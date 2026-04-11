@@ -1,9 +1,10 @@
 /**
  * Pharma Cosmetics - Main JavaScript
  * Handles interactive features: countdown, tabs, carousels, etc.
+ * Pure vanilla JS - no jQuery dependency required
  */
 
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', function() {
 
     // ==========================================
     // Flash Sale Countdown Timer
