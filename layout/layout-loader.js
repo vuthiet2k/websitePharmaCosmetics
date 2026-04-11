@@ -1,6 +1,7 @@
 /**
  * Layout Loader
  * Loads reusable header and footer components into pages with loading states
+ * Pure vanilla JS - no jQuery dependency required
  */
 
 (function() {
