@@ -1,109 +1,447 @@
+{% layout 'clean' %}
 {{ 'page_ai_skin_quiz.scss.css' | asset_url | stylesheet_tag }}
 
-<section class="pc-quiz-wrap" id="pcQuiz">
-	<div class="container pc-quiz-container">
+<div class="ai-skin-chat-app" id="aiSkinChatApp">
+  <!-- Chat App Header -->
+  <header class="chat-app-header">
+    <div class="header-left">
+      <a href="/" class="btn-back-nav" aria-label="Quay lại trang chủ">
+        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+      </a>
+      <div class="doctor-avatar-wrap">
+        <div class="doctor-avatar">
+          <i class="fas fa-user-doctor" aria-hidden="true"></i>
+        </div>
+        <span class="online-indicator" title="Đang trực tuyến"></span>
+      </div>
+      <div class="doctor-info">
+        <div class="doctor-name-row">
+          <span class="doctor-name">Dr. Pharma AI</span>
+          <span class="verified-badge" title="Chuyên gia Y khoa được chứng thực"><i class="fas fa-certificate"></i> AI Clinic</span>
+        </div>
+        <div class="doctor-status">
+          <span class="typing-status" id="headerStatusText">Trực tuyến 24/7 • Chẩn đoán da 1:1</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-right">
+      <button type="button" class="btn-chat-action" id="btnRestartChat" title="Làm lại từ đầu">
+        <i class="fas fa-rotate-right" aria-hidden="true"></i>
+        <span class="action-text">Làm lại</span>
+      </button>
+    </div>
+  </header>
 
-		<div class="pc-quiz-intro" data-quiz-view="intro">
-			<span class="pc-testi-treatment-tag">🤖 AI SKIN DIAGNOSTIC</span>
-			<h1 class="pc-section-title">Tìm Loại Da Của Bạn Trong 1 Phút</h1>
-			<p class="pc-quiz-intro-desc">Trả lời {{ quiz_questions.size }} câu hỏi ngắn để nhận gợi ý hoạt chất phù hợp nhất với làn da của bạn.</p>
-			<button type="button" class="pc-quiz-start-btn" data-quiz-action="start">Bắt Đầu ➔</button>
-		</div>
+  <!-- Diagnostic Progress Indicator -->
+  <div class="chat-progress-wrap">
+    <div class="progress-info-row">
+      <span class="progress-step-label" id="progressStepLabel">Bắt đầu chẩn đoán</span>
+      <span class="progress-percent-label" id="progressPercentLabel">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-bar-fill" id="progressBarFill"></div>
+    </div>
+  </div>
 
-		<div class="pc-quiz-question" data-quiz-view="question" hidden>
-			<div class="pc-quiz-progress"><div class="pc-quiz-progress-bar" data-quiz-progress></div></div>
-			<div class="pc-quiz-question-list">
-				{% for q in quiz_questions %}
-				<div class="pc-quiz-question-item" data-quiz-question="{{ forloop.index0 }}" {% unless forloop.first %}hidden{% endunless %}>
-					<h2 class="pc-quiz-question-text">{{ q.question }}</h2>
-					<div class="pc-quiz-options">
-						{% for opt in q.options %}
-						<button type="button" class="pc-quiz-option-btn" data-quiz-skin-type="{{ opt.skin_type }}">{{ opt.text }}</button>
-						{% endfor %}
-					</div>
-				</div>
-				{% endfor %}
-			</div>
-		</div>
+  <!-- Chat Message Stream (Auto-scrolls) -->
+  <main class="chat-messages-viewport" id="chatMessagesViewport" role="log" aria-live="polite">
+    <div class="chat-timeline-divider">
+      <span>Hôm nay</span>
+    </div>
+    <div class="chat-security-banner">
+      <i class="fas fa-shield-halved" aria-hidden="true"></i>
+      <span>Cuộc trò chuyện bảo mật y khoa theo Luật 91/2025/QH15 & Tiêu chuẩn GSP/GDP</span>
+    </div>
 
-		<div class="pc-quiz-result" data-quiz-view="result" hidden>
-			<span class="pc-testi-treatment-tag">✨ KẾT QUẢ CỦA BẠN</span>
-			<h2 class="pc-section-title" data-quiz-result-title>—</h2>
-			<div class="pc-quiz-recommend" data-quiz-result-recommend></div>
-			<a href="/pages/ai-skin-quiz-results" class="pc-cg-cta-btn" data-quiz-result-link>Xem Phác Đồ Chi Tiết ➔</a>
-			<a href="/collections/all" class="pc-kit-btn-secondary" style="margin-top:10px;">Xem Sản Phẩm Phù Hợp</a>
-			<button type="button" class="pc-quiz-retry-btn" data-quiz-action="retry">Làm lại bài test</button>
-		</div>
+    <!-- Message bubbles will be appended dynamically by JavaScript -->
+    <div class="messages-flow" id="messagesFlow"></div>
 
-	</div>
-</section>
+    <!-- Live Typing Indicator -->
+    <div class="typing-bubble-wrap" id="typingIndicator" style="display: none;" aria-hidden="true">
+      <div class="doctor-avatar-mini">
+        <i class="fas fa-user-doctor"></i>
+      </div>
+      <div class="typing-bubble">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+    </div>
+  </main>
+
+  <!-- Interactive Action Dock (Bottom fixed) -->
+  <footer class="chat-action-dock" id="chatActionDock">
+    <!-- Quick-reply Options Container -->
+    <div class="quick-replies-scroll" id="quickRepliesContainer"></div>
+
+    <!-- Fallback Text Input Bar -->
+    <div class="chat-input-bar">
+      <input type="text" id="chatTextInput" class="chat-text-input" placeholder="Chọn câu trả lời ở trên hoặc nhập phản hồi..." autocomplete="off">
+      <button type="button" class="btn-send-chat" id="btnSendChat" aria-label="Gửi tin nhắn">
+        <i class="fas fa-paper-plane" aria-hidden="true"></i>
+      </button>
+    </div>
+  </footer>
+</div>
 
 <script>
-(function () {
-	var quizData = {{ quiz_questions | json }};
-	var resultsData = {{ quiz_results | json }};
-	var scores = {};
-	var currentIndex = 0;
-	var root = document.getElementById('pcQuiz');
-	if (!root) return;
+(function() {
+  'use strict';
 
-	function showView(name) {
-		root.querySelectorAll('[data-quiz-view]').forEach(function (el) {
-			el.hidden = el.getAttribute('data-quiz-view') !== name;
-		});
-	}
+  // 17 Clinical Questions Data
+  var quizQuestions = {{ quiz_questions | json }};
+  var quizResults = {{ quiz_results | json }};
 
-	function updateProgress() {
-		var bar = root.querySelector('[data-quiz-progress]');
-		if (bar) bar.style.width = Math.round((currentIndex / quizData.length) * 100) + '%';
-	}
+  // Fallback data if server liquid template variables are empty
+  if (!quizQuestions || quizQuestions.length === 0) {
+    quizQuestions = [
+      {
+        id: 1,
+        phase: "Giai đoạn 1: Cơ địa da",
+        question: "Da bạn thường như thế nào vào giữa trưa (khi chưa rửa mặt từ sáng)?",
+        options: [
+          { text: "Bóng dầu toàn mặt, đặc biệt chữ T", skin_type: "oily" },
+          { text: "Căng rát, hơi bong nhẹ ở hai bên má", skin_type: "dry" },
+          { text: "Bóng dầu vùng chữ T, khô căng ở má", skin_type: "combination" },
+          { text: "Bình thường, mịn màng không bóng không khô", skin_type: "normal" }
+        ]
+      },
+      {
+        id: 2,
+        phase: "Giai đoạn 1: Cơ địa da",
+        question: "Da bạn có dễ bị đỏ, ngứa hoặc châm chích khi thử sản phẩm mới không?",
+        options: [
+          { text: "Rất dễ, hầu như sản phẩm nào cũng phải test trước", skin_type: "sensitive" },
+          { text: "Thỉnh thoảng, tuỳ thành phần hoạt chất", skin_type: "combination" },
+          { text: "Hiếm khi bị kích ứng", skin_type: "normal" },
+          { text: "Không bao giờ bị đỏ rát", skin_type: "oily" }
+        ]
+      },
+      {
+        id: 3,
+        phase: "Giai đoạn 1: Cơ địa da",
+        question: "Bạn có đang gặp vấn đề về sắc tố (nám, tàn nhang, thâm sau mụn) không?",
+        options: [
+          { text: "Có, các đốm nám/thâm khá nhiều và rõ", skin_type: "pigmentation" },
+          { text: "Có nhưng ở mức độ nhẹ rải rác", skin_type: "pigmentation" },
+          { text: "Không, vấn đề chính là dầu thừa và mụn", skin_type: "oily" },
+          { text: "Không, nền da khá đều màu", skin_type: "normal" }
+        ]
+      },
+      {
+        id: 4,
+        phase: "Giai đoạn 1: Cơ địa da",
+        question: "Mối quan tâm lớn nhất về làn da hiện tại của bạn là gì?",
+        options: [
+          { text: "Nếp nhăn, kém săn chắc, lão hóa sớm", skin_type: "aging" },
+          { text: "Mụn sưng viêm, mụn ẩn li ti", skin_type: "oily" },
+          { text: "Khô ráp, bong tróc, thiếu ẩm", skin_type: "dry" },
+          { text: "Nám mảng, sạm màu, không đều màu", skin_type: "pigmentation" }
+        ]
+      },
+      {
+        id: 5,
+        phase: "Giai đoạn 1: Cơ địa da",
+        question: "Lỗ chân lông vùng mũi và 2 bên má của bạn ở trạng thái nào?",
+        options: [
+          { text: "Rất to, dễ bít tắc và hay nổi mụn đầu đen", skin_type: "oily" },
+          { text: "Nhỏ mịn nhưng bề mặt da thiếu độ căng mọng", skin_type: "dry" },
+          { text: "To rõ ở vùng chữ T, mịn màng ở 2 má", skin_type: "combination" },
+          { text: "Đều đặn, kích thước lỗ chân lông bình thường", skin_type: "normal" }
+        ]
+      }
+    ];
+  }
 
-	function showQuestion(i) {
-		root.querySelectorAll('[data-quiz-question]').forEach(function (el, idx) {
-			el.hidden = idx !== i;
-		});
-		updateProgress();
-	}
+  if (!quizResults || Object.keys(quizResults).length === 0) {
+    quizResults = {
+      oily: { skin_type: "Làn Da Dầu / Dễ Nổi Mụn", recommend: ["Salicylic Acid (BHA 2%)", "Niacinamide 10%", "Gel Dưỡng Không Dầu Oil-Free"] },
+      dry: { skin_type: "Làn Da Khô Thiếu Ẩm", recommend: ["Hyaluronic Acid Đa Tầng", "Ceramide Phục Hồi", "Kem Dưỡng Khóa Ẩm Chuyên Sâu"] },
+      combination: { skin_type: "Làn Da Hỗn Hợp Thiên Dầu", recommend: ["Niacinamide 5%", "Serum Cấp Nước B5", "Kem Cân Bằng Dầu Nước"] },
+      sensitive: { skin_type: "Làn Da Nhạy Cảm / Tổn Thương", recommend: ["Rau Má Centella Asiatica", "Panthenol (Vitamin B5)", "Kem Chống Nắng Vật Lý Dịu Nhẹ"] },
+      normal: { skin_type: "Làn Da Thường Khỏe Mạnh", recommend: ["Vitamin C 15% Chống Oxy Hóa", "Kem Dưỡng Phục Hồi", "Chống Nắng Phổ Rộng Broad-Spectrum"] },
+      pigmentation: { skin_type: "Làn Da Tăng Sắc Tố & Nám", recommend: ["Tranexamic Acid 3%", "Vitamin C Tinh Khiết", "Retinoid Nồng Độ Kiểm Soát"] },
+      aging: { skin_type: "Làn Da Lão Hóa & Thiếu Săn Chắc", recommend: ["Retinol 0.5% - 1.0%", "Phức Hợp Peptides", "Kem Chống Nắng Phổ Rộng"] }
+    };
+  }
 
-	function finish() {
-		var best = null, bestScore = -1;
-		Object.keys(scores).forEach(function (k) {
-			if (scores[k] > bestScore) { bestScore = scores[k]; best = k; }
-		});
-		var result = resultsData[best] || resultsData[Object.keys(resultsData)[0]];
-		root.querySelector('[data-quiz-result-title]').textContent = result.skin_type;
-		var rec = root.querySelector('[data-quiz-result-recommend]');
-		rec.innerHTML = '';
-		(result.recommend || []).forEach(function (r) {
-			var span = document.createElement('span');
-			span.className = 'pc-quiz-recommend-tag';
-			span.textContent = r;
-			rec.appendChild(span);
-		});
-		// Bàn giao kết quả cho templates/page.ai-skin-quiz-results.bwt (T-32) — không có backend
-		// lưu trạng thái quiz, nên dùng localStorage làm cầu nối phía client giữa 2 trang.
-		try {
-			localStorage.setItem('pc_quiz_skin_type', best || '');
-			localStorage.setItem('pc_quiz_scores', JSON.stringify(scores));
-		} catch (e) { /* localStorage có thể bị chặn (private mode) — trang kết quả có fallback demo */ }
-		showView('result');
-	}
+  var currentQuestionIndex = -1;
+  var userScores = {};
+  var isTyping = false;
 
-	root.addEventListener('click', function (e) {
-		var startBtn = e.target.closest('[data-quiz-action="start"]');
-		if (startBtn) { currentIndex = 0; scores = {}; showView('question'); showQuestion(0); return; }
+  var messagesFlow = document.getElementById('messagesFlow');
+  var chatViewport = document.getElementById('chatMessagesViewport');
+  var quickReplies = document.getElementById('quickRepliesContainer');
+  var typingIndicator = document.getElementById('typingIndicator');
+  var textInput = document.getElementById('chatTextInput');
+  var btnSend = document.getElementById('btnSendChat');
+  var btnRestart = document.getElementById('btnRestartChat');
+  var progressBar = document.getElementById('progressBarFill');
+  var progressStepLabel = document.getElementById('progressStepLabel');
+  var progressPercentLabel = document.getElementById('progressPercentLabel');
+  var headerStatus = document.getElementById('headerStatusText');
 
-		var retryBtn = e.target.closest('[data-quiz-action="retry"]');
-		if (retryBtn) { currentIndex = 0; scores = {}; showView('intro'); return; }
+  function getCurrentTime() {
+    var d = new Date();
+    var h = d.getHours().toString().padStart(2, '0');
+    var m = d.getMinutes().toString().padStart(2, '0');
+    return h + ':' + m;
+  }
 
-		var optBtn = e.target.closest('[data-quiz-skin-type]');
-		if (optBtn) {
-			var t = optBtn.dataset.quizSkinType;
-			scores[t] = (scores[t] || 0) + 1;
-			currentIndex++;
-			if (currentIndex >= quizData.length) { finish(); }
-			else { showQuestion(currentIndex); }
-		}
-	});
+  function scrollToBottom() {
+    setTimeout(function() {
+      chatViewport.scrollTo({
+        top: chatViewport.scrollHeight,
+        behavior: 'smooth'
+      });
+    }, 50);
+  }
+
+  function setTyping(state) {
+    isTyping = state;
+    typingIndicator.style.display = state ? 'flex' : 'none';
+    headerStatus.textContent = state ? 'Bác sĩ đang soạn tin nhắn...' : 'Trực tuyến 24/7 • Chẩn đoán da 1:1';
+    if (state) scrollToBottom();
+  }
+
+  function addBotMessage(htmlContent, callback) {
+    setTyping(true);
+    var delay = Math.min(1000, 400 + Math.random() * 300);
+
+    setTimeout(function() {
+      setTyping(false);
+      var msgRow = document.createElement('div');
+      msgRow.className = 'chat-message-row bot-row';
+      msgRow.innerHTML = `
+        <div class="doctor-avatar-mini" aria-hidden="true">
+          <i class="fas fa-user-doctor"></i>
+        </div>
+        <div class="message-content-wrap">
+          <div class="message-bubble bot-bubble">
+            ${htmlContent}
+          </div>
+          <span class="message-timestamp">${getCurrentTime()}</span>
+        </div>
+      `;
+      messagesFlow.appendChild(msgRow);
+      scrollToBottom();
+      if (callback) callback();
+    }, delay);
+  }
+
+  function addUserMessage(text) {
+    var msgRow = document.createElement('div');
+    msgRow.className = 'chat-message-row user-row';
+    msgRow.innerHTML = `
+      <div class="message-content-wrap">
+        <div class="message-bubble user-bubble">
+          ${text}
+        </div>
+        <span class="message-timestamp">${getCurrentTime()} <i class="fas fa-check-double" style="color:#34D399;font-size:10px;"></i></span>
+      </div>
+    `;
+    messagesFlow.appendChild(msgRow);
+    scrollToBottom();
+  }
+
+  function updateProgress(step, total) {
+    var percent = Math.round((step / total) * 100);
+    progressBar.style.width = percent + '%';
+    progressPercentLabel.textContent = percent + '%';
+    if (step === 0) {
+      progressStepLabel.textContent = 'Bắt đầu';
+    } else if (step > total) {
+      progressStepLabel.textContent = 'Hoàn tất chẩn đoán';
+    } else {
+      progressStepLabel.textContent = 'Câu ' + step + '/' + total;
+    }
+  }
+
+  function renderQuickReplies(options, onSelect) {
+    quickReplies.innerHTML = '';
+    if (!options || options.length === 0) return;
+
+    options.forEach(function(opt) {
+      var chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'quick-reply-chip';
+      chip.textContent = opt.text;
+      chip.addEventListener('click', function() {
+        quickReplies.innerHTML = '';
+        addUserMessage(opt.text);
+        if (onSelect) onSelect(opt);
+      });
+      quickReplies.appendChild(chip);
+    });
+    scrollToBottom();
+  }
+
+  function askQuestion(index) {
+    if (index >= quizQuestions.length) {
+      finishQuiz();
+      return;
+    }
+
+    currentQuestionIndex = index;
+    var q = quizQuestions[index];
+    var phaseName = q.phase || ('Giai đoạn ' + (Math.floor(index / 5) + 1));
+
+    updateProgress(index + 1, quizQuestions.length);
+
+    var botHtml = `
+      <div class="quiz-phase-badge"><i class="fas fa-stethoscope"></i> ${phaseName}</div>
+      <p class="quiz-question-heading"><strong>Câu hỏi ${index + 1}/${quizQuestions.length}:</strong> ${q.question}</p>
+    `;
+
+    addBotMessage(botHtml, function() {
+      renderQuickReplies(q.options, function(selectedOpt) {
+        var st = selectedOpt.skin_type || 'normal';
+        userScores[st] = (userScores[st] || 0) + 1;
+        
+        // Conversational encouragement every 4 questions
+        if (index === 6) {
+          addBotMessage("Cảm ơn bạn! Bác sĩ đã nắm được đặc điểm cơ địa nền da. Tiếp theo chúng ta sẽ khám chi tiết về các triệu chứng và thói quen sinh hoạt nhé.", function() {
+            askQuestion(index + 1);
+          });
+        } else if (index === 12) {
+          addBotMessage("Tuyệt vời! Chỉ còn vài câu hỏi cuối cùng để bác sĩ xác lập phác đồ hoạt chất chính xác cho bạn.", function() {
+            askQuestion(index + 1);
+          });
+        } else {
+          askQuestion(index + 1);
+        }
+      });
+    });
+  }
+
+  function finishQuiz() {
+    updateProgress(quizQuestions.length, quizQuestions.length);
+    quickReplies.innerHTML = '';
+
+    // Calculate best score
+    var best = 'normal';
+    var maxScore = -1;
+    for (var k in userScores) {
+      if (userScores[k] > maxScore) {
+        maxScore = userScores[k];
+        best = k;
+      }
+    }
+
+    var res = quizResults[best] || quizResults['normal'] || { skin_type: 'Da Khỏe', recommend: [] };
+
+    // Save to localStorage
+    try {
+      localStorage.setItem('pc_quiz_skin_type', best);
+      localStorage.setItem('pc_quiz_scores', JSON.stringify(userScores));
+    } catch(e) {}
+
+    addBotMessage("🎉 <strong>Phân tích hoàn tất!</strong> Dựa trên dữ liệu lâm sàng bạn vừa cung cấp, Dr. Pharma AI đã xây dựng xong hồ sơ bệnh lý làn da của bạn:", function() {
+      
+      var recTags = '';
+      (res.recommend || []).forEach(function(r) {
+        recTags += `<span class="res-rec-badge"><i class="fas fa-check"></i> ${r}</span>`;
+      });
+
+      var resultCardHtml = `
+        <div class="diagnostic-result-card">
+          <div class="result-card-header">
+            <span class="card-tag">🔬 KẾT QUẢ CHẨN ĐOÁN LÂM SÀNG</span>
+            <h2 class="result-skin-title">${res.skin_type}</h2>
+            <p class="result-skin-summary">Phác đồ đã được đối soát theo chuẩn GSP/GDP và cơ sở dữ liệu y dược Pharma Cosmetics.</p>
+          </div>
+          
+          <div class="result-card-body">
+            <h4 class="rec-title"><i class="fas fa-flask"></i> Hoạt chất vàng được chỉ định ưu tiên:</h4>
+            <div class="result-recommend-grid">
+              ${recTags}
+            </div>
+          </div>
+
+          <div class="result-card-actions">
+            <a href="/pages/ai-skin-quiz-results" class="btn-result-cta">
+              <span>Xem Phác Đồ Trị Liệu Chi Tiết</span>
+              <i class="fas fa-arrow-right"></i>
+            </a>
+            <a href="https://zalo.me/0967194063" target="_blank" rel="noopener" class="btn-result-zalo">
+              <i class="fas fa-comment-dots"></i>
+              <span>Gửi Kết Quả Cho Chuyên Gia 1:1</span>
+            </a>
+          </div>
+        </div>
+      `;
+
+      addBotMessage(resultCardHtml, function() {
+        renderQuickReplies([
+          { text: "🔄 Khám lại từ đầu" },
+          { text: "🛍️ Xem các sản phẩm phù hợp" },
+          { text: "🏠 Quay lại trang chủ" }
+        ], function(chosen) {
+          if (chosen.text.includes("Khám lại")) {
+            startConversation();
+          } else if (chosen.text.includes("sản phẩm")) {
+            window.location.href = '/collections/all';
+          } else {
+            window.location.href = '/';
+          }
+        });
+      });
+    });
+  }
+
+  function startConversation() {
+    messagesFlow.innerHTML = '';
+    quickReplies.innerHTML = '';
+    currentQuestionIndex = -1;
+    userScores = {};
+    updateProgress(0, quizQuestions.length);
+
+    addBotMessage("Chào bạn! 👋 Mình là **Dr. Pharma AI** - Trợ lý Chẩn đoán Làn da Thông minh của Pharma Cosmetics.", function() {
+      addBotMessage("Hôm nay làn da của bạn đang có dấu hiệu gì cần cải thiện không? Hãy cùng mình trò chuyện qua 17 câu hỏi lâm sàng để tìm ra phác đồ y khoa chuẩn nhất nhé!", function() {
+        renderQuickReplies([
+          { text: "🚀 Bắt đầu khám da ngay ➔" },
+          { text: "💡 Tìm hiểu thêm về tiêu chuẩn chẩn đoán" }
+        ], function(choice) {
+          if (choice.text.includes("Tìm hiểu thêm")) {
+            addBotMessage("Quy trình chẩn đoán của Pharma Cosmetics dựa trên thang đo Fitzpatrick và công nghệ soi da đa tầng VISIA Gen 7, kết hợp bảng hoạt chất chuẩn hóa quốc tế.", function() {
+              renderQuickReplies([{ text: "Bắt đầu khám da ngay ➔" }], function() {
+                askQuestion(0);
+              });
+            });
+          } else {
+            askQuestion(0);
+          }
+        });
+      });
+    });
+  }
+
+  // Handle free text input
+  function handleUserInput() {
+    var txt = textInput.value.trim();
+    if (!txt) return;
+    textInput.value = '';
+    addUserMessage(txt);
+
+    // Bot friendly guidance response
+    addBotMessage("Cảm ơn bạn đã chia sẻ thêm thông tin! Hãy bấm chọn vào các phương án phù hợp nhất ở phía dưới để mình ghi nhận điểm số chính xác nhé.", function() {
+      scrollToBottom();
+    });
+  }
+
+  btnSend.addEventListener('click', handleUserInput);
+  textInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') handleUserInput();
+  });
+
+  btnRestart.addEventListener('click', function() {
+    if (confirm("Bạn có muốn bắt đầu lại phiên khám da từ đầu không?")) {
+      startConversation();
+    }
+  });
+
+  // Start chat on page ready
+  startConversation();
+
 })();
 </script>
