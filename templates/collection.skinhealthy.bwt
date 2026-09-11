@@ -1,0 +1,368 @@
+{% comment %} collection.skinhealthy.bwt — Trang shop/đặt dịch vụ Skin Healthy Beauty {% endcomment %}
+{% layout 'skinhealthy' %}
+{{ 'comp_skinhealthy_card.scss.css' | asset_url | stylesheet_tag }}
+{{ 'page_skinhealthy_services.scss.css' | asset_url | stylesheet_tag }}
+
+{%- comment -%} CSS riêng cho layout collection {%- endcomment -%}
+<style>
+/* ── Collection header strip ── */
+.sh-col-header {
+  padding: 40px 0 0;
+  background: var(--sh-ivory);
+  border-bottom: 1px solid var(--sh-line);
+}
+.sh-col-header__inner {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-bottom: 24px;
+  gap: 16px;
+}
+.sh-col-header__label {
+  font-family: var(--sh-sans);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--sh-gold);
+  display: block;
+  margin-bottom: 8px;
+}
+.sh-col-header__title {
+  font-family: var(--sh-serif);
+  font-size: 2rem;
+  font-weight: 300;
+  color: var(--sh-ink);
+  margin: 0;
+}
+.sh-col-header__count {
+  font-family: var(--sh-sans);
+  font-size: 0.75rem;
+  color: var(--sh-ink-60);
+  flex-shrink: 0;
+}
+/* ── Group filter tabs ── */
+.sh-col-tabs {
+  display: flex;
+  gap: 0;
+  border-top: 1px solid var(--sh-line);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.sh-col-tabs::-webkit-scrollbar { display: none; }
+.sh-col-tab {
+  flex-shrink: 0;
+  padding: 14px 20px;
+  font-family: var(--sh-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--sh-ink-60);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 200ms, border-color 200ms;
+}
+.sh-col-tab:hover,
+.sh-col-tab.is-active {
+  color: var(--sh-ink);
+  border-bottom-color: var(--sh-ink);
+}
+/* ── Layout ── */
+.sh-col-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 0;
+  background: var(--sh-white);
+  min-height: 60vh;
+}
+/* ── Sidebar ── */
+.sh-col-sidebar {
+  border-right: 1px solid var(--sh-line);
+  padding: 32px 24px;
+  background: var(--sh-ivory);
+  position: sticky;
+  top: 72px;
+  align-self: start;
+  height: calc(100vh - 72px);
+  overflow-y: auto;
+}
+.sh-col-sidebar__title {
+  font-family: var(--sh-sans);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--sh-ink-60);
+  margin-bottom: 20px;
+}
+.sh-col-sidebar__list { list-style: none; padding: 0; margin: 0 0 32px; }
+.sh-col-sidebar__item + .sh-col-sidebar__item { border-top: 1px solid var(--sh-line); }
+.sh-col-sidebar__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  font-family: var(--sh-sans);
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--sh-ink);
+  text-decoration: none;
+  transition: color 150ms;
+}
+.sh-col-sidebar__link:hover,
+.sh-col-sidebar__link.is-active { color: var(--sh-gold); font-weight: 600; }
+.sh-col-sidebar__count {
+  font-size: 0.6875rem;
+  color: var(--sh-ink-30);
+}
+.sh-col-sidebar__promo {
+  background: var(--sh-ink);
+  padding: 20px;
+  text-align: center;
+}
+.sh-col-sidebar__promo-text {
+  font-family: var(--sh-sans);
+  font-size: 0.75rem;
+  color: rgba(247,244,239,.7);
+  margin-bottom: 12px;
+}
+.sh-col-sidebar__promo-cta {
+  display: inline-block;
+  padding: 10px 16px;
+  background: var(--sh-gold);
+  color: var(--sh-white);
+  font-family: var(--sh-sans);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 200ms;
+}
+.sh-col-sidebar__promo-cta:hover { background: var(--sh-ivory); color: var(--sh-ink); }
+/* ── Main grid ── */
+.sh-col-main {
+  padding: 32px;
+}
+.sh-col-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--sh-line);
+}
+.sh-col-toolbar__count {
+  font-family: var(--sh-sans);
+  font-size: 0.75rem;
+  color: var(--sh-ink-60);
+}
+.sh-col-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--sh-line);
+  border: 1px solid var(--sh-line);
+  margin-bottom: 40px;
+}
+.sh-col-empty {
+  padding: 80px 0;
+  text-align: center;
+  color: var(--sh-ink-60);
+  font-family: var(--sh-serif);
+  font-size: 1.25rem;
+  font-style: italic;
+}
+/* ── Pagination ── */
+.sh-col-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.sh-col-pagination a,
+.sh-col-pagination span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  font-family: var(--sh-sans);
+  font-size: 0.75rem;
+  border: 1px solid var(--sh-line);
+  color: var(--sh-ink);
+  text-decoration: none;
+  transition: background 150ms, color 150ms;
+}
+.sh-col-pagination a:hover,
+.sh-col-pagination span.current {
+  background: var(--sh-ink);
+  border-color: var(--sh-ink);
+  color: var(--sh-ivory);
+}
+/* Responsive */
+@media (max-width: 991px) {
+  .sh-col-layout { grid-template-columns: 1fr; }
+  .sh-col-sidebar { position: static; height: auto; }
+  .sh-col-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .sh-col-main { padding: 20px 14px; }
+  .sh-col-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+{% paginate collection.products by 12 %}
+
+
+<div class="sh-col-header">
+  <div class="sh-container">
+    <div class="sh-col-header__inner">
+      <div>
+        <span class="sh-col-header__label">{{ settings.skinhealthy_brand_name | default: 'Skin Health Beauty' }}</span>
+        <h1 class="sh-col-header__title">
+          {%- if collection.name == 'All' -%}Tất Cả Dịch Vụ{%- else -%}{{ collection.name }}{%- endif -%}
+        </h1>
+      </div>
+      <span class="sh-col-header__count">{{ collection.products_count }} dịch vụ</span>
+    </div>
+
+    {%- comment -%} Filter tabs by group {%- endcomment -%}
+    <div class="sh-col-tabs" role="navigation" aria-label="Lọc theo nhóm">
+      <a href="{{ collection.url }}" class="sh-col-tab{% if current_tags == blank %} is-active{% endif %}">
+        Tất cả
+      </a>
+      {%- assign tab_ll = linklists[settings.skinhealthy_nav_menu] -%}
+      {%- if settings.skinhealthy_nav_menu != blank and tab_ll and tab_ll.links.size > 0 -%}
+        {%- for link in tab_ll.links -%}
+          <a href="{{ link.url }}" class="sh-col-tab">{{ link.title }}</a>
+        {%- endfor -%}
+      {%- else -%}
+        {%- assign group_col_handles = 'maintenance-skin-care|targeted-treatments|invasive-treatments' | split: '|' -%}
+        {%- assign group_col_labels  = 'Chăm Sóc Duy Trì|Nhắm Mục Tiêu|Xâm Lấn Tối Thiểu' | split: '|' -%}
+        {%- for handle in group_col_handles -%}
+          {%- assign gc = collections[handle] -%}
+          {%- if gc -%}
+            <a href="{{ gc.url }}" class="sh-col-tab{% if collection.alias == handle %} is-active{% endif %}">
+              {{ gc.name }}
+            </a>
+          {%- else -%}
+            <a href="/{{ handle }}" class="sh-col-tab">{{ group_col_labels[forloop.index0] }}</a>
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+
+
+<div class="sh-col-layout sh-container">
+
+  
+  <aside class="sh-col-sidebar">
+    <h2 class="sh-col-sidebar__title">Nhóm Dịch Vụ</h2>
+    <ul class="sh-col-sidebar__list">
+      <li class="sh-col-sidebar__item">
+        <a href="{{ collection.url }}"
+           class="sh-col-sidebar__link{% if current_tags == blank %} is-active{% endif %}">
+          <span>Tất cả dịch vụ</span>
+          <span class="sh-col-sidebar__count">{{ collection.products_count }}</span>
+        </a>
+      </li>
+      {%- assign g1 = collections[settings.skinhealthy_col_maintenance | default: 'maintenance-skin-care'] -%}
+      {%- assign g2 = collections[settings.skinhealthy_col_targeted    | default: 'targeted-treatments'] -%}
+      {%- assign g3 = collections[settings.skinhealthy_col_invasive    | default: 'invasive-treatments'] -%}
+      {%- if g1 -%}
+        <li class="sh-col-sidebar__item">
+          <a href="{{ g1.url }}" class="sh-col-sidebar__link{% if collection.alias == g1.alias %} is-active{% endif %}">
+            <span>{{ g1.name }}</span>
+            <span class="sh-col-sidebar__count">{{ g1.products_count }}</span>
+          </a>
+        </li>
+      {%- endif -%}
+      {%- if g2 -%}
+        <li class="sh-col-sidebar__item">
+          <a href="{{ g2.url }}" class="sh-col-sidebar__link{% if collection.alias == g2.alias %} is-active{% endif %}">
+            <span>{{ g2.name }}</span>
+            <span class="sh-col-sidebar__count">{{ g2.products_count }}</span>
+          </a>
+        </li>
+      {%- endif -%}
+      {%- if g3 -%}
+        <li class="sh-col-sidebar__item">
+          <a href="{{ g3.url }}" class="sh-col-sidebar__link{% if collection.alias == g3.alias %} is-active{% endif %}">
+            <span>{{ g3.name }}</span>
+            <span class="sh-col-sidebar__count">{{ g3.products_count }}</span>
+          </a>
+        </li>
+      {%- endif -%}
+    </ul>
+
+    <div class="sh-col-sidebar__promo">
+      <p class="sh-col-sidebar__promo-text">Chưa biết da bạn cần gì?</p>
+      <a href="/dat-lich-tu-van" class="sh-col-sidebar__promo-cta">Tư vấn miễn phí</a>
+    </div>
+  </aside>
+
+  
+  <main class="sh-col-main">
+
+    {%- if collection.description != blank -%}
+      <p style="font-family:var(--sh-sans);font-size:.8125rem;color:var(--sh-ink-60);line-height:1.75;margin-bottom:24px;">
+        {{ collection.description | strip_html | truncate: 280 }}
+      </p>
+    {%- endif -%}
+
+    <div class="sh-col-toolbar">
+      <span class="sh-col-toolbar__count">
+        {{ collection.products_count }} dịch vụ
+        {%- if paginate.pages > 1 %} — Trang {{ paginate.current_page }}/{{ paginate.pages }}{%- endif -%}
+      </span>
+    </div>
+
+    {%- if collection.products_count > 0 -%}
+      <div class="sh-col-grid">
+        {%- for product in collection.products -%}
+          {%- comment -%} Detect group badge from which collection this product belongs to {%- endcomment -%}
+          {%- assign card_badge = '' -%}
+          {%- for col in product.collections -%}
+            {%- assign ch = col.alias | downcase -%}
+            {%- if ch contains 'maintenance' -%}{%- assign card_badge = 'Duy Trì' -%}
+            {%- elsif ch contains 'targeted' -%}{%- assign card_badge = 'Nhắm Mục Tiêu' -%}
+            {%- elsif ch contains 'invasive' -%}{%- assign card_badge = 'Xâm Lấn' -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {% include 'product_grid_skinhealthy', product: product, group_badge: card_badge %}
+        {%- endfor -%}
+      </div>
+
+      {%- if paginate.pages > 1 -%}
+        <nav class="sh-col-pagination" aria-label="Phân trang">
+          {%- if paginate.previous -%}
+            <a href="{{ paginate.previous.url }}" aria-label="Trang trước">‹</a>
+          {%- endif -%}
+          {%- for part in paginate.parts -%}
+            {%- if part.is_link -%}
+              <a href="{{ part.url }}">{{ part.title }}</a>
+            {%- else -%}
+              <span class="current">{{ part.title }}</span>
+            {%- endif -%}
+          {%- endfor -%}
+          {%- if paginate.next -%}
+            <a href="{{ paginate.next.url }}" aria-label="Trang sau">›</a>
+          {%- endif -%}
+        </nav>
+      {%- endif -%}
+
+    {%- else -%}
+      <div class="sh-col-empty">
+        <em>Dịch vụ đang được cập nhật.</em>
+      </div>
+    {%- endif -%}
+
+  </main>
+
+</div>
+
+{% endpaginate %}

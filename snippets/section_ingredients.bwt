@@ -1,0 +1,128 @@
+{%- comment -%}
+  section_ingredients.bwt (T-20 batch B redesign) — Tailwind/pharma_ui_kit thay cho .pc-ing-*.
+  Style cues: homepage.html "HIGHLIGHT PROTOCOL" card language (rounded-2xl, badge/tag chips,
+  forest-900 heading) + product-detail.html "Active Ingredients Matrix" (bg-gray-50 rounded-3xl
+  section, bg-white rounded-xl card). Giữ NGUYÊN 100% logic Liquid gốc: nhánh linklist
+  (settings.home_ing_menu) VS nhánh fallback 3 thẻ cứng ing_1/2/3, toàn bộ biến settings.*,
+  quy ước lazyload (class="lazyload", base64 placeholder + data-src + onerror).
+{%- endcomment -%}
+{%- assign ing_ll = linklists[settings.home_ing_menu] -%}
+{%- assign ing_use_ll = false -%}
+{%- if settings.home_ing_menu != blank and ing_ll and ing_ll.links.size > 0 -%}{%- assign ing_use_ll = true -%}{%- endif -%}
+<section class="bg-gray-50 py-14 md:py-16">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-3xl mx-auto mb-10">
+      <span class="text-xs font-bold text-clinical-700 uppercase tracking-widest">{{ settings.home_ing_eyebrow | default: 'Trung tâm Khoa học' }}</span>
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 font-heading mt-2">{{ settings.home_ing_title | default: 'Trí tuệ đằng sau làn da' }}</h2>
+      <p class="text-sm text-gray-600 mt-2">{{ settings.home_ing_subtitle | default: 'Khám phá các thành phần hoạt tính nồng độ cao giúp thay đổi làn da từ cấp độ tế bào.' }}</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      {%- if ing_use_ll -%}
+      {%- comment -%} Nguồn dữ liệu: linklist (home_ing_menu) — link.object = collection (ảnh + đếm SP tự động) {%- endcomment -%}
+      {%- for link in ing_ll.links limit: 6 -%}
+        {%- assign ing_col = link.object -%}
+        <a href="{{ link.url }}" class="group bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-lg hover:border-clinical-600 transition flex flex-col gap-3{% if forloop.index == 2 %} sm:col-span-2 lg:col-span-1 ring-1 ring-clinical-100{% endif %}" title="Khám phá sản phẩm {{ link.title | escape }}">
+          <div class="w-16 h-16 rounded-xl bg-mint-50 flex items-center justify-center overflow-hidden">
+            {%- if ing_col.image -%}
+            <img class="lazyload w-16 h-16 object-cover rounded-xl" width="64" height="64"
+              src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII="
+              data-src="{{ ing_col.image.src | img_url: 'compact' }}"
+              alt="{{ link.title | escape }}"
+              onerror="this.onerror=null;this.parentElement.classList.add('bg-mint-50');this.remove();">
+            {%- else -%}
+            <svg width="32" height="32" viewBox="0 0 40 40" fill="none"><path d="M20 4C20 4 8 16 8 24a12 12 0 0 0 24 0C32 16 20 4 20 4Z" fill="#267348" opacity=".2"/><circle cx="20" cy="25" r="4" fill="#267348" opacity=".6"/></svg>
+            {%- endif -%}
+          </div>
+          <h3 class="text-base font-bold text-gray-900 group-hover:text-clinical-700">{{ link.title }}</h3>
+          {%- if ing_col -%}
+            {%- assign ing_col_desc = ing_col.description | strip_html | strip | truncate: 120 -%}
+            <p class="text-xs text-gray-600 leading-relaxed flex-1">{{ ing_col_desc | default: 'Khám phá dòng sản phẩm chứa hoạt chất này.' }}</p>
+            {%- if ing_col.products_count > 0 -%}
+            <span class="pc-kit-badge-clinical text-[11px] self-start">{{ ing_col.products_count }} sản phẩm</span>
+            {%- endif -%}
+          {%- else -%}
+            <p class="text-xs text-gray-600 leading-relaxed flex-1">Khám phá dòng sản phẩm chứa hoạt chất này.</p>
+          {%- endif -%}
+          <span class="text-xs font-semibold text-clinical-700 flex items-center gap-1">
+            Khám phá sản phẩm <i class="fas fa-arrow-right text-[10px]"></i>
+          </span>
+        </a>
+      {%- endfor -%}
+      {%- else -%}
+
+      {%- comment -%} Thẻ 1 {%- endcomment -%}
+      {%- assign ing_1_name = settings.ing_1_title | default: 'Retinol' -%}
+      {%- assign ing_1_link = settings.ing_1_url -%}
+      {%- if ing_1_link == blank -%}{%- capture ing_1_link -%}/search?query={{ ing_1_name | url_encode }}&type=product{%- endcapture -%}{%- endif -%}
+      <a href="{{ ing_1_link }}" class="group bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-lg hover:border-clinical-600 transition flex flex-col gap-3" title="Khám phá sản phẩm {{ ing_1_name | escape }}">
+        <div class="w-16 h-16 rounded-xl bg-amber-50 flex items-center justify-center overflow-hidden">
+          {% if settings.ing_1_icon != blank %}
+            <img class="lazyload w-16 h-16 object-cover rounded-xl" width="64" height="64"
+              src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII="
+              data-src="{{ settings.ing_1_icon | img_url: 'compact' }}"
+              alt="{{ ing_1_name | escape }}"
+              onerror="this.onerror=null;this.remove();">
+          {% else %}
+            <svg width="32" height="32" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="8" fill="#B45309" opacity=".9"/><circle cx="20" cy="20" r="14" stroke="#B45309" stroke-width="1.5" stroke-dasharray="4 3" opacity=".4"/></svg>
+          {% endif %}
+        </div>
+        <span class="pc-kit-badge-gold text-[11px] self-start">{{ settings.ing_1_tag | default: 'Anti-Aging' }}</span>
+        <h3 class="text-base font-bold text-gray-900 group-hover:text-clinical-700">{{ ing_1_name }}</h3>
+        <p class="text-xs text-gray-600 leading-relaxed flex-1">{{ settings.ing_1_desc | default: 'Tiêu chuẩn vàng trong việc trẻ hóa da. Kích thích tái tạo tế bào, xóa mờ nếp nhăn và thâm nám hiệu quả.' }}</p>
+        <span class="pc-kit-badge-clinical text-[11px] self-start">{{ settings.ing_1_badge | default: 'Pure Vitamin A' }}</span>
+        <span class="text-xs font-semibold text-clinical-700 flex items-center gap-1">Khám phá sản phẩm <i class="fas fa-arrow-right text-[10px]"></i></span>
+      </a>
+
+      {%- comment -%} Thẻ 2 {%- endcomment -%}
+      {%- assign ing_2_name = settings.ing_2_title | default: 'Hyaluronic Acid' -%}
+      {%- assign ing_2_link = settings.ing_2_url -%}
+      {%- if ing_2_link == blank -%}{%- capture ing_2_link -%}/search?query={{ ing_2_name | url_encode }}&type=product{%- endcapture -%}{%- endif -%}
+      <a href="{{ ing_2_link }}" class="group bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-lg hover:border-clinical-600 transition flex flex-col gap-3 ring-1 ring-clinical-100" title="Khám phá sản phẩm {{ ing_2_name | escape }}">
+        <div class="w-16 h-16 rounded-xl bg-mint-50 flex items-center justify-center overflow-hidden">
+          {% if settings.ing_2_icon != blank %}
+            <img class="lazyload w-16 h-16 object-cover rounded-xl" width="64" height="64"
+              src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII="
+              data-src="{{ settings.ing_2_icon | img_url: 'compact' }}"
+              alt="{{ ing_2_name | escape }}"
+              onerror="this.onerror=null;this.remove();">
+          {% else %}
+            <svg width="32" height="32" viewBox="0 0 40 40" fill="none"><path d="M20 4C20 4 8 16 8 24a12 12 0 0 0 24 0C32 16 20 4 20 4Z" fill="#267348" opacity=".2"/><circle cx="20" cy="25" r="4" fill="#267348" opacity=".6"/></svg>
+          {% endif %}
+        </div>
+        <span class="pc-kit-badge-clinical text-[11px] self-start">{{ settings.ing_2_tag | default: 'Hydration' }}</span>
+        <h3 class="text-base font-bold text-gray-900 group-hover:text-clinical-700">{{ ing_2_name }}</h3>
+        <p class="text-xs text-gray-600 leading-relaxed flex-1">{{ settings.ing_2_desc | default: 'Nam châm hút nước tự nhiên. Phân tử đa kích cỡ thẩm thấu sâu, giữ ẩm tức thì và liên tục lên đến 72 giờ.' }}</p>
+        <span class="pc-kit-badge-clinical text-[11px] self-start">{{ settings.ing_2_badge | default: 'Multi-Molecular' }}</span>
+        <span class="text-xs font-semibold text-clinical-700 flex items-center gap-1">Khám phá sản phẩm <i class="fas fa-arrow-right text-[10px]"></i></span>
+      </a>
+
+      {%- comment -%} Thẻ 3 {%- endcomment -%}
+      {%- assign ing_3_name = settings.ing_3_title | default: 'Ceramides' -%}
+      {%- assign ing_3_link = settings.ing_3_url -%}
+      {%- if ing_3_link == blank -%}{%- capture ing_3_link -%}/search?query={{ ing_3_name | url_encode }}&type=product{%- endcapture -%}{%- endif -%}
+      <a href="{{ ing_3_link }}" class="group bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-lg hover:border-clinical-600 transition flex flex-col gap-3" title="Khám phá sản phẩm {{ ing_3_name | escape }}">
+        <div class="w-16 h-16 rounded-xl bg-teal-50 flex items-center justify-center overflow-hidden">
+          {% if settings.ing_3_icon != blank %}
+            <img class="lazyload w-16 h-16 object-cover rounded-xl" width="64" height="64"
+              src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII="
+              data-src="{{ settings.ing_3_icon | img_url: 'compact' }}"
+              alt="{{ ing_3_name | escape }}"
+              onerror="this.onerror=null;this.remove();">
+          {% else %}
+            <svg width="32" height="32" viewBox="0 0 40 40" fill="none"><rect x="6" y="14" width="28" height="4" rx="2" fill="#0F766E" opacity=".6"/><rect x="10" y="22" width="20" height="4" rx="2" fill="#0F766E" opacity=".4"/></svg>
+          {% endif %}
+        </div>
+        <span class="pc-kit-badge-blue text-[11px] self-start">{{ settings.ing_3_tag | default: 'Barrier Care' }}</span>
+        <h3 class="text-base font-bold text-gray-900 group-hover:text-clinical-700">{{ ing_3_name }}</h3>
+        <p class="text-xs text-gray-600 leading-relaxed flex-1">{{ settings.ing_3_desc | default: 'Thành phần thiết yếu giúp liên kết các tế bào da, phục hồi hàng rào bảo vệ và ngăn ngừa mất nước.' }}</p>
+        <span class="pc-kit-badge-clinical text-[11px] self-start">{{ settings.ing_3_badge | default: 'Lipid Balance' }}</span>
+        <span class="text-xs font-semibold text-clinical-700 flex items-center gap-1">Khám phá sản phẩm <i class="fas fa-arrow-right text-[10px]"></i></span>
+      </a>
+
+      {%- endif -%}
+
+    </div>
+  </div>
+</section>

@@ -1,0 +1,724 @@
+{% comment %} global_skinhealthy.scss.bwt — Skin Healthy layout CSS (header, footer, shell) — load mọi trang dùng layout skinhealthy {% endcomment %}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANNOUNCE BAR
+═══════════════════════════════════════════════════════════════ */
+.sh-announce {
+  background: var(--sh-primary-deep);
+  color: var(--sh-ivory);
+  text-align: center;
+  padding: 10px 20px;
+}
+.sh-announce__text {
+  font-family: var(--sh-sans);
+  font-size: 0.7rem;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════════════════════ */
+.sh-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  background: transparent;
+  transition: background 400ms var(--sh-ease), border-color 400ms var(--sh-ease);
+  border-bottom: 1px solid transparent;
+}
+/* REOPEN 2026-09-11 — BUG THẬT phát hiện qua Playwright screenshot: header trong suốt (trước
+   khi cuộn) đè trực tiếp lên ảnh hero rối mắt/nhiều màu (vd. hoạ tiết DNA xanh trên trang chủ),
+   làm chữ logo/nav khó đọc. Thêm lớp phủ gradient tối nhẹ CHỈ ở trạng thái chưa cuộn (giữ
+   nguyên hiệu ứng "solidify on scroll" — không đổi .sh-header--scrolled) để đảm bảo tương phản
+   tối thiểu cho chữ sáng màu, không phụ thuộc ảnh hero cụ thể là gì. */
+.sh-header:not(.sh-header--scrolled)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(15,35,24,0.55) 0%, rgba(15,35,24,0.28) 70%, rgba(15,35,24,0) 100%);
+  pointer-events: none;
+}
+.sh-header--scrolled {
+  background: rgba(247,244,239,.97);
+  border-bottom-color: var(--sh-line);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.sh-header__bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: 72px;
+}
+
+/* Logo — center */
+.sh-header__logo {
+  text-align: center;
+  text-decoration: none;
+  justify-self: center;
+}
+.sh-header__logo-text {
+  font-family: var(--sh-serif);
+  font-size: 1.25rem;
+  font-weight: 300;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--sh-ink);
+  white-space: nowrap;
+}
+
+/* Logo image: constrain to header bar — global_core img { height: auto } overrides HTML height attr */
+.sh-header__logo-img {
+  display: block;
+  height: 40px;
+  max-height: 40px;
+  width: auto;
+  max-width: 160px;
+  object-fit: contain;
+}
+
+/* Nav */
+.sh-nav {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.sh-nav--left { justify-self: start; }
+.sh-nav--right {
+  justify-self: end;
+  gap: 0;
+}
+
+.sh-nav__item {
+  position: relative;
+}
+.sh-nav__link {
+  display: block;
+  padding: 0 16px;
+  font-family: var(--sh-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--sh-ink);
+  text-decoration: none;
+  line-height: 72px;
+  transition: color 200ms;
+}
+.sh-nav__link:hover { color: var(--sh-gold); }
+
+/* Mega dropdown */
+.sh-mega {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 200px;
+  background: var(--sh-ivory);
+  border: 1px solid var(--sh-line);
+  border-top: 2px solid var(--sh-ink);
+  padding: 16px 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity 200ms var(--sh-ease), transform 200ms var(--sh-ease), visibility 200ms;
+}
+.sh-nav__item:hover .sh-mega {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.sh-mega__link {
+  display: block;
+  padding: 8px 24px;
+  font-family: var(--sh-sans);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--sh-ink);
+  text-decoration: none;
+  transition: color 150ms;
+}
+.sh-mega__link:hover { color: var(--sh-gold); }
+
+/* Header actions */
+.sh-header__actions {
+  display: flex;
+  align-items: center;
+}
+.sh-header__btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--sh-ink);
+  text-decoration: none;
+  transition: color 200ms;
+}
+.sh-header__btn:hover { color: var(--sh-gold); }
+.sh-header__btn svg { display: block; }
+
+.sh-header__cart-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--sh-ink);
+}
+
+.sh-header__hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 10px;
+}
+.sh-header__hamburger span {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: var(--sh-ink);
+  transition: transform 300ms var(--sh-ease), opacity 200ms;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SEARCH BAR
+═══════════════════════════════════════════════════════════════ */
+.sh-search {
+  overflow: hidden;
+  max-height: 0;
+  border-bottom: 1px solid transparent;
+  transition: max-height 350ms var(--sh-ease), border-color 350ms;
+}
+.sh-search.is-open {
+  max-height: 64px;
+  border-bottom-color: var(--sh-line);
+  background: var(--sh-ivory);
+}
+.sh-search__form {
+  display: flex;
+  align-items: center;
+  height: 64px;
+  gap: 12px;
+}
+.sh-search__input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--sh-sans);
+  font-size: 0.75rem;
+  letter-spacing: .12em;
+  color: var(--sh-ink);
+}
+.sh-search__input::placeholder { color: var(--sh-ink-30); }
+.sh-search__submit,
+.sh-search__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--sh-ink);
+  transition: color 150ms;
+}
+.sh-search__submit:hover,
+.sh-search__close:hover { color: var(--sh-gold); }
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE DRAWER & OVERLAY
+═══════════════════════════════════════════════════════════════ */
+.sh-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(26,26,24,.4);
+  z-index: 890;
+}
+.sh-drawer {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  background: rgba(247,244,239,.97);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 950;
+  transform: translateY(-100%);
+  transition: transform 560ms var(--sh-ease);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.sh-drawer.is-open {
+  transform: translateY(0);
+}
+.sh-drawer__inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 560px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 72px 32px 48px;
+}
+.sh-drawer__close {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--sh-ink);
+}
+.sh-drawer__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 24px;
+}
+.sh-drawer__link {
+  display: block;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--sh-line);
+  font-family: var(--sh-serif);
+  font-size: 1.375rem;
+  font-weight: 300;
+  letter-spacing: .04em;
+  color: var(--sh-ink);
+  text-decoration: none;
+  transition: color 200ms, padding-left 200ms;
+}
+.sh-drawer__link:hover { color: var(--sh-gold); padding-left: 8px; }
+
+/* Drawer — search form */
+.sh-drawer__search {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--sh-line);
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+}
+.sh-drawer__search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: var(--sh-sans);
+  font-size: 0.75rem;
+  letter-spacing: .08em;
+  color: var(--sh-ink);
+  padding: 12px 0;
+}
+.sh-drawer__search-input::placeholder { color: var(--sh-ink-30); }
+.sh-drawer__search-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--sh-ink-60);
+  flex-shrink: 0;
+}
+.sh-drawer__search-btn:hover { color: var(--sh-ink); }
+
+/* Drawer — utility links */
+.sh-drawer__util {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--sh-line);
+}
+.sh-drawer__util-link {
+  display: block;
+  padding: 10px 0;
+  font-family: var(--sh-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--sh-ink-60);
+  text-decoration: none;
+  transition: color 150ms;
+}
+.sh-drawer__util-link:hover { color: var(--sh-ink); }
+
+/* Header — right group (map btn + hamburger) */
+.sh-header__right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-self: end;
+}
+.sh-header__map-btn {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  color: var(--sh-ink);
+  padding: 7px 14px;
+  border: 1px solid var(--sh-line);
+  border-radius: 20px;
+  font-family: var(--sh-sans);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: color 200ms, border-color 200ms;
+}
+.sh-header__map-btn:hover {
+  color: var(--sh-gold);
+  border-color: var(--sh-gold);
+}
+.sh-header__map-text { vertical-align: middle; }
+
+/* Header scrolled: map btn on ivory bg */
+.sh-header--scrolled .sh-header__map-btn {
+  border-color: var(--sh-line);
+}
+
+@media (min-width: 768px) {
+  .sh-header__map-btn { display: flex; }
+}
+
+/* Header — location link */
+.sh-header__location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  color: var(--sh-ink);
+  transition: color 200ms;
+}
+.sh-header__location:hover { color: var(--sh-gold); }
+.sh-header__location svg { flex-shrink: 0; }
+.sh-header__location-text {
+  font-family: var(--sh-sans);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MAIN OFFSET (for fixed header)
+═══════════════════════════════════════════════════════════════ */
+.sh-main { padding-top: 72px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   REVEAL ANIMATION
+═══════════════════════════════════════════════════════════════ */
+.sh-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 700ms var(--sh-ease), transform 700ms var(--sh-ease);
+}
+.sh-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION UTILITIES — shared across all skinhealthy pages
+═══════════════════════════════════════════════════════════════ */
+.sh-section-label {
+  font-family: var(--sh-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--sh-ink-60);
+  margin-bottom: 40px;
+  display: block;
+}
+.sh-section-heading {
+  font-family: var(--sh-serif);
+  font-size: 2rem;
+  font-weight: 300;
+  letter-spacing: .03em;
+  color: var(--sh-ink);
+  margin-bottom: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════════════════════ */
+.sh-footer {
+  background: var(--sh-primary-deep);
+  color: rgba(247,244,239,.6);
+  margin-top: 0;
+}
+.sh-footer__top {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 80px;
+  padding-top: 72px;
+  padding-bottom: 56px;
+  border-bottom: 1px solid rgba(247,244,239,.1);
+}
+.sh-footer__brand-name {
+  font-family: var(--sh-serif);
+  font-size: 1.25rem;
+  font-weight: 300;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--sh-ivory);
+  margin-bottom: 16px;
+}
+.sh-footer__address {
+  font-size: 0.75rem;
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+.sh-footer__contact {
+  font-size: 0.75rem;
+  color: rgba(247,244,239,.6);
+  text-decoration: none;
+  transition: color 150ms;
+}
+.sh-footer__contact:hover { color: var(--sh-ivory); }
+
+.sh-footer__cols {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+}
+.sh-footer__col-title {
+  font-family: var(--sh-sans);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--sh-ivory);
+  margin-bottom: 20px;
+}
+.sh-footer__col-link {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(247,244,239,.55);
+  text-decoration: none;
+  margin-bottom: 10px;
+  transition: color 150ms;
+}
+.sh-footer__col-link:hover { color: var(--sh-ivory); }
+
+.sh-footer__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 20px;
+  padding-bottom: 24px;
+}
+.sh-footer__copy {
+  font-size: 0.6875rem;
+  letter-spacing: .05em;
+}
+.sh-footer__legal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.6875rem;
+  color: rgba(247,244,239,.35);
+}
+.sh-footer__legal-link {
+  color: rgba(247,244,239,.45);
+  text-decoration: none;
+  transition: color 150ms;
+}
+.sh-footer__legal-link:hover { color: var(--sh-ivory); }
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE — layout / shell
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 991px) {
+  .sh-footer__top { grid-template-columns: 1fr; gap: 40px; }
+}
+
+@media (max-width: 767px) {
+  .sh-header__bar { grid-template-columns: auto 1fr auto; }
+  .sh-header__location-text { display: none; }
+  .sh-footer__cols { grid-template-columns: 1fr 1fr; }
+  .sh-footer__bottom { flex-direction: column; gap: 12px; text-align: center; }
+
+  /* REOPEN 2026-09-11 — BUG THẬT phát hiện qua Playwright (đo getBoundingClientRect thật):
+     .sh-header__logo-text ("Skin Health Beauty by Pharma Cosmetics", white-space: nowrap,
+     letter-spacing .18em) render rộng ~480px trên viewport 390px → đẩy #sh-hamburger ra ngoài
+     màn hình (x ≈ 570-610px), khiến nút mở menu mobile KHÔNG THỂ bấm được. CSS Grid item mặc
+     định min-width:auto bỏ qua overflow content khi tính kích thước track — cần min-width:0
+     trên cả ô grid lẫn logo, cộng với truncate ellipsis có max-width để chữ không đẩy vỡ layout. */
+  .sh-header__bar { min-width: 0; }
+  .sh-header__logo { min-width: 0; overflow: hidden; }
+  .sh-header__logo-text {
+    display: inline-block;
+    max-width: 46vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.7rem;
+    letter-spacing: .06em;
+    vertical-align: middle;
+  }
+}
+
+@media (max-width: 480px) {
+  .sh-footer__cols { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANNOUNCE HEIGHT TOKEN
+═══════════════════════════════════════════════════════════════ */
+:root {
+  --sh-announce-h: 40px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE — Sticky header + contrast fix (≤767px)
+   Mirrors desktop announce-bar behaviour. Root cause: header is
+   fixed at top:0 and transparent, overlapping the dark announce
+   bar → dark-on-dark ink elements become invisible. Fix: offset
+   header below announce bar; bump weight + bar height.
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+
+  /* 1. Announce bar: fixed at top, slides up on scroll */
+  .has-announce .sh-announce {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 901;
+    height: var(--sh-announce-h);
+    overflow: hidden;
+    transition: transform 400ms var(--sh-ease), opacity 250ms;
+  }
+  .sh-announce--hidden {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* 2. Header: starts below announce bar, snaps to top:0 after it hides */
+  .has-announce .sh-header {
+    top: var(--sh-announce-h);
+    transition: background 400ms var(--sh-ease), border-color 400ms var(--sh-ease), top 350ms var(--sh-ease);
+  }
+  .has-announce .sh-header--scrolled {
+    top: 0;
+    background: rgba(247,244,239,.97);
+    border-bottom-color: var(--sh-line);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* 3. Main: compensate for announce bar + fixed header height together */
+  .has-announce .sh-main {
+    padding-top: calc(72px + var(--sh-announce-h));
+  }
+
+  /* 4. Logo text: weight-300 + transparent header over dark announce = invisible */
+  .sh-header__logo-text {
+    font-weight: 600;
+    color: var(--sh-ink);
+  }
+
+  /* 5. Hamburger: 1px bars invisible against dark announce bar bg */
+  .sh-header__hamburger span {
+    height: 2px;
+    background: var(--sh-ink);
+  }
+
+  /* 6. Location link: explicit dark */
+  .sh-header__location {
+    color: var(--sh-ink);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DESKTOP — sticky header sync + typography (≥768px only)
+═══════════════════════════════════════════════════════════════ */
+@media (min-width: 768px) {
+  /* 1. Announce bar: fixed at top, slides out on scroll */
+  .has-announce .sh-announce {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 901;
+    height: var(--sh-announce-h);
+    overflow: hidden;
+    transition: transform 400ms var(--sh-ease), opacity 250ms;
+  }
+  .sh-announce--hidden {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* 2. Header: starts below announce bar, snaps to top:0 when announce slides out */
+  .has-announce .sh-header {
+    top: var(--sh-announce-h);
+    transition: background 400ms var(--sh-ease), border-color 400ms var(--sh-ease), top 350ms var(--sh-ease);
+  }
+  .has-announce .sh-header--scrolled {
+    top: 0;
+  }
+
+  /* 3. Main: pad for announce + header together */
+  .has-announce .sh-main {
+    padding-top: calc(72px + var(--sh-announce-h));
+  }
+
+  /* 4. Logo: bump weight from 300 → 500, force dark for cream-bg contrast */
+  .sh-header__logo-text {
+    font-weight: 500;
+    color: #1a1a1a;
+  }
+
+  /* 5. Hamburger lines: explicit dark */
+  .sh-header__hamburger span {
+    background: #1a1a1a;
+  }
+
+  /* 6. "Tìm cửa hàng" button: more vertical padding */
+  .sh-header__map-btn {
+    padding: 10px 16px;
+    color: #1a1a1a;
+  }
+}

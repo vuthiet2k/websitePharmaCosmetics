@@ -1,0 +1,360 @@
+// col.js.bwt — Collection page JS
+// Requires: Bizweb.SearchFilter (search_filter.js), jQuery
+
+/* ── Helpers ── */
+function _replaceParam(url, name, value) {
+	var pattern = new RegExp('(' + name + '=).*?(&|$)');
+	var newUrl = url.replace(pattern, '$1' + encodeURIComponent(value) + '$2');
+	if (newUrl === url) {
+		newUrl += (url.indexOf('?') > 0 ? '&' : '?') + name + '=' + encodeURIComponent(value);
+	}
+	return newUrl;
+}
+function _getParam(name) {
+	var m = new RegExp('[?&]' + name + '=([^&#]*)').exec(window.location.href);
+	return m ? decodeURIComponent(m[1]) : '';
+}
+function _formatPrice(val) {
+	return parseInt(val, 10).toLocaleString('vi-VN') + 'đ';
+}
+
+/* ── sortby() ── */
+function sortby(val) {
+	var url = _replaceParam(window.location.href, 'sortby', val);
+	window.location.href = url;
+}
+
+/* ── CollectionFilter — URL-based active filter bar ─────────────────────────
+   Reads directly from window.location.search so the bar is always in sync
+   with the actual URL, whether the page was loaded fresh or updated via AJAX.
+   ─────────────────────────────────────────────────────────────────────────── */
+var CollectionFilter = (function () {
+
+	var LABELS = {
+		'product_type.filter_key': 'Loại sản phẩm',
+		'vendor': 'Thương hiệu',
+		'tags': 'Tình trạng da',
+		'price_min': 'Khoảng giá'
+	};
+
+	function _decode(s) { try { return decodeURIComponent(s); } catch (e) { return s; } }
+
+	/* Split "A AND B AND C" at top-level AND only (ignores AND inside parens) */
+	function _splitAnd(str) {
+		var clauses = [], depth = 0, cur = '';
+		for (var i = 0; i < str.length; i++) {
+			var ch = str[i];
+			if (ch === '(') { depth++; cur += ch; }
+			else if (ch === ')') { depth--; cur += ch; }
+			else if (depth === 0 && str.substr(i, 5).toUpperCase() === ' AND ') {
+				clauses.push(cur.trim()); cur = ''; i += 4;
+			} else { cur += ch; }
+		}
+		if (cur.trim()) clauses.push(cur.trim());
+		return clauses;
+	}
+
+	/* Parse q= → [{field, value, display, label}] */
+	function parseQ(q) {
+		if (!q) return [];
+		var filters = [];
+
+		_splitAnd(_decode(q)).forEach(function (clause) {
+			clause = clause.trim();
+			if (/^collections:\d/i.test(clause)) return; // implicit from URL path — skip
+
+			/* price_min:(>=200000 AND <=400000) */
+			var pm = /^price_min:\(>=(\d+)\s+AND\s+<=(\d+)\)$/i.exec(clause);
+			if (pm) {
+				filters.push({
+					field: 'price_min',
+					value: pm[1] + '__' + pm[2],
+					display: _formatPrice(pm[1]) + ' – ' + _formatPrice(pm[2]),
+					label: LABELS['price_min']
+				});
+				return;
+			}
+
+			/* field:(content) */
+			var fm = /^([\w.]+):\((.+)\)$/.exec(clause);
+			if (!fm) return;
+			var field = fm[1], inner = fm[2], lbl = LABELS[field] || field;
+
+			/* Multi-value with quotes: ("A") OR ("B") */
+			var qvs = inner.match(/"([^"]+)"/g);
+			if (qvs) {
+				qvs.forEach(function (v) {
+					var val = v.replace(/"/g, '');
+					filters.push({ field: field, value: val, display: val, label: lbl });
+				});
+			} else {
+				/* Single unquoted: vendor:(Kozilar) or tags:(Da khô) */
+				var val = inner.trim();
+				filters.push({ field: field, value: val, display: val, label: lbl });
+			}
+		});
+
+		return filters;
+	}
+
+	/* Return new q= string with one filter entry removed */
+	function _rebuildQ(q, removeField, removeValue) {
+		var newClauses = [];
+
+		_splitAnd(_decode(q)).forEach(function (clause) {
+			/* Always keep the collections: constraint if present */
+			if (/^collections:\d/i.test(clause)) { newClauses.push(clause); return; }
+
+			/* Drop the entire price_min clause */
+			if (removeField === 'price_min' && /^price_min:/i.test(clause)) return;
+
+			var fm = /^([\w.]+):\((.+)\)$/.exec(clause);
+			if (!fm || fm[1] !== removeField) { newClauses.push(clause); return; }
+
+			var inner = fm[2];
+			var qvs = inner.match(/"([^"]+)"/g);
+			if (qvs) {
+				var remaining = qvs
+					.map(function (v) { return v.replace(/"/g, ''); })
+					.filter(function (v) { return v !== removeValue; });
+				if (!remaining.length) return; // drop clause
+				if (remaining.length === 1) {
+					newClauses.push(removeField + ':(("' + remaining[0] + '"))');
+				} else {
+					newClauses.push(removeField + ':(' +
+						remaining.map(function (v) { return '("' + v + '")'; }).join(' OR ') + ')');
+				}
+			} else {
+				if (inner.trim() !== removeValue) newClauses.push(clause); // else drop
+			}
+		});
+
+		return newClauses.join(' AND ');
+	}
+
+	/* Navigate to URL with one filter removed */
+	function removeFilter(field, value) {
+		var params = new URLSearchParams(window.location.search);
+		var newQ = _rebuildQ(params.get('q') || '', field, value);
+		/* Strip bare collections: constraint that may be left alone after removal */
+		var displayQ = newQ
+			.replace(/^collections:\d+\s*AND\s*/i, '')
+			.replace(/\s*AND\s*collections:\d+/gi, '')
+			.trim();
+		if (displayQ) params.set('q', displayQ); else params.delete('q');
+		params.delete('page');
+		var qs = params.toString();
+		window.location.href = window.location.pathname + (qs ? '?' + qs : '');
+	}
+
+	/* Render the active-bar chips from current URL */
+	function renderBar() {
+		var params = new URLSearchParams(window.location.search);
+		var filters = parseQ(params.get('q') || '');
+
+		var $bar   = $('#afw-active-bar');
+		var $chips = $('#afw-active-chips');
+		if (!$bar.length || !$chips.length) return;
+
+		if (!filters.length) { $bar.attr('hidden', 'hidden'); return; }
+
+		/* Group by label, preserving insertion order */
+		var groups = {}, order = [];
+		filters.forEach(function (f) {
+			if (!groups[f.label]) { groups[f.label] = []; order.push(f.label); }
+			groups[f.label].push(f);
+		});
+
+		$chips.empty();
+		order.forEach(function (lbl) {
+			var $g = $('<div class="afw-chip-group"></div>');
+			$g.append($('<span class="afw-chip-group__label"></span>').text(lbl + ':'));
+			groups[lbl].forEach(function (f) {
+				var $chip = $('<span class="afw-chip"><span class="afw-chip__label"></span><button type="button" class="afw-chip__x" aria-label="Bỏ filter">×</button></span>');
+				$chip.find('.afw-chip__label').text(f.display);
+				/* Capture field + value in closure so each × button removes the right filter */
+				(function (field, val) {
+					$chip.find('.afw-chip__x').on('click', function () {
+						CollectionFilter.removeFilter(field, val);
+					});
+				})(f.field, f.value);
+				$g.append($chip);
+			});
+			$chips.append($g);
+		});
+
+		$bar.removeAttr('hidden');
+		$('.afw-bar__count-num').text(filters.length);
+	}
+
+	return { parseQ: parseQ, renderBar: renderBar, removeFilter: removeFilter };
+})();
+
+/* ── doSearch() — AJAX load results into #ajax-result ── */
+function doSearch(page) {
+	var view = (typeof selectedViewData !== 'undefined') ? selectedViewData : 'data';
+	var settings = { page: page || 1, view: view };
+	var sortVal = _getParam('sortby');
+	if (sortVal) settings.sortby = sortVal;
+
+	var url = filter.buildSearchUrl(settings);
+
+	/* Price params — appended to AJAX URL as separate query params */
+	var priceQ = '';
+	var elMin = document.getElementById('afw-price-min');
+	var elMax = document.getElementById('afw-price-max');
+	if (elMin && elMax) {
+		var minVal = parseInt(elMin.value, 10);
+		var maxVal = parseInt(elMax.value, 10);
+		if (minVal > 0)       url += '&price_min=' + minVal;
+		if (maxVal < 5000000) url += '&price_max=' + maxVal;
+		if (minVal > 0 || maxVal < 5000000) {
+			priceQ = 'price_min:(>=' + minVal + ' AND <=' + maxVal + ')';
+		}
+	}
+
+	var $wrap = $('#ajax-result');
+	$wrap.addClass('is-loading');
+
+	/* Pre-build the display q= for the address bar
+	   (strip the implicit collections: constraint — it's conveyed by the URL path) */
+	var rawQ = (function () {
+		var m = /[?&]q=([^&]+)/.exec(url);
+		return m ? decodeURIComponent(m[1]) : '';
+	})();
+	var displayQ = rawQ
+		.replace(/^collections:\d+\s*AND\s*/i, '')
+		.replace(/\s*AND\s*collections:\d+/gi, '')
+		.trim();
+	if (priceQ) displayQ = displayQ ? displayQ + ' AND ' + priceQ : priceQ;
+
+	$.get(url, function (html) {
+		$wrap.html(html).removeClass('is-loading');
+
+		/* Keep address bar in sync so page reload / back-button preserves filter state */
+		var newParams = new URLSearchParams(window.location.search);
+		if (displayQ) newParams.set('q', displayQ); else newParams.delete('q');
+		if (page > 1) newParams.set('page', String(page)); else newParams.delete('page');
+		var qs = newParams.toString();
+		history.replaceState(null, '', window.location.pathname + (qs ? '?' + qs : ''));
+
+		CollectionFilter.renderBar();
+		if (typeof countFilterItem === 'function') countFilterItem();
+		if (page > 1) {
+			$('html, body').animate({ scrollTop: $wrap.offset().top - 100 }, 300);
+		}
+	}).fail(function () {
+		$wrap.removeClass('is-loading');
+	});
+}
+
+/* ── clearAllFiltered — navigate to collection URL without any filter ── */
+function clearAllFiltered() {
+	var params = new URLSearchParams(window.location.search);
+	params.delete('q');
+	params.delete('page');
+	var qs = params.toString();
+	window.location.href = window.location.pathname + (qs ? '?' + qs : '');
+}
+
+/* ── Main ── */
+$(function () {
+
+	/* ── Restore filter UI state from URL on page load ── */
+	(function () {
+		var qVal = new URLSearchParams(location.search).get('q') || '';
+
+		if (qVal) {
+			/* Restore checkboxes */
+			$('.filter-checkbox-input').each(function () {
+				var $cb   = $(this);
+				var field = $cb.data('field');
+				var text  = String($cb.data('text') || '');
+				var fEsc  = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+				var tEsc  = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+				if (!new RegExp(fEsc + ':[^)]*' + tEsc + '[^)]*\\)', 'i').test(qVal)) return;
+				$cb.prop('checked', true);
+				var $item = $cb.closest('.sapo-filter-item');
+				if ($item.length) $item.addClass('is-active');
+				filter.addValue($cb.data('group'), field, $cb.val(), $cb.data('operator') || 'OR');
+			});
+
+			/* Restore pills */
+			$('.filter-pill-btn').each(function () {
+				var $btn  = $(this);
+				var field = $btn.data('field');
+				var text  = String($btn.data('text') || '');
+				var fEsc  = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+				var tEsc  = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+				if (!new RegExp(fEsc + ':[^)]*' + tEsc + '[^)]*\\)', 'i').test(qVal)) return;
+				$btn.addClass('active');
+				filter.addValue($btn.data('group'), field, $btn.data('value'), $btn.data('operator') || 'OR');
+			});
+
+			/* Restore price slider from price_min:(>=X AND <=Y) */
+			var pm = /price_min:\(>=(\d+)\s+AND\s+<=(\d+)\)/i.exec(qVal);
+			if (pm) {
+				var elMin = document.getElementById('afw-price-min');
+				var elMax = document.getElementById('afw-price-max');
+				if (elMin) { elMin.value = pm[1]; elMin.dispatchEvent(new Event('input')); }
+				if (elMax) { elMax.value = pm[2]; elMax.dispatchEvent(new Event('input')); }
+			}
+		}
+
+		/* Always render bar from URL — handles all filter types including price */
+		CollectionFilter.renderBar();
+	})();
+
+	/* Checkbox filter */
+	$(document).on('change', '.filter-checkbox-input', function () {
+		var $cb = $(this);
+		var group = $cb.data('group');
+		var field = $cb.data('field');
+		var value = $cb.val();
+		var op    = $cb.data('operator') || 'OR';
+		var $item = $cb.closest('.sapo-filter-item');
+		if ($item.length) $item.toggleClass('is-active', $cb.is(':checked'));
+		if ($cb.is(':checked')) filter.addValue(group, field, value, op);
+		else filter.deleteValue(group, field, value, op);
+		doSearch(1);
+	});
+
+	/* Pill button filter */
+	$(document).on('click', '.filter-pill-btn', function () {
+		var $btn  = $(this);
+		var group = $btn.data('group');
+		var field = $btn.data('field');
+		var value = $btn.data('value');
+		var op    = $btn.data('operator') || 'OR';
+		$btn.toggleClass('active');
+		if ($btn.hasClass('active')) filter.addValue(group, field, value, op);
+		else filter.deleteValue(group, field, value, op);
+		doSearch(1);
+	});
+
+	/* Price range — search on change event (fired by range slider on mouseup/touchend) */
+	$(document).on('change', '.filter-range-input', function () {
+		doSearch(1);
+	});
+
+	/* Mobile filter panel toggle */
+	$(document).on('click', '.btn-filter-mobile', function () {
+		if (!$('.filter-overlay').length) {
+			$('<div class="filter-overlay"></div>').appendTo('body');
+		}
+		$('.layout-collection .left-content').toggleClass('active');
+		$('body').toggleClass('filter-open');
+		$('.filter-overlay').toggleClass('active');
+	});
+	$(document).on('click', '.btn-close-filter, .close-filters, .filter-overlay', function () {
+		$('.layout-collection .left-content').removeClass('active');
+		$('body').removeClass('filter-open');
+		$('.filter-overlay').removeClass('active');
+	});
+
+	/* Filter group collapse/expand (B4) */
+	$(document).on('click', '.filter-group-toggle', function () {
+		$(this).closest('.filter-group').toggleClass('is-collapsed');
+	});
+
+});

@@ -1,0 +1,56 @@
+{% include 'breadcrumb' %}
+
+<main class="bg-white py-10">
+	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+		<div class="text-center max-w-3xl mx-auto mb-12">
+			<span class="text-xs font-bold text-clinical-700 uppercase tracking-widest">
+				🏥 PHÒNG TRỊ LIỆU CHUYÊN SÂU SKIN HEALTH BEAUTY
+			</span>
+			<h1 class="text-3xl sm:text-4xl font-extrabold text-forest-900 font-heading mt-2">
+				Dịch Vụ Trị Liệu Da Chuyên Sâu Chuẩn Y Khoa
+			</h1>
+			<p class="text-xs sm:text-sm text-gray-600 mt-2">
+				Kết hợp hoàn hảo giữa công nghệ máy móc chuẩn CE Châu Âu và phác đồ dược mỹ phẩm cá nhân hóa bởi Hội đồng Bác sĩ Da liễu.
+			</p>
+		</div>
+
+		{%- comment -%}
+		  REOPEN 2026-09-10 (ADR-007/T-91) — thay 3 thẻ liệu trình minh hoạ cũ bằng "6 Giải Pháp
+		  Skin Health Beauty" (SOL-SKH-01..06, data/solutions.js — trích nguyên văn từ sheet
+		  6_Giai_Phap_Skin_Health_Beauty trong xlsx Clinic mới). CTA thống nhất "tư vấn-only"
+		  (đặt lịch phân tích da) theo ADR-007/T-92 — KHÔNG áp dụng cho catalogue Sapo product cũ
+		  (page.skinhealthy-service-detail.bwt vẫn giữ add-to-cart, quyết định người dùng 2026-09-10).
+		{%- endcomment -%}
+		{%- assign spa_cta_url = settings.spa_services_cta_url | default: '/pages/dat-lich-tu-van' -%}
+
+		{%- if core_philosophy -%}
+		<div class="pc-cmp-expert-callout text-center mb-10 mx-auto max-w-3xl">
+			"{{ core_philosophy.quote }}"
+			<span class="pc-cmp-expert-callout__signature">{{ core_philosophy.title_vi }}</span>
+		</div>
+		{%- endif -%}
+
+		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+			{%- for sol in solutions -%}
+			<div class="bg-gray-50 rounded-3xl p-6 border border-gray-200 space-y-3 hover:shadow-lg transition flex flex-col">
+				<span class="pc-kit-badge-clinical text-[11px] self-start">{{ sol.name_en }}</span>
+				<h3 class="text-lg font-bold text-forest-900 font-heading">{{ sol.name_vi }}</h3>
+				<p class="text-xs text-gray-600 leading-relaxed flex-1">{{ sol.summary }}</p>
+				<div class="text-[11px] text-gray-500">
+					<strong>Phù hợp với:</strong> {{ sol.suitable_for | join: ', ' }}
+				</div>
+				<p class="text-[11px] italic text-clinical-700">{{ sol.tagline }}</p>
+				<a href="{{ spa_cta_url }}" class="block w-full pc-kit-btn-primary text-xs py-2.5 text-center mt-2">Đặt Lịch Phân Tích Da</a>
+			</div>
+			{%- endfor -%}
+		</div>
+
+		<div class="bg-forest-900 text-white rounded-3xl p-8 sm:p-10 text-center">
+			<h2 class="text-xl sm:text-2xl font-bold font-heading mb-2">Chưa Chắc Liệu Trình Nào Phù Hợp?</h2>
+			<p class="text-sm text-emerald-100 mb-5">Đặt lịch soi da vi điểm AI miễn phí — Bác sĩ Da liễu sẽ tư vấn liệu trình phù hợp nhất với tình trạng da của bạn.</p>
+			<a href="{{ spa_cta_url }}" class="pc-kit-btn-primary inline-flex text-sm py-3 px-6 bg-white text-forest-900 hover:bg-emerald-100">
+				Đặt Lịch Soi Da Miễn Phí ➔
+			</a>
+		</div>
+	</div>
+</main>

@@ -1,0 +1,74 @@
+      
+      <div id="tab-staff" v-show="activeTab === 'staff'" class="ma-tab-pane">
+        <button type="button" @click="mobileFilterOpen = true"
+          class="ma-filter-trigger items-center gap-2 w-full justify-center mb-stack-md p-3 bg-surface-bright border border-outline-variant rounded-xl text-body-sm font-bold text-on-surface active:scale-95 transition-all">
+          <span class="material-symbols-outlined text-[18px]">tune</span><span>Bộ lọc</span>
+          <span v-if="(staffMgmt.search?1:0)+(staffMgmt.filterRole?1:0)+(staffMgmt.filterActive?1:0)" class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-label-sm font-bold bg-primary text-white">[[ (staffMgmt.search?1:0)+(staffMgmt.filterRole?1:0)+(staffMgmt.filterActive?1:0) ]]</span>
+        </button>
+        <div class="ma-toolbar ma-toolbar--sheet flex flex-wrap items-center gap-stack-md mb-stack-md p-4 bg-surface-bright border border-outline-variant rounded-xl" :class="{ 'is-filter-open': mobileFilterOpen }">
+          <div class="ma-filter-sheet-head"><span class="text-title-sm font-bold text-on-surface">Bộ lọc nhân viên</span><button type="button" @click="mobileFilterOpen = false" class="w-8 h-8 inline-flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">close</span></button></div>
+          <input type="text" v-model="staffMgmt.search" placeholder="Tìm tên / username..."
+            class="w-[220px] bg-surface-container-lowest border border-outline-variant text-body-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+          <select v-model="staffMgmt.filterRole" class="ma-input-inline">
+            <option value="">Tất cả vai trò</option>
+            <option value="owner">Owner</option>
+            <option value="admin">Admin</option>
+            <option value="manager">Quản lý</option>
+            <option value="accountant">Kế toán</option>
+            <option value="staff">Nhân viên</option>
+          </select>
+          <select v-model="staffMgmt.filterActive" class="ma-input-inline">
+            <option value="">Tất cả trạng thái</option>
+            <option value="1">Đang hoạt động</option>
+            <option value="0">Đã tắt</option>
+          </select>
+        </div>
+        <div class="ma-filter-backdrop" v-if="mobileFilterOpen" @click="mobileFilterOpen = false"></div>
+
+        <div v-if="staffMgmt.loading" class="ma-table-skeleton" aria-label="Đang tải nhân viên"><span></span><span></span><span></span><span></span></div>
+        <div v-else-if="staffEmptyMessage" class="ma-empty-state">
+          <span class="material-symbols-outlined text-on-surface-variant text-[56px] opacity-[.35]">badge</span>
+          <p class="ma-empty-hint">[[ staffEmptyMessage ]]</p>
+          <button @click="loadStaff" type="button" class="ma-btn-outline">Thử lại</button>
+        </div>
+        <div v-else class="ma-card">
+          <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+            <thead><tr class="ma-thead-row">
+              <th class="ma-th-lg w-16">STT</th>
+              <th class="ma-th-lg">Tên hiển thị</th>
+              <th class="ma-th-lg">Username</th>
+              <th class="ma-th-lg">Vai trò</th>
+              <th class="ma-th-lg">Trạng thái</th>
+              <th class="ma-th-lg">Đăng nhập cuối</th>
+              <th class="ma-th-lg">Telegram</th>
+              <th class="ma-th-lg">Thao tác</th>
+            </tr></thead>
+            <tbody class="ma-rows-divide">
+              <template v-for="(s, index) in staffFiltered" :key="s.id">
+                <tr>
+                  <td class="px-6 py-3 text-on-surface-variant">[[ index + 1 ]]</td>
+                  <td class="px-6 py-3 font-body-md font-bold">[[ s.name ]]</td>
+                  <td class="px-6 py-3 font-body-sm">[[ s.username ]]</td>
+                  <td class="px-6 py-3"><span class="ma-role-chip" :class="'ma-role-chip--' + roleColor(s.role)">[[ (s.role || '—').toUpperCase() ]]</span></td>
+                  <td class="px-6 py-3">
+                    <span v-if="s.active" class="ma-badge ma-badge--success">Hoạt động</span>
+                    <span v-else class="ma-badge ma-badge--neutral">Vô hiệu</span>
+                  </td>
+                  <td class="px-6 py-3"><small class="font-body-sm text-on-surface-variant">[[ formatDate(s.last_login) ]]</small></td>
+                  <td class="px-6 py-3"><small class="font-body-sm text-on-surface-variant">[[ s.telegram_id || '—' ]]</small></td>
+                  <td class="px-6 py-3 whitespace-nowrap space-x-1">
+                    <button @click="toggleStaffPerms(s)" type="button" class="px-2.5 py-1 rounded-lg text-label-md border border-outline-variant hover:bg-surface-container-low transition-all">Quyền</button>
+                    <button v-if="canModifyStaff(s) && !isSelfStaff(s)" @click="showEditStaff(s)" type="button" class="px-2.5 py-1 rounded-lg text-label-md border border-outline-variant hover:bg-surface-container-low transition-all">Sửa</button>
+                    <button v-if="canToggleStaff(s)" @click="doToggleStaffActive(s)" type="button" class="px-2.5 py-1 rounded-lg text-label-md text-white transition-all" :class="s.active ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'">[[ s.active ? 'Vô hiệu hoá' : 'Kích hoạt' ]]</button>
+                    <span v-else-if="isSelfStaff(s)" class="text-body-sm text-on-surface-variant opacity-50" title="Không thể tự vô hiệu hoá">— Bạn —</span>
+                    <span v-else class="text-body-sm text-on-surface-variant opacity-50" title="Chỉ OWNER mới có thể thay đổi">Khoá</span>
+                    <button v-if="canModifyStaff(s)" @click="showResetPassword(s)" type="button" class="px-2.5 py-1 rounded-lg text-label-md text-white bg-violet-600 hover:bg-violet-700 transition-all">Reset PW</button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table></div>
+          <p class="text-body-sm text-on-surface-variant mt-3 px-4 pb-4">[[ staffFiltered.length ]] / [[ staffMgmt.all.length ]] nhân viên</p>
+        </div>
+
+      </div>

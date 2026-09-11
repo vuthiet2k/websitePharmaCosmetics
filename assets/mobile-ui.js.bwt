@@ -1,0 +1,301 @@
+/* ==========================================================================
+   mobile-ui.js — Header compact-on-scroll + Search overlay + lịch sử tìm kiếm
+   Chỉ tác động ở mobile (≤991px). Cấu hình bật/tắt qua settings.
+   ========================================================================== */
+(function () {
+  'use strict';
+
+  var CFG = {
+    compact: {% if settings.mobile_header_compact %}true{% else %}false{% endif %},
+    popup:   true
+  };
+
+  var MOBILE_BP  = 991;
+  var RECENT_KEY = 'pc_recent_search';
+  var RECENT_MAX = 8;
+
+  function isMobile() { return window.innerWidth <= MOBILE_BP; }
+
+  /* ── 1. Header thu gọn khi cuộn ───────────────────────────────────────── */
+  function initCompact() {
+    if (!CFG.compact) return;
+    var header = document.querySelector('header.header');
+    if (!header) return;
+
+    var ticking   = false;
+    var THRESHOLD = 60;
+
+    function update() {
+      if (isMobile() && window.scrollY > THRESHOLD) {
+        header.classList.add('mb-compact');
+      } else {
+        header.classList.remove('mb-compact');
+      }
+      ticking = false;
+    }
+
+    window.addEventListener('scroll', function () {
+      if (!ticking) { window.requestAnimationFrame(update); ticking = true; }
+    }, { passive: true });
+    update();
+  }
+
+  /* ── 2. Lịch sử tìm kiếm (localStorage) ───────────────────────────────── */
+  function getRecent() {
+    try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); }
+    catch (e) { return []; }
+  }
+
+  function addRecent(term) {
+    term = (term || '').trim();
+    if (!term) return;
+    var list = getRecent().filter(function (t) {
+      return t.toLowerCase() !== term.toLowerCase();
+    });
+    list.unshift(term);
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, RECENT_MAX))); } catch (e) {}
+  }
+
+  function removeRecentAt(idx) {
+    var list = getRecent();
+    list.splice(idx, 1);
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch (e) {}
+  }
+
+  /* ── 3. Render lịch sử tìm kiếm ───────────────────────────────────────── */
+  function renderRecent() {
+    var section = document.getElementById('mb-recent');
+    var listEl  = document.getElementById('mb-recent-list');
+    if (!section || !listEl) return;
+
+    var items = getRecent();
+    if (!items.length) {
+      section.style.display = 'none';
+      listEl.innerHTML = '';
+      return;
+    }
+
+    section.style.display = '';
+
+    listEl.innerHTML = items.map(function (kw, idx) {
+      var enc  = encodeURIComponent(kw);
+      var safe = kw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return [
+        '<li class="search-overlay__recent-item">',
+        '  <a class="search-overlay__recent-link"',
+        '     href="/search?query=' + enc + '&type=product">',
+        '    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">',
+        '      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>',
+        '    </svg>',
+        '    <span class="search-overlay__recent-text">' + safe + '</span>',
+        '  </a>',
+        '  <button type="button" class="search-overlay__recent-del" data-idx="' + idx + '" aria-label="Xóa \'' + safe + '\'">',
+        '    <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true">',
+        '      <path d="M9.13.87L5 5 .87.87.87.87 0 1.74l.01.01L4.13 5 0 8.88l.87.87L5 5.87l4.13 4.13.87-.87L5.87 5 9.13 1.74z"/>',
+        '    </svg>',
+        '  </button>',
+        '</li>'
+      ].join('');
+    }).join('');
+
+    /* Bind nút xóa từng item — event delegation an toàn hơn querySelectorAll */
+    listEl.addEventListener('click', function (e) {
+      var btn = e.target.closest('.search-overlay__recent-del');
+      if (!btn) return;
+      e.preventDefault();
+      var idx = parseInt(btn.getAttribute('data-idx'), 10);
+      if (!isNaN(idx)) { removeRecentAt(idx); renderRecent(); }
+    });
+  }
+
+  /* ── 4. Search overlay mở / đóng ──────────────────────────────────────── */
+  function initPopup() {
+    if (!CFG.popup) return;
+
+    var overlay     = document.getElementById('mb-search-popup');
+    var openBtn     = document.getElementById('mb-search-open');
+    var closeBtn    = document.getElementById('mb-search-close');
+    var clearBtn    = document.getElementById('mb-search-clear');
+    var input       = document.getElementById('mb-search-input');
+    var form        = document.getElementById('mb-search-form');
+    var suggestWrap = document.getElementById('mb-suggest-tags');
+
+    if (!overlay || !openBtn) return;
+
+    function updateClearBtn() {
+      if (!clearBtn) return;
+      clearBtn.hidden = !(input && input.value.length > 0);
+    }
+
+    function open() {
+      overlay.classList.add('is-active');
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('search-overlay-active');
+      renderRecent();
+      updateClearBtn();
+      if (input) { setTimeout(function () { input.focus(); }, 80); }
+    }
+
+    function close() {
+      overlay.classList.remove('is-active');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('search-overlay-active');
+      if (input) input.value = '';
+      updateClearBtn();
+      var _sr = document.getElementById('mb-smart-results');
+      if (_sr) _sr.style.display = 'none';
+    }
+
+    /* Bind trực tiếp + delegation (fallback Sapo cache) */
+    openBtn.addEventListener('click', open);
+    if (closeBtn) closeBtn.addEventListener('click', close);
+
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('#mb-search-open, [data-open-search]')) { e.preventDefault(); open(); }
+      if (e.target.closest('#mb-search-close')) { close(); }
+    });
+
+    /* Clear button — xóa text, reset về trạng thái ban đầu */
+    if (input) input.addEventListener('input', updateClearBtn);
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function () {
+        if (input) { input.value = ''; input.focus(); }
+        updateClearBtn();
+        var _sr = document.getElementById('mb-smart-results');
+        if (_sr) _sr.style.display = 'none';
+        var _ls = document.getElementById('mb-list-search');
+        if (_ls) _ls.innerHTML = '';
+        var _ls2 = document.getElementById('mb-list-search2');
+        if (_ls2) _ls2.innerHTML = '';
+        renderRecent();
+        if (suggestWrap) {
+          var _ss = suggestWrap.closest('.search-overlay__section');
+          if (_ss) _ss.style.display = '';
+        }
+      });
+    }
+
+    /* Escape key */
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && overlay.classList.contains('is-active')) close();
+    });
+
+    /* Lưu lịch sử khi submit */
+    if (form) {
+      form.addEventListener('submit', function () {
+        if (input && input.value.trim()) addRecent(input.value.trim());
+      });
+    }
+
+    /* Lưu lịch sử khi bấm suggest tag */
+    if (suggestWrap) {
+      suggestWrap.addEventListener('click', function (e) {
+        var tag = e.target.closest('.search-overlay__tag');
+        if (tag) addRecent(tag.textContent.trim());
+      });
+    }
+
+    {%- if settings.header_search_smart -%}
+    /* ── Smart search AJAX (mobile) ────────────────────────────────────── */
+    var smartSection  = document.getElementById('mb-smart-results');
+    var mbListSearch  = document.getElementById('mb-list-search');
+    var mbListSearch2 = document.getElementById('mb-list-search2');
+    var recentSection = document.getElementById('mb-recent');
+    var mbTimer = null;
+
+    function clearSmart() {
+      if (smartSection)  smartSection.style.display = 'none';
+      if (mbListSearch)  mbListSearch.innerHTML = '';
+      if (mbListSearch2) mbListSearch2.innerHTML = '';
+    }
+
+    function showContextSections() {
+      renderRecent();
+      var suggestSection = suggestWrap ? suggestWrap.closest('.search-overlay__section') : null;
+      if (suggestSection) suggestSection.style.display = '';
+    }
+
+    function hideContextSections() {
+      if (recentSection) recentSection.style.display = 'none';
+      var suggestSection = suggestWrap ? suggestWrap.closest('.search-overlay__section') : null;
+      if (suggestSection) suggestSection.style.display = 'none';
+    }
+
+    function buildProductHtml(item) {
+      var priceHtml = (item.compare_price && item.compare_price != 0)
+        ? '<div class="price-box"><span class="price">' + item.price + '</span><span class="compare-price">' + item.compare_price + '</span></div>'
+        : '<div class="price-box"><span class="price">' + item.price + '</span></div>';
+      return '<a class="product-smart" href="' + item.url + '">'
+        + '<div class="image_thumb"><img width="58" height="58" src="' + item.image + '" alt="' + item.name + '"></div>'
+        + '<div class="product-info"><h3 class="product-name"><span>' + item.name + '</span></h3>' + priceHtml + '</div>'
+        + '</a>';
+    }
+
+    function buildArticleHtml(item) {
+      if (!item.url) return '';
+      return '<div class="art-smart">'
+        + '<a class="image_thumb" href="' + item.url + '"><img width="58" height="58" src="' + item.image + '" alt="' + item.name + '"></a>'
+        + '<div class="product-info"><h3 class="product-name"><a href="' + item.url + '">' + item.name + '</a></h3></div>'
+        + '</div>';
+    }
+
+    if (input && smartSection && typeof getItemSearch === 'function') {
+      input.addEventListener('input', function () {
+        clearTimeout(mbTimer);
+        var term = (this.value || '').trim();
+
+        if (term.length < 2) {
+          clearSmart();
+          showContextSections();
+          return;
+        }
+
+        hideContextSections();
+
+        mbTimer = setTimeout(function () {
+          var enc = encodeURIComponent(term);
+
+          getItemSearch(term, 'smartjson').then(function (data) {
+            var keys = Object.keys(data || {});
+            var html = '';
+            if (keys.length > 0) {
+              html = '<div class="title-search"><span>Sản phẩm</span>'
+                + '<a href="/search?query=' + enc + '&type=product" class="see-all-search">Xem tất cả »</a></div>';
+              keys.forEach(function (k) { html += buildProductHtml(data[k]); });
+            } else {
+              html = '<div class="title-search"><span>Sản phẩm</span></div>'
+                + '<div class="not-pro">Không tìm thấy kết quả</div>';
+            }
+            if (mbListSearch) mbListSearch.innerHTML = html;
+            if (smartSection) smartSection.style.display = '';
+          });
+
+          getItemSearch2(term, 'smartjsonar').then(function (data2) {
+            var keys2 = Object.keys(data2 || {});
+            var html2 = '';
+            if (keys2.length > 0) {
+              html2 = '<div class="title-search"><span>Tin tức</span>'
+                + '<a href="/search?query=' + enc + '&type=article" class="see-all-search">Xem tất cả »</a></div>';
+              keys2.forEach(function (k) { html2 += buildArticleHtml(data2[k]); });
+            } else {
+              html2 = '<div class="title-search"><span>Tin tức</span></div>'
+                + '<div class="not-pro">Không tìm thấy kết quả</div>';
+            }
+            if (mbListSearch2) mbListSearch2.innerHTML = html2;
+          });
+        }, 280);
+      });
+    }
+    {%- endif -%}
+  }
+
+  /* ── Init ──────────────────────────────────────────────────────────────── */
+  function init() { initCompact(); initPopup(); }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();

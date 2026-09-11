@@ -1,0 +1,217 @@
+<script src="{{'cookie.js' | asset_url}}" type="text/javascript"></script>
+<script>
+	{% assign delivery_attr_key = 'Thời gian giao hàng' %}
+	function setCookie(cname, cvalue, exdays) {
+
+			var date = new Date();
+			var minutes = 1;
+			date.setTime(date.getTime() + (24 * 60 * 60 * 1000));
+			var expires = "; expires=" + date.toGMTString();
+			document.cookie = cname + "=" + cvalue + expires + ";path=/";
+
+		}
+
+		function getCookie(cname) {
+			var name = cname + "=";
+			var decodedCookie = decodeURIComponent(document.cookie);
+			var ca = decodedCookie.split(';');
+			for (var i = 0; i < ca.length; i++) {
+				var c = ca[i];
+				while (c.charAt(0) == ' ') {
+					c = c.substring(1);
+				}
+				if (c.indexOf(name) == 0) {
+					return c.substring(name.length, c.length);
+				}
+			}
+			return "";
+		}
+		function delete_cookie( cname, path, domain ) {
+			if( getCookie( cname ) ) {
+				document.cookie = cname;
+			}
+		}
+
+		$('.timedeli-cta, .date_picker').on('change touchstart', function(){
+			let date = $('.date_picker').val().split('/')
+			var timex = $(this).find(":selected").val();
+			if (date != undefined && timex != undefined) {
+				setCookie('ego-delivery-value', '' , 1);
+				setCookie('ego-delivery-value', ''+date + ' - ' +timex+'' , 1);
+			}
+		})
+	function updateVAT() { 
+		$('.btn-checkout').addClass('disabled');
+		var invoice = $('input[name="attributes[invoice]"]').val();
+		var company = $('input[name="attributes[company_name]"]').val();
+		var address = $('[name="attributes[company_address]"]').val();
+		var tax = $('input[name="attributes[tax_code]"]').val();
+		var email_company = $('input[name="attributes[invoice_email]"]').val();
+		var cart_info = {
+			'{{invoice}}': invoice,
+			'{{company_name}}': '',
+			'{{company_address}}': '',
+			'{{tax_code}}': '',
+			'{{invoice_email}}': ''
+		};
+		
+		if (invoice === 'có') {
+		  cart_info = {
+			'{{invoice}}': invoice,
+			'{{company_name}}': company,
+			'{{company_address}}': address,
+			'{{tax_code}}': tax,
+			'{{invoice_email}}': email_company
+		  };
+		}
+		
+
+		Cookies.set('cart_info', {
+			'company': company,
+			'address': address,
+			'tax': tax,
+			'email_company': email_company,
+			'email': email_company
+		});
+		var attributes = Object.keys(cart_info).reduce(function(result, info) {
+			if (cart_info[info] !== "") {
+				return {
+					...result,
+					...{
+						[info]: cart_info[info]
+					}
+				}
+			}
+			return result;
+		}, {})
+		const deliveryAttr = getCookie('ego-delivery-value');
+		//alert(deliveryAttr);
+		if (deliveryAttr !== '') {
+			attributes['{{delivery_attr_key}}'] = deliveryAttr;
+		}
+		var data = {};
+		
+			data.attributes = attributes;
+
+			var params = {
+				type: 'POST',
+				url: '/cart/update.js',
+				data: data,
+				dataType: 'json',
+				success: function(cart) {
+					window.location.href = '/checkout'
+				},
+				complete: function() {
+					setTimeout(function() {
+						$('.btn-checkout').removeClass('disabled');
+					}, 1000);
+				},
+				error: function(XMLHttpRequest, textStatus) {
+					Bizweb.onError(XMLHttpRequest, textStatus);
+				}
+			};
+			jQuery.ajax(params);
+			setCookie('ego-delivery-value', '' , 1);
+	}
+
+  		$(document).on('keyup', '.val-f', function () {
+			if ($(this).val() === '') {
+				if ($(this).next('span.text-danger').length == 0) {
+					$(this).after('<span class="text-danger">Bạn không được để trống trường này</span>');
+				}
+			} else {
+				$(this).next('span.text-danger').remove();
+				if($(this).hasClass('val-n')
+				   && $(this).val().trim().length < Number('10')) {
+				  $(this).after('<span class="text-danger">Mã số thuế phải tối thiểu 10 ký tự</span>');
+				}
+				if ($(this).hasClass('val-email')
+				   && !(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test($(this).val().trim()))) {
+				  $(this).after('<span class="text-danger">Định dạng email không đúng</span>');
+				}
+			}
+		})
+					   
+	  if($('.r-bill .regular-checkbox').is(':checked')) {
+	    $('.bill-field').show();
+      }
+
+	  $(document).on('click', '.r-bill .regular-checkbox', 'click', function() {
+		if($(this).is(':checked')){
+		  $('#re-checkbox-bill').val('có');
+		} else {
+		  $('#re-checkbox-bill').val('không');
+		}
+		$('.bill-field').stop(true, true).slideToggle(400);
+	 })
+	 /** PHan hoa don **/
+
+     function goToCheckout(e) {
+		 e.preventDefault();
+		 {% if settings.use_cart_vat or settings.delivery_show%}
+		 if ($('#checkbox-bill').is(':checked')) {
+			 var a = $(this);
+			 let isValidated = true;
+			 $('.val-f').each(function() {
+				 if ($(this).val() === '') {
+					 isValidated = false;
+				 } else {
+					 if($(this).hasClass('val-n') && $(this).val().trim().length < Number('10')) {
+						 isValidated = false;
+					 }
+					 if ($(this).hasClass('val-email') && !(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test($(this).val().trim()))) {
+							 isValidated = false;
+					 }
+				 }
+			 })
+				
+			 if (isValidated) {
+				 swal({
+					 title: `Bạn có chắc không xuất hóa đơn?`,
+					 text: `Chọn đóng và chọn vào xuất hóa đơn công ty sau đó nhập thông tin công ty để xuất hóa đơn!`,
+					 type: "warning",
+				   	 className: 'vat-checked-modal',
+					 buttons: ["Đóng", "Xác nhận"],
+				 }).then(function() {
+					 $('body').on('click', '.swal-button--confirm', function() {
+						 updateVAT();
+					 })
+				 });
+			 } else {
+			   $('.val-f').each(function() {
+			     if ($(this).val() === '') {
+				   if ($(this).next('span.text-danger').length == 0) {
+				     $(this).after('<span class="text-danger">Bạn không được để trống trường này</span>');
+				   }
+				 } else {
+				   $(this).next('span.text-danger').remove();
+				   if($(this).hasClass('val-n')
+					   && $(this).val().trim().length < Number('10')) {
+					  $(this).after('<span class="text-danger">Mã số thuế phải tối thiểu 10 ký tự nè</span>');
+					}
+					if ($(this).hasClass('val-email')
+					   && !(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test($(this).val().trim()))) {
+					  $(this).after('<span class="text-danger">Định dạng email không đúng</span>');
+					}
+				  }
+			    })
+			 }
+		 } else {
+			 updateVAT();
+			 $('body').off('click', '.swal-button--confirm');
+		 	location.href = '/checkout'
+		 }
+		 return;
+		{%else%}
+	 	
+		$('body').off('click', '.swal-button--confirm');
+		 location.href = '/checkout'
+		 {% endif %}
+		 
+	 }
+
+	 /** end hoa don **/  
+	
+	
+	
+</script>

@@ -1,0 +1,1200 @@
+{% comment %} mops-admin-shipping.js.bwt — Mixin domain "Vận chuyển" (tab shipping) cho MOPS Admin.
+  Phase C-FE (2026-07-18): đối soát COD/phí với ĐTVC + báo cáo vận đơn + registry đối tác.
+  Script TOP-LEVEL, đẩy mixin vào window.MopsAdminMixins TRƯỚC mops-admin.js. Helper dùng chung qua
+  window.MopsAdminCore. Quy ước data/computed/methods (bài học project_mops_vue_typeerror_bug):
+  data() trong `data`, tính toán trong `computed`, hành động trong `methods`. Load TRƯỚC mops-admin.js. {% endcomment %}
+(function() {
+  'use strict';
+
+  window.MopsAdminRegisteredDomains = window.MopsAdminRegisteredDomains || [];
+  window.MopsAdminRegisteredDomains.push('shipping');
+
+  // Shape check cho core.isValidResponse (2026-09-04) — shipping.detail được ghi từ 5 action khác
+  // nhau (create/get/update_item/confirm/pay reconciliation); chỉ tin d.success là không đủ vì
+  // template đọc thẳng shipping.detail.items qua v-for không có `|| []` (mops_admin_tab_shipping.bwt).
+  function isReconDetailShape(x) { return !!(x && Array.isArray(x.items)); }
+  function isShippingReportShape(x) { return !!(x && Array.isArray(x.by_carrier)); }
+
+  window.MopsAdminMixins = window.MopsAdminMixins || [];
+  window.MopsAdminMixins.push({
+    data: function() {
+      return {
+        shipping: {
+          subtab: 'shipments', // 'shipments' | 'recon' | 'report' | 'carriers'
+          carriers: [], carriersLoading: false, carrierBusy: '',
+          // Quản lý vận đơn (2026-08-13) — list mọi vận đơn (mọi trạng thái) + detail Sapo-style
+          // (main + sidebar) + timeline từ ShipmentStatusHistory. Tách khỏi `detail` (recon detail)
+          // để 2 màn hình khỏi đè nhau khi staff đang xem Vận đơn rồi mở Đối soát ở tab khác.
+          shipmentsList: [], shipmentsTotal: 0, shipmentsLoading: false,
+          shipmentFilters: { search: '', carrier_code: '', status: '', from: '', to: '' },
+          shipmentDetail: null,
+          // 2026-08-30 — dropdown "Chọn thao tác" thay floating bar cũ khi có vận đơn được chọn
+          // (UI-only, khớp bố cục Sapo). Không thêm action mới — tái dùng nguyên các hàm bulk sẵn có.
+          bulkMenuOpen: false,
+          // Đối soát
+          reconList: [], reconLoading: false, reconError: '',
+          filterCarrier: '', filterStatus: '',
+          createForm: { show: false, carrier_code: '', from: '', to: '', creating: false },
+          detail: null, detailLoading: false, acting: false, detailActing: false,
+          // Nạp số liệu ĐỐI TÁC từ Goship (thay gõ tay từng dòng COD/phí). `goshipInvoices` = các kỳ đối
+          // soát Goship trả về; chọn 1 kỳ rồi Nạp → điền CODPartner/FeePartner cho các dòng khớp mã VĐ.
+          goshipInvoices: [], goshipInvoiceCode: '', goshipLoading: false, goshipImporting: false,
+          // Báo cáo
+          report: null, reportLoading: false, reportFrom: '', reportTo: ''
+        },
+        // In tem A6 vận đơn (2026-08-11) — state riêng vì nút "In tem" xuất hiện ở orders.detail
+        // (domain khác) + recon.detail (cùng domain), nhưng cùng dùng chung tuỳ chọn + trạng thái busy.
+        // hideProductDetails: chỉ ảnh hưởng template MOPS fallback (Goship PDF không có tuỳ chọn).
+        // replacementText: khi ẩn hàng, cho phép in text thay thế lên tem để nhân viên nhận biết
+        // gói hàng (ví dụ "Mỹ phẩm chăm sóc da" thay vì liệt kê SKU). Rỗng = ẩn hoàn toàn.
+        // 2026-08-23 bulkBusy: state cho bulk print (Mục 4 plan OMS). selectedIds: mảng order_id đã tick
+        // ở list Vận đơn. STRICT BOUNDARY: list_shipments/get_shipment_label chỉ ở tab_shipping.
+        labelPrint: {
+          hideProductDetails: false,
+          replacementText: '',
+          busy: '', // order_id đang gọi in — để disable nút tương ứng, tránh double-click
+          selectedIds: [], // 2026-08-23 bulk-select ở subtab shipments
+          bulkBusy: false, // 2026-08-23 disable nút bulk khi đang tải
+          // 2026-08-27 — PHIẾU GIAO HÀNG (khác tem A6): document A5/A4 cho kho + shipper, dùng chung
+          // selectedIds ở trên. slipBulkBusy tách riêng khỏi bulkBusy để 2 nút bulk (tem vs phiếu)
+          // không tự khoá lẫn nhau khi staff bấm gần nhau.
+          slipPaperSize: 'A5', // A5 | A4 | K80 — staff đổi được, giống orders.printPaperSize
+          slipBulkBusy: false,
+          // 2026-08-27 — cột "Thao tác" ở bảng vận đơn: order_id đang gọi urge_shipment (disable nút).
+          urgeBusy: ''
+        },
+        // 2026-08-28 — modal "Tuỳ chỉnh in" (openPrintModal): thay thế click-in-thẳng bằng modal cho
+        // phép chọn layout (goship = tem thật hiện carrier thật / mops = tem giống hệt nhưng ẩn carrier
+        // thật, chỉ hiện "MOPS" / sale = phiếu giao hàng A5-A4-K80 có bảng giá) + sửa tự do ghi chú và
+        // thông tin người gửi trước khi in — không đụng settings gốc, chỉ áp cho lần in này.
+        printModal: {
+          show: false,
+          loading: false,
+          order: null,
+          layout: 'goship', // 'goship' | 'mops' | 'sale'
+          saleSize: 'A5',
+          // 2026-08-29: TÁCH note (ghi chú giao hàng — riêng theo đơn, VD "gọi trước khi giao") khỏi
+          // inspectionTag (chính sách kiểm hàng của SHOP, in trên MỌI đơn — VD "Cho xem hàng, không
+          // cho thử"). Trước đây gộp chung 1 field là sai bản chất — đây là 2 khái niệm khác nhau
+          // trong thực tế vận chuyển VN (SPX/GHN/GHTK/J&T đều in 2 dòng tách biệt).
+          note: '',
+          inspectionTag: '',
+          senderName: '',
+          senderAddress: '',
+          senderPhone: '',
+          // 2026-08-29: đổi từ checkbox "Ẩn tên sản phẩm" + input "Nội dung thay thế" (2 bước, dễ bỏ
+          // sót) sang 1 ô nhập tay tự do luôn hiển thị — staff tự xoá/sửa trực tiếp tên sản phẩm ngay
+          // trong khối "Nội dung hàng" khi cần ẩn (VD ghi "Mỹ phẩm chăm sóc da" thay vì tên SKU thật).
+          // Tổng SL vẫn tính từ items thật (đếm hàng vật lý), không đổi.
+          itemsText: '',
+          previewHtml: '',
+          busy: false
+        }
+      };
+    },
+    // 2026-09-04 — đăng ký recovery cho shipping.detail/shipping.report: nếu 1 render sau khi gán
+    // 2 field này (từ get/create/update/confirm/pay_reconciliation, get_shipping_report — xem
+    // isValidResponse ở các method bên dưới) bị lỗi, app.config.errorHandler dùng hàm này để đưa
+    // domain về trạng thái an toàn (đóng detail/tắt loading) thay vì để UI đứng hình.
+    mounted: function() {
+      var core = window.MopsAdminCore;
+      if (!core || typeof core.registerRecovery !== 'function') return;
+      core.registerRecovery('shipping.detail', function(vm) {
+        vm.shipping.detail = null; vm.shipping.detailLoading = false; vm.shipping.acting = false;
+      });
+      core.registerRecovery('shipping.report', function(vm) {
+        vm.shipping.report = null; vm.shipping.reportLoading = false;
+      });
+    },
+    computed: {
+      shippingReconEmpty: function() {
+        if (this.shipping.reconError) return this.shipping.reconError;
+        if (!this.shipping.reconLoading && !this.shipping.reconList.length) return 'Chưa có phiếu đối soát nào.';
+        return '';
+      },
+      // Đếm bộ lọc đang active cho subtab Vận đơn — hiện trên chip nút "Bộ lọc" mobile.
+      shipmentActiveFilterCount: function() {
+        var f = this.shipping.shipmentFilters;
+        return (f.search ? 1 : 0) + (f.carrier_code ? 1 : 0) + (f.status ? 1 : 0)
+             + (f.from ? 1 : 0) + (f.to ? 1 : 0);
+      },
+      // 2026-08-23 bulk print vận đơn — trạng thái master checkbox (tương tự orders):
+      // 'all' → tất cả row trong trang tick, 'some' → 1 phần, 'none' → chưa tick nào.
+      shipmentsSelectionState: function() {
+        var visible = (this.shipping.shipmentsList || []).map(function(s) { return String(s.order_id); }).filter(Boolean);
+        if (!visible.length) return 'none';
+        var sel = this.labelPrint.selectedIds || [];
+        var checked = visible.filter(function(id) { return sel.indexOf(id) !== -1; }).length;
+        if (checked === 0) return 'none';
+        if (checked === visible.length) return 'all';
+        return 'some';
+      }
+    },
+    methods: {
+      setShippingSubtab: function(key) {
+        this.shipping.subtab = key;
+        this._syncSubToUrl(key);
+        if (key === 'shipments' && !this.shipping.shipmentsList.length) this.loadShipments();
+        if (key === 'recon' && !this.shipping.reconList.length) this.loadReconciliations();
+        if (key === 'report' && !this.shipping.report) this.loadShippingReport();
+        if (key === 'carriers' && !this.shipping.carriers.length) this.loadCarriers();
+      },
+      // 2026-08-23 — Status filter chips (kiến trúc demo_shipping.html GHTK). Set fulfillment_status
+      // filter + reload list. Value '' = Tất cả (bỏ filter status). Backend list_shipments đã hỗ trợ
+      // param status (mops_01.js:4187) — chỉ cần đổi filter rồi gọi loadShipments.
+      setShipmentStatusFilter: function(status) {
+        this.shipping.shipmentFilters.status = status || '';
+        this.loadShipments();
+      },
+      /* ── Quản lý vận đơn (2026-08-13) ── list + detail Sapo-style. ────────────────────
+         List: đọc list_shipments (mọi vận đơn có TrackingCode, filter fulfillment + carrier +
+         date + search). Detail: get_shipment (order + items + shipment + timeline + recon).
+         Sidebar "Tình trạng" read-only + nút Nạp lại (chốt: Goship là source-of-truth). */
+      loadShipments: function() {
+        var self = this, core = window.MopsAdminCore;
+        this.shipping.shipmentsLoading = true;
+        var f = this.shipping.shipmentFilters;
+        var params = { action: 'list_shipments' };
+        if (f.search) params.search = f.search;
+        if (f.carrier_code) params.carrier_code = f.carrier_code;
+        if (f.status) params.status = f.status;
+        if (f.from) params.from = f.from;
+        if (f.to) params.to = f.to;
+        // POST-only read (2026-07-22): token trong body, không qua URL.
+        core.gasPost(params)
+          .then(function(d) {
+            self.shipping.shipmentsLoading = false;
+            if (!d || !d.success) { core.showToast('Không tải được vận đơn: ' + (d && d.error || ''), 'error'); return; }
+            self.shipping.shipmentsList = d.shipments || [];
+            self.shipping.shipmentsTotal = d.total || 0;
+          })
+          .catch(function() { self.shipping.shipmentsLoading = false; core.showToast('Lỗi kết nối khi tải vận đơn.', 'error'); });
+      },
+      openShipmentDetail: function(orderId) {
+        var self = this, core = window.MopsAdminCore;
+        if (!orderId) return;
+        // Snapshot từ row list → hiển thị khung detail NGAY sau khi bấm (fix "đơ, khựng" 2026-08-16):
+        // trước đây set shipmentDetail=null → v-else="!shipmentDetail" quay lại LIST view, user không
+        // thấy UI đổi cho tới khi gasPost trả về (2–5s). Giờ đưa row đã có sang detail dưới cờ
+        // __snapshot để các card gọi skeleton cho phần chưa có data (items/timeline/activity).
+        var snap = (this.shipping.shipmentsList || []).filter(function(r){ return r.order_id === orderId; })[0];
+        var seed = Object.assign(
+          { order_id: orderId, __snapshot: true, timeline: [], activity_logs: [], order: { items: [] } },
+          snap || {}
+        );
+        seed.__snapshot = true;
+        this.shipping.detailLoading = true;
+        this.shipping.shipmentDetail = seed;
+        core.gasPost({ action: 'get_shipment', order_id: orderId })
+          .then(function(d) {
+            self.shipping.detailLoading = false;
+            if (!d || !d.success) { core.showToast('Không tải được vận đơn: ' + (d && d.error || ''), 'error'); return; }
+            self.shipping.shipmentDetail = d;
+          })
+          .catch(function() { self.shipping.detailLoading = false; core.showToast('Lỗi kết nối khi mở chi tiết vận đơn.', 'error'); });
+      },
+      closeShipmentDetail: function() {
+        this.shipping.shipmentDetail = null;
+      },
+      // Gọi refresh_tracking → GAS hỏi Goship / hãng qua shipmentRefresh dispatcher, ghi
+      // ShipmentStatusHistory 1 dòng 'refresh', reload detail để timeline hiện dòng mới.
+      refreshShipmentStatus: function() {
+        var self = this, core = window.MopsAdminCore, d = this.shipping.shipmentDetail;
+        if (!d) return;
+        this.shipping.detailActing = true;
+        core.gasPost({ action: 'refresh_tracking', order_id: d.order_id })
+          .then(function(r) {
+            self.shipping.detailActing = false;
+            if (r && r.success) {
+              core.showToast('Đã nạp lại trạng thái từ đối tác.', 'success');
+              // Reload detail để lấy timeline mới + status cập nhật.
+              self.openShipmentDetail(d.order_id);
+            } else {
+              core.showToast('Không nạp được: ' + (r && r.error || 'Đối tác không phản hồi.'), 'error');
+            }
+          })
+          .catch(function() { self.shipping.detailActing = false; core.showToast('Lỗi kết nối khi nạp trạng thái.', 'error'); });
+      },
+      // Giục giao (2026-08-27) — dùng ở cột Thao tác bảng Vận đơn. KHÔNG có API hãng thật để "ưu
+      // tiên giao gấp" (Goship/GHN/GHTK/VTP/Ahamove đều không hỗ trợ) — chỉ ghi nhật ký nội bộ
+      // (shipmentUrge → ShipmentStatusHistory source='staff_urge') để nhân viên khác biết đơn đã
+      // có người theo dõi sát; KHÔNG báo "đã giục thành công" như thể gọi được đối tác.
+      urgeShipment: function(orderId) {
+        var self = this, core = window.MopsAdminCore;
+        if (!orderId || this.labelPrint.urgeBusy === orderId) return;
+        this.labelPrint.urgeBusy = orderId;
+        core.gasPost({ action: 'urge_shipment', order_id: orderId })
+          .then(function(d) {
+            self.labelPrint.urgeBusy = '';
+            if (d && d.success) {
+              core.showToast('Đã ghi vào lịch sử vận đơn — nhớ liên hệ đối tác ngoài hệ thống nếu cần.', 'success');
+              if (self.shipping.shipmentDetail && self.shipping.shipmentDetail.order_id === orderId) self.openShipmentDetail(orderId);
+            } else {
+              core.showToast('Lỗi: ' + (d && d.error || ''), 'error');
+            }
+          })
+          .catch(function() { self.labelPrint.urgeBusy = ''; core.showToast('Lỗi kết nối khi ghi giục giao.', 'error'); });
+      },
+      /* ── Registry đối tác ── */
+      loadCarriers: function() {
+        var self = this, core = window.MopsAdminCore;
+        this.shipping.carriersLoading = true;
+        core.gasGet({ action: 'list_carriers' })
+          .then(function(d) {
+            if (!d || !d.success) throw new Error(d && d.error || 'Không tải được danh sách đối tác.');
+            self.shipping.carriers = d.carriers || [];
+            // Bản GAS cũ chưa seed registry sẽ không trả GHTK. Vẫn hiển thị hãng
+            // để owner nhận biết deployment backend còn thiếu, thay vì im lặng mất UI.
+            var hasGhtk = self.shipping.carriers.some(function(c) { return c.carrier_code === 'GHTK'; });
+            if (!hasGhtk) self.shipping.carriers.push({
+              carrier_code: 'GHTK', name: 'Giao Hàng Tiết Kiệm', category: 'SELF',
+              has_config: false, connected: false, registry_pending: true
+            });
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối khi tải đối tác.', 'error'); })
+          .finally(function() { self.shipping.carriersLoading = false; });
+      },
+      toggleCarrier: function(c) {
+        var self = this, core = window.MopsAdminCore;
+        if (this.shipping.carrierBusy) return; // chặn double-click khi đang gọi API
+        if (c.registry_pending) {
+          core.showToast('GHTK đang chờ backend được deploy. Chưa thể bật kết nối.', 'error');
+          return;
+        }
+        this.shipping.carrierBusy = c.carrier_code;
+        core.gasPost({ action: 'toggle_carrier', carrier_code: c.carrier_code, connected: !c.connected })
+          .then(function(d) {
+            self.shipping.carrierBusy = '';
+            if (d && d.success) { core.showToast('Đã cập nhật ' + c.carrier_code, 'success'); self.loadCarriers(); }
+            else core.showToast('Lỗi: ' + (d && d.error || ''), 'error');
+          })
+          .catch(function() { self.shipping.carrierBusy = ''; core.showToast('Lỗi kết nối.', 'error'); });
+      },
+      /* ── Đối soát ── */
+      shipStatusBadge: function(status) {
+        if (status === 'Đã đối soát') return 'ma-badge ma-badge--success';
+        if (status === 'Chờ đối soát') return 'ma-badge ma-badge--warning';
+        return 'ma-badge ma-badge--info';
+      },
+      loadReconciliations: function() {
+        var self = this, core = window.MopsAdminCore;
+        this.shipping.reconLoading = true; this.shipping.reconError = '';
+        var params = { action: 'list_reconciliations' };
+        if (this.shipping.filterCarrier) params.carrier_code = this.shipping.filterCarrier;
+        if (this.shipping.filterStatus) params.status = this.shipping.filterStatus;
+        core.gasGet(params)
+          .then(function(d) {
+            self.shipping.reconLoading = false;
+            if (!d || !d.success) { self.shipping.reconError = 'Không tải được danh sách đối soát.'; return; }
+            self.shipping.reconList = d.reconciliations || [];
+          })
+          .catch(function() { self.shipping.reconLoading = false; self.shipping.reconError = 'Lỗi kết nối.'; });
+      },
+      openReconCreate: function() {
+        if (!this.shipping.carriers.length) this.loadCarriers();
+        this.shipping.createForm = { show: true, carrier_code: 'GHN', from: '', to: '', creating: false };
+      },
+      submitReconCreate: function() {
+        var self = this, core = window.MopsAdminCore, f = this.shipping.createForm;
+        if (!f.carrier_code) { core.showToast('Chọn đối tác vận chuyển.', 'error'); return; }
+        f.creating = true;
+        core.gasPost({ action: 'create_reconciliation', carrier_code: f.carrier_code, from: f.from, to: f.to })
+          .then(function(d) {
+            f.creating = false;
+            // Tách "backend thất bại" (d.success=false, TOAST LỖI đúng nghĩa) khỏi "backend đã tạo
+            // thành công nhưng response thiếu items" (review 2026-09-05: dùng chung isValidResponse
+            // cho cả 2 trường hợp trước đây khiến 1 lần tạo phiếu THÀNH CÔNG bị báo "Lỗi:" — staff có
+            // thể bấm tạo lại, sinh phiếu đối soát trùng). d.success=true là nguồn sự thật duy nhất
+            // cho biết ghi có thành công hay không; shape check chỉ quyết định có tin object trả về
+            // để gán thẳng hay phải gọi lại openReconDetail cho sạch.
+            if (!d || !d.success) { core.showToast('Lỗi: ' + (d && d.error || 'Không tạo được'), 'error'); return; }
+            core.showToast('Đã tạo phiếu đối soát ' + d.recon_id, 'success');
+            self.shipping.createForm.show = false;
+            self.loadReconciliations();
+            if (core.isValidResponse(d, isReconDetailShape, 'shipping.detail')) self.shipping.detail = d;
+            else self.openReconDetail(d.recon_id);
+          })
+          .catch(function() { f.creating = false; core.showToast('Lỗi kết nối.', 'error'); });
+      },
+      openReconDetail: function(reconId) {
+        var self = this, core = window.MopsAdminCore;
+        this.shipping.detailLoading = true; this.shipping.detail = null;
+        core.gasGet({ action: 'get_reconciliation', recon_id: reconId })
+          .then(function(d) { self.shipping.detailLoading = false; self.shipping.detail = core.isValidResponse(d, isReconDetailShape, 'shipping.detail') ? d : null; })
+          .catch(function() { self.shipping.detailLoading = false; });
+      },
+      saveReconItem: function(item) {
+        var self = this, core = window.MopsAdminCore, d = this.shipping.detail;
+        if (!d) return;
+        this.shipping.acting = true;
+        core.gasPost({ action: 'update_reconciliation_item', recon_id: d.recon_id, item_id: item.item_id,
+          cod_partner: Number(item.cod_partner) || 0, fee_partner: Number(item.fee_partner) || 0, other_fee: Number(item.other_fee) || 0 })
+          .then(function(r) {
+            self.shipping.acting = false;
+            // Xem comment ở submitReconCreate — d.success là nguồn sự thật cho "ghi thành công hay
+            // không", shape check chỉ quyết định gán thẳng hay refetch.
+            if (!r || !r.success) { core.showToast('Lỗi: ' + (r && r.error || ''), 'error'); return; }
+            core.showToast('Đã cập nhật dòng đối soát', 'success');
+            if (core.isValidResponse(r, isReconDetailShape, 'shipping.detail')) self.shipping.detail = r;
+            else self.openReconDetail(d.recon_id);
+          })
+          .catch(function() { self.shipping.acting = false; core.showToast('Lỗi kết nối.', 'error'); });
+      },
+      /* ── Nạp số liệu đối tác từ Goship ──────────────────────────────────────────────────────
+         Chỉ dùng được với phiếu của hãng GOSHIP (Goship có API kỳ đối soát; hãng trực tiếp vẫn phải
+         nhập tay hoặc đọc Excel). Nạp xong: dòng nào khớp mã vận đơn thì có sẵn COD/phí thực; dòng
+         không khớp giữ nguyên để kế toán thấy và xử lý — KHÔNG tự đưa chênh lệch về 0. */
+      loadGoshipInvoices: function() {
+        var self = this, core = window.MopsAdminCore;
+        this.shipping.goshipLoading = true;
+        core.gasPost({ action: 'goship_invoices' })
+          .then(function(d) {
+            self.shipping.goshipLoading = false;
+            if (d && d.success) {
+              self.shipping.goshipInvoices = d.invoices || [];
+              if (!self.shipping.goshipInvoices.length) core.showToast('Goship chưa có kỳ đối soát nào.', 'info');
+            } else core.showToast('Lỗi: ' + (d && d.error || 'Không tải được kỳ đối soát Goship'), 'error');
+          })
+          .catch(function() { self.shipping.goshipLoading = false; core.showToast('Lỗi kết nối khi tải kỳ đối soát Goship.', 'error'); });
+      },
+      importGoshipInvoice: function() {
+        var self = this, core = window.MopsAdminCore, d = this.shipping.detail;
+        if (!d || !this.shipping.goshipInvoiceCode) return;
+        this.shipping.goshipImporting = true;
+        core.gasPost({ action: 'import_carrier_invoice', recon_id: d.recon_id, invoice_code: this.shipping.goshipInvoiceCode })
+          .then(function(r) {
+            self.shipping.goshipImporting = false;
+            if (r && r.success) {
+              var miss = (r.not_found || []).length;
+              core.showToast('Đã nạp ' + r.updated + ' dòng từ Goship' + (miss ? ' — ' + miss + ' dòng không khớp mã vận đơn, cần kiểm tra tay' : ''), miss ? 'info' : 'success');
+              self.openReconDetail(d.recon_id);
+            } else core.showToast('Lỗi: ' + (r && r.error || ''), 'error');
+          })
+          .catch(function() { self.shipping.goshipImporting = false; core.showToast('Lỗi kết nối khi nạp số liệu Goship.', 'error'); });
+      },
+      confirmRecon: function() {
+        var self = this, core = window.MopsAdminCore, d = this.shipping.detail;
+        if (!d) return;
+        if (d.has_discrepancy) { core.showToast('Còn chênh lệch COD/Phí — sửa cho khớp trước khi xác nhận.', 'error'); return; }
+        if (!confirm('Xác nhận đối soát phiếu ' + d.recon_id + '? Sau khi xác nhận không sửa được dòng nữa.')) return;
+        this.shipping.acting = true;
+        core.gasPost({ action: 'confirm_reconciliation', recon_id: d.recon_id })
+          .then(function(r) {
+            self.shipping.acting = false;
+            // Xem comment ở submitReconCreate — xác nhận đối soát KHÔNG thể sửa lại được, nên báo
+            // "Lỗi:" nhầm khi backend đã xác nhận thành công là đặc biệt nguy hiểm (staff bấm lại
+            // dựa trên toast lỗi sai, dù chỉ hiện toast chứ không tự gọi lại action).
+            if (!r || !r.success) { core.showToast('Lỗi: ' + (r && r.error || ''), 'error'); return; }
+            core.showToast('Đã xác nhận đối soát', 'success');
+            self.loadReconciliations();
+            if (core.isValidResponse(r, isReconDetailShape, 'shipping.detail')) self.shipping.detail = r;
+            else self.openReconDetail(d.recon_id);
+          })
+          .catch(function() { self.shipping.acting = false; core.showToast('Lỗi kết nối.', 'error'); });
+      },
+      payRecon: function() {
+        var self = this, core = window.MopsAdminCore, d = this.shipping.detail;
+        if (!d) return;
+        if (!confirm('Thanh toán công nợ phiếu ' + d.recon_id + '? Hệ thống sẽ tạo Phiếu Thu/Chi tương ứng.')) return;
+        this.shipping.acting = true;
+        core.gasPost({ action: 'pay_reconciliation', recon_id: d.recon_id })
+          .then(function(r) {
+            self.shipping.acting = false;
+            // Xem comment ở submitReconCreate — thanh toán công nợ đã tạo Phiếu Thu/Chi ở backend nếu
+            // r.success=true; báo "Lỗi:" nhầm ở đây có thể khiến staff bấm lại và tạo Phiếu Thu/Chi
+            // trùng cho cùng 1 phiếu đối soát.
+            if (!r || !r.success) { core.showToast('Lỗi: ' + (r && r.error || ''), 'error'); return; }
+            core.showToast('Đã thanh toán công nợ đối soát', 'success');
+            self.loadReconciliations();
+            if (core.isValidResponse(r, isReconDetailShape, 'shipping.detail')) self.shipping.detail = r;
+            else self.openReconDetail(d.recon_id);
+          })
+          .catch(function() { self.shipping.acting = false; core.showToast('Lỗi kết nối.', 'error'); });
+      },
+      /* ── Báo cáo vận đơn ── */
+      loadShippingReport: function() {
+        var self = this, core = window.MopsAdminCore;
+        this.shipping.reportLoading = true;
+        var params = { action: 'get_shipping_report' };
+        if (this.shipping.reportFrom) params.from = this.shipping.reportFrom;
+        if (this.shipping.reportTo) params.to = this.shipping.reportTo;
+        core.gasGet(params)
+          .then(function(d) { self.shipping.reportLoading = false; self.shipping.report = core.isValidResponse(d, isShippingReportShape, 'shipping.report') ? d : null; })
+          .catch(function() { self.shipping.reportLoading = false; self.shipping.report = null; });
+      },
+      /* ── In tem A6 (100×150mm) vận đơn Goship — 2026-08-11 ─────────────────────
+       * Ưu tiên PDF của Goship (đầy đủ barcode + logo hãng con). Backend cache label_url
+       * ở Orders.AO; get_shipment_label trả URL đã append `?size=a6`. Trên FE:
+       *   1) Nạp URL vào iframe ẩn (id="goship-print-frame"), gọi contentWindow.print()
+       *      khi onload → gửi thẳng sang máy in nhiệt A6 mà không rời trang.
+       *   2) Nếu backend trả success=false (không phải Goship, hoặc Goship không có label) →
+       *      fallback template HTML tự dựng tại _printLabelTemplateA6() bên dưới.
+       * KHÔNG dùng window.open() cho path 1: Chrome/Edge block popup khi user click sau
+       * setTimeout, và iframe cho phép in ngầm không mở tab mới. Với fallback template,
+       * DÙNG window.open vì cần user gesture xác nhận trước khi print (in nội dung tự sinh
+       * không phải user-provided).
+       */
+      /* ═══════════ BULK PRINT VẬN ĐƠN — Mục 4 plan OMS (2026-08-23) ═══════════
+       * STRICT BOUNDARY: chỉ ở tab_shipping, chỉ IN TEM A6 100×150mm (Goship PDF hoặc MOPS fallback).
+       * KHÔNG in nội dung đơn / đơn giá — cái đó ở tab_orders (Mục 3).
+       * Concurrency limit 3 request/lúc (memo project_mops_write_perf) tránh quota GAS.
+       * ───────────────────────────────────────────────────────────────────────── */
+      isShipmentSelected: function(orderId) {
+        return this.labelPrint.selectedIds.indexOf(String(orderId)) !== -1;
+      },
+      toggleShipmentSelected: function(orderId, event) {
+        if (event && typeof event.stopPropagation === 'function') event.stopPropagation();
+        var id = String(orderId);
+        var idx = this.labelPrint.selectedIds.indexOf(id);
+        if (idx === -1) this.labelPrint.selectedIds.push(id);
+        else this.labelPrint.selectedIds.splice(idx, 1);
+      },
+      toggleAllShipmentsSelected: function() {
+        var visible = (this.shipping.shipmentsList || []).map(function(s) { return String(s.order_id); }).filter(Boolean);
+        var allSelected = visible.length > 0 && visible.every(function(id) { return this.labelPrint.selectedIds.indexOf(id) !== -1; }, this);
+        if (allSelected) {
+          this.labelPrint.selectedIds = this.labelPrint.selectedIds.filter(function(id) { return visible.indexOf(id) === -1; });
+        } else {
+          var merged = this.labelPrint.selectedIds.slice();
+          visible.forEach(function(id) { if (merged.indexOf(id) === -1) merged.push(id); });
+          this.labelPrint.selectedIds = merged;
+        }
+      },
+      clearShipmentsSelection: function() { this.labelPrint.selectedIds = []; },
+      // Concurrency runner — chạy N task async với limit 3 song song. Giữ nguyên thứ tự result mảng.
+      // Không dùng Promise.all rời vì cần LIMIT (memo write_perf: 20 req cùng lúc → nghẽn GAS).
+      _pMap: function(items, mapper, limit) {
+        limit = Math.max(1, Math.min(limit || 3, 6));
+        var results = new Array(items.length);
+        var i = 0, active = 0;
+        return new Promise(function(resolve) {
+          if (!items.length) return resolve(results);
+          function launch() {
+            while (active < limit && i < items.length) {
+              // 2026-08-28 fix: `var idx = i++` bị hoisted lên scope hàm launch() — khi ≥2 vòng lặp
+              // while chạy đồng bộ trong CÙNG 1 lần gọi launch() (luôn xảy ra vì limit mặc định 3),
+              // mọi closure bên dưới đều đọc chung 1 biến idx đã bị ghi đè thành giá trị cuối cùng
+              // trước khi microtask nào kịp chạy → các item đầu batch (index 0, 1 khi limit=3) bị mất
+              // silent (không lỗi, không log) vì bị mapper gọi nhầm item cuối rồi ghi đè results[idx]
+              // sai chỗ. Bọc IIFE để mỗi vòng lặp giữ idx riêng (ES5, nhất quán style file — không có
+              // let/const nào khác trong file này).
+              (function(idx) {
+                active++;
+                Promise.resolve().then(function() { return mapper(items[idx], idx); })
+                  .then(function(v) { results[idx] = v; })
+                  .catch(function(e) { results[idx] = { __error: String((e && e.message) || e) }; })
+                  .then(function() {
+                    active--;
+                    if (i >= items.length && active === 0) resolve(results);
+                    else launch();
+                  });
+              })(i++);
+            }
+          }
+          launch();
+        });
+      },
+      // Bulk in tem Goship: fetch label_url cho N đơn (concurrency 3), gom PDF vào 1 window nhiều iframe,
+      // page-break-after: always. Đơn nào Goship không có → auto fallback template MOPS trong cùng batch.
+      bulkPrintGoshipLabels: function() {
+        var self = this, core = window.MopsAdminCore;
+        var ids = this.labelPrint.selectedIds.slice();
+        if (!ids.length) { core.showToast('Chưa chọn vận đơn nào để in.', 'error'); return; }
+        // 2026-08-28: chỉ 1 đơn được tick → mở modal "Tuỳ chỉnh in" (preview + sửa ghi chú/người gửi)
+        // thay vì in thẳng như cũ. Từ 2 đơn trở lên vẫn giữ hành vi bulk gốc (không preview từng cái).
+        if (ids.length === 1) { this.openPrintModal(ids[0], 'goship'); return; }
+        if (this.labelPrint.bulkBusy) return;
+        this.labelPrint.bulkBusy = true;
+        this._pMap(ids, function(orderId) {
+          return core.gasPost({ action: 'get_shipment_label', order_id: orderId })
+            .then(function(d) { return { order_id: orderId, label_url: (d && d.success && d.label_url) || '', success: !!(d && d.success && d.label_url) }; })
+            .catch(function() { return { order_id: orderId, label_url: '', success: false }; });
+        }, 3).then(function(results) {
+          self.labelPrint.bulkBusy = false;
+          var withLabel = results.filter(function(r) { return r && r.success && r.label_url; });
+          var noLabel   = results.filter(function(r) { return r && !r.success; });
+          if (!withLabel.length && !noLabel.length) {
+            core.showToast('Không lấy được vận đơn nào.', 'error'); return;
+          }
+          if (withLabel.length) {
+            self._openBulkGoshipPrintWindow(withLabel.map(function(r) { return r.label_url; }));
+          }
+          if (noLabel.length) {
+            // Fallback từng đơn qua template MOPS (không mở popup thứ 2 chồng — chờ user in Goship xong).
+            core.showToast(withLabel.length + ' tem Goship đã gửi in. ' + noLabel.length + ' đơn không có PDF Goship — dùng nút [🏷 In tem MOPS] để in fallback.', 'warning');
+          } else {
+            core.showToast('Đã gửi lệnh in ' + withLabel.length + ' tem vận đơn.', 'success');
+          }
+        });
+      },
+      // Bulk in tem MOPS (template HTML tự dựng) — dùng khi Goship chưa trả PDF hoặc staff muốn kiểm
+      // soát layout. Loop get_order để build data cho từng tem.
+      bulkPrintMopsLabels: function() {
+        var self = this, core = window.MopsAdminCore;
+        var ids = this.labelPrint.selectedIds.slice();
+        if (!ids.length) { core.showToast('Chưa chọn vận đơn nào để in.', 'error'); return; }
+        // 2026-08-28: chỉ 1 đơn được tick → mở modal "Tuỳ chỉnh in" thay vì in thẳng. Xem
+        // bulkPrintGoshipLabels ở trên.
+        if (ids.length === 1) { this.openPrintModal(ids[0], 'mops'); return; }
+        if (this.labelPrint.bulkBusy) return;
+        this.labelPrint.bulkBusy = true;
+        this._pMap(ids, function(orderId) {
+          return core.gasGet({ action: 'get_order', order_id: orderId })
+            .then(function(d) { return (d && d.success && d.order_id) ? d : null; })
+            .catch(function() { return null; });
+        }, 3).then(function(results) {
+          self.labelPrint.bulkBusy = false;
+          var orders = results.filter(function(o) { return o && !o.__error; });
+          if (!orders.length) { core.showToast('Không tải được vận đơn nào để in.', 'error'); return; }
+          // Mỗi buildLabelTemplateHtml trả full doc html5. Với bulk phải rewrap: chỉ giữ body content,
+          // nhưng <style> nằm trong <head> nên bị bỏ mất theo — tem in ra mất sạch CSS (2026-08-28 bug,
+          // phát hiện qua ảnh chụp màn hình staff gửi: chữ tràn dọc không khung/không border/không barcode
+          // co kích thước). Fix: lấy <style> từ sample đầu tiên (N đơn dùng chung 1 bộ class), đổi rule
+          // `body { width:100mm; height:150mm; ... }` (áp cho <body> gốc) thành `.sheet-wrap { ... }` (áp
+          // cho từng khối tem) rồi nhét vào <style> của window bulk — khác context nên phải đổi selector,
+          // không thể giữ nguyên literal.
+          var sample = self._buildLabelTemplateHtml(orders[0], self.labelPrint.hideProductDetails, self.labelPrint.replacementText);
+          var styleMatch = sample.match(/<style>([\s\S]*?)<\/style>/i);
+          var labelCss = styleMatch ? styleMatch[1].replace(/\}body\s*\{/, '}.sheet-wrap {') : '';
+          var bodyContents = orders.map(function(o) {
+            var html = self._buildLabelTemplateHtml(o, self.labelPrint.hideProductDetails, self.labelPrint.replacementText);
+            var m = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+            return '<div class="sheet-wrap" style="page-break-after: always;">' + (m ? m[1] : '') + '</div>';
+          }).join('');
+          var w = window.open('', '_blank', 'width=420,height=640');
+          if (!w) { core.showToast('Trình duyệt chặn popup — cho phép popup rồi thử lại.', 'error'); return; }
+          w.document.open();
+          w.document.write('<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><title>In ' + orders.length + ' tem MOPS</title>' +
+            '<style>@page { size: 100mm 150mm; margin: 0; } html,body{margin:0;padding:0;} .sheet-wrap:last-child{page-break-after:auto;}' + labelCss + '</style>' +
+            '</head><body>' + bodyContents + '</body></html>');
+          w.document.close();
+          setTimeout(function() { try { w.focus(); w.print(); } catch (e) {} }, 500);
+          core.showToast('Đã gửi lệnh in ' + orders.length + ' tem MOPS.', 'success');
+        });
+      },
+      /* ═══════════ BULK PRINT PHIẾU GIAO HÀNG (2026-08-27) ═══════════
+       * Khác TEM A6 ở trên: đây là document A5/A4 nội bộ cho kho/shipper — người nhận + địa chỉ đầy
+       * đủ + bảng hàng đóng gói (SKU/SL/đơn giá) + tổng tiền + số COD cần thu. Dùng chung
+       * labelPrint.selectedIds với 2 nút tem — staff tick 1 lần, chọn loại in cần.
+       * ───────────────────────────────────────────────────────────────────────── */
+      bulkPrintShipmentSlips: function() {
+        var self = this, core = window.MopsAdminCore;
+        var ids = this.labelPrint.selectedIds.slice();
+        if (!ids.length) { core.showToast('Chưa chọn vận đơn nào để in.', 'error'); return; }
+        // 2026-08-28: chỉ 1 đơn được tick → mở modal "Tuỳ chỉnh in" (layout 'sale') thay vì in thẳng.
+        // openPrintModal reset saleSize='A5' đồng bộ trước khi await get_order nên override ngay sau
+        // vẫn kịp áp dụng (không bị ghi đè lại) — giữ đúng khổ giấy staff đã chọn ở dropdown bulk.
+        if (ids.length === 1) {
+          this.openPrintModal(ids[0], 'sale');
+          this.printModal.saleSize = this.labelPrint.slipPaperSize || 'A5';
+          return;
+        }
+        if (this.labelPrint.slipBulkBusy) return;
+        this.labelPrint.slipBulkBusy = true;
+        this._pMap(ids, function(orderId) {
+          return core.gasGet({ action: 'get_order', order_id: orderId })
+            .then(function(d) { return (d && d.success && d.order_id) ? d : null; })
+            .catch(function() { return null; });
+        }, 3).then(function(results) {
+          self.labelPrint.slipBulkBusy = false;
+          var orders = results.filter(function(o) { return o && !o.__error; });
+          if (!orders.length) { core.showToast('Không tải được vận đơn nào để in.', 'error'); return; }
+          self._openShipmentSlipPrintWindow(orders, self.labelPrint.slipPaperSize || 'A5');
+          core.showToast('Đã gửi lệnh in ' + orders.length + ' phiếu giao hàng.', 'success');
+        });
+      },
+      _openShipmentSlipPrintWindow: function(orders, paperSize) {
+        var html = this._buildShipmentPrintHtml(orders, paperSize);
+        var w = window.open('', '_blank', 'width=720,height=900');
+        if (!w) { window.MopsAdminCore.showToast('Trình duyệt chặn popup — cho phép popup rồi thử lại.', 'error'); return; }
+        w.document.open();
+        w.document.write(html);
+        w.document.close();
+        setTimeout(function() { try { w.focus(); w.print(); } catch (e) {} }, 500);
+      },
+      // Render N sheet PHIẾU GIAO HÀNG liên tiếp — 1 window, mỗi sheet page-break. Khối: header shop ·
+      // mã VĐ/mã đơn · đối tác + trạng thái + thanh toán · người nhận + địa chỉ đầy đủ · bảng hàng
+      // đóng gói · tổng tiền + số COD cần thu nổi bật · ghi chú giao hàng · footer. KHÔNG chữ ký
+      // (document nội bộ kho/shipper, không phải chứng từ khách ký nhận — theo tinh thần bỏ khối chữ
+      // ký ở hoá đơn bán hàng 2026-08-27, xem _buildOrderPrintHtml trong mops-admin-orders.js.bwt).
+      // 2026-08-28 — `overrides` optional (giống _buildLabelTemplateHtml), dùng bởi modal "Tuỳ chỉnh
+      // in" khi staff chọn layout "Bán hàng". Không truyền → hành vi y hệt bulkPrintShipmentSlips cũ.
+      _buildShipmentPrintHtml: function(orders, paperSize, overrides) {
+        var esc = function(s) {
+          return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+          });
+        };
+        var fmtVND = function(n) { return (Number(n) || 0).toLocaleString('vi-VN') + ' ₫'; };
+        var toNum = function(v) {
+          if (typeof v === 'number' && isFinite(v)) return v;
+          var s = String(v == null ? '' : v).replace(/[^\d.-]/g, '').replace(/\.(?=\d{3}(\D|$))/g, '');
+          var n = parseFloat(s);
+          return isFinite(n) ? n : 0;
+        };
+        var fmtDT = function(raw) {
+          if (!raw) return '';
+          var d = new Date(raw);
+          if (isNaN(d.getTime())) return String(raw).substring(0, 16);
+          var pad = function(n) { return (n < 10 ? '0' : '') + n; };
+          return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() +
+                 ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        };
+        var pageSize;
+        var isK80 = false;
+        if (paperSize === 'A4') pageSize = 'A4';
+        else if (paperSize === 'K80') { pageSize = '80mm 297mm'; isK80 = true; }
+        else pageSize = 'A5';
+
+        var storeName    = {{ settings.store_name    | default: shop.name          | default: 'PHARMA COSMETICS' | json }};
+        var storeAddress = {{ settings.store_address | default: ''                                              | json }};
+        var storePhone   = {{ settings.store_phone   | default: shop.phone_number  | default: ''                | json }};
+        var senderName    = (overrides && overrides.senderName    != null) ? overrides.senderName    : storeName;
+        var senderAddress = (overrides && overrides.senderAddress != null) ? overrides.senderAddress : storeAddress;
+        var senderPhone   = (overrides && overrides.senderPhone   != null) ? overrides.senderPhone   : storePhone;
+
+        var statusLabel = { ready_to_pick: 'Sẵn sàng lấy hàng', delivering: 'Đang giao hàng',
+          redelivery: 'Chờ giao lại', delivered: 'Đã giao hàng', delivery_cancelled: 'Huỷ giao hàng',
+          returned: 'Đã hoàn hàng', cancelled: 'Đã huỷ' };
+        var payMethodLabel = { VIETQR: 'Chuyển khoản (VietQR)', COD: 'Thu hộ khi giao (COD)',
+          CASH: 'Tiền mặt tại quầy' };
+
+        var sheets = orders.map(function(o) {
+          var items = Array.isArray(o.items) ? o.items : [];
+
+          var subTotal = 0;
+          var itemsRows = items.map(function(it, i) {
+            var qty = toNum(it.qty || it.quantity || 0);
+            var price = toNum(it.price || 0);
+            var lineFromField = toNum(it.line_total);
+            var lineDiscount = toNum(it.discount_value || it.line_discount || 0);
+            var line = (lineFromField > 0 ? lineFromField : Math.max(0, qty * price - lineDiscount)) || 0;
+            subTotal += line;
+            var displayName = esc(it.name || it.title || it.handle || '?');
+            if (it.variant_title) displayName += ' <span class="var">(' + esc(it.variant_title) + ')</span>';
+            return '<tr>' +
+              '<td class="c-idx">' + (i + 1) + '</td>' +
+              (isK80 ? '' : '<td class="c-sku">' + esc(it.sku || '') + '</td>') +
+              '<td class="c-name">' + displayName + '</td>' +
+              '<td class="c-qty">' + qty + '</td>' +
+              (isK80 ? '' : '<td class="c-price">' + fmtVND(price) + '</td>') +
+              '<td class="c-total">' + fmtVND(line) + '</td>' +
+            '</tr>';
+          }).join('');
+
+          // shipFee = phí THU CỦA KHÁCH (customer_shipping_fee) — KHÔNG dùng o.shipping_fee (đó là
+          // phí TRẢ ĐTVC / chi phí nội bộ, khác số khách thấy — lẫn vào đây sẽ lệch TỔNG như bug
+          // 2026-08-24 ở hoá đơn bán hàng, xem _buildOrderPrintHtml).
+          var shipFee = toNum(o.customer_shipping_fee);
+          var discount = toNum(o.discount_amount);
+          var totalBE = toNum(o.total_amount);
+          var SANITY_MAX = 1e10;
+          var invalidNum = function(n) { return !isFinite(n) || n < 0 || n > SANITY_MAX; };
+          var finalTotal;
+          if (!invalidNum(totalBE) && totalBE > 0 && (subTotal === 0 || totalBE <= subTotal * 3)) {
+            finalTotal = totalBE;
+          } else {
+            finalTotal = Math.max(0, subTotal - discount + shipFee);
+          }
+          if (discount === 0 && subTotal > 0 && (finalTotal - shipFee) < subTotal) {
+            discount = Math.max(0, Math.round(subTotal - (finalTotal - shipFee)));
+          }
+
+          var addr = o.shipping_address || {};
+          var addrLine = [addr.address, addr.ward, addr.district, addr.province].filter(Boolean).join(', ');
+          var receiverName = String(addr.receiver_name || o.customer_name || '').trim();
+          var receiverPhone = String(addr.phone || o.customer_phone || '').trim();
+          var paymentMethod = String(o.payment_method || 'VIETQR').toUpperCase();
+          var isCod = paymentMethod === 'COD' && toNum(o.cod_amount) > 0;
+          var codAmount = isCod ? toNum(o.cod_amount) : 0;
+
+          var deliveryNote = String(o.driver_note || o.delivery_note || '').trim();
+          var notesBlock;
+          if (overrides) {
+            // Modal "Tuỳ chỉnh in": 1 khối ghi chú tự do, thay hẳn 2 nguồn auto bên dưới.
+            var freeNote = String(overrides.note || '').trim();
+            notesBlock = freeNote ? ('<div class="notes-block"><div class="note-line">' + esc(freeNote).replace(/\n/g, '<br>') + '</div></div>') : '';
+          } else {
+            notesBlock = (o.customer_note || deliveryNote) ? (
+              '<div class="notes-block">' +
+                (o.customer_note ? '<div class="note-line"><b>Ghi chú của khách:</b> ' + esc(o.customer_note) + '</div>' : '') +
+                (deliveryNote ? '<div class="note-line"><b>Chỉ dẫn giao hàng:</b> ' + esc(deliveryNote) + '</div>' : '') +
+              '</div>'
+            ) : '';
+          }
+
+          return '' +
+          '<div class="sheet ' + (isK80 ? 'sheet--k80' : 'sheet--a5') + '">' +
+
+            '<div class="shop-hd">' +
+              '<div class="shop-name">' + esc(senderName) + '</div>' +
+              (senderAddress ? '<div class="shop-line">' + esc(senderAddress) + '</div>' : '') +
+              (senderPhone ? '<div class="shop-line">ĐT: ' + esc(senderPhone) + '</div>' : '') +
+            '</div>' +
+
+            '<div class="doc-title">PHIẾU GIAO HÀNG</div>' +
+            '<div class="doc-oid">Mã VĐ: <b class="mono">' + esc(o.tracking_code || '—') + '</b>' +
+              ' · Mã đơn: <b>' + esc(o.order_id) + '</b>' +
+              (o.sapo_order_id ? ' · SAPO: <span class="mono">' + esc(o.sapo_order_id) + '</span>' : '') +
+            '</div>' +
+
+            '<div class="meta-grid">' +
+              (o.carrier ? '<div><span class="mk">Đối tác:</span> ' + esc(o.carrier) + '</div>' : '') +
+              '<div><span class="mk">Ngày đóng gói:</span> ' + esc(fmtDT(o.packed_at) || fmtDT(o.created_at)) + '</div>' +
+              '<div><span class="mk">Trạng thái:</span> ' + esc(statusLabel[o.fulfillment_status] || 'Chưa xác định') + '</div>' +
+              '<div><span class="mk">Thanh toán:</span> ' + esc(payMethodLabel[paymentMethod] || paymentMethod) + '</div>' +
+            '</div>' +
+
+            '<div class="party">' +
+              '<div class="party-title">Người nhận</div>' +
+              '<div><b>' + esc(receiverName || '—') + '</b></div>' +
+              (receiverPhone ? '<div>SĐT: <span class="mono">' + esc(receiverPhone) + '</span></div>' : '') +
+              (addrLine ? '<div>' + esc(addrLine) + '</div>' : '') +
+            '</div>' +
+
+            '<table class="items">' +
+              '<thead><tr>' +
+                '<th class="c-idx">STT</th>' +
+                (isK80 ? '' : '<th class="c-sku">Mã SKU</th>') +
+                '<th class="c-name">Sản phẩm</th>' +
+                '<th class="c-qty">SL</th>' +
+                (isK80 ? '' : '<th class="c-price">Đơn giá</th>') +
+                '<th class="c-total">Thành tiền</th>' +
+              '</tr></thead>' +
+              '<tbody>' + itemsRows + '</tbody>' +
+            '</table>' +
+
+            '<div class="totals">' +
+              '<div class="tot-row"><span>Tạm tính</span><b>' + fmtVND(subTotal) + '</b></div>' +
+              (discount > 0 ? '<div class="tot-row tot-neg"><span>Giảm giá</span><b>-' + fmtVND(discount) + '</b></div>' : '') +
+              (shipFee > 0 ? '<div class="tot-row"><span>Phí vận chuyển</span><b>' + fmtVND(shipFee) + '</b></div>' : '') +
+              '<div class="tot-row tot-final"><span>TỔNG CỘNG</span><b>' + fmtVND(finalTotal) + '</b></div>' +
+            '</div>' +
+
+            (isCod ? (
+              '<div class="cod-block"><span class="cod-lbl">SỐ TIỀN THU HỘ (COD)</span><span class="cod-val">' + fmtVND(codAmount) + '</span></div>'
+            ) : '<div class="cod-block cod-block--free">ĐÃ THANH TOÁN · KHÔNG THU TIỀN</div>') +
+
+            notesBlock +
+
+            '<div class="ft">Cảm ơn quý khách! · Hotline: ' + esc(senderPhone || '') + '</div>' +
+
+          '</div>';
+        }).join('');
+
+        return [
+          '<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8">',
+          '<title>Phiếu giao hàng · ' + orders.length + ' đơn</title>',
+          '<style>',
+          '@page { size: ' + pageSize + '; margin: ' + (isK80 ? '3mm' : '8mm') + '; }',
+          'html, body { margin: 0; padding: 0; font-family: Arial, "Helvetica Neue", sans-serif; color: #111; font-size: ' + (isK80 ? '9pt' : '10pt') + '; line-height: 1.4; }',
+          '.sheet { page-break-after: always; padding: 0; }',
+          '.sheet:last-child { page-break-after: auto; }',
+          '.shop-hd { text-align: center; border-bottom: 2px solid #111; padding-bottom: 2mm; margin-bottom: 2mm; }',
+          '.shop-name { font-size: ' + (isK80 ? '13pt' : '15pt') + '; font-weight: 900; letter-spacing: 0.5px; }',
+          '.shop-line { font-size: ' + (isK80 ? '8pt' : '9pt') + '; color: #444; margin-top: 0.5mm; }',
+          '.doc-title { text-align: center; font-size: ' + (isK80 ? '11pt' : '13pt') + '; font-weight: 800; letter-spacing: 1.5px; margin: 2mm 0 0.5mm; text-transform: uppercase; }',
+          '.doc-oid { text-align: center; font-size: 10pt; margin-bottom: 2.5mm; }',
+          '.mono { font-family: "Courier New", monospace; font-weight: 600; }',
+          '.meta-grid { display: grid; grid-template-columns: ' + (isK80 ? '1fr' : 'repeat(2, 1fr)') + '; gap: 0.5mm 4mm; font-size: 9pt; padding: 1.5mm 0; border-top: 1px dashed #999; border-bottom: 1px dashed #999; margin-bottom: 2mm; }',
+          '.mk { color: #666; }',
+          '.party { font-size: 10pt; margin-bottom: 2mm; }',
+          '.party-title { font-size: 8pt; text-transform: uppercase; color: #666; letter-spacing: 0.5px; margin-bottom: 0.5mm; font-weight: 700; }',
+          'table.items { width: 100%; border-collapse: collapse; margin: 2mm 0 3mm; font-size: 9pt; }',
+          'table.items th, table.items td { border-bottom: 1px solid #ccc; padding: 1.5mm 2mm; text-align: left; }',
+          'table.items th { background: #f5f5f5; font-weight: 700; text-transform: uppercase; font-size: 8pt; letter-spacing: 0.3px; border-bottom: 2px solid #111; }',
+          'table.items .var { color: #666; font-size: 8pt; font-style: italic; }',
+          '.c-idx { width: 8mm; text-align: right; color: #666; }',
+          '.c-sku { width: 22mm; font-family: monospace; font-size: 8pt; color: #444; }',
+          '.c-name { min-width: ' + (isK80 ? '30mm' : '55mm') + '; }',
+          '.c-qty { width: 12mm; text-align: right; font-weight: 700; }',
+          '.c-price { width: 22mm; text-align: right; }',
+          '.c-total { width: 24mm; text-align: right; font-weight: 700; }',
+          '.totals { margin: 2mm 0 3mm; }',
+          '.tot-row { display: flex; justify-content: space-between; padding: 0.8mm 0; font-size: 10pt; }',
+          '.tot-row span { color: #444; }',
+          '.tot-neg b { color: #dc2626; }',
+          '.tot-final { border-top: 2px solid #111; margin-top: 1mm; padding-top: 2mm; font-size: 12pt; }',
+          '.tot-final span { font-weight: 700; color: #111; }',
+          '.tot-final b { font-size: 13pt; }',
+          '.cod-block { margin: 2.5mm 0; padding: 2.5mm 3mm; border: 1.5px dashed #111; display: flex; justify-content: space-between; align-items: center; }',
+          '.cod-lbl { font-weight: 800; font-size: 11pt; }',
+          '.cod-val { font-weight: 800; font-size: 15pt; }',
+          '.cod-block--free { display: block; text-align: center; font-weight: 800; font-size: 11pt; letter-spacing: 1px; border-style: solid; color: #059669; }',
+          '.notes-block { margin: 2mm 0; padding: 1.5mm 2.5mm; background: #FFFBEB; border-left: 3px solid #f59e0b; font-size: 9pt; }',
+          '.notes-block .note-line { margin: 0.5mm 0; }',
+          '.ft { margin-top: 3mm; text-align: center; font-size: 8pt; color: #777; border-top: 1px dashed #999; padding-top: 1.5mm; }',
+          '@media print { .no-print { display: none; } }',
+          '</style></head><body>',
+          sheets,
+          '</body></html>'
+        ].join('');
+      },
+      // Mở 1 window chứa N iframe PDF (Goship label_url). Print sau khi tất cả iframe onload.
+      _openBulkGoshipPrintWindow: function(labelUrls) {
+        var w = window.open('', '_blank', 'width=420,height=640');
+        if (!w) { window.MopsAdminCore.showToast('Trình duyệt chặn popup — cho phép popup rồi thử lại.', 'error'); return; }
+        var iframes = labelUrls.map(function(url, i) {
+          return '<iframe id="goship-lbl-' + i + '" src="' + url + '" style="width:100mm;height:150mm;border:0;display:block;page-break-after:always;" scrolling="no"></iframe>';
+        }).join('');
+        w.document.open();
+        w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Bulk in tem Goship (' + labelUrls.length + ')</title>' +
+          '<style>@page{size:100mm 150mm;margin:0;}html,body{margin:0;padding:0;}iframe:last-child{page-break-after:auto;}</style>' +
+          '</head><body>' + iframes +
+          '<script>window.addEventListener("load",function(){setTimeout(function(){try{window.print();}catch(e){}},900);});</script>' +
+          '</body></html>');
+        w.document.close();
+      },
+      /* ═══════════ MODAL "TUỲ CHỈNH IN" — 2026-08-28 ═══════════
+       * Thay cho việc bấm nút "In tem" là in thẳng luôn (printGoshipLabelA6 auto-fetch PDF Goship):
+       * giờ mở modal cho staff chọn 1 trong 3 layout preview trực tiếp — 'goship'/'mops' dùng
+       * _buildLabelTemplateHtml (tem A6 100×150mm), 'sale' dùng _buildShipmentPrintHtml (phiếu A5/A4/
+       * K80 có bảng giá). Cả 2 builder nhận `overrides` để staff sửa ghi chú + người gửi tự do trước
+       * khi in — preview (iframe srcdoc) và bản in thật DÙNG CHUNG refreshPrintPreview nên không bao
+       * giờ lệch nhau. CHỈ áp cho 3 nút "In tem" trong tab Shipping (mops_admin_tab_shipping.bwt) —
+       * KHÔNG đụng nút in ở tab Đơn hàng (mops_admin_tab_orders.bwt:573 vẫn gọi printGoshipLabelA6
+       * trực tiếp, giữ nguyên hành vi auto-fetch PDF Goship thật cho hãng vận chuyển khi giao hàng).
+       */
+      openPrintModal: function(orderId, presetLayout) {
+        var self = this, core = window.MopsAdminCore, pm = this.printModal;
+        if (!orderId) return;
+        pm.show = true;
+        pm.loading = true;
+        pm.order = null;
+        pm.layout = presetLayout || 'goship';
+        pm.saleSize = 'A5';
+        pm.itemsText = '';
+        pm.previewHtml = '';
+        core.gasGet({ action: 'get_order', order_id: orderId }).then(function(d) {
+          pm.loading = false;
+          if (!d || !d.success || !d.order_id) {
+            core.showToast('Không lấy được chi tiết đơn.', 'error');
+            pm.show = false;
+            return;
+          }
+          pm.order = d;
+          var sender = self._printDefaultSender();
+          pm.senderName = sender.name;
+          pm.senderAddress = sender.address;
+          pm.senderPhone = sender.phone;
+          pm.note = self._composeDefaultNote(d);
+          pm.inspectionTag = {{ settings.mops_label_shipper_note | default: '' | json }};
+          pm.itemsText = self._composeDefaultItemsText(d);
+          self.refreshPrintPreview();
+        }).catch(function() {
+          pm.loading = false;
+          core.showToast('Lỗi kết nối khi tải đơn.', 'error');
+          pm.show = false;
+        });
+      },
+      closePrintModal: function() {
+        this.printModal.show = false;
+        this.printModal.order = null;
+        this.printModal.previewHtml = '';
+      },
+      setPrintLayout: function(layout) {
+        if (this.printModal.layout === layout) return;
+        this.printModal.layout = layout;
+        this.refreshPrintPreview();
+      },
+      // Nguồn "Ghi chú giao hàng" mặc định khi mở modal — CHỈ gộp note theo ĐƠN (driver/delivery/
+      // customer note). Chính sách kiểm hàng (shopNote) giờ là field riêng — xem inspectionTag ở
+      // openPrintModal — không trộn vào đây nữa (2026-08-29, tách theo đúng thực tế 2 field khác nhau).
+      _composeDefaultNote: function(o) {
+        var orderNote = String((o.driver_note || o.delivery_note || '')).trim();
+        var custNote  = String(o.customer_note || '').trim();
+        var lines = [];
+        if (orderNote) lines.push(orderNote);
+        if (custNote)  lines.push('Khách: ' + custNote);
+        return lines.join('\n');
+      },
+      _printDefaultSender: function() {
+        var storeName    = {{ settings.store_name    | default: shop.name          | default: 'PHARMA COSMETICS' | json }};
+        var storeAddress = {{ settings.store_address | default: ''                                              | json }};
+        var storePhone   = {{ settings.store_phone   | default: shop.phone_number  | default: ''                | json }};
+        return { name: storeName, address: storeAddress, phone: storePhone };
+      },
+      // Nguồn "Nội dung hàng" mặc định khi mở modal — liệt kê tên+SL thật từ đơn thành text thô để
+      // staff thấy sẵn rồi tự xoá/sửa tên sản phẩm khi cần ẩn (2026-08-29).
+      _composeDefaultItemsText: function(o) {
+        var items = Array.isArray(o.items) ? o.items : [];
+        return items.map(function(it) {
+          return (it.name || it.title || it.handle || '?') + ', SL: ' + Number(it.quantity || it.qty || 1);
+        }).join('\n');
+      },
+      refreshPrintPreview: function() {
+        var pm = this.printModal;
+        if (!pm.order) return;
+        var overrides = {
+          note: pm.note,
+          inspectionTag: pm.inspectionTag,
+          itemsText: pm.itemsText,
+          senderName: pm.senderName,
+          senderAddress: pm.senderAddress,
+          senderPhone: pm.senderPhone,
+          forceCarrierLabel: pm.layout === 'mops' ? 'MOPS' : ''
+        };
+        pm.previewHtml = (pm.layout === 'sale')
+          ? this._buildShipmentPrintHtml([pm.order], pm.saleSize, overrides)
+          : this._buildLabelTemplateHtml(pm.order, false, '', overrides);
+      },
+      printFromModal: function() {
+        var core = window.MopsAdminCore, pm = this.printModal;
+        if (!pm.order || pm.busy) return;
+        this.refreshPrintPreview();
+        pm.busy = true;
+        var w = window.open('', '_blank', 'width=480,height=700');
+        if (!w) { core.showToast('Trình duyệt chặn popup — cho phép popup rồi thử lại.', 'error'); pm.busy = false; return; }
+        w.document.open();
+        w.document.write(pm.previewHtml);
+        w.document.close();
+        setTimeout(function() {
+          try { w.focus(); w.print(); } catch (e) {}
+          pm.busy = false;
+        }, 300);
+        core.showToast('Đã gửi lệnh in.', 'success');
+      },
+      printGoshipLabelA6: function(orderId) {
+        var self = this, core = window.MopsAdminCore;
+        if (!orderId) return;
+        if (this.labelPrint.busy === orderId) return; // đang gọi — chặn double-click
+        this.labelPrint.busy = orderId;
+        core.gasPost({ action: 'get_shipment_label', order_id: orderId })
+          .then(function(d) {
+            self.labelPrint.busy = '';
+            if (d && d.success && d.label_url) {
+              // Path 1 — iframe ẩn nạp PDF Goship rồi tự print.
+              self._printLabelViaIframe(d.label_url);
+              return;
+            }
+            // Path 2 — Goship không trả label (hoặc đơn không dùng Goship): fallback template.
+            self._printLabelTemplateA6(orderId).catch(function() {
+              core.showToast('Không tải được chi tiết đơn để in tem — thử lại sau ít phút.', 'error');
+            });
+          })
+          .catch(function() {
+            self.labelPrint.busy = '';
+            core.showToast('Lỗi kết nối khi lấy tem vận đơn.', 'error');
+          });
+      },
+      // Iframe ẩn — reuse một element duy nhất giữa các lần in (tránh rò leak DOM nếu staff
+      // in liên tục 20 đơn/phút). Set src mới sẽ kích hoạt onload → print.
+      _printLabelViaIframe: function(url) {
+        var frame = document.getElementById('goship-print-frame');
+        if (!frame) {
+          frame = document.createElement('iframe');
+          frame.id = 'goship-print-frame';
+          frame.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:0;height:0;border:0;';
+          document.body.appendChild(frame);
+        }
+        frame.onload = function() {
+          // Try/catch: cross-origin PDF từ Goship CDN có thể chặn contentWindow.print() trên
+          // một số trình duyệt. Fallback: mở tab mới bằng URL trực tiếp (staff bấm Ctrl+P).
+          try {
+            frame.contentWindow.focus();
+            frame.contentWindow.print();
+          } catch (e) {
+            window.open(url, '_blank', 'noopener');
+          }
+        };
+        frame.src = url;
+      },
+      // Fallback template HTML — tự dựng tem khi Goship không có label (hoặc đơn không phải
+      // Goship). Fetch chi tiết đơn qua get_order, render vào window mới với @page 100×150mm.
+      // Barcode via barcodeapi.org (public, không token) — máy in nhiệt đọc CODE128 chuẩn.
+      _printLabelTemplateA6: function(orderId) {
+        var self = this, core = window.MopsAdminCore;
+        return core.gasGet({ action: 'get_order', order_id: orderId }).then(function(d) {
+          if (!d || !d.success || !d.order_id) throw new Error('Không lấy được chi tiết đơn');
+          var html = self._buildLabelTemplateHtml(d, self.labelPrint.hideProductDetails, self.labelPrint.replacementText);
+          var w = window.open('', '_blank', 'width=420,height=640');
+          if (!w) { core.showToast('Trình duyệt chặn popup — cho phép popup rồi thử lại.', 'error'); return; }
+          w.document.open();
+          w.document.write(html);
+          w.document.close();
+          // Chờ layout xong rồi print. Timeout 300ms cho font load.
+          setTimeout(function() { try { w.focus(); w.print(); } catch (e) {} }, 300);
+        });
+      },
+      // 2026-08-29 — REWRITE toàn bộ theo yêu cầu khớp bố cục tem chuẩn ngành GHN/GHTK/SPX/J&T (staff
+      // gửi ảnh tem SPX thật để đối chiếu). Field nào có DỮ LIỆU THẬT thì thêm đủ; field nào là dữ liệu
+      // NỘI BỘ CỦA HÃNG (không MOPS/Goship/GHN nào trả về) thì KHÔNG bịa số — xem ghi chú tại chỗ:
+      //   - Mã tuyến/mã sắp xếp kho (VD "CT-74-01-CM10" trong ảnh mẫu): do hệ thống sort nội bộ của
+      //     TỪNG hãng vận chuyển tự sinh theo mạng lưới kho của họ — GHN/Goship API không trả field này
+      //     (đã grep xác nhận). BỎ, không hiện field giả.
+      //   - Mã trạm/hub dưới QR (VD "HN-20-09-01"): tương tự, không có nguồn dữ liệu thật. BỎ.
+      //   - Khối lượng: CÓ dữ liệu thật — Orders.package_weight (cân lúc đóng gói) hoặc
+      //     package_weight_suggested (ước tính từ Products.Weight) từ get_order — GIỮ.
+      //   - Footer quảng cáo/tuyển dụng tài xế + hotline "1900 6885" + "spx.vn" trong ảnh mẫu là
+      //     THƯƠNG HIỆU RIÊNG của SPX Express (bên thứ 3) — không in trên tem MOPS/Goship-facsimile vì
+      //     tem này đại diện shop, không phải SPX; ĐẶC BIỆT sai nếu layout='mops' (mục đích ẩn hãng
+      //     thật) mà lại in thương hiệu 1 hãng cụ thể. BỎ, giữ footer trung tính.
+      // 2 field KHÁC nhau theo đúng thực tế ngành (nghiên cứu quy ước SPX/GHN/GHTK/J&T, không tự chế):
+      //   - inspectionTag = CHÍNH SÁCH KIỂM HÀNG của shop, in trên MỌI đơn (VD "Cho xem hàng, không
+      //     cho thử") — nguồn settings.mops_label_shipper_note, KHÔNG đổi theo đơn.
+      //   - note = GHI CHÚ GIAO HÀNG riêng theo TỪNG đơn (VD "Gọi trước khi giao") — nguồn
+      //     driver_note/delivery_note/customer_note, hiện ở khối "Chỉ dẫn giao hàng".
+      // `overrides` optional ({note, inspectionTag, senderName, senderAddress, senderPhone,
+      // forceCarrierLabel}) cho modal "Tuỳ chỉnh in". Không có overrides (bulk print) → auto-compose
+      // từ dữ liệu đơn + settings, hành vi tương đương trước giờ.
+      _buildLabelTemplateHtml: function(o, hideItems, replacementText, overrides) {
+        var esc = function(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        }); };
+        var storeName    = {{ settings.store_name    | default: shop.name          | default: 'PHARMA COSMETICS' | json }};
+        var storeAddress = {{ settings.store_address | default: ''                                              | json }};
+        var storePhone   = {{ settings.store_phone   | default: shop.phone_number  | default: ''                | json }};
+        var senderName    = (overrides && overrides.senderName    != null) ? overrides.senderName    : storeName;
+        var senderAddress = (overrides && overrides.senderAddress != null) ? overrides.senderAddress : storeAddress;
+        var senderPhone   = (overrides && overrides.senderPhone   != null) ? overrides.senderPhone   : storePhone;
+        var carrierLabel  = (overrides && overrides.forceCarrierLabel) ? overrides.forceCarrierLabel : (o.carrier || 'MOPS');
+        var addr = o.shipping_address || {};
+        var addrLine = [addr.address, addr.ward, addr.district, addr.province].filter(Boolean).join(', ');
+        var receiverName = String(addr.receiver_name || o.customer_name || '').trim();
+        var receiverPhone = String(addr.phone || o.customer_phone || '').trim();
+        var tracking = String(o.tracking_code || o.order_id || '');
+        var barcodeUrl = 'https://barcodeapi.org/api/code128/' + encodeURIComponent(tracking);
+        // QR mã hoá CHÍNH mã vận đơn (dữ liệu thật, dùng được luôn) — KHÔNG phải mã trạm/hub (không có
+        // dữ liệu) như ảnh mẫu; nhiều app tài xế (GHN/Goship) cũng quét QR mã vận đơn tương tự barcode.
+        var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=0&data=' + encodeURIComponent(tracking);
+        var items = Array.isArray(o.items) ? o.items : [];
+        var replacement = String(replacementText || '').trim();
+
+        // Chính sách kiểm hàng (shop-wide, mọi đơn) — TÁCH khỏi ghi chú giao hàng theo đơn bên dưới.
+        var shopInspectionTag = {{ settings.mops_label_shipper_note | default: '' | json }};
+        var inspectionTag = String((overrides && overrides.inspectionTag != null) ? overrides.inspectionTag : shopInspectionTag).trim();
+        var policyTagHtml = inspectionTag ? '<div class="policy-tag">' + esc(inspectionTag) + '</div>' : '';
+
+        // Ghi chú giao hàng riêng theo đơn.
+        var deliveryNoteText;
+        if (overrides) {
+          deliveryNoteText = String(overrides.note || '').trim();
+        } else {
+          var orderNote = String((o.delivery_note || o.driver_note || '')).trim();
+          var custNote  = String(o.customer_note || '').trim();
+          var parts = [];
+          if (orderNote) parts.push(orderNote);
+          if (custNote)  parts.push('Khách: ' + custNote);
+          deliveryNoteText = parts.join('\n');
+        }
+        var deliveryNoteHtml = deliveryNoteText ? esc(deliveryNoteText).replace(/\n/g, '<br>') : '<span class="muted">—</span>';
+
+        // Tổng SL luôn tính từ items thật (đếm hàng vật lý để đối chiếu khi giao) — không đổi dù staff
+        // có ẩn/sửa tên sản phẩm ở dưới hay không.
+        var totalQty = items.reduce(function(sum, it) { return sum + (Number(it.quantity || it.qty || 1) || 0); }, 0);
+        var itemsBodyHtml = '';
+        if (overrides && overrides.itemsText != null) {
+          // 2026-08-29 — modal "Tuỳ chỉnh in": ô "Nội dung hàng" nhập tay tự do, thay hẳn danh sách
+          // auto bên dưới. Dùng khi cần ẩn tên sản phẩm thật (VD ghi "Mỹ phẩm chăm sóc da" thay vì
+          // tên SKU cụ thể) — thay thế cơ chế checkbox hideItems/replacementText cũ cho đường modal.
+          var itemsText = String(overrides.itemsText).trim();
+          if (itemsText) itemsBodyHtml = '<div class="items-note">' + esc(itemsText).replace(/\n/g, '<br>') + '</div>';
+        } else if (hideItems) {
+          // Đường bulk print cũ (không qua modal) — giữ nguyên hideItems/replacementText.
+          if (replacement) itemsBodyHtml = '<div class="items-note">' + esc(replacement) + '</div>';
+        } else if (items.length) {
+          // 2026-08-16 fix: get_order response items dùng field `name` (từ mops_02.js:821), không phải
+          // `title` — trước đây fallback về `handle` (URL slug) khiến tem in ra chuỗi kiểu
+          // "adapalene-gel-adaferin-01" thay vì tên tiếng Việt. Ưu tiên: name → title → handle → '?'.
+          itemsBodyHtml = '<ul>' + items.map(function(it) {
+            return '<li>' + esc(it.name || it.title || it.handle || '?') + ', SL: ' + Number(it.quantity || it.qty || 1) + '</li>';
+          }).join('') + '</ul>';
+        }
+
+        var cod = Number(o.cod_amount || 0);
+        var codPartHtml = cod > 0
+          ? '<span class="cod-lbl">Tiền thu người nhận: <b class="cod-val">' + new Intl.NumberFormat('vi-VN').format(cod) + 'đ</b></span>'
+          : '<span class="cod-lbl cod-lbl--free">ĐÃ THANH TOÁN · KHÔNG THU TIỀN</span>';
+        // Khối lượng: dữ liệu thật (cân lúc đóng gói, fallback ước tính từ khối lượng sản phẩm) —
+        // KHÔNG phải "khối lượng tối đa dịch vụ" như tem hãng thật (đó là hạn mức gói cước, MOPS không
+        // quản lý gói cước của từng hãng).
+        var weight = Number(o.package_weight || o.package_weight_suggested || 0);
+        var weightPartHtml = weight > 0 ? '<span class="wt">Khối lượng: <b>' + weight + 'g</b></span>' : '<span></span>';
+
+        var createdDT = (function() {
+          var d = new Date(o.created_at || '');
+          if (isNaN(d.getTime())) return esc(String(o.created_at || '').substring(0, 16));
+          var pad = function(n) { return (n < 10 ? '0' : '') + n; };
+          return pad(d.getDate()) + '-' + pad(d.getMonth() + 1) + '-' + d.getFullYear() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+        })();
+
+        return [
+          '<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><title>Tem ' + esc(tracking) + '</title>',
+          '<style>',
+          '@page { size: 100mm 150mm; margin: 0; }',
+          'html, body { margin: 0; padding: 0; font-family: Arial, sans-serif; color: #111; }',
+          // overflow: hidden chặn địa chỉ siêu dài đẩy tràn ra trang in thứ 2 (lãng phí giấy nhiệt) —
+          // chấp nhận cắt bớt còn hơn tràn trang, .addr-col đã tự co dòng bên dưới.
+          'body { width: 100mm; height: 150mm; padding: 3.5mm; box-sizing: border-box; font-size: 8pt; line-height: 1.3; overflow: hidden; }',
+          '.muted { color: #bbb; }',
+          '.hd { display: flex; justify-content: space-between; align-items: center; gap: 2mm; border-bottom: 2px solid #111; padding-bottom: 1.5mm; margin-bottom: 1.5mm; }',
+          '.hd .carrier { font-size: 13pt; font-weight: 800; letter-spacing: 0.3px; flex-shrink: 0; }',
+          '.hd .barcode-wrap { text-align: right; min-width: 0; }',
+          '.hd .barcode-wrap img { height: 11mm; max-width: 55mm; }',
+          '.tracking-line { font-size: 8.5pt; font-weight: 700; margin-bottom: 1.5mm; }',
+          '.tracking-line .mono { font-family: "Courier New", monospace; letter-spacing: 0.4px; }',
+          '.addr-grid { display: flex; border-top: 1px dashed #111; border-bottom: 1px dashed #111; padding: 1.5mm 0; margin-bottom: 1.5mm; }',
+          '.addr-col { flex: 1; min-width: 0; font-size: 7.5pt; line-height: 1.3; overflow-wrap: anywhere; word-break: break-word; }',
+          '.addr-col--from { padding-right: 2mm; border-right: 1px dashed #111; }',
+          '.addr-col--to { padding-left: 2mm; }',
+          '.addr-lbl { font-weight: 800; text-transform: uppercase; font-size: 7pt; color: #444; margin-bottom: 0.5mm; }',
+          '.addr-name { font-weight: 700; font-size: 8.5pt; }',
+          '.addr-col--to .addr-name { font-size: 9.5pt; }',
+          '.addr-line { margin-top: 0.3mm; }',
+          '.legal-note { font-size: 6.3pt; font-style: italic; color: #555; line-height: 1.25; margin-bottom: 1mm; }',
+          '.policy-tag { border: 1px solid #111; background: #f5f5f5; font-weight: 800; font-size: 7.5pt; text-transform: uppercase; text-align: center; padding: 1mm; margin-bottom: 1.5mm; }',
+          '.mid-grid { display: flex; gap: 2mm; border-top: 1px dashed #111; border-bottom: 1px dashed #111; padding: 1.5mm 0; margin-bottom: 1.5mm; }',
+          '.mid-col--items { flex: 1; min-width: 0; font-size: 7.5pt; }',
+          '.mid-col--items .items-hd { font-weight: 700; font-size: 7.5pt; margin-bottom: 0.5mm; }',
+          '.mid-col--items ul { margin: 0; padding-left: 3.5mm; line-height: 1.3; }',
+          '.mid-col--items .items-note { font-weight: 600; line-height: 1.3; word-wrap: break-word; }',
+          '.mid-col--qr { width: 20mm; text-align: center; flex-shrink: 0; }',
+          '.mid-col--qr img { width: 18mm; height: 18mm; }',
+          '.created-at { font-size: 6.5pt; margin-top: 1mm; line-height: 1.3; }',
+          '.created-at b { font-size: 7.5pt; }',
+          '.foot-grid { display: flex; gap: 2mm; border-top: 1px dashed #111; border-bottom: 1px dashed #111; padding: 1.5mm 0; margin-bottom: 1.5mm; font-size: 7.3pt; line-height: 1.3; }',
+          '.foot-col { flex: 1; min-width: 0; }',
+          '.foot-col--note { padding-right: 2mm; border-right: 1px dashed #111; overflow-wrap: anywhere; }',
+          '.foot-col--sign { padding-left: 2mm; text-align: center; }',
+          '.foot-lbl { font-weight: 800; font-size: 7.3pt; text-transform: uppercase; margin-bottom: 0.5mm; color: #444; text-align: left; }',
+          '.sign-line { border-bottom: 1px dotted #999; height: 6mm; margin-top: 1mm; }',
+          '.sign-hint { font-size: 6.3pt; color: #999; margin-top: 0.5mm; }',
+          '.cw-row { display: flex; justify-content: space-between; align-items: center; border: 1.5px dashed #111; padding: 1.5mm 2mm; margin-bottom: 1mm; font-size: 7.5pt; }',
+          '.cw-row .cod-val { font-size: 10pt; }',
+          '.cw-row .cod-lbl--free { color: #059669; font-weight: 800; }',
+          '.cw-row .wt { color: #555; }',
+          '.foot { font-size: 6.3pt; color: #999; display: flex; justify-content: space-between; }',
+          '@media print { .no-print { display: none; } }',
+          '</style></head><body>',
+          '<div class="hd">',
+          '<div class="carrier">' + esc(carrierLabel) + '</div>',
+          '<div class="barcode-wrap"><img src="' + barcodeUrl + '" alt="' + esc(tracking) + '"></div>',
+          '</div>',
+          '<div class="tracking-line">Mã vận đơn: <span class="mono">' + esc(tracking) + '</span></div>',
+          '<div class="addr-grid">',
+          '<div class="addr-col addr-col--from"><div class="addr-lbl">Từ</div><div class="addr-name">' + esc(senderName) + '</div>' +
+            (senderAddress ? '<div class="addr-line">' + esc(senderAddress) + '</div>' : '') +
+            (senderPhone ? '<div class="addr-line">SĐT: ' + esc(senderPhone) + '</div>' : '') + '</div>',
+          '<div class="addr-col addr-col--to"><div class="addr-lbl">Đến</div><div class="addr-name">' + esc(receiverName || '—') + '</div>' +
+            (addrLine ? '<div class="addr-line">' + esc(addrLine) + '</div>' : '') +
+            (receiverPhone ? '<div class="addr-line">SĐT: ' + esc(receiverPhone) + '</div>' : '') + '</div>',
+          '</div>',
+          '<div class="legal-note">*** Người gửi cam kết hàng hoá có đầy đủ hoá đơn, chứng từ hợp lệ theo quy định pháp luật.</div>',
+          policyTagHtml,
+          '<div class="mid-grid">',
+          '<div class="mid-col--items"><div class="items-hd">Nội dung hàng (Tổng SL: ' + totalQty + ')</div>' + itemsBodyHtml + '</div>',
+          '<div class="mid-col--qr"><img src="' + qrUrl + '" alt="QR ' + esc(tracking) + '">' +
+            '<div class="created-at">Ngày tạo vận đơn:<br><b>' + createdDT + '</b></div></div>',
+          '</div>',
+          '<div class="foot-grid">',
+          '<div class="foot-col--note"><div class="foot-lbl">Chỉ dẫn giao hàng</div>' + deliveryNoteHtml + '</div>',
+          '<div class="foot-col--sign"><div class="foot-lbl">Chữ ký người nhận</div><div class="sign-line"></div><div class="sign-hint">(Ký &amp; ghi rõ họ tên)</div></div>',
+          '</div>',
+          '<div class="cw-row">' + codPartHtml + weightPartHtml + '</div>',
+          '<div class="foot"><span>' + esc(carrierLabel) + (o.store_branch ? ' · ' + esc(o.store_branch) : '') + '</span><span>A6 · 100×150mm</span></div>',
+          '</body></html>'
+        ].join('');
+      }
+    }
+  });
+})();

@@ -1,0 +1,150 @@
+{%- comment -%}
+  cart_initial_ssr.bwt — Server-Side Render initial cart HTML
+  ──────────────────────────────────────────────────────────────
+  Mục đích: First paint hiển thị NGAY cart items thay vì chờ JS fetch /cart.js.
+  Cấu trúc HTML phải KHỚP với Handlebars #CartTemplate / #CartMobileTemplate
+  / #FooterCartTemplate trong ajaxcart.bwt để khi JS replace innerHTML
+  không gây layout shift.
+
+  Tham số:
+    target = 'desktop' | 'mobile' | 'footer'
+
+  Dùng:
+    {%- include 'cart_initial_ssr', target: 'desktop' -%}
+{%- endcomment -%}
+
+{%- if target == 'desktop' -%}
+  {%- if cart.item_count > 0 -%}
+  <form action="/cart" method="post" novalidate class="cart ajaxcart cartpage">
+    <div class="cart-header-info">
+      <div class="cart-check-col"><label><input type="checkbox" id="cart-select-all" title="Chọn tất cả" checked></label></div>
+      <div>Thông tin sản phẩm</div>
+      <div>Số lượng</div>
+      <div>Thành tiền</div>
+    </div>
+    <div class="ajaxcart__inner ajaxcart__inner--has-fixed-footer cart_body items">
+      {%- for item in cart.items -%}
+      <div class="ajaxcart__row">
+        <div class="cart-item-check">
+          <input type="checkbox" class="cart-item-select" data-key="{{ item.variant.id }}" data-line="{{ forloop.index }}" data-raw-price="{{ item.line_price }}" checked>
+        </div>
+        <div class="cart-item-info" data-line="{{ forloop.index }}">
+          <a href="{{ item.url }}" class="cart-item-thumb" title="{{ item.product.name | escape }}">
+            {%- assign _img_src = item.image.src | default: item.image -%}
+            {%- if _img_src -%}
+            <img src="{{ _img_src | img_url: 'compact' }}" alt="{{ item.product.name | escape }}" width="90" height="90">
+            {%- elsif item.product.featured_image.src -%}
+            <img src="{{ item.product.featured_image.src | img_url: 'compact' }}" alt="{{ item.product.name | escape }}" width="90" height="90">
+            {%- endif -%}
+          </a>
+          <div class="cart-item-meta">
+            <a href="{{ item.url }}" class="cart-item-name line-clamp line-clamp-2-new" title="{{ item.product.name | escape }}">{{ item.product.name }}</a>
+            {%- if item.variant.title and item.variant.title != 'Default Title' -%}
+            <span class="cart-item-variant">{{ item.variant.title }}</span>
+            {%- endif -%}
+            <span class="cart-item-unit-price-inline"><span class="cart-price">{{ item.price | money }}</span></span>
+            <a title="Xóa" class="cart-item-remove remove-item-cart ajaxifyCart--remove" href="javascript:;" data-line="{{ forloop.index }}">Xóa</a>
+          </div>
+        </div>
+        <div class="cart-item-qty">
+          <div class="ajaxcart__qty input-group-btn">
+            <button type="button" class="ajaxcart__qty-adjust ajaxcart__qty--minus items-count" data-id="{{ item.variant.id }}" data-qty="{{ item.quantity | minus: 1 }}" data-line="{{ forloop.index }}" aria-label="-">-</button>
+            <input type="text" name="updates[]" class="ajaxcart__qty-num number-sidebar" maxlength="3" value="{{ item.quantity }}" min="0" data-id="{{ item.variant.id }}" data-line="{{ forloop.index }}" aria-label="quantity" pattern="[0-9]*">
+            <button type="button" class="ajaxcart__qty-adjust ajaxcart__qty--plus items-count" data-id="{{ item.variant.id }}" data-line="{{ forloop.index }}" data-qty="{{ item.quantity | plus: 1 }}" aria-label="+">+</button>
+          </div>
+        </div>
+        <div class="cart-item-line-price">
+          <span class="cart-price">{{ item.line_price | money }}</span>
+        </div>
+      </div>
+      {%- endfor -%}
+    </div>
+  </form>
+  {%- else -%}
+  <div class="ajaxcart__empty cart-empty-ssr">
+    <p>Giỏ hàng của bạn đang trống.</p>
+  </div>
+  {%- endif -%}
+
+{%- elsif target == 'mobile' -%}
+  {%- if cart.item_count > 0 -%}
+  <form action="/cart" method="post" novalidate class="cart ajaxcart cart-mobile">
+    <div class="cart-mobile-select-all">
+      <label><input type="checkbox" id="cart-select-all" title="Chọn tất cả" checked> Chọn tất cả</label>
+    </div>
+    <div class="ajaxcart__inner ajaxcart__inner--has-fixed-footer cart_body">
+      {%- for item in cart.items -%}
+      <div class="ajaxcart__row">
+        <div class="cart-item-check cart-item-check--mobile">
+          <input type="checkbox" class="cart-item-select" data-key="{{ item.variant.id }}" data-line="{{ forloop.index }}" data-raw-price="{{ item.line_price }}" checked>
+        </div>
+        <div class="ajaxcart__product cart_product" data-line="{{ forloop.index }}">
+          <a href="{{ item.url }}" class="ajaxcart__product-image cart_image" title="{{ item.product.name | escape }}">
+            {%- assign _img_src = item.image.src | default: item.image -%}
+            {%- if _img_src -%}
+            <img width="80" height="80" src="{{ _img_src | img_url: 'compact' }}" alt="{{ item.product.name | escape }}">
+            {%- elsif item.product.featured_image.src -%}
+            <img width="80" height="80" src="{{ item.product.featured_image.src | img_url: 'compact' }}" alt="{{ item.product.name | escape }}">
+            {%- endif -%}
+          </a>
+          <div class="grid__item cart_info">
+            <div class="ajaxcart__product-name-wrapper cart_name">
+              <a href="{{ item.url }}" class="ajaxcart__product-name h4 line-clamp line-clamp-2-new" title="{{ item.product.name | escape }}">{{ item.product.name }}</a>
+              {%- if item.variant.title and item.variant.title != 'Default Title' -%}
+              <span class="ajaxcart__product-meta variant-title">{{ item.variant.title }}</span>
+              {%- endif -%}
+            </div>
+            <div class="grid">
+              <div class="grid__item one-half cart_select cart_item_name">
+                <div class="ajaxcart__qty input-group-btn">
+                  <button type="button" class="ajaxcart__qty-adjust ajaxcart__qty--minus items-count" data-id="{{ item.variant.id }}" data-qty="{{ item.quantity | minus: 1 }}" data-line="{{ forloop.index }}" aria-label="-"> - </button>
+                  <input type="text" name="updates[]" class="ajaxcart__qty-num number-sidebar" maxlength="3" value="{{ item.quantity }}" min="0" data-id="{{ item.variant.id }}" data-line="{{ forloop.index }}" aria-label="quantity" pattern="[0-9]*">
+                  <button type="button" class="ajaxcart__qty-adjust ajaxcart__qty--plus items-count" data-id="{{ item.variant.id }}" data-line="{{ forloop.index }}" data-qty="{{ item.quantity | plus: 1 }}" aria-label="+"> + </button>
+                </div>
+              </div>
+              <div class="grid__item one-half text-right cart_prices">
+                <span class="cart-price">{{ item.price | money }}</span>
+                <a title="Xóa" class="cart__btn-remove remove-item-cart ajaxifyCart--remove" href="javascript:;" data-line="{{ forloop.index }}">Xóa</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {%- endfor -%}
+    </div>
+  </form>
+  {%- else -%}
+  <div class="ajaxcart__empty cart-empty-ssr">
+    <p>Giỏ hàng của bạn đang trống.</p>
+  </div>
+  {%- endif -%}
+
+{%- elsif target == 'footer' -%}
+  {%- assign has_discount = false -%}
+  {%- if cart.total_discounts > 0 -%}{%- assign has_discount = true -%}{%- endif -%}
+  <div class="cart-summary-breakdown">
+    <div class="cart-summary-row cart-summary-row--count">
+      <span class="cart-summary-label">Đã chọn (tính tổng)</span>
+      <span class="cart-summary-count js-cart-count">{{ cart.item_count }} sản phẩm</span>
+    </div>
+    {%- if has_discount -%}
+    <div class="cart-summary-row">
+      <span class="cart-summary-label">Tạm tính</span>
+      <span class="cart-summary-value js-subtotal"><s>{{ cart.total_line_items_price | money }}</s></span>
+    </div>
+    <div class="cart-summary-row cart-summary-row--saving">
+      <span class="cart-summary-label">Tiết kiệm được</span>
+      <span class="cart-summary-saving">-{{ cart.total_discounts | money }}</span>
+    </div>
+    {%- else -%}
+    <div class="cart-summary-row">
+      <span class="cart-summary-label">Tạm tính</span>
+      <span class="cart-summary-value js-subtotal">{{ cart.total_line_items_price | money }}</span>
+    </div>
+    {%- endif -%}
+    <div class="cart-summary-row cart-summary-row--total">
+      <span class="cart-summary-label">Tổng đặt hàng</span>
+      <span class="total-price">{{ cart.total_price | money }}</span>
+    </div>
+  </div>
+{%- endif -%}

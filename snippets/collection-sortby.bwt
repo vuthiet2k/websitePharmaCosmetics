@@ -1,0 +1,67 @@
+<div class="sort-cate clearfix">
+	{%- assign _result_count = paginate.items | default: collection.products_count -%}
+	{%- if _result_count > 0 -%}
+	<div class="sort-cate-count">
+		<span class="sort-count-num">{{ _result_count }}</span> sản phẩm
+	</div>
+	{%- endif -%}
+	<div class="sort-cate-right">
+		<h3>
+			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-sort-alpha-down" viewBox="0 0 16 16">
+				<path fill-rule="evenodd" d="M10.082 5.629 9.664 7H8.598l1.789-5.332h1.234L13.402 7h-1.12l-.419-1.371h-1.781zm1.57-.785L11 2.687h-.047l-.652 2.157h1.351z"/>
+				<path d="M12.96 14H9.028v-.691l2.579-3.72v-.054H9.098v-.867h3.785v.691l-2.567 3.72v.054h2.645V14zM4.5 2.5a.5.5 0 0 0-1 0v9.793l-1.146-1.147a.5.5 0 0 0-.708.708l2 1.999.007.007a.497.497 0 0 0 .7-.006l2-2a.5.5 0 0 0-.707-.708L4.5 12.293V2.5z"/>
+			</svg> Sắp xếp</h3>
+		<ul>
+			<li class="btn-quick-sort" data-sort="default">
+				<a href="javascript:;" onclick="sortby('default')" title="Mặc định"><i></i>Mặc định</a>
+			</li>
+			<li class="btn-quick-sort" data-sort="alpha-asc">
+				<a href="javascript:;" onclick="sortby('alpha-asc')" title="Tên A-Z"><i></i>Tên A-Z</a>
+			</li>
+			<li class="btn-quick-sort" data-sort="alpha-desc">
+				<a href="javascript:;" onclick="sortby('alpha-desc')" title="Tên Z-A"><i></i>Tên Z-A</a>
+			</li>
+			<li class="btn-quick-sort" data-sort="created-desc">
+				<a href="javascript:;" onclick="sortby('created-desc')" title="Hàng mới"><i></i>Hàng mới</a>
+			</li>
+			<li class="btn-quick-sort" data-sort="price-asc">
+				<a href="javascript:;" onclick="sortby('price-asc')" title="Giá thấp đến cao"><i></i>Giá thấp đến cao</a>
+			</li>
+			<li class="btn-quick-sort" data-sort="price-desc">
+				<a href="javascript:;" onclick="sortby('price-desc')" title="Giá cao xuống thấp"><i></i>Giá cao xuống thấp</a>
+			</li>
+		</ul>
+	</div>
+	{%if settings.aside_filter_enable%}
+	<div class="sudes-filter">
+		<a class="btn btn-outline btn-filter btn-filter-mobile" title="Bộ lọc">
+			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-funnel-fill" viewBox="0 0 16 16">
+				<path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z"/>
+			</svg>
+			Bộ lọc
+			<span class="count-filter-val"></span>
+		</a>
+	</div>
+	{%endif%}
+</div>
+
+<script>
+(function () {
+	/* B2: Sync sort active state from URL */
+	var _sv = (function () {
+		var m = /[?&]sortby=([^&#]*)/.exec(window.location.href);
+		return m ? decodeURIComponent(m[1]) : 'default';
+	})();
+	document.querySelectorAll('.btn-quick-sort[data-sort]').forEach(function (li) {
+		li.classList.toggle('active', li.dataset.sort === _sv);
+	});
+})();
+
+function countFilterItem() {
+	/* Đọc count từ "Bạn chọn" bar mới (B13 refactor) — đếm chips trong #afw-active-chips */
+	var n = $('#afw-active-chips .afw-chip').length;
+	var $badge = $('.count-filter-val');
+	if (n > 0) { $badge.text(n).show(); } else { $badge.text('').hide(); }
+}
+countFilterItem();
+</script>

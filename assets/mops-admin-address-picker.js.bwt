@@ -1,0 +1,592 @@
+{% comment %} mops-admin-address-picker.js — Vue 3 global component <mops-address-picker>.
+  Tái sử dụng cho mọi form địa chỉ MOPS Admin (Manual Order, Customer create/edit,
+  Branch, Supplier). Không SFC/build step: template in-DOM khai báo trong
+  Templates/page.mops-admin.bwt (#mops-address-picker-template), đăng ký qua
+  window.MopsAdminComponents theo pattern chuẩn (xem mops-admin-orders.js.bwt::mops-qr-lightbox
+  và mops-admin.js.bwt line ~1963 app.component loop).
+
+  UI có 3 nhánh nhập song song trong 1 khối:
+   1. Nút [⚡ Chuyển đổi địa chỉ hành chính GSO] (Sapo-style) — bấm → panel radio candidates.
+   2. Smart Search inline (dropdown auto-suggest khi gõ ≥2 ký tự).
+   3. 3 combobox typeahead Tỉnh/Huyện/Xã cascade thủ công.
+
+  Nguồn dữ liệu: window.MopsAddressMaster (OFFLINE, 3 asset mops-address-*.js). Adapter
+  ID cho vận đơn (ghn/ghtk/vnp/njv/bst/jt/vtp) đi kèm mỗi row master → component expose
+  qua payload.adapters để mixin dựng ship_province_id/district_id/ward_code cho GHN
+  (hoặc hãng khác) khi tạo vận đơn. {% endcomment %}
+(function() {
+  'use strict';
+
+  window.MopsAdminComponents = window.MopsAdminComponents || {};
+
+  // Adapter keys mà MopsAddressMaster hỗ trợ (từ scripts/build-vn-admin-js.js).
+  // Chỉ có key nếu adapter có ID — component tự strip empty.
+  var ADAPTER_KEYS = ['ghn', 'ghtk', 'vnp', 'njv', 'bst', 'jt', 'vtp'];
+
+  function emptyPayload() {
+    return {
+      provinceCode: '', provinceName: '',
+      districtCode: '', districtName: '',
+      wardCode: '', wardName: '',
+      fullShippingAddress: '',
+      adapters: {} // { ghn: {province, district, ward}, ghtk: {...}, ... }
+    };
+  }
+
+  function noAccent(s) {
+    var str = String(s == null ? '' : s).toLowerCase();
+    if (!str) return '';
+    try { str = str.normalize('NFD').replace(/[̀-ͯ]/g, ''); } catch (e) {}
+    str = str.replace(/đ/g, 'd').replace(/Đ/g, 'd');
+    return str.trim();
+  }
+
+  // Trích adapter IDs khỏi 3 row (province/district/ward) → object {ghn: {p,d,w}, ...}
+  function extractAdapters(province, district, ward) {
+    var out = {};
+    for (var i = 0; i < ADAPTER_KEYS.length; i++) {
+      var k = ADAPTER_KEYS[i];
+      var p = province && province[k];
+      var d = district && district[k];
+      var w = ward && ward[k];
+      if (p || d || w) {
+        out[k] = {
+          province: p || '',
+          district: d || '',
+          ward: w || ''
+        };
+      }
+    }
+    return out;
+  }
+
+  function buildFullAddress(street, wardName, districtName, provinceName) {
+    var parts = [street, wardName, districtName, provinceName];
+    return parts.map(function(s) { return String(s == null ? '' : s).trim(); })
+                .filter(Boolean).join(', ');
+  }
+
+  window.MopsAdminComponents['mops-address-picker'] = {
+    // Vue 3: root app delimiters ['[[', ']]'] KHÔNG kế thừa xuống child component (khác Vue 2
+    // options merge). Phải khai báo lại per-component nếu dùng in-DOM template — nếu không,
+    // '[[ ]]' bị coi là text literal và hiển thị nguyên chuỗi trong DOM (bug 2026-08-12).
+    delimiters: ['[[', ']]'],
+    props: {
+      // v-model — payload object phẳng (schema xem emptyPayload). Vue 3 v-model default
+      // prop name = modelValue; emit 'update:modelValue' khi user pick.
+      modelValue: {
+        type: Object,
+        default: function() { return emptyPayload(); }
+      },
+      // .sync qua v-model:rawStreet — ô "Số nhà / Đường" đi kèm bên ngoài. Component nghe
+      // rawStreet để làm nguồn cho nút Chuyển đổi (parse fallback nếu smart query trống).
+      rawStreet: { type: String, default: '' },
+      // Chuỗi địa chỉ text từ Customers sheet (customer.default_address) — parent set
+      // 1 lần khi mount / khi pick customer → component tự resolve 3 cấp.
+      legacyAddress: { type: String, default: '' },
+      // Hiện checkbox "Lưu địa chỉ đang nhập làm mặc định" (bật khi có selectedCustomer).
+      showSaveDefault: { type: Boolean, default: false },
+      // .sync qua v-model:saveDefault.
+      saveDefault: { type: Boolean, default: false },
+      disabled: { type: Boolean, default: false },
+      // Layout compact hơn cho form ngắn (Customer/Branch).
+      dense: { type: Boolean, default: false },
+      // 2026-08-12: mode="new" dùng dataset MỚI (34 tỉnh + 3221 xã sau sáp nhập 01/07/2025)
+      // — chỉ 2 cấp Tỉnh/Xã, KHÔNG có Huyện. Component tự map ngược sang code CŨ + adapter IDs
+      // (ghn/ghtk/spx…) để backend create_shipment còn dùng được với hãng chưa update dữ liệu mới.
+      // mode="old" (default) giữ 3 cấp cũ 63 tỉnh/696 huyện/10500 xã.
+      mode: { type: String, default: 'old', validator: function(v) { return v === 'old' || v === 'new'; } }
+    },
+    emits: ['update:modelValue', 'update:rawStreet', 'update:saveDefault', 'apply', 'clear'],
+    data: function() {
+      return {
+        // 3 query typeahead cho combobox Tỉnh/Huyện/Xã.
+        provinceQuery: '', provinceFocused: false,
+        districtQuery: '', districtFocused: false,
+        wardQuery: '', wardFocused: false,
+        // Smart Search inline (nhánh 2 — dropdown auto-suggest).
+        smartQuery: '', smartFocused: false,
+        // Converter Sapo-style (nhánh 1 — nút + panel radio).
+        converterOpen: false,          // panel candidates hiện hay ẩn
+        converterAttempted: false,     // đã bấm nút Chuyển đổi ít nhất 1 lần
+        converterAnalyzing: false,     // đang chạy scoring (async simulation qua nextTick)
+        converterCandidates: [],       // top 5 candidates từ scoring
+        converterSelectedIndex: null,  // index radio đang chọn
+        // Fallback amber "chưa load master" — ready guard dựa vào window.MopsAddressMaster.
+        masterReady: !!(window.MopsAddressMaster && window.MopsAddressMaster.provinces &&
+                        window.MopsAddressMaster.districts && window.MopsAddressMaster.wards),
+        // 2026-08-12: state cho mode="new" (2 cấp Tỉnh/Xã sau sáp nhập).
+        newProvinceQuery: '', newProvinceFocused: false,
+        newWardQuery: '', newWardFocused: false,
+        newMasterReady: !!(window.MopsAddressMaster && window.MopsAddressMaster.newProvinces &&
+                           window.MopsAddressMaster.newWards),
+        // 2026-08-12 (v3 — Sapo 3-layer pattern): activeTab internal cho phép user toggle giữa
+        // "Mới" và "Cũ" runtime, không cần cha đổi prop. mode = default tab lúc mount, sau đó
+        // activeTab tự do. Toggle KHÔNG clear payload (v-model giữ nguyên cả 2 layer new+old)
+        // → user thấy cùng địa chỉ dưới 2 hệ mã, chỉ đổi UI hiển thị.
+        activeTab: this.mode,
+        // Unique id cho radio name (tránh collide khi có 2 picker cùng trang).
+        uid: 'mops_addr_' + Math.random().toString(36).slice(2, 8)
+      };
+    },
+    computed: {
+      // Chấp nhận cả trường hợp master load sau mount (async load asset) — poll qua onReady.
+      // mode='new' cần cả 2 dataset load: old (để resolve adapter) + new (để hiển thị 2 cấp).
+      isReady: function() {
+        if (this.activeTab === 'new') return this.masterReady && this.newMasterReady;
+        return this.masterReady;
+      },
+      // 2026-08-12: options 34 tỉnh MỚI, lọc theo query typeahead.
+      newProvinceOptions: function() {
+        var m = window.MopsAddressMaster; if (!m || !m.newProvinces) return [];
+        var q = noAccent(this.newProvinceQuery);
+        var list = m.newProvinces;
+        if (!q) return list.slice(0, 40);
+        return list.filter(function(p) {
+          return noAccent(p.n).indexOf(q) !== -1 || noAccent(p.f).indexOf(q) !== -1;
+        }).slice(0, 40);
+      },
+      // Options wards MỚI theo new province code + filter query.
+      newWardOptions: function() {
+        var m = window.MopsAddressMaster; if (!m || !m.newWards) return [];
+        var pc = this.modelValue && this.modelValue.newProvinceCode;
+        if (!pc) return [];
+        var q = noAccent(this.newWardQuery);
+        var list = m.newWards.filter(function(w) { return w.p === pc; });
+        if (!q) return list.slice(0, 100);
+        return list.filter(function(w) {
+          return noAccent(w.n).indexOf(q) !== -1 || noAccent(w.f).indexOf(q) !== -1;
+        }).slice(0, 100);
+      },
+      // Options 3 combobox — filter theo query typeahead + cascade parent code.
+      provinceOptions: function() {
+        var m = window.MopsAddressMaster; if (!m || !m.provinces) return [];
+        var q = noAccent(this.provinceQuery);
+        var list = m.provinces;
+        if (!q) return list.slice(0, 30);
+        return list.filter(function(p) {
+          return noAccent(p.n).indexOf(q) !== -1 || noAccent(p.f).indexOf(q) !== -1;
+        }).slice(0, 30);
+      },
+      districtOptions: function() {
+        var m = window.MopsAddressMaster; if (!m || !m.districts) return [];
+        var pc = this.modelValue && this.modelValue.provinceCode;
+        if (!pc) return [];
+        var q = noAccent(this.districtQuery);
+        var list = m.districts.filter(function(d) { return d.p === pc; });
+        if (!q) return list.slice(0, 50);
+        return list.filter(function(d) {
+          return noAccent(d.n).indexOf(q) !== -1 || noAccent(d.f).indexOf(q) !== -1;
+        }).slice(0, 50);
+      },
+      wardOptions: function() {
+        var m = window.MopsAddressMaster; if (!m || !m.wards) return [];
+        var dc = this.modelValue && this.modelValue.districtCode;
+        if (!dc) return [];
+        var q = noAccent(this.wardQuery);
+        var list = m.wards.filter(function(w) { return w.p === dc; });
+        if (!q) return list.slice(0, 80);
+        return list.filter(function(w) {
+          return noAccent(w.n).indexOf(q) !== -1 || noAccent(w.f).indexOf(q) !== -1;
+        }).slice(0, 80);
+      },
+      // Smart Search — dùng chung thuật toán scoring với nút Chuyển đổi. mode-aware.
+      smartCandidates: function() {
+        var raw = String(this.smartQuery || '').trim();
+        if (raw.length < 2) return [];
+        return this.activeTab === 'new' ? this._scoreNewCandidates(raw, 8) : this._scoreCandidates(raw, 8);
+      },
+      // Chuỗi hiển thị "street, ward, district, province" (tương thích module vận chuyển cũ).
+      previewFullAddress: function() {
+        var mv = this.modelValue || {};
+        return buildFullAddress(this.rawStreet, mv.wardName, mv.districtName, mv.provinceName);
+      },
+      hasAnyCode: function() {
+        var mv = this.modelValue || {};
+        if (this.activeTab === 'new') return !!(mv.newProvinceCode || mv.newWardCode);
+        return !!(mv.provinceCode || mv.districtCode || mv.wardCode);
+      },
+      // Preview mã cũ đã được resolve ngầm khi tab='new' — user thấy được sẽ push gì cho carrier.
+      // Trả null khi chưa có mapping (chưa pick ward mới, hoặc master cũ chưa load).
+      oldCodePreview: function() {
+        if (this.activeTab !== 'new') return null;
+        var mv = this.modelValue || {};
+        if (!mv.wardCode || !mv.districtCode || !mv.provinceCode) return null;
+        return {
+          province: mv.provinceName || '',
+          district: mv.districtName || '',
+          ward: mv.wardName || ''
+        };
+      },
+      // Warning: tab='new' đã pick nhưng chưa resolve được mã cũ → carrier có thể fail.
+      // Hiếm gặp (100% wards có default mapping) nhưng vẫn defensive.
+      newButNoOldMapping: function() {
+        if (this.activeTab !== 'new') return false;
+        var mv = this.modelValue || {};
+        return !!(mv.newWardCode && !mv.wardCode);
+      },
+      // Nút Chuyển đổi disabled khi: chưa có input, đang analyzing, master chưa ready, disabled prop.
+      converterBtnDisabled: function() {
+        return this.disabled || !this.isReady || this.converterAnalyzing ||
+               !(this._converterSourceText().length >= 2);
+      },
+      converterBtnLabel: function() {
+        if (this.converterAnalyzing) return 'Đang phân tích…';
+        return 'Chuyển đổi địa chỉ hành chính GSO';
+      }
+    },
+    watch: {
+      // Khi user sửa rawStreet → reset panel Chuyển đổi (kết quả cũ có thể lệch).
+      rawStreet: function() {
+        if (this.converterOpen) this._resetConverter();
+      },
+      // Khi legacyAddress từ parent đổi (pick customer) → tự resolve 3 cấp.
+      legacyAddress: function(val) {
+        if (val && !this.hasAnyCode) this._applyLegacyText(val);
+      },
+      // Khi parent set modelValue có provinceCode nhưng query rỗng (edit đơn cũ) → sync query.
+      modelValue: {
+        deep: true,
+        handler: function(mv) {
+          if (!mv) return;
+          if (mv.provinceName && !this.provinceQuery) this.provinceQuery = mv.provinceName;
+          if (mv.districtName && !this.districtQuery) this.districtQuery = mv.districtName;
+          if (mv.wardName && !this.wardQuery) this.wardQuery = mv.wardName;
+          if (mv.newProvinceName && !this.newProvinceQuery) this.newProvinceQuery = mv.newProvinceName;
+          if (mv.newWardName && !this.newWardQuery) this.newWardQuery = mv.newWardName;
+        }
+      }
+    },
+    mounted: function() {
+      // Master data load bất đồng bộ (nhiều script tag). Nếu chưa ready khi mount → chờ _onReady.
+      var self = this;
+      var m = window.MopsAddressMaster;
+      if (m && !this.masterReady) {
+        var prev = m._onReady;
+        m._onReady = function() {
+          try { if (typeof prev === 'function') prev(); } catch (e) {}
+          self.masterReady = true;
+        };
+        if (m.provinces && m.districts && m.wards) self.masterReady = true;
+      }
+      if (m && !this.newMasterReady) {
+        var prev2 = m._onNewReady;
+        m._onNewReady = function() {
+          try { if (typeof prev2 === 'function') prev2(); } catch (e) {}
+          self.newMasterReady = true;
+        };
+        if (m.newProvinces && m.newWards) self.newMasterReady = true;
+      }
+      if (this.legacyAddress && !this.hasAnyCode) this._applyLegacyText(this.legacyAddress);
+      // Sync query từ modelValue nếu parent truyền sẵn (edit form).
+      var mv = this.modelValue || {};
+      if (mv.provinceName) this.provinceQuery = mv.provinceName;
+      if (mv.districtName) this.districtQuery = mv.districtName;
+      if (mv.wardName) this.wardQuery = mv.wardName;
+      if (mv.newProvinceName) this.newProvinceQuery = mv.newProvinceName;
+      if (mv.newWardName) this.newWardQuery = mv.newWardName;
+    },
+    methods: {
+      // Blur handler chung — setTimeout 150ms để click option (mousedown.prevent) kịp fire
+      // trước khi v-if ẩn dropdown. Xem bug fix 2026-08-12 trong orders mixin.
+      blurDropdown: function(field) {
+        var self = this;
+        setTimeout(function() { self[field] = false; }, 150);
+      },
+      // Toggle giữa tab Cũ/Mới. KHÔNG clear payload (v-model giữ nguyên cả 2 layer) để user
+      // thấy cùng địa chỉ dưới 2 hệ mã khi chuyển tab. Reset chỉ các query typeahead + smart
+      // để tránh dropdown còn lơ lửng của tab trước.
+      switchAddressTab: function(tab) {
+        if (tab !== 'new' && tab !== 'old') return;
+        if (this.activeTab === tab) return;
+        this.activeTab = tab;
+        this.smartQuery = ''; this.smartFocused = false;
+        this._resetConverter();
+      },
+      // Nguồn text cho nút Chuyển đổi: ưu tiên smartQuery → rawStreet → legacyAddress.
+      // 2026-08-12 (v2): thêm fallback legacyAddress để khi chọn KH có địa chỉ text mà ô Số
+      // nhà chưa điền, nút vẫn enable — user bấm chuyển đổi được ngay từ hồ sơ KH.
+      _converterSourceText: function() {
+        var q = String(this.smartQuery || '').trim();
+        if (q.length >= 2) return q;
+        var street = String(this.rawStreet || '').trim();
+        if (street.length >= 2) return street;
+        return String(this.legacyAddress || '').trim();
+      },
+      // Scoring cho mode='new' — 2 cấp (Tỉnh MỚI + Xã MỚI). Duyệt newWards, join tên
+      // "ward + province" và đếm token khớp. Trả top-N sorted desc.
+      _scoreNewCandidates: function(raw, limit) {
+        var m = window.MopsAddressMaster;
+        if (!m || !m.newWards || !m.newProvinces) return [];
+        var q = noAccent(raw);
+        var tokens = q.split(/\s+/).filter(function(t) { return t.length >= 2; });
+        if (!tokens.length) return [];
+        var pById = {};
+        m.newProvinces.forEach(function(p) { pById[p.c] = p; });
+        var scored = [];
+        var wards = m.newWards;
+        for (var i = 0; i < wards.length; i++) {
+          var w = wards[i];
+          var p = pById[w.p]; if (!p) continue;
+          var hay = noAccent(w.n + ' ' + w.f + ' ' + p.n + ' ' + p.f);
+          var score = 0;
+          for (var ti = 0; ti < tokens.length; ti++) {
+            if (hay.indexOf(tokens[ti]) !== -1) score++;
+          }
+          if (score < Math.min(2, tokens.length)) continue;
+          scored.push({ score: score, ward: w, province: p, isNew: true });
+        }
+        scored.sort(function(a, b) { return b.score - a.score; });
+        return scored.slice(0, limit || 5);
+      },
+      // Từ newWard (có dp/dd/dw = default OLD codes), tra ngược ra {oldProvince, oldDistrict, oldWard}
+      // trong master data CŨ để lookup adapter IDs (ghn/ghtk/spx…). Nếu master cũ chưa load
+      // hoặc code không match → trả null (component vẫn emit new fields, adapters rỗng).
+      _resolveOldFromNewWard: function(newWard) {
+        if (!newWard || !newWard.dp || !newWard.dd || !newWard.dw) return null;
+        var m = window.MopsAddressMaster;
+        if (!m || !m.provinces || !m.districts || !m.wards) return null;
+        var oldP = m.provinces.filter(function(x) { return x.c === newWard.dp; })[0] || null;
+        var oldD = m.districts.filter(function(x) { return x.c === newWard.dd; })[0] || null;
+        var oldW = m.wards.filter(function(x) { return x.c === newWard.dw; })[0] || null;
+        return { province: oldP, district: oldD, ward: oldW };
+      },
+      // Chấm điểm candidates: duyệt wards, join full-path, đếm token khớp.
+      // Trả top-N sorted desc theo score. Copy nguyên thuật toán từ orders mixin.
+      _scoreCandidates: function(raw, limit) {
+        var m = window.MopsAddressMaster;
+        if (!m || !m.wards) return [];
+        var q = noAccent(raw);
+        var tokens = q.split(/\s+/).filter(function(t) { return t.length >= 2; });
+        if (!tokens.length) return [];
+        var pById = {}, dById = {};
+        (m.provinces || []).forEach(function(p) { pById[p.c] = p; });
+        (m.districts || []).forEach(function(d) { dById[d.c] = d; });
+        var scored = [];
+        var wards = m.wards;
+        for (var i = 0; i < wards.length; i++) {
+          var w = wards[i];
+          var d = dById[w.p]; if (!d) continue;
+          var p = pById[d.p]; if (!p) continue;
+          var hay = noAccent(w.n + ' ' + w.f + ' ' + d.n + ' ' + d.f + ' ' + p.n + ' ' + p.f);
+          var score = 0;
+          for (var ti = 0; ti < tokens.length; ti++) {
+            if (hay.indexOf(tokens[ti]) !== -1) score++;
+          }
+          if (score < Math.min(2, tokens.length)) continue;
+          scored.push({ score: score, ward: w, district: d, province: p });
+        }
+        scored.sort(function(a, b) { return b.score - a.score; });
+        return scored.slice(0, limit || 5);
+      },
+      // Emit payload cho mode='old' (3 cấp).
+      _emitValue: function(province, district, ward) {
+        var payload = emptyPayload();
+        if (province) {
+          payload.provinceCode = province.c || '';
+          payload.provinceName = province.f || province.n || '';
+        }
+        if (district) {
+          payload.districtCode = district.c || '';
+          payload.districtName = district.f || district.n || '';
+        }
+        if (ward) {
+          payload.wardCode = ward.c || '';
+          payload.wardName = ward.f || ward.n || '';
+        }
+        payload.adapters = extractAdapters(province, district, ward);
+        payload.fullShippingAddress = buildFullAddress(
+          this.rawStreet, payload.wardName, payload.districtName, payload.provinceName
+        );
+        this.$emit('update:modelValue', payload);
+        this.$emit('apply', payload);
+      },
+      // Emit payload cho mode='new' (2 cấp) — TỰ ĐỘNG map ngược sang old code qua ward.dp/dd/dw
+      // để hãng vận chuyển (SPX/Goship/GHN) dùng adapter cũ tạo vận đơn. Payload chứa cả 2:
+      //   - old fields (provinceCode/districtCode/wardCode + adapters) — cho create_shipment
+      //   - new fields (newProvinceCode/newProvinceName/newWardCode/newWardName) — hiển thị + audit
+      _emitValueNew: function(newProvince, newWard) {
+        var payload = emptyPayload();
+        // Extend schema new fields
+        payload.newProvinceCode = ''; payload.newProvinceName = '';
+        payload.newWardCode = '';    payload.newWardName = '';
+        if (newProvince) {
+          payload.newProvinceCode = newProvince.c || '';
+          payload.newProvinceName = newProvince.f || newProvince.n || '';
+        }
+        if (newWard) {
+          payload.newWardCode = newWard.c || '';
+          payload.newWardName = newWard.f || newWard.n || '';
+        }
+        // Map new → old để lấy adapter cũ (SPX/GHN/… lookup qua master row cũ).
+        var oldResolved = this._resolveOldFromNewWard(newWard);
+        if (oldResolved) {
+          if (oldResolved.province) {
+            payload.provinceCode = oldResolved.province.c || '';
+            payload.provinceName = oldResolved.province.f || oldResolved.province.n || '';
+          }
+          if (oldResolved.district) {
+            payload.districtCode = oldResolved.district.c || '';
+            payload.districtName = oldResolved.district.f || oldResolved.district.n || '';
+          }
+          if (oldResolved.ward) {
+            payload.wardCode = oldResolved.ward.c || '';
+            payload.wardName = oldResolved.ward.f || oldResolved.ward.n || '';
+          }
+          payload.adapters = extractAdapters(oldResolved.province, oldResolved.district, oldResolved.ward);
+        }
+        // fullShippingAddress dùng tên MỚI (2 cấp) — user thấy chuẩn hiện hành.
+        payload.fullShippingAddress = buildFullAddress(
+          this.rawStreet, '', payload.newWardName, payload.newProvinceName
+        );
+        this.$emit('update:modelValue', payload);
+        this.$emit('apply', payload);
+      },
+      // Pick trong dropdown mode='new'.
+      pickNewProvince: function(p) {
+        this.newProvinceQuery = p.f || p.n || '';
+        this.newProvinceFocused = false;
+        this.newWardQuery = '';
+        this._emitValueNew(p, null);
+      },
+      pickNewWard: function(w) {
+        var m = window.MopsAddressMaster;
+        var province = (m && m.newProvinces || []).filter(function(x) { return x.c === w.p; })[0];
+        this.newWardQuery = w.f || w.n || '';
+        this.newWardFocused = false;
+        this._emitValueNew(province, w);
+      },
+      // Pick từng cấp — cascade reset các cấp con.
+      pickProvince: function(p) {
+        this.provinceQuery = p.f || p.n || '';
+        this.provinceFocused = false;
+        this.districtQuery = ''; this.wardQuery = '';
+        this._emitValue(p, null, null);
+      },
+      pickDistrict: function(d) {
+        var m = window.MopsAddressMaster;
+        var province = (m && m.provinces || []).filter(function(x) { return x.c === d.p; })[0];
+        this.districtQuery = d.f || d.n || '';
+        this.districtFocused = false;
+        this.wardQuery = '';
+        this._emitValue(province, d, null);
+      },
+      pickWard: function(w) {
+        var m = window.MopsAddressMaster;
+        var district = (m && m.districts || []).filter(function(x) { return x.c === w.p; })[0];
+        var province = district && (m.provinces || []).filter(function(x) { return x.c === district.p; })[0];
+        this.wardQuery = w.f || w.n || '';
+        this.wardFocused = false;
+        this._emitValue(province, district, w);
+      },
+      // Smart Search — click 1 candidate → set các cấp cùng lúc. mode-aware.
+      pickSmartCandidate: function(cand) {
+        if (!cand) return;
+        this.smartQuery = ''; this.smartFocused = false;
+        if (cand.isNew) {
+          // candidate mode='new' — 2 cấp Tỉnh MỚI + Xã MỚI.
+          this.newProvinceQuery = cand.province.f || cand.province.n || '';
+          this.newWardQuery = cand.ward.f || cand.ward.n || '';
+          this._emitValueNew(cand.province, cand.ward);
+          return;
+        }
+        // candidate mode='old' — 3 cấp.
+        this.provinceQuery = cand.province.f || cand.province.n || '';
+        this.districtQuery = cand.district.f || cand.district.n || '';
+        this.wardQuery = cand.ward.f || cand.ward.n || '';
+        this._emitValue(cand.province, cand.district, cand.ward);
+      },
+      // Nhánh 1 — Nút [Chuyển đổi]. Bấm → chạy scoring → hiện panel radio candidates.
+      runConverter: function() {
+        if (this.converterBtnDisabled) return;
+        var self = this;
+        this.converterAnalyzing = true;
+        this.converterAttempted = true;
+        setTimeout(function() {
+          var src = self._converterSourceText();
+          self.converterCandidates = self.activeTab === 'new'
+            ? self._scoreNewCandidates(src, 5)
+            : self._scoreCandidates(src, 5);
+          self.converterSelectedIndex = self.converterCandidates.length ? 0 : null;
+          self.converterOpen = true;
+          self.converterAnalyzing = false;
+        }, 100);
+      },
+      applyConverterSelection: function() {
+        var idx = this.converterSelectedIndex;
+        if (idx === null || idx === undefined) return;
+        var cand = this.converterCandidates[idx];
+        if (!cand) return;
+        this.pickSmartCandidate(cand);
+        this._resetConverter();
+      },
+      closeConverter: function() { this._resetConverter(); },
+      _resetConverter: function() {
+        this.converterOpen = false;
+        this.converterAttempted = false;
+        this.converterCandidates = [];
+        this.converterSelectedIndex = null;
+      },
+      // Xoá địa chỉ (giữ rawStreet). Reset cả field cũ + mới.
+      clearAddress: function() {
+        this.provinceQuery = ''; this.districtQuery = ''; this.wardQuery = '';
+        this.newProvinceQuery = ''; this.newWardQuery = '';
+        this.smartQuery = '';
+        this._resetConverter();
+        var payload = emptyPayload();
+        payload.newProvinceCode = ''; payload.newProvinceName = '';
+        payload.newWardCode = '';    payload.newWardName = '';
+        this.$emit('update:modelValue', payload);
+        this.$emit('clear');
+      },
+      // Áp text 4-part từ customer.default_address (chuỗi "street, ward, district, province").
+      _applyLegacyText: function(text) {
+        var raw = String(text || '').trim();
+        if (!raw) return;
+        // Tolerant: chấp nhận 3 hoặc 4 part sau split.
+        var parts = raw.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+        if (parts.length < 3) return;
+        var provinceName = parts[parts.length - 1];
+        var districtName = parts[parts.length - 2];
+        var wardName = parts[parts.length - 3];
+        var m = window.MopsAddressMaster;
+        if (!m || !m.provinces) return;
+        var pKey = noAccent(provinceName);
+        var dKey = noAccent(districtName);
+        var wKey = noAccent(wardName);
+        var p = m.provinces.filter(function(x) {
+          return noAccent(x.f) === pKey || noAccent(x.n) === pKey;
+        })[0];
+        if (!p) return;
+        var d = (m.districts || []).filter(function(x) {
+          return x.p === p.c && (noAccent(x.f) === dKey || noAccent(x.n) === dKey);
+        })[0];
+        var w = (d && (m.wards || []).filter(function(x) {
+          return x.p === d.c && (noAccent(x.f) === wKey || noAccent(x.n) === wKey);
+        })[0]) || null;
+        if (p) this.provinceQuery = p.f || p.n || '';
+        if (d) this.districtQuery = d.f || d.n || '';
+        if (w) this.wardQuery = w.f || w.n || '';
+        this._emitValue(p, d, w);
+      },
+      onRawStreetInput: function(event) {
+        this.$emit('update:rawStreet', event.target.value);
+      },
+      onSaveDefaultToggle: function(event) {
+        this.$emit('update:saveDefault', !!event.target.checked);
+      },
+      // Chip mã GSO hiển thị trên mỗi candidate card. Bảo vệ cho candidate mode='new' (không
+      // có cand.district) — chỉ show province + ward. 2026-08-12 fix bug undefined.f.
+      formatGsoCode: function(cand) {
+        if (!cand) return '';
+        var parts = [];
+        if (cand.province && cand.province.c) parts.push(cand.province.c);
+        if (cand.district && cand.district.c) parts.push(cand.district.c);
+        if (cand.ward && cand.ward.c) parts.push(cand.ward.c);
+        return parts.join(' · ');
+      }
+    },
+    template: '#mops-address-picker-template'
+  };
+
+})();

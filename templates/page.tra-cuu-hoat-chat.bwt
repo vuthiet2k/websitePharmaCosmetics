@@ -1,0 +1,80 @@
+{%- comment -%}
+  page.tra-cuu-hoat-chat.bwt (REOPEN 2026-09-10, ADR-007/T-82, MOD-05 xlsx "Tra Cứu Hoạt Chất Y
+  Khoa") — CREATE mới. Đọc-only, không cần backend mops-gas. Dữ liệu: data/ingredients.js.
+{%- endcomment -%}
+{% include 'breadcrumb' %}
+
+<main class="py-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <div class="text-center max-w-3xl mx-auto mb-10">
+      <span class="pc-kit-badge-clinical text-xs font-bold">🔬 TRA CỨU HOẠT CHẤT Y KHOA</span>
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-forest-900 font-heading mt-3">
+        Thư Viện Hoạt Chất &amp; Ma Trận Tương Tác
+      </h1>
+      <p class="text-xs sm:text-sm text-gray-600 mt-2">
+        Tổng hợp kiến thức phổ thông về các hoạt chất da liễu phổ biến, tham khảo trước khi tư vấn
+        trực tiếp — không thay thế đánh giá chuyên môn.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div class="lg:col-span-1">
+        <div class="pc-cmp-taxonomy-filter">
+          <div class="pc-cmp-taxonomy-filter__title">Nhóm hoạt chất</div>
+          <div class="pc-cmp-taxonomy-filter__tags">
+            {%- assign pc_ing_groups = "" -%}
+            {%- for ing in ingredients -%}
+              {%- unless pc_ing_groups contains ing.group -%}
+                {%- assign pc_ing_groups = pc_ing_groups | append: ing.group | append: '||' -%}
+                <a href="#ing-{{ ing.id }}" class="pc-cmp-taxonomy-filter__tag">{{ ing.group }}</a>
+              {%- endunless -%}
+            {%- endfor -%}
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-3 space-y-6">
+        {%- for ing in ingredients -%}
+        <div id="ing-{{ ing.id }}" class="bg-white rounded-2xl border border-border-clinical p-6 scroll-mt-24">
+          <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
+            <div>
+              <span class="pc-cmp-verified-badge">{{ ing.group }}</span>
+              <h3 class="text-lg font-bold text-forest-900 font-heading mt-2">{{ ing.name }}</h3>
+              <p class="text-[11px] text-gray-400 italic">INCI: {{ ing.inci_name }}</p>
+            </div>
+          </div>
+          <p class="text-sm text-gray-600 leading-relaxed mb-3">{{ ing.summary }}</p>
+          <div class="pc-cmp-expert-callout mb-3">
+            <strong>Lưu ý sử dụng:</strong> {{ ing.caution }}
+          </div>
+          {%- if ing.interacts_with.size > 0 -%}
+          <div class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3">
+            <strong>⚠️ Ma trận tương tác:</strong> {{ ing.interaction_note }}
+            <div class="mt-1 flex flex-wrap gap-2">
+              {%- for other_id in ing.interacts_with -%}
+              {%- for other in ingredients -%}
+              {%- if other.id == other_id -%}
+              <a href="#ing-{{ other.id }}" class="underline">{{ other.name }}</a>
+              {%- endif -%}
+              {%- endfor -%}
+              {%- endfor -%}
+            </div>
+          </div>
+          {%- endif -%}
+        </div>
+        {%- endfor -%}
+      </div>
+    </div>
+
+    <div class="mt-10 bg-amber-50 border border-amber-200 rounded-xl p-5 text-xs text-amber-900 leading-relaxed">
+      <p class="font-bold mb-1">⚠️ Lưu ý y khoa:</p>
+      <p>
+        Thông tin trên mang tính chất tham khảo phổ thông, không thay thế cho việc thăm khám và tư
+        vấn trực tiếp bởi Chuyên gia. Vui lòng đặt lịch soi da để được đánh giá và xây dựng phác đồ
+        phù hợp riêng, đặc biệt trước khi phối hợp nhiều hoạt chất có ghi nhận tương tác ở trên.
+      </p>
+    </div>
+
+  </div>
+</main>

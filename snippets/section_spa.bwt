@@ -1,0 +1,108 @@
+{%- comment -%}
+  section_spa.bwt (T-20 batch B redesign) — Tailwind/pharma_ui_kit thay cho .pc-spa-* cũ.
+  Style cues: Pharma_Cosmetics_Figma_Project/spa-services.html (badge-clinical/badge-gold,
+  rounded-3xl card, btn-primary). Giữ NGUYÊN toàn bộ Liquid bindings gốc (settings.home_spa_*),
+  bao gồm quy ước lazyload (class="lazyload", base64 placeholder + data-src + onerror swap
+  sang .pc-spa-img-placeholder) — assets/lazy.js quét theo class ".lazyload" toàn site.
+{%- endcomment -%}
+<style>
+.pc-spa-thumb { transition: transform .2s ease, box-shadow .2s ease; cursor: default; }
+.pc-spa-thumb:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 10px 20px -8px rgba(0,0,0,0.4); }
+.pc-spa-thumb__img { transition: transform .35s ease; }
+.pc-spa-thumb:hover .pc-spa-thumb__img { transform: scale(1.06); }
+.pc-spa-thumb::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(0deg, rgba(15,35,24,0.85) 0%, rgba(15,35,24,0.05) 55%, transparent 100%);
+  pointer-events: none;
+}
+.pc-spa-thumb--empty::after { background: rgba(15,35,24,0.4); }
+.pc-spa-thumb__caption {
+  position: absolute; left: 8px; right: 8px; bottom: 6px; z-index: 1;
+  font-size: 11px; font-weight: 700; color: #fff; line-height: 1.25;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+</style>
+<section class="bg-forest-900 text-white py-14 md:py-20">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+      <div class="lg:col-span-6 space-y-6">
+        <span class="pc-kit-badge-gold text-[11px]">SKIN HEALTH BEAUTY</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold font-heading">
+          {{ settings.home_spa_title | default: 'Trị liệu chuyên sâu cho từng tế bào' }}
+        </h2>
+        <p class="text-sm text-emerald-100/90 leading-relaxed">
+          {{ settings.home_spa_desc | default: 'Kết hợp giữa công nghệ y khoa tân tiến nhất và sự tận tâm của đội ngũ chuyên gia, chúng tôi kiến tạo lộ trình điều trị riêng biệt cho làn da bạn.' }}
+        </p>
+
+        <div class="space-y-3">
+          <a href="{{ settings.home_spa_service_1_url | default: '/dieu-tri-chuyen-nghiep' }}" class="flex items-start gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition border border-white/10">
+            <span class="flex-shrink-0 w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-sm font-bold font-heading">01</span>
+            <div>
+              <div class="text-sm font-bold">{{ settings.home_spa_service_1_title | default: 'Chăm sóc Da Duy trì' }}</div>
+              <p class="text-xs text-emerald-100/70 mt-1">{{ settings.home_spa_service_1_desc | default: 'Liệu pháp cơ bản, không xâm lấn — duy trì sức khỏe làn da, xử lý vấn đề nhẹ và phục hồi da hàng ngày.' }}</p>
+            </div>
+          </a>
+          <a href="{{ settings.home_spa_service_2_url | default: '/dieu-tri-chuyen-nghiep' }}" class="flex items-start gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition border border-white/10">
+            <span class="flex-shrink-0 w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-sm font-bold font-heading">02</span>
+            <div>
+              <div class="text-sm font-bold">{{ settings.home_spa_service_2_title | default: 'Điều trị Nhắm mục tiêu' }}</div>
+              <p class="text-xs text-emerald-100/70 mt-1">{{ settings.home_spa_service_2_desc | default: 'Công nghệ và sản phẩm đặc trị, xử lý chuyên sâu các vấn đề cụ thể như nám, mụn, lão hóa — ít hoặc không xâm lấn.' }}</p>
+            </div>
+          </a>
+          <a href="{{ settings.home_spa_service_3_url | default: '/dieu-tri-chuyen-nghiep' }}" class="flex items-start gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition border border-white/10">
+            <span class="flex-shrink-0 w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-sm font-bold font-heading">03</span>
+            <div>
+              <div class="text-sm font-bold">{{ settings.home_spa_service_3_title | default: 'Điều trị Xâm lấn' }}</div>
+              <p class="text-xs text-emerald-100/70 mt-1">{{ settings.home_spa_service_3_desc | default: 'Phương pháp xâm lấn tối thiểu, đưa dưỡng chất vào sâu trong da và kích thích tái tạo da từ bên trong.' }}</p>
+            </div>
+          </a>
+        </div>
+
+        <a href="{{ settings.home_spa_btn_url | default: '/dat-lich-tu-van' }}" class="pc-kit-btn-primary text-sm px-6 py-3 inline-flex">
+          {{ settings.home_spa_btn_text | default: 'Xem tất cả dịch vụ' }} <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+
+      <div class="lg:col-span-6 grid grid-cols-2 gap-4">
+        <div class="col-span-2">
+          {% if settings.home_spa_img_1 != blank %}
+            <img class="lazyload rounded-2xl w-full h-64 object-cover border border-white/10" width="600" height="338"
+              src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII="
+              data-src="{{ settings.home_spa_img_1 | img_url: '1024x1024' }}"
+              alt="Trị liệu tại Pharma Cosmetics"
+              onerror="this.onerror=null;this.nextElementSibling.style.display='';this.remove();">
+            <div class="rounded-2xl w-full h-64 bg-white/5 border border-white/10" style="display:none;"></div>
+          {% else %}
+            <div class="rounded-2xl w-full h-64 bg-white/5 border border-white/10"></div>
+          {% endif %}
+        </div>
+        {%- comment -%}
+          T-106 (2026-09-11) — BUG THẬT phát hiện qua đánh giá UI người dùng: 3 ảnh nhỏ dùng
+          chung 1 alt text ("Dịch vụ tại Pharma Cosmetics"), không chú thích, không hover state —
+          không thể hiện liên kết với 3 bước phác đồ (section_protocol.bwt "BƯỚC 01/02/03"). Thêm
+          nhãn số bước + chú thích riêng từng ảnh (settings mới home_spa_img_N_caption, có default
+          khớp đúng tên bước ở section_protocol) + overlay gradient + hover scale cho phản hồi
+          tương tác rõ ràng, không đổi cấu trúc lazyload/onerror gốc.
+        {%- endcomment -%}
+        {% assign spa_imgs = 'home_spa_img_2,home_spa_img_3,home_spa_img_4' | split: ',' %}
+        {% assign spa_captions = 'Bước 01 · Chẩn đoán da,Bước 02 · Phác đồ điều trị,Bước 03 · Đồng hành 1:1' | split: ',' %}
+        {% for img_key in spa_imgs %}
+          {% assign caption_key = img_key | append: '_caption' %}
+          {% assign step_caption = settings[caption_key] | default: spa_captions[forloop.index0] %}
+          <div class="pc-spa-thumb relative rounded-xl overflow-hidden border border-white/10 h-28">
+          {% if settings[img_key] != blank %}
+            <img class="lazyload w-full h-full object-cover pc-spa-thumb__img" width="200" height="200"
+              src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII="
+              data-src="{{ settings[img_key] | img_url: 'large' }}"
+              alt="{{ step_caption }} — Pharma Cosmetics"
+              onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('pc-spa-thumb--empty');">
+          {% else %}
+            <div class="w-full h-full bg-white/5"></div>
+          {% endif %}
+            <span class="pc-spa-thumb__caption">{{ step_caption }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>

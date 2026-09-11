@@ -1,0 +1,305 @@
+{% include 'breadcrumb' %}
+{%- comment -%} ─── Compute current timeline step from order status ─── {%- endcomment -%}
+{%- assign current_step = 1 -%}
+{%- if order.financial_status == 'paid' or order.financial_status == 'partially_paid' -%}{%- assign current_step = 2 -%}{%- endif -%}
+{%- if order.shipping_status != blank -%}{%- assign current_step = 3 -%}{%- endif -%}
+{%- if order.shipping_status == 'delivering' -%}{%- assign current_step = 4 -%}{%- endif -%}
+{%- if order.shipping_status == 'delivered' -%}{%- assign current_step = 5 -%}{%- endif -%}
+{%- assign is_cancelled = false -%}
+{%- if order.cancelled or order.status == 'cancelled' or order.shipping_status == 'cancelled' -%}{%- assign is_cancelled = true -%}{%- endif -%}
+{%- assign is_returning = false -%}
+{%- if order.shipping_status == 'returning' or order.shipping_status == 'returned' -%}{%- assign is_returning = true -%}{%- endif -%}
+{%- comment -%} Reorder matrix: hiện khi chu kỳ đơn kết thúc (delivered/returned/cancelled).
+   Ẩn khi đang xử lý (delivering/returning/pending/paid). Đồng bộ với orders.bwt. {%- endcomment -%}
+{%- assign show_reorder = false -%}
+{%- if is_cancelled -%}
+	{%- assign show_reorder = true -%}
+{%- elsif order.shipping_status == 'delivered' or order.shipping_status == 'returned' -%}
+	{%- assign show_reorder = true -%}
+{%- endif -%}
+
+{%- comment -%} ─── Estimated delivery: created_on + 3 days (only if not delivered & not cancelled) ─── {%- endcomment -%}
+{%- assign show_eta = false -%}
+{%- if is_cancelled == false and is_returning == false and current_step < 5 -%}{%- assign show_eta = true -%}{%- endif -%}
+
+<section class="page_account pc-hub page_order pc-order-detail">
+	<div class="container">
+					{%- comment -%} ─── Header: back link + order id + date + status ─── {%- endcomment -%}
+					<a href="/account/orders" class="pc-order-detail__back">
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+						Tất cả đơn hàng
+					</a>
+
+					<div class="pc-order-detail__head">
+						<div>
+							<h1 class="title-head margin-top-0">Chi tiết đơn hàng {{ order.name }}</h1>
+							<span class="note order_date">Đặt lúc {{ order.created_on | date: 'HH:mm — dd/MM/yyyy' }}</span>
+						</div>
+						{%- if is_cancelled -%}
+						<span class="pc-order-status-badge pc-order-status-badge--cancelled">Đã hủy</span>
+						{%- elsif is_returning -%}
+						<span class="pc-order-status-badge pc-order-status-badge--returned">{% if order.shipping_status == 'returned' %}Đã hoàn trả{% else %}Đang chuyển hoàn{% endif %}</span>
+						{%- elsif current_step == 5 -%}
+						<span class="pc-order-status-badge pc-order-status-badge--delivered">Đã giao</span>
+						{%- elsif current_step == 4 -%}
+						<span class="pc-order-status-badge pc-order-status-badge--delivering">Đang giao</span>
+						{%- elsif current_step == 3 -%}
+						<span class="pc-order-status-badge pc-order-status-badge--processing">Đang xử lý</span>
+						{%- elsif current_step == 2 -%}
+						<span class="pc-order-status-badge pc-order-status-badge--paid">Đã thanh toán</span>
+						{%- else -%}
+						<span class="pc-order-status-badge pc-order-status-badge--pending">Chờ thanh toán</span>
+						{%- endif -%}
+					</div>
+
+					{%- comment -%} ─── Timeline: cancelled / returning / normal 5-step ─── {%- endcomment -%}
+					{%- if is_cancelled -%}
+					<div class="pc-order-timeline pc-order-timeline--cancelled">
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+						<div>
+							<strong>Đơn hàng đã hủy</strong>
+							{%- if order.cancelled_on -%}<br><span class="note">Ngày hủy: {{ order.cancelled_on | date: 'dd/MM/yyyy' }}</span>{%- endif -%}
+							{%- if order.cancel_reason -%}<br><span class="note">Lý do: {{ order.cancel_reason }}</span>{%- endif -%}
+						</div>
+					</div>
+					{%- elsif is_returning -%}
+					<div class="pc-order-timeline pc-order-timeline--returning">
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+						<div>
+							{%- if order.shipping_status == 'returned' -%}
+							<strong>Đơn hàng đã hoàn trả</strong>
+							{%- else -%}
+							<strong>Đang chuyển hoàn đơn hàng</strong>
+							{%- endif -%}
+						</div>
+					</div>
+					{%- else -%}
+					<div class="pc-order-timeline" data-step="{{ current_step }}">
+						<div class="pc-order-timeline__track">
+							<div class="pc-order-timeline__fill" style="width: {{ current_step | minus: 1 | times: 25 }}%;"></div>
+						</div>
+						<ol class="pc-order-timeline__steps">
+							<li class="pc-order-timeline__step{% if current_step >= 1 %} is-done{% endif %}{% if current_step == 1 %} is-current{% endif %}">
+								<span class="pc-order-timeline__dot">
+									{%- if current_step > 1 -%}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{%- else -%}1{%- endif -%}
+								</span>
+								<span class="pc-order-timeline__label">Đặt hàng</span>
+							</li>
+							<li class="pc-order-timeline__step{% if current_step >= 2 %} is-done{% endif %}{% if current_step == 2 %} is-current{% endif %}">
+								<span class="pc-order-timeline__dot">
+									{%- if current_step > 2 -%}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{%- else -%}2{%- endif -%}
+								</span>
+								<span class="pc-order-timeline__label">Xác nhận</span>
+							</li>
+							<li class="pc-order-timeline__step{% if current_step >= 3 %} is-done{% endif %}{% if current_step == 3 %} is-current{% endif %}">
+								<span class="pc-order-timeline__dot">
+									{%- if current_step > 3 -%}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{%- else -%}3{%- endif -%}
+								</span>
+								<span class="pc-order-timeline__label">Đóng gói</span>
+							</li>
+							<li class="pc-order-timeline__step{% if current_step >= 4 %} is-done{% endif %}{% if current_step == 4 %} is-current{% endif %}">
+								<span class="pc-order-timeline__dot">
+									{%- if current_step > 4 -%}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{%- else -%}4{%- endif -%}
+								</span>
+								<span class="pc-order-timeline__label">Đang giao</span>
+							</li>
+							<li class="pc-order-timeline__step{% if current_step >= 5 %} is-done{% endif %}{% if current_step == 5 %} is-current{% endif %}">
+								<span class="pc-order-timeline__dot">
+									{%- if current_step >= 5 -%}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{%- else -%}5{%- endif -%}
+								</span>
+								<span class="pc-order-timeline__label">Đã giao</span>
+							</li>
+						</ol>
+					</div>
+
+					{%- comment -%} ─── ETA (estimated delivery) ─── {%- endcomment -%}
+					{%- if show_eta -%}
+					<div class="pc-order-eta">
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+						<span>Dự kiến giao hàng <strong>trong 2-3 ngày làm việc</strong> kể từ ngày đặt</span>
+					</div>
+					{%- endif -%}
+					{%- endif -%}
+
+					{%- comment -%} ─── Info row: address + payment + note ─── {%- endcomment -%}
+					<div class="row pc-order-detail__info">
+						{% if order.shipping_address %}
+						<div class="col-12 col-lg-6 body_order">
+							<div class="box-address">
+								<h2 class="title-head">
+									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+									Địa chỉ giao hàng
+								</h2>
+								<div class="address box-des">
+									<p><strong>{{ order.customer.name }}</strong></p>
+									<p>
+										{% unless order.shipping_address.address1 == blank and order.shipping_address.address2 == blank %}
+										{%- if order.shipping_address.address1 != blank -%}{{ order.shipping_address.address1 }}{%- endif -%}
+										{%- if order.shipping_address.address2 != blank -%}, {{ order.shipping_address.address2 }}{%- endif -%}
+										{%- if order.shipping_address.district != blank -%}, {{ order.shipping_address.district }}{%- endif -%}
+										{%- if order.shipping_address.city != blank -%}, {{ order.shipping_address.city }}{%- endif -%}
+										{% endunless %}
+									</p>
+									{% if order.shipping_address.phone != blank %}
+									<p>SĐT: {{ order.shipping_address.phone }}</p>
+									{% endif %}
+								</div>
+							</div>
+						</div>
+						{% endif %}
+						<div class="col-12 col-lg-6 body_order">
+							<div class="box-address">
+								<h2 class="title-head">
+									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/></svg>
+									Trạng thái thanh toán
+								</h2>
+								<div class="box-des">
+									<p>
+										{%- case order.financial_status -%}
+										{%- when 'paid' -%}Đã thanh toán
+										{%- when 'partially_paid' -%}Thanh toán một phần
+										{%- when 'pending' -%}Chờ thanh toán
+										{%- when 'authorized' -%}Đã ủy quyền
+										{%- when 'refunded' -%}Đã hoàn tiền
+										{%- when 'partially_refunded' -%}Hoàn tiền một phần
+										{%- when 'voided' -%}Đã hủy thanh toán
+										{%- else -%}Chưa xác định
+										{%- endcase -%}
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					{%- comment -%} ─── Line items table (giữ nguyên data, fix một chút markup) ─── {%- endcomment -%}
+					<div class="table-order">
+						<div class="table-responsive-block table_mobile">
+							<table id="order_details" class="table table-cart">
+								<thead class="thead-default theborder">
+									<tr>
+										<th>Sản phẩm</th>
+										<th>Đơn giá</th>
+										<th>Số lượng</th>
+										<th>Tổng</th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for line_item in order.line_items %}
+									{%- comment -%} price/line_price deprecated → dùng price_final, fallback price {%- endcomment -%}
+									{%- assign li_price = line_item.price_final | default: line_item.price -%}
+									<tr>
+										<td class="link" data-title="Tên">
+											<div class="image_order">
+												<a title="{{ line_item.title }}" href="{{ line_item.url | default: line_item.product.url }}">{{ line_item.image | img_url: 'small' | img_tag }}</a>
+											</div>
+											<div class="content_right">
+												<a class="title_order" href="{{ line_item.url | default: line_item.product.url }}" title="{{ line_item.title }}">{{ line_item.title }}</a>
+												{% unless line_item.variant_title == 'Default Title' or line_item.variant_title == blank %}
+												<p style="color:#828282;font-size:12px;">{{ line_item.variant_title }}</p>
+												{% endunless %}
+												{% if line_item.sku != blank %}
+												<p class="sku_order">Mã: {{ line_item.sku }}</p>
+												{% endif %}
+												<div class="bottom_mb">
+													<div class="quantity_mb">x{{ line_item.quantity }}</div>
+													<div class="sum_mb">{{ line_item.quantity | times: li_price | money }}</div>
+												</div>
+											</div>
+										</td>
+										<td data-title="Giá" class="numeric">{{ li_price | money }}</td>
+										<td data-title="Số lượng" class="numeric">{{ line_item.quantity }}</td>
+										<td data-title="Tổng" class="numeric">{{ line_item.quantity | times: li_price | money }}</td>
+									</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+						<table class="table totalorders">
+							<tfoot>
+								{% if order.total_discounts > 0 %}
+								<tr class="order_summary discount">
+									<td>Khuyến mại{% for d in order.discounts %} ({{ d.code }}){% endfor %}</td>
+									<td class="total money right">-{{ order.total_discounts | money }}</td>
+								</tr>
+								{% endif %}
+								{% if order.shipping_price > 0 %}
+								<tr class="order_summary">
+									<td>Phí vận chuyển</td>
+									<td class="total money right">{{ order.shipping_price | money }}</td>
+								</tr>
+								{% endif %}
+								<tr class="order_summary order_total">
+									<td>Tổng tiền</td>
+									<td class="right"><strong style="color:#CA170E;font-size:19px;">{{ order.total_price | money }}</strong></td>
+								</tr>
+							</tfoot>
+						</table>
+					</div>
+
+					{%- comment -%} ─── Action buttons: Reorder (status-gated) + Support ─── {%- endcomment -%}
+					<div class="pc-order-detail__actions">
+						{%- if show_reorder -%}
+						<button type="button" class="pc-btn pc-btn-primary" id="js-reorder-btn"
+							data-line-items='[{% for li in order.line_items %}{"variantId":{{ li.variant.id | default: li.variant_id | default: 0 }},"quantity":{{ li.quantity }}}{% unless forloop.last %},{% endunless %}{% endfor %}]'>
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+							Mua lại đơn này
+						</button>
+						{%- endif -%}
+						<a class="pc-btn pc-btn-secondary" href="/dat-lich-tu-van">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+							Liên hệ hỗ trợ
+						</a>
+					</div>
+
+	</div>
+</section>
+
+<script>
+(function() {
+	var btn = document.getElementById('js-reorder-btn');
+	if (!btn) return;
+
+	btn.addEventListener('click', function() {
+		var items;
+		try { items = JSON.parse(btn.getAttribute('data-line-items')); } catch(e) { items = []; }
+		items = items.filter(function(it) { return it.variantId > 0 && it.quantity > 0; });
+
+		if (!items.length) {
+			alert('Không thể mua lại — sản phẩm trong đơn hàng này không còn variant ID hợp lệ.');
+			return;
+		}
+
+		btn.disabled = true;
+		btn.innerHTML = '<span>Đang thêm vào giỏ...</span>';
+
+		var queue = items.slice();
+		var added = 0, failed = 0;
+
+		function addNext() {
+			if (!queue.length) {
+				/* Finished — go to cart */
+				if (failed > 0 && added > 0) {
+					alert('Đã thêm ' + added + ' sản phẩm vào giỏ. ' + failed + ' sản phẩm không khả dụng.');
+				} else if (failed > 0 && added === 0) {
+					alert('Tất cả sản phẩm trong đơn hàng này hiện không khả dụng.');
+					btn.disabled = false;
+					btn.innerHTML = 'Mua lại đơn này';
+					return;
+				}
+				window.location.href = '/cart';
+				return;
+			}
+			var it = queue.shift();
+			jQuery.post('/cart/add.js', { variantId: it.variantId, quantity: it.quantity })
+				.done(function() { added++; addNext(); })
+				.fail(function() { failed++; addNext(); });
+		}
+		addNext();
+	});
+
+	/* Auto-trigger reorder if URL has #reorder hash (from orders list page) */
+	if (window.location.hash === '#reorder') {
+		setTimeout(function() { btn.click(); }, 200);
+	}
+})();
+</script>

@@ -1,0 +1,91 @@
+{%- comment -%}
+  T-45 seo-directory: mở rộng taxonomy theo Pharma_Cosmetics_Figma_Project/seo-directory.html
+  (Mega SEO Directory & Clinical Taxonomy). Giữ nguyên toàn bộ binding gốc (linklists
+  'footer-categories', page_seo_directory.scss.css) — CHỈ THÊM 2 cột taxonomy mới
+  (Tình Trạng Làn Da / Thành Phần Hoạt Chất) bind vào tag vocabulary THẬT đã cấu hình sẵn ở
+  configs/settings_data.json (filter_tag2_list / filter_tag1_list — CÙNG vocabulary mà
+  templates/search.bwt + snippets/aside-filter.bwt dùng để filter thật), thay vì bịa vocabulary
+  thứ 3 (đã có 1 lệch pha đã biết giữa section_solutions.bwt và filter_tag2_list — xem
+  .project-agent/EXECUTION_PLAN.yaml#known_gaps_m2_m3, không nên tạo thêm lệch pha).
+  pharma_ui_kit.bwt classes dùng tiền tố pc-kit- (đã đổi 2026-09-09 để tránh trùng CSS
+  site-wide) — xem comment đầu file đó.
+{%- endcomment -%}
+{{ 'page_seo_directory.scss.css' | asset_url | stylesheet_tag }}
+{% include 'breadcrumb' %}
+
+<section class="pc-seo-dir bg-gray-50 py-10">
+	<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+
+		<div class="pb-6 border-b border-gray-200">
+			<h1 class="text-2xl font-bold font-heading text-forest-900">📚 Mega SEO Directory &amp; Clinical Taxonomy</h1>
+			<p class="text-xs text-gray-500 mt-1">Toàn bộ danh mục phân loại hoạt chất &amp; giải pháp da liễu chuẩn y khoa</p>
+		</div>
+
+		<div class="pc-seo-dir-row space-y-3">
+			<h2 class="pc-seo-dir-heading text-xs font-bold uppercase tracking-wider text-clinical-700">Dược Mỹ Phẩm Nổi Bật</h2>
+			<div class="pc-seo-dir-links flex flex-wrap gap-2 text-xs font-semibold">
+				{% for brand in linklists['footer-categories'].links[0].links %}
+				<a href="{{ brand.url }}" class="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-800 hover:bg-mint-100 hover:text-clinical-700 transition">{{ brand.title | upcase }}</a>
+				{% endfor %}
+			</div>
+		</div>
+
+		<div class="pc-seo-dir-row space-y-3">
+			<h2 class="pc-seo-dir-heading text-xs font-bold uppercase tracking-wider text-clinical-700">Giải Pháp Điều Trị Bán Chạy</h2>
+			<div class="pc-seo-dir-links flex flex-wrap gap-2 text-xs">
+				{% for item in linklists['footer-categories'].links[2].links %}
+				<a href="{{ item.url }}" class="px-3 py-1.5 rounded-lg border border-gray-200 hover:border-clinical-600 hover:text-clinical-700 transition">{{ item.title }}</a>
+				{% endfor %}
+			</div>
+		</div>
+
+		<h2 class="pc-seo-dir-heading text-xs font-bold uppercase tracking-wider text-clinical-700 pt-4 border-t border-gray-200">Danh Mục Sản Phẩm</h2>
+		<div class="pc-seo-dir-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+			<div class="pc-seo-dir-col space-y-2 text-xs">
+				<h3 class="font-bold text-gray-900 uppercase">Tình Trạng Làn Da</h3>
+				<ul class="space-y-1.5 text-gray-600">
+					{% assign skin_conditions = settings.filter_tag2_list | default: 'Mụn trứng cá;Lão hóa;Nhạy cảm;Sắc tố' | split: ';' %}
+					{% for cond in skin_conditions %}
+					<li><a href="/search?query=tags:({{ cond | url_encode }})&type=product" class="hover:text-clinical-700">• {{ cond }}</a></li>
+					{% endfor %}
+				</ul>
+			</div>
+			<div class="pc-seo-dir-col space-y-2 text-xs">
+				<h3 class="font-bold text-gray-900 uppercase">Thành Phần Hoạt Chất</h3>
+				<ul class="space-y-1.5 text-gray-600">
+					{% assign active_ingredients = settings.filter_tag1_list | default: 'Retinol;Vitamin C;Hyaluronic Acid;Niacinamide' | split: ';' %}
+					{% for ing in active_ingredients %}
+					<li><a href="/search?query=tags:({{ ing | url_encode }})&type=product" class="hover:text-clinical-700">• {{ ing }}</a></li>
+					{% endfor %}
+				</ul>
+			</div>
+			<div class="pc-seo-dir-col space-y-2 text-xs">
+				<h3 class="font-bold text-gray-900 uppercase">Theo Công Dụng</h3>
+				<ul class="space-y-1.5 text-gray-600">
+					{% for item in linklists['footer-categories'].links[1].links %}
+					<li><a href="{{ item.url }}" class="hover:text-clinical-700">• {{ item.title }}</a></li>
+					{% endfor %}
+				</ul>
+			</div>
+			<div class="pc-seo-dir-col space-y-2 text-xs">
+				<h3 class="font-bold text-gray-900 uppercase">Liệu Trình &amp; Dịch Vụ</h3>
+				<ul class="space-y-1.5 text-gray-600">
+					{% for item in linklists['footer-categories'].links[6].links %}
+					<li><a href="{{ item.url }}" class="hover:text-clinical-700">• {{ item.title }}</a></li>
+					{% endfor %}
+				</ul>
+			</div>
+		</div>
+
+		<div class="pc-seo-dir-row pc-seo-dir-keywords space-y-3 pt-4 border-t border-gray-200">
+			<h2 class="pc-seo-dir-heading text-xs font-bold uppercase tracking-wider text-clinical-700">Từ Khóa Được Tìm Kiếm Nhiều Nhất</h2>
+			<div class="pc-seo-dir-tags flex flex-wrap gap-2">
+				{% assign kw = 'Phục hồi da chuyên sâu,Trị mụn nội tiết,Trị nám cho da nhạy cảm,Kem chống nắng cho da treatment,Serum HA cấp nước,Peel da tại nhà,Trị thâm mụn' | split: ',' %}
+				{% for k in kw %}
+				<a href="/search?query=tags:({{ k | url_encode }})&type=product" class="pc-seo-dir-tag pc-kit-badge-clinical text-xs">{{ k }}</a>
+				{% endfor %}
+			</div>
+		</div>
+
+	</div>
+</section>

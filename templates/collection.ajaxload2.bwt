@@ -1,0 +1,26 @@
+{% layout none %}
+{% assign module_product_count = collection.products_count %}
+<div class="is-collection-ajax">
+	{% if collection.products.size < 1 %}
+	<div class="alert alert-warning alert-dismissible show margin-bottom-0" role="alert">
+		<span>Hiện tại chưa có sản phẩm nào trong danh mục này!...</span>
+	</div>
+	{% else%}
+	<div class="row">
+		{% for product in collection.products limit:settings.section_pro_1_limit %}
+		<div class="col-xl-3 col-lg-3 col-md-3 col-sm-6 col-xs-12">
+			<div class="item_product_main">
+				{%include 'product_grid_office'%}
+			</div>
+		</div>			
+		{% endfor %}
+	</div>
+	{% if collection.products.size >= settings.section_pro_1_limit%}
+	<div class="view-more clearfix">
+		<a href="{{collection.url}}" title="Xem tất cả" class="show-more btn btn-extent frame">
+			Xem tất cả 
+		</a>
+	</div>
+	{% endif %}
+	{%endif%}
+</div>

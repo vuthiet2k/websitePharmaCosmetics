@@ -1,0 +1,982 @@
+      
+      <div id="tab-customers" v-show="activeTab === 'customers'" class="ma-tab-pane">
+        <template v-if="['customers.detail','customers.create','customers.edit','customers.addresses','customers.orders'].indexOf(workspaceView) === -1">
+        <button type="button" @click="mobileFilterOpen = true"
+          class="ma-filter-trigger items-center gap-2 w-full justify-center mb-stack-md p-3 bg-surface-bright border border-outline-variant rounded-xl text-body-sm font-bold text-on-surface active:scale-95 transition-all">
+          <span class="material-symbols-outlined text-[18px]">tune</span><span>Bộ lọc</span>
+          <span v-if="customers.search" class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-label-sm font-bold bg-primary text-white">1</span>
+        </button>
+        <div class="ma-toolbar ma-toolbar--sheet flex flex-wrap items-center gap-stack-md mb-stack-md p-4 bg-surface-bright border border-outline-variant rounded-xl" :class="{ 'is-filter-open': mobileFilterOpen }">
+          <div class="ma-filter-sheet-head"><span class="text-title-sm font-bold text-on-surface">Bộ lọc khách hàng</span><button type="button" @click="mobileFilterOpen = false" class="w-8 h-8 inline-flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">close</span></button></div>
+          <input type="text" v-model="customers.search" placeholder="Tìm theo SĐT / tên..."
+            class="w-[220px] bg-surface-container-lowest border border-outline-variant text-body-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+        
+          <div class="flex items-center gap-2 md:ml-auto">
+            <button @click="openCustomerCreate" type="button"
+              class="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90 transition-all active:scale-95">
+              <span class="material-symbols-outlined text-[18px]">person_add</span>Thêm khách hàng
+            </button>
+            <button @click="openCustomerImport" type="button"
+              class="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90 transition-all active:scale-95">
+              <span class="material-symbols-outlined text-[18px]">upload_file</span>Nhập từ Excel
+            </button>
+            <button @click="exportCustomersCsv" :disabled="customers.exporting" type="button"
+              class="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-surface-container-lowest border border-outline-variant font-bold text-label-md hover:bg-surface-container-low transition-all active:scale-95 disabled:opacity-50">
+              <span class="material-symbols-outlined text-[18px]" :class="{ 'ma-spin': customers.exporting }">[[ customers.exporting ? 'progress_activity' : 'download' ]]</span>[[ customers.exporting ? 'Đang xuất…' : 'Xuất CSV' ]]
+            </button>
+          </div>
+        </div>
+        <div class="ma-filter-backdrop" v-if="mobileFilterOpen" @click="mobileFilterOpen = false"></div>
+
+        <div v-if="customers.loading" class="ma-table-skeleton" aria-label="Đang tải khách hàng"><span></span><span></span><span></span><span></span></div>
+        <div v-else-if="customers.error" class="ma-empty-state">
+          <span class="material-symbols-outlined text-error text-[48px]">error</span>
+          <p class="ma-empty-hint">[[ customers.error ]]</p>
+          <button @click="loadCustomers" type="button" class="ma-btn-outline">Thử lại</button>
+        </div>
+        <div v-else-if="customersEmptyMessage" class="ma-empty-state">
+          <span class="material-symbols-outlined text-on-surface-variant text-[56px] opacity-[.35]">person_off</span>
+          <p class="ma-empty-hint">[[ customersEmptyMessage ]]</p>
+        </div>
+        <div v-else class="ma-card">
+          <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+            <thead><tr class="ma-thead-row">
+              <th class="ma-th-lg w-16">STT</th>
+              <th class="ma-th-lg">Số điện thoại</th>
+              <th class="ma-th-lg">Tên</th>
+              <th class="ma-th-lg">Nhóm khách</th>
+              <th class="ma-th-lg">Lần cuối đặt</th>
+              <th class="px-6 py-3 font-label-md text-on-surface-variant tracking-wider uppercase text-right">Tổng đơn</th>
+              <th class="px-6 py-3 font-label-md text-on-surface-variant tracking-wider uppercase text-right">Đã thanh toán</th>
+              <th class="px-6 py-3"></th>
+            </tr></thead>
+            <tbody class="ma-rows-divide">
+              
+              <tr v-for="(c, index) in customersFiltered" :key="c.customer_id" class="hover:bg-surface-container-low/50 transition-colors cursor-pointer" @click="openCustomerDrawer(c)">
+                <td class="px-6 py-3 text-on-surface-variant">[[ index + 1 ]]</td>
+                <td class="px-6 py-3 font-body-md font-bold">[[ formatPhone(c.phone) ]]</td>
+                <td class="px-6 py-3 font-body-sm">[[ c.name || '—' ]]</td>
+                <td class="px-6 py-3">
+                  <span v-if="c.customer_group === 'SỈ'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-label-md bg-primary-container text-on-primary-container font-bold">Sỉ [[ c.default_discount_percent ]]%</span>
+                  <span v-else class="ma-text-sub">Lẻ</span>
+                </td>
+                <td class="px-6 py-3"><small class="font-body-sm text-on-surface-variant">[[ formatDate(c.last_order_at) ]]</small></td>
+                <td class="px-6 py-3 text-right font-body-sm">[[ c.order_count ]]</td>
+                <td class="px-6 py-3 text-right font-body-md font-bold">[[ formatMoney(c.total_paid) ]]</td>
+                <td class="px-6 py-3 text-right"><span class="material-symbols-outlined text-on-surface-variant">chevron_right</span></td>
+              </tr>
+            </tbody>
+          </table></div>
+          <p class="text-body-sm text-on-surface-variant mt-3 px-4 pb-4">[[ customersFiltered.length ]] / [[ customers.all.length ]] khách hàng</p>
+        </div>
+        </template>
+
+        <!-- ================================================================================
+             CUSTOMER CREATE — 2-column layout (2026-08-09)
+             Header sticky: breadcrumb + nút Huỷ + Lưu&Tạo đơn (primary emerald, F9) + Lưu KH.
+             Cột chính 65% (Info cá nhân + Địa chỉ grid 3 cột); Cột phụ 35% (Nhóm + Ghi chú).
+             Realtime dupe check khi gõ đủ 10 số. Auto-format phone. Auto save default address.
+             ================================================================================ -->
+        <section v-if="workspaceView === 'customers.create'" class="ma-workspace-detail text-on-surface font-body-sm">
+
+          <!-- HEADER STICKY -->
+          <div class="sticky top-0 z-10 flex flex-col md:flex-row md:items-center gap-3 border-b border-outline-variant bg-surface-container-lowest px-4 py-3 md:px-6">
+            <div class="flex items-center gap-2 min-w-0 flex-1">
+              <button @click="closeCustomerCreate" type="button"
+                class="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-label-md font-bold text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span><span class="hidden sm:inline">Quay lại</span>
+              </button>
+              <div class="flex min-w-0 items-center gap-1.5 truncate text-body-sm text-on-surface-variant">
+                <span>Khách hàng</span><span class="text-outline">/</span>
+                <span class="truncate font-semibold text-on-surface">Thêm khách hàng mới</span>
+              </div>
+              <span class="hidden md:inline text-label-sm text-on-surface-variant opacity-70">· SĐT là định danh duy nhất</span>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <button @click="closeCustomerCreate" :disabled="customers.createSaving" type="button"
+                class="inline-flex items-center gap-1.5 border border-outline-variant px-3 py-1.5 rounded-lg text-label-md font-bold hover:bg-surface-container-high transition-colors disabled:opacity-50">
+                Huỷ
+              </button>
+              <!-- Lưu & Tạo đơn (F9) — 80% ca sử dụng: thu ngân tạo khách MỚI để lên đơn ngay -->
+              <button @click="saveCustomerCreate({ thenCreateOrder: true })"
+                :disabled="customers.createSaving || customers.createForm.dupeCheck.status === 'found'" type="button"
+                class="inline-flex items-center gap-1.5 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-label-md font-bold hover:bg-emerald-700 transition-colors active:scale-95 disabled:opacity-50">
+                <span class="material-symbols-outlined text-[16px]" :class="{ 'ma-spin': customers.createSaving }">[[ customers.createSaving ? 'progress_activity' : 'point_of_sale' ]]</span>[[ customers.createSaving && customers.createForm._thenCreateOrder ? 'Đang lưu…' : 'Lưu &amp; Tạo đơn' ]]<kbd v-if="!customers.createSaving" class="ml-1 text-label-sm px-1 py-0.5 bg-emerald-700 rounded">F9</kbd>
+              </button>
+              <button @click="saveCustomerCreate({ thenCreateOrder: false })"
+                :disabled="customers.createSaving || customers.createForm.dupeCheck.status === 'found'" type="button"
+                class="inline-flex items-center gap-1.5 bg-primary text-on-primary px-3 py-1.5 rounded-lg text-label-md font-bold hover:opacity-90 transition-colors active:scale-95 disabled:opacity-50">
+                <span class="material-symbols-outlined text-[16px]" :class="{ 'ma-spin': customers.createSaving }">[[ customers.createSaving ? 'progress_activity' : 'save' ]]</span>[[ customers.createSaving && !customers.createForm._thenCreateOrder ? 'Đang lưu…' : 'Lưu khách hàng' ]]
+              </button>
+            </div>
+          </div>
+
+          <!-- Realtime dupe check banner (SĐT đã tồn tại) -->
+          <div v-if="customers.createForm.dupeCheck.status === 'found'"
+            class="mx-4 mt-4 md:mx-6 rounded-xl border border-amber-300 bg-amber-50 p-3 flex items-start gap-3">
+            <span class="material-symbols-outlined text-amber-700 text-[22px] flex-shrink-0">warning</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-body-sm font-semibold text-amber-900">
+                Số điện thoại này đã có trong hệ thống — <b>[[ customers.createForm.dupeCheck.existingCustomer.name || 'Không có tên' ]]</b>
+              </p>
+              <p class="text-label-sm text-amber-700 mt-0.5">Không thể tạo trùng. Mở hồ sơ khách để cập nhật thông tin hoặc tạo đơn cho khách này.</p>
+            </div>
+            <button @click="openCustomerDrawer(customers.createForm.dupeCheck.existingCustomer); closeCustomerCreate()"
+              type="button"
+              class="flex-shrink-0 inline-flex items-center gap-1 bg-amber-700 text-white px-3 py-1.5 rounded-lg text-label-md font-bold hover:bg-amber-800 transition-colors">
+              <span class="material-symbols-outlined text-[16px]">person</span>Xem hồ sơ
+            </button>
+          </div>
+
+          <form @submit.prevent="saveCustomerCreate({ thenCreateOrder: false })" class="p-4 md:p-6">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,65fr)_minmax(0,35fr)]">
+
+              <!-- ================== CỘT CHÍNH (65%) ================== -->
+              <div class="space-y-4">
+
+                <!-- CARD 1: Thông tin cá nhân -->
+                <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-sm">
+                  <h3 class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider mb-3">
+                    <span class="material-symbols-outlined text-[16px] align-middle mr-1">person</span>Thông tin cá nhân
+                  </h3>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="md:col-span-1">
+                      <label class="ma-label">Tên khách hàng <span class="text-error">*</span></label>
+                      <input v-model="customers.createForm.name" type="text" placeholder="Nguyễn Văn A"
+                        class="ma-input" autocomplete="name">
+                    </div>
+                    <div class="md:col-span-1">
+                      <label class="ma-label">Số điện thoại <span class="text-error">*</span></label>
+                      <div class="relative">
+                        <input v-model="customers.createForm.phone" @input="onCustomerPhoneInput" @blur="onCustomerPhoneBlur"
+                          type="tel" inputmode="numeric" placeholder="0912 345 678"
+                          class="ma-input pr-9"
+                          :class="{ 'ma-input-error': customers.createForm.dupeCheck.status === 'found' }"
+                          autocomplete="tel">
+                        <span v-if="customers.createForm.dupeCheck.status === 'checking'"
+                          class="absolute right-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined ma-spin text-[18px] text-primary">progress_activity</span>
+                        <span v-else-if="customers.createForm.dupeCheck.status === 'notfound'"
+                          class="absolute right-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-emerald-600" title="SĐT hợp lệ, chưa có trong hệ thống">check_circle</span>
+                        <span v-else-if="customers.createForm.dupeCheck.status === 'found'"
+                          class="absolute right-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-amber-600" title="SĐT đã tồn tại">error</span>
+                      </div>
+                      <p class="text-label-sm text-on-surface-variant opacity-70 mt-0.5">Tự chuẩn hoá: nhập 9 số tự bù 0 đầu; kiểm tra trùng khi nhập đủ 10 số.</p>
+                    </div>
+                    <div>
+                      <label class="ma-label">Email</label>
+                      <input v-model="customers.createForm.email" type="email" placeholder="email@domain.com" class="ma-input" autocomplete="email">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                      <div>
+                        <label class="ma-label">Giới tính</label>
+                        <select v-model="customers.createForm.gender" class="ma-input">
+                          <option value="">—</option>
+                          <option value="M">Nam</option>
+                          <option value="F">Nữ</option>
+                          <option value="X">Khác</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="ma-label">Ngày sinh</label>
+                        <input v-model="customers.createForm.birthday" type="date" class="ma-input">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- CARD 2: Địa chỉ giao hàng mặc định -->
+                <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-sm">
+                  <h3 class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider mb-3">
+                    <span class="material-symbols-outlined text-[16px] align-middle mr-1">home_pin</span>Địa chỉ giao hàng mặc định
+                    <span class="ml-1 text-label-sm font-normal opacity-70">· tự lưu vào Sổ địa chỉ khi Lưu</span>
+                  </h3>
+                  <div class="space-y-3">
+                    <div>
+                      <label class="ma-label">Địa chỉ chi tiết <span class="ma-text-hint">(số nhà, tên đường)</span></label>
+                      <input v-model="customers.createForm.addressStreet" type="text" placeholder="217A Phạm Viết Chánh"
+                        class="ma-input" autocomplete="street-address">
+                    </div>
+                    <!-- Grid 3 cột 1 hàng: Tỉnh · Huyện · Xã -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div>
+                        <label class="ma-label">Tỉnh/Thành phố</label>
+                        <input v-model="customers.createForm.addressCity"
+                          @change="onProvinceChange(customers.createForm, 'addressCity', 'addressWard')"
+                          list="ma-cust-provinces" type="text" placeholder="TP. Hồ Chí Minh" class="ma-input">
+                        <datalist id="ma-cust-provinces">
+                          <option v-for="p in addressBook.provinces" :key="p.code" :value="p.name"></option>
+                        </datalist>
+                      </div>
+                      <div>
+                        <label class="ma-label">Quận/Huyện <span class="ma-text-hint">(nếu có)</span></label>
+                        <input v-model="customers.createForm.addressDistrict" type="text" placeholder="Q. 1" class="ma-input">
+                      </div>
+                      <div>
+                        <label class="ma-label">Phường/Xã</label>
+                        <input v-model="customers.createForm.addressWard"
+                          list="ma-cust-wards" type="text" placeholder="P. Bến Nghé" class="ma-input">
+                        <datalist id="ma-cust-wards">
+                          <option v-for="w in wardsFor(customers.createForm.addressCity)" :key="w.code" :value="w.name"></option>
+                        </datalist>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- ================== CỘT PHỤ (35%) ================== -->
+              <div class="space-y-4">
+
+                <!-- CARD 3: Nhóm khách + Mã ngoài + Ghi chú -->
+                <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-sm">
+                  <h3 class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider mb-3">
+                    <span class="material-symbols-outlined text-[16px] align-middle mr-1">category</span>Nhóm &amp; Ghi chú
+                  </h3>
+                  <div class="space-y-3">
+                    <!-- Nhóm khách radio -->
+                    <div>
+                      <label class="ma-label">Nhóm khách hàng</label>
+                      <div class="grid grid-cols-2 gap-2 mt-1">
+                        <label class="flex items-center gap-2 p-2.5 rounded-lg border border-outline-variant cursor-pointer transition-colors"
+                          :class="customers.createForm.customerGroup === 'LẺ' ? 'bg-primary-container border-primary text-on-primary-container font-bold' : 'hover:bg-surface-container-low'">
+                          <input type="radio" v-model="customers.createForm.customerGroup" value="LẺ" class="w-4 h-4">
+                          <span class="text-body-sm">Khách lẻ</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2.5 rounded-lg border border-outline-variant cursor-pointer transition-colors"
+                          :class="customers.createForm.customerGroup === 'SỈ' ? 'bg-primary-container border-primary text-on-primary-container font-bold' : 'hover:bg-surface-container-low'">
+                          <input type="radio" v-model="customers.createForm.customerGroup" value="SỈ" class="w-4 h-4">
+                          <span class="text-body-sm">Khách sỉ</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div v-if="customers.createForm.customerGroup === 'SỈ'">
+                      <label class="ma-label">Chiết khấu mặc định (%)</label>
+                      <input v-model.number="customers.createForm.defaultDiscountPercent" type="number" min="0" max="100" class="ma-input" placeholder="10">
+                    </div>
+                    <!-- Mã khách ngoài (Sapo/External) -->
+                    <div>
+                      <label class="ma-label">Mã khách ngoài <span class="ma-text-hint">(Sapo/CRM ngoài, tuỳ chọn)</span></label>
+                      <input v-model="customers.createForm.externalCode" type="text" placeholder="EXT-10294" class="ma-input">
+                    </div>
+                    <!-- Ghi chú -->
+                    <div>
+                      <label class="ma-label">Ghi chú nội bộ</label>
+                      <textarea v-model="customers.createForm.notes" rows="4"
+                        placeholder="Da nhạy cảm, hay thích tư vấn qua Zalo..."
+                        class="ma-input"></textarea>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Hidden submit để phím Enter trong form vẫn hoạt động (form on submit → thenCreateOrder=false) -->
+            <button type="submit" class="hidden">Submit</button>
+          </form>
+        </section>
+
+
+
+  
+  <!-- ═══════════════════════════════════════════════════════════════════════════════════════════
+       CUSTOMER DETAIL v2 (2026-08-15) — đồng bộ layout với Order/Product detail:
+         • Sticky header với breadcrumb + nút Sửa hồ sơ
+         • Grid 2-col 7fr / 3fr (stack trên mobile)
+         • Cột chính: Hồ sơ, Thông tin cơ bản, Sổ địa chỉ, Lịch sử đơn hàng
+         • Cột phụ (sticky top xl): Số liệu tổng, Ghi chú nội bộ, Top sản phẩm
+         • Card pattern: border border-outline-variant · bg-surface-container-lowest · header xám nhạt
+       Vue directives + method calls (closeCustomerDrawer / startEditCustomer / copyCustomerAddress /
+       saveCustomerNotes / openCustomerAddressForm / useCustomerAddressForOrder /
+       setCustomerDefaultAddress / viewOrderFromCustomer / …) giữ nguyên — chỉ đổi vỏ HTML.
+       ═══════════════════════════════════════════════════════════════════════════════════════════ -->
+  <section v-if="workspaceView === 'customers.detail' && customers.expandedId" class="ma-workspace-detail text-on-surface font-body-sm">
+
+    <!-- STICKY HEADER: breadcrumb + Sửa hồ sơ + Ẩn + Đóng — thống nhất với Order detail:
+         chỉ 1 nút Đóng ở phải, không có "Quay lại" (arrow_back) ở trái (2026-08-22 rev). -->
+    <div class="sticky top-0 z-10 flex flex-none items-center gap-3 border-b border-outline-variant bg-surface-container-lowest px-4 py-3 md:px-6">
+      <div class="flex min-w-0 flex-1 items-center gap-1.5 truncate text-body-sm text-on-surface-variant">
+        <span>Khách hàng</span><span class="text-outline">/</span>
+        <span class="truncate font-semibold text-on-surface">[[ customers.detail && customers.detail.name || customers.expandedId ]]</span>
+      </div>
+      <div v-if="customers.detail" class="flex items-center gap-2">
+        <button @click="startEditCustomer(customers.detail)" type="button"
+          class="inline-flex items-center gap-1.5 border border-outline-variant px-3 py-1.5 rounded-lg text-label-md font-bold hover:bg-surface-container-high transition-colors">
+          <span class="material-symbols-outlined text-[16px]">edit</span><span class="hidden sm:inline">Sửa hồ sơ</span>
+        </button>
+        {%- comment -%}
+          2026-08-16: nút Ẩn (soft delete). Backend chỉ set Status='deleted' — đơn cũ vẫn giữ,
+          list mặc định ẩn khách này. Đủ tần suất huỷ nhầm nên confirm hai bước (showConfirm).
+        {%- endcomment -%}
+        <button @click="confirmDeleteCustomer(customers.detail)" type="button" :disabled="customers.deleteBusy"
+          class="inline-flex items-center gap-1.5 border border-error/40 text-error px-3 py-1.5 rounded-lg text-label-md font-bold hover:bg-error/5 transition-colors disabled:opacity-50">
+          <span class="material-symbols-outlined text-[16px]" :class="{ 'ma-spin': customers.deleteBusy }">[[ customers.deleteBusy ? 'progress_activity' : 'visibility_off' ]]</span>
+          <span class="hidden sm:inline">Ẩn khách</span>
+        </button>
+      </div>
+      <button @click="closeCustomerDrawer" type="button" class="ma-icon-btn" aria-label="Đóng">
+        <span class="material-symbols-outlined text-[20px]">close</span>
+      </button>
+    </div>
+
+    <div class="bg-surface-bright p-4 md:p-6">
+      <div v-if="!customers.detail" class="text-body-sm text-on-surface-variant py-8 text-center">Không tải được chi tiết khách hàng.</div>
+      <template v-else>
+        <div v-if="customers.detailLoading" class="mb-4 flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2 text-label-sm text-on-surface-variant" role="status"><span class="material-symbols-outlined ma-spin text-[16px]">progress_activity</span>Đang bổ sung thông tin hồ sơ…</div>
+
+        <!-- GRID 2-COL: 7fr chính / 3fr phụ (stack trên mobile), cột phụ sticky top trên xl -->
+        <div class="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]">
+
+          <!-- ═══════════ CỘT CHÍNH (7fr) ═══════════
+               2026-08-22 rev: chuyển sang grid 2-col trên lg (laptop) để card ghép cặp gọn
+               hơn thay vì stack dọc dài. Hero + Số liệu ở hàng 1, Thông tin cơ bản + Sổ địa
+               chỉ ở hàng 2, Lịch sử đơn lg:col-span-2 (full-width). Chọn lg thay vì xl để
+               laptop 1366×768 cũng thấy 2 cột (xl cần ≥1280 kèm bootstrap main-col 7fr đủ rộng
+               ~890px — trên 1366 outer grid vẫn stack, nên inner lg:grid-cols-2 hoạt động ngay). -->
+          <div class="grid min-w-0 gap-4 lg:grid-cols-2 lg:items-start">
+
+            <!-- CARD 1: HỒ SƠ KHÁCH HÀNG (Hero + Thông tin cơ bản gộp) — 2026-08-22 rev4:
+                 gộp Thông tin cơ bản (địa chỉ mặc định / ngày sinh / khách từ / email) vào
+                 Hồ sơ để giảm card thừa, layout gọn hơn. -->
+            <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+              <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+                <span class="material-symbols-outlined text-[18px] text-on-surface-variant">person</span>
+                <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Hồ sơ khách hàng</div>
+                <span class="ml-auto text-label-sm font-mono text-on-surface-variant">[[ customers.detail.customer_id || customers.expandedId ]]</span>
+              </div>
+              <!-- Block A: Hero — avatar + (tên & badge Sỉ/tier) + phone + badge phụ.
+                   2026-08-22 rev5: badge Sỉ + tier di lên cạnh tên (cùng hàng), badge phụ
+                   (acquisition_channel) đi xuống dòng dưới cùng cho gọn. -->
+              <div class="p-4 flex items-start gap-3">
+                <div class="w-14 h-14 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-headline-lg flex-shrink-0">[[ (customers.detail.name || '?').trim().charAt(0).toUpperCase() ]]</div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h4 class="text-headline-md font-bold text-on-surface truncate min-w-0">[[ customers.detail.name || 'Khách lẻ' ]]</h4>
+                    <span v-if="customers.detail.customer_group === 'SỈ'" class="inline-flex items-center px-2 py-0.5 rounded-full text-label-sm bg-primary-container text-on-primary-container font-bold flex-shrink-0">Sỉ [[ customers.detail.default_discount_percent ]]%</span>
+                    <span v-if="membershipTierMeta(customers.detail.membership_tier)" class="inline-flex items-center px-2 py-0.5 rounded-full text-label-sm font-bold flex-shrink-0" :class="membershipTierMeta(customers.detail.membership_tier).cls">
+                      [[ membershipTierMeta(customers.detail.membership_tier).label ]] · [[ customers.detail.loyalty_points ]] điểm
+                    </span>
+                  </div>
+                  <div v-if="customers.detail.phone" class="flex items-center gap-1.5 mt-1.5">
+                    <span class="font-body-md font-bold font-mono">[[ formatPhone(customers.detail.phone) ]]</span>
+                    <a :href="'tel:' + formatPhone(customers.detail.phone)" class="p-1 text-on-surface-variant hover:text-primary hover:bg-surface-container-high rounded-full transition-colors" title="Gọi điện">
+                      <span class="material-symbols-outlined text-[18px]">call</span>
+                    </a>
+                    <a :href="'https://zalo.me/' + formatPhone(customers.detail.phone)" target="_blank" rel="noopener" class="p-1 text-on-surface-variant hover:text-primary hover:bg-surface-container-high rounded-full transition-colors" title="Chat Zalo">
+                      <span class="material-symbols-outlined text-[18px]">chat</span>
+                    </a>
+                  </div>
+                  <div v-if="customers.detail.acquisition_channel" class="flex flex-wrap items-center gap-1.5 mt-2">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-label-sm bg-surface-container-high text-on-surface-variant">Nguồn: [[ customers.detail.acquisition_channel ]]</span>
+                  </div>
+                </div>
+              </div>
+              <!-- Block B: Thông tin cơ bản gộp — KV rows dưới hero, ngăn cách bằng border-t.
+                   2026-08-22 rev: Địa chỉ mặc định để dạng block (label trên, địa chỉ + nút Copy
+                   xuống dưới) — không dùng grid 2-col vì địa chỉ đủ 4 cấp thường dài (~80-120 ký
+                   tự), ép cột 1fr sau label 140px hay bị wrap/tràn. Ngày sinh + Email vẫn 2-col
+                   vì giá trị ngắn. -->
+              <div class="px-3 py-1 border-t border-outline-variant">
+                <div class="block border-b border-outline-variant/60 py-2 last:border-b-0">
+                  <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Địa chỉ mặc định</div>
+                  <div class="mt-1 min-w-0 text-body-sm">
+                    <span :class="(customers.detail.default_address || customers.detail.address_street || customers.detail.address_city) ? 'text-on-surface' : 'text-on-surface-variant opacity-60'">
+                      [[ [customers.detail.default_address && customers.detail.default_address.address || customers.detail.address_street, customers.detail.default_address && customers.detail.default_address.ward || customers.detail.address_ward, customers.detail.default_address && customers.detail.default_address.district || customers.detail.address_district, customers.detail.default_address && customers.detail.default_address.province || customers.detail.address_city].filter(function(v){return v;}).join(', ') || 'Chưa có địa chỉ' ]]
+                    </span>
+                    <button v-if="customers.detail.default_address || customers.detail.address_street || customers.detail.address_city" @click="copyCustomerAddress" type="button" class="ml-2 inline-flex items-center gap-1 text-label-sm text-primary hover:underline whitespace-nowrap align-middle">
+                      <span class="material-symbols-outlined text-[16px]">content_copy</span>Copy
+                    </button>
+                  </div>
+                </div>
+                <div v-if="customers.detail.birthday" class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3">
+                  <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Ngày sinh</div>
+                  <div class="min-w-0 text-body-sm text-on-surface">[[ customers.detail.birthday ]]</div>
+                </div>
+                <div v-if="customers.detail.created_at" class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3">
+                  <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Khách từ</div>
+                  <div class="min-w-0 text-body-sm text-on-surface font-mono">[[ formatDate(customers.detail.created_at) ]]</div>
+                </div>
+                <div v-if="customers.detail.email" class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3">
+                  <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Email</div>
+                  <div class="min-w-0 text-body-sm text-on-surface">
+                    <a :href="'mailto:' + customers.detail.email" class="text-primary hover:underline">[[ customers.detail.email ]]</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CARD 2: SỐ LIỆU KH — 1 col, ghép cặp với Hero trên xl (rev 2026-08-22).
+                 Chuyển từ cột phụ sang cột chính: "đưa số liệu khách lên trước địa chỉ". -->
+            <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+              <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+                <span class="material-symbols-outlined text-[18px] text-on-surface-variant">insights</span>
+                <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Số liệu khách</div>
+              </div>
+              <div class="p-3">
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="rounded-lg border border-outline-variant bg-surface-container-low p-3">
+                    <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Tổng đơn</div>
+                    <div class="mt-1 text-headline-md font-bold text-primary tabular-nums">[[ customers.detail.order_count || 0 ]]</div>
+                  </div>
+                  <div class="rounded-lg border border-outline-variant bg-surface-container-low p-3">
+                    <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Đơn đã trả</div>
+                    <div class="mt-1 text-headline-md font-bold text-primary tabular-nums">[[ customersPaidOrders.length ]]</div>
+                  </div>
+                  <div class="col-span-2 rounded-lg border border-outline-variant bg-primary-container/40 p-3">
+                    <div class="text-label-sm font-bold uppercase tracking-wider text-on-primary-container">Tổng đã thanh toán</div>
+                    <div class="mt-1 text-headline-md font-bold text-on-primary-container tabular-nums font-mono">[[ formatMoney(customersTotalPaid) ]]</div>
+                  </div>
+                </div>
+                <div class="mt-3 rounded-lg bg-surface-container-low px-3 py-2 text-label-sm text-on-surface-variant">
+                  <span class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Tần suất mua</span><br>
+                  <strong class="text-on-surface">[[ customers.detail.avg_days_between_orders ? ('Trung bình ' + customers.detail.avg_days_between_orders + ' ngày / lần') : 'Chưa đủ dữ liệu (cần ≥ 2 đơn)' ]]</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- CARD 3: SỔ ĐỊA CHỈ GIAO HÀNG — ghép cặp với Lịch sử đơn trên lg. Hiển thị
+                 TOP 3 địa chỉ (slice(0,3)), khi tổng >3 → hiện "Xem tất cả [N] địa chỉ" ở
+                 footer, dẫn qua workspace view customers.addresses. Không dùng max-h+scroll
+                 vì user report card vẫn cao — chỉ hard cap 3 dòng. -->
+            <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+              <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+                <span class="material-symbols-outlined text-[18px] text-on-surface-variant">location_on</span>
+                <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Sổ địa chỉ giao hàng</div>
+                <span class="ml-auto text-label-sm text-on-surface-variant">[[ (customers.detail.addresses || []).length ]] địa chỉ</span>
+                <button @click="openCustomerAddressForm()" type="button" class="ml-2 inline-flex items-center gap-1 rounded-lg border border-outline-variant bg-surface-container-lowest px-2 py-1 text-label-sm font-bold text-on-surface hover:bg-surface-container-low transition-colors">
+                  <span class="material-symbols-outlined text-[16px]">add</span><span class="hidden sm:inline">Thêm</span>
+                </button>
+              </div>
+              <div v-if="customers.detailLoading && customers.detail.__snapshot" class="ma-component-skeleton" aria-label="Đang tải sổ địa chỉ"><span class="ma-component-skeleton__line"></span><span class="ma-component-skeleton__line"></span><span class="ma-component-skeleton__line"></span></div>
+              <div v-else-if="!(customers.detail.addresses || []).length" class="ma-component-empty">
+                <span class="material-symbols-outlined">location_off</span>
+                <span>Chưa có địa chỉ đã lưu. Thêm một địa chỉ để tự điền ở form Tạo đơn.</span>
+              </div>
+              <div v-else class="divide-y divide-outline-variant">
+                <div v-for="a in (customers.detail.addresses || []).slice(0, 3)" :key="a.address_id" class="px-3 py-3">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                      <div class="flex flex-wrap items-center gap-1.5">
+                        <strong class="text-body-sm">[[ a.receiver_name || customers.detail.name ]]</strong>
+                        <span v-if="a.phone" class="text-label-sm text-on-surface-variant font-mono">[[ formatPhone(a.phone) ]]</span>
+                        <span v-if="a.is_default" class="px-1.5 py-0.5 rounded bg-primary-container text-on-primary-container text-label-sm font-bold">Mặc định</span>
+                      </div>
+                      <p class="mt-1 text-body-sm text-on-surface">[[ [a.address, a.ward, a.district, a.province].filter(function(v){return v;}).join(', ') ]]</p>
+                    </div>
+                    <div class="flex flex-wrap justify-end gap-2 flex-shrink-0">
+                      <button @click="useCustomerAddressForOrder(a)" type="button" class="text-label-sm font-bold text-primary hover:underline">Dùng tạo đơn</button>
+                      <button v-if="!a.is_default" @click="setCustomerDefaultAddress(a)" type="button" class="text-label-sm text-on-surface-variant hover:text-primary">Đặt mặc định</button>
+                      {%- comment -%}
+                        2026-08-16: Sửa (in-place) + Xoá (soft delete). Sửa reuse form Thêm địa chỉ
+                        với address_id để backend route qua update_customer_address. Xoá gọi
+                        delete_customer_address — Status='deleted', đơn cũ vẫn tra được nội dung.
+                      {%- endcomment -%}
+                      <button @click="editCustomerAddress(a)" type="button" class="text-label-sm text-on-surface-variant hover:text-primary">Sửa</button>
+                      <button @click="openCustomerAddressForm(a)" type="button" class="text-label-sm text-on-surface-variant hover:text-primary">Sao chép</button>
+                      <button @click="confirmDeleteCustomerAddress(a)" type="button" :disabled="customers.addressBusy === a.address_id"
+                        class="text-label-sm text-error hover:underline disabled:opacity-50">
+                        <span v-if="customers.addressBusy === a.address_id" class="material-symbols-outlined text-[14px] align-middle ma-spin">progress_activity</span>
+                        Xoá
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-if="(customers.detail.addresses || []).length > 3" class="border-t border-outline-variant bg-surface-container-low px-3 py-2">
+                <button @click="openCustomerAddressesAll" type="button" class="w-full inline-flex items-center justify-center gap-1 text-label-md font-bold text-primary hover:underline">
+                  <span class="material-symbols-outlined text-[16px]">open_in_full</span>Xem tất cả [[ (customers.detail.addresses || []).length ]] địa chỉ
+                </button>
+              </div>
+            </div>
+
+            <!-- CARD 4: LỊCH SỬ ĐƠN HÀNG — ghép cặp với Sổ địa chỉ (1-col mỗi bên trên lg).
+                 Hiển thị TOP 3 đơn (slice(0,3) sau khi filter search). Ô search vẫn giữ để lọc
+                 nhanh trên 3 dòng đang hiển thị. >3 đơn → nút "Xem tất cả" mở workspace
+                 customers.orders — full list, không cắt. -->
+            <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+              <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+                <span class="material-symbols-outlined text-[18px] text-on-surface-variant">receipt_long</span>
+                <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Lịch sử đơn hàng</div>
+                <span class="ml-auto text-label-sm text-on-surface-variant">[[ (customers.detail.orders || []).length ]] đơn</span>
+              </div>
+              <div class="px-3 py-3">
+                <div v-if="!(customers.detail.orders || []).length" class="ma-component-empty">
+                  <span class="material-symbols-outlined">receipt_long</span>
+                  <span>Khách hàng chưa có đơn hàng nào.</span>
+                </div>
+                <div v-else class="overflow-x-auto rounded-lg border border-outline-variant">
+                  <table class="w-full text-left border-collapse">
+                    <thead><tr class="ma-thead-row">
+                      <th class="px-3 py-2 font-label-sm text-on-surface-variant tracking-wider uppercase">Mã đơn</th>
+                      <th class="px-3 py-2 font-label-sm text-on-surface-variant tracking-wider uppercase">Ngày đặt</th>
+                      <th class="px-3 py-2 font-label-sm text-on-surface-variant tracking-wider uppercase text-right">Tổng tiền</th>
+                      <th class="px-3 py-2 font-label-sm text-on-surface-variant tracking-wider uppercase">Trạng thái</th>
+                    </tr></thead>
+                    <tbody class="ma-rows-divide">
+                      <tr v-for="o in (customers.detail.orders || []).slice(0, 3)" :key="o.order_id" class="hover:bg-surface-container-low/50 transition-colors">
+                        <td class="px-3 py-2"><button @click="viewOrderFromCustomer(o.order_id)" type="button" class="font-body-sm font-bold font-mono text-primary hover:underline">[[ o.order_id ]]</button></td>
+                        <td class="px-3 py-2 font-body-sm text-on-surface-variant font-mono">[[ formatDate(o.created_at) ]]</td>
+                        <td class="px-3 py-2 font-body-sm font-bold text-right font-mono">[[ formatMoney(o.amount) ]]</td>
+                        <td class="px-3 py-2"><span :class="statusMeta(o.status).wrapClass"><span :class="statusMeta(o.status).dotClass"></span>[[ statusMeta(o.status).label ]]</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div v-if="(customers.detail.orders || []).length > 3" class="border-t border-outline-variant bg-surface-container-low px-3 py-2">
+                <button @click="openCustomerOrdersAll" type="button" class="w-full inline-flex items-center justify-center gap-1 text-label-md font-bold text-primary hover:underline">
+                  <span class="material-symbols-outlined text-[16px]">open_in_full</span>Xem tất cả [[ (customers.detail.orders || []).length ]] đơn
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ═══════════ CỘT PHỤ (3fr, sticky top xl) ═══════════
+               Card SỐ LIỆU KH đã chuyển sang cột chính (rev 2026-08-22), cột phụ còn
+               Ghi chú + Top sản phẩm. -->
+          <div class="flex min-w-0 flex-col gap-4 xl:sticky xl:top-16 xl:self-start">
+
+            <!-- CARD B: GHI CHÚ NỘI BỘ -->
+            <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+              <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+                <span class="material-symbols-outlined text-[18px] text-on-surface-variant">sticky_note_2</span>
+                <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Ghi chú nội bộ</div>
+              </div>
+              <div class="p-3">
+                <textarea v-model="customers.detail.notes" rows="4" placeholder="Đặc điểm da, sở thích, yêu cầu riêng của khách..."
+                  class="w-full bg-surface-container-lowest border border-outline-variant text-body-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"></textarea>
+                <button @click="saveCustomerNotes" type="button" :disabled="customers.notesSaving" class="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-label-md font-bold bg-surface-container-lowest border border-outline-variant hover:bg-surface-container-low transition-all disabled:opacity-50">
+                  <span class="material-symbols-outlined text-[16px]" :class="{ 'ma-spin': customers.notesSaving }">[[ customers.notesSaving ? 'progress_activity' : 'save' ]]</span>[[ customers.notesSaving ? 'Đang lưu…' : 'Lưu ghi chú' ]]
+                </button>
+              </div>
+            </div>
+
+            <!-- CARD C: TOP SẢN PHẨM (chỉ hiện khi có dữ liệu) -->
+            <div v-if="(customers.detail.top_products || []).length" class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+              <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+                <span class="material-symbols-outlined text-[18px] text-on-surface-variant">star</span>
+                <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Top sản phẩm</div>
+                <span class="ml-auto text-label-sm text-on-surface-variant">[[ customers.detail.top_products.length ]]</span>
+              </div>
+              <div class="p-3">
+                <div class="space-y-1.5">
+                  <div v-for="(p, idx) in customers.detail.top_products" :key="idx" class="flex items-center justify-between text-body-sm gap-2 px-2 py-1.5 rounded-lg hover:bg-surface-container-low/50 transition-colors">
+                    <span class="flex items-center gap-2 min-w-0">
+                      <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary-container text-on-primary-container text-label-sm font-bold flex-shrink-0">[[ idx + 1 ]]</span>
+                      <span class="truncate">[[ p.name ]]</span>
+                    </span>
+                    <strong class="text-on-surface flex-shrink-0 tabular-nums font-mono">x[[ p.qty ]]</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </template>
+    </div>
+  </section>
+
+  <!-- ================================================================================
+       CUSTOMER EDIT — workspaceView='customers.edit' (2026-08-22)
+       Chuyển từ modal (customers.showEditForm) sang page riêng. Header sticky pattern
+       khớp Order + Customer detail (breadcrumb + Huỷ + Lưu + ×). Body bg-surface-bright
+       + form field group được stack đơn cột với heading tách section.
+       ================================================================================ -->
+  <section v-if="workspaceView === 'customers.edit' && customers.editTarget" class="ma-workspace-detail text-on-surface font-body-sm">
+
+    <!-- STICKY HEADER: breadcrumb + action Huỷ + Lưu + × -->
+    <div class="sticky top-0 z-10 flex flex-none items-center gap-3 border-b border-outline-variant bg-surface-container-lowest px-4 py-3 md:px-6">
+      <div class="flex min-w-0 flex-1 items-center gap-1.5 truncate text-body-sm text-on-surface-variant">
+        <span>Khách hàng</span><span class="text-outline">/</span>
+        <span class="truncate text-on-surface">[[ customers.editTarget.name || 'Khách lẻ' ]]</span>
+        <span class="text-outline">/</span>
+        <span class="truncate font-semibold text-on-surface">Sửa hồ sơ</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button @click="cancelEditCustomer" type="button" :disabled="customers.editSaving"
+          class="inline-flex items-center gap-1.5 border border-outline-variant px-3 py-1.5 rounded-lg text-label-md font-bold text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-50">
+          Huỷ
+        </button>
+        <button @click="saveCustomerEdit" :disabled="customers.editSaving" type="button"
+          class="inline-flex items-center gap-1.5 bg-primary text-on-primary px-3 py-1.5 rounded-lg text-label-md font-bold hover:opacity-90 transition-all active:scale-95 disabled:opacity-50">
+          <span class="material-symbols-outlined text-[16px]" :class="{ 'ma-spin': customers.editSaving }">[[ customers.editSaving ? 'progress_activity' : 'save' ]]</span>[[ customers.editSaving ? 'Đang lưu…' : 'Lưu thay đổi' ]]
+        </button>
+      </div>
+      <button @click="cancelEditCustomer" type="button" class="ma-icon-btn" aria-label="Đóng">
+        <span class="material-symbols-outlined text-[20px]">close</span>
+      </button>
+    </div>
+
+    <!-- BODY: bg-surface-bright, grid 2-col trên lg (laptop) — Danh tính + Chính sách giá
+         cùng hàng, Địa chỉ + Loyalty cùng hàng. Trước dùng xl (≥1280) → laptop 1366×768 vẫn
+         thấy 1 cột dài, đổi sang lg (≥1024) để 2 card có bố cục song song ngay laptop cỡ nhỏ. -->
+    <div class="bg-surface-bright p-4 md:p-6">
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
+
+        <!-- CARD 1: DANH TÍNH (Tên + Email) -->
+        <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+          <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">person</span>
+            <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Danh tính</div>
+          </div>
+          <div class="p-4 space-y-3">
+            <div>
+              <label class="ma-label">Tên *</label>
+              <input type="text" v-model="customers.editForm.name" class="ma-input">
+            </div>
+            <div>
+              <label class="ma-label">Email <span class="ma-text-hint">(tuỳ chọn)</span></label>
+              <input type="text" v-model="customers.editForm.email" class="ma-input">
+            </div>
+            <div>
+              <label class="ma-label">Ngày sinh</label>
+              <input type="date" v-model="customers.editForm.birthday" class="ma-input">
+            </div>
+            <div>
+              <label class="ma-label">Kênh nguồn</label>
+              <select v-model="customers.editForm.acquisitionChannel" class="ma-input">
+                <option value="">— Chưa rõ —</option>
+                <option value="Facebook">Facebook</option>
+                <option value="Zalo">Zalo</option>
+                <option value="Cửa hàng">Cửa hàng</option>
+                <option value="Sapo">Sapo</option>
+                <option value="Khác">Khác</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 2: CHÍNH SÁCH GIÁ -->
+        <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+          <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">sell</span>
+            <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Chính sách giá</div>
+            <span class="ml-auto text-label-sm text-on-surface-variant font-normal opacity-70">docs/mops.md §16</span>
+          </div>
+          <div class="p-4 space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="ma-label">Nhóm khách</label>
+                <select v-model="customers.editForm.customerGroup" class="ma-input">
+                  <option value="LẺ">Lẻ</option>
+                  <option value="SỈ">Sỉ</option>
+                </select>
+              </div>
+              <div v-if="customers.editForm.customerGroup === 'SỈ'">
+                <label class="ma-label">% Chiết khấu mặc định</label>
+                <input type="number" min="0" max="100" v-model="customers.editForm.defaultDiscountPercent" placeholder="10" class="ma-input">
+              </div>
+            </div>
+            <p class="text-body-sm text-on-surface-variant opacity-70">Khách Sỉ sẽ tự động áp % này khi thu ngân chọn khách ở form Tạo đơn thủ công — không cần gõ tay mỗi lần.</p>
+          </div>
+        </div>
+
+        <!-- CARD 3: ĐỊA CHỈ MẶC ĐỊNH -->
+        <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+          <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">home_pin</span>
+            <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Địa chỉ giao hàng mặc định</div>
+          </div>
+          <div class="p-4 space-y-2">
+            <input type="text" v-model="customers.editForm.addressStreet" placeholder="Số nhà / Đường" class="ma-input">
+            <div class="grid grid-cols-2 gap-2">
+              <select v-model="customers.editForm.addressCity" @change="onProvinceChange(customers.editForm, 'addressCity', 'addressWard')" class="ma-input">
+                <option value="" disabled>Chọn tỉnh/thành phố</option>
+                <option v-for="p in addressBook.provinces" :key="p.code" :value="p.name">[[ p.name ]]</option>
+              </select>
+              <select v-model="customers.editForm.addressWard" :disabled="!customers.editForm.addressCity" class="ma-input">
+                <option value="" disabled>Chọn xã/phường</option>
+                <option v-for="w in wardsFor(customers.editForm.addressCity)" :key="w.code" :value="w.name">[[ w.name ]]</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 4: LOYALTY -->
+        <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+          <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">workspace_premium</span>
+            <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Loyalty</div>
+            <span class="ml-auto text-label-sm text-on-surface-variant font-normal opacity-70">hạng set tay</span>
+          </div>
+          <div class="p-4 grid grid-cols-2 gap-3">
+            <div>
+              <label class="ma-label">Điểm tích lũy</label>
+              <input type="number" min="0" v-model="customers.editForm.loyaltyPoints" class="ma-input">
+            </div>
+            <div>
+              <label class="ma-label">Hạng thành viên</label>
+              <select v-model="customers.editForm.membershipTier" class="ma-input">
+                <option value="">— Chưa xếp hạng —</option>
+                <option value="Silver">Silver</option>
+                <option value="Gold">Gold</option>
+                <option value="Diamond">Diamond</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================================
+       CUSTOMER ADDRESSES ALL — workspaceView='customers.addresses' (2026-08-22)
+       Trang riêng liệt kê toàn bộ địa chỉ của khách, không truncate. Sticky header +
+       body bg-surface-bright đồng bộ. Actions Dùng tạo đơn/Sửa/Xoá reuse handler cũ.
+       ================================================================================ -->
+  <section v-if="workspaceView === 'customers.addresses' && customers.detail" class="ma-workspace-detail text-on-surface font-body-sm">
+    <div class="sticky top-0 z-10 flex flex-none items-center gap-3 border-b border-outline-variant bg-surface-container-lowest px-4 py-3 md:px-6">
+      <div class="flex min-w-0 flex-1 items-center gap-1.5 truncate text-body-sm text-on-surface-variant">
+        <span>Khách hàng</span><span class="text-outline">/</span>
+        <span class="truncate text-on-surface">[[ customers.detail.name || 'Khách lẻ' ]]</span>
+        <span class="text-outline">/</span>
+        <span class="truncate font-semibold text-on-surface">Sổ địa chỉ</span>
+      </div>
+      <button @click="openCustomerAddressForm()" type="button" class="inline-flex items-center gap-1.5 border border-outline-variant px-3 py-1.5 rounded-lg text-label-md font-bold hover:bg-surface-container-high transition-colors">
+        <span class="material-symbols-outlined text-[16px]">add</span>Thêm địa chỉ
+      </button>
+      <button @click="closeCustomerSubView" type="button" class="ma-icon-btn" aria-label="Đóng">
+        <span class="material-symbols-outlined text-[20px]">close</span>
+      </button>
+    </div>
+    <div class="bg-surface-bright p-4 md:p-6">
+      <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+        <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+          <span class="material-symbols-outlined text-[18px] text-on-surface-variant">location_on</span>
+          <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Sổ địa chỉ giao hàng</div>
+          <span class="ml-auto text-label-sm text-on-surface-variant">[[ (customers.detail.addresses || []).length ]] địa chỉ</span>
+        </div>
+        <div v-if="!(customers.detail.addresses || []).length" class="ma-component-empty">
+          <span class="material-symbols-outlined">location_off</span>
+          <span>Chưa có địa chỉ đã lưu. Thêm một địa chỉ để tự điền ở form Tạo đơn.</span>
+        </div>
+        <div v-else class="divide-y divide-outline-variant">
+          <div v-for="a in customers.detail.addresses" :key="a.address_id" class="px-3 py-3">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <strong class="text-body-sm">[[ a.receiver_name || customers.detail.name ]]</strong>
+                  <span v-if="a.phone" class="text-label-sm text-on-surface-variant font-mono">[[ formatPhone(a.phone) ]]</span>
+                  <span v-if="a.is_default" class="px-1.5 py-0.5 rounded bg-primary-container text-on-primary-container text-label-sm font-bold">Mặc định</span>
+                </div>
+                <p class="mt-1 text-body-sm text-on-surface">[[ [a.address, a.ward, a.district, a.province].filter(function(v){return v;}).join(', ') ]]</p>
+              </div>
+              <div class="flex flex-wrap justify-end gap-2 flex-shrink-0">
+                <button @click="useCustomerAddressForOrder(a)" type="button" class="text-label-sm font-bold text-primary hover:underline">Dùng tạo đơn</button>
+                <button v-if="!a.is_default" @click="setCustomerDefaultAddress(a)" type="button" class="text-label-sm text-on-surface-variant hover:text-primary">Đặt mặc định</button>
+                <button @click="editCustomerAddress(a)" type="button" class="text-label-sm text-on-surface-variant hover:text-primary">Sửa</button>
+                <button @click="openCustomerAddressForm(a)" type="button" class="text-label-sm text-on-surface-variant hover:text-primary">Sao chép</button>
+                <button @click="confirmDeleteCustomerAddress(a)" type="button" :disabled="customers.addressBusy === a.address_id"
+                  class="text-label-sm text-error hover:underline disabled:opacity-50">
+                  <span v-if="customers.addressBusy === a.address_id" class="material-symbols-outlined text-[14px] align-middle ma-spin">progress_activity</span>
+                  Xoá
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================================
+       CUSTOMER ORDERS ALL — workspaceView='customers.orders' (2026-08-22)
+       Trang liệt kê toàn bộ đơn của khách. Search vẫn giữ (customers.orderSearch), table
+       rộng thoải mái vì không còn giới hạn max-h-[420px] của card trong detail.
+       ================================================================================ -->
+  <section v-if="workspaceView === 'customers.orders' && customers.detail" class="ma-workspace-detail text-on-surface font-body-sm">
+    <div class="sticky top-0 z-10 flex flex-none items-center gap-3 border-b border-outline-variant bg-surface-container-lowest px-4 py-3 md:px-6">
+      <div class="flex min-w-0 flex-1 items-center gap-1.5 truncate text-body-sm text-on-surface-variant">
+        <span>Khách hàng</span><span class="text-outline">/</span>
+        <span class="truncate text-on-surface">[[ customers.detail.name || 'Khách lẻ' ]]</span>
+        <span class="text-outline">/</span>
+        <span class="truncate font-semibold text-on-surface">Lịch sử đơn hàng</span>
+      </div>
+      <button @click="closeCustomerSubView" type="button" class="ma-icon-btn" aria-label="Đóng">
+        <span class="material-symbols-outlined text-[20px]">close</span>
+      </button>
+    </div>
+    <div class="bg-surface-bright p-4 md:p-6">
+      <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+        <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+          <span class="material-symbols-outlined text-[18px] text-on-surface-variant">receipt_long</span>
+          <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Lịch sử đơn hàng</div>
+          <span class="ml-auto text-label-sm text-on-surface-variant">[[ customerOrdersFiltered.length ]] / [[ (customers.detail.orders || []).length ]] đơn</span>
+        </div>
+        <div class="px-3 py-3">
+          <input type="text" v-model="customers.orderSearch" placeholder="Tìm theo mã đơn / loại / trạng thái..."
+            class="w-full bg-surface-container-lowest border border-outline-variant text-body-sm rounded-lg px-3 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+          <div v-if="!(customers.detail.orders || []).length" class="ma-component-empty">
+            <span class="material-symbols-outlined">receipt_long</span>
+            <span>Khách hàng chưa có đơn hàng nào.</span>
+          </div>
+          <div v-else-if="!customerOrdersFiltered.length" class="ma-component-empty">
+            <span class="material-symbols-outlined">search_off</span>
+            <span>Không có đơn nào phù hợp tìm kiếm.</span>
+          </div>
+          <div v-else class="overflow-x-auto rounded-lg border border-outline-variant">
+            <table class="w-full text-left border-collapse">
+              <thead><tr class="ma-thead-row">
+                <th class="px-3 py-2 font-label-sm text-on-surface-variant tracking-wider uppercase">Mã đơn</th>
+                <th class="px-3 py-2 font-label-sm text-on-surface-variant tracking-wider uppercase">Ngày đặt</th>
+                <th class="px-3 py-2 font-label-sm text-on-surface-variant tracking-wider uppercase text-right">Tổng tiền</th>
+                <th class="px-3 py-2 font-label-sm text-on-surface-variant tracking-wider uppercase">Trạng thái</th>
+              </tr></thead>
+              <tbody class="ma-rows-divide">
+                <tr v-for="o in customerOrdersFiltered" :key="o.order_id" class="hover:bg-surface-container-low/50 transition-colors">
+                  <td class="px-3 py-2"><button @click="viewOrderFromCustomer(o.order_id)" type="button" class="font-body-sm font-bold font-mono text-primary hover:underline">[[ o.order_id ]]</button></td>
+                  <td class="px-3 py-2 font-body-sm text-on-surface-variant font-mono">[[ formatDate(o.created_at) ]]</td>
+                  <td class="px-3 py-2 font-body-sm font-bold text-right font-mono">[[ formatMoney(o.amount) ]]</td>
+                  <td class="px-3 py-2"><span :class="statusMeta(o.status).wrapClass"><span :class="statusMeta(o.status).dotClass"></span>[[ statusMeta(o.status).label ]]</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+        <div v-if="customers.imp.show" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" @click.self="closeCustomerImport">
+          <div class="bg-surface rounded-2xl shadow-xl w-full max-w-3xl max-h-[92vh] overflow-y-auto p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-heading-sm font-bold">Nhập khách hàng từ Excel</h3>
+              <button @click="closeCustomerImport" type="button" class="w-8 h-8 inline-flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <!-- STEPPER 3 bước — indicator progress cho quy trình dry-run (2026-08-09) -->
+            <div class="flex items-center justify-between gap-2 mb-5 px-1">
+              <div class="flex items-center gap-2 flex-1 min-w-0">
+                <div class="w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center text-label-md font-bold transition-colors"
+                  :class="customers.imp.step === 'paste' ? 'bg-primary text-on-primary' : 'bg-emerald-600 text-white'">
+                  <span v-if="customers.imp.step !== 'paste'" class="material-symbols-outlined text-[18px]">check</span>
+                  <span v-else>1</span>
+                </div>
+                <div class="min-w-0">
+                  <div class="text-label-md font-bold" :class="customers.imp.step === 'paste' ? 'text-on-surface' : 'text-emerald-700'">Chọn file</div>
+                  <div class="text-label-sm text-on-surface-variant opacity-70 truncate">Excel / CSV / Dán bảng</div>
+                </div>
+              </div>
+              <div class="w-8 h-0.5 flex-shrink-0" :class="customers.imp.step !== 'paste' ? 'bg-emerald-600' : 'bg-outline-variant'"></div>
+              <div class="flex items-center gap-2 flex-1 min-w-0">
+                <div class="w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center text-label-md font-bold transition-colors"
+                  :class="customers.imp.step === 'preview' ? 'bg-primary text-on-primary' : (customers.imp.step === 'done' ? 'bg-emerald-600 text-white' : 'bg-surface-container-high text-on-surface-variant')">
+                  <span v-if="customers.imp.step === 'done'" class="material-symbols-outlined text-[18px]">check</span>
+                  <span v-else>2</span>
+                </div>
+                <div class="min-w-0">
+                  <div class="text-label-md font-bold" :class="customers.imp.step === 'preview' ? 'text-on-surface' : (customers.imp.step === 'done' ? 'text-emerald-700' : 'text-on-surface-variant')">Xem trước (Dry-run)</div>
+                  <div class="text-label-sm text-on-surface-variant opacity-70 truncate">Kiểm tra hợp lệ / trùng / lỗi</div>
+                </div>
+              </div>
+              <div class="w-8 h-0.5 flex-shrink-0" :class="customers.imp.step === 'done' ? 'bg-emerald-600' : 'bg-outline-variant'"></div>
+              <div class="flex items-center gap-2 flex-1 min-w-0">
+                <div class="w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center text-label-md font-bold transition-colors"
+                  :class="customers.imp.step === 'done' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant'">
+                  <span>3</span>
+                </div>
+                <div class="min-w-0">
+                  <div class="text-label-md font-bold" :class="customers.imp.step === 'done' ? 'text-on-surface' : 'text-on-surface-variant'">Xác nhận ghi</div>
+                  <div class="text-label-sm text-on-surface-variant opacity-70 truncate">Ghi vào Sheet / báo cáo kết quả</div>
+                </div>
+              </div>
+            </div>
+
+
+            <template v-if="customers.imp.step === 'paste'">
+              <div class="flex justify-end mb-3"><button @click="downloadCustomerImportTemplate" type="button" class="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-outline-variant font-bold text-label-md hover:bg-surface-container-high"><span class="material-symbols-outlined text-[18px]">download</span>Tải Excel mẫu</button></div>
+              <div class="mb-3 p-3 rounded-lg bg-surface-container-lowest border border-outline-variant text-body-sm">
+                <p class="font-bold mb-1">Cột nhận được:</p>
+                <p class="ma-text-sub">
+                  <strong>Mã khách hàng</strong> · <strong>Tên khách hàng *</strong> (bắt buộc) ·
+                  <strong>Địa chỉ - SĐT</strong> (gộp — hệ thống tự tách SĐT ra khỏi địa chỉ) ·
+                  <strong>SL đơn hàng</strong> và <strong>Tổng chi tiêu</strong> (số liệu lịch sử từ file; số liệu đơn MOPS sẽ được ưu tiên khi có).
+                  Có thể thêm: SĐT, Địa chỉ, Phường/Xã, Quận/Huyện, Tỉnh/TP, Email, Nhóm khách, % chiết khấu, Ghi chú.
+                </p>
+              </div>
+              <label class="text-label-md font-bold">Dán dữ liệu (copy vùng bảng từ Excel, gồm cả dòng tiêu đề)</label>
+              <textarea v-model="customers.imp.text" rows="8" placeholder="Mã khách hàng&#9;Tên khách hàng *&#9;Địa chỉ - SĐT&#9;SL đơn hàng&#10;CUZN03697&#9;Vũ Tuấn Dũng&#9;0983492001&#9;"
+                class="w-full mt-1 p-3 rounded-lg border border-outline-variant bg-surface text-body-sm font-mono"></textarea>
+              <div class="flex flex-wrap items-center gap-2 mt-2">
+                <label class="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-outline-variant font-bold text-label-md cursor-pointer hover:bg-surface-container-high">
+                  <span class="material-symbols-outlined text-[18px]">attach_file</span>Chọn file Excel/CSV
+                  <input type="file" accept=".xlsx,.xls,.csv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" @change="onCustomerImportFile" class="hidden">
+                </label>
+                <span v-if="customers.imp.fileName" class="text-body-sm ma-text-sub">[[ customers.imp.fileName ]]</span>
+                <button @click="parseCustomerImport" :disabled="customers.imp.checking" type="button"
+                  class="ml-auto inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90 disabled:opacity-50">
+                  <span v-if="customers.imp.checking" class="material-symbols-outlined ma-spin text-[18px]">progress_activity</span>
+                  [[ customers.imp.checking ? 'Đang kiểm tra…' : 'Kiểm tra dữ liệu' ]]
+                </button>
+              </div>
+              <p v-if="customers.imp.parseError" class="mt-2 px-3 py-2 rounded-lg bg-error-container text-on-error-container text-body-sm">[[ customers.imp.parseError ]]</p>
+            </template>
+
+            
+            <template v-if="customers.imp.step === 'preview'">
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                <div class="p-3 rounded-lg bg-surface-container-lowest border border-outline-variant"><div class="ma-text-sub">Thêm mới</div><div class="font-bold text-lg text-emerald-700">[[ customers.imp.dryStat.create ]]</div></div>
+                <div class="p-3 rounded-lg bg-surface-container-lowest border border-outline-variant"><div class="ma-text-sub">Cập nhật</div><div class="font-bold text-lg text-primary">[[ customers.imp.dryStat.update ]]</div></div>
+                <div class="p-3 rounded-lg bg-surface-container-lowest border border-outline-variant"><div class="ma-text-sub">Bỏ qua</div><div class="font-bold text-lg">[[ customers.imp.dryStat.skip ]]</div></div>
+                <div class="p-3 rounded-lg border" :class="customers.imp.dryStat.error ? 'bg-error/5 border-error/30' : 'bg-surface-container-lowest border-outline-variant'"><div class="ma-text-sub">Lỗi</div><div class="font-bold text-lg" :class="customers.imp.dryStat.error ? 'text-error' : ''">[[ customers.imp.dryStat.error ]]</div></div>
+              </div>
+              <p v-if="customers.imp.unknownCols.length" class="mb-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-body-sm text-amber-800">
+                Cột không nhận diện được (sẽ bỏ qua): [[ customers.imp.unknownCols.join(', ') ]]
+              </p>
+              <div class="max-h-72 overflow-y-auto rounded-lg border border-outline-variant">
+                <table class="ma-table w-full text-body-sm">
+                  <thead><tr class="ma-thead-row"><th class="px-3 py-2 text-left">Dòng</th><th class="px-3 py-2 text-left">Kết quả</th><th class="px-3 py-2 text-left">Tên</th><th class="px-3 py-2 text-left">SĐT</th><th class="px-3 py-2 text-left">Ghi chú</th></tr></thead>
+                  <tbody class="ma-rows-divide">
+                    <tr v-for="r in customers.imp.results" :key="r.row">
+                      <td class="px-3 py-1.5 text-on-surface-variant">[[ r.row ]]</td>
+                      <td class="px-3 py-1.5 font-semibold" :class="customerImportRowClass(r.action)">[[ customerImportActionLabel(r.action) ]]</td>
+                      <td class="px-3 py-1.5">[[ r.name || '—' ]]</td>
+                      <td class="px-3 py-1.5">[[ r.phone ? formatPhone(r.phone) : '—' ]]</td>
+                      <td class="px-3 py-1.5 ma-text-sub">[[ r.reason || '' ]]</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="flex flex-wrap items-center gap-2 mt-3">
+                <button @click="customers.imp.step = 'paste'" type="button" class="h-9 px-3 rounded-lg border border-outline-variant font-bold text-label-md hover:bg-surface-container-high">Quay lại sửa</button>
+                <span v-if="customers.imp.checking || customers.imp.committing" class="text-body-sm ma-text-sub">Đang xử lý lô [[ customers.imp.completedBatches ]]/[[ customers.imp.totalBatches ]]… [[ customers.imp.progress ]]%</span>
+                <button @click="commitCustomerImport" :disabled="customers.imp.committing || (!customers.imp.dryStat.create && !customers.imp.dryStat.update)" type="button"
+                  class="ml-auto inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90 disabled:opacity-40">
+                  <span v-if="customers.imp.committing" class="material-symbols-outlined ma-spin text-[18px]">progress_activity</span>
+                  Ghi [[ customers.imp.dryStat.create + customers.imp.dryStat.update ]] dòng vào hệ thống
+                </button>
+              </div>
+              <p v-if="customers.imp.dryStat.error" class="text-body-sm text-error mt-2">Các dòng lỗi sẽ KHÔNG được ghi — sửa trong file rồi nhập lại phần đó.</p>
+            </template>
+
+            
+            <template v-if="customers.imp.step === 'done'">
+              <div class="p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-body-sm mb-3">
+                <p class="font-bold text-emerald-800">Đã nhập xong</p>
+                <p class="text-emerald-700 mt-1">Thêm mới <strong>[[ customers.imp.stat.create ]]</strong> · Cập nhật <strong>[[ customers.imp.stat.update ]]</strong> · Bỏ qua [[ customers.imp.stat.skip ]] · Lỗi [[ customers.imp.stat.error ]]</p>
+              </div>
+              <div class="max-h-64 overflow-y-auto rounded-lg border border-outline-variant mb-3">
+                <table class="ma-table w-full text-body-sm">
+                  <tbody class="ma-rows-divide">
+                    <tr v-for="r in customers.imp.results" :key="r.row">
+                      <td class="px-3 py-1.5 text-on-surface-variant w-14">[[ r.row ]]</td>
+                      <td class="px-3 py-1.5 font-semibold w-24" :class="customerImportRowClass(r.action)">[[ customerImportActionLabel(r.action) ]]</td>
+                      <td class="px-3 py-1.5">[[ r.name || '—' ]]<span v-if="r.customer_id" class="ma-text-sub"> · [[ r.customer_id ]]</span></td>
+                      <td class="px-3 py-1.5 ma-text-sub">[[ r.reason || '' ]]</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <button @click="closeCustomerImport" type="button" class="w-full h-9 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90">Đóng &amp; tải lại danh sách</button>
+            </template>
+          </div>
+        </div>
+      </div>

@@ -1,0 +1,139 @@
+{%- comment -%}
+  Mobile Bottom Navigation — 5 tab cố định, mỗi tab tự đặt nhãn/url/icon.
+  Admin bật/tắt từng tab + tự đặt nhãn, đường dẫn, icon trong Tùy chỉnh → Mobile.
+  Icon: nhập class Font Awesome 6 (vd: fas fa-house) → render <i>; để trống → SVG mặc định.
+  Nhãn dài tự cắt "..." — không xuống dòng. Cuộn ngang nếu tab tràn.
+  Active state: Tab blog/article khớp blog.url; Tab wishlist khớp URL setting hoặc wishlist_page.
+{%- endcomment -%}
+{%- if settings.mobile_bottom_nav_enable -%}
+
+{%- comment -%} Active state theo URL & template {%- endcomment -%}
+{%- assign mb_active = '' -%}
+{%- if template contains 'index' -%}
+  {%- assign mb_active = 'home' -%}
+{%- elsif template contains 'collection' or template contains 'search' or template contains 'product' -%}
+  {%- assign mb_active = 'products' -%}
+{%- elsif template contains 'blog' or template contains 'article' -%}
+  {%- comment -%} Khớp blog.url để tránh highlight sai khi tab trỏ URL không phải blog {%- endcomment -%}
+  {%- if settings.mobile_nav_blog_url == blank or blog.url == settings.mobile_nav_blog_url -%}
+    {%- assign mb_active = 'blog' -%}
+  {%- endif -%}
+{%- elsif template contains 'customers' or template contains 'account' or template contains 'orders' or template contains 'addresses' or template contains 'login' or template contains 'register' -%}
+  {%- assign mb_active = 'account' -%}
+{%- endif -%}
+{%- if template contains 'page' -%}
+  {%- comment -%} Wishlist: ưu tiên mobile_nav_wishlist_url nếu admin đã đặt URL tùy chỉnh {%- endcomment -%}
+  {%- if settings.mobile_nav_wishlist_url != blank -%}
+    {%- if page.url == settings.mobile_nav_wishlist_url -%}{%- assign mb_active = 'wishlist' -%}{%- endif -%}
+  {%- elsif page.alias == settings.wishlist_page -%}
+    {%- assign mb_active = 'wishlist' -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- comment -%} URL wishlist — dùng mobile_nav_wishlist_url nếu có, fallback về wishlist_page {%- endcomment -%}
+{%- if settings.mobile_nav_wishlist_url != blank -%}
+  {%- assign wishlist_url = settings.mobile_nav_wishlist_url -%}
+{%- else -%}
+  {%- assign wishlist_url = pages[settings.wishlist_page].url -%}
+  {%- if wishlist_url == blank -%}{%- capture wishlist_url -%}/{{ settings.wishlist_page }}{%- endcapture -%}{%- endif -%}
+{%- endif -%}
+
+{%- comment -%} Labels & URLs {%- endcomment -%}
+{%- assign nav_home_label     = settings.mobile_nav_home_label     | default: 'Trang chủ' -%}
+{%- assign nav_home_url       = settings.mobile_nav_home_url       | default: '/' -%}
+{%- assign nav_products_label = settings.mobile_nav_products_label | default: 'Sản phẩm' -%}
+{%- assign nav_products_url   = settings.mobile_nav_products_url   | default: '/collections/all' -%}
+{%- assign nav_wishlist_label = settings.mobile_nav_wishlist_label | default: 'Yêu thích' -%}
+{%- assign nav_blog_label     = settings.mobile_nav_blog_label     | default: 'Blog' -%}
+{%- assign nav_blog_url       = settings.mobile_nav_blog_url       | default: '/tin-tuc' -%}
+{%- assign nav_account_label  = settings.mobile_nav_account_label  | default: 'Tài khoản' -%}
+{%- assign nav_account_url    = settings.mobile_nav_account_url    | default: '/account' -%}
+
+{%- comment -%} Icons — FA class nếu có, fallback về SVG {%- endcomment -%}
+{%- assign nav_home_icon     = settings.mobile_nav_home_icon     | strip -%}
+{%- assign nav_products_icon = settings.mobile_nav_products_icon | strip -%}
+{%- assign nav_wishlist_icon = settings.mobile_nav_wishlist_icon | strip -%}
+{%- assign nav_blog_icon     = settings.mobile_nav_blog_icon     | strip -%}
+{%- assign nav_account_icon  = settings.mobile_nav_account_icon  | strip -%}
+
+<nav class="pc-bottom-nav" aria-label="Điều hướng">
+  <ul class="pc-bottom-nav__list">
+
+    {%- if settings.mobile_nav_home_enable -%}
+    <li class="pc-bottom-nav__item{% if mb_active == 'home' %} is-active{% endif %}">
+      <a href="{{ nav_home_url }}" title="{{ nav_home_label }}" aria-label="{{ nav_home_label }}"{% if mb_active == 'home' %} aria-current="page"{% endif %}>
+        <span class="pc-bottom-nav__icon">
+          {%- if nav_home_icon != blank -%}
+            <i class="{{ nav_home_icon }}" aria-hidden="true"></i>
+          {%- else -%}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>
+          {%- endif -%}
+        </span>
+        <span class="pc-bottom-nav__label">{{ nav_home_label }}</span>
+      </a>
+    </li>
+    {%- endif -%}
+
+    {%- if settings.mobile_nav_products_enable -%}
+    <li class="pc-bottom-nav__item{% if mb_active == 'products' %} is-active{% endif %}">
+      <a href="{{ nav_products_url }}" title="{{ nav_products_label }}" aria-label="{{ nav_products_label }}"{% if mb_active == 'products' %} aria-current="page"{% endif %}>
+        <span class="pc-bottom-nav__icon">
+          {%- if nav_products_icon != blank -%}
+            <i class="{{ nav_products_icon }}" aria-hidden="true"></i>
+          {%- else -%}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h6v3a3 3 0 0 1 1.2 2.4V20a2 2 0 0 1-2 2H9.8a2 2 0 0 1-2-2V7.4A3 3 0 0 1 9 5z"/><path d="M7.8 11h8.4"/></svg>
+          {%- endif -%}
+        </span>
+        <span class="pc-bottom-nav__label">{{ nav_products_label }}</span>
+      </a>
+    </li>
+    {%- endif -%}
+
+    {%- if settings.mobile_nav_wishlist_enable -%}
+    <li class="pc-bottom-nav__item{% if mb_active == 'wishlist' %} is-active{% endif %}">
+      <a href="{{ wishlist_url }}" title="{{ nav_wishlist_label }}" aria-label="{{ nav_wishlist_label }}"{% if mb_active == 'wishlist' %} aria-current="page"{% endif %}>
+        <span class="pc-bottom-nav__icon">
+          {%- if nav_wishlist_icon != blank -%}
+            <i class="{{ nav_wishlist_icon }}" aria-hidden="true"></i>
+          {%- else -%}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.35-9.5-8.5C1 8.5 2.5 5 6 5c2 0 3.2 1.2 4 2.3C10.8 6.2 12 5 14 5c3.5 0 5 3.5 3.5 6.5C19 15.65 12 20 12 20z"/></svg>
+          {%- endif -%}
+        </span>
+        <span class="pc-bottom-nav__label">{{ nav_wishlist_label }}</span>
+      </a>
+    </li>
+    {%- endif -%}
+
+    {%- if settings.mobile_nav_blog_enable -%}
+    <li class="pc-bottom-nav__item{% if mb_active == 'blog' %} is-active{% endif %}">
+      <a href="{{ nav_blog_url }}" title="{{ nav_blog_label }}" aria-label="{{ nav_blog_label }}"{% if mb_active == 'blog' %} aria-current="page"{% endif %}>
+        <span class="pc-bottom-nav__icon">
+          {%- if nav_blog_icon != blank -%}
+            <i class="{{ nav_blog_icon }}" aria-hidden="true"></i>
+          {%- else -%}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H19a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>
+          {%- endif -%}
+        </span>
+        <span class="pc-bottom-nav__label">{{ nav_blog_label }}</span>
+      </a>
+    </li>
+    {%- endif -%}
+
+    {%- if settings.mobile_nav_account_enable -%}
+    <li class="pc-bottom-nav__item{% if mb_active == 'account' %} is-active{% endif %}">
+      <a href="{{ nav_account_url }}" title="{{ nav_account_label }}" aria-label="{{ nav_account_label }}"{% if mb_active == 'account' %} aria-current="page"{% endif %}>
+        <span class="pc-bottom-nav__icon">
+          {%- if nav_account_icon != blank -%}
+            <i class="{{ nav_account_icon }}" aria-hidden="true"></i>
+          {%- else -%}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5"/></svg>
+          {%- endif -%}
+        </span>
+        <span class="pc-bottom-nav__label">{{ nav_account_label }}</span>
+      </a>
+    </li>
+    {%- endif -%}
+
+  </ul>
+</nav>
+{%- endif -%}

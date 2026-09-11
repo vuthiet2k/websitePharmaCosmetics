@@ -1,0 +1,91 @@
+{{ 'page_patient_portal.scss.css' | asset_url | stylesheet_tag }}
+{% include 'breadcrumb' %}
+
+{%- comment -%}
+  T-42 (2026-09-09): Cổng bệnh nhân hiển thị dữ liệu cá nhân/sức khoẻ (customer.orders, tên,
+  hạng thành viên) — theo POLICY.yaml#pii_form_gate/Luật 91/2025/QH15, trang PHẢI yêu cầu đăng
+  nhập. Khác với templates/customers/*.bwt (Sapo tự động redirect /account/login nếu chưa đăng
+  nhập), đây là template "page.*" (trang CMS thường) — Sapo KHÔNG tự áp auth cho loại này, nên
+  phải tự guard thủ công. Route login theo đúng href đã dùng ở snippets/header.bwt:82.
+{%- endcomment -%}
+{%- if customer -%}
+{%- assign latest_order = customer.orders | first -%}
+
+<section class="pc-pp-wrap">
+	<div class="container">
+
+		<div class="pc-pp-hero">
+			<div class="pc-pp-hero-main">
+				<span class="pc-pp-hero-tag">HỒ SƠ BỆNH NHÂN #PC-PATIENT-{{ customer.id }}</span>
+				<span class="pc-pp-hero-doctor">Bác sĩ phụ trách: BS. CKII Nguyễn Minh Anh</span>
+				<h1 class="pc-pp-hero-title">{{ customer.name }} — Hạng {{ customer.tier | default: 'Vàng' }}</h1>
+				<div class="pc-pp-hero-score">CHỈ SỐ SỨC KHOẺ DA: 78 / 100</div>
+				<p class="pc-pp-hero-note">(Tăng +16 điểm sau 4 tuần áp dụng phác đồ Derma B5 &amp; Ceramide NP)</p>
+				<div class="pc-pp-hero-metrics">
+					<span>💧 Độ ẩm: 68% (Đạt)</span>
+					<span>🛡 Màng lipid: Đang phục hồi</span>
+					<span>🔴 Đỏ rát: Giảm 85%</span>
+					<span>⚠ Sắc tố: Mờ dần</span>
+				</div>
+				<div class="pc-pp-hero-actions">
+					<a href="#" class="pc-cg-cta-btn pc-pp-btn-outline">Nhật Ký Ảnh Da Hàng Tuần ➔</a>
+					<a href="/pages/dat-lich-tu-van" class="pc-cg-cta-btn">Đặt Lịch Tái Khám 1:1</a>
+				</div>
+			</div>
+			<div class="pc-pp-hero-side">
+				<h3>Lịch Hẹn Khám Sắp Tới</h3>
+				<div class="pc-pp-appt-card">
+					<div>📅 10:00 - 11:00, Ngày 21/08/2026</div>
+					<div>🏥 Clinic Hà Nội (Số 44 Ngõ 897 Giải Phóng)</div>
+					<div>👩‍⚕️ Bác sĩ: BS. CKII Nguyễn Minh Anh</div>
+					<div>Mã check-in: PC-APP-2026 (Trạng thái: Đã xác nhận ✓)</div>
+				</div>
+				<a href="#" class="pc-pp-appt-link">Xem Chi Tiết Lịch Hẹn ➔</a>
+			</div>
+		</div>
+
+		{% if latest_order %}
+		<section class="pc-hub-block pc-pp-order-block">
+			<div class="pc-hub-block__head">
+				<h2 class="pc-hub-block__title">Đơn Hàng Dược Mỹ Phẩm Gần Nhất ({{ latest_order.name }})</h2>
+				{% if latest_order.shipping_status == 'delivering' %}<span class="pc-pp-order-status">🚚 Đang giao hoả tốc</span>{% endif %}
+			</div>
+			<div class="pc-pp-order-items">
+				{% for li in latest_order.line_items %}• {{ li.title }} (x{{ li.quantity }}) {% unless forloop.last %}&nbsp;&nbsp;{% endunless %}{% endfor %}
+				&nbsp;&nbsp;TỔNG TIỀN: {{ latest_order.total_price | money }}
+			</div>
+			<div class="pc-pp-order-actions">
+				<a href="{{ latest_order.customer_url }}" class="pc-cg-cta-btn pc-pp-btn-outline">Theo Dõi Vận Đơn Thời Gian Thực ➔</a>
+				<a href="#" class="pc-pp-btn-ghost">Mua Lại Đơn Này</a>
+			</div>
+		</section>
+		{% endif %}
+
+		<div class="pc-pp-bottom-grid">
+			<section class="pc-hub-block">
+				<h2 class="pc-hub-block__title">Phác Đồ Phục Hồi Màng Lipid 6 Tuần (#PC-4410)</h2>
+				<p class="pc-pp-plan-progress">Tiến độ: Tuần 4/6 (Giai đoạn 2: Tái tạo màng Ceramide) • Bác sĩ Minh Anh phụ trách</p>
+				<p class="pc-pp-plan-note">Nhật ký theo dõi: Da đã giảm 85% đỏ rát, tiếp tục duy trì Derma B5 và Ceramide NP đều đặn sáng tối.</p>
+				<a href="/pages/chuyen-gia" class="pc-cg-cta-btn pc-pp-btn-outline">Xem Phác Đồ Chi Tiết ➔</a>
+			</section>
+			<section class="pc-hub-block">
+				<h2 class="pc-hub-block__title">Kho Voucher &amp; Mã Đổi Thưởng ({{ customer.points | default: 2 }} mã)</h2>
+				<div class="pc-pp-voucher-item">🎟 Voucher Giảm 5% Toàn Đơn (HSD: 30 ngày) • Trạng thái: Khả dụng ✓</div>
+				<div class="pc-pp-voucher-item">🎟 Voucher Soi Da AI Miễn Phí 500K • Trạng thái: Đã dùng ngày 27/03/2026 ✓</div>
+			</section>
+		</div>
+
+	</div>
+</section>
+{%- else -%}
+<section class="pc-pp-wrap">
+	<div class="container">
+		<div class="bg-white rounded-3xl p-10 shadow-sm border border-gray-200 text-center max-w-lg mx-auto my-10">
+			<div class="pc-kit-badge-clinical inline-flex mb-4">🩺 Khu vực riêng tư</div>
+			<h1 class="text-xl font-bold text-forest-900 font-heading mb-2">Cổng Bệnh Nhân Lâm Sàng</h1>
+			<p class="text-sm text-gray-600 mb-6">Vui lòng đăng nhập tài khoản Sapo để xem hồ sơ sức khoẻ, lịch hẹn và đơn hàng của bạn.</p>
+			<a href="/account/login" class="pc-kit-btn-primary inline-flex text-sm px-6 py-3">Đăng nhập ngay</a>
+		</div>
+	</div>
+</section>
+{%- endif -%}

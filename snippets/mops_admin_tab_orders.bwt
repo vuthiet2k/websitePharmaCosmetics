@@ -1,0 +1,1237 @@
+      
+      <div id="tab-orders" v-show="activeTab === 'orders'" class="ma-tab-pane">
+        <template v-if="!workspaceView || workspaceView === 'orders' || workspaceView === 'orders.list'">
+
+        {%- comment -%}
+          Toolbar row: search box (flex-1) + icon-button "Bộ lọc" (mở modal) + "Xuất file" + "Kéo từ SAPO".
+          Filter đã đóng gói modal riêng (xem block dưới), không còn dàn selects inline. Nút mobile trigger
+          cũ (.ma-filter-trigger + mobileFilterOpen) đã bỏ vì icon-button "Bộ lọc" hiển thị mọi kích thước.
+        {%- endcomment -%}
+        <div class="mb-3 flex flex-col gap-2 border-b border-outline-variant bg-surface-container-lowest px-3 py-2.5 md:flex-row md:items-center md:px-4">
+          <div class="relative min-w-0 flex-1">
+            <span class="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[16px] text-on-surface-variant">search</span>
+            <input type="text" v-model="orders.orderId" @keydown.enter="loadOrders" placeholder="Tìm theo mã đơn, tên, SĐT…"
+                   class="w-full rounded-lg border border-outline-variant bg-surface-container-lowest py-2 pl-9 pr-9 text-body-sm text-on-surface outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20">
+            <button v-if="orders.orderId" @click="clearOrdersSearch" type="button" aria-label="Xoá tìm kiếm"
+                    title="Huỷ tìm kiếm"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-6 w-6 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors">
+              <span class="material-symbols-outlined text-[16px]">close</span>
+            </button>
+          </div>
+          <button @click="orders.filterModalOpen = true" type="button" title="Bộ lọc đơn hàng"
+            class="relative inline-flex items-center gap-1.5 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-label-md font-bold text-on-surface hover:bg-surface-container-low hover:border-primary transition-all active:scale-95">
+            <span class="material-symbols-outlined text-[16px]">tune</span>
+            <span class="hidden sm:inline">Bộ lọc</span>
+            <span v-if="ordersFilterCount" class="absolute -top-1.5 -right-1.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white shadow-sm">[[ ordersFilterCount ]]</span>
+          </button>
+          <button @click="exportOrdersCsv" :disabled="orders.exporting || orders.loading" type="button"
+            title="Xuất file CSV các đơn hàng khớp bộ lọc hiện tại — mở được bằng Excel/Google Sheets"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary-container/30 px-3 py-2 text-label-md font-bold text-primary hover:bg-primary-container hover:border-primary transition-all active:scale-95 disabled:opacity-50">
+            <span class="material-symbols-outlined text-[16px]" :class="{ 'ma-spin': orders.exporting }">[[ orders.exporting ? 'progress_activity' : 'file_download' ]]</span>
+            <span>[[ orders.exporting ? 'Đang xuất…' : 'Xuất file' ]]</span>
+          </button>
+          <button @click="confirmPullFromSapo" :disabled="orders.pulling" type="button"
+            title="Kéo đơn tạo trực tiếp trên SAPO (không qua MOPS) về — bình thường tự chạy qua cron, dùng nút này nếu cần cập nhật ngay"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-label-md font-bold text-on-surface hover:bg-surface-container-low transition-all active:scale-95 disabled:opacity-50">
+            <span class="material-symbols-outlined text-[16px]" :class="{ 'ma-spin': orders.pulling }">[[ orders.pulling ? 'progress_activity' : 'cloud_sync' ]]</span>
+            <span>[[ orders.pulling ? 'Đang kéo…' : 'Kéo từ SAPO' ]]</span>
+          </button>
+        </div>
+        <div v-if="orders.error && orders.list.length" class="mb-3 flex items-center justify-between gap-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-body-sm text-amber-900">
+          <span>[[ orders.error ]] — dữ liệu đang hiển thị là lần tải gần nhất.</span>
+          <button type="button" @click="loadOrders" class="font-bold underline whitespace-nowrap">Thử lại</button>
+        </div>
+
+        <!-- 2026-08-23: Floating action bar cho BULK PRINT ĐƠN HÀNG (Mục 3 plan OMS).
+             STRICT BOUNDARY: chỉ ở tab_orders, chỉ 1 nút "In đơn hàng" (nội dung đơn) — KHÔNG có "In tem"
+             (đó là tab_shipping / Mục 4). Position fixed bottom cho khả năng thao tác nhanh. -->
+        <!-- 2026-08-24: giảm padding + rounded-md (4px radius) thay pill · select nền trắng chữ đen
+             để dropdown options đọc được (trước dùng bg-white/15 + text-white → options popup không hiện text). -->
+        <div v-if="orders.selectedIds.length > 0"
+             class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 rounded-md bg-primary text-white px-2.5 py-1.5"
+             style="border:1px solid rgba(255,255,255,0.15); box-shadow:0 4px 12px rgba(0,0,0,0.18);">
+          <span class="material-symbols-outlined text-[16px]">check_circle</span>
+          <span class="text-label-sm font-bold">Đã chọn [[ orders.selectedIds.length ]] đơn</span>
+          <span class="opacity-30 mx-0.5">|</span>
+          <button type="button" @click="bulkPrintOrders" :disabled="orders.printing"
+                  class="inline-flex items-center gap-1 rounded-md bg-white/15 hover:bg-white/25 px-2 py-1 text-label-sm font-bold transition disabled:opacity-50">
+            <span class="material-symbols-outlined text-[14px]" :class="{ 'ma-spin': orders.printing }">[[ orders.printing ? 'progress_activity' : 'print' ]]</span>
+            [[ orders.printing ? 'Đang tải…' : 'In đơn hàng' ]]
+          </button>
+          <select v-model="orders.printPaperSize"
+                  class="rounded-md px-2 py-1 text-label-sm font-bold outline-none cursor-pointer"
+                  style="background:#fff; color:#0f172a; border:1px solid rgba(255,255,255,0.2);"
+                  title="Khổ giấy in">
+            <option value="A5">A5 (mặc định)</option>
+            <option value="A4">A4</option>
+            <option value="K80">K80 (nhiệt 80mm)</option>
+          </select>
+          <span class="opacity-30 mx-0.5">|</span>
+          <button type="button" @click="clearOrdersSelection"
+                  class="inline-flex items-center gap-1 rounded-md hover:bg-white/15 px-1.5 py-1 text-label-sm opacity-90 transition">
+            <span class="material-symbols-outlined text-[14px]">close</span>Bỏ chọn
+          </button>
+        </div>
+
+        {%- comment -%}
+          Modal "Bộ lọc đơn hàng" — 1 chỗ duy nhất cho toàn bộ filter (4 select + 2 date + 3 preset
+          chip + Xoá bộ lọc). Trigger là icon-button trong toolbar row 1. Trước đây filter nằm inline
+          dàn ngang gây wrap loạn ở màn trung + chiếm chiều dọc; giờ toolbar chỉ còn search + 3 nút
+          action (Bộ lọc / Xuất file / Kéo từ SAPO). Xem orders.filterModalOpen ở mops-admin-orders.js.bwt.
+        {%- endcomment -%}
+        <div v-if="orders.filterModalOpen" @click.self="orders.filterModalOpen = false" class="ma-modal-backdrop"></div>
+        <div v-if="orders.filterModalOpen" class="ma-modal-panel" role="dialog" aria-modal="true" aria-label="Bộ lọc đơn hàng">
+          <div class="ma-row-header">
+            <h3 class="ma-heading inline-flex items-center gap-2">
+              <span class="material-symbols-outlined text-[20px] text-primary">tune</span>
+              Bộ lọc đơn hàng
+              <span v-if="ordersFilterCount" class="inline-flex h-[20px] min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-white">[[ ordersFilterCount ]]</span>
+            </h3>
+            <button @click="orders.filterModalOpen = false" type="button" class="ma-icon-btn" aria-label="Đóng">
+              <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
+
+          <div class="ma-modal-body">
+            <div class="mb-stack-md">
+              <label class="ma-label inline-flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">bookmarks</span>Bộ lọc gợi ý</label>
+              <div class="flex flex-wrap gap-2">
+                <button type="button" @click="applyOrderSavedFilter('pending')"
+                  class="rounded-full border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-label-sm font-semibold text-on-surface hover:border-primary hover:bg-primary-container/40 hover:text-on-primary-container transition-colors">Chờ xử lý hôm nay</button>
+                <button type="button" @click="applyOrderSavedFilter('cod')"
+                  class="rounded-full border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-label-sm font-semibold text-on-surface hover:border-primary hover:bg-primary-container/40 hover:text-on-primary-container transition-colors">Chờ đối soát COD</button>
+                <button type="button" @click="applyOrderSavedFilter('overdue')"
+                  class="rounded-full border border-outline-variant bg-surface-container-lowest px-3 py-1.5 text-label-sm font-semibold text-on-surface hover:border-primary hover:bg-primary-container/40 hover:text-on-primary-container transition-colors">Đơn quá 4h</button>
+              </div>
+            </div>
+
+            <div class="ma-form-grid-2">
+              <div>
+                <label class="ma-label">Trạng thái</label>
+                <select v-model="orders.status" @change="loadOrders" class="ma-input">
+                  <option value="">Tất cả</option>
+                  <option value="PENDING">Chờ thanh toán</option>
+                  <option value="PAYMENT_REPORTED">Đã báo chuyển</option>
+                  <option value="PAID">Đã thanh toán</option>
+                  <option value="CANCELLED">Đã huỷ</option>
+                  <option value="EXPIRED">Hết hạn</option>
+                  <option value="REFUNDED">Đã hoàn tiền</option>
+                </select>
+              </div>
+              <div>
+                <label class="ma-label">Phương thức thanh toán</label>
+                <select v-model="orders.paymentMethod" @change="loadOrders" class="ma-input">
+                  <option value="">Tất cả</option>
+                  <option value="VIETQR">VietQR</option>
+                  <option value="COD">COD</option>
+                  <option value="CASH">Tiền mặt</option>
+                </select>
+              </div>
+              <div>
+                <label class="ma-label">Vận đơn</label>
+                <select v-model="orders.fulfillment" @change="loadOrders" class="ma-input">
+                  <option value="">Tất cả</option>
+                  <option value="pending_payment">Chờ thanh toán</option>
+                  <option value="pending_packing">Chờ đóng gói</option>
+                  <option value="delivering">Đang giao</option>
+                  <option value="delivered">Đã giao</option>
+                  <option value="returned">Hoàn hàng</option>
+                </select>
+              </div>
+              <div>
+                <label class="ma-label">Chi nhánh</label>
+                <select v-model="orders.branchId" @change="loadOrders" class="ma-input">
+                  <option value="">Tất cả</option>
+                  <option v-for="branch in activeBranches" :key="branch.branch_id" :value="branch.branch_id">[[ branch.name_vi ]]</option>
+                </select>
+              </div>
+              <div>
+                <label class="ma-label">Từ ngày</label>
+                <input type="date" v-model="orders.from" @change="loadOrders" class="ma-input">
+              </div>
+              <div>
+                <label class="ma-label">Đến ngày</label>
+                <input type="date" v-model="orders.to" @change="loadOrders" class="ma-input">
+              </div>
+            </div>
+          </div>
+
+          <div class="ma-btn-row">
+            <button v-if="ordersFilterCount" type="button" @click="clearOrderFilters"
+              class="inline-flex items-center gap-1 rounded-lg border border-error/40 bg-error-container/40 px-3 py-2 text-label-md font-bold text-error hover:bg-error-container transition-colors">
+              <span class="material-symbols-outlined text-[16px]">close</span>Xoá bộ lọc ([[ ordersFilterCount ]])
+            </button>
+            <button @click="orders.filterModalOpen = false" type="button" class="ma-btn-primary">Áp dụng</button>
+          </div>
+        </div>
+        
+        <div class="ma-chip-scroll flex gap-2">
+          <button v-for="b in fulfillmentBoard" :key="b.slug" type="button" @click="setFulfillmentFilter(b.slug)"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-label-sm font-semibold transition-all whitespace-nowrap"
+            :class="b.active ? 'bg-primary text-white border-primary' : 'bg-surface-container-lowest text-on-surface border-outline-variant hover:bg-surface-container-low'">
+            <span>[[ b.label ]]</span>
+            <span class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[11px] font-bold"
+              :class="b.active ? 'bg-white/25 text-white' : 'bg-surface-container-high text-on-surface-variant'">[[ b.count ]]</span>
+          </button>
+        </div>
+
+        <div class="ma-card">
+          <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+            <thead><tr class="ma-thead-row">
+              <th class="w-10 px-3 py-3">
+                <!-- 2026-08-23 master checkbox — tick/bỏ tick tất cả đơn trong TRANG hiện tại. Giữ selection
+                     ngoài trang này (khi user phân trang) — xem toggleAllOrdersSelected. -->
+                <input type="checkbox" aria-label="Chọn tất cả đơn"
+                       :checked="ordersSelectionState === 'all'"
+                       :class="{ 'ma-check-indeterminate': ordersSelectionState === 'some' }"
+                       @change="toggleAllOrdersSelected($event)"
+                       class="rounded border-outline-variant">
+              </th>
+              <th class="ma-th-lg">Đơn</th>
+              <th class="ma-th-lg">Khách hàng</th>
+              <th class="ma-th-lg">Trạng thái</th>
+              <th class="ma-th-lg w-[220px]">Sản phẩm</th>
+              <th class="px-4 py-3 text-right font-label-md uppercase tracking-wider text-on-surface-variant">Tổng tiền</th>
+              <th class="w-40 px-3 py-3 text-right font-label-md uppercase tracking-wider text-on-surface-variant">Hành động</th>
+            </tr></thead>
+            <tbody class="ma-rows-divide">
+              <template v-if="orders.loading">
+                <tr v-for="n in 6" :key="'order-skeleton-' + n" aria-hidden="true">
+                  <td class="px-3 py-3"><div class="ma-table-skeleton__check"></div></td>
+                  <td class="px-3 py-3"><div class="ma-table-skeleton__line w-32"></div><div class="ma-table-skeleton__line w-24 mt-1"></div></td>
+                  <td class="px-3 py-3"><div class="ma-table-skeleton__line w-24"></div><div class="ma-table-skeleton__line w-20 mt-1"></div></td>
+                  <td class="px-3 py-3"><div class="ma-table-skeleton__badge"></div><div class="ma-table-skeleton__badge w-20 mt-1"></div></td>
+                  <td class="px-3 py-3"><div class="ma-table-skeleton__line w-28"></div></td>
+                  <td class="px-3 py-3"><div class="ma-table-skeleton__line ml-auto w-20"></div></td>
+                  <td class="px-3 py-3"><div class="ma-table-skeleton__line ml-auto w-24"></div></td>
+                </tr>
+              </template>
+              <tr v-else-if="ordersEmptyMessage"><td colspan="7" class="px-6 py-16 text-center"><span class="material-symbols-outlined text-on-surface-variant text-[56px] opacity-[.35]">receipt_long</span><p class="ma-empty-hint">[[ ordersEmptyMessage ]]</p></td></tr>
+              <template v-else><tr v-for="tx in orders.list" :key="tx.order_id"
+                class="transition-colors"
+                :class="{ 'ma-row-active': orders.expandedId === tx.order_id, 'ma-order-pending': tx.__pending, 'cursor-pointer hover:bg-surface-container-low/50': !tx.__pending, 'cursor-wait': tx.__pending }"
+                @click="tx.__pending || toggleOrderDetail(tx.order_id)">
+                <td class="px-3 py-3" @click.stop>
+                  <!-- 2026-08-23 checkbox row — bind vào orders.selectedIds qua toggleOrderSelected.
+                       Pending row disable để tránh chọn đơn chưa có order_id thật. -->
+                  <input type="checkbox" :disabled="tx.__pending" :aria-label="'Chọn ' + tx.order_id"
+                         :checked="isOrderSelected(tx.order_id)"
+                         @change="toggleOrderSelected(tx.order_id, $event)"
+                         class="rounded border-outline-variant">
+                </td>
+
+                <td data-label="Đơn" class="px-3 py-3 align-top">
+                  <div class="flex flex-col gap-0.5">
+                    <span v-if="tx.__pending" class="inline-flex items-center gap-1 text-primary font-mono text-label-md font-bold" title="Đơn đang được backend xử lý — sẽ có mã sau khi tạo xong">
+                      <span class="material-symbols-outlined ma-spin text-[16px]">progress_activity</span>Đang tạo…
+                    </span>
+                    <span v-else class="font-mono text-label-md font-bold text-on-surface">[[ tx.order_id ]]</span>
+                    <span class="text-label-sm text-on-surface-variant">[[ tx.__pending ? 'Vừa xong' : formatDate(tx.created_at) ]]</span>
+                  </div>
+                </td>
+
+                <td data-label="Khách hàng" class="px-3 py-3 align-top">
+                  <div class="flex flex-col gap-0.5 min-w-0">
+                    <div class="flex items-center gap-1.5 min-w-0">
+                      <span class="text-body-sm font-bold text-on-surface truncate">[[ tx.customer_name || 'Khách lẻ' ]]</span>
+                      <span v-if="tx.customer_group" class="ma-badge ma-badge--sm flex-shrink-0"
+                            :class="tx.customer_group === 'SỈ' ? 'ma-badge--accent' : 'ma-badge--neutral'">[[ tx.customer_group ]]</span>
+                    </div>
+                    <a v-if="tx.customer_phone" :href="'tel:' + tx.customer_phone" @click.stop
+                       class="font-mono text-label-sm text-primary hover:underline w-fit">[[ tx.customer_phone ]]</a>
+                    <span v-else class="font-mono text-label-sm text-on-surface-variant">—</span>
+                    <div v-if="tx.customer_address" class="w-[240px] max-w-full truncate text-label-sm text-on-surface-variant" :title="tx.customer_address">[[ tx.customer_address ]]</div>
+                  </div>
+                </td>
+
+                <td data-label="Trạng thái" class="px-3 py-3 align-top">
+                  <div class="flex flex-col gap-1 items-start">
+                    <span v-if="tx.__pending" class="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-label-sm font-bold text-primary">
+                      <span class="material-symbols-outlined ma-spin text-[12px]">progress_activity</span>Đang tạo
+                    </span>
+                    <template v-else>
+                      <span :class="orderStatusBadgeClass(tx.status)">[[ statusMeta(tx.status, tx.payment_method, tx.fulfillment_status).label ]]</span>
+                      <span v-if="tx.payment_method" :class="paymentMethodBadgeClass(tx.payment_method)">TT: [[ tx.payment_method ]]</span>
+                    </template>
+                  </div>
+                </td>
+
+                <td data-label="Sản phẩm" class="px-3 py-3 align-top text-body-sm text-on-surface">
+                  <div class="w-[220px] max-w-full truncate" :title="tx.product_summary || tx.product_name || tx.item_summary || ''">[[ tx.product_summary || tx.product_name || tx.item_summary || '—' ]]</div>
+                  <div v-if="tx.total_quantity" class="text-label-sm text-on-surface-variant">SL: [[ tx.total_quantity ]]</div>
+                </td>
+
+                <td data-label="Tổng tiền" class="px-3 py-3 text-right align-top text-body-sm font-bold tabular-nums text-on-surface">
+                  [[ formatMoney(tx.amount || tx.total_amount) ]]
+                  <small v-if="tx.customer_shipping_fee > 0" class="block text-label-sm text-on-surface-variant font-normal">gồm phí giao</small>
+                </td>
+
+                <td class="px-3 py-3 align-top" @click.stop>
+                  <div class="flex items-center gap-1 justify-end">
+                    <button v-if="!tx.__pending && (!tx.fulfillment_status || tx.fulfillment_status === 'pending_packing' || tx.fulfillment_status === 'pending_approval')"
+                            @click="openShipModalFromRow(tx)" type="button"
+                            class="ma-icon-btn text-primary hover:bg-primary-container/60"
+                            aria-label="Tạo vận đơn" title="Tạo vận đơn">
+                      <span class="material-symbols-outlined text-[18px]">local_shipping</span>
+                    </button>
+                    <button v-if="!tx.__pending" @click="toggleOrderDetail(tx.order_id)" type="button"
+                            class="ma-icon-btn" aria-label="Xem chi tiết" title="Xem chi tiết">
+                      <span class="material-symbols-outlined text-[18px]">visibility</span>
+                    </button>
+                    <button v-if="!tx.__pending && !tx.tracking_code" @click="openEditOrderForm(tx.order_id, tx)" type="button"
+                            class="ma-icon-btn" aria-label="Chỉnh sửa" title="Chỉnh sửa">
+                      <span class="material-symbols-outlined text-[18px]">edit</span>
+                    </button>
+                  </div>
+                </td>
+              </tr></template>
+            </tbody>
+          </table></div>
+          {%- comment -%}
+            Thanh phân trang — chỉ render khi total > pageSize (không có gì để paginate thì ẩn).
+            Layout 3 vùng: [range + total] [nav Prev/Next + page N/K] [pageSize selector]. Trên
+            mobile stack thành 2 hàng nhờ flex-wrap.
+          {%- endcomment -%}
+          <div class="flex flex-wrap items-center justify-between gap-3 border-t border-outline-variant px-4 py-3 text-body-sm">
+            <span class="text-on-surface-variant">
+              <template v-if="orders.total">
+                [[ ordersPageRange.from ]]–[[ ordersPageRange.to ]] của <b class="text-on-surface">[[ orders.total ]]</b> đơn
+              </template>
+              <template v-else>0 đơn</template>
+            </span>
+            <div v-if="ordersPageCount > 1" class="flex items-center gap-1">
+              <button @click="prevOrdersPage" :disabled="orders.page <= 0 || orders.loading" type="button"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container-low disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Trang trước">
+                <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+              </button>
+              <span class="px-2 text-label-md font-bold text-on-surface">Trang [[ orders.page + 1 ]] / [[ ordersPageCount ]]</span>
+              <button @click="nextOrdersPage" :disabled="!orders.hasMore || orders.loading" type="button"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container-low disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Trang sau">
+                <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+              </button>
+            </div>
+            <label class="inline-flex items-center gap-1.5 text-on-surface-variant">
+              <span class="text-label-sm">Số dòng</span>
+              <select :value="orders.pageSize" @change="changeOrdersPageSize($event.target.value)"
+                class="rounded-lg border border-outline-variant bg-surface-container-lowest px-2 py-1 text-label-md text-on-surface outline-none focus:border-primary">
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="200">200</option>
+                <option value="500">500</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        </template>
+
+        
+        <section v-if="workspaceView === 'orders.detail' && orders.expandedId" class="ma-workspace-detail text-on-surface font-body-sm">
+
+          
+          <div class="flex flex-none items-center gap-3 border-b border-outline-variant bg-surface-container-lowest px-4 py-3 md:px-6">
+            <div class="flex min-w-0 flex-1 items-center gap-1.5 truncate text-body-sm text-on-surface-variant">
+              <span>Vận hành</span>
+              <span class="text-outline">/</span>
+              <span>Đơn hàng</span>
+              <span class="text-outline">/</span>
+              <span class="truncate font-mono font-semibold text-on-surface">[[ orders.expandedId ]]</span>
+            </div>
+            <div class="flex flex-none items-center gap-2">
+              <button v-if="orders.detail" @click="printOrderDetail" type="button" class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-label-md font-bold text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-on-surface">
+                <span class="material-symbols-outlined text-[16px]">print</span>In đơn
+              </button>
+              <button v-if="orders.detail && !orders.detail.tracking_code" @click="openEditOrderForm(orders.detail.order_id)" :disabled="orders.editLoading" type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-label-md font-bold text-on-surface transition-colors hover:bg-surface-container-low">
+                <span class="material-symbols-outlined text-[16px]">edit</span>[[ orders.editLoading ? 'Đang mở…' : 'Sửa đơn' ]]
+              </button>
+              <button @click="closeOrderDetail" type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-on-surface" aria-label="Đóng">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+          </div>
+
+          <div v-if="!orders.detail" class="flex min-h-[360px] flex-1 flex-col items-center justify-center gap-3 p-8 text-on-surface-variant">
+            <span class="material-symbols-outlined text-on-surface-variant text-[32px]">error</span>
+            <p class="text-body-sm text-on-surface-variant mt-2">Không tải được chi tiết đơn.</p>
+          </div>
+
+          
+          <div v-else class="bg-surface-bright gap-4 grid grid-cols-1 md:p-6 p-4 xl:grid-cols-[minmax(0,1fr)_280px]">
+            <div class="flex min-w-0 flex-col gap-4">
+
+              
+              <div class="flex flex-col gap-1">
+                <div class="flex flex-wrap items-center gap-2 text-headline-md font-bold text-on-surface">
+                  Đơn <span class="font-mono">[[ orders.detail.order_id ]]</span>
+                  <span :class="statusMeta(orders.detail.status || orders.detail.payment_status, orders.detail.payment_method, orders.detail.fulfillment_status).wrapClass" style="font-size:13px;padding:4px 10px;">
+                    <span :class="statusMeta(orders.detail.status || orders.detail.payment_status, orders.detail.payment_method, orders.detail.fulfillment_status).dotClass"></span>[[ statusMeta(orders.detail.status || orders.detail.payment_status, orders.detail.payment_method, orders.detail.fulfillment_status).label ]]
+                  </span>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 text-body-sm text-on-surface-variant">
+                  <span>Tạo <b>[[ formatDate(orders.detail.created_at) ]]</b></span>
+                  <span class="h-3 w-px bg-outline-variant"></span>
+                  <span v-if="orders.detail.order_type">Loại <b>[[ orders.detail.order_type ]]</b></span>
+                </div>
+              </div>
+
+              
+              <div v-if="orders.detail.tracking_code" class="flex gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-body-sm text-amber-800">
+                <span class="material-symbols-outlined text-[18px]">info</span>
+                <div>
+                  <b>Đơn đã có vận đơn</b> — Mã <span class="font-mono font-bold">[[ orders.detail.tracking_code ]]</span><template v-if="orders.detail.carrier"> ([[ orders.detail.carrier ]])</template>. Sửa địa chỉ/sản phẩm bị khoá; cần huỷ vận đơn trước.
+                </div>
+              </div>
+
+              
+              <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+                <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+                  <span class="material-symbols-outlined text-[18px] text-on-surface-variant">person</span>
+                  <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Khách hàng</div>
+                  <button v-if="orders.detail.customer_phone" @click="viewCustomerFromOrder" type="button" class="ml-auto text-label-md font-bold text-primary hover:underline">Xem hồ sơ →</button>
+                </div>
+                <div v-if="orders.detailLoading && orders.detail.__snapshot && !orders.detail.customer_name" class="ma-component-skeleton" aria-label="Đang tải thông tin khách hàng"><span class="ma-component-skeleton__line"></span><span class="ma-component-skeleton__line"></span><span class="ma-component-skeleton__line"></span></div>
+                <div v-else class="px-3 py-1">
+                  <div class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3">
+                    <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Họ và tên</div>
+                    <div class="min-w-0 text-body-sm font-bold text-on-surface">[[ orders.detail.customer_name || 'Khách lẻ' ]]</div>
+                  </div>
+                  <div class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3">
+                    <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Số điện thoại</div>
+                    <div class="min-w-0 text-body-sm font-mono text-on-surface">[[ orders.detail.customer_phone ? formatPhone(orders.detail.customer_phone) : '—' ]]</div>
+                  </div>
+                  <div v-if="orders.detail.customer_note" class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3">
+                    <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">💬 Ghi chú KH</div>
+                    <div class="min-w-0 text-body-sm text-on-surface-variant">[[ orders.detail.customer_note ]]</div>
+                  </div>
+                  <!-- 2026-08-23: internal_note (AQ) — chỉ staff xem trong detail modal, KHÔNG in tem/hóa đơn.
+                       Nền vàng nhạt + icon 🔒 để phân biệt rõ với customer_note. Đơn cũ không có → v-if false. -->
+                  <div v-if="orders.detail.internal_note" class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3" style="background:#fefce8;border-left:3px solid #f59e0b;padding-left:8px;">
+                    <div class="text-label-sm font-bold uppercase tracking-wider" style="color:#92400e;">🔒 Ghi chú nội bộ</div>
+                    <div class="min-w-0 text-body-sm" style="color:#78350f;">[[ orders.detail.internal_note ]]</div>
+                  </div>
+                </div>
+              </div>
+
+              
+              <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+                <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+                  <span class="material-symbols-outlined text-[18px] text-on-surface-variant">inventory_2</span>
+                  <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Sản phẩm · [[ (orders.detail.items || []).length ]] mặt hàng</div>
+                </div>
+                <div v-if="orders.detailLoading && !orders.detail.items" class="ma-detail-skeleton p-3" aria-label="Đang tải sản phẩm của đơn hàng">
+                  <span></span><span></span><span></span>
+                </div>
+                <div v-else-if="(orders.detail.items || []).length" class="p-2.5 overflow-x-auto"><table class="min-w-[620px] w-full text-left text-body-sm">
+                  <thead>
+                    <tr>
+                      <th class="w-[52%]">Sản phẩm</th>
+                      <th class="text-right tabular-nums">SL</th>
+                      <th class="text-right tabular-nums">Đơn giá</th>
+                      <th class="text-right tabular-nums">Thành tiền</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="item in (orders.detail.items || [])" :key="item.id || item.handle">
+                      <td>
+                        <div class="flex items-center gap-3">
+                          <img v-if="item.image_url || item.image" :src="item.image_url || item.image"
+                            :alt="item.name || item.handle || 'Sản phẩm'" width="32" height="32"
+                            class="h-8 w-8 flex-none rounded-lg border border-outline-variant bg-surface-container-low object-cover"
+                            @error="$event.target.style.display = 'none'; $event.target.nextElementSibling.style.display = 'inline-flex';">
+                          <div class="h-8 w-8 flex-none items-center justify-center rounded-lg border border-primary/20 bg-primary-container text-label-sm font-bold text-on-primary-container"
+                            :style="{ display: (item.image_url || item.image) ? 'none' : 'inline-flex' }">[[ (item.name || item.handle || '?').substring(0, 2).toUpperCase() ]]</div>
+                          <div>
+                            <div class="font-semibold text-on-surface">[[ item.name || item.handle ]]</div>
+                            <div v-if="item.sku || item.handle" class="mt-0.5 break-all font-mono text-label-sm text-on-surface-variant">SKU · [[ item.sku || item.handle ]]</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="text-right tabular-nums">[[ item.qty || 1 ]]</td>
+                      <td class="text-right font-mono tabular-nums">[[ formatMoney(item.price || 0) ]]</td>
+                      <td class="text-right font-bold tabular-nums">[[ formatMoney(item.lineTotal || (item.price * (item.qty || 1))) ]]</td>
+                    </tr>
+                  </tbody>
+                </table></div>
+                <div v-else class="ma-component-empty">
+                  <span class="material-symbols-outlined">inventory_2</span>
+                  <span>Đơn hàng chưa có sản phẩm.</span>
+                </div>
+                
+                {%- comment -%}
+                  Số học tổng đơn dùng orderDetailAmounts (FE tính từ items + discount/ship qua
+                  Number()) — không dùng thẳng orders.detail.total_amount vì backend có thể trả
+                  dữ liệu lỗi (bug MOPS0022 hiện 132.315.667.200.000₫). Xem computed ở
+                  assets/mops-admin-orders.js.bwt, block header comment nói rõ lý do.
+                {%- endcomment -%}
+                <div class="space-y-1 border-t border-outline-variant px-3 py-3">
+                  <div class="flex items-center justify-between gap-3 text-body-sm text-on-surface-variant">
+                    <span>Tạm tính</span>
+                    <span class="font-mono">[[ formatMoney(orderDetailAmounts.subtotal) ]]</span>
+                  </div>
+                  <div v-if="orderDetailAmounts.discount > 0" class="flex items-start justify-between gap-3 text-body-sm text-on-surface-variant">
+                    <div class="flex-1 min-w-0">
+                      <span>Giảm giá</span>
+                      <span v-if="orders.detail.discount_code" class="ml-1 inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-2 py-0.5 text-label-sm font-bold text-purple-700" style="padding:0 6px;font-size:10px;">[[ orders.detail.discount_code ]]</span>
+                      <span v-else-if="orders.detail.order_discount_type === '%'" class="ml-1 inline-flex items-center rounded-full border border-primary/30 bg-primary-container/30 px-2 py-0.5 text-label-sm font-bold text-primary" style="padding:0 6px;font-size:10px;">[[ orders.detail.order_discount_value || orders.detail.discount_percent ]]%</span>
+                      <div v-if="orders.detail.order_discount_reason" class="text-label-sm text-on-surface-variant opacity-70 mt-0.5">[[ orders.detail.order_discount_reason ]]</div>
+                    </div>
+                    <span class="font-mono text-error whitespace-nowrap">−[[ formatMoney(orderDetailAmounts.discount) ]]</span>
+                  </div>
+                  <div v-if="orderDetailAmounts.shipping > 0" class="flex items-center justify-between gap-3 text-body-sm text-on-surface-variant">
+                    <span>Phí vận chuyển</span>
+                    <span class="font-mono">[[ formatMoney(orderDetailAmounts.shipping) ]]</span>
+                  </div>
+                  <div class="mt-2 flex items-center justify-between border-t border-outline-variant pt-2 text-body-md font-bold text-on-surface">
+                    <span>Tổng cộng</span>
+                    <span class="font-mono">[[ formatMoney(orderDetailAmounts.total) ]]</span>
+                  </div>
+                </div>
+              </div>
+
+              
+              <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+
+                
+                <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+                  <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+                    <span class="material-symbols-outlined text-[18px] text-on-surface-variant">credit_card</span>
+                    <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Thanh toán</div>
+                    <span :class="statusMeta(orders.detail.status || orders.detail.payment_status, orders.detail.payment_method, orders.detail.fulfillment_status).wrapClass" style="margin-left:auto;">
+                      <span :class="statusMeta(orders.detail.status || orders.detail.payment_status, orders.detail.payment_method, orders.detail.fulfillment_status).dotClass"></span>[[ statusMeta(orders.detail.status || orders.detail.payment_status, orders.detail.payment_method, orders.detail.fulfillment_status).label ]]
+                    </span>
+                  </div>
+                  <div v-if="orders.detailLoading && orders.detail.__snapshot" class="ma-component-skeleton" aria-label="Đang tải thông tin thanh toán"><span class="ma-component-skeleton__line"></span><span class="ma-component-skeleton__line"></span><span class="ma-component-skeleton__line"></span></div>
+                  <div v-else class="px-3 py-1">
+                    <div class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3">
+                      <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Phương thức</div>
+                      <div class="min-w-0 text-body-sm text-on-surface">
+                        <span v-if="orderDetailPaymentMethod === 'VIETQR'" class="inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-2 py-0.5 text-label-sm font-bold text-purple-700">VIETQR</span>
+                        <span v-else-if="orderDetailPaymentMethod === 'COD'" class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-label-sm font-bold text-amber-700"><span class="material-symbols-outlined text-[12px]">local_atm</span>COD (thu hộ)</span>
+                        <span v-else-if="orderDetailPaymentMethod === 'CASH'" class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-label-sm font-bold text-emerald-700"><span class="material-symbols-outlined text-[12px]">payments</span>Tiền mặt</span>
+                        <span v-else class="inline-flex items-center rounded-full border border-outline-variant bg-surface-container-low px-2 py-0.5 text-label-sm font-bold text-on-surface-variant">[[ orderDetailPaymentMethod ]]</span>
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3">
+                      <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">[[ orderDetailPaymentMethod === 'COD' ? 'Thu hộ' : 'Số tiền' ]]</div>
+                      <div class="min-w-0 text-body-sm font-bold font-mono text-on-surface">[[ formatMoney(orderDetailAmounts.pay) ]]</div>
+                    </div>
+                    <div v-if="orders.detail.transaction_ref && orderDetailPaymentMethod === 'VIETQR'" class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3">
+                      <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Nội dung CK</div>
+                      <div class="min-w-0 text-body-sm font-mono text-on-surface">[[ orders.detail.transaction_ref ]]</div>
+                    </div>
+
+                    <div v-if="orders.detail.qr_url && orderDetailPaymentMethod === 'VIETQR'" class="mt-3 flex justify-center rounded-lg bg-surface-container-low p-3">
+                      <img :src="orders.detail.qr_url" @click="openQrLightbox(orders.detail.qr_url)" width="160" height="160" class="h-40 w-40 cursor-zoom-in rounded-lg border border-outline-variant bg-white object-contain" alt="QR chuyển khoản">
+                    </div>
+                  </div>
+                </div>
+
+                
+                <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+                  <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+                    <span class="material-symbols-outlined text-[18px] text-on-surface-variant">local_shipping</span>
+                    <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Vận chuyển</div>
+                    <span v-if="orders.detail.fulfillment_status" style="margin-left:auto;" class="ma-badge" :class="fulfillmentBadgeClass(orders.detail.fulfillment_status)">[[ fulfillmentLabel(orders.detail.fulfillment_status) ]]</span>
+                  </div>
+                  <div v-if="orders.detailLoading && orders.detail.__snapshot" class="ma-component-skeleton" aria-label="Đang tải thông tin vận chuyển"><span class="ma-component-skeleton__line"></span><span class="ma-component-skeleton__line"></span><span class="ma-component-skeleton__line"></span></div>
+                  <div v-else class="px-3 py-1">
+                    
+                    <div v-if="orders.detail.shipping_address" class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3">
+                      <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Địa chỉ giao</div>
+                      <div class="min-w-0 text-body-sm text-on-surface">
+                        <div class="font-bold">[[ orders.detail.shipping_address.receiver_name || '—' ]]<template v-if="orders.detail.shipping_address.phone"> · [[ formatPhone(orders.detail.shipping_address.phone) ]]</template></div>
+                        <div class="text-body-sm text-on-surface-variant" style="margin-top:2px;font-size:12px;">[[ formatAddress(orders.detail.shipping_address.address, orders.detail.shipping_address.ward, orders.detail.shipping_address.province) ]]</div>
+                      </div>
+                    </div>
+                    <div v-else class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3">
+                      <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Địa chỉ giao</div>
+                      <div class="min-w-0 text-body-sm text-on-surface-variant">Đơn không cần giao</div>
+                    </div>
+                    
+                    <template v-if="orders.detail.tracking_code">
+                      <div class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3">
+                        <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Hãng vận chuyển</div>
+                        <div class="min-w-0 text-body-sm font-bold text-on-surface">[[ orders.detail.carrier || '—' ]]</div>
+                      </div>
+                      <div class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3">
+                        <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Mã vận đơn</div>
+                        <div class="ma-fr__val font-mono font-bold text-primary">[[ orders.detail.tracking_code ]]</div>
+                      </div>
+                      <!-- In tem A6 (100×150mm) — chỉ hiện với vận đơn Goship (label PDF là API của họ).
+                           Vận đơn khác: FE tự dựng template HTML fallback khi bấm (nút vẫn hiển thị
+                           để nhân viên không phải phân biệt hãng). Guard theo carrier prefix vì "GOSHIP · <hãng thật>". -->
+                      <div v-if="orders.detail.carrier" class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3">
+                        <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">In tem</div>
+                        <div class="min-w-0 flex flex-col gap-2">
+                          <!-- 2026-08-29: bỏ checkbox "Ẩn danh sách hàng" + input thay thế riêng — modal
+                               "Tuỳ chỉnh in" (openPrintModal, tạo ở tab Shipping) đã có sẵn ô "Nội dung
+                               hàng" nhập tay tự do, làm đúng việc này rồi nên không cần control riêng ở
+                               đây nữa. Modal bọc <teleport to="body"> + Liquid include không điều kiện ở
+                               mops_admin_tab_shipping.bwt nên luôn có trong DOM bất kể tab nào đang active. -->
+                          <button type="button" @click="openPrintModal(orders.detail.order_id)"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/5 px-3 py-1.5 text-label-md font-bold text-primary transition-colors hover:bg-primary/10 disabled:opacity-50">
+                            <span class="material-symbols-outlined text-[16px]">print</span>
+                            In tem A6 (100×150)
+                          </button>
+                        </div>
+                      </div>
+                      <div v-if="orders.detail.shipping_fee > 0" class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3">
+                        <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Phí ship</div>
+                        <div class="min-w-0 text-body-sm font-mono text-on-surface">[[ formatMoney(orders.detail.shipping_fee) ]]</div>
+                      </div>
+                      <div v-if="orders.detail.package_weight > 0" class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3">
+                        <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Kiện hàng</div>
+                        <div class="min-w-0 text-body-sm text-on-surface">[[ orders.detail.package_weight ]]g<template v-if="orders.detail.package_dims"> · [[ orders.detail.package_dims ]] cm</template></div>
+                      </div>
+                    </template>
+                    <!-- 2026-08-30: "Ngày hẹn" dời sang card sidebar "Thông tin đơn hàng" (khớp vị
+                         trí Sapo — field này không phải chi tiết vận chuyển). -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            
+            <div class="flex min-w-0 flex-col gap-4 xl:sticky xl:top-0 xl:self-start">
+
+              
+              <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest p-3 shadow-sm">
+                <div class="px-3 py-1">
+                  <div class="mb-2 text-label-md font-bold uppercase tracking-wider text-on-surface-variant">Hành động chính</div>
+
+                  <!-- Trong lúc snapshot nạp full detail, dùng skeleton hình khối nút để không nhấp nháy pop-in từng nút -->
+                  <div v-if="orders.detailLoading && orders.detail.__snapshot" class="ma-component-skeleton ma-component-skeleton--actions" aria-label="Đang tải hành động">
+                    <span></span><span></span><span></span>
+                  </div>
+                  <div v-else class="ma-actions-panel">
+                    {%- comment -%}
+                      Grid 2x2 "Modern Grid" (2026-08-16, Ý tưởng 1): áp dụng cho state 'ready_to_pick'
+                      — cùng lúc có đủ 4 action (Cập nhật · Huỷ đóng gói · Đã lấy hàng · Huỷ đơn).
+                      Vị trí cố định để staff quen: xanh tím (primary), amber (huỷ đóng gói),
+                      sky (tiến bước), đỏ outline (destructive). Slot rỗng khi action không khả dụng
+                      (VD Huỷ đơn ẩn vì canCancel=false) — grid tự co lại. Các state khác giữ stacked
+                      list phía dưới (fallback).
+                    {%- endcomment -%}
+                    <div v-if="orders.detail.fulfillment_status === 'ready_to_pick'"
+                         class="grid grid-cols-2 gap-3 mb-3">
+                      <!-- Slot 1 (top-left): Cập nhật trạng thái giao — primary action, tím -->
+                      <button @click="doFulfillmentAction(orders.detail.order_id, { type: 'refresh', label: 'Cập nhật trạng thái giao', icon: 'sync' })"
+                        :disabled="!!orders.actionBusy" type="button"
+                        class="ma-action-tile flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-transparent bg-violet-600 hover:bg-violet-700 text-white py-5 px-3 min-h-[104px] text-center transition-all active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span class="material-symbols-outlined text-[28px]" :class="{ 'ma-spin': orders.actionBusy === 'refresh' }">[[ orders.actionBusy === 'refresh' ? 'progress_activity' : 'sync' ]]</span>
+                        <span class="text-label-md font-bold leading-tight">Cập nhật trạng thái giao</span>
+                      </button>
+
+                      <!-- Slot 2 (top-right): Huỷ đóng gói — warning amber -->
+                      <button v-if="orders.detail.tracking_code"
+                        @click="doFulfillmentAction(orders.detail.order_id, { type: 'cancel_ship', label: 'Huỷ đóng gói', icon: 'undo', tone: 'warning' })"
+                        :disabled="!!orders.actionBusy" type="button"
+                        class="ma-action-tile flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 py-5 px-3 min-h-[104px] text-center transition-all active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span class="material-symbols-outlined text-[28px]" :class="{ 'ma-spin': orders.actionBusy === 'cancel_ship' }">[[ orders.actionBusy === 'cancel_ship' ? 'progress_activity' : 'undo' ]]</span>
+                        <span class="text-label-md font-bold leading-tight">Huỷ đóng gói</span>
+                      </button>
+
+                      <!-- Slot 3 (bottom-left): Đã lấy hàng → Đang giao — info sky -->
+                      <button @click="doFulfillmentAction(orders.detail.order_id, { type: 'advance', to: 'delivering', label: 'Đã lấy hàng → Đang giao', icon: 'local_shipping', minor: true })"
+                        :disabled="!!orders.actionBusy" type="button"
+                        class="ma-action-tile flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-sky-200 bg-sky-50 hover:bg-sky-100 text-sky-900 py-5 px-3 min-h-[104px] text-center transition-all active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span class="material-symbols-outlined text-[28px]" :class="{ 'ma-spin': orders.actionBusy === 'advancedelivering' }">[[ orders.actionBusy === 'advancedelivering' ? 'progress_activity' : 'local_shipping' ]]</span>
+                        <span class="text-label-md font-bold leading-tight">Đã lấy hàng<br>→ Đang giao</span>
+                      </button>
+
+                      <!-- Slot 4 (bottom-right): Huỷ đơn — destructive outline đỏ (chỉ hiện khi orderActions có CANCELLED) -->
+                      <template v-for="act in orderActions(orders.detail)" :key="'grid-' + act.status">
+                        <button v-if="act.status === 'CANCELLED'"
+                          @click="confirmUpdateOrderStatus(orders.detail.order_id, act.status)"
+                          :disabled="!!orders.actionBusy" type="button"
+                          class="ma-action-tile flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-red-500 bg-white hover:bg-red-50 text-red-600 py-5 px-3 min-h-[104px] text-center transition-all active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed">
+                          <span class="material-symbols-outlined text-[28px]" :class="{ 'ma-spin': orders.actionBusy === 'CANCELLED' }">[[ orders.actionBusy === 'CANCELLED' ? 'progress_activity' : 'cancel' ]]</span>
+                          <span class="text-label-md font-bold leading-tight">Huỷ đơn</span>
+                        </button>
+                      </template>
+                    </div>
+
+                    <template v-if="orders.detail.fulfillment_status && orders.detail.fulfillment_status !== 'ready_to_pick'">
+                      <!-- 3 tone: 'warning' = viền amber (Huỷ đóng gói — cảnh báo trung, tách khỏi Huỷ đơn destructive);
+                           'minor' = viền neutral (advance/refresh phụ); mặc định = primary solid (bước chính). -->
+                      <button v-for="fa in fulfillmentActions(orders.detail)" :key="fa.type + (fa.to || '')"
+                        @click="doFulfillmentAction(orders.detail.order_id, fa)" type="button" :disabled="!!orders.actionBusy"
+                         :class="fa.tone === 'warning' ? 'flex w-full items-center justify-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5 mb-3 text-label-md font-bold text-amber-800 transition-colors hover:bg-amber-100 disabled:opacity-50' : (fa.minor ? 'flex w-full items-center justify-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2.5 mb-3 text-label-md font-bold text-on-surface transition-colors hover:bg-surface-container-low disabled:opacity-50' : 'flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2.5 text-label-md font-bold text-on-primary transition-colors hover:bg-primary/90 disabled:opacity-50')">
+                        <span class="material-symbols-outlined text-[18px]" :class="{ 'ma-spin': orders.actionBusy === (fa.type + (fa.to || '')) }">[[ orders.actionBusy === (fa.type + (fa.to || '')) ? 'progress_activity' : fa.icon ]]</span>[[ fa.label ]]
+                      </button>
+                    </template>
+
+                    <!-- Non-CANCELLED order actions (Hoàn tiền, Xác nhận đã trả…) — không thuộc grid 2x2, giữ stacked
+                         khi state = ready_to_pick, hoặc render đầy đủ ở state khác. -->
+                    <div v-if="(orderActions(orders.detail) || []).filter(function(a){ return orders.detail.fulfillment_status !== 'ready_to_pick' || a.status !== 'CANCELLED'; }).length"
+                         class="mt-3 pt-3 border-t border-outline-variant/60"></div>
+                    <template v-for="act in orderActions(orders.detail)" :key="'stack-' + act.status">
+                      <button v-if="orders.detail.fulfillment_status !== 'ready_to_pick' || act.status !== 'CANCELLED'"
+                        @click="confirmUpdateOrderStatus(orders.detail.order_id, act.status)" :disabled="!!orders.actionBusy"
+                        :class="act.cls" type="button">
+                        <span class="material-symbols-outlined text-[18px]" :class="{ 'ma-spin': orders.actionBusy === act.status }">[[ orders.actionBusy === act.status ? 'progress_activity' : act.icon ]]</span>[[ orders.actionBusy === act.status ? 'Đang xử lý…' : act.label ]]
+                      </button>
+                    </template>
+
+                    <div v-if="orders.detail.sapo_order_id" class="mt-2 rounded-lg bg-surface-container-low px-3 py-2 text-label-sm text-on-surface-variant">
+                      Đã đẩy lên SAPO: <strong>[[ orders.detail.sapo_order_id ]]</strong>
+                    </div>
+                    <div v-else-if="orders.detail.sapo_sync_status === 'SYNCING'" class="mt-2 rounded-lg bg-surface-container-low px-3 py-2 text-label-sm text-on-surface-variant">
+                      <span class="material-symbols-outlined text-[16px] ma-spin">progress_activity</span> Đang đồng bộ lên SAPO…
+                    </div>
+                    <template v-else-if="canPushToSapo(orders.detail)">
+                      <div v-if="orders.detail.sapo_sync_status === 'FAILED'" class="mt-2 rounded-lg border border-error/30 bg-error-container px-3 py-2 text-label-sm text-error">Lần đẩy trước thất bại — thử lại?</div>
+                      <button @click="confirmPushToSapo(orders.detail.order_id)" type="button" class="flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2.5 text-label-md font-bold text-blue-700 transition-colors hover:bg-blue-100 disabled:opacity-50">
+                        <span class="material-symbols-outlined text-[18px]">cloud_upload</span>[[ orders.detail.sapo_sync_status === 'FAILED' ? 'Thử lại tạo trên SAPO' : 'Tạo đơn trên SAPO' ]]
+                      </button>
+                    </template>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2026-08-30 — card "Thông tin đơn hàng" (khớp sidebar Sapo mẫu): Bán tại (store) và
+                   Hẹn giao vốn đã có trong get_order nhưng chưa từng hiển thị/hiển thị lẫn chỗ khác ở
+                   FE — xem findings so sánh Sapo. Bán bởi (created_by) trước đây chỉ nằm lẫn trong 1
+                   dòng nhỏ ở "Lịch sử đơn", giờ tách thành field riêng cho dễ nhìn. FE-only, dùng thẳng
+                   field get_order đã trả, không đụng BE. -->
+              <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+                <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+                  <span class="material-symbols-outlined text-[18px] text-on-surface-variant">info</span>
+                  <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Thông tin đơn hàng</div>
+                </div>
+                <div v-if="orders.detailLoading && orders.detail.__snapshot" class="ma-component-skeleton" aria-label="Đang tải thông tin đơn hàng"><span class="ma-component-skeleton__line"></span><span class="ma-component-skeleton__line"></span></div>
+                <div v-else class="px-3 py-1">
+                  <div class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3">
+                    <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Bán tại</div>
+                    <div class="min-w-0 text-body-sm text-on-surface">[[ orders.detail.store || '—' ]]</div>
+                  </div>
+                  <div class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3">
+                    <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Bán bởi</div>
+                    <div class="min-w-0 text-body-sm text-on-surface">[[ orders.detail.created_by || 'Khách hàng' ]]</div>
+                  </div>
+                  <div v-if="orders.detail.appointment_date" class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3">
+                    <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Hẹn giao</div>
+                    <div class="min-w-0 text-body-sm text-on-surface">[[ orders.detail.appointment_date ]]<template v-if="orders.detail.appointment_time"> · [[ orders.detail.appointment_time ]]</template></div>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+                <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+                  <span class="material-symbols-outlined text-[18px] text-on-surface-variant">schedule</span>
+                  <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Lịch sử đơn</div>
+                </div>
+                <div v-if="orders.detailLoading && orders.detail.__snapshot" class="ma-component-skeleton" aria-label="Đang tải lịch sử đơn hàng"><span class="ma-component-skeleton__line"></span><span class="ma-component-skeleton__line"></span><span class="ma-component-skeleton__line"></span></div>
+                <div v-else class="px-3 py-2">
+                  <ul class="space-y-3 border-l-2 border-outline-variant pl-4">
+                    <!-- 2026-08-30: orderDetailTimeline computed gộp activity_logs + shipment_timeline
+                         (webhook ĐVVC) làm 1 — trước đây chỉ hiện activity_logs, bỏ sót toàn bộ mốc
+                         cập nhật vận đơn từ hãng vận chuyển. -->
+                    <template v-if="orderDetailTimeline.length">
+                      <li v-for="entry in orderDetailTimeline" :key="entry.key" class="relative">
+                        <div class="absolute -left-[25px] top-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full border border-green-200 bg-green-50 text-green-700"><span class="material-symbols-outlined text-[10px]">person</span></div>
+                        <div class="min-w-0">
+                          <div class="text-body-sm font-semibold text-on-surface">[[ entry.label ]]</div>
+                          <div class="mt-0.5 text-label-sm text-on-surface-variant"><template v-if="entry.when">[[ formatDate(entry.when) ]] · </template>[[ entry.sub ]]</div>
+                        </div>
+                      </li>
+                    </template>
+                    <template v-else>
+                    <li v-if="orders.detail.fulfillment_status && orders.detail.fulfillment_status !== 'pending_payment'" class="relative">
+                      <div class="absolute -left-[25px] top-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full border border-green-200 bg-green-50 text-green-700"><span class="material-symbols-outlined text-[10px]">check</span></div>
+                      <div class="min-w-0">
+                        <div class="text-body-sm font-semibold text-on-surface">Trạng thái vận đơn · <span class="text-body-sm text-on-surface-variant">[[ fulfillmentLabel(orders.detail.fulfillment_status) ]]</span></div>
+                        <div class="mt-0.5 text-label-sm text-on-surface-variant">Cập nhật gần nhất</div>
+                      </div>
+                    </li>
+                    
+                    <li v-if="orders.detail.tracking_code" class="relative">
+                      <div class="absolute -left-[25px] top-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full border border-green-200 bg-green-50 text-green-700"><span class="material-symbols-outlined text-[10px]">check</span></div>
+                      <div class="min-w-0">
+                        <div class="text-body-sm font-semibold text-on-surface">Đã tạo vận đơn <span class="font-mono">[[ orders.detail.tracking_code ]]</span></div>
+                        <div v-if="orders.detail.packed_at" class="mt-0.5 text-label-sm text-on-surface-variant">[[ formatDate(orders.detail.packed_at) ]]</div>
+                      </div>
+                    </li>
+                    
+                    <li v-if="orders.detail.status === 'PAID' || orders.detail.paid_at" class="relative">
+                      <div class="absolute -left-[25px] top-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full border border-green-200 bg-green-50 text-green-700"><span class="material-symbols-outlined text-[10px]">check</span></div>
+                      <div class="min-w-0">
+                        <div class="text-body-sm font-semibold text-on-surface">Xác nhận thanh toán · <span class="inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-2 py-0.5 text-label-sm font-bold text-purple-700" style="padding:1px 6px;font-size:10px;">VIETQR</span></div>
+                        <div v-if="orders.detail.paid_at" class="mt-0.5 text-label-sm text-on-surface-variant">[[ formatDate(orders.detail.paid_at) ]]</div>
+                      </div>
+                    </li>
+                    
+                    <li v-if="orders.detail.discount_code" class="relative">
+                      <div class="absolute -left-[25px] top-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full border border-green-200 bg-green-50 text-green-700"><span class="material-symbols-outlined text-[10px]">check</span></div>
+                      <div class="min-w-0">
+                        <div class="text-body-sm font-semibold text-on-surface">Áp mã <span class="font-mono">[[ orders.detail.discount_code ]]</span> <span class="font-mono text-body-sm text-on-surface-variant">−[[ formatMoney(orders.detail.discount_amount) ]]</span></div>
+                      </div>
+                    </li>
+                    
+                    <li class="relative">
+                      <div class="absolute -left-[25px] top-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full border border-green-200 bg-green-50 text-green-700"><span class="material-symbols-outlined text-[10px]">check</span></div>
+                      <div class="min-w-0">
+                        <div class="text-body-sm font-semibold text-on-surface">Đơn được tạo</div>
+                        <div class="mt-0.5 text-label-sm text-on-surface-variant">[[ formatDate(orders.detail.created_at) ]] · Người tạo: <span class="font-medium text-on-surface">[[ orders.detail.created_by || 'Khách hàng' ]]</span></div>
+                      </div>
+                    </li>
+                    </template>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        
+        <div v-if="shipModal.show" class="ma-modal-backdrop" @click.self="closeShipModal">
+          <div class="ma-modal ma-modal-ship">
+            <div class="ma-modal-head">
+              <span class="material-symbols-outlined ma-modal-icon">local_shipping</span>
+              <div class="ma-modal-title">Tạo vận đơn<template v-if="shipModal.order"> <span class="font-mono ma-fr__val--muted">· [[ shipModal.order.order_id ]]</span></template></div>
+              <button @click="closeShipModal" type="button" class="ma-modal-close" aria-label="Đóng">
+                <span class="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+
+            <div class="ma-modal-body">
+
+              <div v-if="shipModal.detailLoading" class="mb-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-body-sm text-amber-800">
+                <span class="material-symbols-outlined ma-spin text-[16px]">progress_activity</span>
+                <span>Đang tải chi tiết đơn — form đang hiện dữ liệu tóm tắt, sẽ tự bổ sung khi xong.</span>
+              </div>
+
+              <div class="ma-sect ma-addr-block">
+                <div class="ma-sect-label ma-addr-block__head">
+                  <span>Địa chỉ giao</span>
+                  <span v-if="shipModal.order && shipModal.order.shipping_address && !shipModal.addrEdit.open" class="ma-badge ma-badge--success" style="padding:1px 6px;font-size:10px;">Đủ thông tin</span>
+                  <span v-else-if="!shipModal.addrEdit.open" class="ma-badge ma-badge--warning" style="padding:1px 6px;font-size:10px;">Thiếu</span>
+                  <button v-if="!shipModal.addrEdit.open" @click="openShipAddrEdit" type="button" class="ma-addr-block__edit-btn" aria-label="Thay đổi địa chỉ">
+                    <span class="material-symbols-outlined text-[14px]">edit</span>Thay đổi
+                  </button>
+                </div>
+
+
+                <template v-if="!shipModal.addrEdit.open">
+                  <div v-if="shipModal.order && shipModal.order.shipping_address" class="ma-sect-addr">
+                    <div class="ma-sect-addr-line1">
+                      <span class="font-bold">[[ shipModal.order.shipping_address.receiver_name || '—' ]]</span>
+                      <span v-if="shipModal.order.shipping_address.phone" class="font-mono ma-fr__val--muted">· [[ formatPhone(shipModal.order.shipping_address.phone) ]]</span>
+                    </div>
+                    <div class="ma-sect-addr-line2">[[ [shipModal.order.shipping_address.address, shipModal.order.shipping_address.ward, shipModal.order.shipping_address.district, shipModal.order.shipping_address.province].filter(Boolean).join(', ') ]]</div>
+                  </div>
+                  <div v-else-if="shipModal.detailLoading" class="ma-sect-addr opacity-80">
+                    <div class="ma-sect-addr-line1">
+                      <span class="font-bold">[[ (shipModal.order && shipModal.order.customer_name) || 'Đang tải…' ]]</span>
+                      <span v-if="shipModal.order && shipModal.order.customer_phone" class="font-mono ma-fr__val--muted">· [[ formatPhone(shipModal.order.customer_phone) ]]</span>
+                    </div>
+                    <div class="ma-sect-addr-line2 flex items-center gap-1.5">
+                      <span class="material-symbols-outlined ma-spin text-[14px]">progress_activity</span>
+                      <span>[[ (shipModal.order && shipModal.order.customer_address) || 'Đang tải địa chỉ chi tiết…' ]]</span>
+                    </div>
+                  </div>
+                  <div v-else class="ma-sect-warn">
+                    <div class="ma-sect-warn-title">
+                      <span class="material-symbols-outlined text-[18px]">location_off</span>
+                      Đơn chưa có địa chỉ giao
+                    </div>
+                    <p>Bấm nút <strong>Thay đổi</strong> ở trên để điền — không cần đóng modal này.</p>
+                  </div>
+                </template>
+
+
+                {%- comment -%}
+                  2026-08-16: Thay 3 select cascade (province/district/ward) + input tự do bằng
+                  <mops-address-picker mode="new"> — dùng chung với form Tạo đơn + form Sửa/Thêm
+                  địa chỉ khách. Auto-complete gõ tên, chuẩn Sapo 3-layer, adapters GHN/Goship,
+                  save đi qua handler đã reuse _buildAddrPayloadFromAddress. Bỏ 3 handler cascade
+                  legacy trong mops-admin-orders.js.bwt (onShipAddrProvinceChange/DistrictChange/
+                  WardChange).
+                {%- endcomment -%}
+                <div v-else class="ma-addr-edit">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <input type="text" v-model="shipModal.addrEdit.receiverName" placeholder="Họ và tên người nhận *" class="ma-input">
+                    <input type="tel" v-model="shipModal.addrEdit.phone" placeholder="Số điện thoại *" class="ma-input">
+                  </div>
+                  <div class="mt-2">
+                    <label class="text-label-sm text-on-surface-variant block mb-1">Số nhà / Đường <span class="text-error">*</span></label>
+                    <input type="text" v-model="shipModal.addrEdit.address" placeholder="vd: 217A Phạm Viết Chánh" class="ma-input">
+                  </div>
+                  <div class="mt-2">
+                    <label class="text-label-sm text-on-surface-variant block mb-1">Tỉnh / Xã (địa danh hành chính mới) <span class="text-error">*</span></label>
+                    <mops-address-picker
+                      v-model="shipModal.addrEdit.addr"
+                      mode="new"
+                      :raw-street="shipModal.addrEdit.address"
+                      @update:rawStreet="shipModal.addrEdit.address = $event"
+                      :dense="true"></mops-address-picker>
+                  </div>
+                  <p v-if="shipModal.addrEdit.error" class="ma-addr-edit__err mt-2">
+                    <span class="material-symbols-outlined text-[16px] align-middle">error</span>[[ shipModal.addrEdit.error ]]
+                  </p>
+                  <div class="ma-addr-edit__actions mt-3">
+                    <button @click="saveShipAddrEdit" :disabled="shipModal.addrEdit.saving" type="button" class="ma-addr-edit__save">
+                      <span v-if="!shipModal.addrEdit.saving" class="material-symbols-outlined text-[16px]">check</span>
+                      <span v-else class="material-symbols-outlined ma-spin text-[16px]">progress_activity</span>
+                      [[ shipModal.addrEdit.saving ? 'Đang lưu…' : 'Lưu địa chỉ + Tính lại cước' ]]
+                    </button>
+                    <button @click="closeShipAddrEdit" :disabled="shipModal.addrEdit.saving" type="button" class="ma-addr-edit__cancel">Huỷ</button>
+                    <span class="ma-addr-edit__hint">Cân nặng · Kích thước · COD · Ghi chú không bị reset.</span>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="ma-sect">
+                <div class="ma-sect-label">Đơn vị vận chuyển <span class="ma-sect-req">*</span></div>
+                <div v-if="shipModal.loading" class="ma-sect-loading">
+                  <span class="material-symbols-outlined ma-spin text-[18px]">progress_activity</span>
+                  Đang tải danh sách…
+                </div>
+                <div v-else class="ma-carrier-list">
+                  <label v-for="c in shipModal.carriers" :key="c.carrier_code"
+                    class="ma-carrier"
+                    :class="{ 'is-selected': shipModal.carrier === c.carrier_code, 'is-disabled': shipCarrierDisabled(c) }">
+                    <input type="radio" :value="c.carrier_code" v-model="shipModal.carrier" :disabled="shipCarrierDisabled(c)" @change="onShipCarrierChange" class="ma-carrier-rd">
+                    <div class="ma-carrier-logo" :data-code="c.carrier_code">[[ (c.carrier_code || '').substring(0, 2) ]]</div>
+                    <div class="ma-carrier-body">
+                      <div class="ma-carrier-name">[[ c.name ]]<span v-if="c.carrier_code === 'GOSHIP'" class="inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-2 py-0.5 text-label-sm font-bold text-purple-700" style="padding:0 6px;font-size:10px;margin-left:6px;">Đề xuất</span></div>
+                      <div class="ma-carrier-sub">
+                        <template v-if="shipCarrierApiCode(c.carrier_code) && !c.has_config">
+                          <span class="ma-carrier-warn">Chưa nhập cấu hình</span>
+                          <a v-if="carrierConfigPanelKey(c.carrier_code)" @click.stop.prevent="openCarrierConfig(c.carrier_code)" href="#" class="ma-carrier-link">Đi tới Cấu hình →</a>
+                        </template>
+                        <template v-else-if="c.carrier_code !== 'SELF' && !shipCarrierApiCode(c.carrier_code)">
+                          Không auto-track · nhập mã vận đơn thủ công
+                        </template>
+                        <template v-else-if="shipCarrierApiCode(c.carrier_code) && c.has_config && !shipCarrierCapable(c.carrier_code)">
+                          <span class="ma-carrier-warn">Đơn thiếu địa chỉ theo hãng</span>
+                        </template>
+                        <template v-else-if="c.carrier_code === 'SELF'">
+                          Nhân viên tự giao hoặc hãng ngoài · chỉ ghi nhận
+                        </template>
+                        <template v-else-if="c.carrier_code === 'GOSHIP'">
+                          So sánh đa hãng · Đối soát tự động · <span class="ma-carrier-ok">Đã cấu hình</span>
+                        </template>
+                        <template v-else>Sẵn sàng tạo vận đơn</template>
+                      </div>
+                    </div>
+                    <div class="ma-carrier-info">
+                      <span v-if="shipCarrierApiCode(c.carrier_code) && !c.has_config" class="ma-badge ma-badge--warning" style="padding:2px 7px;">Chưa cấu hình</span>
+                      <span v-else-if="shipCarrierApiCode(c.carrier_code) && c.has_config && !shipCarrierCapable(c.carrier_code)" class="ma-badge ma-badge--warning" style="padding:2px 7px;">Thiếu địa chỉ</span>
+                      <span v-else-if="c.carrier_code === 'SELF'" class="ma-badge ma-badge--neutral" style="padding:2px 7px;">Fallback</span>
+                      <span v-else-if="c.carrier_code !== 'SELF' && !shipCarrierApiCode(c.carrier_code)" class="ma-badge ma-badge--info" style="padding:2px 7px;">Nhập tay</span>
+                      <span v-else class="ma-badge ma-badge--success" style="padding:2px 7px;">Chọn được</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              
+              <template v-if="shipModalIsApi() && shipModal.carrier === 'GOSHIP'">
+                <div v-if="shipModal.feeLoading" class="ma-sect ma-sect-note">
+                  <span class="material-symbols-outlined ma-spin text-[16px]">progress_activity</span>
+                  Đang lấy chào giá từ các hãng…
+                </div>
+                <div v-else-if="shipModal.rates && shipModal.rates.length" class="ma-sect">
+                  <div class="ma-rate-panel">
+                    <div class="ma-rate-head">
+                      <div class="ma-rate-head-title">So sánh giá qua Goship · [[ shipRatesSorted().length ]]<template v-if="shipModal.rateCarrier">/[[ shipModal.rates.length ]]</template> lựa chọn</div>
+                      <div class="ma-rate-head-controls">
+                        <select v-model="shipModal.rateCarrier" @change="onShipRateCarrierChange" class="ma-rate-select">
+                          <option value="">Tất cả hãng</option>
+                          <option v-for="c in shipRateCarriers()" :key="c.name" :value="c.name">[[ c.name ]] · từ [[ formatMoney(c.min_fee) ]]</option>
+                        </select>
+                        <select v-model="shipModal.rateSort" class="ma-rate-select">
+                          <option value="fee">Sắp xếp: Phí thấp nhất</option>
+                          <option value="success">Sắp xếp: Giao thành công cao</option>
+                        </select>
+                      </div>
+                    </div>
+                    <table class="ma-rate-table">
+                      <thead>
+                        <tr>
+                          <th></th>
+                          <th>Hãng</th>
+                          <th>Dịch vụ</th>
+                          <th>Dự kiến</th>
+                          <th>Thành công</th>
+                          <th class="ma-rate-price">Phí</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="r in shipRatesSorted()" :key="r.rate_id"
+                          @click="shipModal.rateId = r.rate_id; selectShipRate(r)"
+                          :class="{ 'is-picked': shipModal.rateId === r.rate_id }">
+                          <td>
+                            <span class="ma-rate-rd" :class="{ 'is-picked': shipModal.rateId === r.rate_id }"></span>
+                          </td>
+                          <td class="font-bold">[[ r.carrier_name ]]</td>
+                          <td>[[ r.service || '—' ]]</td>
+                          <td>[[ r.expected || '—' ]]</td>
+                          <td><span v-if="r.success_percent" class="ma-badge ma-badge--success" style="padding:1px 6px;font-size:10px;">[[ r.success_percent ]]%</span><span v-else class="text-body-sm text-on-surface-variant">—</span></td>
+                          <td class="ma-rate-price font-mono">[[ formatMoney(r.total_fee) ]]<div v-if="shipRateCheapest() && shipRateCheapest().rate_id === r.rate_id" class="text-body-sm text-on-surface-variant" style="font-size:10px;">Rẻ nhất</div></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div v-else-if="shipModal.feeError" class="ma-sect ma-sect-error">[[ shipModal.feeError ]]</div>
+                <div v-else class="ma-sect ma-sect-note">
+                  <span>Chưa có chào giá</span>
+                  <button @click="previewShipFee" type="button" class="ma-sect-note-btn">
+                    <span class="material-symbols-outlined text-[16px]">calculate</span>Lấy chào giá
+                  </button>
+                </div>
+              </template>
+
+              
+              <template v-if="shipModalIsApi() && shipModal.carrier === 'GHN'">
+                <div class="ma-sect">
+                  <div class="ma-sect-label">Gói dịch vụ GHN</div>
+                  <div class="ma-field-row">
+                    <div class="ma-field">
+                      <div class="ma-field-label">Loại dịch vụ</div>
+                      <select v-model="shipModal.serviceTypeId" @change="previewShipFee" class="ma-field-input">
+                        <option value="2">Chuẩn</option>
+                        <option value="1">Nhanh</option>
+                      </select>
+                    </div>
+                    <div class="ma-field">
+                      <div class="ma-field-label">Ghi chú giao</div>
+                      <select v-model="shipModal.requiredNote" class="ma-field-input">
+                        <option value="KHONGCHOXEMHANG">Không cho xem</option>
+                        <option value="CHOXEMHANGKHONGTHU">Cho xem, không thử</option>
+                        <option value="CHOTHUHANG">Cho xem &amp; thử</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </template>
+
+              <div class="ma-sect">
+                <div class="ma-sect-label">
+                  <span class="material-symbols-outlined text-[16px] align-middle mr-1">warehouse</span>
+                  Kho lấy hàng <span class="ma-sect-req">*</span>
+                  <span v-if="shipPickBranchCurrent && shipPickBranchCurrent.is_default" class="ma-badge ma-badge--neutral" style="padding:1px 6px;font-size:10px;margin-left:6px">Chi nhánh chính</span>
+                </div>
+
+                <template v-if="shipModal.carrier === 'GHTK'">
+                  <div class="ma-carrier-list" style="grid-template-columns:1fr 1fr;margin-bottom:10px;">
+                    <label class="ma-carrier" :class="{ 'is-selected': (shipModal.ghtkPickSource || 'auto') === 'auto' }">
+                      <input type="radio" value="auto" v-model="shipModal.ghtkPickSource" @change="previewShipFee" class="ma-carrier-rd">
+                      <div class="ma-carrier-logo" data-code="GHTK"><span class="material-symbols-outlined text-[18px]">link</span></div>
+                      <div class="ma-carrier-body">
+                        <div class="ma-carrier-name">Auto từ chi nhánh</div>
+                        <div class="ma-carrier-sub">Dùng Pick Address ID cấu hình sẵn theo branch</div>
+                      </div>
+                    </label>
+                    <label class="ma-carrier" :class="{ 'is-selected': shipModal.ghtkPickSource === 'manual' }">
+                      <input type="radio" value="manual" v-model="shipModal.ghtkPickSource" @change="previewShipFee" class="ma-carrier-rd">
+                      <div class="ma-carrier-logo" data-code="GHTK"><span class="material-symbols-outlined text-[18px]">inventory_2</span></div>
+                      <div class="ma-carrier-body">
+                        <div class="ma-carrier-name">Chọn kho GHTK khác</div>
+                        <div class="ma-carrier-sub">Override kho riêng cho vận đơn này</div>
+                      </div>
+                    </label>
+                  </div>
+                </template>
+
+                <!-- Compact display (default 2026-08-05): auto-resolve theo chi nhánh đơn, chỉ show
+                     địa chỉ kho + nút "Đổi kho khác" (chỉ hiện khi có >1 lựa chọn). Ẩn dropdown mặc
+                     định để giảm rối thao tác — user thường không đổi kho khi tạo vận đơn. -->
+                <template v-if="shipPickBranchCurrent && !shipModal.showBranchPicker">
+                  <div class="rounded-lg border border-outline-variant bg-surface-container-low p-2.5" style="font-size:12px">
+                    <div class="flex items-start justify-between gap-2">
+                      <div>
+                        <div class="font-bold text-on-surface">[[ shipPickBranchCurrent.name ]]</div>
+                        <div class="text-on-surface-variant mt-0.5">
+                          <span class="material-symbols-outlined text-[14px] align-middle mr-1 opacity-70">location_on</span>[[ shipPickBranchCurrent.address_line || '(chưa có địa chỉ kho — vào tab Chi nhánh bổ sung)' ]]
+                        </div>
+                      </div>
+                      <button v-if="shipPickBranchOptions.length > 1" @click="shipModal.showBranchPicker = true" type="button"
+                        class="whitespace-nowrap text-label-sm text-primary font-bold hover:opacity-80 shrink-0">
+                        Đổi kho khác
+                      </button>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- Full picker: chỉ hiện khi chưa resolve được (thiếu chi nhánh mặc định) hoặc user
+                     đã bấm "Đổi kho khác". -->
+                <template v-else>
+                  <select v-model="shipModal.pickBranchId" @change="previewShipFee" class="ma-input">
+                    <option value="" disabled>— Chọn kho shipper đến lấy hàng —</option>
+                    <option v-for="b in shipPickBranchOptions" :key="b.branch_id" :value="b.branch_id">
+                      [[ b.name ]] · [[ b.address_line || 'chưa có địa chỉ kho' ]][[ b.is_default ? ' (Mặc định)' : '' ]]
+                    </option>
+                  </select>
+                  <div v-if="shipPickBranchCurrent" class="text-body-sm text-on-surface-variant" style="margin-top:6px;padding:6px 8px;background:var(--ma-subtle);border-radius:6px;font-size:12px">
+                    <span class="material-symbols-outlined text-[14px] align-middle mr-1 opacity-70">location_on</span>[[ shipPickBranchCurrent.address_line ]]
+                  </div>
+                  <div v-if="shipModal.pickBranchId && !shipPickBranchCurrent" class="text-body-sm text-error" style="margin-top:6px;font-size:12px">
+                    <span class="material-symbols-outlined text-[14px] align-middle">warning</span>
+                    Chi nhánh chưa cấu hình địa chỉ kho — vào tab <strong>Chi nhánh</strong> → Sửa để bổ sung Số nhà/Đường + SĐT kho + Tỉnh/Quận/Xã.
+                  </div>
+                  <div v-else-if="!shipModal.pickBranchId && !shipPickBranchOptions.length" class="text-body-sm text-amber-700" style="margin-top:6px;font-size:12px">
+                    <span class="material-symbols-outlined text-[14px] align-middle">warning</span>
+                    Chưa có chi nhánh nào cấu hình địa chỉ kho. Vào tab <strong>Chi nhánh</strong> → chỉnh 1 chi nhánh → mở section <em>"Kho lấy hàng"</em> → điền địa chỉ + SĐT kho.
+                  </div>
+                </template>
+
+                <template v-if="shipModal.carrier === 'GHTK' && (shipModal.ghtkPickSource || 'auto') === 'auto'">
+                  <div v-if="shipPickBranchCurrent && shipPickBranchCapableForCarrier" style="margin-top:8px;background:#f0fdf4;border-left:3px solid #10b981;padding:8px 10px;border-radius:4px;font-size:12px;">
+                    <span class="material-symbols-outlined text-[16px] align-middle mr-1" style="color:#10b981;">check_circle</span>
+                    Sẽ gửi mã kho GHTK từ chi nhánh <strong>[[ shipPickBranchCurrent.name ]]</strong> (auto-map).
+                  </div>
+                  <div v-else-if="shipPickBranchCurrent && !shipPickBranchCapableForCarrier" style="margin-top:8px;background:#fff7ed;border-left:3px solid #f59e0b;padding:8px 10px;border-radius:4px;font-size:12px;">
+                    <span class="material-symbols-outlined text-[16px] align-middle mr-1" style="color:#f59e0b;">link_off</span>
+                    Chi nhánh <strong>[[ shipPickBranchCurrent.name ]]</strong> chưa có <em>GHTK Pick Address ID</em> — chuyển sang tab <strong>"Chọn kho GHTK khác"</strong> hoặc bổ sung ID ở tab Chi nhánh.
+                  </div>
+                </template>
+
+                <template v-if="shipModal.carrier === 'GHTK' && shipModal.ghtkPickSource === 'manual'">
+                  <div class="ma-sect-label" style="margin-top:10px;">Kho GHTK <span class="ma-sect-req">*</span></div>
+                  <div v-if="shipModal.ghtkPickAddressesLoading" class="ma-sect-loading"><span class="material-symbols-outlined ma-spin text-[18px]">progress_activity</span>Đang tải kho từ GHTK…</div>
+                  <template v-else>
+                    <select v-model="shipModal.ghtkPickAddressId" @change="syncGhtkPickAddressFields(); previewShipFee()" class="ma-field-input">
+                      <option value="">— Chọn kho GHTK —</option>
+                      <option v-for="warehouse in shipModal.ghtkPickAddresses" :key="warehouse.pick_address_id" :value="warehouse.pick_address_id">[[ warehouse.pick_name || 'Kho GHTK' ]] — [[ warehouse.address ]]</option>
+                    </select>
+                    <div v-if="shipModal.ghtkPickAddressId" class="ma-field-row" style="margin-top:10px;">
+                      <div class="ma-field"><div class="ma-field-label">Tên kho/người gửi</div><input v-model="shipModal.ghtkPickName" type="text" class="ma-field-input"></div>
+                      <div class="ma-field"><div class="ma-field-label">SĐT người gửi</div><input v-model="shipModal.ghtkPickTel" type="text" class="ma-field-input"></div>
+                    </div>
+                    <div v-if="shipModal.ghtkPickAddressId" class="ma-field" style="margin-top:8px;"><div class="ma-field-label">Địa chỉ kho</div><input v-model="shipModal.ghtkPickAddress" type="text" class="ma-field-input"></div>
+                    <div v-if="shipModal.ghtkPickAddressId" class="ma-field-row" style="margin-top:8px;">
+                      <div class="ma-field"><div class="ma-field-label">Tỉnh/TP</div><select v-if="shipModal.ghtkProvinces.length" v-model="shipModal.ghtkPickProvince" @change="onGhtkPickProvinceChange" :disabled="shipModal.ghtkLocationLoading" class="ma-field-input"><option value="">Chọn Tỉnh/TP</option><option v-for="province in shipModal.ghtkProvinces" :key="province.id" :value="province.name">[[ province.name ]]</option></select><input v-else v-model="shipModal.ghtkPickProvince" type="text" placeholder="Không tải được danh mục — nhập thủ công" class="ma-field-input"></div>
+                      <div class="ma-field"><div class="ma-field-label">Quận/Huyện</div><select v-if="shipModal.ghtkDistricts.length" v-model="shipModal.ghtkPickDistrict" :disabled="shipModal.ghtkLocationLoading || !shipModal.ghtkPickProvince" class="ma-field-input"><option value="">Chọn Quận/Huyện</option><option v-for="district in shipModal.ghtkDistricts" :key="district.id" :value="district.name">[[ district.name ]]</option></select><input v-else v-model="shipModal.ghtkPickDistrict" type="text" placeholder="Chọn Tỉnh/TP hoặc nhập thủ công" class="ma-field-input"></div>
+                      <div class="ma-field"><div class="ma-field-label">Phường/Xã</div><input v-model="shipModal.ghtkPickWard" type="text" class="ma-field-input"></div>
+                    </div>
+                    <div v-if="shipModal.ghtkPickAddressId" class="text-body-sm text-on-surface-variant" style="margin-top:6px;font-size:12px;">Kho này chỉ áp cho vận đơn hiện tại · không thay đổi mã kho mặc định của chi nhánh.</div>
+                    <button @click="loadShipGhtkPickAddresses" type="button" class="ma-sect-note-btn" style="margin-top:8px;"><span class="material-symbols-outlined text-[16px]">refresh</span>Tải lại kho GHTK</button>
+                  </template>
+                </template>
+
+                <div v-if="shipPickBranchCurrent && shipModal.carrier && !shipPickBranchCapableForCarrier && shipModal.carrier !== 'GHTK'" class="text-body-sm text-amber-700" style="margin-top:6px;padding:6px 8px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:4px;font-size:12px;">
+                  <span class="material-symbols-outlined text-[14px] align-middle mr-1">link_off</span>
+                  Chi nhánh <strong>[[ shipPickBranchCurrent.name ]]</strong> chưa liên kết với <strong>[[ shipModal.carrier ]]</strong>. Vào tab <strong>Chi nhánh</strong> → Sửa chi nhánh → bổ sung mã kho của hãng ([[ shipModal.carrier === 'GHN' ? 'GHN Shop ID' : 'mã kho hãng' ]]) rồi thử lại.
+                </div>
+              </div>
+
+              
+              <div v-if="shipModalIsApi() && shipModal.carrier !== 'GOSHIP'" class="ma-sect">
+                <div class="ma-sect-fee">
+                  <div>
+                    <div class="text-body-sm text-on-surface-variant" style="font-size:12px;">Phí vận chuyển dự kiến</div>
+                    <div v-if="shipModal.feeLoading" class="text-body-sm text-on-surface-variant"><span class="material-symbols-outlined ma-spin text-[16px]">progress_activity</span> Đang tính…</div>
+                    <div v-else-if="shipModal.feeError" class="ma-sect-error">[[ shipModal.feeError ]]</div>
+                    <div v-else-if="shipModal.fee !== null" class="ma-sect-fee-amount font-mono">[[ formatMoney(shipModal.fee) ]]</div>
+                    <div v-else class="text-body-sm text-on-surface-variant">Bấm "Kiểm tra phí"</div>
+                  </div>
+                  <button @click="previewShipFee" type="button" :disabled="shipModal.feeLoading" class="ma-sect-note-btn">
+                    <span class="material-symbols-outlined text-[16px]">calculate</span>Kiểm tra phí
+                  </button>
+                </div>
+              </div>
+
+              
+              <template v-if="shipModalIsManual()">
+                <div class="ma-sect">
+                  <div v-if="shipModal.carrier === 'SELF'">
+                    <div class="ma-sect-label">Tên đơn vị / hình thức giao</div>
+                    <input v-model="shipModal.selfCarrierName" type="text" placeholder="VD: Tự giao, Grab, VNPost…" class="ma-field-input">
+                  </div>
+                  <div v-else class="ma-sect-note">
+                    Shopee Express không có API cho đơn ngoài sàn — nhập <strong>mã vận đơn</strong> tạo trên app Shopee/SPX vào đây.
+                  </div>
+                  <div class="ma-field-row" style="margin-top:8px;">
+                    <div class="ma-field">
+                      <div class="ma-field-label">Mã vận đơn (nếu có)</div>
+                      <input v-model="shipModal.manualTracking" type="text" class="ma-field-input">
+                    </div>
+                    <div class="ma-field">
+                      <div class="ma-field-label">Phí ship</div>
+                      <input v-model="shipModal.manualFee" type="number" min="0" class="ma-field-input">
+                    </div>
+                  </div>
+                </div>
+              </template>
+
+
+              <div class="ma-sect">
+                <div class="ma-sect-label">Chi tiết vận đơn</div>
+                <div class="ma-field-row">
+                  <div class="ma-field">
+                    <div class="ma-field-label">Tiền thu hộ (COD) <span class="text-body-sm text-on-surface-variant opacity-70" style="font-size:11px">— tự điền = số còn thiếu</span></div>
+                    <div class="ma-input-suffix">
+                      <input v-model.number="shipModal.codAmount" @change="previewShipFee" type="number" min="0" step="1000" placeholder="0" class="ma-field-input">
+                      <span class="ma-input-suffix-lbl">đ</span>
+                    </div>
+                  </div>
+                  <div class="ma-field">
+                    <div class="ma-field-label">Yêu cầu giao hàng</div>
+                    <select v-model="shipModal.requiredNote" class="ma-field-input">
+                      <option value="CHOTHUHANG">Cho xem hàng · cho thử</option>
+                      <option value="CHOXEMHANGKHONGTHU">Cho xem hàng · không cho thử</option>
+                      <option value="KHONGCHOXEMHANG">Không cho xem hàng</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="ma-field mt-2">
+                  <div class="ma-field-label">Ghi chú giao hàng <span class="text-body-sm text-on-surface-variant opacity-70" style="font-size:11px">— hiển thị cho tài xế</span></div>
+                  <input v-model="shipModal.deliveryNote" type="text" placeholder="vd: Gọi trước khi giao, giao giờ hành chính, nhà cuối hẻm bên phải…" class="ma-field-input" maxlength="200">
+                </div>
+              </div>
+
+
+              <div class="ma-sect">
+                <div class="ma-sect-label">Cân thực + kích thước gói <span class="ma-sect-req">*</span></div>
+                <div class="ma-field-row">
+                  <div class="ma-field">
+                    <div class="ma-field-label">Trọng lượng thực</div>
+                    <div class="ma-input-suffix">
+                      <input v-model="shipModal.packageWeight" @change="previewShipFee" type="number" min="0" step="10" placeholder="Tự tính theo sản phẩm" class="ma-field-input">
+                      <span class="ma-input-suffix-lbl">gram</span>
+                    </div>
+                  </div>
+                  <div class="ma-field">
+                    <div class="ma-field-label">Kích thước (D×R×C)</div>
+                    <div class="ma-input-suffix">
+                      <input v-model="shipModal.packageDims" @change="previewShipFee" type="text" placeholder="vd: 20x15x10" class="ma-field-input">
+                      <span class="ma-input-suffix-lbl">cm</span>
+                    </div>
+                  </div>
+                </div>
+                <label class="ma-check-line">
+                  <input type="checkbox" v-model="shipModal.packedConfirmed" class="ma-check-box">
+                  <span class="ma-check-text">Đã <strong>đóng gói &amp; cân hàng</strong> xong. Sau khi tạo vận đơn sẽ không sửa được địa chỉ/người nhận.</span>
+                  <span class="ma-badge ma-badge--neutral" style="padding:1px 6px;font-size:10px;">Bắt buộc</span>
+                </label>
+              </div>
+            </div>
+
+            
+            <div class="ma-modal-foot">
+              <button @click="closeShipModal" type="button" class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-label-md font-bold text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-on-surface">Huỷ</button>
+              <div class="ma-modal-foot-right">
+                <span v-if="shipModal.fee !== null || (shipModal.rateId && shipRatesSorted().find(r => r.rate_id === shipModal.rateId))" class="text-body-sm text-on-surface-variant" style="font-size:12px;">
+                  Phí ship
+                  <b class="font-mono" style="color:var(--ma-tp)">[[ formatMoney(shipModal.fee || (shipRatesSorted().find(r => r.rate_id === shipModal.rateId) || {}).total_fee || 0) ]]</b>
+                </span>
+                <button @click="submitCreateShipment" type="button"
+                  :disabled="!shipModal.carrier || !shipModal.packedConfirmed || !shipModal.pickBranchId || (shipModalIsApi() && !shipPickBranchCapableForCarrier && !(shipModal.carrier === 'GHTK' && shipModal.ghtkPickSource === 'manual' && shipModal.ghtkPickAddressId)) || (shipModal.carrier === 'GHTK' && shipModal.ghtkPickSource === 'manual' && !shipModal.ghtkPickAddressId) || !!shipModal.submitting"
+                  class="ma-od-btn ma-od-btn-primary">
+                  <span v-if="shipModal.submitting" class="material-symbols-outlined ma-spin text-[16px]">progress_activity</span>
+                  <span v-else class="material-symbols-outlined text-[16px]">send</span>
+                  [[ shipModal.submitting ? 'Đang tạo…' : 'Tạo vận đơn' ]]
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>

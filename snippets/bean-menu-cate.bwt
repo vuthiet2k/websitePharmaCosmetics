@@ -1,0 +1,67 @@
+{%if linklists[settings.header_nav_cate].links.size > 0 %}
+<div class="sudes-list-cate" data-section="header_nav_cate">
+	<script type="text/x-custom-template" data-template="header_nav_cate">
+		<ul class="sudes-main-cate">
+			{% for link in linklists[settings.header_nav_cate].links %}
+			{% capture icon_cate %}cate-icon-{{ forloop.index }}.png{% endcapture %}
+			{% if linklists[link.alias] %}
+			<li class="sudes-main-cate-has-child menu-item-count {%if link.active%}active{%endif%}">
+				<a {%if  linklists[link.alias].links.size > 0%}href="javascript:void(0)"{%else%}href="{{link.url}}"{%endif%} title="{{ link.title }}">
+					<img class="lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC" data-src="{{ icon_cate | asset_url }}" alt="{{ link.title }}" />
+					{{ link.title }}<i class="icon_mask"></i>
+			</a>
+				<i class="open_mnu down_icon"></i>
+				<ul class="menu-child sub-menu sudes-sub-mega-menu">
+					{% for childlink in linklists[link.alias].links %}
+					{% if linklists[childlink.alias] %} 
+					<li class="sudes-main-cate-has-child-2 clearfix">
+						<a class="image_thumb" href="{{ childlink.url }}" title="{{ childlink.title }}">
+						<div class="image">
+						<img  class="lazyload image1" src="{{ 'lazy.png' | asset_url}}"  data-src="{{ childlink.object.image.src | img_url: 'large'}}" alt="{{ childlink.title }}">
+											</div>
+						<span class="line-clamp line-clamp-2">{{ childlink.title }} </span> <i class="icon_mask"></i></a>
+						<i class="open_mnu down_icon"></i>
+						<ul class="menu-child menu-child-2 sub-menu clearfix">
+							{% for childlink2 in linklists[childlink.alias].links %}
+							<li>
+								<a href="{{ childlink2.url }}" title="{{ childlink2.title }}">{{ childlink2.title }}</a>
+			</li>
+							{% endfor %}
+			</ul>
+			</li>
+					{% else %}
+					<li class="sudes-main-cate-has-child-2">
+						<a class="image_thumb" href="{{ childlink.url }}" title="{{ childlink.title }}">
+						<div class="image">
+						<img  class="lazyload image1" src="{{ 'lazy.png' | asset_url}}"  data-src="{{ childlink.object.image.src | img_url: 'large'}}" alt="{{ childlink.title }}">
+											</div>
+						<span class="line-clamp line-clamp-2">{{ childlink.title }} </span></a>
+			</li>
+					{% endif %}
+					{% endfor %}
+					<li class="sudes-main-cate-has-child-2">
+						<a class="image_thumb" href="{{ link.url }}" title="XEM TẤT CẢ">
+						<div class="image allcol">
+						<img width="128" height="128" class="lazyload image1" src="{{ 'lazy.png' | asset_url}}"  data-src="{{ 'arrow-right.png' | asset_url}}" alt="Xem tất cả">
+											</div>
+						<span class="line-clamp line-clamp-2">XEM TẤT CẢ </span></a>
+			</li>
+			</ul>
+			</li>
+			{% else %}
+			<li class="sudes-main-cate-has-child menu-item-count {%if link.active%}active{%endif%}">
+				<a href="{{ link.url }}" title="{{ link.title }}">
+				{% if forloop.index > 15 %}
+				<img class="lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC" data-src="{{ 'cate-icon.png' | asset_url }}" alt="{{ link.title }}" />
+				{%else%}
+				<img class="lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC" data-src="{{ icon_cate | asset_url }}" alt="{{ link.title }}" />
+				{%endif%}{{ link.title }}</a>
+			</li>
+			{% endif %}
+			
+			{% endfor %}
+			
+			</ul>
+	</script>
+</div>
+{%endif%}

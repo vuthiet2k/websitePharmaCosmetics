@@ -1,0 +1,360 @@
+{% comment %} mops-admin-staff.js.bwt — Mixin domain "Nhân viên" (tab Staff) cho MOPS Admin.
+  Tách khỏi Assets/mops-admin.js.bwt (2026-07-16, theo mẫu mops-admin-audit.js.bwt). Script
+  TOP-LEVEL — đẩy mixin vào window.MopsAdminMixins TRƯỚC khi Assets/mops-admin.js.bwt đọc mảng
+  này. Gọi helper dùng chung qua window.MopsAdminCore. Load TRƯỚC Assets/mops-admin.js.bwt.
+  PERM_LABELS/ROLE_CHIP_COLOR/SENSITIVE_PERMISSIONS/_loadPermsOnce/_loadPermCatalogOnce chỉ được
+  dùng ở đây (đã grep xác nhận, không chỗ nào khác trong app dùng) nên chuyển hẳn theo domain,
+  không cần export qua MopsAdminCore. this.isOwner (computed core, gate UI theo role) vẫn dùng
+  bình thường qua this vì Vue mixins share chung 1 instance. {% endcomment %}
+(function() {
+  'use strict';
+
+  // Đối chiếu 1-1 với PERMISSION_CATALOG (docs/code.gs) — đây là fallback khi permCatalog server
+  // chưa tải xong, permLabel() ưu tiên đọc catalog thật trước (xem bên dưới). Review 2026-07-16:
+  // đã xoá 3 key không còn checkPermission() nào dùng trong code.gs (orders.cancel — huỷ đơn thật
+  // ra đi qua orders.edit; payments.confirm — xác nhận TT cũng qua orders.edit; sync.run — đã đổi
+  // tên thành products.sync), và bổ sung 3 quyền có thật nhưng bị thiếu nhãn (products.edit/
+  // customers.edit/branches.manage) — thiếu nhãn khiến chip quyền theo Role hiện ra key thô.
+  var PERM_LABELS = {
+    'orders.view': 'Xem đơn hàng', 'orders.create': 'Tạo đơn hàng', 'orders.edit': 'Sửa đơn hàng',
+    'payments.view': 'Xem thanh toán', 'staff.manage': 'Quản lý nhân viên',
+    'audit.view': 'Xem nhật ký', 'reports.view': 'Xem báo cáo',
+    'orders.sapo_push': 'Tạo đơn trên SAPO', 'orders.sapo_pull': 'Kéo đơn từ SAPO về', 'coupons.manage': 'Quản lý mã giảm giá',
+    'reports.finance.view': 'Xem tab Tài chính', 'expenses.manage': 'Quản lý Thu Chi',
+    'finance.view': 'Xem Sổ quỹ (Finance Core)', 'finance.create': 'Lập Phiếu thu/chi',
+    'finance.post': 'Ghi sổ (Post) chứng từ', 'finance.cancel': 'Huỷ/đảo chứng từ',
+    'finance.approve': 'Duyệt Phiếu chi', 'finance.admin': 'Quản lý CashAccounts/Danh mục',
+    'inventory.view': 'Xem Kho & NCC', 'inventory.manage': 'Quản lý NCC/Phiếu nhập',
+    'products.sync': 'Đồng bộ sản phẩm từ SAPO', 'products.create': 'Tạo sản phẩm mới (LOCAL)',
+    'products.edit': 'Sửa giá/tên/tồn kho sản phẩm', 'customers.edit': 'Sửa Nhóm khách/% chiết khấu mặc định',
+    'branches.manage': 'Quản lý chi nhánh',
+    'customers.view': 'Xem thông tin khách hàng', 'notifications.view': 'Xem lịch sử thông báo',
+    '*': 'Toàn quyền'
+  };
+  var ROLE_CHIP_COLOR = { owner: 'violet', admin: 'blue', manager: 'teal', accountant: 'amber', staff: 'gray' };
+  // Mirror docs/code.gs SENSITIVE_PERMISSIONS — chỉ dùng để disable checkbox phía UI (chặn
+  // TICK MỚI nếu caller không phải owner), server luôn tự kiểm tra lại, không tin client này.
+  var SENSITIVE_PERMISSIONS = ['staff.manage', 'finance.admin', 'finance.approve'];
+
+  /* ── Cache quyền theo role (tab Nhân viên) — tránh gọi lại GAS mỗi lần mở 1 dòng ── */
+  var _permsCache = null;
+  function _loadPermsOnce() {
+    if (_permsCache) return Promise.resolve(_permsCache);
+    return window.MopsAdminCore.gasGet({ action: 'list_role_permissions' })
+      .then(function(d) {
+        _permsCache = d.roles ? d : { roles: {} };
+        return _permsCache;
+      });
+  }
+
+  /* ── Cache danh mục quyền cá nhân (StaffPermissions, review 16) — cùng chủ đích _loadPermsOnce,
+     nhưng đây là danh mục ĐẦY ĐỦ (nhóm theo mục quản lý) để render multi-select checkbox. ── */
+  var _permCatalogCache = null;
+  function _loadPermCatalogOnce() {
+    if (_permCatalogCache) return Promise.resolve(_permCatalogCache);
+    return window.MopsAdminCore.gasGet({ action: 'list_permission_catalog' })
+      .then(function(d) {
+        _permCatalogCache = (d && d.success && d.catalog) ? d.catalog : [];
+        return _permCatalogCache;
+      });
+  }
+
+  window.MopsAdminRegisteredDomains = window.MopsAdminRegisteredDomains || [];
+  window.MopsAdminRegisteredDomains.push('staff');
+
+  window.MopsAdminMixins = window.MopsAdminMixins || [];
+  window.MopsAdminMixins.push({
+    data: function() {
+      return {
+        staffMgmt: {
+          all: [], loading: false, error: '',
+          search: '', filterRole: '', filterActive: '',
+          showAddForm: false, showResetForm: false,
+          newStaff: { name: '', username: '', password: '', role: 'staff', telegram: '', address: '', province: '', ward: '', permissions: [] },
+          resetTarget: null, resetPassword: '',
+          expandedPermsId: null, permsTarget: null, permsLoading: false, currentPerms: [], currentPermsIsOwner: false,
+          permCatalog: [], individualPerms: [], permsSaving: false,
+          // rolePermsCache — dùng để hiện "đã có qua Role" (baseline) khi tích quyền riêng LÚC TẠO
+          // mới, cùng cơ chế hasPermViaRole() đang dùng khi Sửa quyền — tránh admin tick 1 quyền
+          // role đã có sẵn (dữ liệu StaffPermissions rác, dù union logic vẫn đúng không lỗi).
+          rolePermsCache: { roles: {} },
+          showEditForm: false, editTarget: null, editForm: { name: '', role: '', telegram: '', notes: '' }, editSaving: false
+        }
+      };
+    },
+    computed: {
+      staffFiltered: function() {
+        var search = (this.staffMgmt.search || '').trim().toLowerCase();
+        var filterRole = this.staffMgmt.filterRole;
+        var filterActive = this.staffMgmt.filterActive;
+        return this.staffMgmt.all.filter(function(s) {
+          if (search && s.name.toLowerCase().indexOf(search) === -1 && s.username.toLowerCase().indexOf(search) === -1) return false;
+          if (filterRole && (s.role || '').toLowerCase() !== filterRole) return false;
+          if (filterActive === '1' && !s.active) return false;
+          if (filterActive === '0' && s.active)  return false;
+          return true;
+        });
+      },
+      staffEmptyMessage: function() {
+        if (this.staffMgmt.error) return this.staffMgmt.error;
+        if (!this.staffFiltered.length) {
+          return this.staffMgmt.all.length ? 'Không có kết quả phù hợp.' : 'Chưa có nhân viên nào.';
+        }
+        return '';
+      },
+      // Quyền baseline của Role đang chọn trong form Thêm nhân viên (đổi theo select Vai trò) —
+      // cùng nguồn rolePermsCache.roles, khác currentPerms (đó là baseline của 1 staff CÓ SẴN).
+      newStaffRolePerms: function() {
+        var cache = this.staffMgmt.rolePermsCache;
+        var roleKey = (this.staffMgmt.newStaff.role || '').toUpperCase();
+        return (cache && cache.roles && cache.roles[roleKey]) || [];
+      },
+      newStaffRoleIsOwnerLike: function() {
+        return (this.staffMgmt.newStaff.role || '').toLowerCase() === 'owner' || this.newStaffRolePerms.indexOf('*') !== -1;
+      }
+    },
+    methods: {
+      /* ── Nhân viên ── */
+      loadStaff: function() {
+        var self = this;
+        this.staffMgmt.loading = true;
+        this.staffMgmt.error = '';
+        window.MopsAdminCore.gasGet({ action: 'list_staffs' })
+          .then(function(d) {
+            self.staffMgmt.loading = false;
+            if (!d || !d.success) { self.staffMgmt.error = 'Không tải được danh sách nhân viên.'; return; }
+            self.staffMgmt.all = d.staffs || [];
+          })
+          .catch(function() { self.staffMgmt.loading = false; self.staffMgmt.error = 'Lỗi kết nối.'; });
+      },
+      roleColor: function(role) { return ROLE_CHIP_COLOR[(role || 'staff').toLowerCase()] || 'gray'; },
+      // Ưu tiên đọc nhãn từ permCatalog THẬT (server, cùng nguồn PERMISSION_CATALOG trong
+      // code.gs) — PERM_LABELS chỉ còn là fallback tĩnh cho lúc catalog chưa kịp tải, tránh drift
+      // như đã xảy ra (orders.cancel/payments.confirm/sync.run chết, products.edit/customers.edit/
+      // branches.manage bị thiếu nhãn — review 2026-07-16).
+      permLabel: function(p) {
+        if (p === '*') return 'Toàn quyền';
+        var catalog = this.staffMgmt.permCatalog || [];
+        for (var i = 0; i < catalog.length; i++) {
+          var perms = catalog[i].permissions || [];
+          for (var j = 0; j < perms.length; j++) {
+            if (perms[j].key === p) return perms[j].label;
+          }
+        }
+        return PERM_LABELS[p] || p;
+      },
+      isSelfStaff: function(s) {
+        return !!(this.staff && String(s.id) === String(this.staff.id));
+      },
+      canModifyStaff: function(s) {
+        var targetIsOwner = (s.role || '').toLowerCase() === 'owner';
+        return !targetIsOwner || this.isOwner;
+      },
+      canToggleStaff: function(s) {
+        return this.canModifyStaff(s) && !this.isSelfStaff(s);
+      },
+      // Mở form Thêm nhân viên — tải trước permCatalog (danh mục quyền) + rolePermsCache (baseline
+      // theo Role) để checkbox "Quyền riêng" chấm điểm đúng ngay khi mở, không phải đợi tick xong
+      // mới biết cái nào đã có sẵn qua Role (review 2026-07-16, theo yêu cầu: nhân viên mới phải
+      // tích chọn quyền được ngay lúc tạo, không bắt phải tạo xong rồi mở lại modal "Quyền").
+      openAddStaffForm: function() {
+        var self = this;
+        this.staffMgmt.showAddForm = true;
+        this.staffMgmt.showResetForm = false;
+        this.staffMgmt.showEditForm = false;
+        this.staffMgmt.newStaff.permissions = [];
+        Promise.all([_loadPermCatalogOnce(), _loadPermsOnce()]).then(function(results) {
+          self.staffMgmt.permCatalog = results[0] || [];
+          self.staffMgmt.rolePermsCache = results[1] || { roles: {} };
+        });
+      },
+      hasPermViaNewStaffRole: function(permKey) {
+        return this.newStaffRoleIsOwnerLike || this.newStaffRolePerms.indexOf(permKey) !== -1;
+      },
+      // isLockedList: mảng đang giữ các quyền đã tick (individualPerms khi Sửa, newStaff.permissions
+      // khi Tạo mới) — chỉ dùng để kiểm tra "quyền nhạy cảm này đã có sẵn CHƯA" trước khi khoá tick mới,
+      // không đổi ý nghĩa SENSITIVE_PERMISSIONS/isOwner giữa 2 luồng.
+      isPermLockedForCaller: function(permKey, isLockedList) {
+        if (this.isOwner) return false;
+        if (SENSITIVE_PERMISSIONS.indexOf(permKey) === -1) return false; // không nhạy cảm → không khoá
+        var list = isLockedList || this.staffMgmt.individualPerms;
+        return list.indexOf(permKey) === -1; // nhạy cảm & CHƯA có → khoá tick mới
+      },
+      toggleNewStaffPerm: function(permKey) {
+        var list = this.staffMgmt.newStaff.permissions;
+        var idx = list.indexOf(permKey);
+        if (idx === -1) {
+          if (this.isPermLockedForCaller(permKey, list)) { window.MopsAdminCore.showToast('Chỉ OWNER mới được cấp quyền "' + this.permLabel(permKey) + '" cho người khác', 'error'); return; }
+          list.push(permKey);
+        } else {
+          list.splice(idx, 1);
+        }
+      },
+      createStaff: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var ns = this.staffMgmt.newStaff;
+        var name = (ns.name || '').trim();
+        var username = (ns.username || '').trim();
+        var password = ns.password || '';
+        if (!name || !username || !password) { core.showToast('Vui lòng điền đầy đủ thông tin bắt buộc', 'error'); return; }
+        var perms = (ns.permissions || []).slice(); // chốt danh sách trước khi reset form
+        core.gasPost({
+          action: 'create_staff', name: name, username: username, password: password, role: ns.role,
+          telegram_chat_id: (ns.telegram || '').trim(), address: (ns.address || '').trim(),
+          province: ns.province || '', ward: ns.ward || ''
+        })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Tạo nhân viên thất bại');
+            var createdId = d.id;
+            // Quyền riêng đã tích khi tạo (nếu có) → gán ngay cho staff_id vừa tạo, không bắt admin
+            // phải mở lại modal "Quyền" sau khi tạo (đúng yêu cầu tích chọn quyền ngay lúc tạo mới).
+            var afterPerms = perms.length
+              ? core.gasPost({ action: 'set_staff_permissions', staff_id: createdId, permissions: perms })
+              : Promise.resolve({ success: true });
+            return afterPerms.then(function(permRes) {
+              if (perms.length && !permRes.success) {
+                core.showToast('Đã tạo nhân viên ' + name + ' nhưng gán quyền riêng thất bại: ' + (permRes.error || 'lỗi không rõ') + '. Vào "Quyền" để gán lại.', 'error');
+              } else {
+                core.showToast('Đã tạo nhân viên ' + name, 'success');
+              }
+              self.staffMgmt.showAddForm = false;
+              self.staffMgmt.newStaff = { name: '', username: '', password: '', role: 'staff', telegram: '', address: '', province: '', ward: '', permissions: [] };
+              self.loadStaff();
+            });
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      doToggleStaffActive: function(s) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        if (!confirm(s.active ? 'Vô hiệu hoá nhân viên này?' : 'Kích hoạt nhân viên này?')) return;
+        core.gasPost({ action: 'toggle_staff_active', staff_id: s.id, active: !s.active })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Thao tác thất bại');
+            core.showToast('Đã cập nhật trạng thái', 'success');
+            self.loadStaff();
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      showResetPassword: function(s) {
+        this.staffMgmt.resetTarget = s;
+        this.staffMgmt.resetPassword = '';
+        this.staffMgmt.showAddForm = false;
+        this.staffMgmt.showEditForm = false;
+        this.staffMgmt.showResetForm = true;
+      },
+      showEditStaff: function(s) {
+        this.staffMgmt.editTarget = s;
+        this.staffMgmt.editForm = {
+          name: s.name || '', role: s.role || 'staff', telegram: s.telegram_id || '', notes: s.notes || '',
+          address: s.address || '', province: s.province || '', ward: s.ward || ''
+        };
+        this.staffMgmt.showAddForm = false;
+        this.staffMgmt.showResetForm = false;
+        this.staffMgmt.showEditForm = true;
+        this.preloadWardsFor(this.staffMgmt.editForm.province); // helper dùng chung — vẫn ở core
+      },
+      editRoleOptions: function() {
+        var opts = [{ value: 'staff', label: 'Nhân viên' }, { value: 'accountant', label: 'Kế toán' }, { value: 'manager', label: 'Quản lý' }, { value: 'admin', label: 'Quản trị' }];
+        if (this.isOwner) opts.push({ value: 'owner', label: 'Owner' });
+        return opts;
+      },
+      saveEditStaff: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var s = this.staffMgmt.editTarget;
+        var f = this.staffMgmt.editForm;
+        if (!s) return;
+        var name = (f.name || '').trim();
+        if (!name) { core.showToast('Tên hiển thị không được để trống', 'error'); return; }
+        var payload = {
+          action: 'update_staff', staff_id: s.id, name: name, telegram_chat_id: (f.telegram || '').trim(), notes: (f.notes || '').trim(),
+          address: (f.address || '').trim(), province: f.province || '', ward: f.ward || ''
+        };
+        if (f.role && f.role !== s.role) payload.role = f.role;
+        this.staffMgmt.editSaving = true;
+        core.gasPost(payload)
+          .then(function(d) {
+            self.staffMgmt.editSaving = false;
+            if (!d.success) throw new Error(d.error || 'Sửa nhân viên thất bại');
+            core.showToast('Đã lưu thông tin ' + name, 'success');
+            self.staffMgmt.showEditForm = false;
+            self.loadStaff();
+          })
+          .catch(function(e) { self.staffMgmt.editSaving = false; core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      confirmResetPassword: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var s = this.staffMgmt.resetTarget;
+        var password = this.staffMgmt.resetPassword;
+        if (!s || !password) { core.showToast('Nhập mật khẩu mới trước', 'error'); return; }
+        core.gasPost({ action: 'reset_staff_password', staff_id: s.id, new_password: password })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Đặt lại thất bại');
+            core.showToast('Đã đặt lại mật khẩu', 'success');
+            self.staffMgmt.showResetForm = false;
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      toggleStaffPerms: function(s) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        if (this.staffMgmt.expandedPermsId === s.id) { this.staffMgmt.expandedPermsId = null; return; }
+        this.staffMgmt.expandedPermsId = s.id;
+        // Modal "Quyền" render ở top-level (ngoài v-for="s in staffFiltered"), không truy cập được
+        // biến lặp s — lưu lại cả object để template đọc s.role/s.name trong modal.
+        this.staffMgmt.permsTarget = s;
+        this.staffMgmt.permsLoading = true;
+        this.staffMgmt.currentPerms = [];
+        this.staffMgmt.currentPermsIsOwner = false;
+        this.staffMgmt.permCatalog = [];
+        this.staffMgmt.individualPerms = [];
+        Promise.all([
+          _loadPermsOnce(),
+          _loadPermCatalogOnce(),
+          core.gasGet({ action: 'get_staff_permissions', staff_id: s.id })
+        ])
+          .then(function(results) {
+            var cache = results[0], catalog = results[1], indivResp = results[2];
+            var roleKey = (s.role || '').toUpperCase();
+            var perms = (cache.roles && cache.roles[roleKey]) ? cache.roles[roleKey] : [];
+            self.staffMgmt.currentPermsIsOwner = roleKey === 'OWNER' || perms.indexOf('*') !== -1;
+            self.staffMgmt.currentPerms = perms;
+            self.staffMgmt.permCatalog = catalog || [];
+            self.staffMgmt.individualPerms = (indivResp && indivResp.success && indivResp.permissions) || [];
+            self.staffMgmt.permsLoading = false;
+          })
+          .catch(function() { self.staffMgmt.permsLoading = false; core.showToast('Không tải được dữ liệu quyền.', 'error'); });
+      },
+      // Đã có quyền này qua Role (baseline) chưa — checkbox vẫn hiện checked+disabled để admin
+      // hiểu rõ quyền tới từ đâu (Role vs riêng cá nhân), không cho tick/untick trùng lặp vô nghĩa.
+      hasPermViaRole: function(permKey) {
+        return this.staffMgmt.currentPermsIsOwner || this.staffMgmt.currentPerms.indexOf(permKey) !== -1;
+      },
+      toggleIndividualPerm: function(permKey) {
+        var list = this.staffMgmt.individualPerms;
+        var idx = list.indexOf(permKey);
+        if (idx === -1) {
+          if (this.isPermLockedForCaller(permKey)) { window.MopsAdminCore.showToast('Chỉ OWNER mới được cấp quyền "' + this.permLabel(permKey) + '" cho người khác', 'error'); return; }
+          list.push(permKey);
+        } else {
+          list.splice(idx, 1);
+        }
+      },
+      savePermissions: function(s) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.staffMgmt.permsSaving = true;
+        core.gasPost({ action: 'set_staff_permissions', staff_id: s.id, permissions: this.staffMgmt.individualPerms })
+          .then(function(d) {
+            self.staffMgmt.permsSaving = false;
+            if (!d.success) throw new Error(d.error || 'Lưu quyền thất bại');
+            core.showToast('Đã lưu quyền riêng cho ' + s.name, 'success');
+          })
+          .catch(function(e) { self.staffMgmt.permsSaving = false; core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      }
+    }
+  });
+})();

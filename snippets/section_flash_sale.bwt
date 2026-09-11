@@ -1,0 +1,271 @@
+<style>
+/* Flash Sale — edge-to-edge via section--brand */
+.section_flash_sale.pc-flashsale {
+  border-radius: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+/* Pharma clinical redesign (T-20) — flash-sale bar theo
+   Pharma_Cosmetics_Figma_Project/homepage.html "FLASH SALE BAR WITH LIVE COUNTDOWN".
+   var(--accent-flash-red) từ snippets/pharma_ui_kit.bwt (:root global). */
+.pc-flashsale {
+  background: #FEF2F2; /* red-50 */
+  border-top: 1px solid #FECACA; /* red-200 */
+  border-bottom: 1px solid #FECACA;
+}
+.pc-flashsale__header-inner { padding: 20px 0 12px; }
+.pc-flashsale__title { display: flex; align-items: center; gap: 10px; }
+.pc-flashsale__title a {
+  display: flex; align-items: center; gap: 10px;
+  color: var(--accent-flash-red, #DC2626);
+  font-family: 'Inter', sans-serif;
+  font-weight: 800; text-transform: uppercase; letter-spacing: -0.01em;
+  font-size: 1.1rem;
+}
+.pc-flashsale__title img { border-radius: 8px; background: var(--accent-flash-red, #DC2626); padding: 4px; }
+.pc-flashsale__countdown { display: flex; align-items: center; gap: 10px; }
+.pc-flashsale__countdown-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #57534e; }
+.pc-flashsale__countdown-timer {
+  background: var(--accent-flash-red, #DC2626); color: #fff; font-weight: 700;
+  font-size: 0.85rem; padding: 8px 14px; border-radius: 8px; font-family: monospace;
+}
+.pc-flashsale__viewall a, .pc-flashsale__viewmore a { color: var(--accent-flash-red, #DC2626) !important; font-weight: 700; }
+</style>
+{% assign count = collections[settings.home_flashsale_collection].products_count %}
+<section class="pc-section section--brand section_flash_sale pc-flashsale">
+	<div class="pc-flashsale__body {%if settings.home_flashsale_countdown_enable%}has-deal-time{%endif%}">
+		<div class="pc-flashsale__header">
+			<div class="container">
+				<div class="pc-flashsale__header-inner">
+					<h2 class="pc-flashsale__title">
+						<a href="{{settings.home_flashsale_collection}}" title="{{settings.home_flashsale_title}}">
+							<img width="32" height="32" alt="{{settings.home_flashsale_title}}" src="{{'flash_-1.png' | asset_url}}">
+							{{settings.home_flashsale_title}}
+						</a>
+					</h2>
+					{%if settings.home_flashsale_countdown_enable%}
+					<div class="pc-flashsale__countdown">
+						<div class="pc-flashsale__countdown-label">{{settings.home_flashsale_countdown_title}}</div>
+						<div class="pc-flashsale__countdown-timer" data-countdown="countdown" data-date="{{settings.home_flashsale_countdown_end}}" data-cycle-hours="{{settings.home_flashsale_countdown_cycle_hours | default: 0}}">
+						</div>
+					</div>
+					{%endif%}
+
+					{% if count > 0 %}
+					<div class="pc-flashsale__viewall sm-hidden">
+						<a href="{{settings.home_flashsale_collection}}" title="Xem tất cả" class="ssmore action">Xem tất cả
+							<svg height="64" viewBox="0 0 24 24" width="64" xmlns="http://www.w3.org/2000/svg" data-name="Layer 2"><path d="m22.707 11.293-7-7a1 1 0 0 0 -1.414 1.414l5.293 5.293h-17.586a1 1 0 0 0 0 2h17.586l-5.293 5.293a1 1 0 1 0 1.414 1.414l7-7a1 1 0 0 0 0-1.414z"/></svg></a>
+					</div>
+					{%endif%}
+				</div>
+			</div>
+		</div>
+		{% if count > 0 %}
+		<div class="container">
+			<div class="pc-flashsale__carousel swiper_sale swiper-container">
+				<div class="swiper-wrapper load-after" data-section="section_flash_sale">
+					{%assign product_html = ''%}
+					{% for i in (1..5) %}
+					<div class="col-xl-20 col-lg-3 col-md-4 col-sm-6 col-xs-6 swiper-slide item_null">
+						<div class="item_product_main">
+						</div>
+					</div>
+					{% endfor %}
+					{% for product in collections[settings.home_flashsale_collection].products limit: settings.home_flashsale_limit %}
+					{%capture product_block %}
+					<div class="swiper-slide">
+						<div class="item_product_main">
+							{% include 'product_grid_office_sale' %}
+						</div>
+					</div>
+					{%endcapture%}
+					{%assign product_html = product_html | append : product_block%}
+					{%assign checkcol = true%}
+					{% endfor %}
+					<script type="text/x-custom-template" data-template="section_flash_sale">
+							{{product_html}}
+					</script>
+				</div>
+				<div class="swiper-button-prev">
+					<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+				</div>
+				<div class="swiper-button-next">
+					<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+						<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+				</div>
+				<div class="pc-flashsale__viewmore clearfix">
+					<a href="{{settings.home_flashsale_collection}}" title="Xem tất cả" class="show-more btn btn-extent frame flexbtn">
+						Xem tất cả <svg height="64" viewBox="0 0 24 24" width="64" xmlns="http://www.w3.org/2000/svg" data-name="Layer 2"><path d="m22.707 11.293-7-7a1 1 0 0 0 -1.414 1.414l5.293 5.293h-17.586a1 1 0 0 0 0 2h17.586l-5.293 5.293a1 1 0 1 0 1.414 1.414l7-7a1 1 0 0 0 0-1.414z"/></svg>
+					</a>
+				</div>
+			</div>
+		</div>
+		{% else %}
+		<div class="alert alert-warning alert-dismissible show margin-bottom-0" role="alert">
+			<span>Danh mục đang cập nhật sản phẩm.</span>
+		</div>
+		{% endif %}
+		{%- if settings.promo_coupon_home_enable -%}
+		<div class="pc-flashsale__coupons">{% include 'coupon_products' %}</div>
+		{%- endif -%}
+	</div>
+</section>
+{%- assign count = collections[settings.home_flashsale_collection].products_count -%}
+{%- if count > 0 -%}
+<script>
+	$(document).ready(function ($) {
+		function runSwiperSale() {
+			var swiper_sale = null;
+			function initSwiperSale() {
+				swiper_sale = new Swiper('.swiper_sale', {
+					slidesPerView: 5,
+					spaceBetween: 20,
+					slidesPerGroup: 1,
+					navigation: {
+						nextEl: '.swiper_sale .swiper-button-next',
+						prevEl: '.swiper_sale .swiper-button-prev',
+					},
+					breakpoints: {
+						280: {
+							slidesPerView: 1.5,
+							spaceBetween: 14
+						},
+						480: {
+							slidesPerView: 2,
+							spaceBetween: 14
+						},
+						768: {
+							slidesPerView: 3,
+							spaceBetween: 20
+						},
+						993: {
+							slidesPerView: 4,
+							spaceBetween: 20
+						},
+						1025: {
+							slidesPerView: 5,
+							spaceBetween: 20
+						}
+					}
+				});
+			}
+			function destroySwiperSale() {
+				if (swiper_sale) {
+					swiper_sale.destroy(true, true);
+					swiper_sale = null;
+				}
+			}
+			function toggleSwiperSale() {
+				if ($(window).width() <= 0 && swiper_sale) {
+					destroySwiperSale();
+				} else if ($(window).width() > 0 && !swiper_sale) {
+					initSwiperSale();
+				}
+			}
+			toggleSwiperSale();
+			$(window).resize(toggleSwiperSale);
+		}
+		lazyBlockProduct('section_flash_sale','0px 0px -250px 0px',runSwiperSale);
+	});
+
+</script>
+{%- endif -%}
+{%- if settings.home_flashsale_countdown_enable -%}
+<script>
+	(function($){
+		"user strict";
+		$.fn.Dqdt_CountDown = function( options ) {
+			return this.each(function() {
+				new  $.Dqdt_CountDown( this, options );
+			});
+		}
+		$.Dqdt_CountDown = function( obj, options ){
+			this.options = $.extend({
+				autoStart			: true,
+				LeadingZero:true,
+				DisplayFormat:"<div><span>%%D%%</span> Days</div><div><span>%%H%%</span> Hours</div><div><span>%%M%%</span> Mins</div><div><span>%%S%%</span> Secs</div>",
+				FinishMessage:"Hết hạn",
+				CountActive:true,
+				TargetDate:null
+			}, options || {} );
+			if( this.options.TargetDate == null || this.options.TargetDate == '' ){
+				return ;
+			}
+			this.timer  = null;
+			this.element = obj;
+			this.CountStepper = -1;
+			this.CountStepper = Math.ceil(this.CountStepper);
+			this.SetTimeOutPeriod = (Math.abs(this.CountStepper)-1)*1000 + 990;
+			var dthen = new Date(this.options.TargetDate);
+			var dnow = new Date();
+			if( this.CountStepper > 0 ) {
+				ddiff = new Date(dnow-dthen);
+			}
+			else {
+				ddiff = new Date(dthen-dnow);
+			}
+			gsecs = Math.floor(ddiff.valueOf()/1000);
+			this.CountBack(gsecs, this);
+		};
+		$.Dqdt_CountDown.fn =  $.Dqdt_CountDown.prototype;
+		$.Dqdt_CountDown.fn.extend =  $.Dqdt_CountDown.extend = $.extend;
+		$.Dqdt_CountDown.fn.extend({
+			calculateDate:function( secs, num1, num2 ){
+				var s = ((Math.floor(secs/num1))%num2).toString();
+				if ( this.options.LeadingZero && s.length < 2) {
+					s = "0" + s;
+				}
+				return "<b>" + s + "</b>";
+			},
+			CountBack:function( secs, self ){
+				if (secs < 0) {
+					self.element.innerHTML = '<div class="lof-labelexpired"> '+self.options.FinishMessage+"</div>";
+					return;
+				}
+				clearInterval(self.timer);
+				DisplayStr = self.options.DisplayFormat.replace(/%%D%%/g, self.calculateDate( secs,86400,100000) );
+				DisplayStr = DisplayStr.replace(/%%H%%/g, self.calculateDate(secs,3600,24));
+				DisplayStr = DisplayStr.replace(/%%M%%/g, self.calculateDate(secs,60,60));
+				DisplayStr = DisplayStr.replace(/%%S%%/g, self.calculateDate(secs,1,60));
+				self.element.innerHTML = DisplayStr;
+				if (self.options.CountActive) {
+					self.timer = null;
+					self.timer =  setTimeout( function(){
+						self.CountBack((secs+self.CountStepper),self);
+					},( self.SetTimeOutPeriod ) );
+				}
+			}
+		});
+		$(document).ready(function(){
+			function pad2(n){ return (n < 10 ? '0' : '') + n; }
+			$('[data-countdown="countdown"]').each(function(index, el) {
+				var $this = $(this);
+				var $date = $this.data('date').split("-");
+				var anchor = new Date($date[0]+"/"+$date[1]+"/"+$date[2]+" "+$date[3]+":"+$date[4]+":"+$date[5]);
+				var cycleHours = parseFloat($this.data('cycle-hours')) || 0;
+				var target = anchor;
+				// Chu kỳ lặp lại: nếu đã qua mốc, nhảy tới mốc kế tiếp cách nhau cycleHours giờ — tránh hiện "Hết hạn"
+				if (cycleHours > 0 && !isNaN(anchor.getTime())) {
+					var now = new Date();
+					if (now.getTime() > anchor.getTime()) {
+						var cycleMs = cycleHours * 3600 * 1000;
+						var cycles = Math.ceil((now.getTime() - anchor.getTime()) / cycleMs);
+						target = new Date(anchor.getTime() + cycles * cycleMs);
+					}
+				}
+				var targetStr = pad2(target.getMonth()+1)+"/"+pad2(target.getDate())+"/"+target.getFullYear()+" "+pad2(target.getHours())+":"+pad2(target.getMinutes())+":"+pad2(target.getSeconds());
+				$this.Dqdt_CountDown({
+					TargetDate: targetStr,
+					DisplayFormat:"<div class=\"block-timer\"><p>%%D%%</p><span>Ngày</span></div><div class=\"block-timer\"><p>%%H%%</p><span>Giờ</span></div><div class=\"block-timer\"><p>%%M%%</p><span>Phút</span></div><div class=\"block-timer\"><p>%%S%%</p><span>Giây</span></div>",
+					FinishMessage: "Hết hạn"
+				});
+			});
+		});
+	})(jQuery);
+</script>
+{%- endif -%}

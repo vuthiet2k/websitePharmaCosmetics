@@ -1,0 +1,392 @@
+{% comment %} Order Tracking Page — MOPS V2 {% endcomment %}
+{{ 'page_order_tracking.scss.css' | asset_url | stylesheet_tag }}
+
+<main class="ot-page">
+  <div class="container">
+
+    <div class="ot-header">
+      <div class="ot-header__icon">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+          <circle cx="20" cy="20" r="20" fill="var(--mainColorLight, #eaf7ee)"/>
+          <path d="M12 20l6 6 10-12" stroke="var(--mainColor, #3cb371)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+      </div>
+      <h1 class="ot-header__title">Theo dõi đơn hàng</h1>
+      <p class="ot-header__sub">Nhập mã đơn và số điện thoại để xem trạng thái thanh toán</p>
+    </div>
+
+    {% comment %} ── Search form ── {% endcomment %}
+    <div class="ot-form-card" id="ot-form-card">
+      <form id="ot-search-form" autocomplete="off" novalidate>
+        <div class="ot-field">
+          <label class="ot-field__label" for="ot-order-id">Mã đơn hàng</label>
+          <input
+            class="ot-field__input"
+            type="text"
+            id="ot-order-id"
+            name="order_id"
+            placeholder="VD: ORD-20240101-0001"
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+          >
+        </div>
+        <div class="ot-field">
+          <label class="ot-field__label" for="ot-phone">Số điện thoại đặt hàng</label>
+          <input
+            class="ot-field__input"
+            type="tel"
+            id="ot-phone"
+            name="phone"
+            placeholder="0901 234 567"
+            autocomplete="off"
+            inputmode="numeric"
+          >
+        </div>
+        <div class="ot-error" id="ot-error" role="alert" style="display:none"></div>
+        <button type="submit" class="ot-btn-search" id="ot-search-btn">
+          <span class="ot-btn-search__text">Kiểm tra đơn hàng</span>
+          <span class="ot-btn-search__loading" style="display:none" aria-hidden="true">
+            <span class="ot-spinner"></span> Đang tải...
+          </span>
+        </button>
+      </form>
+    </div>
+
+    {% comment %} ── Result area ── {% endcomment %}
+    <div class="ot-result" id="ot-result" style="display:none" aria-live="polite">
+
+      {% comment %} Stepper {% endcomment %}
+      <div class="ot-stepper" id="ot-stepper" aria-label="Tiến trình đơn hàng">
+        <div class="ot-step" id="ot-step-1" role="listitem">
+          <div class="ot-step__dot"><span class="ot-step__num">1</span></div>
+          <div class="ot-step__label">Đặt đơn</div>
+        </div>
+        <div class="ot-step-line" id="ot-line-1"></div>
+        <div class="ot-step" id="ot-step-2" role="listitem">
+          <div class="ot-step__dot"><span class="ot-step__num">2</span></div>
+          <div class="ot-step__label">Chuyển khoản</div>
+        </div>
+        <div class="ot-step-line" id="ot-line-2"></div>
+        <div class="ot-step" id="ot-step-3" role="listitem">
+          <div class="ot-step__dot"><span class="ot-step__num">3</span></div>
+          <div class="ot-step__label">Xác nhận</div>
+        </div>
+        <div class="ot-step-line" id="ot-line-3"></div>
+        <div class="ot-step" id="ot-step-4" role="listitem">
+          <div class="ot-step__dot"><span class="ot-step__num">4</span></div>
+          <div class="ot-step__label">Hoàn thành</div>
+        </div>
+      </div>
+
+      {% comment %} Status card {% endcomment %}
+      <div class="ot-status-card" id="ot-status-card"></div>
+
+      {% comment %} QR payment card (PENDING / PAYMENT_REPORTED) {% endcomment %}
+      <div class="ot-qr-card" id="ot-qr-card" style="display:none"></div>
+
+      {% comment %} Order items card {% endcomment %}
+      <div class="ot-items-card" id="ot-items-card" style="display:none"></div>
+
+      {% comment %} Appointment card {% endcomment %}
+      <div class="ot-appt-card" id="ot-appt-card" style="display:none"></div>
+
+      <div class="ot-result-footer">
+        <button type="button" class="ot-btn-new" id="ot-btn-new">Tra cứu đơn khác</button>
+        <p class="ot-poll-status" id="ot-poll-status"></p>
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
+<script>
+(function() {
+  var GAS_URL   = {{ settings.mops_gas_url | json }};
+  var pollTimer = null;
+  var lastData  = null;
+
+  var formCard   = document.getElementById('ot-form-card');
+  var resultArea = document.getElementById('ot-result');
+  var form       = document.getElementById('ot-search-form');
+  var orderInput = document.getElementById('ot-order-id');
+  var phoneInput = document.getElementById('ot-phone');
+  var errorBox   = document.getElementById('ot-error');
+  var searchBtn  = document.getElementById('ot-search-btn');
+  var btnNew     = document.getElementById('ot-btn-new');
+  var pollStatus = document.getElementById('ot-poll-status');
+
+  // ── Pre-fill order ID from URL params ──────────────────────
+  (function prefillFromURL() {
+    try {
+      var qs       = window.location.search;
+      var match    = qs.match(/[?&]order_id=([^&]+)/);
+      if (match) orderInput.value = decodeURIComponent(match[1]).trim();
+    } catch(e) {}
+  })();
+
+  // ── Form submit ────────────────────────────────────────────
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    var orderId = orderInput.value.trim();
+    var phone   = phoneInput.value.replace(/\s/g, '').trim();
+    if (!orderId) { showError('Vui lòng nhập mã đơn hàng.'); phoneInput.focus(); return; }
+    if (!phone)   { showError('Vui lòng nhập số điện thoại.'); phoneInput.focus(); return; }
+    clearError();
+    doSearch(orderId, phone);
+  });
+
+  // ── New search ─────────────────────────────────────────────
+  btnNew.addEventListener('click', function() {
+    stopPoll();
+    resultArea.style.display = 'none';
+    formCard.style.display   = '';
+    orderInput.value = '';
+    phoneInput.value = '';
+    clearError();
+    searchBtn.querySelector('.ot-btn-search__text').style.display   = '';
+    searchBtn.querySelector('.ot-btn-search__loading').style.display = 'none';
+    searchBtn.disabled = false;
+    orderInput.focus();
+  });
+
+  // ── Search / fetch ─────────────────────────────────────────
+  function doSearch(orderId, phone) {
+    setLoading(true);
+    fetchOrder(orderId, phone, function(err, data) {
+      setLoading(false);
+      if (err) { showError(err); return; }
+      lastData = data;
+      renderResult(data);
+      formCard.style.display   = 'none';
+      resultArea.style.display = '';
+      // Start polling only for non-terminal states
+      if (data.status === 'PENDING' || data.status === 'PAYMENT_REPORTED') {
+        startPoll(orderId, phone);
+      }
+    });
+  }
+
+  function fetchOrder(orderId, phone, cb) {
+    if (!GAS_URL) { cb('Hệ thống chưa được cấu hình. Vui lòng liên hệ hỗ trợ.'); return; }
+    var url = GAS_URL + '?action=get_order'
+      + '&order_id=' + encodeURIComponent(orderId)
+      + '&phone='    + encodeURIComponent(phone);
+    fetch(url)
+      .then(function(r) { return r.json(); })
+      .then(function(json) {
+        // getOrder() trả về object PHẲNG qua _ok() (không bọc trong "data") — dùng
+        // thẳng json, trước đây đọc json.data luôn ra undefined khiến renderResult()
+        // vỡ ngay (d.status throw) với MỌI đơn, không riêng booking/deposit.
+        if (json.success) { cb(null, json); }
+        else { cb(json.error || 'Không tìm thấy đơn hàng. Vui lòng kiểm tra lại mã đơn và số điện thoại.'); }
+      })
+      .catch(function() { cb('Không kết nối được hệ thống. Vui lòng thử lại sau ít phút.'); });
+  }
+
+  // ── Polling ────────────────────────────────────────────────
+  function startPoll(orderId, phone) {
+    stopPoll();
+    var tick = 0;
+    pollTimer = setInterval(function() {
+      tick++;
+      pollStatus.textContent = 'Tự động cập nhật sau ' + (10 - (tick % 10)) + ' giây...';
+      if (tick % 10 !== 0) return;
+      fetchOrder(orderId, phone, function(err, data) {
+        if (err || !data) return;
+        if (data.status !== lastData.status) {
+          lastData = data;
+          renderResult(data);
+        }
+        if (data.status !== 'PENDING' && data.status !== 'PAYMENT_REPORTED') {
+          stopPoll();
+          pollStatus.textContent = '';
+        }
+      });
+    }, 1000);
+  }
+
+  function stopPoll() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    pollStatus.textContent = '';
+  }
+
+  // ── Render ─────────────────────────────────────────────────
+  function renderResult(d) {
+    renderStepper(d.status);
+    renderStatusCard(d);
+    renderQRCard(d);
+    renderItemsCard(d);
+    renderApptCard(d);
+  }
+
+  // Step states: 'done' | 'active' | ''
+  function renderStepper(status) {
+    var steps = { 1: '', 2: '', 3: '', 4: '' };
+    var lines = { 1: '', 2: '', 3: '' };
+    if (status === 'PENDING') {
+      steps[1] = 'done'; steps[2] = 'active';
+      lines[1] = '';
+    } else if (status === 'PAYMENT_REPORTED') {
+      steps[1] = 'done'; steps[2] = 'done'; steps[3] = 'active';
+      lines[1] = 'done';
+    } else if (status === 'PAID') {
+      steps[1] = 'done'; steps[2] = 'done'; steps[3] = 'done'; steps[4] = 'done';
+      lines[1] = 'done'; lines[2] = 'done'; lines[3] = 'done';
+    } else if (status === 'CANCELLED' || status === 'EXPIRED') {
+      steps[1] = 'done';
+    }
+    for (var s = 1; s <= 4; s++) {
+      var el = document.getElementById('ot-step-' + s);
+      el.className = 'ot-step' + (steps[s] ? ' ot-step--' + steps[s] : '');
+    }
+    for (var l = 1; l <= 3; l++) {
+      var ln = document.getElementById('ot-line-' + l);
+      ln.className = 'ot-step-line' + (lines[l] ? ' ot-step-line--done' : '');
+    }
+  }
+
+  var STATUS_MAP = {
+    'PENDING':           { label: 'Chờ thanh toán',  cls: 'warn', desc: 'Vui lòng chuyển khoản theo thông tin bên dưới.' },
+    'PAYMENT_REPORTED':  { label: 'Đang xác nhận',   cls: 'info', desc: 'Chúng tôi đã nhận ảnh thanh toán và đang xác nhận.' },
+    'PAID':              { label: 'Đã xác nhận',     cls: 'ok',   desc: 'Thanh toán đã được xác nhận thành công.' },
+    'CANCELLED':         { label: 'Đã huỷ',          cls: 'err',  desc: 'Đơn hàng này đã bị huỷ.' },
+    'EXPIRED':           { label: 'Hết hạn thanh toán', cls: 'err', desc: 'Đã quá hạn thanh toán. Vui lòng đặt đơn mới.' }
+  };
+
+  function renderStatusCard(d) {
+    var sm     = STATUS_MAP[d.status] || { label: d.status, cls: 'info', desc: '' };
+    var amount = d.pay_amount > 0 ? d.pay_amount : d.total_amount;
+    var html   = '<div class="ot-status-card__row">'
+      + '<div class="ot-status-card__left">'
+      + '<span class="ot-badge ot-badge--' + sm.cls + '">' + sm.label + '</span>'
+      + '<p class="ot-status-card__desc">' + sm.desc + '</p>'
+      + '</div>'
+      + '<div class="ot-status-card__right">'
+      + '<div class="ot-status-card__id">' + d.order_id + '</div>'
+      + (amount > 0 ? '<div class="ot-status-card__amount">' + formatMoney(amount) + '</div>' : '')
+      + '</div>'
+      + '</div>';
+    if (d.status === 'CANCELLED' || d.status === 'EXPIRED') {
+      html += '<div class="ot-status-card__action">'
+        + '<a href="/dieu-tri-chuyen-nghiep-1" class="ot-btn-secondary">Xem dịch vụ khác</a>'
+        + '</div>';
+    }
+    document.getElementById('ot-status-card').innerHTML = html;
+  }
+
+  function renderQRCard(d) {
+    var el = document.getElementById('ot-qr-card');
+    if (d.status !== 'PENDING' && d.status !== 'PAYMENT_REPORTED') {
+      el.style.display = 'none'; return;
+    }
+    el.style.display = '';
+    var amount  = d.pay_amount > 0 ? d.pay_amount : d.total_amount;
+    var expHtml = '';
+    if (d.expire_at) {
+      expHtml = '<p class="ot-qr-card__expire" id="ot-expire-label">Hết hạn: <strong id="ot-countdown">' + formatExpiry(d.expire_at) + '</strong></p>';
+      startCountdown(d.expire_at);
+    }
+    var qrHtml = '';
+    if (d.qr_url) {
+      qrHtml = '<div class="ot-qr-card__qr-wrap">'
+        + '<img class="ot-qr-card__qr-img" src="' + escHtml(d.qr_url) + '" alt="QR thanh toán" width="200" height="200">'
+        + '<p class="ot-qr-card__qr-hint">Quét mã bằng ứng dụng ngân hàng</p>'
+        + '</div>';
+    }
+    var noteHtml = d.status === 'PAYMENT_REPORTED'
+      ? '<div class="ot-notice ot-notice--info">Chúng tôi đã nhận thông tin thanh toán của bạn và đang xác nhận. Vui lòng đợi trong giây lát.</div>'
+      : '';
+    el.innerHTML = '<div class="ot-qr-card__header">'
+      + '<h2 class="ot-qr-card__title">Thông tin chuyển khoản</h2>'
+      + expHtml
+      + '</div>'
+      + qrHtml
+      + '<div class="ot-qr-card__info">'
+      + (d.transaction_ref ? '<div class="ot-qr-card__row"><span>Nội dung CK</span><strong>' + escHtml(d.transaction_ref) + '</strong></div>' : '')
+      + (amount > 0 ? '<div class="ot-qr-card__row"><span>Số tiền</span><strong class="ot-qr-card__amount">' + formatMoney(amount) + '</strong></div>' : '')
+      + '</div>'
+      + noteHtml;
+  }
+
+  function renderItemsCard(d) {
+    var el = document.getElementById('ot-items-card');
+    if (!d.items || d.items.length === 0) { el.style.display = 'none'; return; }
+    el.style.display = '';
+    var rows = d.items.map(function(it) {
+      return '<div class="ot-items-card__row">'
+        + '<span class="ot-items-card__name">' + escHtml(String(it.name || '')) + (it.qty > 1 ? ' &times;' + it.qty : '') + '</span>'
+        + '<span class="ot-items-card__price">' + formatMoney(it.lineTotal || it.price || 0) + '</span>'
+        + '</div>';
+    }).join('');
+    var total = d.total_amount > 0 ? '<div class="ot-items-card__total">'
+      + '<span>Tổng</span><strong>' + formatMoney(d.total_amount) + '</strong>'
+      + '</div>' : '';
+    el.innerHTML = '<h3 class="ot-items-card__title">Chi tiết đơn hàng</h3>'
+      + '<div class="ot-items-card__list">' + rows + '</div>'
+      + total;
+  }
+
+  function renderApptCard(d) {
+    var el = document.getElementById('ot-appt-card');
+    if (!d.appointment_date || d.appointment_date === '' || d.appointment_date === 'null') {
+      el.style.display = 'none'; return;
+    }
+    el.style.display = '';
+    el.innerHTML = '<h3 class="ot-appt-card__title">Thông tin lịch hẹn</h3>'
+      + '<div class="ot-appt-card__row">'
+      + '<span>Ngày hẹn</span><strong>' + escHtml(d.appointment_date) + '</strong>'
+      + '</div>'
+      + (d.appointment_time ? '<div class="ot-appt-card__row"><span>Giờ hẹn</span><strong>' + escHtml(d.appointment_time) + '</strong></div>' : '');
+  }
+
+  // ── Countdown ──────────────────────────────────────────────
+  var countdownTimer = null;
+  function startCountdown(expireAt) {
+    if (countdownTimer) clearInterval(countdownTimer);
+    function tick() {
+      var el = document.getElementById('ot-countdown');
+      if (!el) { clearInterval(countdownTimer); return; }
+      el.textContent = formatExpiry(expireAt);
+    }
+    tick();
+    countdownTimer = setInterval(tick, 1000);
+  }
+
+  function formatExpiry(expireAt) {
+    var exp  = new Date(expireAt);
+    var now  = new Date();
+    var diff = Math.floor((exp - now) / 1000);
+    if (isNaN(diff) || diff <= 0) return 'Đã hết hạn';
+    var h = Math.floor(diff / 3600);
+    var m = Math.floor((diff % 3600) / 60);
+    var s = diff % 60;
+    if (h > 0) return pad(h) + ':' + pad(m) + ':' + pad(s);
+    return pad(m) + ':' + pad(s);
+  }
+
+  // ── Helpers ────────────────────────────────────────────────
+  function formatMoney(n) {
+    return Number(n).toLocaleString('vi-VN') + ' ₫';
+  }
+  function pad(n) { return n < 10 ? '0' + n : String(n); }
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function setLoading(on) {
+    searchBtn.disabled = on;
+    searchBtn.querySelector('.ot-btn-search__text').style.display    = on ? 'none' : '';
+    searchBtn.querySelector('.ot-btn-search__loading').style.display = on ? '' : 'none';
+  }
+  function showError(msg) {
+    errorBox.textContent   = msg;
+    errorBox.style.display = '';
+  }
+  function clearError() {
+    errorBox.textContent   = '';
+    errorBox.style.display = 'none';
+  }
+
+})();
+</script>

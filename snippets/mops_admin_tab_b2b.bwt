@@ -1,0 +1,71 @@
+
+      <div id="tab-b2b" v-show="activeTab === 'b2b'" class="ma-tab-pane">
+        {%- comment -%}
+          REOPEN 2026-09-11 (ADR-007/T-81) — Đơn đăng ký đại lý B2B (MOD-04 xlsx). MST cơ quan
+          thuế + chữ ký số hợp đồng = BLOCKED_EXTERNAL (ADR-007), KHÔNG có nút "xác minh tự
+          động" — chỉ duyệt/từ chối thủ công sau khi đội ngũ kinh doanh tự xác minh ngoài hệ
+          thống. Mirror pattern approveOrder/pending_approval đã có ở tab Đơn hàng.
+        {%- endcomment -%}
+        <div class="ma-toolbar flex flex-wrap items-center gap-stack-md mb-stack-md p-4 bg-surface-bright border border-outline-variant rounded-xl">
+          <select v-model="b2bMgmt.statusFilter" class="bg-surface-container-lowest border border-outline-variant text-body-sm rounded-lg px-3 py-2">
+            <option value="">Tất cả trạng thái</option>
+            <option value="pending_review">Chờ duyệt</option>
+            <option value="approved">Đã duyệt</option>
+            <option value="rejected">Đã từ chối</option>
+          </select>
+          <span v-if="b2bPendingCount > 0" class="ma-badge ma-badge--warning">[[ b2bPendingCount ]] đơn chờ duyệt</span>
+          <button @click="loadB2BApplications" type="button" class="ma-btn-outline ml-auto">
+            <span class="material-symbols-outlined text-[16px] align-middle">refresh</span> Tải lại
+          </button>
+        </div>
+
+        <div v-if="b2bMgmt.loading" class="ma-table-skeleton" aria-label="Đang tải đơn B2B"><span></span><span></span><span></span><span></span></div>
+        <div v-else-if="b2bEmptyMessage" class="ma-empty-state">
+          <span class="material-symbols-outlined text-on-surface-variant text-[56px] opacity-[.35]">handshake</span>
+          <p class="ma-empty-hint">[[ b2bEmptyMessage ]]</p>
+          <button @click="loadB2BApplications" type="button" class="ma-btn-outline">Thử lại</button>
+        </div>
+        <div v-else class="ma-card">
+          <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+            <thead><tr class="ma-thead-row">
+              <th class="ma-th-lg">Công ty</th>
+              <th class="ma-th-lg">Liên hệ</th>
+              <th class="ma-th-lg">Loại hình</th>
+              <th class="ma-th-lg">Ngày gửi</th>
+              <th class="ma-th-lg">Trạng thái</th>
+              <th class="ma-th-lg">Thao tác</th>
+            </tr></thead>
+            <tbody class="ma-rows-divide">
+              <tr v-for="a in b2bFiltered" :key="a.application_id">
+                <td class="px-6 py-3">
+                  <div class="font-body-md font-bold">[[ a.company_name ]]</div>
+                  <div class="font-body-sm text-on-surface-variant">MST: [[ a.tax_code ]] &bull; [[ a.expected_volume || '—' ]]</div>
+                  <div v-if="a.address" class="font-body-sm text-on-surface-variant">[[ a.address ]]</div>
+                </td>
+                <td class="px-6 py-3 font-body-sm">
+                  <div>[[ a.contact_name ]]</div>
+                  <div class="text-on-surface-variant">[[ a.phone ]]<span v-if="a.email"> &bull; [[ a.email ]]</span></div>
+                </td>
+                <td class="px-6 py-3 font-body-sm">[[ a.business_type || '—' ]]</td>
+                <td class="px-6 py-3 font-body-sm">[[ formatDate(a.created_at) ]]</td>
+                <td class="px-6 py-3">
+                  <span :class="b2bStatusBadgeClass(a.status)">[[ b2bStatusLabel(a.status) ]]</span>
+                  <div v-if="a.reviewed_by" class="font-body-sm text-on-surface-variant mt-0.5">bởi [[ a.reviewed_by ]]</div>
+                </td>
+                <td class="px-6 py-3 whitespace-nowrap">
+                  <template v-if="a.status === 'pending_review'">
+                    <input type="text" v-model="b2bMgmt.reviewNoteDraft[a.application_id]" placeholder="Ghi chú (tuỳ chọn)"
+                      class="w-[140px] mb-1.5 block bg-surface-container-lowest border border-outline-variant text-body-sm rounded-lg px-2 py-1">
+                    <button @click="doApproveB2B(a)" :disabled="b2bMgmt.acting[a.application_id]" type="button"
+                      class="px-2.5 py-1 rounded-lg text-label-md text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 mr-1.5">Duyệt</button>
+                    <button @click="doRejectB2B(a)" :disabled="b2bMgmt.acting[a.application_id]" type="button"
+                      class="px-2.5 py-1 rounded-lg text-label-md text-white bg-red-600 hover:bg-red-700 disabled:opacity-50">Từ chối</button>
+                  </template>
+                  <span v-else class="font-body-sm text-on-surface-variant">[[ a.review_note || '—' ]]</span>
+                </td>
+              </tr>
+            </tbody>
+          </table></div>
+          <p class="text-body-sm text-on-surface-variant mt-3 px-4 pb-4">[[ b2bFiltered.length ]] / [[ b2bMgmt.all.length ]] đơn đăng ký</p>
+        </div>
+      </div>

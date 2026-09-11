@@ -1,0 +1,46 @@
+{% comment %} mops-admin-notifications.js.bwt — Mixin domain "Thông báo" (tab Notifications) cho
+  MOPS Admin. Tách khỏi Assets/mops-admin.js.bwt (2026-07-16, theo mẫu mops-admin-audit.js.bwt).
+  Script TOP-LEVEL — đẩy mixin vào window.MopsAdminMixins TRƯỚC khi Assets/mops-admin.js.bwt đọc
+  mảng này. Gọi helper dùng chung qua window.MopsAdminCore. Load TRƯỚC Assets/mops-admin.js.bwt.
+  statusMeta() (badge trạng thái chung) KHÔNG chuyển theo — đã dùng chung ở cả tab Đơn hàng, vẫn
+  ở core. {% endcomment %}
+(function() {
+  'use strict';
+
+  var NOTIF_LABELS = {
+    ORDER_CREATED: 'Đơn mới', PAYMENT_REPORTED: 'Báo CK', PAYMENT_CONFIRMED: 'Xác nhận TT',
+    ORDER_CANCELLED: 'Huỷ đơn', PAYMENT_EXPIRED: 'Hết hạn', PRODUCT_SYNC_FAILED: 'Lỗi SP'
+  };
+
+  window.MopsAdminRegisteredDomains = window.MopsAdminRegisteredDomains || [];
+  window.MopsAdminRegisteredDomains.push('notifications');
+
+  window.MopsAdminMixins = window.MopsAdminMixins || [];
+  window.MopsAdminMixins.push({
+    data: function() {
+      return {
+        notifications: { event: '', status: '', loading: false, error: '', list: [] }
+      };
+    },
+    methods: {
+      /* ── Thông báo ── */
+      loadNotifications: function() {
+        var self = this;
+        this.notifications.loading = true;
+        this.notifications.error = '';
+        var params = { action: 'list_notifications', limit: 200 };
+        if (this.notifications.event)  params.event  = this.notifications.event;
+        if (this.notifications.status) params.status = this.notifications.status;
+        window.MopsAdminCore.gasGet(params)
+          .then(function(d) {
+            self.notifications.loading = false;
+            if (!d || !d.success) { self.notifications.error = 'Không tải được thông báo.'; return; }
+            self.notifications.list = d.notifications || [];
+            if (!self.notifications.list.length) self.notifications.error = 'Không có thông báo nào.';
+          })
+          .catch(function() { self.notifications.loading = false; self.notifications.error = 'Lỗi kết nối.'; });
+      },
+      notifLabel: function(event) { return NOTIF_LABELS[event] || event; }
+    }
+  });
+})();

@@ -1,0 +1,247 @@
+{% include 'breadcrumb' %}
+<div class="blog_wrapper layout-blog" itemscope itemtype="https://schema.org/Blog">
+	<meta itemprop="name" content="{{ blog.name }}">
+	<meta itemprop="description" content="{{ blog.description | default: store.description }}">
+
+	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+		<div class="text-center max-w-3xl mx-auto mb-10">
+			<span class="text-xs font-bold text-clinical-700 uppercase tracking-widest">
+				📰 Tạp Chí &amp; Bản Tin Chuyên Khoa Da Liễu
+			</span>
+			<h1 class="btxt_blog text-3xl sm:text-4xl font-extrabold text-forest-900 font-heading mt-2">
+				{{ blog.name }}
+			</h1>
+		</div>
+
+		{%- comment -%}
+		  REOPEN 2026-09-11 — CMP: Clinical Topic Matrix (3 cột x 5 dòng = 15 ô), khớp gap phát
+		  hiện khi đối chiếu blog.html SECTION 2 (dòng 2238-2317 file gốc). 5 chuyên đề thật lặp
+		  lại theo đúng bố cục mockup (không phải 15 chuyên đề khác nhau — mockup gốc cũng lặp
+		  lại y hệt). Danh xưng giữ theo ĐÚNG title đã dùng trong data/doctors.js (nhất quán với
+		  15 cảnh báo RULE-P0-02 đang chờ người dùng quyết định ở T-95, không tạo thêm mâu thuẫn
+		  danh xưng mới cho cùng 1 người).
+		{%- endcomment -%}
+		{%- assign pc_topics = "Retinol Chống Lão Hoá|Chuyên đề cùng BS. Nguyễn Minh Anh||Điều Trị Nám Da|Chuyên đề cùng BS.CKI Hoàng Thu Trang||Vitamin C Làm Sáng Da|Chuyên đề cùng DS.CKI Đặng Thị Hương||Giải Mã SPF/PA|Chuyên đề cùng BS. Nguyễn Minh Anh||Routine Skincare Sáng|Chuyên đề cùng BS. Nguyễn Minh Anh" | split: "||" -%}
+		<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+			{%- for col in (1..3) -%}
+			<div>
+				{%- for t in pc_topics -%}
+				{%- assign parts = t | split: "|" -%}
+				<div class="pb-2 mb-2 border-b border-gray-100 last:border-0 last:mb-0 last:pb-0 cursor-pointer group">
+					<div class="text-[13px] font-bold text-text-main group-hover:text-brand-green">{{ parts[0] }}</div>
+					<div class="text-[11px] italic text-text-muted">{{ parts[1] }}</div>
+				</div>
+				{%- endfor -%}
+			</div>
+			{%- endfor -%}
+		</div>
+
+		{%- comment -%}
+		  REOPEN 2026-09-11 — CMP: Spotlight Clinical Case Study, khớp gap blog.html SECTION 5
+		  (dòng 2523-2550 file gốc). Danh xưng giữ nguyên (BS. CKII Nguyễn Minh Anh / ThS. BS
+		  Trần Phương Linh) — cùng lý do trên.
+		{%- endcomment -%}
+		<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 sm:p-7 mb-10 grid grid-cols-1 md:grid-cols-[280px_1fr] gap-7 items-center">
+			<div class="aspect-[4/3] rounded-lg flex items-center justify-center text-5xl" style="background: var(--color-peach-light,#F6E3D8); border:1px solid rgba(223,186,115,0.3);">🧪</div>
+			<div>
+				<span class="pc-cmp-verified-badge mb-2">🔬 PHÁC ĐỒ ĐIỀU TRỊ LÂM SÀNG &bull; DA LIỄU Y KHOA</span>
+				<h2 class="text-xl sm:text-2xl font-extrabold font-heading text-forest-900 mb-2.5">
+					Phác Đồ Đa Tầng Phục Hồi Màng Lipid &amp; Tái Sinh Da Nhiễm Corticoid Sau 6 Tuần
+				</h2>
+				<p class="text-[13px] text-text-body leading-relaxed mb-3.5">
+					Hướng dẫn chi tiết từ BS. CKII Nguyễn Minh Anh về cách ứng dụng hoạt chất B5, Ceramide NP và Peptides sinh học để làm dịu da đỏ rát, phục hồi màng mỡ sau tổn thương nặng.
+				</p>
+				<div class="flex items-center justify-between flex-wrap gap-3 pt-3 border-t border-gray-100 text-xs">
+					<span class="text-text-muted">ThS. BS Trần Phương Linh &bull; 15/08/2026 &bull; 8 phút đọc</span>
+					<a href="/blogs/all" class="pc-kit-btn-primary text-xs py-2 px-4">Đọc Tiếp Bài Viết →</a>
+				</div>
+			</div>
+		</div>
+
+		<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+			<div class="{% if settings.right_asideblog_enable %}lg:col-span-9{% else %}lg:col-span-12{% endif %} col-span-12">
+
+				{%- comment -%}
+				  Featured post hero (Figma blog.html) — bọc bên ngoài include có sẵn, không sửa
+				  cấu trúc bên trong blog_item_big.bwt (giữ nguyên lazyload/data binding của nó).
+				{%- endcomment -%}
+				<div class="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-gray-200 mb-10 pc-blog-featured">
+					{%for article in blogs[settings.section_blog_url].articles limit: 1 %}
+					{%include 'blog_item_big'%}
+					{%endfor%}
+				</div>
+
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+					{%for article in blogs[settings.section_blog_url].articles offset:1 limit:3 %}
+					<div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 pc-blog-small-item">
+						<div class="item_small_blog clearfix">
+							<div class="post-thumb">
+								<a class="image-blog scale_hover" href="{{ article.url }}" title="{{ article.title }}">
+									{% if article.image != null %}
+									<img width="800" height="500" class="img_blog lazyload rounded-xl" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC" data-src="{{ article.image.src | img_url}}"  alt="{{ article.title }}">
+									{%else%}
+									<img width="800" height="500" class="img_blog lazyload rounded-xl" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC" data-src="{{ 'no-image.jpg' | asset_url }}" alt="{{ article.title }}"/>
+									{% endif %}
+								</a>
+							</div>
+							<div class="contentright pt-3">
+								<h3 class="text-sm font-bold text-gray-900 leading-snug"><a title="{{ article.title }}" href="{{ article.url }}">{{ article.title }}</a></h3>
+								<p class="time-post text-[11px] text-gray-500 mt-1">
+									<span>{{ article.published_on | date:'dd/MM/yyy' }}</span>
+								</p>
+							</div>
+						</div>
+					</div>
+					{%endfor%}
+				</div>
+
+				{%- comment -%}
+				  REOPEN 2026-09-10 (ADR-007/T-74) — CMP-06 Multimedia Hub: 4 video tư vấn (bài viết
+				  gắn tag 'video', quy ước đã có sẵn — xem templates/article.bwt tag check) + audio
+				  placeholder (mock_policy#frontend_theme, minh hoạ định dạng podcast chuyên đề).
+				{%- endcomment -%}
+				{%- assign pc_video_count = 0 -%}
+				<div class="pc-cmp-multimedia-hub mb-10">
+					<div class="pc-cmp-multimedia-hub__videos">
+						{%- for article in blog.articles limit: 20 -%}
+						{%- if pc_video_count < 4 -%}
+						{%- for tag in article.tags -%}
+						{%- if tag contains 'video' and pc_video_count < 4 -%}
+						{%- assign pc_video_count = pc_video_count | plus: 1 -%}
+						<figure class="pc-cmp-multimedia-hub__video-card">
+							<video controls preload="none" poster="{{ article.image.src | default: 'no-image.jpg' | img_url: '640x360' }}">
+								<source src="{{ article.metafields.custom.video_url }}" type="video/mp4">
+							</video>
+							<figcaption>{{ article.title | truncate: 60 }}</figcaption>
+						</figure>
+						{%- endif -%}
+						{%- endfor -%}
+						{%- endif -%}
+						{%- endfor -%}
+						{%- if pc_video_count == 0 -%}
+						<div class="col-span-2 text-xs text-gray-500 p-4 border border-dashed rounded-xl">
+							Video tư vấn chuyên sâu đang được cập nhật — gắn tag "video" cho bài viết trong Sapo blog admin để hiển thị tại đây.
+						</div>
+						{%- endif -%}
+					</div>
+					<div class="pc-cmp-multimedia-hub__audio">
+						<div class="pc-cmp-sticky-toc__title" style="margin-bottom:14px;">Podcast Chuyên Đề Da Liễu</div>
+						<div class="pc-cmp-multimedia-hub__audio-track">
+							<div class="text-xs font-semibold text-forest-900">Tập 1 · Hàng rào lipid và cách phục hồi sau lột tẩy hoá học</div>
+							<audio controls preload="none" src="{{ 'podcast-ep1.mp3' | asset_url }}"></audio>
+						</div>
+						<div class="pc-cmp-multimedia-hub__audio-track">
+							<div class="text-xs font-semibold text-forest-900">Tập 2 · Chống nắng vật lý vs hoá học cho da nhạy cảm</div>
+							<audio controls preload="none" src="{{ 'podcast-ep2.mp3' | asset_url }}"></audio>
+						</div>
+					</div>
+				</div>
+
+				{%- comment -%}
+				  REOPEN 2026-09-11 — CMP: Consultation CTA Banner, khớp gap blog.html SECTION 8
+				  (dòng 2663-2679 file gốc). Đây là claim CHUNG (không gắn tên riêng) nên đổi
+				  "Bác Sĩ Da Liễu" → "Chuyên Gia Da Liễu" theo RULE-P0-02. Link thẳng tới trang
+				  đặt lịch tư vấn THẬT đã có (không gọi mops-gas riêng, tránh thêm 1 bề mặt backend
+				  mới ngoài phạm vi đã thống nhất với người dùng phiên này).
+				{%- endcomment -%}
+				<div class="rounded-2xl p-7 sm:p-9 mb-10 text-white" style="background: var(--color-brand-deep,#0F2318);">
+					<div class="flex items-center justify-between flex-wrap gap-8">
+						<div>
+							<h3 class="text-lg sm:text-xl font-bold font-heading mb-1.5">Nhận Tư Vấn Phác Đồ Trực Tiếp Từ Chuyên Gia Da Liễu</h3>
+							<p class="text-[13px]" style="color:rgba(255,255,255,0.75);">Gửi hình ảnh da và nhận phác đồ điều trị cá nhân hóa hoàn toàn miễn phí trong 24 giờ.</p>
+						</div>
+						<a href="/pages/dat-lich-tu-van" class="inline-flex items-center justify-center text-xs font-bold py-3 px-6 rounded-md flex-shrink-0" style="background:#10B981; white-space:nowrap;">
+							Đăng Ký Tư Vấn Ngay
+						</a>
+					</div>
+				</div>
+
+				{% paginate blog.articles by settings.blogs_number_perpage %}
+				<div class="box_blog_list">
+					<div class="row list-news grid grid-cols-1 md:grid-cols-3 gap-6">
+						{% if blog.articles_count > 0 %}
+						{% for article in blog.articles %}
+						<div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 space-y-1 pc-blog-card">
+							{%include 'blog_item_all'%}
+						</div>
+						{% endfor %}
+						<div class="pagi-div col-span-full flex justify-center mt-4">
+							{% if paginate.pages > 1 %}
+							{% include 'paginate-pages' %}
+							{% endif %}
+						</div>
+						{%else%}
+						<div class="col-span-full">
+							<div class="pc-kit-badge-gold text-sm !inline-flex" role="alert">
+								Danh mục này đang cập nhật bài viết
+							</div>
+						</div>
+						{%endif%}
+					</div>
+				</div>
+				{% endpaginate %}
+			</div>
+			{%if settings.right_asideblog_enable%}
+			<div class="lg:col-span-3 col-span-12">
+				{%- comment -%}
+				  REOPEN 2026-09-10 (ADR-007/T-74) — CMP-07 Taxonomy & Metadata filter bar. Dùng
+				  ĐÚNG settings.filter_tag1_list/filter_tag2_list đã cấu hình sẵn (configs/
+				  settings_data.json) thay vì bịa danh sách mới — tránh lặp lại lệch tag vocabulary
+				  đã ghi nhận ở known_gaps_m2_m3 (section_solutions.bwt vs filter_tag2_list thật).
+				{%- endcomment -%}
+				<div class="pc-cmp-taxonomy-filter mb-4">
+					<div class="pc-cmp-taxonomy-filter__title">Lọc theo chuyên khoa</div>
+					<div class="pc-cmp-taxonomy-filter__list">
+						{%- assign pc_tax_list = settings.filter_tag2_list | split: ';' -%}
+						{%- for item in pc_tax_list limit: 6 -%}
+						<label><input type="checkbox" disabled>{{ item | strip }}</label>
+						{%- endfor -%}
+					</div>
+					<div class="pc-cmp-taxonomy-filter__title">Tag phổ biến</div>
+					<div class="pc-cmp-taxonomy-filter__tags">
+						{%- assign pc_tag_cloud = settings.filter_tag1_list | split: ';' -%}
+						{%- for item in pc_tag_cloud limit: 8 -%}
+						<a href="/blogs/all/tagged/{{ item | strip | handleize }}" class="pc-cmp-taxonomy-filter__tag">#{{ item | strip }}</a>
+						{%- endfor -%}
+					</div>
+				</div>
+				<div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200">
+					{%include 'aside-blog'%}
+				</div>
+			</div>
+			{%endif%}
+		</div>
+	</div>
+</div>
+<div class="ab-module-article-mostview"></div>
+<style>
+	/* pc-blog-featured/pc-blog-small-item/pc-blog-card: chỉ bọc layout Tailwind bên ngoài các
+	   include blog_item_big/blog_item_all/aside-blog vốn đã có CSS riêng ở assets/page_blog.scss.bwt
+	   — không sửa markup bên trong các include đó (giữ nguyên lazyload/data binding gốc). */
+	.pc-blog-featured .blog-item-big,
+	.pc-blog-card .item-blog-all { margin-bottom: 0; }
+</style>
+<script>
+	var swipertopic = new Swiper('.swipertopic', {
+		slidesPerView: 5,
+		spaceBetween: 20,
+		breakpoints: {
+			300: {
+				slidesPerView: 1.4,
+				spaceBetween: 20
+			},
+			768: {
+				slidesPerView: 3.2,
+				spaceBetween: 20
+			},
+			1024: {
+				slidesPerView: 3.2,
+				spaceBetween: 20
+			},
+			1199: {
+				slidesPerView: 4.2,
+				spaceBetween: 20
+			}
+		}
+	});
+</script>

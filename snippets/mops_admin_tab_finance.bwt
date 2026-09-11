@@ -1,0 +1,401 @@
+      
+      <div id="tab-finance" v-show="activeTab === 'finance'" class="ma-tab-pane">
+        
+        <div class="hidden flex flex-wrap items-center gap-1 mb-3 border-b border-outline-variant">
+          <button v-for="p in financeCorePanels" :key="p.key" @click="setFinanceCorePanel(p.key)" type="button"
+            class="px-4 py-2.5 text-label-md font-bold border-b-2 -mb-px transition-all"
+            :class="financeCore.activePanel === p.key ? 'border-primary text-primary' : 'border-transparent text-on-surface-variant hover:text-on-surface'">
+            [[ p.label ]]
+          </button>
+        </div>
+
+        <div v-show="financeCore.activePanel === 'legacy'">
+        <button type="button" @click="mobileFilterOpen = true"
+          class="ma-filter-trigger items-center gap-2 w-full justify-center mb-stack-md p-3 bg-surface-bright border border-outline-variant rounded-xl text-body-sm font-bold text-on-surface active:scale-95 transition-all">
+          <span class="material-symbols-outlined text-[18px]">tune</span><span>Bộ lọc</span>
+          <span v-if="(finance.from?1:0)+(finance.to?1:0)" class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-label-sm font-bold bg-primary text-white">[[ (finance.from?1:0)+(finance.to?1:0) ]]</span>
+        </button>
+        <div class="ma-toolbar ma-toolbar--sheet flex flex-wrap items-center gap-stack-md mb-stack-lg p-4 bg-surface-bright border border-outline-variant rounded-xl" :class="{ 'is-filter-open': mobileFilterOpen }">
+          <div class="ma-filter-sheet-head"><span class="text-title-sm font-bold text-on-surface">Bộ lọc sổ quỹ</span><button type="button" @click="mobileFilterOpen = false" class="w-8 h-8 inline-flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">close</span></button></div>
+          <label class="ma-text-sub">Từ</label>
+          <input type="date" v-model="finance.from" class="ma-input-inline">
+          <label class="ma-text-sub">đến</label>
+          <input type="date" v-model="finance.to" class="ma-input-inline">
+          <div class="flex items-center rounded-lg border border-outline-variant overflow-hidden">
+            <button @click="finance.groupBy = 'day'" type="button" class="px-3 py-2 text-body-sm font-bold transition-all" :class="finance.groupBy === 'day' ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low'">Theo ngày</button>
+            <button @click="finance.groupBy = 'month'" type="button" class="px-3 py-2 text-body-sm font-bold transition-all" :class="finance.groupBy === 'month' ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low'">Theo tháng</button>
+          </div>
+          <button @click="loadFinance(); mobileFilterOpen = false" type="button" class="ma-btn-primary">Xem</button>
+        </div>
+        <div class="ma-filter-backdrop" v-if="mobileFilterOpen" @click="mobileFilterOpen = false"></div>
+
+        <div v-if="finance.loading" class="ma-table-skeleton" aria-label="Đang tải giao dịch"><span></span><span></span><span></span><span></span></div>
+        <div v-else-if="finance.error" class="flex flex-col items-center justify-center text-center py-16 px-6 border border-dashed border-outline-variant rounded-xl bg-surface-container-lowest mb-stack-lg">
+          <span class="material-symbols-outlined text-on-surface-variant text-[56px] opacity-[.35]">error_outline</span>
+          <p class="ma-empty-hint">[[ finance.error ]]</p>
+        </div>
+        <div v-else-if="finance.metrics">
+          
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-stack-md mb-stack-lg">
+            <div v-for="card in financeCards" :key="card.label" class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
+              <div class="text-label-md text-on-surface-variant uppercase tracking-wider">[[ card.label ]]</div>
+              <div class="text-headline-lg font-bold mt-2" :class="card.accent">[[ card.value ]]</div>
+            </div>
+          </div>
+
+          
+          <div v-if="financeGrossProfitCard" class="flex items-center justify-between gap-3 bg-surface-container-lowest border border-outline-variant rounded-xl p-4 mb-stack-lg">
+            <div class="flex items-center gap-2 text-label-md text-on-surface-variant uppercase tracking-wider">
+              <span class="material-symbols-outlined text-[18px]">insights</span>Lợi nhuận gộp (kỳ)
+            </div>
+            <div class="flex items-center gap-3">
+              <span v-if="financeGrossProfitCard.lowCoverage" class="text-label-sm text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                Chỉ [[ financeGrossProfitCard.coveragePct ]]% doanh thu có dữ liệu giá vốn
+              </span>
+              <span class="text-headline-lg font-bold" :class="financeGrossProfitCard.accent">[[ financeGrossProfitCard.value ]]</span>
+            </div>
+          </div>
+
+          
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm mb-stack-lg">
+            <div class="ma-td-border"><span class="ma-section-label">Chi theo danh mục</span></div>
+            <div v-if="financeExpenseByCategory.length" class="p-4 border-b border-outline-variant" :style="{ height: financeExpenseByCategoryChartHeight }">
+              <canvas id="financeExpenseByCategoryChart"></canvas>
+            </div>
+            <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+              <thead><tr class="ma-thead-row">
+                <th class="ma-th">Danh mục</th>
+                <th class="ma-th-right">Số tiền</th>
+                <th class="ma-th-right">Số giao dịch</th>
+              </tr></thead>
+              <tbody class="ma-rows-divide">
+                <tr v-for="c in financeExpenseByCategory" :key="c.category">
+                  <td class="ma-td-cell">[[ c.category ]]</td>
+                  <td class="px-6 py-2 text-right font-body-md font-bold text-red-600">[[ formatMoney(c.amount) ]]</td>
+                  <td class="px-6 py-2 text-right font-body-sm text-on-surface-variant">[[ c.count ]]</td>
+                </tr>
+                <tr v-if="!financeExpenseByCategory.length"><td colspan="3" class="ma-td-empty">Chưa có khoản chi nào trong khoảng lọc.</td></tr>
+              </tbody>
+            </table></div>
+          </div>
+        </div>
+
+        
+        <div class="ma-card">
+          <div class="px-6 py-3 border-b border-outline-variant flex items-center justify-between">
+            <span class="ma-section-label">Sổ quỹ (giao dịch thủ công)</span>
+          </div>
+          <div v-if="finance.listLoading" class="ma-component-skeleton ma-component-skeleton--table" aria-label="Đang tải sổ quỹ">
+            <span class="ma-component-skeleton__line"></span><span class="ma-component-skeleton__line"></span><span class="ma-component-skeleton__line"></span>
+          </div>
+          <div v-else-if="finance.listError || !finance.list.length" class="text-center py-10 px-6">
+            <p class="ma-text-sub">[[ finance.listError || 'Chưa có giao dịch thu chi thủ công nào trong khoảng lọc.' ]]</p>
+          </div>
+          
+          <div v-else class="overflow-x-auto"><table class="ma-table ma-data-table">
+            <thead><tr class="ma-thead-row">
+              <th class="ma-th">Ngày</th>
+              <th class="ma-th">Loại</th>
+              <th class="ma-th">Danh mục</th>
+              <th class="ma-th-right">Số tiền</th>
+              <th class="ma-th">Tài khoản</th>
+              <th class="ma-th">Thao tác</th>
+            </tr></thead>
+            <tbody class="ma-rows-divide">
+              <tr v-for="tx in finance.list" :key="tx.transaction_id" :class="{ 'opacity-50': tx.status === 'VOID' }">
+                <td class="px-6 py-2 font-body-sm text-on-surface-variant whitespace-nowrap">[[ formatDate(tx.created_at) ]]</td>
+                <td class="px-6 py-2">
+                  <span v-if="tx.type === 'INCOME'" class="ma-badge ma-badge--success">Thu</span>
+                  <span v-else class="ma-badge ma-badge--danger">Chi</span>
+                </td>
+                <td class="ma-td-cell">[[ tx.category ]]<br><small v-if="financeTxSecondaryLine(tx)" class="text-on-surface-variant">[[ financeTxSecondaryLine(tx) ]]</small></td>
+                <td class="ma-td-amount" :class="tx.type === 'INCOME' ? 'text-emerald-700' : 'text-red-600'">[[ tx.type === 'INCOME' ? '+' : '−' ]][[ formatMoney(tx.amount) ]]</td>
+                <td class="ma-td-cell">[[ tx.account || '—' ]]<br><small class="text-on-surface-variant">[[ tx.created_by ]]</small></td>
+                <td class="px-6 py-2 whitespace-nowrap">
+                  <span v-if="tx.status === 'VOID'" class="text-label-md text-on-surface-variant italic">Đã huỷ</span>
+                  <button v-else @click="doVoidCashTransaction(tx)" type="button" class="px-2.5 py-1 rounded-lg text-label-md text-white bg-red-600 hover:bg-red-700 transition-all">Huỷ</button>
+                </td>
+              </tr>
+            </tbody>
+          </table></div>
+        </div>
+
+        </div>
+
+        
+        <div v-show="financeCore.activePanel === 'accounts'">
+          <div class="flex justify-end mb-stack-md">
+            <button @click="financeCore.accounts.showAddForm = true; ensureBranchesLoaded()" type="button" class="ma-btn-primary">
+              <span class="material-symbols-outlined text-[18px]">add</span>Thêm tài khoản
+            </button>
+          </div>
+          <div v-if="financeCore.accounts.loading" class="ma-loading-center"><span class="material-symbols-outlined text-primary ma-spin text-[32px]">progress_activity</span></div>
+          <div v-else-if="financeCore.accounts.error" class="ma-empty-state">
+            <p class="text-body-md text-on-surface-variant">[[ financeCore.accounts.error ]]</p>
+            <button @click="loadFinanceCoreAccounts" type="button" class="ma-btn-outline">Thử lại</button>
+          </div>
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-stack-md">
+            <div v-for="a in financeCore.accounts.list" :key="a.account_id" class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
+              <div class="flex items-center justify-between mb-2">
+                <span class="ma-section-label">[[ a.name ]]</span>
+                <span :class="'ma-badge ma-badge--sm ' + (a.type === 'BANK' ? 'ma-badge--info' : a.type === 'EWALLET' ? 'ma-badge--accent' : 'ma-badge--neutral')">[[ a.type ]]</span>
+              </div>
+              <div class="text-headline-lg font-bold" :class="a.balance >= 0 ? 'text-on-surface' : 'text-red-600'">[[ formatMoney(a.balance) ]]</div>
+              <div class="text-body-sm text-on-surface-variant mt-1">[[ a.active ? 'Đang hoạt động' : 'Đã ẩn' ]][[ a.branch ? ' · ' + a.branch : '' ]]</div>
+            </div>
+            <div v-if="!financeCore.accounts.list.length" class="col-span-full text-center py-10 text-body-sm text-on-surface-variant">Chưa có tài khoản nào — bấm "Thêm tài khoản" ở trên.</div>
+          </div>
+        </div>
+
+        
+        <div v-show="financeCore.activePanel === 'receipts'">
+          <div class="flex flex-wrap items-center justify-between gap-stack-md mb-stack-lg">
+            <div class="flex items-center gap-2">
+              <select v-model="financeCore.receipts.filterStatus" @change="loadReceipts" class="ma-input-inline">
+                <option value="">Tất cả trạng thái</option>
+                <option value="Draft">Draft</option>
+                <option value="Posted">Posted</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+            <button @click="financeCore.receipts.showAddForm = true; loadFinanceCoreCategories('INCOME')" type="button" class="ma-btn-primary">
+              <span class="material-symbols-outlined text-[18px]">add</span>Lập phiếu thu
+            </button>
+          </div>
+
+          <div v-if="financeCore.receipts.loading" class="ma-table-skeleton" aria-label="Đang tải phiếu thu"><span></span><span></span><span></span><span></span></div>
+          <div v-else-if="financeCore.receipts.error || !financeCore.receipts.list.length" class="text-center py-10 px-6 border border-dashed border-outline-variant rounded-xl bg-surface-container-lowest">
+            <p class="ma-text-sub">[[ financeCore.receipts.error || 'Chưa có Phiếu Thu nào.' ]]</p>
+          </div>
+          <div v-else class="ma-card">
+            <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+              <thead><tr class="ma-thead-row">
+                <th class="ma-th">Mã phiếu</th>
+                <th class="ma-th">Nguồn</th>
+                <th class="ma-th-right">Số tiền</th>
+                <th class="ma-th">Trạng thái</th>
+                <th class="ma-th">Ngày tạo</th>
+                <th class="ma-th">Thao tác</th>
+              </tr></thead>
+              <tbody class="ma-rows-divide">
+                <tr v-for="r in financeCore.receipts.list" :key="r.receipt_id">
+                  <td class="px-6 py-2 font-body-md font-bold text-primary">[[ r.receipt_id ]]</td>
+                  <td class="ma-td-cell">[[ r.source_type === 'SALES_AUTO' ? 'Tự động (đơn hàng)' : 'Thủ công' ]]<br><small v-if="r.note" class="text-on-surface-variant">[[ r.note ]]</small></td>
+                  <td class="px-6 py-2 text-right font-body-md font-bold text-emerald-700">[[ formatMoney(r.total_amount) ]]</td>
+                  <td class="px-6 py-2"><span :class="financeDocStatusClass(r.status)">[[ r.status ]]</span></td>
+                  <td class="px-6 py-2 font-body-sm text-on-surface-variant whitespace-nowrap">[[ formatDate(r.created_at) ]]</td>
+                  <td class="px-6 py-2 whitespace-nowrap">
+                    <button v-if="r.status === 'Draft'" @click="postReceiptAction(r)" type="button" class="px-2.5 py-1 rounded-lg text-label-md text-white bg-emerald-600 hover:bg-emerald-700 transition-all mr-1">Post</button>
+                    <button v-if="r.status !== 'Cancelled'" @click="cancelReceiptAction(r)" type="button" class="px-2.5 py-1 rounded-lg text-label-md text-white bg-red-600 hover:bg-red-700 transition-all">Huỷ</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table></div>
+          </div>
+        </div>
+
+        
+        <div v-show="financeCore.activePanel === 'vouchers'">
+          <div class="flex flex-wrap items-center justify-between gap-stack-md mb-stack-lg">
+            <div class="flex items-center gap-2">
+              <select v-model="financeCore.vouchers.filterStatus" @change="loadVouchers" class="ma-input-inline">
+                <option value="">Tất cả trạng thái</option>
+                <option value="Draft">Draft</option>
+                <option value="PendingApproval">Chờ duyệt</option>
+                <option value="Approved">Đã duyệt</option>
+                <option value="Posted">Posted</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+            <button @click="financeCore.vouchers.showAddForm = true; loadFinanceCoreCategories('EXPENSE'); loadBills()" type="button" class="ma-btn-primary">
+              <span class="material-symbols-outlined text-[18px]">add</span>Lập phiếu chi
+            </button>
+          </div>
+
+          <div v-if="financeCore.vouchers.loading" class="ma-table-skeleton" aria-label="Đang tải phiếu chi"><span></span><span></span><span></span><span></span></div>
+          <div v-else-if="financeCore.vouchers.error || !financeCore.vouchers.list.length" class="text-center py-10 px-6 border border-dashed border-outline-variant rounded-xl bg-surface-container-lowest">
+            <p class="ma-text-sub">[[ financeCore.vouchers.error || 'Chưa có Phiếu Chi nào.' ]]</p>
+          </div>
+          <div v-else class="ma-card">
+            <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+              <thead><tr class="ma-thead-row">
+                <th class="ma-th">Mã phiếu</th>
+                <th class="ma-th">Diễn giải</th>
+                <th class="ma-th-right">Số tiền</th>
+                <th class="ma-th">Trạng thái</th>
+                <th class="ma-th">Người tạo / duyệt</th>
+                <th class="ma-th-right">Thao tác</th>
+              </tr></thead>
+              <tbody class="ma-rows-divide">
+                
+                <tr v-for="v in financeCore.vouchers.list" :key="v.voucher_id">
+                  <td class="px-6 py-2 font-body-md font-bold text-primary">[[ v.voucher_id ]]</td>
+                  <td class="ma-td-cell">[[ v.note || '—' ]]</td>
+                  <td class="px-6 py-2 text-right font-body-md font-bold text-red-600">[[ formatMoney(v.total_amount) ]]</td>
+                  <td class="px-6 py-2"><span :class="financeDocStatusClass(v.status)">[[ v.status ]]</span></td>
+                  <td class="ma-td-cell-muted">[[ v.created_by ]]<span v-if="v.approved_by"> → [[ v.approved_by ]]</span></td>
+                  <td class="px-6 py-2 text-right">
+                    <button @click="toggleVoucherMenu(v, $event)" type="button" class="ma-icon-btn" aria-label="Thao tác" title="Thao tác">
+                      <span class="material-symbols-outlined text-[18px]">more_vert</span>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table></div>
+          </div>
+
+          
+          <teleport to="body">
+            <div v-if="voucherMenuTarget" class="fixed inset-0 z-40" @click="financeCore.vouchers.menuOpenId = null"></div>
+            <div v-if="voucherMenuTarget" class="fixed z-50 w-56 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-2xl overflow-hidden py-1"
+              :style="{ top: financeCore.vouchers.menuPos.top + 'px', left: financeCore.vouchers.menuPos.left + 'px' }">
+              <template v-if="voucherMenuTarget.status === 'Draft'">
+                <button @click="financeCore.vouchers.menuOpenId = null; postVoucherAction(voucherMenuTarget)" type="button" class="w-full flex items-center gap-2 px-3 py-2 text-left text-body-sm hover:bg-surface-container-low transition-colors">
+                  <span class="material-symbols-outlined text-[18px] text-emerald-600">rocket_launch</span>Post ngay
+                </button>
+                <button @click="financeCore.vouchers.menuOpenId = null; submitVoucherAction(voucherMenuTarget)" type="button" class="w-full flex items-center gap-2 px-3 py-2 text-left text-body-sm hover:bg-surface-container-low transition-colors">
+                  <span class="material-symbols-outlined text-[18px] text-blue-600">send</span>Gửi duyệt
+                </button>
+              </template>
+              <template v-if="voucherMenuTarget.status === 'PendingApproval'">
+                <button @click="financeCore.vouchers.menuOpenId = null; approveVoucherAction(voucherMenuTarget, 'approve')" type="button" class="w-full flex items-center gap-2 px-3 py-2 text-left text-body-sm hover:bg-surface-container-low transition-colors">
+                  <span class="material-symbols-outlined text-[18px] text-emerald-600">check_circle</span>Duyệt
+                </button>
+                <button @click="financeCore.vouchers.menuOpenId = null; approveVoucherAction(voucherMenuTarget, 'reject')" type="button" class="w-full flex items-center gap-2 px-3 py-2 text-left text-body-sm hover:bg-surface-container-low transition-colors">
+                  <span class="material-symbols-outlined text-[18px] text-amber-600">cancel</span>Từ chối
+                </button>
+              </template>
+              <button v-if="voucherMenuTarget.status === 'Approved'" @click="financeCore.vouchers.menuOpenId = null; postVoucherAction(voucherMenuTarget)" type="button" class="w-full flex items-center gap-2 px-3 py-2 text-left text-body-sm hover:bg-surface-container-low transition-colors">
+                <span class="material-symbols-outlined text-[18px] text-emerald-600">rocket_launch</span>Post
+              </button>
+              <button v-if="voucherMenuTarget.status !== 'Cancelled'" @click="financeCore.vouchers.menuOpenId = null; cancelVoucherAction(voucherMenuTarget)" type="button" class="w-full flex items-center gap-2 px-3 py-2 text-left text-body-sm text-red-600 hover:bg-red-50 transition-colors border-t border-outline-variant mt-1">
+                <span class="material-symbols-outlined text-[18px]">close</span>Huỷ
+              </button>
+            </div>
+          </teleport>
+
+        </div>
+
+        
+        <div v-show="financeCore.activePanel === 'transfers'">
+          <div class="flex flex-wrap items-center justify-between gap-stack-md mb-stack-lg">
+            <select v-model="financeCore.transfers.filterStatus" @change="loadTransfers" class="ma-input-inline">
+              <option value="">Tất cả trạng thái</option>
+              <option value="Draft">Draft</option>
+              <option value="Posted">Posted</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+            <button @click="financeCore.transfers.showAddForm = true" type="button" class="ma-btn-primary">
+              <span class="material-symbols-outlined text-[18px]">add</span>Chuyển quỹ
+            </button>
+          </div>
+
+          <div v-if="financeCore.transfers.loading" class="ma-table-skeleton" aria-label="Đang tải chuyển quỹ"><span></span><span></span><span></span><span></span></div>
+          <div v-else-if="financeCore.transfers.error || !financeCore.transfers.list.length" class="text-center py-10 px-6 border border-dashed border-outline-variant rounded-xl bg-surface-container-lowest">
+            <p class="ma-text-sub">[[ financeCore.transfers.error || 'Chưa có Chuyển quỹ nào.' ]]</p>
+          </div>
+          <div v-else class="ma-card">
+            <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+              <thead><tr class="ma-thead-row">
+                <th class="ma-th">Mã</th>
+                <th class="ma-th">Từ</th>
+                <th class="ma-th">Đến</th>
+                <th class="ma-th-right">Số tiền</th>
+                <th class="ma-th">Trạng thái</th>
+                <th class="ma-th">Thao tác</th>
+              </tr></thead>
+              <tbody class="ma-rows-divide">
+                <tr v-for="t in financeCore.transfers.list" :key="t.transfer_id">
+                  <td class="px-6 py-2 font-body-md font-bold text-primary">[[ t.transfer_id ]]</td>
+                  <td class="ma-td-cell">[[ accountName(t.from_account_id) ]]</td>
+                  <td class="ma-td-cell">[[ accountName(t.to_account_id) ]]</td>
+                  <td class="ma-td-amount">[[ formatMoney(t.amount) ]]</td>
+                  <td class="px-6 py-2"><span :class="financeDocStatusClass(t.status)">[[ t.status ]]</span></td>
+                  <td class="px-6 py-2 whitespace-nowrap">
+                    <button v-if="t.status === 'Draft'" @click="postTransferAction(t)" type="button" class="px-2.5 py-1 rounded-lg text-label-md text-white bg-emerald-600 hover:bg-emerald-700 transition-all mr-1">Post</button>
+                    <button v-if="t.status !== 'Cancelled'" @click="cancelTransferAction(t)" type="button" class="px-2.5 py-1 rounded-lg text-label-md text-white bg-red-600 hover:bg-red-700 transition-all">Huỷ</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table></div>
+          </div>
+
+        </div>
+
+        
+        <div v-show="financeCore.activePanel === 'adjustments'">
+          <div class="flex flex-wrap items-center justify-between gap-stack-md mb-stack-lg">
+            <select v-model="financeCore.adjustments.filterStatus" @change="loadAdjustments" class="ma-input-inline">
+              <option value="">Tất cả trạng thái</option>
+              <option value="Draft">Draft</option>
+              <option value="PendingApproval">Chờ duyệt</option>
+              <option value="Approved">Đã duyệt</option>
+              <option value="Posted">Posted</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+            <button @click="financeCore.adjustments.showAddForm = true" type="button" class="ma-btn-primary">
+              <span class="material-symbols-outlined text-[18px]">add</span>Điều chỉnh quỹ
+            </button>
+          </div>
+
+          <div v-if="financeCore.adjustments.loading" class="ma-table-skeleton" aria-label="Đang tải điều chỉnh quỹ"><span></span><span></span><span></span><span></span></div>
+          <div v-else-if="financeCore.adjustments.error || !financeCore.adjustments.list.length" class="text-center py-10 px-6 border border-dashed border-outline-variant rounded-xl bg-surface-container-lowest">
+            <p class="ma-text-sub">[[ financeCore.adjustments.error || 'Chưa có Điều chỉnh quỹ nào.' ]]</p>
+          </div>
+          <div v-else class="ma-card">
+            <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+              <thead><tr class="ma-thead-row">
+                <th class="ma-th">Mã</th>
+                <th class="ma-th">Tài khoản</th>
+                <th class="ma-th-right">Số tiền</th>
+                <th class="ma-th">Lý do</th>
+                <th class="ma-th">Trạng thái</th>
+                <th class="ma-th-right">Thao tác</th>
+              </tr></thead>
+              <tbody class="ma-rows-divide">
+                
+                <tr v-for="a in financeCore.adjustments.list" :key="a.adjustment_id">
+                  <td class="px-6 py-2 font-body-md font-bold text-primary">[[ a.adjustment_id ]]</td>
+                  <td class="ma-td-cell">[[ accountName(a.account_id) ]]</td>
+                  <td class="px-6 py-2 text-right">
+                    <span :class="'ma-badge ' + (a.direction === 'INCREASE' ? 'ma-badge--success' : 'ma-badge--danger')">[[ a.direction === 'INCREASE' ? 'Tăng' : 'Giảm' ]]</span>
+                    <div class="font-body-md font-bold" :class="a.direction === 'INCREASE' ? 'text-emerald-700' : 'text-red-600'">[[ a.direction === 'INCREASE' ? '+' : '−' ]][[ formatMoney(a.amount) ]]</div>
+                  </td>
+                  <td class="ma-td-cell-muted">[[ a.reason ]]</td>
+                  <td class="px-6 py-2"><span :class="financeDocStatusClass(a.status)">[[ a.status ]]</span></td>
+                  <td class="px-6 py-2 text-right">
+                    <button @click="toggleAdjustmentMenu(a, $event)" type="button" class="ma-icon-btn" aria-label="Thao tác" title="Thao tác">
+                      <span class="material-symbols-outlined text-[18px]">more_vert</span>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table></div>
+          </div>
+
+          <teleport to="body">
+            <div v-if="adjustmentMenuTarget" class="fixed inset-0 z-40" @click="financeCore.adjustments.menuOpenId = null"></div>
+            <div v-if="adjustmentMenuTarget" class="fixed z-50 w-56 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-2xl overflow-hidden py-1"
+              :style="{ top: financeCore.adjustments.menuPos.top + 'px', left: financeCore.adjustments.menuPos.left + 'px' }">
+              <button v-if="adjustmentMenuTarget.status === 'Draft'" @click="financeCore.adjustments.menuOpenId = null; submitAdjustmentAction(adjustmentMenuTarget)" type="button" class="w-full flex items-center gap-2 px-3 py-2 text-left text-body-sm hover:bg-surface-container-low transition-colors">
+                <span class="material-symbols-outlined text-[18px] text-blue-600">send</span>Gửi duyệt
+              </button>
+              <template v-if="adjustmentMenuTarget.status === 'PendingApproval'">
+                <button @click="financeCore.adjustments.menuOpenId = null; approveAdjustmentAction(adjustmentMenuTarget, 'approve')" type="button" class="w-full flex items-center gap-2 px-3 py-2 text-left text-body-sm hover:bg-surface-container-low transition-colors">
+                  <span class="material-symbols-outlined text-[18px] text-emerald-600">check_circle</span>Duyệt
+                </button>
+                <button @click="financeCore.adjustments.menuOpenId = null; approveAdjustmentAction(adjustmentMenuTarget, 'reject')" type="button" class="w-full flex items-center gap-2 px-3 py-2 text-left text-body-sm hover:bg-surface-container-low transition-colors">
+                  <span class="material-symbols-outlined text-[18px] text-amber-600">cancel</span>Từ chối
+                </button>
+              </template>
+              <button v-if="adjustmentMenuTarget.status === 'Approved'" @click="financeCore.adjustments.menuOpenId = null; postAdjustmentAction(adjustmentMenuTarget)" type="button" class="w-full flex items-center gap-2 px-3 py-2 text-left text-body-sm hover:bg-surface-container-low transition-colors">
+                <span class="material-symbols-outlined text-[18px] text-emerald-600">rocket_launch</span>Post
+              </button>
+              <button v-if="adjustmentMenuTarget.status !== 'Cancelled'" @click="financeCore.adjustments.menuOpenId = null; cancelAdjustmentAction(adjustmentMenuTarget)" type="button" class="w-full flex items-center gap-2 px-3 py-2 text-left text-body-sm text-red-600 hover:bg-red-50 transition-colors border-t border-outline-variant mt-1">
+                <span class="material-symbols-outlined text-[18px]">close</span>Huỷ
+              </button>
+            </div>
+          </teleport>
+
+        </div>
+      </div>

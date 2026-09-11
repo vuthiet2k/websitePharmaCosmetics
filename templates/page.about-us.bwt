@@ -1,0 +1,315 @@
+{%- comment -%}
+  page.about-us.bwt (T-21) — nội dung trang "Về chúng tôi", đối chiếu
+  Pharma_Cosmetics_Figma_Project/about-us.html. Header/Footer/topbar đã có sẵn ở
+  layouts/theme.bwt ({% include 'header' %} / {% include 'footer' %} quanh
+  {{ content_for_layout }}) — file này chỉ chứa nội dung <main>.
+
+  LƯU Ý: configs/settings_schema.json (mục "── HERO ──" .. "── LIÊN HỆ ──", các field
+  "about_*") đã được author sẵn ĐẦY ĐỦ cho đúng nội dung trang này, với 1 dòng ghi chú
+  "Cấu hình nội dung trang Về chúng tôi (template: page.about)". Tên field trong
+  configs/settings_data.json (about_hero_title = "10 năm đồng hành...", about_stat_*,
+  about_story_*, about_mission_*, about_pillar_*, about_method_*/about_step_*,
+  about_team_*/about_expert_1..4, about_lab_*, about_ing_*, about_cta_*, about_contact_*)
+  khớp gần như 1:1 với about-us.html — nên toàn bộ nội dung dưới đây BIND vào settings,
+  không hard-code, để khớp với dữ liệu đã chuẩn bị sẵn.
+{%- endcomment -%}
+
+<section class="relative overflow-hidden py-16 md:py-20 border-b border-gray-100
+  {% if settings.about_hero_bg_img != blank %}bg-forest-900{% else %}bg-gradient-to-b from-emerald-50 to-white{% endif %}">
+  {%- if settings.about_hero_bg_img != blank -%}
+  <img src="{{ settings.about_hero_bg_img | img_url: 'grande' }}" alt="" class="absolute inset-0 w-full h-full object-cover opacity-30">
+  <div class="absolute inset-0 bg-gradient-to-t from-forest-900 via-forest-900/70 to-transparent"></div>
+  {%- endif -%}
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <div class="max-w-3xl">
+      {%- if settings.about_hero_badge != blank -%}
+      <div class="inline-block px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-semibold mb-4">
+        🌿 {{ settings.about_hero_badge }}
+      </div>
+      {%- endif -%}
+      <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight font-heading mb-6 {% if settings.about_hero_bg_img != blank %}text-white{% else %}text-forest-900{% endif %}">
+        {{ settings.about_hero_title | default: '10 năm đồng hành — Da khoẻ từ gốc' }}
+      </h1>
+      <p class="text-base sm:text-lg leading-relaxed mb-6 {% if settings.about_hero_bg_img != blank %}text-emerald-100{% else %}text-gray-600{% endif %}">
+        {{ settings.about_hero_desc | default: '400+ thương hiệu nhập khẩu chính ngạch. Phòng trị liệu da ngay tại cửa hàng.' }}
+      </p>
+      <div class="flex flex-wrap gap-4">
+        {%- if settings.about_hero_btn1_text != blank -%}
+        <a href="{{ settings.about_hero_btn1_url | default: '/dat-lich-tu-van' }}" class="pc-kit-btn-primary">
+          {{ settings.about_hero_btn1_text }} <i class="fas fa-arrow-right" aria-hidden="true"></i>
+        </a>
+        {%- endif -%}
+        {%- if settings.about_hero_btn2_text != blank -%}
+        <a href="{{ settings.about_hero_btn2_url | default: '/spa-services' }}" class="pc-kit-btn-secondary">
+          {{ settings.about_hero_btn2_text }}
+        </a>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-10 bg-forest-900 text-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+      {%- for i in (1..4) -%}
+      {%- capture k_target -%}about_stat_{{ i }}_target{%- endcapture -%}
+      {%- capture k_suffix -%}about_stat_{{ i }}_suffix{%- endcapture -%}
+      {%- capture k_label -%}about_stat_{{ i }}_label{%- endcapture -%}
+      {%- assign v_target = settings[k_target] -%}
+      {%- if v_target != blank -%}
+      <div>
+        <div class="text-3xl font-extrabold text-emerald-400 font-heading">{{ v_target }}{{ settings[k_suffix] }}</div>
+        <div class="text-xs text-gray-300 mt-1 uppercase tracking-wider">{{ settings[k_label] }}</div>
+      </div>
+      {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+{%- if settings.about_story_title != blank or settings.about_story_body_1 != blank -%}
+<section class="py-16 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+      {%- if settings.about_story_img != blank -%}
+      <div class="lg:col-span-5">
+        <img src="{{ settings.about_story_img | img_url: 'grande' }}" alt="{{ settings.about_story_title | escape }}" class="rounded-2xl shadow-xl w-full object-cover" style="max-height:560px">
+      </div>
+      {%- endif -%}
+      <div class="{% if settings.about_story_img != blank %}lg:col-span-7{% else %}lg:col-span-12 max-w-3xl{% endif %} space-y-4">
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 font-heading">{{ settings.about_story_title }}</h2>
+        {%- if settings.about_story_body_1 != blank -%}<p class="text-sm sm:text-base text-gray-600 leading-relaxed">{{ settings.about_story_body_1 }}</p>{%- endif -%}
+        {%- if settings.about_story_body_2 != blank -%}<p class="text-sm sm:text-base text-gray-600 leading-relaxed">{{ settings.about_story_body_2 }}</p>{%- endif -%}
+        {%- if settings.about_story_blockquote != blank -%}
+        <blockquote class="border-l-4 border-emerald-600 pl-4 italic text-gray-700 text-sm sm:text-base">
+          “{{ settings.about_story_blockquote }}”
+          {%- if settings.about_story_cite != blank -%}<footer class="not-italic text-xs font-semibold text-emerald-700 mt-2">— {{ settings.about_story_cite }}</footer>{%- endif -%}
+        </blockquote>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</section>
+{%- endif -%}
+
+{%- if settings.about_mission_title != blank -%}
+<section class="py-16 bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-3xl mx-auto mb-12">
+      {%- if settings.about_mission_eyebrow != blank -%}<span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">{{ settings.about_mission_eyebrow }}</span>{%- endif -%}
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 mt-2 font-heading">{{ settings.about_mission_title }}</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+      {%- if settings.about_mission_card1_title != blank -%}
+      <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+        <h3 class="text-lg font-bold text-gray-900 mb-3">{{ settings.about_mission_card1_title }}</h3>
+        <p class="text-sm text-gray-600 leading-relaxed">{{ settings.about_mission_card1_desc }}</p>
+      </div>
+      {%- endif -%}
+      {%- if settings.about_mission_card2_title != blank -%}
+      <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+        <h3 class="text-lg font-bold text-gray-900 mb-3">{{ settings.about_mission_card2_title }}</h3>
+        <p class="text-sm text-gray-600 leading-relaxed">{{ settings.about_mission_card2_desc }}</p>
+      </div>
+      {%- endif -%}
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {%- assign pillar_icons = 'fa-home,fa-clinic-medical,fa-shield-virus' | split: ',' -%}
+      {%- assign pillar_colors = 'emerald,teal,cyan' | split: ',' -%}
+      {%- for i in (1..3) -%}
+      {%- capture k_title -%}about_pillar_{{ i }}_title{%- endcapture -%}
+      {%- capture k_body -%}about_pillar_{{ i }}_body{%- endcapture -%}
+      {%- assign v_title = settings[k_title] -%}
+      {%- if v_title != blank -%}
+      {%- assign idx0 = i | minus: 1 -%}
+      <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition">
+        <div class="w-14 h-14 rounded-xl bg-{{ pillar_colors[idx0] }}-100 text-{{ pillar_colors[idx0] }}-700 flex items-center justify-center text-2xl mb-6">
+          <i class="fas {{ pillar_icons[idx0] }}" aria-hidden="true"></i>
+        </div>
+        <span class="text-xs font-bold text-{{ pillar_colors[idx0] }}-700 uppercase tracking-widest">TRỤ CỘT 0{{ i }}</span>
+        <h3 class="text-lg font-bold text-gray-900 mt-2 mb-3">{{ v_title }}</h3>
+        <p class="text-sm text-gray-600 leading-relaxed">{{ settings[k_body] }}</p>
+      </div>
+      {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+{%- endif -%}
+
+{%- if settings.about_method_title != blank -%}
+<section class="py-16 bg-white border-b border-gray-100">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-3xl mx-auto mb-12">
+      {%- if settings.about_method_eyebrow != blank -%}<span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">{{ settings.about_method_eyebrow }}</span>{%- endif -%}
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 mt-2 font-heading">{{ settings.about_method_title }}</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {%- for i in (1..3) -%}
+      {%- capture k_title -%}about_step_{{ i }}_title{%- endcapture -%}
+      {%- capture k_body -%}about_step_{{ i }}_body{%- endcapture -%}
+      {%- assign v_title = settings[k_title] -%}
+      {%- if v_title != blank -%}
+      <div class="relative p-6 rounded-2xl bg-emerald-50/60 border border-emerald-100">
+        <span class="absolute -top-4 -left-2 w-9 h-9 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold font-heading">{{ i }}</span>
+        <h3 class="text-base font-bold text-gray-900 mt-3 mb-2">{{ v_title }}</h3>
+        <p class="text-sm text-gray-600 leading-relaxed">{{ settings[k_body] }}</p>
+      </div>
+      {%- endif -%}
+      {%- endfor -%}
+    </div>
+    {%- if settings.about_method_cert_text != blank -%}
+    <div class="text-center mt-10">
+      {%- if settings.about_method_cert_url != blank -%}
+      <a href="{{ settings.about_method_cert_url }}" class="pc-kit-badge-clinical text-xs">✓ {{ settings.about_method_cert_text }}</a>
+      {%- else -%}
+      <span class="pc-kit-badge-clinical text-xs">✓ {{ settings.about_method_cert_text }}</span>
+      {%- endif -%}
+    </div>
+    {%- endif -%}
+  </div>
+</section>
+{%- endif -%}
+
+{%- if settings.about_team_title != blank -%}
+<section class="py-16 bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-3xl mx-auto mb-12">
+      {%- if settings.about_team_eyebrow != blank -%}<span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">{{ settings.about_team_eyebrow }}</span>{%- endif -%}
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 mt-2 font-heading">{{ settings.about_team_title }}</h2>
+      {%- if settings.about_team_subtitle != blank -%}<p class="text-sm text-gray-600 mt-2 max-w-2xl mx-auto">{{ settings.about_team_subtitle }}</p>{%- endif -%}
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {%- for i in (1..4) -%}
+      {%- capture k_name -%}about_expert_{{ i }}_name{%- endcapture -%}
+      {%- capture k_role -%}about_expert_{{ i }}_role{%- endcapture -%}
+      {%- capture k_desc -%}about_expert_{{ i }}_desc{%- endcapture -%}
+      {%- capture k_img -%}about_expert_{{ i }}_img{%- endcapture -%}
+      {%- assign v_name = settings[k_name] -%}
+      {%- if v_name != blank -%}
+      <div class="bg-white p-6 rounded-2xl border border-gray-200 text-center">
+        {%- if settings[k_img] != blank -%}
+        <img src="{{ settings[k_img] | img_url: 'medium' }}" alt="{{ v_name | escape }}" class="w-20 h-20 rounded-xl object-cover mx-auto mb-4 shadow">
+        {%- else -%}
+        <div class="w-20 h-20 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fas fa-user-md" aria-hidden="true"></i></div>
+        {%- endif -%}
+        <h3 class="text-sm font-bold text-gray-900">{{ v_name }}</h3>
+        <p class="text-xs text-emerald-700 font-semibold mb-2">{{ settings[k_role] }}</p>
+        <p class="text-xs text-gray-600 leading-relaxed">{{ settings[k_desc] }}</p>
+      </div>
+      {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+{%- endif -%}
+
+{%- if settings.about_lab_title != blank -%}
+<section class="relative overflow-hidden py-16 {% if settings.about_lab_bg_img != blank %}bg-forest-900{% else %}bg-forest-900{% endif %} text-white">
+  {%- if settings.about_lab_bg_img != blank -%}
+  <img src="{{ settings.about_lab_bg_img | img_url: 'grande' }}" alt="" class="absolute inset-0 w-full h-full object-cover opacity-25">
+  <div class="absolute inset-0 bg-forest-900/70"></div>
+  {%- endif -%}
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+    <h2 class="text-2xl sm:text-3xl font-extrabold font-heading mb-4">{{ settings.about_lab_title }}</h2>
+    {%- if settings.about_lab_body != blank -%}<p class="text-sm sm:text-base text-emerald-100 leading-relaxed mb-6">{{ settings.about_lab_body }}</p>{%- endif -%}
+    <div class="flex flex-wrap justify-center gap-3">
+      {%- for i in (1..4) -%}
+      {%- capture k_badge -%}about_lab_badge_{{ i }}{%- endcapture -%}
+      {%- assign v_badge = settings[k_badge] -%}
+      {%- if v_badge != blank -%}<span class="pc-kit-badge-clinical text-xs">✓ {{ v_badge }}</span>{%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+{%- endif -%}
+
+{%- if settings.about_ing_title != blank -%}
+<section class="py-16 bg-white border-b border-gray-100">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-3xl mx-auto mb-10">
+      {%- if settings.about_ing_eyebrow != blank -%}<span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">{{ settings.about_ing_eyebrow }}</span>{%- endif -%}
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 mt-2 font-heading">{{ settings.about_ing_title }}</h2>
+    </div>
+    {%- if settings.about_ing_menu != blank and linklists[settings.about_ing_menu].links.size > 0 -%}
+    <div class="flex flex-wrap justify-center gap-3">
+      {%- for link in linklists[settings.about_ing_menu].links -%}
+      <a href="{{ link.url }}" class="px-4 py-2 rounded-full bg-emerald-50 text-emerald-800 text-sm font-semibold border border-emerald-200 hover:bg-emerald-100 transition">{{ link.title }}</a>
+      {%- endfor -%}
+    </div>
+    {%- endif -%}
+  </div>
+</section>
+{%- endif -%}
+
+{%- if settings.about_cta_title != blank -%}
+<section class="py-16 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-gradient-to-r from-emerald-900 to-forest-900 rounded-3xl p-8 sm:p-12 text-white text-center shadow-xl">
+      <h2 class="text-2xl sm:text-3xl font-extrabold font-heading mb-3">{{ settings.about_cta_title }}</h2>
+      {%- if settings.about_cta_body != blank -%}<p class="text-sm sm:text-base text-emerald-100 mb-6 max-w-2xl mx-auto">{{ settings.about_cta_body }}</p>{%- endif -%}
+      <div class="flex flex-wrap justify-center gap-4">
+        {%- if settings.about_cta_btn1_text != blank -%}
+        <a href="{{ settings.about_cta_btn1_url | default: '/dat-lich-tu-van' }}" class="pc-kit-btn-primary bg-white text-emerald-900 hover:bg-emerald-100">{{ settings.about_cta_btn1_text }}</a>
+        {%- endif -%}
+        {%- if settings.about_cta_btn2_text != blank -%}
+        <a href="{{ settings.about_cta_btn2_url | default: '/search' }}" class="pc-kit-btn-secondary bg-transparent text-white border-white/40 hover:bg-white/10">{{ settings.about_cta_btn2_text }}</a>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</section>
+{%- endif -%}
+
+{%- if settings.about_contact_title != blank -%}
+<section class="py-16 bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-3xl mx-auto mb-12">
+      {%- if settings.about_contact_eyebrow != blank -%}<span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">{{ settings.about_contact_eyebrow }}</span>{%- endif -%}
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 mt-2 font-heading">{{ settings.about_contact_title }}</h2>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+      <div class="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 space-y-3 text-sm text-gray-700">
+        {%- if settings.about_contact_address != blank -%}<p><i class="fas fa-map-marker-alt text-emerald-600 w-5" aria-hidden="true"></i> {{ settings.about_contact_address }}</p>{%- endif -%}
+        {%- if settings.about_contact_phone != blank -%}<p><i class="fas fa-phone-alt text-emerald-600 w-5" aria-hidden="true"></i> <a href="tel:{{ settings.about_contact_phone | remove: ' ' }}" class="hover:text-emerald-700">{{ settings.about_contact_phone }}</a></p>{%- endif -%}
+        {%- if settings.about_contact_email != blank -%}<p><i class="fas fa-envelope text-emerald-600 w-5" aria-hidden="true"></i> <a href="mailto:{{ settings.about_contact_email }}" class="hover:text-emerald-700">{{ settings.about_contact_email }}</a></p>{%- endif -%}
+        {%- if settings.about_contact_hours != blank -%}<p><i class="fas fa-clock text-emerald-600 w-5" aria-hidden="true"></i> {{ settings.about_contact_hours }}</p>{%- endif -%}
+      </div>
+
+      {%- comment -%}
+        pii_form_gate (POLICY.yaml#frontend_theme): form thu thập tên/SĐT/email cần mục đích rõ
+        ràng + checkbox consent + link chính sách. Chưa có action backend "contact" chung trong
+        mops-gas/ hoặc dev-server (chỉ có /cart/add, booking riêng) — form này để action="#"
+        (client-side only) và cần bổ sung endpoint thật ở 1 task riêng trước khi go-live.
+      {%- endcomment -%}
+      <form class="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 space-y-4" action="#" method="post" onsubmit="return false;">
+        <h3 class="text-base font-bold text-gray-900">{{ settings.about_contact_form_title | default: 'Gửi tin nhắn cho chúng tôi' }}</h3>
+        <p class="text-xs text-gray-500">Thông tin bạn gửi chỉ dùng để liên hệ tư vấn, không chia sẻ cho bên thứ ba.</p>
+        <div>
+          <label for="about-contact-name" class="block text-xs font-semibold text-gray-700 mb-1">Họ tên</label>
+          <input id="about-contact-name" name="name" type="text" required class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-emerald-600 focus:ring-emerald-600">
+        </div>
+        <div>
+          <label for="about-contact-phone" class="block text-xs font-semibold text-gray-700 mb-1">Số điện thoại</label>
+          <input id="about-contact-phone" name="phone" type="tel" required class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-emerald-600 focus:ring-emerald-600">
+        </div>
+        <div>
+          <label for="about-contact-message" class="block text-xs font-semibold text-gray-700 mb-1">Nội dung</label>
+          <textarea id="about-contact-message" name="message" rows="3" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-emerald-600 focus:ring-emerald-600"></textarea>
+        </div>
+        <div class="flex items-start gap-2">
+          <input id="about-contact-consent" name="consent" type="checkbox" required class="mt-0.5">
+          <label for="about-contact-consent" class="text-xs text-gray-600">
+            Tôi đồng ý để Pharma Cosmetics thu thập và sử dụng thông tin trên nhằm mục đích liên hệ tư vấn, theo
+            <a href="{{ pages['chinh-sach'].url | default: '/chinh-sach' }}" class="text-emerald-700 underline">Chính sách bảo mật</a>.
+          </label>
+        </div>
+        <button type="submit" class="pc-kit-btn-primary w-full justify-center">{{ settings.about_contact_btn_text | default: 'Gửi tin nhắn' }}</button>
+      </form>
+    </div>
+  </div>
+</section>
+{%- endif -%}

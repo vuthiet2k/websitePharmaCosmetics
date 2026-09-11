@@ -1,0 +1,54 @@
+T-102-search-icon-header-merge — 2026-09-11
+Nguoi dung tiep tuc bao cao sau T-101 (nguyen van): "http://localhost:3000/ thay giaod diện đi
+làm ơn, quá lì" — kem screenshot mo file mau HTML truc tiep (khong phai localhost) de doi chieu.
+
+PHAN TICH THEM (T-101 chua du):
+- Do dac ngan sach chieu rong thuc te: gop toan bo .header-menu (Danh muc + site-nav mega-menu)
+  len chung 1 hang voi .box-hearder can ~1015px (Danh muc 150px + 6 muc nav tieng Viet dai:
+  "DIEU TRI CHUYEN NGHIEP", "MUA SAM THEO THANH PHAN"...) nhung sau khi tru logo+icon+gap chi con
+  ~800px o do rong desktop pho bien (1280-1366px) => se TRAN DONG/VO LAYOUT that neu gop. Nhan
+  tieng Viet dai hon nhieu so voi nhan tieng Anh ngan trong file mau ("Skin Health Beauty", "Tin
+  tuc"). QUYET DINH: KHONG gop .header-menu len (rui ro pha chuc nang that, vi pham quy uoc "khong
+  duoc pha vo mega-menu/nav that" da thong nhat).
+- Nguyen nhan thuc su khien hang .box-hearder nhin "nang"/tach biet: o tim kiem hien luon dang
+  input full-width chiem ~40% chieu rong hang - day la khoi trang lon nhat, khac han file mau
+  (file mau CHI co icon kinh lup, khong co input hien san).
+
+FIX: thu gon o tim kiem thanh icon, TAI SU DUNG nguyen ven he thong search overlay co san cho
+mobile (#mb-search-popup, JS trong assets/mobile-ui.js.bwt, event delegation tren document nen
+khong can code JS moi) - chi bat hien thi icon (`.header-action-search`) o desktop (>=992px) va
+an o tim kiem inline (`.header-mid`).
+
+SU CO PHAT HIEN + TU SUA TRONG LUC LAM (khong giau):
+- Thu dau tien: dat `background:#fff` cho .box-hearder de logo "nam tren nen trang" giong file
+  mau. PHAT HIEN NGAY qua screenshot: logo (assets/logoPC.svg) la mark TRANG THUAN (fill="white"
+  moi path, khong co ban mau), va icon wishlist/cart dung color:var(--txtHeader)=#ffffff - ca hai
+  chi thiet ke cho nen xanh. Nen trang lam logo/icon bien mat (trang tren trang). KHONG co asset
+  logo mau thay the an toan trong theme. Da REVERT ngay lap tuc (khong publish loi len file cuoi
+  cung) - xem comment con lai trong pharma_ui_kit.bwt giai thich ro ly do.
+- Ket qua cuoi: giu nguyen .box-hearder nen xanh var(--bgHeader) (mac dinh) - topbar + hang
+  logo/icon gop thanh 1 khoi XANH lien mach (khong con o input trang to lam ngat quang), hang
+  .header-menu TRANG rieng ben duoi - dung tinh than "chi 2 khoi" nguoi dung yeu cau, khong rui ro
+  vo logo.
+
+FILE SUA: snippets/pharma_ui_kit.bwt (them CSS @media min-width:992px, an .header-mid + hien
+.header-action-search voi style dong bo box-icon 28px/20px giong wishlist/cart).
+
+VERIFY (E2 — Playwright thuc, nhieu do rong):
+1. Desktop 1280px: header gon lai, logo+3 icon (search/wishlist/cart) thay cho o input to -
+   header nhin nhu 1 khoi xanh + 1 hang trang, khong con "nang" nhu truoc.
+2. Click #mb-search-open tai desktop: overlay tim kiem mo dung (giao dien giong mobile, co goi y
+   pho bien, nut back) - XAC NHAN 0 loi JS, tai su dung code san co, khong regress.
+3. Desktop 992px (bien breakpoint): nav bi chat/tran nhe (TPCN/KHUYEN MAI/BLOG khong hien du) -
+   XAC NHAN day la HANH VI CO TRUOC (khong lien quan thay doi cua T-102, khong dung .header-menu),
+   ghi nhan la known_gap rieng, khong sua trong task nay.
+4. Desktop 1440px: sach, khong loi.
+5. Mobile 390px: khong doi (scope CSS chi @media min-width:992px), van 1 hang xanh don gian
+   (hamburger+search-icon+logo+cart) nhu truoc.
+6. npm run build: PASS. npx playwright test --update-snapshots: 39/39 PASS (baseline cap nhat chu
+   dich). compliance-lint: 0 vi pham cung, 18 canh bao danh xung khong doi.
+
+EVIDENCE_GRADE: E2 (Playwright + build that, chua co xac nhan mat nguoi dung tren thiet bi that).
+KNOWN GAP moi ghi nhan (khong chan release): nav header-menu bi chat nhe o dung 992px (bien
+breakpoint tablet/desktop) - can rieng 1 task neu nguoi dung muon sua (co the giam font-size nav
+hoac an bot 1-2 muc it quan trong o do rong nay).

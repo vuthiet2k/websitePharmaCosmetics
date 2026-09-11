@@ -1,0 +1,259 @@
+{%- assign feat_col    = settings.home_featured_collection   | default: 'san-pham-ban-chay-noi-bat' -%}
+{%- assign feat_limit  = settings.home_featured_limit | default: 10 -%}
+{%- assign feat_count  = collections[feat_col].products_count -%}
+{%- if feat_count > 0 -%}
+<section class="pc-section section--light section_featured_products pc-featured-products">
+  <div class="container">
+
+    <div class="pc-featured__header">
+      <div class="pc-section-header pc-section-header--left">
+        {%- if settings.home_featured_eyebrow != blank -%}
+        <p class="pc-section-eyebrow">{{ settings.home_featured_eyebrow }}</p>
+        {%- endif -%}
+        <h2 class="pc-section-title">{{ settings.home_featured_title | default: 'Sản phẩm nổi bật' }} <span class="pc-kit-badge-clinical align-middle ml-1">✓ Kiểm định lâm sàng</span></h2>
+        {%- if settings.home_featured_subtitle != blank -%}
+        <p class="pc-section-subtitle">{{ settings.home_featured_subtitle }}</p>
+        {%- endif -%}
+      </div>
+      <a href="/{{ feat_col }}" class="pc-featured__viewall sm-hidden" title="{{ settings.home_featured_viewall_text | default: 'Xem tất cả' }}">
+        {{ settings.home_featured_viewall_text | default: 'Xem tất cả' }}
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="m22.707 11.293-7-7a1 1 0 0 0-1.414 1.414l5.293 5.293H2a1 1 0 0 0 0 2h17.586l-5.293 5.293a1 1 0 1 0 1.414 1.414l7-7a1 1 0 0 0 0-1.414z" fill="currentColor"/>
+        </svg>
+      </a>
+    </div>
+
+    <div class="pc-featured__swiper swiper_featured swiper-container">
+      <div class="swiper-wrapper load-after" data-section="section_featured_products">
+        {%- for i in (1..5) -%}
+        <div class="swiper-slide item_null">
+          <div class="item_product_main"></div>
+        </div>
+        {%- endfor -%}
+
+        {%- assign feat_html = '' -%}
+        {%- for product in collections[feat_col].products limit: feat_limit -%}
+        {%- capture feat_block -%}
+        <div class="swiper-slide">
+          <div class="item_product_main">
+            {%- include 'product_grid_office_sale' -%}
+          </div>
+        </div>
+        {%- endcapture -%}
+        {%- assign feat_html = feat_html | append: feat_block -%}
+        {%- endfor -%}
+        <script type="text/x-custom-template" data-template="section_featured_products">
+          {{ feat_html }}
+        </script>
+      </div>
+
+      <div class="swiper-button-prev pc-featured__prev">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="swiper-button-next pc-featured__next">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <div class="swiper-pagination pc-featured__pagination"></div>
+    </div>
+
+    <div class="pc-featured__footer md-hidden">
+      <a href="/{{ feat_col }}" class="pc-featured__viewall-mobile">
+        {{ settings.home_featured_viewall_text | default: 'Xem tất cả' }}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="m22.707 11.293-7-7a1 1 0 0 0-1.414 1.414l5.293 5.293H2a1 1 0 0 0 0 2h17.586l-5.293 5.293a1 1 0 1 0 1.414 1.414l7-7a1 1 0 0 0 0-1.414z" fill="currentColor"/>
+        </svg>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<style>
+/* ── Section Featured Products ── */
+.pc-featured-products {
+  overflow: hidden;
+}
+
+/* Header: title trái + link "xem tất cả" phải */
+.pc-featured__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.pc-featured__header .pc-section-header {
+  margin-bottom: 0; /* override global 32px — spacing handled by parent flex gap */
+}
+.pc-featured__header .pc-section-title {
+  margin-bottom: 4px;
+}
+.pc-featured__header .pc-section-subtitle {
+  margin: 0;
+}
+
+/* "Xem tất cả" — desktop (bên phải header) */
+.pc-featured__viewall {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-primary);
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--mainColorDark);
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 1.5px solid var(--mainColorDark);
+  padding-bottom: 2px;
+  transition: color .2s, border-color .2s;
+  flex-shrink: 0;
+}
+.pc-featured__viewall:hover {
+  color: var(--mainColor);
+  border-color: var(--mainColor);
+}
+
+/* Swiper wrapper */
+.pc-featured__swiper {
+  overflow: hidden;
+  padding-bottom: 40px; /* room for pagination dots */
+}
+
+/* Navigation buttons */
+.pc-featured__prev,
+.pc-featured__next {
+  width: 40px;
+  height: 40px;
+  background: #fff;
+  border: 1.5px solid var(--lineColor);
+  border-radius: 50%;
+  color: var(--mainColorDark);
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  transition: background .2s, border-color .2s, color .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pc-featured__prev::after,
+.pc-featured__next::after { display: none; } /* ẩn text mặc định của Swiper */
+.pc-featured__prev:hover,
+.pc-featured__next:hover {
+  background: var(--mainColorDark);
+  border-color: var(--mainColorDark);
+  color: #fff;
+}
+
+/* Pagination dots */
+.pc-featured__pagination {
+  bottom: 8px !important;
+}
+.pc-featured__pagination .swiper-pagination-bullet {
+  background: var(--lineColor);
+  opacity: 1;
+  width: 8px;
+  height: 8px;
+  transition: background .2s, width .2s;
+}
+.pc-featured__pagination .swiper-pagination-bullet-active {
+  background: var(--mainColorDark);
+  width: 24px;
+  border-radius: 4px;
+}
+
+/* "Xem tất cả" — mobile (giữa, dưới swiper) */
+.pc-featured__footer {
+  text-align: center;
+  margin-top: 8px;
+}
+.pc-featured__viewall-mobile {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-primary);
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--mainColorDark);
+  text-decoration: none;
+  transition: color .2s;
+}
+.pc-featured__viewall-mobile:hover {
+  color: var(--mainColor);
+}
+
+/* ── Featured context: override card's flash-sale colors ── */
+.pc-featured-products .pc-btn--action {
+  background: var(--mainColorDark);
+}
+.pc-featured-products .pc-btn--action:hover {
+  background: var(--mainColor);
+  transform: translateY(-1px);
+}
+.pc-featured-products .pc-btn--action--disabled:hover {
+  transform: none;
+}
+.pc-featured-products .pc-flashsale__badge {
+  background: var(--mainColorDark);
+}
+.pc-featured-products .pc-flashsale__progress {
+  display: none;
+}
+
+/* Responsive header */
+@media (max-width: 767px) {
+  .pc-featured__header {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+  .pc-featured__swiper {
+    padding-bottom: 48px;
+  }
+}
+</style>
+
+<script>
+$(document).ready(function($) {
+  function runSwiperFeatured() {
+    var swiperFeatured = null;
+
+    function init() {
+      swiperFeatured = new Swiper('.swiper_featured', {
+        slidesPerView: 4,
+        spaceBetween: 20,
+        slidesPerGroup: 1,
+        pagination: {
+          el: '.swiper_featured .pc-featured__pagination',
+          clickable: true,
+        },
+        navigation: {
+          nextEl: '.swiper_featured .pc-featured__next',
+          prevEl: '.swiper_featured .pc-featured__prev',
+        },
+        breakpoints: {
+          280: { slidesPerView: 2, spaceBetween: 12 },
+          480: { slidesPerView: 2,   spaceBetween: 12 },
+          768: { slidesPerView: 3,   spaceBetween: 16 },
+          993: { slidesPerView: 4,   spaceBetween: 20 },
+        }
+      });
+    }
+
+    function destroy() {
+      if (swiperFeatured) { swiperFeatured.destroy(true, true); swiperFeatured = null; }
+    }
+
+    init();
+    $(window).on('resize', function() {
+      destroy(); init();
+    });
+  }
+
+  lazyBlockProduct('section_featured_products', '0px 0px -200px 0px', runSwiperFeatured);
+});
+</script>
+{%- endif -%}

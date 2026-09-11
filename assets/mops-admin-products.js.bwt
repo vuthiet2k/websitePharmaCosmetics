@@ -1,0 +1,627 @@
+{% comment %} mops-admin-products.js.bwt — Mixin domain "Sản phẩm" (tab Products + panel Chi tiết
+  sản phẩm bên phải) cho MOPS Admin. Tách khỏi Assets/mops-admin.js.bwt (2026-07-16, theo mẫu
+  mops-admin-audit.js.bwt). Script TOP-LEVEL — đẩy mixin vào window.MopsAdminMixins TRƯỚC khi
+  Assets/mops-admin.js.bwt đọc mảng này. Gọi helper dùng chung qua window.MopsAdminCore.
+  Load TRƯỚC Assets/mops-admin.js.bwt.
+  Cross-domain (Vue mixins share chung 1 instance): products.all/loadProducts() được domain Đơn
+  hàng (Manual Order search/Quick Add) đọc/ghi qua this.* — không cần thay đổi gì phía đó.
+  watch: 'products.search' (debounce) cũng chuyển theo — Vue tự gộp watch từ mixin vào 1 mảng,
+  không cần merge tay. {% endcomment %}
+(function() {
+  'use strict';
+
+  // Ngưỡng "sắp hết hàng" cho bộ lọc + badge (review 2026-07-16) — chỉ Products dùng.
+  var LOW_STOCK_THRESHOLD = 5;
+
+  window.MopsAdminRegisteredDomains = window.MopsAdminRegisteredDomains || [];
+  window.MopsAdminRegisteredDomains.push('products');
+
+  window.MopsAdminMixins = window.MopsAdminMixins || [];
+  window.MopsAdminMixins.push({
+    data: function() {
+      return {
+        products: {
+          all: [], loading: false, error: '', filterStatus: '', filterMapped: '',
+          filterStock: '', filterCategory: '',
+          search: '', searchDebounced: '',
+          sortBy: '', sortDir: 'desc',
+          page: 1, pageSize: 10, syncing: false,
+          // Hydration của catalog đầy đủ (xem loadProducts): trang đầu về trước, phần còn lại
+          // tải nền. serverTotal là tổng thật trên server để biết đã đủ dữ liệu hay chưa.
+          serverTotal: 0, hydrating: false, hydrated: false,
+          showAddForm: false, creating: false,
+          imp: { show: false, step: 'select', reading: false, importing: false, fileName: '', rows: [], unknownCols: [], error: '', result: null, progress: 0, completedBatches: 0, totalBatches: 0 },
+          newProduct: {
+            title: '', price: '', deposit: '', costPrice: '', sku: '', image: '',
+            compareAtPrice: '', vendor: '', productType: '', unit: '', weight: '', barcode: '', requiresShipping: false,
+            imageFileName: '', imagePreview: '', imagePreparing: false
+          }
+        },
+        rightPanel: {
+          open: false, title: '', product: null,
+          editing: false,
+          editForm: {
+            title: '', price: '', compare_at_price: '', inventory_qty: '',
+            vendor: '', product_type: '', unit: '', weight: '', barcode: '', requires_shipping: false
+          },
+          saving: false,
+          // 2026-08-09 — 2-column detail layout: tab lịch sử "Biến động kho" (mặc định) vs "Đơn hàng chứa SP".
+          // Endpoint list_product_movements / list_product_orders chưa có ở backend — UI hiện dựa vào
+          // rightPanel.product.recent_movements / recent_orders nếu get_product enrich (chưa có), rơi vào
+          // empty state khi không có data. Không gây lỗi runtime.
+          historyTab: 'movements'
+        }
+      };
+    },
+    watch: {
+      // Debounce search sản phẩm — trễ 300ms sau khi ngừng gõ mới cập nhật searchDebounced (giá
+      // trị thật productsFiltered dùng để lọc), tránh lọc lại toàn bộ list trên mỗi keystroke.
+      'products.search': function(v) {
+        var self = this;
+        clearTimeout(this._productsSearchTimer);
+        this._productsSearchTimer = setTimeout(function() {
+          self.products.searchDebounced = v;
+          self.products.page = 1;
+        }, 300);
+      }
+    },
+    computed: {
+      /* ── Sản phẩm: filter + sort + phân trang client-side ── */
+      productsFiltered: function() {
+        var status = this.products.filterStatus;
+        var mappedFlag = this.products.filterMapped;
+        var stockFlag = this.products.filterStock;
+        var category = this.products.filterCategory;
+        var q = (this.products.searchDebounced || '').trim().toLowerCase();
+        var sortBy = this.products.sortBy;
+        var sortDir = this.products.sortDir;
+        var result = this.products.all.filter(function(p) {
+          if (status && p.status !== status) return false;
+          if (mappedFlag === '1' && !p.in_mops) return false;
+          if (mappedFlag === '0' && p.in_mops)  return false;
+          if (category && p.product_type !== category) return false;
+          if (q && String(p.title || '').toLowerCase().indexOf(q) === -1
+                && String(p.sku || '').toLowerCase().indexOf(q) === -1
+                && String(p.barcode || '').toLowerCase().indexOf(q) === -1) return false;
+          if (stockFlag) {
+            if (p.source === 'LOCAL') return false;
+            var qty = p.inventory_qty || 0;
+            if (stockFlag === 'out_of_stock' && qty > 0) return false;
+            if (stockFlag === 'low_stock' && !(qty > 0 && qty < LOW_STOCK_THRESHOLD)) return false;
+            if (stockFlag === 'in_stock' && qty <= 0) return false;
+          }
+          return true;
+        });
+        if (sortBy) {
+          result = result.slice().sort(function(a, b) {
+            var diff = (Number(a[sortBy]) || 0) - (Number(b[sortBy]) || 0);
+            return sortDir === 'asc' ? diff : -diff;
+          });
+        }
+        return result;
+      },
+      // Danh mục sản phẩm — lấy từ product_type thật đang có, không hardcode tên danh mục.
+      productCategories: function() {
+        var seen = {}, cats = [];
+        this.products.all.forEach(function(p) {
+          var t = (p.product_type || '').trim();
+          if (t && !seen[t]) { seen[t] = true; cats.push(t); }
+        });
+        return cats.sort();
+      },
+      productsTotalPages: function() {
+        return Math.max(1, Math.ceil(this.productsFiltered.length / this.products.pageSize));
+      },
+      productsPageItems: function() {
+        var page = Math.min(Math.max(1, this.products.page), this.productsTotalPages);
+        return this.productsFiltered.slice((page - 1) * this.products.pageSize, page * this.products.pageSize);
+      },
+      productsPageFrom: function() {
+        if (!this.productsFiltered.length) return 0;
+        var page = Math.min(Math.max(1, this.products.page), this.productsTotalPages);
+        return (page - 1) * this.products.pageSize + 1;
+      },
+      productsPageTo: function() {
+        var page = Math.min(Math.max(1, this.products.page), this.productsTotalPages);
+        return Math.min(page * this.products.pageSize, this.productsFiltered.length);
+      },
+      productsPageNumbers: function() {
+        var totalPages = this.productsTotalPages;
+        var current = Math.min(Math.max(1, this.products.page), totalPages);
+        var pages = [];
+        for (var i = 1; i <= totalPages; i++) {
+          if (totalPages > 7 && i !== 1 && i !== totalPages && Math.abs(i - current) > 1) {
+            if (i === 2 || i === totalPages - 1) pages.push('...');
+            continue;
+          }
+          pages.push(i);
+        }
+        return pages;
+      },
+      productsStatsCards: function() {
+        var all = this.products.all;
+        var total = all.length;
+        var active = all.filter(function(p) { return p.status === 'active'; }).length;
+        var unmapped = all.filter(function(p) { return !p.in_mops; }).length;
+        var deleted = all.filter(function(p) { return p.status === 'deleted'; }).length;
+        return [
+          { label: 'Tổng sản phẩm', value: total, icon: 'inventory_2', colorCls: 'bg-primary/10 text-primary' },
+          { label: 'SAPO đang bán', value: active, icon: 'storefront', colorCls: 'bg-blue-50 text-blue-600' },
+          { label: 'Chưa map MOPS', value: unmapped, icon: 'warning', colorCls: 'bg-amber-50 text-amber-600' },
+          { label: 'Ngừng kinh doanh', value: deleted, icon: 'block', colorCls: 'bg-red-50 text-red-600' }
+        ];
+      },
+      productsEmptyMessage: function() {
+        if (this.products.error) return this.products.error;
+        if (!this.productsFiltered.length) {
+          return this.products.all.length ? 'Không có sản phẩm phù hợp bộ lọc.' : 'Chưa có sản phẩm. Hãy đồng bộ từ SAPO.';
+        }
+        return '';
+      }
+    },
+    methods: {
+      // 4 hàm dưới đây nhận tham số nên PHẢI ở methods (không phải computed) — bài học
+      // purchaseOrderMenuTarget/productStatusBadge (xem memory project_mops_vue_typeerror_bug).
+      sortProductsBy: function(col) {
+        if (this.products.sortBy === col) {
+          this.products.sortDir = this.products.sortDir === 'desc' ? 'asc' : 'desc';
+        } else {
+          this.products.sortBy = col;
+          this.products.sortDir = 'desc';
+        }
+      },
+      productStatusBadge: function(p) {
+        if (p.status === 'deleted') return { text: 'Ngừng kinh doanh', cls: 'ma-badge ma-badge--neutral' };
+        if (this.isStockTracked(p) && (p.inventory_qty || 0) <= 0) return { text: 'Hết hàng', cls: 'ma-badge ma-badge--danger' };
+        return { text: 'Đang bán', cls: 'ma-badge ma-badge--success' };
+      },
+      isStockTracked: function(p) {
+        return p.source !== 'LOCAL';
+      },
+      stockBadge: function(p) {
+        if (!this.isStockTracked(p)) return null;
+        var qty = p.inventory_qty || 0;
+        if (qty === 0) return { text: 'Hết hàng', cls: 'ma-badge ma-badge--danger' };
+        if (qty < LOW_STOCK_THRESHOLD) return { text: 'Sắp hết: ' + qty, cls: 'ma-badge ma-badge--warning' };
+        return null;
+      },
+      loadProducts: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.products.loading = true;
+        this.products.error = '';
+        // Mỗi lần load lại (mở tab, sau sync/sửa) phải hydrate lại từ đầu — nếu không, catalog
+        // cũ sẽ bị coi là đã đủ và thay đổi vừa ghi không xuất hiện trong filter/thống kê.
+        this.products.hydrated = false;
+        this.products.hydrating = false;
+        // Đo trên deployment thật (2026-08-07): trả TOÀN BỘ catalog (~1.6-2MB) mất ~4-6.6s p95,
+        // trong khi trang đầu chỉ hiển thị pageSize dòng. Vì vậy tách 2 chặng: chặng 1 lấy đúng
+        // 1 trang để bảng hiện dưới ngưỡng chờ, chặng 2 tải nốt catalog ở nền cho filter/sort/
+        // thống kê/xuất CSV (vẫn client-side như trước, không đổi ngữ nghĩa các computed).
+        var firstPageSize = Math.max(this.products.pageSize, 50);
+        return core.gasGet({
+          action: 'list_products', include_sales: 1, compact: 1,
+          page: 1, page_size: firstPageSize
+        })
+          .then(function(d) {
+            self.products.loading = false;
+            if (!d || !d.success) { self.products.error = 'Không tải được danh sách sản phẩm.'; return; }
+            self.products.all = d.products || [];
+            self.products.page = 1;
+            // `total` là số sản phẩm THẬT trên server (trước khi phân trang) — dùng để biết còn
+            // phần chưa tải, không suy từ độ dài mảng đã nhận.
+            self.products.serverTotal = Number(d.total) || self.products.all.length;
+            if (self.products.all.length < self.products.serverTotal) self.loadProductsFull();
+          })
+          .catch(function() { self.products.loading = false; self.products.error = 'Lỗi kết nối. Kiểm tra GAS_URL.'; });
+      },
+      // Tải trọn catalog ở nền. Chỉ ghi đè products.all khi nhận đủ dữ liệu — nếu lỗi thì trang
+      // đầu đang hiển thị vẫn dùng được, chỉ mất filter/thống kê toàn bộ (có cờ để UI báo).
+      loadProductsFull: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        if (this.products.hydrating || this.products.hydrated) return Promise.resolve();
+        this.products.hydrating = true;
+        return core.gasGet({ action: 'list_products', include_sales: 1, compact: 1 })
+          .then(function(d) {
+            self.products.hydrating = false;
+            if (!d || !d.success || !Array.isArray(d.products)) return;
+            self.products.all = d.products;
+            self.products.serverTotal = Number(d.total) || d.products.length;
+            self.products.hydrated = true;
+          })
+          .catch(function() { self.products.hydrating = false; });
+      },
+      confirmSyncProducts: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        if (this.products.syncing) return;
+        core.showConfirm('Đồng bộ sản phẩm từ SAPO',
+          'Kéo lại dữ liệu sản phẩm từ SAPO — có thể thêm sản phẩm mới, cập nhật tên/giá bán/ảnh, và xoá khỏi danh sách sản phẩm không còn trên SAPO. Giá gốc và tồn kho do MOPS tự quản riêng, không bị ghi đè. Tiếp tục?'
+        ).then(function(ok) {
+          if (!ok) return;
+          self.products.syncing = true;
+          core.gasPost({ action: 'sync_products' })
+            .then(function(d) {
+              self.products.syncing = false;
+              if (d && d.success) {
+                core.showToast('Đồng bộ xong — Thêm: ' + (d.added||0) + ' · Cập nhật: ' + (d.updated||0) + ' · Xoá: ' + (d.deleted||0), 'success');
+                self.loadProducts();
+              } else {
+                core.showToast('Lỗi đồng bộ: ' + (d && d.error || 'Không rõ'), 'error');
+              }
+            })
+            .catch(function() { self.products.syncing = false; core.showToast('Lỗi kết nối khi đồng bộ.', 'error'); });
+        });
+      },
+      productRowBg: function(p) {
+        if (p.status === 'deleted') return 'bg-red-50/40';
+        if (!p.in_mops) return 'bg-amber-50/40';
+        if (p.mops_enabled) return 'bg-emerald-50/40';
+        return '';
+      },
+      connectProduct: function(handle, title) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var depositStr = prompt('Kết nối "' + title + '" vào MOPS.\nNhập số tiền cọc mặc định (VNĐ, để 0 nếu miễn phí):', '0');
+        if (depositStr === null) return;
+        var deposit = Number(depositStr.replace(/[^\d]/g, '')) || 0;
+        var costStr = prompt('Nhập giá vốn (VNĐ) cho "' + title + '" — dùng cho báo cáo lãi lỗ (để 0 nếu chưa biết, có thể sửa sau trong Google Sheet ProductMappings):', '0');
+        if (costStr === null) return;
+        var costPrice = Number(costStr.replace(/[^\d]/g, '')) || 0;
+        core.gasPost({ action: 'create_product_mapping', handle: handle, display_name: title, deposit_amount: deposit, cost_price: costPrice })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Kết nối thất bại');
+            core.showToast('Đã kết nối "' + title + '" vào MOPS.', 'success');
+            self.loadProducts();
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      openProductDetail: function(p) {
+        if (this.workspaceView !== 'products.detail' && typeof this.openWorkspaceView === 'function') {
+          this.openWorkspaceView('products.detail', { productId: p.product_id || p.variant_id || p.handle });
+        } else {
+          this.workspaceView = 'products.detail';
+        }
+        this.rightPanel.open = false;
+        this.rightPanel.title = 'Chi tiết sản phẩm';
+        this.rightPanel.product = p;
+        this.rightPanel.editing = false;
+        return this.loadProductDetail(p);
+      },
+      loadProductDetail: function(p) {
+        var self = this;
+        if (p.detail_loaded) return Promise.resolve(p);
+        return window.MopsAdminCore.gasPost({ action: 'get_product', product_id: p.product_id, variant_id: p.variant_id || '' })
+          .then(function(d) {
+            if (d && d.success && d.product) {
+              self.rightPanel.product = d.product;
+              return d.product;
+            }
+            return p;
+          })
+          .catch(function() { return p; });
+      },
+      // Icon bút chì ở cột Hành động — mở workspace detail rồi vào thẳng chế độ sửa.
+      openProductEdit: function(p) {
+        var self = this;
+        this.openProductDetail(p).then(function(product) {
+          self.rightPanel.product = product;
+          self.startEditProduct();
+        });
+      },
+      closeRightPanel: function() {
+        this.rightPanel.open = false;
+        this.rightPanel.editing = false;
+        if (typeof this.restoreWorkspaceView === 'function') this.restoreWorkspaceView('products.list');
+        else this.workspaceView = 'products.list';
+      },
+      // Icon thùng rác ở cột Hành động — "Xóa sản phẩm" = gỡ khỏi MOPS (xoá dòng ProductMappings),
+      // KHÔNG đụng Products sheet.
+      confirmDisconnectProduct: function(p) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        core.showConfirm('Xóa sản phẩm khỏi MOPS',
+          'Gỡ "' + (p.title || p.handle) + '" khỏi MOPS? Sản phẩm vẫn còn trên SAPO, chỉ không còn dùng được trong đặt lịch/checkout MOPS. Có thể "Kết nối" lại sau nếu cần.'
+        ).then(function(ok) {
+          if (!ok) return;
+          core.gasPost({ action: 'delete_product_mapping', handle: p.handle })
+            .then(function(d) {
+              if (!d.success) throw new Error(d.error || 'Xóa thất bại');
+              core.showToast('Đã gỡ "' + (p.title || p.handle) + '" khỏi MOPS.', 'success');
+              p.in_mops = false; p.mops_enabled = false;
+              var row = self.products.all.filter(function(x) { return x.handle === p.handle; })[0];
+              if (row) { row.in_mops = false; row.mops_enabled = false; }
+            })
+            .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+        });
+      },
+      startEditProduct: function() {
+        var p = this.rightPanel.product;
+        if (!p) return;
+        this.rightPanel.editForm = {
+          title: p.title || '', price: p.price || 0,
+          compare_at_price: p.compare_at_price || 0, inventory_qty: p.inventory_qty || 0,
+          vendor: p.vendor || '', product_type: p.product_type || '', unit: p.unit || '',
+          weight: p.weight || 0, barcode: p.barcode || '', requires_shipping: !!p.requires_shipping
+        };
+        this.rightPanel.editing = true;
+      },
+      saveProductEdit: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var p = this.rightPanel.product;
+        var f = this.rightPanel.editForm;
+        if (!p) return;
+        var title = (f.title || '').trim();
+        if (!title) { core.showToast('Tên sản phẩm không được để trống', 'error'); return; }
+        var payload = {
+          // variant_id: đa-biến-thể (2026-07-17) — sửa đúng dòng biến thể/size, không phải dòng đầu.
+          action: 'update_product', product_id: p.product_id, variant_id: p.variant_id || '', title: title,
+          // 2026-08-10 OCC — gửi _version từ getProduct để server kiểm tra race.
+          _version: Number(p._version) || 0,
+          price: Number(f.price) || 0, compare_at_price: Number(f.compare_at_price) || 0,
+          inventory_qty: Number(f.inventory_qty) || 0,
+          vendor: (f.vendor || '').trim(), product_type: (f.product_type || '').trim(),
+          weight: Number(f.weight) || 0, barcode: (f.barcode || '').trim(),
+          requires_shipping: !!f.requires_shipping
+        };
+        if (p.in_mops) payload.unit = (f.unit || '').trim();
+        this.rightPanel.saving = true;
+        core.gasPost(payload)
+          .then(function(d) {
+            self.rightPanel.saving = false;
+            if (!d.success) {
+              // 2026-08-10 OCC: nếu conflict → toast dedicated + reload detail để lấy version mới
+              if (String(d.error || '').indexOf('OCC_CONFLICT') !== -1) {
+                core.showToast('Sản phẩm đã được cập nhật ở nơi khác. Đang tải lại — kiểm tra rồi sửa lại.', 'warning', { duration: 6000 });
+                if (typeof self.reloadProductDetail === 'function') self.reloadProductDetail(p.product_id, p.variant_id);
+                return;
+              }
+              throw new Error(d.error || 'Lưu thất bại');
+            }
+            core.showToast('Đã lưu "' + title + '"', 'success');
+            // Cập nhật local _version với giá trị server trả về (đã bump)
+            if (d._version) p._version = d._version;
+            p.title = title; p.price = Number(f.price) || 0;
+            p.compare_at_price = Number(f.compare_at_price) || 0; p.inventory_qty = Number(f.inventory_qty) || 0;
+            p.vendor = payload.vendor; p.product_type = payload.product_type;
+            p.weight = payload.weight; p.barcode = payload.barcode;
+            p.requires_shipping = payload.requires_shipping;
+            if (p.in_mops) p.unit = payload.unit;
+            var row = self.products.all.filter(function(x) { return x.product_id === p.product_id; })[0];
+            if (row) {
+              row.title = p.title; row.price = p.price;
+              row.compare_at_price = p.compare_at_price; row.inventory_qty = p.inventory_qty;
+              row.vendor = p.vendor; row.product_type = p.product_type;
+              row.weight = p.weight; row.barcode = p.barcode; row.requires_shipping = p.requires_shipping;
+              if (p.in_mops) row.unit = p.unit;
+            }
+            self.rightPanel.editing = false;
+          })
+          .catch(function(e) { self.rightPanel.saving = false; core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      exportProductsCsv: function() {
+        var core = window.MopsAdminCore;
+        if (!this.products.all.length) { core.showToast('Chưa có dữ liệu để xuất.', 'info'); return; }
+        // Trang đầu về trước catalog đầy đủ (xem loadProducts). Xuất khi chưa hydrate xong sẽ ra
+        // file THIẾU sản phẩm mà người dùng không biết — đợi hydrate rồi xuất.
+        if (!this.products.hydrated && this.products.all.length < (this.products.serverTotal || 0)) {
+          var self = this;
+          core.showToast('Đang tải nốt danh sách sản phẩm để xuất đủ…', 'info');
+          return this.loadProductsFull().then(function() { self.exportProductsCsv(); });
+        }
+        var csvLines = ['Handle,Title,SKU,Price,Status,InMops,MopsEnabled'];
+        this.products.all.forEach(function(p) {
+          csvLines.push([core.csvCell(p.handle), core.csvCell(p.title), core.csvCell(p.sku), core.csvCell(p.price), core.csvCell(p.status), core.csvCell(p.in_mops), core.csvCell(p.mops_enabled)].join(','));
+        });
+        core.downloadCsv('products-' + new Date().toISOString().slice(0,10) + '.csv', csvLines);
+      },
+      openProductImport: function() {
+        this.products.imp = { show: true, step: 'select', reading: false, importing: false, fileName: '', rows: [], unknownCols: [], error: '', result: null, progress: 0, completedBatches: 0, totalBatches: 0 };
+      },
+      downloadProductImportTemplate: function() {
+        var headers = ['Tên sản phẩm *', 'Ảnh đại diện', 'Giá bán', 'SKU', 'Giá gốc', 'Giá vốn', 'Tiền cọc', 'Thương hiệu', 'Loại sản phẩm', 'Đơn vị', 'Khối lượng (gram)', 'Mã vạch', 'Cần vận chuyển'];
+        var sample = ['Serum mẫu', 'https://cdn.example.com/serum-mau.jpg', '250000', 'SERUM-MAU-001', '300000', '150000', '0', 'MOPS', 'Chăm sóc da', 'Chai', '50', '8930000000000', 'Có'];
+        var filename = 'mau-nhap-san-pham-mops.xlsx';
+        // Zero-Wait 2026-08-10: xlsx lazy-load — nếu chưa có → chờ tải (~200ms). Fallback CSV khi fail.
+        var loader = (window.MopsAssets && window.MopsAssets.loadXlsx) ? window.MopsAssets.loadXlsx() : Promise.reject();
+        loader.then(function() {
+          var sheet = window.XLSX.utils.aoa_to_sheet([headers, sample]);
+          sheet['!cols'] = headers.map(function(h) { return { wch: Math.max(14, h.length + 3) }; });
+          var book = window.XLSX.utils.book_new();
+          window.XLSX.utils.book_append_sheet(book, sheet, 'San pham');
+          window.XLSX.writeFile(book, filename);
+        }).catch(function() {
+          window.MopsAdminCore.downloadCsv(filename.replace(/\.xlsx$/, '.csv'), [headers.join(','), sample.join(',')]);
+        });
+      },
+      closeProductImport: function() {
+        var shouldReload = this.products.imp.step === 'done' && this.products.imp.result && this.products.imp.result.created;
+        this.products.imp.show = false;
+        if (this.$refs.productImportFile) this.$refs.productImportFile.value = '';
+        if (shouldReload) this.loadProducts();
+      },
+      onProductImportFile: function(event) {
+        var self = this, file = event.target.files && event.target.files[0];
+        if (!file) return;
+        var ext = (file.name.split('.').pop() || '').toLowerCase();
+        if (['xlsx', 'xls', 'csv'].indexOf(ext) === -1) { this.products.imp.error = 'Chỉ hỗ trợ tệp .xlsx, .xls hoặc .csv.'; return; }
+        this.products.imp.reading = true; this.products.imp.error = '';
+        // Zero-Wait 2026-08-10: chờ xlsx tải trước khi FileReader chạy (nếu file .xlsx/.xls).
+        var needsXlsx = (ext === 'xlsx' || ext === 'xls');
+        var preload = needsXlsx && window.MopsAssets && window.MopsAssets.loadXlsx
+          ? window.MopsAssets.loadXlsx()
+          : Promise.resolve();
+        preload.catch(function() { /* im lặng */ }).then(function() {
+        var reader = new FileReader();
+        reader.onerror = function() { self.products.imp.reading = false; self.products.imp.error = 'Không đọc được tệp đã chọn.'; };
+        reader.onload = function(loadEvent) {
+          try {
+            var matrix;
+            if (ext === 'csv') {
+              var text = String(loadEvent.target.result || '');
+              matrix = self._productCsvMatrix(text);
+            } else {
+              if (!window.XLSX) throw new Error('Không tải được bộ đọc Excel. Hãy tải lại trang rồi thử lại.');
+              var book = window.XLSX.read(loadEvent.target.result, { type: 'array' });
+              if (!book.SheetNames.length) throw new Error('File Excel không có sheet nào.');
+              matrix = window.XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]], { header: 1, defval: '', raw: false });
+            }
+            self._prepareProductImport(matrix, file.name);
+          } catch (err) {
+            self.products.imp.error = err.message || 'Không thể đọc dữ liệu từ tệp.';
+          } finally { self.products.imp.reading = false; }
+        };
+        if (ext === 'csv') reader.readAsText(file, 'UTF-8'); else reader.readAsArrayBuffer(file);
+        });
+      },
+      _productCsvMatrix: function(text) {
+        var rows = String(text || '').replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(function(line) { return line.trim() !== ''; });
+        return rows.map(function(line) {
+          var out = [], current = '', quoted = false;
+          for (var i = 0; i < line.length; i++) { var c = line.charAt(i); if (c === '"') { if (quoted && line.charAt(i + 1) === '"') { current += '"'; i++; } else quoted = !quoted; } else if (c === ',' && !quoted) { out.push(current.trim()); current = ''; } else current += c; }
+          out.push(current.trim()); return out;
+        });
+      },
+      _prepareProductImport: function(matrix, fileName) {
+        var imp = this.products.imp;
+        if (!matrix || matrix.length < 2) throw new Error('Cần ít nhất một dòng tiêu đề và một dòng sản phẩm.');
+        var aliases = {
+          'tên sản phẩm': 'title', 'ten san pham': 'title', 'title': 'title', 'name': 'title',
+          'giá bán': 'price', 'gia ban': 'price', 'price': 'price', 'sku': 'sku',
+          'ảnh đại diện': 'image', 'anh dai dien': 'image', 'ảnh': 'image', 'anh': 'image', 'image': 'image', 'image url': 'image',
+          'giá gốc': 'compare_at_price', 'gia goc': 'compare_at_price', 'compare at price': 'compare_at_price',
+          'giá vốn': 'cost_price', 'gia von': 'cost_price', 'cost price': 'cost_price',
+          'tiền cọc': 'deposit_amount', 'tien coc': 'deposit_amount', 'deposit': 'deposit_amount',
+          'thương hiệu': 'vendor', 'thuong hieu': 'vendor', 'vendor': 'vendor',
+          'loại sản phẩm': 'product_type', 'loai san pham': 'product_type', 'product type': 'product_type',
+          'đơn vị': 'unit', 'don vi': 'unit', 'unit': 'unit',
+          'khối lượng (gram)': 'weight', 'khoi luong (gram)': 'weight', 'khối lượng': 'weight', 'weight': 'weight',
+          'mã vạch': 'barcode', 'ma vach': 'barcode', 'barcode': 'barcode',
+          'cần vận chuyển': 'requires_shipping', 'can van chuyen': 'requires_shipping', 'requires shipping': 'requires_shipping'
+        };
+        var header = matrix[0].map(function(value) { return String(value || '').trim().toLowerCase(); });
+        var fields = header.map(function(name) { return aliases[name] || ''; });
+        if (fields.indexOf('title') === -1) throw new Error('Không tìm thấy cột "Tên sản phẩm" hoặc "Title".');
+        imp.unknownCols = header.filter(function(name, index) { return name && !fields[index]; });
+        var rows = [];
+        for (var r = 1; r < matrix.length; r++) {
+          var item = {};
+          fields.forEach(function(field, index) { if (field && matrix[r][index] !== undefined && String(matrix[r][index]).trim() !== '') item[field] = String(matrix[r][index]).trim(); });
+          if (item.title) {
+            ['price', 'compare_at_price', 'cost_price', 'deposit_amount', 'weight'].forEach(function(field) { if (item[field] !== undefined) item[field] = Number(String(item[field]).replace(/[^0-9.-]/g, '')) || 0; });
+            if (item.requires_shipping !== undefined) item.requires_shipping = ['true', '1', 'có', 'co', 'yes', 'x'].indexOf(String(item.requires_shipping).toLowerCase()) !== -1;
+            rows.push(item);
+          }
+        }
+        if (!rows.length) throw new Error('Không có dòng nào có Tên sản phẩm để nhập.');
+        imp.fileName = fileName; imp.rows = rows; imp.step = 'preview'; imp.error = '';
+      },
+      commitProductImport: function() {
+        var self = this, core = window.MopsAdminCore, imp = this.products.imp, rows = imp.rows, batchSize = 25;
+        if (imp.importing || !rows.length) return;
+        imp.importing = true; imp.error = ''; imp.progress = 0; imp.completedBatches = 0;
+        var result = { created: 0, skipped: 0, error: 0 }, chain = Promise.resolve();
+        var totalBatches = Math.ceil(rows.length / batchSize);
+        imp.totalBatches = totalBatches;
+        for (var i = 0; i < rows.length; i += batchSize) (function(batch) {
+          var batchNo = Math.floor(i / batchSize) + 1;
+          chain = chain.then(function() { return core.gasPost({ action: 'import_products', rows: batch }).then(function(response) {
+            if (!response || !response.success) throw new Error((response && response.error) || 'Không thể nhập lô sản phẩm.');
+            ['created', 'skipped', 'error'].forEach(function(key) { result[key] += (response.stat && response.stat[key]) || 0; });
+            imp.completedBatches = batchNo; imp.progress = Math.round((batchNo / totalBatches) * 100);
+          }).catch(function(error) {
+            throw new Error('Lô ' + batchNo + '/' + totalBatches + ' thất bại sau khi đã xử lý ' + (batchNo - 1) + ' lô. ' + (error.message || error));
+          }); });
+        })(rows.slice(i, i + batchSize));
+        chain.then(function() { imp.importing = false; imp.result = result; imp.step = 'done'; core.showToast('Đã nhập ' + result.created + ' sản phẩm.', result.error ? 'info' : 'success'); })
+          .catch(function(error) { imp.importing = false; imp.error = error.message || 'Lỗi kết nối khi nhập sản phẩm.'; core.showToast(imp.error, 'error'); });
+      },
+      onNewProductImageFile: function(event) {
+        var self = this, core = window.MopsAdminCore, file = event.target.files && event.target.files[0], np = this.products.newProduct;
+        if (!file) return;
+        if (!/^image\//.test(file.type || '')) { core.showToast('Chỉ chọn tệp hình ảnh.', 'error'); event.target.value = ''; return; }
+        np.imagePreparing = true;
+        this._prepareProductImage(file, 5 * 1024 * 1024).then(function(result) {
+          np.imagePreview = result.dataUrl;
+          np.imageFileName = result.fileName;
+          // Đây là preview cục bộ, không ghi base64 vào Sheet. URL sẽ chỉ được lưu khi upload Sapo có endpoint xác thực.
+          core.showToast(result.compressed ? 'Đã nén ảnh xuống dưới 5 MB. Hãy tải ảnh lên Sapo hoặc dán URL ảnh Sapo.' : 'Ảnh hợp lệ dưới 5 MB. Hãy tải ảnh lên Sapo hoặc dán URL ảnh Sapo.', 'info');
+        }).catch(function(error) {
+          np.imagePreview = ''; np.imageFileName = '';
+          core.showToast(error.message || 'Không thể xử lý ảnh.', 'error');
+        }).finally(function() { np.imagePreparing = false; });
+      },
+      _prepareProductImage: function(file, maxBytes) {
+        function dataUrl(fileObj) {
+          return new Promise(function(resolve, reject) {
+            var reader = new FileReader();
+            reader.onerror = function() { reject(new Error('Không đọc được tệp ảnh.')); };
+            reader.onload = function() { resolve(String(reader.result || '')); };
+            reader.readAsDataURL(fileObj);
+          });
+        }
+        if (file.size <= maxBytes) return dataUrl(file).then(function(url) { return { dataUrl: url, fileName: file.name, compressed: false }; });
+        if (typeof createImageBitmap !== 'function') return Promise.reject(new Error('Ảnh vượt 5 MB; trình duyệt không hỗ trợ nén tự động. Hãy chọn ảnh nhỏ hơn 5 MB.'));
+        return createImageBitmap(file).then(function(bitmap) {
+          var maxEdge = 2400, scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
+          var canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(bitmap.width * scale)); canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+          canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+          if (bitmap.close) bitmap.close();
+          return new Promise(function(resolve, reject) {
+            function encode(quality) { canvas.toBlob(function(blob) { blob ? resolve(blob) : reject(new Error('Không thể nén ảnh.')); }, 'image/jpeg', quality); }
+            encode(0.82);
+          });
+        }).then(function(blob) {
+          if (blob.size > maxBytes) throw new Error('Ảnh sau khi nén vẫn lớn hơn 5 MB. Hãy chọn ảnh nhỏ hơn.');
+          return dataUrl(blob).then(function(url) { return { dataUrl: url, fileName: file.name.replace(/\.[^.]+$/, '') + '.jpg', compressed: true }; });
+        });
+      },
+      createLocalProduct: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var np = this.products.newProduct;
+        var title = (np.title || '').trim();
+        var price = Number(np.price);
+        if (!title) { core.showToast('Vui lòng nhập tên sản phẩm.', 'error'); return; }
+        if (isNaN(price) || price < 0) { core.showToast('Giá bán không hợp lệ.', 'error'); return; }
+        var compareAtPrice = np.compareAtPrice === '' ? 0 : Number(np.compareAtPrice);
+        if (isNaN(compareAtPrice) || compareAtPrice < 0) { core.showToast('Giá gốc không hợp lệ.', 'error'); return; }
+        var weight = np.weight === '' ? 0 : Number(np.weight);
+        if (isNaN(weight) || weight < 0) { core.showToast('Khối lượng không hợp lệ.', 'error'); return; }
+        this.products.creating = true;
+        core.gasPost({
+          action: 'create_local_product',
+          title: title,
+          price: price,
+          deposit_amount: Number(np.deposit) || 0,
+          cost_price: Number(np.costPrice) || 0,
+          sku: (np.sku || '').trim(),
+          image: (np.image || '').trim(),
+          compare_at_price: compareAtPrice,
+          vendor: (np.vendor || '').trim(),
+          product_type: (np.productType || '').trim(),
+          unit: (np.unit || '').trim(),
+          weight: weight,
+          barcode: (np.barcode || '').trim(),
+          requires_shipping: !!np.requiresShipping
+        })
+          .then(function(d) {
+            self.products.creating = false;
+            if (!d.success) throw new Error(d.error || 'Tạo sản phẩm thất bại');
+            core.showToast('Đã tạo sản phẩm "' + title + '".', 'success');
+            self.products.showAddForm = false;
+            self.products.newProduct = {
+              title: '', price: '', deposit: '', costPrice: '', sku: '', image: '',
+              compareAtPrice: '', vendor: '', productType: '', unit: '', weight: '', barcode: '', requiresShipping: false,
+              imageFileName: '', imagePreview: '', imagePreparing: false
+            };
+            self.loadProducts();
+          })
+          .catch(function(e) { self.products.creating = false; core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      }
+    }
+  });
+})();

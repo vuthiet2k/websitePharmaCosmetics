@@ -1,0 +1,265 @@
+<section class="combo_pro"> 
+	<div class="title-popup">
+		<h3 class="til_h3">{{settings.product_combo_title}}</h3>
+	</div>
+	<div id="product-bundled" class="product-bundled-section">
+		<form id="bundled-form" action="/cart/add" method="post">
+			<div id="bundled-products" class="bundled-products">
+				{% for tag in product.tags %}
+				{% assign tag_str = tag | split: '_'%}
+				{% assign tag_str_case = tag_str[0] | handleize %}
+				{% if tag_str_prefix_val == tag_str_case %}
+				{% capture names %}{{ tag_str[1] | handleize | remove_first: "/" }}{% endcapture %}
+
+				<div class="bundled-product">
+					<input checked type="checkbox" name="items[]" value="{{ all_products[names].id }}" class="bundled-checkbox form-check-input" 
+						   title="Chọn sản phẩm">
+					<a href="{{ all_products[names].url }}" class="thumb-product" title="{{ all_products[names].name }}">
+						<img height="150" width="150"
+							class="lazyload img-fluid"
+							src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII="
+							data-src="{{ all_products[names].featured_image.src | img_url: 'compact' }}"
+							alt="{{ all_products[names].name | escape }}">
+					</a>
+					<div class="box_content_pro">
+						<a href="{{ all_products[names].url }}" class="view-product" title="{{ all_products[names].name }}">
+							{{ all_products[names].name }}</a>
+						<span class="price price{{ all_products[names].id }}">{{all_products[names].variants[0].price | money}}</span>
+						{%- assign variantCount = all_products[names].variants | size -%}
+						{% if variantCount > 1 %}
+						<select id="product-new{{ all_products[names].id }}" name="variant-{{ all_products[names].id }}" class="bundled-variants form-select" title="Chọn thuộc tính sản phẩm">
+							{% for variant in all_products[names].variants %}
+							<option {% if variant == all_products[names].selected_or_la_available_variant %} selected="selected" {% endif %} 
+									data-value="{{ variant.title | escape}}"	value="{{ variant.id }}" data-price="{{variant.price}}">
+								{{ variant.title | escape}} - {{ variant.price | money }}</option>
+							{% endfor %}
+						</select>
+						{% else %}
+						<select name="variant-{{ all_products[names].id }}" class="bundled-variants form-select d-none" title="Chọn thuộc tính sản phẩm">
+							<option {% if variant == all_products[names].selected_or_first_available_variant %} selected="selected" {% endif %} value="{{ all_products[names].variants[0].id }}" data-price="{{all_products[names].variants[0].price}}">Mặc định - {{ all_products[names].variants[0].price | money }}</option>
+						</select>
+						{% endif %}
+					</div>
+				</div>
+				{%endif%}
+				{% endfor%}
+			</div>
+			<div class="bundled-right">
+				Tạm tính:
+				<div id="bundled-price">0₫</div>
+				<button class="btn-click-add">Thêm vào giỏ</button>
+			</div>
+		</form>
+	</div> 
+</section>
+<div id="successModal" class="modal popup-bundled">
+	<div class="modal-content">
+		<span class="close closebundled">×</span>
+		<p id="successMessage"></p>
+		<a href="/cart" class="btn" title="Xem giỏ hàng">Xem giỏ hàng</a>
+	</div>
+</div>
+<script>
+	$(document).ready(function() {
+		const bundledForm = document.getElementById('bundled-form');
+		const totalPriceElement = document.getElementById('bundled-price');
+		const successModal = document.getElementById('successModal');
+		const closeModalSpan = document.querySelector('.closebundled');
+		const checkboxes = document.querySelectorAll('.bundled-checkbox');
+		const variantSelects = document.querySelectorAll('.bundled-variants');
+
+		function updateCheckboxState() {
+			checkboxes.forEach(checkbox => {
+				const productId = checkbox.value;
+				const priceElement = document.querySelector(`.price.price${productId}`);
+
+				if (priceElement) {
+					const priceValue = parseFloat(priceElement.textContent.replace(/[^0-9.-]+/g, ""));
+					checkbox.disabled = priceValue === 0;
+					if (priceValue === 0) {
+						checkbox.checked = false;
+					}
+				}
+			});
+		}
+
+		function updateTotalPrice() {
+			let totalPrice = 0; // Khai báo lại biến totalPrice ở đây
+			checkboxes.forEach(checkbox => {
+				if (checkbox.checked) {
+					const productId = checkbox.value;
+					const variantSelect = document.querySelector(`select[name="variant-${productId}"]`);
+					const variantPrice = parseFloat(variantSelect.selectedOptions[0].getAttribute('data-price'));
+					totalPrice += variantPrice;
+				}
+			});
+			totalPriceElement.textContent = Bizweb.formatMoney(totalPrice, "{{store.money_format}}");
+															   updateCheckboxState();
+		}
+
+		updateCheckboxState(); // Gọi hàm để cập nhật trạng thái checkbox khi trang được tải
+
+		checkboxes.forEach(checkbox => {
+			checkbox.addEventListener('change', updateTotalPrice);
+			handleVariantChange(checkbox);
+		});
+
+		variantSelects.forEach(select => {
+			select.addEventListener('change', updateTotalPrice);
+		});
+
+		function handleVariantChange(checkbox) {
+			const productId = checkbox.value;
+			const produuswas = `.swas${productId} :radio`; // Đảm bảo biến được định nghĩa đúng
+			const produoption = `product-${productId}-option-`;
+			const produselect = `product-new${productId}`;
+			const produsel = `.single-${productId}`;
+			$(produuswas).change(function() {
+				const optionIndex = $(this).closest('.swatchitem').data('option-index');
+				const optionValue = $(this).val();
+
+				// Cập nhật giá trị của thuộc tính
+				$(this).closest('form').find(produsel).eq(optionIndex).val(optionValue).trigger('change');
+
+				const values = Array.from({ length: 3 }, (_, i) => {
+					const select = document.getElementById(`${produoption}${i}`);
+					return select ? select.value : undefined;
+				}).filter(Boolean).join(' / ');
+
+				const selectElement = document.getElementById(produselect);
+				let variantPrice = 0; // Khởi tạo giá biến thể
+
+				for (let i = 0; i < selectElement.options.length; i++) {
+					if (selectElement.options[i].dataset.value === values) {
+						selectElement.selectedIndex = i;
+						variantPrice = parseFloat(selectElement.options[i].getAttribute('data-price')); // Lấy giá biến thể
+						break;
+					}
+				}
+
+				// Cập nhật giá cho thuộc tính đã chọn
+				const priceElement = document.querySelector(`.price.price${checkbox.value}`);
+				if (priceElement) {
+					priceElement.textContent = Bizweb.formatMoney(variantPrice, "{{store.money_format}}");
+
+																  // Cập nhật giá bundled-price
+																  const bundledPriceElement = document.querySelector('.bundled-price'); // Chỉnh sửa selector nếu cần
+					if (bundledPriceElement) {
+						const totalPrice = calculateTotalPrice(); // Tính tổng giá
+						bundledPriceElement.textContent = Bizweb.formatMoney(totalPrice, "{{store.money_format}}");
+																			 }
+
+																			 const checkboxInput = document.querySelector(`input[name="items[]"][value="${checkbox.value}"]`);
+																			 if (variantPrice === 0) {
+							checkboxInput.disabled = true; // Vô hiệu hóa nếu giá = 0
+							checkboxInput.checked = false; // Bỏ chọn nếu giá = 0
+						} else {
+							checkboxInput.disabled = false; // Bỏ vô hiệu hóa nếu giá > 0
+							checkboxInput.checked = true; // Đánh dấu nếu giá > 0
+						}
+					}
+
+					updateTotalPrice(); // Gọi hàm để cập nhật tổng giá sau khi thay đổi
+				});
+
+				// Hàm giả định để tính tổng giá
+				function calculateTotalPrice() {
+					let total = 0;
+					// Thêm logic để tính tổng giá dựa trên các thuộc tính đã chọn
+					const selectedItems = document.querySelectorAll('input[name="items[]"]:checked');
+					selectedItems.forEach(item => {
+						const itemPrice = parseFloat(item.dataset.price); // Giả định rằng giá được lưu trong data-price
+						if (!isNaN(itemPrice)) {
+							total += itemPrice;
+						}
+					});
+					return total;
+				}
+
+			}
+
+								 bundledForm.addEventListener('submit', function(event) {
+				event.preventDefault();
+				const selectedItems = Array.from(checkboxes).filter(checkbox => checkbox.checked).map(checkbox => {
+					const productId = checkbox.value;
+					const variantSelect = document.querySelector(`select[name="variant-${productId}"]`);
+					const variantId = variantSelect.value;
+					const variantPrice = parseFloat(variantSelect.selectedOptions[0].getAttribute('data-price'));
+					return variantId ? { variant_id: variantId, quantity: 1, price: variantPrice } : null;
+				}).filter(Boolean);
+
+				if (selectedItems.length > 0) {
+					addToCart(selectedItems);
+				} else {
+					alert('Vui lòng chọn ít nhất 1 sản phẩm.');
+				}
+			});
+
+			function addToCart(items) {
+				let addedCount = 0;
+				let totalPrice = 0;
+
+				function moveAlong() {
+					if (items.length) {
+						const request = items.shift();
+						const data = `quantity=${request.quantity}&variantId=${request.variant_id}`;
+						$.ajax({
+							type: 'POST',
+							url: '/cart/add.js',
+							data: data,
+							dataType: 'json',
+							success: function() {
+								addedCount++;
+								totalPrice += request.price * request.quantity;
+								moveAlong();
+							},
+							error: function() {
+								console.log("fail");
+								moveAlong();
+							}
+						});
+					} else {
+						ajaxCart.load();
+						$('.combo_pro').removeClass('active');
+						$('.backdrop__body-backdrop___1rvky').removeClass('active');
+						document.getElementById('successMessage').textContent = `Đã thêm ${addedCount} sản phẩm vào giỏ hàng`;
+						successModal.style.display = "block";
+						$('.popup-bundled').addClass("active");
+						document.body.classList.add('modal-open');
+
+						const backdrop = document.createElement('div');
+						backdrop.className = 'modal-backdrop fade show';
+						document.body.appendChild(backdrop);
+					}
+				}
+				moveAlong();
+			}
+
+			closeModalSpan.onclick = function() {
+				successModal.style.display = "none";
+				$('.popup-bundled').removeClass('active');
+				document.body.classList.remove('modal-open');
+				const backdrop = document.querySelector('.modal-backdrop');
+				if (backdrop) {
+					document.body.removeChild(backdrop);
+				}
+			};
+
+			window.onclick = function(event) {
+				if (event.target === successModal) {
+					closeModalSpan.onclick();
+				}
+			};
+
+			updateTotalPrice(); // Gọi hàm để cập nhật giá ban đầu
+		});
+		const scrollableDiv = document.getElementById('bundled-products');
+		scrollableDiv.addEventListener('wheel', (e) => {
+			e.preventDefault();
+			const scrollAmount = 50; 
+			const newScrollLeft = scrollableDiv.scrollLeft + e.deltaY * scrollAmount;
+			requestAnimationFrame(() => {
+				scrollableDiv.scrollLeft = newScrollLeft;
+			});
+		});
+</script>

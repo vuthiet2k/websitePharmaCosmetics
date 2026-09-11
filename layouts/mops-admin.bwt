@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html class="light" lang="vi">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="robots" content="noindex,nofollow">
+	<title>{{ page_title | default: 'MOPS Admin' }}</title>
+	{%- if settings.theme_favicon_enable -%}
+	<link rel="icon" href="{{ 'favicon.png' | asset_url }}" type="image/x-icon">
+	{%- endif -%}
+
+	{{ 'vue.global.prod.js' | asset_url | script_tag }}
+	<script>
+		/* Fall back to the official Vue 3 CDN when the Sapo asset is unavailable (for example, HTTP 404). */
+		if (!window.Vue || typeof window.Vue.createApp !== 'function') {
+			document.write('<script src="https://unpkg.com/vue@3.5.13/dist/vue.global.prod.js"><\/script>');
+		}
+	</script>
+	<!-- Zero-Wait Path (2026-08-10): Chart.js (~200KB) + xlsx (~1MB) TRƯỚC ĐÂY tải sync ngay startup —
+	     ~1.2MB rơi vào critical path dù đa số nhân viên không mở tab Tổng quan/Báo cáo và không xuất
+	     Excel trong 1 session. Chuyển sang lazy-load qua window.MopsAssets.loadChart() và loadXlsx()
+	     — inject <script> tag khi cần dùng, return Promise. Xem Assets/mops-admin.js.bwt cuối file. -->
+	<script>
+		window.MopsAssets = (function() {
+			var CHART_URL = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js';
+			var XLSX_URL  = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+			var _p = {};
+			function _load(url, key, isReady) {
+				if (_p[key]) return _p[key];
+				if (isReady()) { _p[key] = Promise.resolve(); return _p[key]; }
+				_p[key] = new Promise(function(resolve, reject) {
+					var s = document.createElement('script');
+					s.src = url; s.async = true; s.defer = true;
+					s.onload = function() { resolve(); };
+					s.onerror = function() { _p[key] = null; reject(new Error('Không tải được ' + url)); };
+					document.head.appendChild(s);
+				});
+				return _p[key];
+			}
+			return {
+				loadChart: function() { return _load(CHART_URL, 'chart', function() { return !!window.Chart; }); },
+				loadXlsx:  function() { return _load(XLSX_URL,  'xlsx',  function() { return !!window.XLSX; }); }
+			};
+		})();
+	</script>
+	<style>
+		/* Tokens phải có ở layout scope: preloader, boot splash và workspace detail có thể nằm
+		   ngoài .ma-wrap hoặc render trước asset CSS. .ma-wrap trong page_mops_admin.scss.bwt
+		   vẫn giữ các token component chi tiết, nhưng không được là nơi DUY NHẤT định nghĩa nền. */
+		:root {
+			--ma-page-bg: {{ settings.mops_admin_surface_page | default: '#f7f8fa' }};
+			--ma-primary: {{ settings.mops_admin_primary | default: '#6b4dfc' }};
+			--ma-primary-hover: {{ settings.mops_admin_primary_hover | default: '#4a2fd6' }};
+			--ma-primary-fg: #ffffff; --ma-primary-soft: #f0edff; --ma-primary-ink: #4529b5; --ma-primary-ring: #c8bdfd;
+			--ma-card: #ffffff;
+			--ma-sidebar-bg: #fbfbfd; --ma-hover-row: #f6f6fb; --ma-subtle: #fafbfc;
+			--ma-tp: #16181e;
+			--ma-ts: #5b6270; --ma-tt: #8b93a1; --ma-td: #b5bbc7;
+			--ma-bd: #e7e9ee; --ma-bd-strong: #cfd3dc;
+			--ma-green-bg: #e3f6ea; --ma-green-fg: #196f39; --ma-green-ring: #a9dfbb;
+			--ma-blue-bg: #e6efff; --ma-blue-fg: #1c4bbc; --ma-blue-ring: #b2c8f5;
+			--ma-amber-bg: #fef2d6; --ma-amber-fg: #8a5411; --ma-amber-ring: #f2d786;
+			--ma-red-bg: #fde3e7; --ma-red-fg: #a12233; --ma-red-ring: #f2b6be;
+			--ma-gray-bg: #ecedf1; --ma-gray-fg: #4c5261; --ma-gray-ring: #cfd3dc;
+			--ma-purple-bg: #ede8ff; --ma-purple-fg: #4a35a8; --ma-purple-ring: #cabfff;
+			--ma-pink-bg: #fce1ed; --ma-pink-fg: #a02168; --ma-pink-ring: #f3b8d3;
+			--ma-orange-bg: #fee2c9; --ma-orange-fg: #9a4508; --ma-orange-ring: #f7c393;
+			--ma-teal-bg: #d9f2eb; --ma-teal-fg: #135f4e; --ma-teal-ring: #a2dcc9;
+			--ma-radius: 6px; --ma-radius-lg: 8px;
+			--ma-shadow-sm: 0 1px 2px rgba(20, 30, 50, 0.04); --ma-shadow-md: 0 4px 12px rgba(20, 30, 50, 0.08);
+		}
+		html, body { background: var(--ma-page-bg); }
+		[v-cloak],
+		#mops-app:not(.is-vue-ready) { display: none !important; }
+	</style>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0&display=block" rel="stylesheet">
+	<link rel="preload" as="style" type="text/css" href="{{ 'page_mops_admin.scss.css' | asset_url }}">
+	<link rel="preload" as="style" type="text/css" href="{{ 'mops-tailwind.css' | asset_url }}">
+	{{ 'mops-tailwind.css' | asset_url | stylesheet_tag }}
+	{{ 'page_mops_admin.scss.css' | asset_url | stylesheet_tag }}
+
+	{{ content_for_header }}
+
+
+	<style>
+		body { font-family: 'Inter', system-ui, -apple-system, sans-serif; overflow-x: hidden; }
+		/* Google Fonts phân phối subset Material Symbols; tránh asset local vượt giới hạn 2 MB của Sapo. */
+		.material-symbols-outlined {
+			font-family: 'Material Symbols Outlined';
+			font-weight: normal;
+			font-style: normal;
+			font-feature-settings: 'liga';
+			-webkit-font-feature-settings: 'liga';
+			-webkit-font-smoothing: antialiased;
+			display: inline-block;
+			line-height: 1;
+			letter-spacing: normal;
+			text-transform: none;
+			white-space: nowrap;
+			word-wrap: normal;
+			direction: ltr;
+			font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+			vertical-align: middle;
+		}
+		/* ── Data tables — header không xuống dòng, buộc scroll ngang trong wrapper
+		     riêng (overflow-x-auto) thay vì bóp méo cột khi màn hẹp (DESKTOP) ── */
+		th { white-space: nowrap; }
+		.ma-data-table { min-width: 760px; }
+
+		/* ── MOBILE (≤767px): tối ưu toàn cục cho MỌI tab quản lý (review mobile 2026-07-18) ──
+		   1) Toolbar lọc: 1 hàng cuộn ngang thay vì wrap chiếm 1/3 màn. Thêm class .ma-toolbar
+		      vào cụm filter của từng tab để nhận rule này (desktop giữ nguyên flex-wrap).
+		   2) Bảng .ma-data-table → thẻ dọc: hết vuốt ngang. td có data-label hiện "Nhãn: giá trị";
+		      td không nhãn xếp chồng đơn giản (định danh ở đầu thẻ). Áp cho mọi bảng dùng .ma-data-table. */
+		/* Detail bottom-sheet: chi tiết đơn (Orders) sổ inline trên desktop, thành modal trượt từ đáy
+		   trên mobile — hết cảnh kéo lướt qua dòng phình to. Backdrop ẩn ở desktop. */
+		.ma-detail-backdrop { display: none; }
+		/* Bộ lọc mobile: toolbar bị ẩn sau nút "Bộ lọc"; mở ra thành bottom-sheet (tái dùng token
+		   .ma-detail-sheet). Trigger + backdrop + sheet-head chỉ hiện ở mobile — desktop giữ toolbar inline. */
+		.ma-filter-trigger { display: none; }
+		.ma-filter-backdrop { display: none; }
+		.ma-filter-sheet-head { display: none; }
+		/* Dải chip trạng thái (fulfillment board, audit cats, shipping sub-nav): LUÔN 1 hàng cuộn ngang
+		   mọi kích thước (desktop + mobile) — dải mảnh, không ngốn chiều cao bảng. Không dùng utility
+		   Tailwind .flex-wrap (bị đè theo source order) — kiểm soát wrap tại đây. */
+		.ma-chip-scroll { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 4px; }
+		.ma-chip-scroll::-webkit-scrollbar { display: none; }
+		.ma-chip-scroll > * { flex: 0 0 auto; }
+		@media (max-width: 767px) {
+			.ma-filter-trigger { display: inline-flex; }
+			.ma-filter-backdrop { display: block; position: fixed; inset: 0; z-index: 54; background: rgba(0,0,0,0.45); }
+			/* Tab CHƯA chuyển sang sheet (.ma-toolbar không có --sheet): giữ hành vi cũ — 1 hàng cuộn ngang. */
+			.ma-toolbar:not(.ma-toolbar--sheet) { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 10px 12px; scrollbar-width: none; }
+			.ma-toolbar:not(.ma-toolbar--sheet)::-webkit-scrollbar { display: none; }
+			.ma-toolbar:not(.ma-toolbar--sheet) > * { flex: 0 0 auto; }
+			/* Tab ĐÃ chuyển sang sheet: toolbar ẩn cho tới khi bấm nút "Bộ lọc", mở ra thành bottom-sheet.
+			   Selector 2 class (.ma-toolbar.ma-toolbar--sheet) để specificity > utility Tailwind .flex
+			   (1 class, inject sau trong <head> — nếu chỉ 1 class sẽ bị .flex đè, toolbar hiện inline). */
+			.ma-toolbar.ma-toolbar--sheet { display: none; }
+			.ma-toolbar.ma-toolbar--sheet.is-filter-open {
+				display: flex; flex-direction: column; align-items: stretch; gap: 12px;
+				position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 55;
+				margin: 0; max-height: 85vh; overflow-y: auto;
+				border: none; border-radius: 16px 16px 0 0;
+				background: #ffffff; box-shadow: 0 -8px 30px rgba(0,0,0,0.25);
+				padding: 0 16px 20px;
+			}
+			.ma-toolbar.ma-toolbar--sheet.is-filter-open > * { flex: 0 0 auto; width: 100%; margin: 0; }
+			.ma-toolbar.ma-toolbar--sheet.is-filter-open .ma-filter-sheet-head {
+				display: flex; align-items: center; justify-content: space-between;
+				position: sticky; top: 0; z-index: 1; margin: 0 -16px 4px; padding: 14px 16px;
+				background: #ffffff; border-bottom: 1px solid rgba(120,140,130,0.28);
+			}
+			/* label ("Từ"/"đến"...) canh trái, không kéo full-width như input trong sheet */
+			.ma-toolbar.ma-toolbar--sheet.is-filter-open label { width: auto; font-weight: 600; }
+
+			.ma-detail-backdrop { display: block; position: fixed; inset: 0; z-index: 54; background: rgba(0,0,0,0.45); }
+			.ma-data-table tr.ma-detail-sheet { position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 55; margin: 0; max-height: 88vh; overflow-y: auto; border: none; border-radius: 16px 16px 0 0; background: #ffffff; box-shadow: 0 -8px 30px rgba(0,0,0,0.25); padding: 0; }
+			.ma-data-table tr.ma-detail-sheet > td { display: block; padding: 16px; }
+
+			.ma-data-table { min-width: 0; width: 100%; }
+			.ma-data-table thead { display: none; }
+			.ma-data-table tbody { display: block; }
+			.ma-data-table tr { display: block; margin: 0 0 10px; padding: 8px 12px; border: 1px solid rgba(207,211,220,0.6); border-radius: 12px; background: rgba(255,255,255,0.6); }
+			.ma-data-table td { display: block; width: 100%; padding: 4px 0; text-align: left; white-space: normal; border: none; }
+			.ma-data-table td[data-label] { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; text-align: right; }
+			.ma-data-table td[data-label]::before { content: attr(data-label); flex: 0 0 auto; font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.03em; color: #5b6270; text-align: left; }
+			.ma-data-table td:last-child:not([data-label]) { display: flex; justify-content: flex-end; padding-top: 6px; }
+		}
+		.custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+		.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+		.custom-scrollbar::-webkit-scrollbar-thumb { background: #cfd3dc; border-radius: 10px; }
+		.glass-panel {
+			background: rgba(255, 255, 255, 0.86);
+			backdrop-filter: blur(8px);
+			border: 1px solid rgba(231, 233, 238, 0.6);
+		}
+		/* ── Mobile sidebar drawer ── */
+		#ma-sidebar { transition: transform 220ms ease; }
+		@media (max-width: 767px) {
+			#ma-sidebar { position: fixed; inset: 0 auto 0 0; transform: translateX(-100%); z-index: 60; }
+			#ma-sidebar.is-open { transform: translateX(0); }
+		}
+		#ma-sidebar-overlay { display: none; }
+		#ma-sidebar-overlay.is-open { display: block; }
+		/* ── Sidebar scroll: nav là phần giữa của aside flex-column;
+		   cần overflow-y:auto + min-height:0 để không tràn khỏi h-screen khi nhiều mục.
+		   Áp cho cả state mở rộng lẫn thu gọn (rail thu gọn dropdown vẫn phẳng icon con). */
+		#ma-sidebar > nav { overflow-y: auto; min-height: 0; }
+		/* ── Desktop sidebar collapse (icon-only strip, NotebookLM-style) ── */
+		@media (min-width: 768px) {
+			#ma-sidebar { transition: width 200ms ease; }
+			#ma-wrap.is-sidebar-collapsed #ma-sidebar { width: 72px; }
+			#ma-wrap.is-sidebar-collapsed main { margin-left: 72px !important; }
+			/* header dùng md:left-[260px] inline — cần override khi rail thu gọn,
+			   nếu không header giữ nguyên left:260px, để lộ khoảng trắng 188px cạnh sidebar */
+			#ma-wrap.is-sidebar-collapsed main > header { left: 72px !important; }
+			#ma-wrap.is-sidebar-collapsed #cfg-footer { left: 72px !important; }
+			#ma-wrap.is-sidebar-collapsed .ma-sidebar-label,
+			#ma-wrap.is-sidebar-collapsed .ma-nav-label { display: none; }
+			#ma-wrap.is-sidebar-collapsed .ma-nav-link { justify-content: center; }
+			/* Rail thu gọn: dropdown cha mất nhãn + chevron, không còn lý do giữ thụt lề —
+			   phẳng icon con ngay dưới icon cha (isNavGroupOpen ép luôn mở khi collapsed) */
+			#ma-wrap.is-sidebar-collapsed .ma-nav-subgroup { margin-left: 0; padding-left: 0; border-left: none; }
+			#ma-wrap.is-sidebar-collapsed #ma-sidebar-collapse .material-symbols-outlined { transform: rotate(180deg); }
+		}
+		/* ── Loading spinner ── */
+		.ma-spin { animation: ma-spin 0.8s linear infinite; }
+		@keyframes ma-spin { to { transform: rotate(360deg); } }
+
+		/* ── Trạng thái "đang gửi" của form trong modal (vd Tạo/Sửa đơn thủ công) ──
+		   .ma-busy-form: mờ + chặn mọi tương tác lên form đang chờ server, tránh nhân viên
+		   sửa tiếp giỏ hàng/khách trong lúc request bay (đơn tạo ra sẽ không khớp màn hình).
+		   .ma-busy-card: thẻ spinner cố định giữa màn hình — báo rõ hệ thống đang chạy.
+		   Viết CSS thuần (không @apply) để vẫn hoạt động nếu Tailwind CDN lỗi tải. */
+		.ma-busy-form {
+			opacity: 0.45;
+			pointer-events: none;
+			user-select: none;
+			transition: opacity 160ms ease;
+		}
+		.ma-busy-card {
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			z-index: 97;
+			min-width: 240px;
+			padding: 24px 28px;
+			text-align: center;
+			background: #ffffff;
+			border-radius: 12px;
+			box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+		}
+		/* Render khởi tạo Vue lỗi: giữ preloader để template in-DOM chưa được patch không
+		   phơi các directive v-if/v-show và nội suy [[ ... ]] ra giao diện. */
+		.ma-preloader-overlay.is-error .ma-loader-bar span { animation: none; width: 100%; background: #a12233; }
+		.ma-preloader-overlay.is-error .ma-loader-status { max-width: 360px; color: #a12233; font-weight: 600; line-height: 1.5; }
+
+		/* ── STATUS BADGE SYSTEM — chuẩn hoá ngôn ngữ màu trạng thái toàn MOPS Admin (2026-07-28).
+		     Trước đây mỗi tab tự chọn Tailwind combo (bg-emerald-100 text-emerald-700, bg-amber-100
+		     text-amber-700...) → 26 chỗ inline khác nhau, semantic không nhất quán giữa Orders /
+		     Shipping / Products / Inventory. Giờ dùng .ma-badge base + variant theo NGHĨA (semantic),
+		     KHÔNG theo tên màu. Đổi ở đây là đổi toàn app; tab-level chỉ cần chọn đúng variant.
+		     JS helper: window.MopsAdminCore.badgeClass(kind) trong mops-admin.js.bwt. */
+		.ma-badge {
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			padding: 2px 8px;
+			font-size: 11px;
+			line-height: 16px;
+			font-weight: 600;
+			letter-spacing: 0.02em;
+			border-radius: 999px;
+			border: 1px solid transparent;
+			white-space: nowrap;
+			text-transform: none;
+		}
+		.ma-badge > .material-symbols-outlined { font-size: 13px; margin-right: -2px; }
+		/* Airtable-flavored soft-fill palette (Direction B v2, 2026-07-29). Đồng bộ EXACT với
+		   scratchpad/mops-ui-redesign/design-demos/direction-b-retool-airtable.html — warm-green
+		   / brick-red / warm-blue thay vì Tailwind emerald/rose/indigo (tông lạnh hơn, kém accessible
+		   ở mật độ 32px row). Fill + text tách sáng-tối 1 bậc rõ, border khớp fill (light-200 range)
+		   tạo "outlined pill" đặc trưng Airtable/Retool — khác với Material chip flat fill không border. */
+		.ma-badge--success  { background: #e3f6ea; color: #196f39; border-color: #a9dfbb; }  /* Đã thanh toán / Đã giao / Hoàn thành */
+		.ma-badge--warning  { background: #fef2d6; color: #8a5411; border-color: #f2d786; }  /* Chờ xử lý / Chờ giao lại / Đơn thiếu địa chỉ */
+		.ma-badge--danger   { background: #fde3e7; color: #a12233; border-color: #f2b6be; }  /* Đã huỷ / Hoàn hàng / Lỗi */
+		.ma-badge--info     { background: #e6efff; color: #1c4bbc; border-color: #b2c8f5; }  /* Đang giao / Chờ lấy hàng / Đang xử lý */
+		.ma-badge--neutral  { background: #ecedf1; color: #4c5261; border-color: #cfd3dc; }  /* Nháp / Không xác định / Chưa cập nhật */
+		.ma-badge--accent   { background: #ede8ff; color: #4a35a8; border-color: #cabfff; }  /* Đã hoàn tiền / VIP-Diamond / Đặc biệt / VIETQR / COD reconciliation */
+		.ma-badge--gold     { background: #fef2d6; color: #92400e; border-color: #f2d786; }  /* VIP-Gold membership tier */
+		.ma-badge--pink     { background: #fce1ed; color: #a02168; border-color: #f3b8d3; }  /* Đã hoàn tiền / soft refund state */
+		.ma-badge--orange   { background: #fee2c9; color: #9a4508; border-color: #f7c393; }  /* Giao lại / retry ship */
+		.ma-badge--teal     { background: #d9f2eb; color: #135f4e; border-color: #a2dcc9; }  /* Tiền mặt / cash paid */
+		/* Outline-only variants (transparent fill) — dùng cho "cần cấu hình" / "đang chờ hành động" — nhẹ nhất */
+		.ma-badge--outline-warning { background: transparent; color: #8a5411; border-color: #f2d786; }
+		.ma-badge--outline-neutral { background: transparent; color: #4c5261; border-color: #cfd3dc; }
+		/* Line-through modifier — dùng cho CANCELLED / dead-state (không phải standalone variant) */
+		.ma-badge--strike { text-decoration: line-through; }
+		/* Solid variants — dùng khi cần nhấn mạnh (số filter đang bật, badge notification) */
+		.ma-badge--solid-primary { background: {{ settings.mops_admin_primary | default: '#6b4dfc' }}; color: #ffffff; }
+		.ma-badge--solid-danger  { background: #dc2626; color: #ffffff; }
+		/* Size modifier — .ma-badge--sm nhỏ hơn 1 bậc, dùng trong table density cao */
+		.ma-badge--sm { padding: 1px 6px; font-size: 10px; line-height: 14px; }
+
+		/* ── System loading effect — dùng chung giữa preloader tĩnh (HTML/CSS thuần,
+		     hiện trước khi Vue mount, xem #ma-preloader trong page.mops-admin.bwt) và
+		     boot-splash trong Vue (#ma-boot-splash, v-if="screen === 'booting'"). Cùng
+		     1 bộ class ở đây để 2 giai đoạn nối liền mạch — không đổi thiết kế giữa
+		     lúc trang vừa load và lúc Vue đang verify phiên đăng nhập. Đặt ở đây (Layout
+		     head, không phải trong <body>) để style có sẵn ngay từ before-paint, không
+		     phụ thuộc Tailwind/Vue tải xong hay chưa. Không dùng vòng xoay (spin) —
+		     dùng thanh trượt + pulse + fade để tránh cảm giác bị nghẽn/đơ. */
+		.ma-loader-mark {
+			width: 88px;
+			height: 88px;
+			border-radius: 20px;
+			/* Logo (logoPC.svg) là ảnh trắng — nền trắng trước đây làm ảnh gần như vô hình.
+			   Đổi sang màu chính thương hiệu (--primary trong tailwind.config ở <head>) để
+			   logo trắng nổi rõ. Direction B (2026-07-28): purple #6b4dfc; glow theo rgba khớp. */
+			background: {{ settings.mops_admin_primary | default: '#6b4dfc' }};
+			box-shadow: 0 4px 20px rgba(107, 77, 252, 0.32);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 14px;
+			animation: ma-loader-pulse 1.8s ease-in-out infinite;
+		}
+		.ma-loader-mark img { width: 100%; height: 100%; object-fit: contain; }
+		/* Không đặt background riêng — ăn theo nền xanh của .ma-loader-mark cha (luôn hiển
+		   thị, kể cả khi ảnh lỗi), chỉ hiện chữ "M" trắng đè lên, tránh 2 giao diện màu
+		   ngược nhau tuỳ ảnh load được hay không. */
+		.ma-loader-mark-fallback {
+			display: none;
+			width: 100%;
+			height: 100%;
+			color: #ffffff;
+			align-items: center;
+			justify-content: center;
+			font-size: 32px;
+			font-weight: 800;
+		}
+		.ma-loader-bar {
+			width: 168px;
+			height: 3px;
+			border-radius: 9999px;
+			background: #e5e7eb;
+			overflow: hidden;
+		}
+		.ma-loader-bar span {
+			display: block;
+			width: 40%;
+			height: 100%;
+			border-radius: 9999px;
+			background: {{ settings.mops_admin_primary | default: '#6b4dfc' }};
+			animation: ma-loader-slide 1.2s ease-in-out infinite;
+		}
+		/* ── Chống FOUT (Flash of Unstyled Text): mọi chữ trong preloader dùng system font
+		     stack ngay từ đầu — KHÔNG kế thừa font-family: 'Roboto Condensed' của <body>
+		     (webfont tải từ Google Fonts, có độ trễ mạng). Nếu để kế thừa, lúc Roboto
+		     Condensed tải xong sẽ áp lại font giữa lúc đang hiện preloader → chữ co giãn,
+		     đổi hình dáng, nhảy vị trí (đúng hiện tượng FOUT). Dùng font hệ điều hành sẵn
+		     có → hiện đúng font này ngay từ khung hình đầu tiên và không đổi nữa suốt vòng
+		     đời preloader (kể cả khi Roboto Condensed tải xong sau đó — preloader không
+		     dùng font đó nên không có gì để "swap lại"). ── */
+		.ma-loader-status, .ma-loader-brand-title, .ma-loader-brand-sub, .ma-loader-mark-fallback {
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+		}
+		.ma-loader-status {
+			font-size: 0.875rem;
+			font-weight: 600;
+			color: {{ settings.mops_admin_primary_hover | default: '#4a2fd6' }};
+			margin: 0;
+			animation: ma-loader-fade 1.6s ease-in-out infinite;
+		}
+		.ma-loader-brand { text-align: center; margin-top: 8px; }
+		.ma-loader-brand-title {
+			font-size: 1rem;
+			font-weight: 800;
+			letter-spacing: 0.08em;
+			color: #1c1e21;
+			text-transform: uppercase;
+			margin: 0;
+		}
+		.ma-loader-brand-sub { font-size: 0.875rem; color: #6b7280; margin: 4px 0 0; }
+		@keyframes ma-loader-pulse {
+			0%, 100% { transform: scale(1); opacity: 1; }
+			50% { transform: scale(1.05); opacity: 0.9; }
+		}
+		@keyframes ma-loader-slide {
+			0% { transform: translateX(-100%); }
+			100% { transform: translateX(350%); }
+		}
+		@keyframes ma-loader-fade {
+			0%, 100% { opacity: 1; }
+			50% { opacity: 0.35; }
+		}
+		@media (prefers-reduced-motion: reduce) {
+			.ma-loader-mark, .ma-loader-bar span, .ma-loader-status { animation: none; }
+		}
+		/* Overlay cố định — chỉ dùng cho preloader tĩnh trước khi Vue mount; boot-splash
+		   trong Vue dùng layout thường (min-h-screen flex) vì đã là nội dung duy nhất
+		   render bên trong #mops-app lúc đó, không cần fixed. */
+		.ma-preloader-overlay {
+			position: fixed;
+			inset: 0;
+			z-index: 9999;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: 20px;
+			background: var(--ma-page-bg);
+			transition: opacity 300ms ease;
+		}
+		.ma-preloader-overlay.is-hidden { opacity: 0; pointer-events: none; }
+
+		/* ── Mobile App Springboard (page.mops-admin.bwt, .ma-spring — chỉ hiện dưới md:
+		     768px qua class md:hidden trên khung ngoài, KHÔNG đụng giao diện desktop).
+		     Nền dùng gradient thương hiệu thay ảnh phong cảnh thật — chưa có ảnh thương
+		     hiệu nào để dùng (design.md mục 10: không tự chèn ảnh stock vô nghĩa cho công
+		     cụ nội bộ). Đổi trực tiếp `background` của .ma-spring nếu sau này có ảnh thật;
+		     phần kính mờ (glassmorphism) phía trên không cần đổi theo. ── */
+		/* Ẩn mặc định bằng CSS thuần (không chỉ dựa vào class md:hidden của Tailwind) — cùng
+		   nguyên tắc phòng thủ 2 lớp đã dùng cho #ma-sidebar-overlay (display:none mặc định +
+		   .is-open mở). Tailwind CDN là <script> tải qua mạng, từng có tiền lệ lỗi làm mất CSS
+		   toàn trang trong chính file này (xem ghi chú fontSize/label-sm phía trên) — nếu nó
+		   tải chậm/lỗi trước khi vẽ trang, div fixed inset-0 z-80 này KHÔNG được phép tự nhiên
+		   che kín desktop chỉ vì class Tailwind chưa kịp áp dụng. */
+		.ma-spring {
+			display: none;
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			/* height: 100dvh (không phải inset:0/bottom:0) — dvh bám theo VISUAL viewport, tự co
+			   lại khi bàn phím mobile mở. top+height (không kèm bottom) khiến trình duyệt lấy
+			   height làm chuẩn thay vì kéo bottom cố định về đáy layout viewport tĩnh — nhờ vậy
+			   layout co giãn đúng theo flex bên trong (.ma-spring-pages flex:1 tự nhường chỗ cho
+			   bàn phím) mà không cần JS nghe visualViewport.resize. */
+			height: 100dvh;
+			z-index: 80;
+			flex-direction: column;
+			/* Gradient thương hiệu Direction B: deep purple → mid purple → soft violet.
+			   Đủ đối trọng với biểu tượng app glass trắng, đồng bộ với --primary (#6b4dfc). */
+			background: linear-gradient(165deg, #2a1a7a 0%, #4a2fd6 48%, #8f74ff 100%);
+			font-family: 'Inter', system-ui, -apple-system, sans-serif;
+			overflow: hidden;
+		}
+		@media (max-width: 767px) {
+			.ma-spring { display: flex; }
+		}
+		.ma-spring-header {
+			flex-shrink: 0;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			/* Bottom = 0 — khoảng cách xuống thanh search do chính margin-top của
+			   .ma-spring-search-bar quyết định (không cộng dồn 2 lớp padding+margin). */
+			padding: 16px 16px 0;
+		}
+		.ma-spring-logo { height: 26px; width: auto; }
+		.ma-spring-glass {
+			border: 1px solid rgba(255,255,255,0.22);
+		}
+		.ma-spring-icon-btn {
+			width: 44px;
+			height: 44px;
+			border-radius: 9999px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: #ffffff;
+			flex-shrink: 0;
+		}
+		.ma-spring-avatar {
+			width: 40px;
+			height: 40px;
+			border-radius: 9999px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: #ffffff;
+			font-weight: 800;
+			font-size: 0.95rem;
+			flex-shrink: 0;
+		}
+		.ma-spring-search-bar {
+			flex-shrink: 0;
+			/* Top 20px — tách khỏi header (review UX: trước đây dính sát chỉ nhờ padding-bottom
+			   8px của header, quá ngột ngạt). Bottom 24px — tách rõ khỏi dải filter phía dưới. */
+			margin: 20px 16px 24px;
+			/* Khai báo border trực tiếp ở đây (không dựa vào .ma-spring-glass) — 2 class cùng
+			   độ đặc hiệu nên thứ tự khai báo quyết định ai thắng, dễ gây nhầm lẫn khi đọc lại
+			   sau này. Giữ mức mờ y hệt .ma-spring-glass lúc nghỉ, sáng hơn khi :focus-within. */
+			border: 1px solid rgba(255,255,255,0.22);
+			border-radius: 14px;
+			padding: 8px 12px;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			min-height: 44px;
+			transition: background 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+		}
+		/* Kính mờ chỉ thật sự "sáng lên" khi focus — giữ tinh thần glassmorphism nhưng không
+		   dùng outline xanh mặc định của trình duyệt (thô, lệch tông). :focus-within đặt trên
+		   khối bọc (không phải input) để cả icon kính lúp + input cùng nhận hiệu ứng, và viền/
+		   glow ôm theo đúng bo góc pill 14px thay vì viền vuông mặc định quanh riêng ô input. */
+		.ma-spring-search-bar:focus-within {
+			background: rgba(255,255,255,0.18);
+			border-color: rgba(255,255,255,0.5);
+			box-shadow: 0 0 0 3px rgba(255,255,255,0.18), 0 4px 18px rgba(0,0,0,0.12);
+		}
+		.ma-spring-search-bar input {
+			background: transparent;
+			border: none;
+			outline: none;
+			color: #ffffff;
+			flex: 1;
+			font-size: 0.95rem;
+			min-width: 0;
+		}
+		.ma-spring-search-bar input::placeholder { color: rgba(255,255,255,0.7); }
+		.ma-spring-search-icon { color: rgba(255,255,255,0.7); }
+		.ma-spring-filters {
+			flex-shrink: 0;
+			display: flex;
+			gap: 8px;
+			padding: 0 16px 16px;
+			overflow-x: auto;
+			scrollbar-width: none;
+		}
+		.ma-spring-filters::-webkit-scrollbar { display: none; }
+		.ma-spring-chip {
+			flex-shrink: 0;
+			padding: 8px 16px;
+			min-height: 36px;
+			border-radius: 9999px;
+			background: rgba(255,255,255,0.14);
+			border: 1px solid rgba(255,255,255,0.18);
+			color: rgba(255,255,255,0.85);
+			font-size: 0.8125rem;
+			font-weight: 700;
+			white-space: nowrap;
+			display: flex;
+			align-items: center;
+			transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+		}
+		.ma-spring-chip.is-active {
+			background: rgba(255,255,255,0.4);
+			border-color: rgba(255,255,255,0.55);
+			color: #ffffff;
+		}
+		.ma-spring-pages {
+			flex: 1;
+			display: flex;
+			overflow-x: auto;
+			scroll-snap-type: x mandatory;
+			-webkit-overflow-scrolling: touch;
+			scrollbar-width: none;
+		}
+		.ma-spring-pages::-webkit-scrollbar { display: none; }
+		.ma-spring-page {
+			flex: 0 0 100%;
+			width: 100%;
+			scroll-snap-align: start;
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			gap: 22px 8px;
+			padding: 4px 20px;
+			/* center (không phải start) — .ma-spring-page đã stretch full chiều cao còn lại của
+			   .ma-spring-pages (flex:1), để align-content:start thì lưới app dồn hết lên đỉnh,
+			   để trống 1 khoảng lớn phía trên dot bên dưới. Center chia đều khoảng trống 2 đầu. */
+			align-content: center;
+		}
+		@media (max-width: 380px) {
+			.ma-spring-page { grid-template-columns: repeat(3, 1fr); }
+		}
+		.ma-spring-app {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 6px;
+			min-height: 44px;
+			-webkit-tap-highlight-color: transparent;
+		}
+		.ma-spring-app-icon {
+			position: relative;
+			width: 60px;
+			height: 60px;
+			border-radius: 18px;
+			background: rgba(255,255,255,0.22);
+			backdrop-filter: blur(10px);
+			-webkit-backdrop-filter: blur(10px);
+			border: 1px solid rgba(255,255,255,0.25);
+			box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: #ffffff;
+			transition: transform 120ms ease, background 120ms ease;
+		}
+		.ma-spring-app:active .ma-spring-app-icon { transform: scale(0.92); background: rgba(255,255,255,0.32); }
+		.ma-spring-app-icon .material-symbols-outlined { font-size: 28px; }
+		.ma-spring-app-badge {
+			position: absolute;
+			top: -4px;
+			right: -4px;
+			min-width: 20px;
+			height: 20px;
+			padding: 0 5px;
+			border-radius: 9999px;
+			background: #dc2626;
+			border: 2px solid #4a2fd6;
+			color: #ffffff;
+			font-size: 0.6875rem;
+			font-weight: 800;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		.ma-spring-app-label {
+			color: #ffffff;
+			font-size: 0.75rem;
+			font-weight: 600;
+			text-align: center;
+			line-height: 1.25;
+			max-width: 76px;
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+		}
+		.ma-spring-dots {
+			flex-shrink: 0;
+			display: flex;
+			justify-content: center;
+			gap: 6px;
+			/* Bottom nhỉnh hơn top — dịch cụm dot xuống thấp hơn 1 chút để cân trọng lượng thị
+			   giác với cụm header/search phía trên (review UX). */
+			padding: 8px 0 24px;
+		}
+		.ma-spring-dot {
+			width: 6px;
+			height: 6px;
+			border-radius: 9999px;
+			background: rgba(255,255,255,0.35);
+			transition: background 150ms ease, width 150ms ease;
+		}
+		.ma-spring-dot.is-active { background: #ffffff; width: 16px; }
+		@media (prefers-reduced-motion: reduce) {
+			.ma-spring-app-icon, .ma-spring-chip, .ma-spring-dot { transition: none; }
+		}
+
+		/* ── Toast ── */
+		#ma-toast { transition: opacity 200ms ease, transform 200ms ease; }
+
+		/* ── App Launcher (2026-08-21) — full-page grid responsive.
+		     Salesforce Lightning App Launcher pattern. Grid 2/4/6 cols mobile/tablet/desktop.
+		     Tile: 88×88 với icon 26dp trong ô 56×56 tint primary-container, label 1-2 dòng bên dưới.
+		     Category grouping 3 super-section (Vận hành / Quản trị / Báo cáo & Tài chính).
+		     Layout: fixed inset-0 z-70, cover toàn màn hình đè lên #ma-wrap dashboard.
+		     Badge count: dot đỏ (chưa đọc)/số (chờ xử lý) góc phải-trên tile-icon. ── */
+		.ma-launcher {
+			position: fixed;
+			inset: 0;
+			z-index: 70;
+			background: var(--ma-page-bg);
+			display: flex;
+			flex-direction: column;
+			overflow: hidden;
+			font-family: 'Inter', system-ui, -apple-system, sans-serif;
+		}
+		/* Body scroll-lock khi Launcher mở — Vue watch mobileHome.open toggle
+		   ma-launcher-open trên html+body. Tránh 2 thanh scroll (rev3 2026-08-22). */
+		html.ma-launcher-open,
+		body.ma-launcher-open {
+			overflow: hidden !important;
+			overscroll-behavior: none;
+		}
+		/* Header full-width edge-to-edge (không max-width để tránh chừa lề trắng ở
+		   màn ≥1440), inner content padding responsive khớp với body inset. Search
+		   input đưa vào cùng row header (thay vì tách row riêng bên dưới) — cấu trúc
+		   1-row đơn giản, giảm không gian dọc + tránh 2-thanh-scroll cảm giác. Rev
+		   2026-08-22 (rev3). */
+		.ma-launcher__header {
+			flex-shrink: 0;
+			display: flex;
+			align-items: center;
+			gap: 16px;
+			padding: 12px 24px;
+			border-bottom: 1px solid var(--ma-bd);
+			background: var(--ma-card);
+		}
+		@media (min-width: 640px)  { .ma-launcher__header { padding: 14px 32px; gap: 20px; } }
+		@media (min-width: 1024px) { .ma-launcher__header { padding: 14px 48px; gap: 24px; } }
+		@media (min-width: 1440px) { .ma-launcher__header { padding: 14px 64px; } }
+		.ma-launcher__brand {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			min-width: 0;
+			flex-shrink: 0;
+		}
+		.ma-launcher__brand img {
+			width: 40px;
+			height: 40px;
+			border-radius: 8px;
+			object-fit: contain;
+			flex-shrink: 0;
+			background: var(--ma-card);
+			padding: 2px;
+			border: 1px solid var(--ma-bd);
+		}
+		@media (min-width: 1024px) { .ma-launcher__brand img { width: 44px; height: 44px; } }
+		.ma-launcher__actions {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			flex-shrink: 0;
+		}
+		.ma-launcher__action {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			padding: 6px 12px;
+			border-radius: 8px;
+			background: transparent;
+			border: 1px solid var(--ma-bd);
+			color: var(--ma-tp);
+			font-size: 13px;
+			font-weight: 600;
+			cursor: pointer;
+			transition: background 120ms;
+		}
+		.ma-launcher__action:hover { background: var(--ma-subtle); }
+		.ma-launcher__avatar {
+			width: 36px;
+			height: 36px;
+			border-radius: 9999px;
+			background: var(--ma-primary);
+			color: #ffffff;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			font-weight: 800;
+			font-size: 14px;
+			border: none;
+			cursor: pointer;
+		}
+		/* Search input NẰM TRONG header (không tách row riêng — rev3 2026-08-22).
+		   flex:1 chiếm khoảng giữa brand và actions. margin 0. */
+		.ma-launcher__searchbar {
+			flex: 1;
+			min-width: 0;
+			max-width: 640px;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			margin: 0;
+			padding: 6px 12px;
+			border: 1px solid var(--ma-bd);
+			border-radius: 10px;
+			background: var(--ma-page-bg);
+			transition: border-color 120ms, box-shadow 120ms;
+		}
+		.ma-launcher__searchbar:focus-within {
+			border-color: var(--ma-primary);
+			box-shadow: 0 0 0 3px var(--ma-primary-ring);
+		}
+		.ma-launcher__searchbar input {
+			flex: 1;
+			min-width: 0;
+			background: transparent;
+			border: none;
+			outline: none;
+			font-size: 13.5px;
+			line-height: 1.4;
+			padding: 4px 0;
+			color: var(--ma-tp);
+		}
+		.ma-launcher__searchbar input::placeholder { color: var(--ma-tt); }
+		.ma-launcher__searchclear {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 24px;
+			height: 24px;
+			border-radius: 9999px;
+			background: transparent;
+			border: none;
+			color: var(--ma-ts);
+			cursor: pointer;
+		}
+		.ma-launcher__searchclear:hover { background: var(--ma-subtle); }
+		.ma-launcher__body {
+			flex: 1;
+			overflow-y: auto;
+			/* Spacing 2 bên: mobile 24px, tablet+ nhiều hơn để cân đối container rộng.
+			   Rev3 (2026-08-22): popover chuyển sang position:fixed nên KHÔNG cần
+			   padding-bottom lớn để né overflow clip nữa — restore về padding gốc. */
+			padding: 24px 24px 32px;
+		}
+		@media (min-width: 640px) { .ma-launcher__body { padding: 24px 32px 40px; } }
+		@media (min-width: 1024px) { .ma-launcher__body { padding: 28px 48px 48px; } }
+		@media (min-width: 1440px) { .ma-launcher__body { padding: 32px 64px 56px; max-width: 1440px; margin: 0 auto; width: 100%; } }
+		.ma-launcher__section + .ma-launcher__section { margin-top: 32px; }
+		.ma-launcher__heading {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			font-size: 12px;
+			font-weight: 700;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			color: var(--ma-ts);
+			margin: 0 0 14px;
+		}
+		.ma-launcher__grid {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 10px;
+		}
+		@media (min-width: 480px) { .ma-launcher__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+		@media (min-width: 640px) { .ma-launcher__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; } }
+		@media (min-width: 1024px) { .ma-launcher__grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; } }
+		@media (min-width: 1440px) { .ma-launcher__grid { grid-template-columns: repeat(8, minmax(0, 1fr)); } }
+		/* Tile — User req: bo góc 4px (không dùng radius lớn kiểu iOS/Android modern), bỏ shadow
+		   (hover chỉ đổi border + background nhẹ, không lift). Padding compact hơn để mobile fit 2 cột
+		   thoải mái không tràn ngoài viewport 360px. Min-height 84px cho tap target > WCAG 44px. */
+		.ma-launcher__tile {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 6px;
+			padding: 12px 6px;
+			background: var(--ma-card);
+			border: 1px solid var(--ma-bd);
+			border-radius: 4px;
+			cursor: pointer;
+			transition: background 120ms, border-color 120ms;
+			-webkit-tap-highlight-color: transparent;
+			text-align: center;
+			min-height: 84px;
+		}
+		.ma-launcher__tile:hover {
+			border-color: var(--ma-primary-ring);
+			background: var(--ma-subtle);
+		}
+		.ma-launcher__tile:active { background: var(--ma-primary-soft); }
+		.ma-launcher__tile-icon {
+			position: relative;
+			width: 44px;
+			height: 44px;
+			border-radius: 4px;
+			background: var(--ma-primary-soft);
+			color: var(--ma-primary-ink);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		.ma-launcher__tile-badge {
+			position: absolute;
+			top: -6px;
+			right: -6px;
+			min-width: 18px;
+			height: 18px;
+			padding: 0 5px;
+			border-radius: 9999px;
+			background: var(--ma-red-fg);
+			color: #ffffff;
+			font-size: 10px;
+			font-weight: 800;
+			line-height: 18px;
+			text-align: center;
+			border: 2px solid var(--ma-card);
+			box-sizing: border-box;
+		}
+		.ma-launcher__tile-label {
+			font-size: 12px;
+			font-weight: 600;
+			color: var(--ma-tp);
+			line-height: 1.25;
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+			word-break: break-word;
+			max-width: 100%;
+		}
+		@media (min-width: 640px) { .ma-launcher__tile-label { font-size: 13px; } }
+		.ma-launcher__empty {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 10px;
+			padding: 60px 20px;
+			text-align: center;
+			color: var(--ma-ts);
+		}
+		.ma-launcher__empty p { margin: 0; font-size: 13px; }
+
+		/* ── App Launcher V2 (2026-08-22 — Windows Store card style) ─────────────────
+		   Card VUÔNG (aspect-ratio 1/1) nền pastel + hover mở panel DETAIL nở rộng ngay
+		   tại vị trí card (không phải popover floating). --ma-lc-acc/--ma-lc-soft set
+		   inline theo từng card (:style trong template) — né color-mix() không ổn định
+		   trên Sapo (memory feedback_sapo_css_safe). Recent section CỐ Ý không mount
+		   .ma-launcher__detail — chỉ hover-lift + CTA pill. */
+		.ma-launcher__cards {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 12px;
+		}
+		@media (min-width: 480px) { .ma-launcher__cards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; } }
+		@media (min-width: 720px) { .ma-launcher__cards { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+		@media (min-width: 1024px) { .ma-launcher__cards { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; } }
+		@media (min-width: 1280px) { .ma-launcher__cards { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+		@media (min-width: 1600px) { .ma-launcher__cards { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
+
+		.ma-launcher__card {
+			position: relative;
+			aspect-ratio: 1 / 1;      /* Vuông — user req 2026-08-22 rev2, spacing đều */
+			border-radius: 14px;
+			background: var(--ma-card);
+			transition: box-shadow 200ms ease, transform 180ms ease;
+			isolation: isolate;
+		}
+		.ma-launcher__card:hover {
+			z-index: 40;
+			transform: translateY(-2px);
+			box-shadow: 0 10px 24px rgba(15, 23, 42, 0.10);
+		}
+
+		.ma-launcher__card-body {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: 12px;
+			width: 100%;
+			height: 100%;
+			padding: 14px 12px;
+			background: transparent;
+			border: 0;
+			border-radius: 14px;
+			cursor: pointer;
+			text-align: center;
+			-webkit-tap-highlight-color: transparent;
+		}
+		.ma-launcher__card-icon {
+			position: relative;
+			width: 56px;
+			height: 56px;
+			border-radius: 14px;
+			background: var(--ma-lc-soft, #e2e8f0);
+			color: var(--ma-lc-acc, #64748b);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			flex-shrink: 0;
+		}
+		.ma-launcher__card-icon .material-symbols-outlined {
+			font-variation-settings: 'FILL' 1, 'wght' 500;
+		}
+		.ma-launcher__card-badge {
+			position: absolute;
+			top: -6px;
+			right: -6px;
+			min-width: 20px;
+			height: 20px;
+			padding: 0 6px;
+			border-radius: 9999px;
+			background: var(--ma-red-fg);
+			color: #ffffff;
+			font-size: 11px;
+			font-weight: 800;
+			line-height: 20px;
+			text-align: center;
+			border: 2px solid var(--ma-card);
+			box-sizing: border-box;
+		}
+		.ma-launcher__card-name {
+			font-size: 13.5px;
+			font-weight: 700;
+			color: var(--ma-tp);
+			line-height: 1.25;
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+			word-break: break-word;
+			max-width: 100%;
+		}
+		.ma-launcher__card-status {
+			font-size: 11px;
+			font-weight: 600;
+			color: var(--ma-lc-acc, var(--ma-ts));
+			opacity: 0.85;
+			line-height: 1.2;
+			max-width: 100%;
+			text-align: center;
+		}
+		@media (min-width: 640px) {
+			.ma-launcher__card-name { font-size: 14.5px; }
+			.ma-launcher__card-icon { width: 60px; height: 60px; }
+		}
+		@media (min-width: 1024px) {
+			.ma-launcher__card-icon { width: 64px; height: 64px; }
+		}
+
+		/* CTA pill "Mở" trên hover đã BỎ (2026-08-22 rev): card đã click-toàn-thân,
+		   pill lơ lửng thừa + đè lên tên app khi hover — trải nghiệm rối. Detail
+		   popover fixed vẫn giữ cho các card có sub-menu ở Search/Sections. */
+
+		/* ── Detail popover: fixed tooltip (rev3 2026-08-22) ──────────────────────
+		   Single instance render ở cuối .ma-launcher (v-if theo launcherHoveredKey).
+		   position:fixed → toạ độ viewport, không bám .ma-launcher__body → không bị
+		   overflow-y:auto clip. inline style :style="top/left" tính từ card rect
+		   trong onLauncherEnter. Width cố định 320, height tuỳ content (max 340 +
+		   overflow-y auto nếu tràn). Grid rows auto everywhere — sub-menu block
+		   v-if khi rỗng → popover thu ngắn, không có khoảng trắng. */
+		.ma-launcher__detail {
+			position: fixed;
+			width: 320px;
+			max-height: 340px;
+			overflow-y: auto;
+			border-radius: 14px;
+			background: var(--ma-card);
+			border: 1px solid var(--ma-bd);
+			box-shadow: 0 24px 48px rgba(15, 23, 42, 0.22);
+			display: grid;
+			grid-template-columns: 1fr;
+			gap: 10px;
+			padding: 14px;
+			z-index: 60;
+			transform-origin: top left;
+			animation: ma-launcher-detail-in 220ms cubic-bezier(.2,.85,.3,1);
+		}
+		/* MS Store style: nở ra từ TOP-LEFT của card (vị trí popover đè đúng card) →
+		   dần scale 0.85 → 1 kèm opacity 0 → 1, cảm giác "app phình ra" thay vì
+		   floating-in từ đâu đó. Rev4 2026-08-22. */
+		@keyframes ma-launcher-detail-in {
+			from { opacity: 0; transform: scale(0.86); }
+			to   { opacity: 1; transform: scale(1); }
+		}
+
+		/* Detail — Block 1: Header (icon + identity + Mở) */
+		.ma-launcher__detail-head {
+			display: grid;
+			grid-template-columns: auto minmax(0, 1fr) auto;
+			gap: 10px;
+			align-items: center;
+			padding-bottom: 10px;
+			border-bottom: 1px solid var(--ma-bd);
+		}
+		.ma-launcher__detail-icon {
+			width: 40px;
+			height: 40px;
+			border-radius: 10px;
+			background: var(--ma-lc-soft, #e2e8f0);
+			color: var(--ma-lc-acc, #64748b);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		.ma-launcher__detail-icon .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500; }
+		.ma-launcher__detail-name {
+			font-size: 14.5px;
+			font-weight: 800;
+			color: var(--ma-tp);
+			line-height: 1.2;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+		.ma-launcher__detail-cat {
+			font-size: 10.5px;
+			font-weight: 700;
+			color: var(--ma-ts);
+			line-height: 1.2;
+			margin-top: 3px;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+		}
+		.ma-launcher__detail-cta {
+			padding: 6px 14px;
+			border-radius: 9999px;
+			background: var(--ma-lc-acc, var(--ma-primary));
+			color: #ffffff;
+			font-size: 12px;
+			font-weight: 700;
+			border: 0;
+			cursor: pointer;
+			flex-shrink: 0;
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			transition: filter 120ms, transform 120ms;
+		}
+		.ma-launcher__detail-cta:hover { filter: brightness(1.08); transform: translateY(-1px); }
+
+		/* Detail — Block 2: Description */
+		.ma-launcher__detail-desc {
+			font-size: 12px;
+			color: var(--ma-ts);
+			margin: 0;
+			line-height: 1.5;
+		}
+
+		/* Detail — Block 3: Sub-menu grid. Chỉ render khi launcherSubMenus.length > 0
+		   (v-if trong template) — nếu app không có sub thì cả block ẩn hẳn, popover
+		   thu ngắn theo content. */
+		.ma-launcher__detail-sub { display: block; }
+		.ma-launcher__detail-subhead {
+			font-size: 10.5px;
+			font-weight: 800;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			color: var(--ma-ts);
+			margin-bottom: 6px;
+		}
+		.ma-launcher__detail-subgrid {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 4px;
+		}
+		.ma-launcher__detail-subitem {
+			display: flex;
+			align-items: center;
+			gap: 4px;
+			padding: 6px 8px;
+			border-radius: 6px;
+			background: transparent;
+			border: 0;
+			cursor: pointer;
+			font-size: 12px;
+			font-weight: 500;
+			color: var(--ma-tp);
+			text-align: left;
+			transition: background 120ms, color 120ms;
+		}
+		.ma-launcher__detail-subitem:hover {
+			background: var(--ma-lc-soft, var(--ma-subtle));
+			color: var(--ma-lc-acc, var(--ma-tp));
+		}
+		.ma-launcher__detail-subitem .material-symbols-outlined {
+			color: var(--ma-lc-acc, var(--ma-ts));
+			flex-shrink: 0;
+		}
+		.ma-launcher__detail-subitem .flex-1 {
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+		}
+
+		/* Detail — Block 4: Footer meta (badge count / group) */
+		.ma-launcher__detail-meta {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 8px;
+			padding-top: 8px;
+			border-top: 1px solid var(--ma-bd);
+			font-size: 11px;
+			color: var(--ma-ts);
+		}
+		.ma-launcher__detail-meta-badge {
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
+			padding: 2px 8px;
+			border-radius: 9999px;
+			background: var(--ma-red-fg);
+			color: #ffffff;
+			font-weight: 700;
+			font-size: 10.5px;
+		}
+		.ma-launcher__detail-meta-badge--muted {
+			background: var(--ma-lc-soft, var(--ma-subtle));
+			color: var(--ma-lc-acc, var(--ma-ts));
+		}
+
+		/* Mobile / touch: không có hover — detail overlay không có nghĩa (chưa có
+		   long-press mechanism), ẩn hoàn toàn để card tap thẳng vào tab. */
+		@media (hover: none) {
+			.ma-launcher__detail { display: none !important; }
+			.ma-launcher__card:hover { transform: none; box-shadow: none; }
+		}
+	</style>
+
+</head>
+<body class="bg-surface-container-low text-on-surface min-h-screen">
+	{{ content_for_layout }}
+</body>
+</html>

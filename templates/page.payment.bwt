@@ -1,0 +1,1234 @@
+{{ 'page_payment.scss.css' | asset_url | stylesheet_tag }}
+
+<div class="mops-page mops-page--payment">
+
+  
+  <div class="mops-state" id="mops-state-loading">
+    <div class="mops-catalog-hero">
+      <div class="container">
+        <span class="mops-sk mops-sk--xl" style="width:42%;margin-bottom:14px;"></span>
+        <span class="mops-sk mops-sk--sm" style="width:28%;"></span>
+      </div>
+    </div>
+    <div class="mops-layout">
+      <div class="container">
+        <div class="mops-catalog-grid">
+          <div class="mops-cat-card">
+            <div class="mops-cat-card__body">
+              <span class="mops-sk mops-sk--base" style="width:70%;margin-bottom:8px;"></span>
+              <span class="mops-sk mops-sk--sm" style="width:90%;margin-bottom:6px;"></span>
+              <span class="mops-sk mops-sk--sm" style="width:75%;margin-bottom:18px;"></span>
+              <span class="mops-sk mops-sk--sm" style="width:50%;margin-bottom:4px;"></span>
+              <span class="mops-sk mops-sk--base" style="width:38%;"></span>
+            </div>
+            <span class="mops-sk" style="width:100%;height:44px;border-radius:8px;margin-top:16px;"></span>
+          </div>
+          <div class="mops-cat-card">
+            <div class="mops-cat-card__body">
+              <span class="mops-sk mops-sk--base" style="width:78%;margin-bottom:8px;"></span>
+              <span class="mops-sk mops-sk--sm" style="width:85%;margin-bottom:6px;"></span>
+              <span class="mops-sk mops-sk--sm" style="width:60%;margin-bottom:18px;"></span>
+              <span class="mops-sk mops-sk--sm" style="width:45%;margin-bottom:4px;"></span>
+              <span class="mops-sk mops-sk--base" style="width:40%;"></span>
+            </div>
+            <span class="mops-sk" style="width:100%;height:44px;border-radius:8px;margin-top:16px;"></span>
+          </div>
+          <div class="mops-cat-card">
+            <div class="mops-cat-card__body">
+              <span class="mops-sk mops-sk--base" style="width:65%;margin-bottom:8px;"></span>
+              <span class="mops-sk mops-sk--sm" style="width:88%;margin-bottom:6px;"></span>
+              <span class="mops-sk mops-sk--sm" style="width:70%;margin-bottom:18px;"></span>
+              <span class="mops-sk mops-sk--sm" style="width:52%;margin-bottom:4px;"></span>
+              <span class="mops-sk mops-sk--base" style="width:36%;"></span>
+            </div>
+            <span class="mops-sk" style="width:100%;height:44px;border-radius:8px;margin-top:16px;"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="mops-state" id="mops-state-catalog" hidden>
+    <div class="mops-catalog-hero">
+      <div class="container">
+        <h1 class="mops-hero__title">{{ page.name | escape }}</h1>
+        {%- if page.content != blank -%}
+        <p class="mops-catalog-hero__desc">{{ page.content | strip_html | truncate: 200 }}</p>
+        {%- endif -%}
+      </div>
+    </div>
+    <div class="mops-layout">
+      <div class="container">
+        <div class="mops-catalog-tabs-wrap" id="mops-catalog-tabs-wrap" hidden>
+          <div class="mops-booking-tabs" id="mops-catalog-tabs">
+            <button class="mops-booking-tab mops-booking-tab--active" type="button" data-tab="services">Liệu trình</button>
+            <button class="mops-booking-tab" type="button" data-tab="products">Sản phẩm</button>
+          </div>
+        </div>
+        <div class="mops-catalog-grid" id="mops-catalog-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="mops-state" id="mops-state-cart" hidden>
+    <div class="mops-catalog-hero mops-catalog-hero--cart">
+      <div class="container">
+        <h1 class="mops-hero__title">Xác nhận đơn hàng</h1>
+        <p class="mops-catalog-hero__desc">Kiểm tra giỏ hàng và điền thông tin đặt lịch</p>
+      </div>
+    </div>
+    <div class="mops-layout">
+      <div class="container">
+        <div class="row">
+
+          
+          <div class="col-lg-7 order-2 order-lg-1 mops-content-col">
+            <button type="button" class="mops-btn-back" id="mops-btn-back">
+              &#8592; Thêm dịch vụ / sản phẩm
+            </button>
+            <div class="mops-cart-items" id="mops-cart-items"></div>
+            <div class="mops-cart-total" id="mops-cart-total"></div>
+          </div>
+
+          
+          <div class="col-lg-5 order-1 order-lg-2 mops-form-col">
+            <div class="mops-form-sticky">
+              <div class="mops-form">
+                <form id="mops-cart-form" novalidate>
+
+                  <p class="mops-form__section-title">Thông tin khách hàng</p>
+                  <div class="mops-form__group">
+                    <label class="mops-form__label" for="mops-cart-name">Họ và tên <span aria-hidden="true">*</span></label>
+                    <input class="mops-form__input" id="mops-cart-name" name="customer_name"
+                           type="text" autocomplete="name" required placeholder="Nguyễn Thị A">
+                  </div>
+                  <div class="mops-form__group">
+                    <label class="mops-form__label" for="mops-cart-phone">Số điện thoại <span aria-hidden="true">*</span></label>
+                    <input class="mops-form__input" id="mops-cart-phone" name="phone"
+                           type="tel" autocomplete="tel" required placeholder="0901 234 567">
+                  </div>
+
+                  <p class="mops-form__section-title">Lịch hẹn &amp; Cơ sở</p>
+                  {%- assign mops_stores_raw = settings.mops_stores | default: '' | strip -%}
+                  {%- if mops_stores_raw != blank -%}
+                  {%- assign mops_stores_list = mops_stores_raw | split: ';' -%}
+                  <div class="mops-form__group">
+                    <label class="mops-form__label" for="mops-cart-store">Cơ sở nhận / hẹn <span aria-hidden="true">*</span></label>
+                    <select class="mops-form__input mops-form__select" id="mops-cart-store" name="store" required>
+                      <option value="">-- Chọn cơ sở --</option>
+                      {%- for store_item in mops_stores_list -%}
+                        {%- assign s = store_item | strip -%}
+                        {%- if s != blank -%}
+                        <option value="{{ s | escape }}">{{ s | escape }}</option>
+                        {%- endif -%}
+                      {%- endfor -%}
+                    </select>
+                  </div>
+                  {%- endif -%}
+                  <div class="mops-form-row-2">
+                    <div class="mops-form__group">
+                      <label class="mops-form__label" for="mops-cart-date">Ngày hẹn <span aria-hidden="true">*</span></label>
+                      <input class="mops-form__input" id="mops-cart-date" name="appointment_date"
+                             type="date" required>
+                    </div>
+                    <div class="mops-form__group">
+                      <label class="mops-form__label" for="mops-cart-time">Giờ hẹn <span aria-hidden="true">*</span></label>
+                      {%- assign mops_slots_raw = settings.mops_time_slots | default: '9:00;9:30;10:00;10:30;11:00;13:00;13:30;14:00;14:30;15:00;15:30;16:00;16:30;17:00' | strip -%}
+                      {%- assign mops_slots = mops_slots_raw | split: ';' -%}
+                      <select class="mops-form__input mops-form__select" id="mops-cart-time" name="appointment_time" required>
+                        <option value="">-- Chọn giờ --</option>
+                        {%- for slot in mops_slots -%}
+                          {%- assign sl = slot | strip -%}
+                          {%- if sl != blank -%}
+                          <option value="{{ sl | escape }}">{{ sl | escape }}</option>
+                          {%- endif -%}
+                        {%- endfor -%}
+                      </select>
+                    </div>
+                  </div>
+
+                  <p class="mops-form__section-title">Phương thức thanh toán</p>
+                  <div class="mops-pay-opts" id="mops-pay-opts">
+                    <label class="mops-pay-opt is-active" id="mops-pay-opt-deposit">
+                      <input type="radio" name="payment_mode" value="deposit" checked hidden>
+                      <div class="mops-pay-opt__body">
+                        <span class="mops-pay-opt__name">Đặt cọc</span>
+                        <span class="mops-pay-opt__amount" id="mops-pay-deposit-amount">—</span>
+                        <span class="mops-pay-opt__note">Thanh toán phần còn lại tại cơ sở</span>
+                      </div>
+                    </label>
+                    <label class="mops-pay-opt" id="mops-pay-opt-full">
+                      <input type="radio" name="payment_mode" value="full" hidden>
+                      <div class="mops-pay-opt__body">
+                        <span class="mops-pay-opt__name">Thanh toán toàn bộ</span>
+                        <span class="mops-pay-opt__amount" id="mops-pay-full-amount">—</span>
+                        <span class="mops-pay-opt__note">Sản phẩm trả đủ; liệu trình thanh toán nốt tại cơ sở</span>
+                      </div>
+                    </label>
+                  </div>
+
+                  <p class="mops-form__section-title">Mã giảm giá</p>
+                  <div class="mops-coupon-row">
+                    <input class="mops-form__input mops-coupon-row__input" id="mops-coupon-input"
+                           type="text" placeholder="Nhập mã (nếu có)">
+                    <button type="button" class="mops-coupon-row__btn" id="mops-coupon-apply">Áp dụng</button>
+                  </div>
+                  <div class="mops-coupon-feedback" id="mops-coupon-feedback" hidden></div>
+
+                  <div class="mops-form__group" style="margin-top:20px;">
+                    <label class="mops-form__label" for="mops-cart-note">Ghi chú (tùy chọn)</label>
+                    <input class="mops-form__input" id="mops-cart-note" name="note"
+                           type="text" placeholder="Vấn đề da, yêu cầu đặc biệt...">
+                  </div>
+
+                  <div class="mops-form__error" id="mops-cart-form-error" hidden></div>
+                  <button type="submit" class="mops-btn-submit" id="mops-btn-order-submit">
+                    Đặt cọc &amp; Xác nhận
+                  </button>
+                </form>
+                <p class="mops-form__privacy">
+                  Thông tin của bạn được bảo mật hoàn toàn và chỉ dùng để xác nhận lịch hẹn.
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="mops-state" id="mops-state-error" hidden>
+    <div class="mops-error-page">
+      <div class="container">
+        <div class="mops-error-box">
+          <p id="mops-error-msg">Đã có lỗi xảy ra.</p>
+          <a href="{{ page.url }}" class="mops-btn-submit" style="display:inline-block;text-decoration:none;">
+            Xem tất cả dịch vụ
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<button class="mops-cart-fab" id="mops-cart-fab" type="button" aria-label="Xem giỏ hàng" hidden>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+    <line x1="3" y1="6" x2="21" y2="6"/>
+    <path d="M16 10a4 4 0 0 1-8 0"/>
+  </svg>
+  <span class="mops-cart-fab__badge" id="mops-cart-fab-badge">0</span>
+</button>
+
+
+<div class="mops-popup" id="mops-popup" role="dialog" aria-modal="true" aria-labelledby="mops-popup-title">
+  <div class="mops-popup__box">
+    <button class="mops-popup__close" id="mops-popup-close" aria-label="Đóng">&times;</button>
+    <h2 class="mops-popup__title" id="mops-popup-title">Quét QR để thanh toán</h2>
+    <p class="mops-popup__subtitle">Chuyển khoản đúng số tiền và nội dung bên dưới</p>
+    <div class="mops-qr-wrap">
+      <img class="mops-qr-img" id="mops-qr-img" src="" alt="QR chuyển khoản" width="220" height="220">
+      <span class="mops-qr-note">Scan bằng app ngân hàng hoặc MOMO</span>
+    </div>
+    <div class="mops-popup__info">
+      <div class="mops-info-row">
+        <span class="mops-info-row__label">Mã đơn</span>
+        <span class="mops-info-row__value" id="mops-order-id-display"></span>
+      </div>
+      <div class="mops-info-row">
+        <span class="mops-info-row__label">Số tiền</span>
+        <span class="mops-info-row__value" id="mops-amount-display"></span>
+      </div>
+      <div class="mops-info-row">
+        <span class="mops-info-row__label">Nội dung CK</span>
+        <span class="mops-info-row__value" id="mops-content-display"></span>
+        <button class="mops-copy-btn" id="mops-copy-btn" type="button">Sao chép</button>
+      </div>
+    </div>
+    <div class="mops-expire-bar">
+      QR hết hạn sau <strong id="mops-countdown">--:--</strong>
+    </div>
+    <div id="mops-expired-notice" class="mops-expired-notice" hidden>
+      <p>QR đã hết hạn. Vui lòng đóng và thực hiện lại.</p>
+    </div>
+    <button type="button" id="mops-btn-reported" class="mops-btn-reported">
+      Tôi đã chuyển khoản xong
+    </button>
+    <div class="mops-thankyou" id="mops-thankyou">
+      <div class="mops-thankyou__icon">&#x2705;</div>
+      <h3 class="mops-thankyou__title">Cảm ơn bạn!</h3>
+      <p class="mops-thankyou__msg">Chúng tôi đã ghi nhận và sẽ xác nhận lịch hẹn trong thời gian sớm nhất.</p>
+      <div class="mops-thankyou__code">Mã đơn: <strong id="mops-thankyou-code"></strong></div>
+      <a href="#" id="mops-lookup-link" class="mops-thankyou__link">Tra cứu trạng thái đơn</a>
+    </div>
+  </div>
+</div>
+
+<script>
+var __mopsDetailBase = {{ settings.skinhealthy_detail_url | default: '' | json }};
+</script>
+
+<script>
+(function() {
+  'use strict';
+
+  var GAS_URL = {{ settings.mops_gas_url | json }};
+  var PH      = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII=';
+
+  var _cart           = [];
+  var _catalog        = [];
+  // Fallback cho addToCart() khi handle KHÔNG có trong _catalog (chưa được admin
+  // "Kết nối" vào ProductMappings) — vẫn cho mua được (thanh toán đủ, không đặt cọc),
+  // miễn sản phẩm có thật + đang active bên SAPO. Nguồn: list_products (đã có sẵn,
+  // public) — merge phía client, KHÔNG đổi lưới hiển thị dịch vụ (renderCatalog vẫn
+  // chỉ dùng _catalog để tránh dump toàn bộ sản phẩm SAPO vào giao diện chọn dịch vụ).
+  var _productCatalog = {};
+  var _paymentMode    = 'deposit';
+  var _countdownTimer = null;
+  var _pollingTimer   = null;
+  // Chỉ là preview hiển thị — createOrder() ở server LUÔN tự kiểm tra lại mã này
+  // (điều kiện có thể đổi giữa lúc preview và lúc submit, vd giỏ hàng thay đổi
+  // khiến không còn đủ đơn tối thiểu). Không tự reset khi sửa giỏ hàng để tránh
+  // mất mã khi khách chỉ đổi qua lại giữa cọc/thanh toán đủ — nếu mã không còn
+  // hợp lệ lúc submit, backend báo lỗi rõ ràng thay vì âm thầm tính sai.
+  var _appliedDiscount = { code: '', amount: 0 };
+  var SH_CART_KEY     = 'sh_cart';
+  var HIST_KEY        = 'mops_booking_history'; // đọc bởi templates/page.order-lookup.bwt
+
+  // Lưu tối đa 20 đơn gần nhất vào máy khách để trang "Tra cứu đặt lịch" hiện
+  // được lịch sử — trước đây chỉ page.dat_lich_tu_van.bwt (đã không còn dùng
+  // trong luồng hiện tại) ghi vào key này, nên panel "Lịch sử đặt lịch của bạn"
+  // luôn trống với mọi khách đặt qua trang thanh toán hiện tại.
+  function _saveToHistory(orderData) {
+    try {
+      var hist = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+      if (!Array.isArray(hist)) hist = [];
+      hist.unshift({
+        order_id:     orderData.order_id || '',
+        product_name: orderData.product_name || '',
+        created_at:   new Date().toISOString()
+      });
+      hist = hist.slice(0, 20);
+      localStorage.setItem(HIST_KEY, JSON.stringify(hist));
+    } catch (e) { /* localStorage đầy/bị chặn — không chặn luồng thanh toán */ }
+  }
+
+  function _loadCart() {
+    try {
+      var s = localStorage.getItem(SH_CART_KEY);
+      _cart = s ? JSON.parse(s) : [];
+      // V2 migration: discard V1 items that don't have a handle field
+      _cart = _cart.filter(function(item) { return item.handle; });
+    } catch(e) { _cart = []; }
+  }
+  function _saveCart() {
+    try { localStorage.setItem(SH_CART_KEY, JSON.stringify(_cart)); } catch(e) {}
+  }
+  _loadCart();
+  setTimeout(function() { updateFab(); }, 0);
+
+  // ── State machine ─────────────────────────────────────────────────────────────
+
+  function showState(name) {
+    ['loading', 'catalog', 'cart', 'error'].forEach(function(s) {
+      var el = document.getElementById('mops-state-' + s);
+      if (el) { el.hidden = (s !== name); }
+    });
+  }
+
+  function showPageError(msg) {
+    var box = document.getElementById('mops-error-msg');
+    if (box) { box.textContent = msg || 'Đã có lỗi xảy ra.'; }
+    showState('error');
+  }
+
+  // ── GAS fetch ────────────────────────────────────────────────────────────────
+
+  function gasPost(body) {
+    var ctrl  = new AbortController();
+    var timer = setTimeout(function() { ctrl.abort(); }, 30000);
+    return fetch(GAS_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body:    JSON.stringify(body),
+      signal:  ctrl.signal
+    })
+    .then(function(r) { clearTimeout(timer); return r.json(); })
+    .catch(function(e) { clearTimeout(timer); throw e; });
+  }
+
+  function gasGet(params) {
+    var sep   = GAS_URL.indexOf('?') !== -1 ? '&' : '?';
+    var query = Object.keys(params).map(function(k) {
+      return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+    }).join('&');
+    var ctrl  = new AbortController();
+    var timer = setTimeout(function() { ctrl.abort(); }, 30000);
+    return fetch(GAS_URL + sep + query, { signal: ctrl.signal })
+      .then(function(r) { clearTimeout(timer); return r.json(); })
+      .catch(function(e) { clearTimeout(timer); throw e; });
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────────
+
+  function formatMoney(n) {
+    return Number(n).toLocaleString('vi-VN') + ' ₫';
+  }
+
+  function escHtml(s) {
+    return String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // ── Init ─────────────────────────────────────────────────────────────────────
+
+  (function init() {
+    if (!GAS_URL) {
+      showPageError('Hệ thống thanh toán chưa được cấu hình. Vui lòng thử lại sau.');
+      return;
+    }
+    showState('loading');
+    Promise.all([loadCatalog(), loadProductCatalog()])
+      .then(function() {
+        initTabsFromCatalog(_catalog);
+        renderCatalog(_catalog);
+        // Chuyển giỏ dịch vụ đã chọn từ trang Skin Healthy (sh_svc_cart) hoặc link
+        // dạng ?svc=X&svc=Y sang giỏ của trang này — khách không phải chọn lại.
+        var transferred = transferExternalCart();
+        if (transferred) { openCartView(); } else { showState('catalog'); }
+      })
+      .catch(function(e) {
+        showPageError(e && e.name === 'AbortError'
+          ? 'Quá lâu không có phản hồi. Vui lòng thử lại.'
+          : 'Mất kết nối. Kiểm tra đường truyền và thử lại.');
+      });
+  })();
+
+  // ── Giỏ dịch vụ từ Skin Healthy (sh_svc_cart) ─────────────────────────────────
+
+  function transferExternalCart() {
+    var handles = [];
+
+    try {
+      var shCart = JSON.parse(localStorage.getItem('sh_svc_cart') || '[]');
+      if (Array.isArray(shCart)) {
+        shCart.forEach(function(item) {
+          var h = item && (item.sapo_handle || item.svc_id);
+          if (h) { handles.push(h); }
+        });
+      }
+    } catch (e) { /* localStorage hỏng/bị chặn — bỏ qua, không chặn luồng chính */ }
+
+    // Tương thích link cũ dạng ?svc=X&svc=Y (vd nút "Đặt lịch" đơn lẻ)
+    try {
+      var params = new URLSearchParams(window.location.search);
+      params.getAll('svc').forEach(function(h) { if (h) { handles.push(h); } });
+    } catch (e) {}
+
+    if (!handles.length) { return false; }
+
+    var addedAny = false;
+    handles.forEach(function(h) {
+      var before = _cart.length;
+      addToCart(h);
+      if (_cart.length > before) { addedAny = true; }
+    });
+
+    if (addedAny) {
+      try { localStorage.removeItem('sh_svc_cart'); } catch (e) {}
+    }
+    return addedAny;
+  }
+
+  function openCartView() {
+    if (!_cart.length) { return; }
+    renderCart();
+    showState('cart');
+    var dateInput = document.getElementById('mops-cart-date');
+    if (dateInput && !dateInput.min) {
+      var now = new Date();
+      var yy  = now.getFullYear();
+      var mm  = String(now.getMonth() + 1).padStart(2, '0');
+      var dd  = String(now.getDate()).padStart(2, '0');
+      dateInput.min   = yy + '-' + mm + '-' + dd;
+      dateInput.value = yy + '-' + mm + '-' + dd;
+    }
+  }
+
+  // ── Catalog ──────────────────────────────────────────────────────────────────
+
+  function loadCatalog() {
+    return gasPost({ action: 'list_services' })
+      .then(function(d) {
+        if (d && d.success) {
+          _catalog = d.mappings || [];
+        } else {
+          throw new Error((d && d.error) || 'Không thể tải danh sách dịch vụ.');
+        }
+      });
+  }
+
+  // Sản phẩm KHÔNG cần "Kết nối" trước vẫn mua được (thanh toán đủ) — xem addToCart().
+  // list_products ~2MB/~5s → dùng stale-while-revalidate qua localStorage: có cache thì hiển thị
+  // NGAY (không bắt khách chờ ~5s), rồi refresh nền cập nhật. AN TOÀN: chỉ dùng để hiển thị/thêm giỏ;
+  // createOrder tính lại giá server-side + chặn SP đã ngưng bán, nên cache lệch tối đa vài phút chỉ
+  // là cosmetic. Chỉ cache SP active (giảm size cache).
+  var _PRODUCT_CACHE_KEY = 'mops_product_catalog_v1';
+  var _PRODUCT_CACHE_TTL = 10 * 60 * 1000; // 10 phút
+
+  function _applyProductCatalog(products, replace) {
+    if (replace) { _productCatalog = {}; }
+    (products || []).forEach(function(p) {
+      if (p.status === 'active' && p.handle) { _productCatalog[p.handle] = p; }
+    });
+  }
+
+  function loadProductCatalog() {
+    var cached = null;
+    try {
+      var raw = localStorage.getItem(_PRODUCT_CACHE_KEY);
+      if (raw) { var o = JSON.parse(raw); if (o && o.products) cached = o; }
+    } catch (e) { cached = null; }
+
+    // 1) Có cache → áp NGAY (khách thấy sản phẩm tức thì).
+    if (cached && cached.products) { _applyProductCatalog(cached.products, false); }
+    var fresh = cached && (Date.now() - (cached.at || 0) < _PRODUCT_CACHE_TTL);
+
+    // 2) Fetch mới: cập nhật _productCatalog + ghi cache (chỉ SP active). Lỗi không chặn trang.
+    var fetchP = gasGet({ action: 'list_products' })
+      .then(function(d) {
+        if (d && d.success && d.products) {
+          _applyProductCatalog(d.products, true); // replace: bỏ SP đã ngưng bán khỏi catalog
+          try {
+            var active = d.products.filter(function(p) { return p.status === 'active' && p.handle; });
+            localStorage.setItem(_PRODUCT_CACHE_KEY, JSON.stringify({ at: Date.now(), products: active }));
+          } catch (e2) { /* localStorage đầy/tắt — bỏ qua, vẫn chạy bình thường */ }
+        }
+      })
+      .catch(function() { /* lỗi tải không chặn trang — dịch vụ đã map vẫn hoạt động */ });
+
+    // Cache còn tươi → KHÔNG chờ fetch (refresh nền). Cache cũ/thiếu → chờ (lần đầu).
+    return (cached && cached.products && fresh) ? Promise.resolve() : fetchP;
+  }
+
+  function initTabsFromCatalog(mappings) {
+    // Show tabs only when catalog has both service and product capabilities
+    var hasService = mappings.some(function(m) {
+      var c = m.capabilities || [];
+      return c.indexOf('booking') >= 0 || c.indexOf('deposit') >= 0 || c.indexOf('consultation') >= 0;
+    });
+    var hasProduct = mappings.some(function(m) {
+      var c = m.capabilities || [];
+      return c.indexOf('product') >= 0 || c.indexOf('pickup') >= 0;
+    });
+    var tabsWrap = document.getElementById('mops-catalog-tabs-wrap');
+    if (tabsWrap) { tabsWrap.hidden = !(hasService && hasProduct); }
+  }
+
+  function renderCatalog(mappings) {
+    var grid = document.getElementById('mops-catalog-grid');
+    if (!grid) { return; }
+
+    if (!mappings.length) {
+      grid.innerHTML = '<div class="mops-catalog-empty">'
+        + '<p>Chưa có liệu trình nào.</p>'
+        + '<p style="font-size:var(--fs-sm)">Vui lòng quay lại sau.</p>'
+        + '</div>';
+      return;
+    }
+
+    var html = '';
+    mappings.forEach(function(m) {
+      var handle  = m.handle;
+      var title   = m.display_name || handle;
+      var desc    = m.description || '';
+      var img     = m.image || '';
+      var deposit = Number(m.deposit) || 0;
+      var price   = Number(m.price) || 0;
+      var uid     = 'item:' + handle;
+      var inCart  = _cart.some(function(i) { return i.uid === uid; });
+
+      var badgeLabel  = deposit > 0 ? 'Đặt cọc' : (price > 0 ? 'Thanh toán đủ' : 'Miễn phí');
+      var amountLabel = deposit > 0 ? formatMoney(deposit) : (price > 0 ? formatMoney(price) : '');
+
+      html +=
+        '<div class="mops-cat-card">'
+        + (img
+          ? '<div class="mops-cat-card__media"><img class="mops-cat-card__img lazyload" src="' + PH + '" data-src="' + escHtml(img) + '" alt="' + escHtml(title) + '" width="400" height="225"></div>'
+          : '')
+        + '<div class="mops-cat-card__body">'
+        + '<h2 class="mops-cat-card__name">' + escHtml(title) + '</h2>'
+        + (desc ? '<p class="mops-cat-card__desc">' + escHtml(desc) + '</p>' : '')
+        + '<div class="mops-cat-card__price">'
+        + '<span class="mops-cat-card__badge">' + badgeLabel + '</span>'
+        + (amountLabel ? '<span class="mops-cat-card__amount">' + amountLabel + '</span>' : '')
+        + '</div>'
+        + '</div>'
+        + '<button type="button"'
+        + ' class="mops-cat-card__cta-btn' + (inCart ? ' mops-cat-card__cta-btn--added' : '') + '"'
+        + ' data-action="add-to-cart" data-handle="' + escHtml(handle) + '">'
+        + (inCart ? '&#10003; Đã thêm' : 'Thêm vào giỏ')
+        + '</button>'
+        + '</div>';
+    });
+    grid.innerHTML = html;
+  }
+
+  // ── Tab switching ─────────────────────────────────────────────────────────────
+
+  function switchTab(tab) {
+    var tabs = document.querySelectorAll('#mops-catalog-tabs [data-tab]');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].classList.toggle('mops-booking-tab--active', tabs[i].getAttribute('data-tab') === tab);
+    }
+    if (window.lazySizes) { window.lazySizes.loader.checkElems(); }
+  }
+
+  // ── Cart operations ───────────────────────────────────────────────────────────
+
+  function addToCart(handle) {
+    if (!handle) { return; }
+    var uid = 'item:' + handle;
+    if (_cart.some(function(i) { return i.uid === uid; })) { return; }
+
+    var m = null;
+    for (var i = 0; i < _catalog.length; i++) {
+      if (_catalog[i].handle === handle) { m = _catalog[i]; break; }
+    }
+
+    if (m) {
+      _cart.push({
+        uid:            uid,
+        handle:         handle,
+        title:          m.display_name || handle,
+        image:          m.image || '',
+        deposit_amount: Number(m.deposit) || 0,
+        price:          Number(m.price) || 0,
+        capabilities:   m.capabilities || [],
+        quantity:       1
+      });
+    } else if (_productCatalog[handle]) {
+      // Sản phẩm có thật bên SAPO nhưng chưa "Kết nối" — bán được, không đặt cọc.
+      var p = _productCatalog[handle];
+      _cart.push({
+        uid:            uid,
+        handle:         handle,
+        title:          p.title || handle,
+        image:          p.image || '',
+        deposit_amount: 0,
+        price:          Number(p.price) || 0,
+        capabilities:   ['product'],
+        quantity:       1
+      });
+    } else {
+      return;
+    }
+
+    updateItemBtn(handle, true);
+    _saveCart();
+    updateFab();
+  }
+
+  function removeFromCart(uid) {
+    var item = null;
+    for (var i = 0; i < _cart.length; i++) {
+      if (_cart[i].uid === uid) { item = _cart[i]; break; }
+    }
+    if (!item) { return; }
+
+    _cart = _cart.filter(function(x) { return x.uid !== uid; });
+    updateItemBtn(item.handle, false);
+    _saveCart();
+    updateFab();
+    if (!_cart.length) {
+      showState('catalog');
+    } else {
+      renderCart();
+    }
+  }
+
+  function updateItemBtn(handle, added) {
+    var btn = document.querySelector('[data-action="add-to-cart"][data-handle="' + handle + '"]');
+    if (!btn) { return; }
+    if (added) {
+      btn.classList.add('mops-cat-card__cta-btn--added');
+      btn.innerHTML = '&#10003; Đã thêm';
+    } else {
+      btn.classList.remove('mops-cat-card__cta-btn--added');
+      btn.innerHTML = 'Thêm vào giỏ';
+    }
+  }
+
+  function updateFab() {
+    var fab   = document.getElementById('mops-cart-fab');
+    var badge = document.getElementById('mops-cart-fab-badge');
+    var total = _cart.length;
+    if (badge) { badge.textContent = String(total); }
+    if (fab)   { fab.hidden = (total === 0); }
+    renderSHCart();
+  }
+
+  // ── Sidebar SH Cart (optional panel) ─────────────────────────────────────────
+
+  function renderSHCart() {
+    var body   = document.getElementById('mops-sh-cart-body');
+    var footer = document.getElementById('mops-sh-cart-footer');
+    var total  = document.getElementById('mops-sh-cart-total');
+    if (!body) { return; }
+
+    if (!_cart.length) {
+      body.innerHTML = '<p class="mops-sh-cart__empty">Chưa có dịch vụ / sản phẩm nào</p>';
+      if (footer) { footer.hidden = true; }
+      return;
+    }
+
+    var html = '';
+    var dep  = 0;
+    _cart.forEach(function(item) {
+      var depAmt = item.deposit_amount || item.price || 0;
+      dep += depAmt;
+      var depTxt = depAmt === 0 ? 'Miễn phí' : formatMoney(depAmt);
+      html +=
+        '<div class="mops-sh-cart__item">'
+        + '<div class="mops-sh-cart__item-title">' + escHtml(item.title) + '</div>'
+        + '<div class="mops-sh-cart__item-price">' + depTxt + '</div>'
+        + '<button type="button" class="mops-sh-cart__item-remove" data-action="remove" data-uid="' + escHtml(item.uid) + '" aria-label="Xóa">&#215;</button>'
+        + '</div>';
+    });
+    body.innerHTML = html;
+    if (total) {
+      total.innerHTML = '<span>Cọc:</span><strong>' + formatMoney(dep) + '</strong>';
+    }
+    if (footer) { footer.hidden = false; }
+  }
+
+  // ── Amount calculations ───────────────────────────────────────────────────────
+
+  function calcAmounts() {
+    var depositTotal = 0;
+    var rawFullTotal = 0;
+    _cart.forEach(function(item) {
+      var deposit = item.deposit_amount || 0;
+      var price   = item.price || 0;
+      depositTotal += deposit > 0 ? deposit : price;
+      rawFullTotal += price;
+    });
+    // Giảm giá trừ vào tổng đơn TRƯỚC, giống createOrder() ở server — cọc chỉ
+    // kẹp lại nếu vượt quá tổng đã giảm (không tự nhân đôi phần giảm vào cả 2 số).
+    var discount   = _appliedDiscount.amount || 0;
+    var fullTotal  = Math.max(0, rawFullTotal - discount);
+    depositTotal   = Math.min(depositTotal, fullTotal);
+    return { depositTotal: depositTotal, fullTotal: fullTotal, rawFullTotal: rawFullTotal, discount: discount };
+  }
+
+  function updatePaymentAmounts() {
+    var amounts = calcAmounts();
+    var depEl = document.getElementById('mops-pay-deposit-amount');
+    var fulEl = document.getElementById('mops-pay-full-amount');
+    if (depEl) { depEl.textContent = formatMoney(amounts.depositTotal); }
+    if (fulEl) { fulEl.textContent = formatMoney(amounts.fullTotal); }
+
+    var totalEl = document.getElementById('mops-cart-total');
+    if (totalEl) {
+      var amount = (_paymentMode === 'full') ? amounts.fullTotal : amounts.depositTotal;
+      var note   = (_paymentMode === 'full')
+        ? 'Sản phẩm thanh toán online đầy đủ. Phần còn lại của liệu trình thanh toán tại cơ sở.'
+        : 'Số tiền cọc để đặt chỗ. Phần còn lại thanh toán tại cơ sở.';
+      var discountRow = amounts.discount > 0
+        ? '<div class="mops-cart-total__row"><span class="mops-cart-total__label">Giảm giá (' + escHtml(_appliedDiscount.code) + ')</span><span class="mops-cart-total__amount">−' + formatMoney(amounts.discount) + '</span></div>'
+        : '';
+      totalEl.innerHTML =
+        discountRow
+        + '<div class="mops-cart-total__row">'
+        + '<span class="mops-cart-total__label">Số tiền thanh toán</span>'
+        + '<span class="mops-cart-total__amount">' + formatMoney(amount) + '</span>'
+        + '</div>'
+        + '<p class="mops-cart-total__note">' + note + '</p>';
+    }
+  }
+
+  function updateSubmitBtn() {
+    var btn = document.getElementById('mops-btn-order-submit');
+    if (!btn || btn.disabled) { return; }
+    btn.textContent = _paymentMode === 'full'
+      ? 'Thanh toán đầy đủ & Xác nhận'
+      : 'Đặt cọc & Xác nhận';
+  }
+
+  // ── Cart render ───────────────────────────────────────────────────────────────
+
+  function renderCart() {
+    var listEl = document.getElementById('mops-cart-items');
+    if (!listEl) { return; }
+
+    var html = '';
+    _cart.forEach(function(item) {
+      var caps       = item.capabilities || [];
+      var hasPickup  = caps.indexOf('pickup') >= 0;
+      var hasProduct = caps.indexOf('product') >= 0;
+      var badge, amt;
+
+      if (hasPickup || hasProduct) {
+        badge = hasPickup ? 'Nhận tại CS' : 'Sản phẩm';
+        amt   = _paymentMode === 'full'
+          ? 'Thanh toán đủ: ' + formatMoney(item.price || 0)
+          : (item.deposit_amount > 0
+            ? 'Đặt cọc: ' + formatMoney(item.deposit_amount)
+            : 'Thanh toán đủ: ' + formatMoney(item.price || 0));
+      } else {
+        badge = 'Liệu trình';
+        amt   = item.deposit_amount === 0 ? 'Miễn phí' : 'Đặt cọc: ' + formatMoney(item.deposit_amount || 0);
+      }
+
+      html +=
+        '<div class="mops-cart-item">'
+        + (item.image
+          ? '<div class="mops-cart-item__img-wrap"><img class="mops-cart-item__img lazyload" src="' + PH + '" data-src="' + escHtml(item.image) + '" alt="' + escHtml(item.title) + '" width="60" height="60"></div>'
+          : '')
+        + '<div class="mops-cart-item__info">'
+        + '<div class="mops-cart-item__badge">' + escHtml(badge) + '</div>'
+        + '<div class="mops-cart-item__name">' + escHtml(item.title) + '</div>'
+        + '<div class="mops-cart-item__deposit">' + amt + '</div>'
+        + '</div>'
+        + '<button type="button" class="mops-cart-item__remove" data-action="remove" data-uid="' + escHtml(item.uid) + '" aria-label="Xóa">&#215;</button>'
+        + '</div>';
+    });
+    listEl.innerHTML = html;
+    updatePaymentAmounts();
+    updateSubmitBtn();
+  }
+
+  // ── Event delegation ──────────────────────────────────────────────────────────
+
+  document.addEventListener('click', function(e) {
+    var el = e.target;
+    while (el && el !== document.body) {
+      if (el.getAttribute && (el.getAttribute('data-action') || el.getAttribute('data-tab'))) { break; }
+      el = el.parentNode;
+    }
+    if (!el || !el.getAttribute) { return; }
+
+    var action = el.getAttribute('data-action');
+    var tab    = el.getAttribute('data-tab');
+
+    if (tab) {
+      switchTab(tab);
+    } else if (action === 'add-to-cart') {
+      addToCart(el.getAttribute('data-handle'));
+    } else if (action === 'remove') {
+      removeFromCart(el.getAttribute('data-uid'));
+    }
+  });
+
+  document.addEventListener('change', function(e) {
+    if (e.target.name === 'payment_mode') {
+      _paymentMode = e.target.value;
+      var opts = document.querySelectorAll('.mops-pay-opt');
+      for (var i = 0; i < opts.length; i++) {
+        var radio = opts[i].querySelector('input[type="radio"]');
+        opts[i].classList.toggle('is-active', radio ? radio.checked : false);
+      }
+      renderCart();
+    }
+  });
+
+  // ── Cart FAB ─────────────────────────────────────────────────────────────────
+
+  var fab = document.getElementById('mops-cart-fab');
+  if (fab) {
+    fab.addEventListener('click', openCartView);
+  }
+
+  // ── Back ─────────────────────────────────────────────────────────────────────
+
+  var backBtn = document.getElementById('mops-btn-back');
+  if (backBtn) {
+    backBtn.addEventListener('click', function() { showState('catalog'); });
+  }
+
+  // ── Coupon ────────────────────────────────────────────────────────────────────
+
+  var couponApplyBtn = document.getElementById('mops-coupon-apply');
+  if (couponApplyBtn) {
+    couponApplyBtn.addEventListener('click', function() {
+      var inp = document.getElementById('mops-coupon-input');
+      var fb  = document.getElementById('mops-coupon-feedback');
+      if (!inp || !fb) { return; }
+      var code = inp.value.trim().toUpperCase();
+      if (!code) {
+        fb.textContent = 'Vui lòng nhập mã giảm giá.';
+        fb.className   = 'mops-coupon-feedback mops-coupon-feedback--err';
+        fb.hidden      = false;
+        return;
+      }
+      _appliedDiscount = { code: '', amount: 0 };
+      couponApplyBtn.disabled    = true;
+      couponApplyBtn.textContent = '...';
+      gasGet({
+        action: 'preview_coupon', code: code, total_amount: calcAmounts().rawFullTotal,
+        // Pha B: gửi giỏ để server tính scope (mã giới hạn theo loại/SP). Server tự resolve giá+loại.
+        items: JSON.stringify(_cart.map(function(i) { return { handle: i.handle, qty: i.quantity || 1 }; }))
+      })
+        .then(function(d) {
+          couponApplyBtn.disabled    = false;
+          couponApplyBtn.textContent = 'Áp dụng';
+          if (!d || !d.success || !d.valid) {
+            fb.textContent = (d && (d.error || d.message)) || 'Mã giảm giá không hợp lệ.';
+            fb.className   = 'mops-coupon-feedback mops-coupon-feedback--err';
+            fb.hidden      = false;
+            updatePaymentAmounts();
+            return;
+          }
+          _appliedDiscount = { code: code, amount: d.discount_amount || 0 };
+          fb.textContent = 'Đã áp dụng — giảm ' + formatMoney(d.discount_amount) + '.';
+          fb.className   = 'mops-coupon-feedback mops-coupon-feedback--ok';
+          fb.hidden      = false;
+          updatePaymentAmounts();
+        })
+        .catch(function() {
+          couponApplyBtn.disabled    = false;
+          couponApplyBtn.textContent = 'Áp dụng';
+          fb.textContent = 'Lỗi kết nối, vui lòng thử lại.';
+          fb.className   = 'mops-coupon-feedback mops-coupon-feedback--err';
+          fb.hidden      = false;
+        });
+    });
+  }
+
+  // ── Cart form submit ──────────────────────────────────────────────────────────
+
+  var cartForm = document.getElementById('mops-cart-form');
+  if (cartForm) {
+    cartForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      submitOrder();
+    });
+  }
+
+  function submitOrder() {
+    var nameEl   = document.getElementById('mops-cart-name');
+    var phoneEl  = document.getElementById('mops-cart-phone');
+    var storeEl  = document.getElementById('mops-cart-store');
+    var dateEl   = document.getElementById('mops-cart-date');
+    var timeEl   = document.getElementById('mops-cart-time');
+    var couponEl = document.getElementById('mops-coupon-input');
+    var noteEl   = document.getElementById('mops-cart-note');
+    var btn      = document.getElementById('mops-btn-order-submit');
+    var payRadio = document.querySelector('input[name="payment_mode"]:checked');
+
+    var name   = nameEl   ? nameEl.value.trim()   : '';
+    var phone  = phoneEl  ? phoneEl.value.trim()   : '';
+    var store  = storeEl  ? storeEl.value          : '';
+    var date   = dateEl   ? dateEl.value           : '';
+    var time   = timeEl   ? timeEl.value           : '';
+    var coupon = couponEl ? couponEl.value.trim()  : '';
+    var note   = noteEl   ? noteEl.value.trim()    : '';
+    var mode   = payRadio ? payRadio.value         : _paymentMode;
+
+    if (!name) {
+      showCartError('Vui lòng nhập họ tên.'); nameEl && nameEl.focus(); return;
+    }
+    if (!phone || !/^[0-9]{9,11}$/.test(phone.replace(/\s/g, ''))) {
+      showCartError('Số điện thoại không hợp lệ (9–11 chữ số).'); phoneEl && phoneEl.focus(); return;
+    }
+    if (storeEl && !store) {
+      showCartError('Vui lòng chọn cơ sở.'); storeEl.focus(); return;
+    }
+    if (!date) {
+      showCartError('Vui lòng chọn ngày hẹn.'); dateEl && dateEl.focus(); return;
+    }
+    if (!time) {
+      showCartError('Vui lòng chọn giờ hẹn.'); timeEl && timeEl.focus(); return;
+    }
+    if (!_cart.length) {
+      showCartError('Giỏ hàng trống. Vui lòng thêm dịch vụ.'); return;
+    }
+    hideCartError();
+
+    var amounts     = calcAmounts();
+    var totalAmount = (mode === 'full') ? amounts.fullTotal : amounts.depositTotal;
+    var submitLabel = mode === 'full' ? 'Thanh toán đầy đủ & Xác nhận' : 'Đặt cọc & Xác nhận';
+
+    btn.disabled    = true;
+    btn.textContent = 'Đang xử lý...';
+
+    gasPost({
+      action:           'create_order',
+      items:            _cart.map(function(item) {
+        return { handle: item.handle, quantity: item.quantity || 1 };
+      }),
+      customer_name:    name,
+      phone:            phone,
+      store:            store,
+      appointment_date: date,
+      appointment_time: time,
+      payment_mode:     mode,
+      // FIX: createOrder() đọc payload.order_type (KHÔNG đọc payment_mode) — thiếu dòng
+      // này khiến MỌI đơn từ trang khách luôn bị coi là 'product' (thanh toán đủ), kể cả
+      // khi khách chọn "Đặt cọc" và thấy số tiền cọc nhỏ hơn trên màn hình. QR tạo ra khi
+      // đó là cho TOÀN BỘ giá trị đơn, không phải số cọc đã hiển thị.
+      order_type:       (mode === 'full' ? 'product' : 'deposit'),
+      coupon_code:      coupon,
+      customer_note:    note,
+      source:           'page.payment'
+    })
+    .then(function(d) {
+      btn.disabled    = false;
+      btn.textContent = submitLabel;
+      if (d && d.success) {
+        _saveToHistory(d);
+        openPopup(d, totalAmount);
+      } else {
+        var errMsg = (d && d.error) || 'Đã có lỗi. Vui lòng thử lại.';
+        if (errMsg.indexOf('mapping') >= 0 || errMsg.indexOf('disabled') >= 0 || errMsg.indexOf('tạm ngưng') >= 0) {
+          errMsg = 'Sản phẩm hiện đang tạm khóa. Vui lòng liên hệ Pharma Cosmetics.';
+        }
+        showCartError(errMsg);
+      }
+    })
+    .catch(function(err) {
+      btn.disabled    = false;
+      btn.textContent = submitLabel;
+      showCartError(err.name === 'AbortError'
+        ? 'Quá lâu không có phản hồi. Vui lòng thử lại.'
+        : 'Mất kết nối. Kiểm tra đường truyền và thử lại.');
+    });
+  }
+
+  function showCartError(msg) {
+    var el = document.getElementById('mops-cart-form-error');
+    if (el) { el.textContent = msg; el.hidden = false; }
+  }
+
+  function hideCartError() {
+    var el = document.getElementById('mops-cart-form-error');
+    if (el) { el.hidden = true; }
+  }
+
+  // ── QR Popup ──────────────────────────────────────────────────────────────────
+
+  function openPopup(orderData, fallbackAmount) {
+    var popup = document.getElementById('mops-popup');
+    if (!popup) { return; }
+
+    var thankyou      = document.getElementById('mops-thankyou');
+    var mainContent   = popup.querySelector('.mops-popup__info');
+    var expireBar     = popup.querySelector('.mops-expire-bar');
+    var reportBtn     = document.getElementById('mops-btn-reported');
+    var expiredNotice = document.getElementById('mops-expired-notice');
+
+    if (thankyou)      { thankyou.hidden      = true; }
+    if (mainContent)   { mainContent.hidden   = false; }
+    if (expireBar)     { expireBar.hidden      = false; }
+    if (reportBtn)     { reportBtn.hidden      = false; reportBtn.disabled = false; reportBtn.textContent = 'Tôi đã chuyển khoản xong'; }
+    if (expiredNotice) { expiredNotice.hidden  = true; }
+
+    var qrImg = document.getElementById('mops-qr-img');
+    if (qrImg && orderData.qr_url) { qrImg.src = orderData.qr_url; qrImg.hidden = false; }
+
+    var amount    = orderData.total_amount || fallbackAmount || 0;
+    var orderIdEl = document.getElementById('mops-order-id-display');
+    var amountEl  = document.getElementById('mops-amount-display');
+    var contentEl = document.getElementById('mops-content-display');
+    if (orderIdEl) { orderIdEl.textContent = orderData.order_id || ''; }
+    if (amountEl)  { amountEl.textContent  = formatMoney(amount); }
+    if (contentEl) { contentEl.textContent = orderData.transfer_content || orderData.order_id || ''; }
+
+    var lookupLink = document.getElementById('mops-lookup-link');
+    if (lookupLink && orderData.order_id) {
+      lookupLink.href = '/tra-cuu-don-hang?order_id=' + encodeURIComponent(orderData.order_id);
+    }
+
+    startCountdown(orderData.expire_at);
+    popup.classList.add('is-open');
+    document.body.classList.add('mops-popup-open');
+  }
+
+  function closePopup() {
+    var popup = document.getElementById('mops-popup');
+    if (popup) { popup.classList.remove('is-open'); }
+    document.body.classList.remove('mops-popup-open');
+    stopCountdown();
+    stopPolling();
+  }
+
+  // ── Countdown ─────────────────────────────────────────────────────────────────
+
+  function startCountdown(expireIso) {
+    stopCountdown();
+    var expireAt = expireIso ? new Date(expireIso).getTime() : 0;
+    if (!expireAt) { return; }
+    var el = document.getElementById('mops-countdown');
+    function tick() {
+      var diff = Math.max(0, expireAt - Date.now());
+      var m = Math.floor(diff / 60000);
+      var s = Math.floor((diff % 60000) / 1000);
+      if (el) { el.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0'); }
+      if (diff === 0) {
+        stopCountdown();
+        showExpiredState();
+      }
+    }
+    tick();
+    _countdownTimer = setInterval(tick, 1000);
+  }
+
+  function stopCountdown() {
+    if (_countdownTimer) { clearInterval(_countdownTimer); _countdownTimer = null; }
+  }
+
+  // ── Polling ───────────────────────────────────────────────────────────────────
+
+  function startPolling(orderId) {
+    stopPolling();
+    var attempts    = 0;
+    var MAX_ATTEMPTS = 36; // 36 × 5s = 3 min max
+    function poll() {
+      if (attempts >= MAX_ATTEMPTS) {
+        stopPolling();
+        handlePaymentStatus('EXPIRED', orderId);
+        return;
+      }
+      attempts++;
+      gasPost({ action: 'get_order', order_id: orderId })
+        .then(function(d) {
+          if (d && d.success) {
+            var status = d.status || '';
+            if (status === 'PAID' || status === 'COMPLETED' || status === 'EXPIRED' || status === 'CANCELLED' || status === 'REFUNDED') {
+              stopPolling();
+              handlePaymentStatus(status, orderId);
+            }
+          }
+        })
+        .catch(function() { /* ignore network errors during polling */ });
+    }
+    poll();
+    _pollingTimer = setInterval(poll, 5000);
+  }
+
+  function stopPolling() {
+    if (_pollingTimer) { clearInterval(_pollingTimer); _pollingTimer = null; }
+  }
+
+  function handlePaymentStatus(status, orderId) {
+    if (status === 'PAID' || status === 'COMPLETED') {
+      showThankYou(orderId);
+    } else if (status === 'EXPIRED') {
+      showExpiredState();
+    } else {
+      showFailedState(status);
+    }
+  }
+
+  function showThankYou(orderId) {
+    stopCountdown();
+    var mainContent   = document.querySelector('.mops-popup__info');
+    var expireBar     = document.querySelector('.mops-expire-bar');
+    var reportBtn     = document.getElementById('mops-btn-reported');
+    var thankyou      = document.getElementById('mops-thankyou');
+    var codeEl        = document.getElementById('mops-thankyou-code');
+    var expiredNotice = document.getElementById('mops-expired-notice');
+    if (mainContent)   { mainContent.hidden   = true; }
+    if (expireBar)     { expireBar.hidden      = true; }
+    if (reportBtn)     { reportBtn.hidden      = true; }
+    if (expiredNotice) { expiredNotice.hidden  = true; }
+    if (codeEl)        { codeEl.textContent    = orderId; }
+    if (thankyou)      { thankyou.hidden       = false; }
+  }
+
+  function showExpiredState() {
+    stopCountdown();
+    stopPolling();
+    var expiredNotice = document.getElementById('mops-expired-notice');
+    var reportBtn     = document.getElementById('mops-btn-reported');
+    if (expiredNotice) { expiredNotice.hidden = false; }
+    if (reportBtn)     { reportBtn.disabled   = true; }
+  }
+
+  function showFailedState(status) {
+    stopCountdown();
+    var expiredNotice = document.getElementById('mops-expired-notice');
+    if (expiredNotice) {
+      var p = expiredNotice.querySelector('p');
+      if (p) {
+        p.textContent = status === 'REFUNDED'
+          ? 'Giao dịch đã được hoàn tiền. Vui lòng liên hệ Pharma Cosmetics để được hỗ trợ.'
+          : status === 'CANCELLED'
+          ? 'Đơn hàng đã bị huỷ. Vui lòng liên hệ Pharma Cosmetics nếu cần hỗ trợ.'
+          : 'Giao dịch thất bại. Vui lòng đóng và thực hiện lại, hoặc liên hệ hỗ trợ.';
+      }
+      expiredNotice.hidden = false;
+    }
+    var reportBtn = document.getElementById('mops-btn-reported');
+    if (reportBtn) { reportBtn.disabled = true; }
+  }
+
+  // ── Copy ──────────────────────────────────────────────────────────────────────
+
+  var copyBtn = document.getElementById('mops-copy-btn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function() {
+      var contentEl = document.getElementById('mops-content-display');
+      var text = contentEl ? contentEl.textContent : '';
+      if (text && navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function() {
+          copyBtn.textContent = 'Đã chép!';
+          setTimeout(function() { copyBtn.textContent = 'Sao chép'; }, 2000);
+        });
+      }
+    });
+  }
+
+  // ── Report payment ────────────────────────────────────────────────────────────
+
+  var reportBtn = document.getElementById('mops-btn-reported');
+  if (reportBtn) {
+    reportBtn.addEventListener('click', function() {
+      var orderIdEl = document.getElementById('mops-order-id-display');
+      var orderId   = orderIdEl ? orderIdEl.textContent.trim() : '';
+      if (!orderId) { return; }
+
+      reportBtn.disabled    = true;
+      reportBtn.textContent = 'Đang ghi nhận...';
+
+      gasPost({ action: 'report_payment', order_id: orderId })
+        .then(function(d) {
+          if (!d || !d.success) throw new Error((d && d.error) || 'Không ghi nhận được. Vui lòng thử lại.');
+          startPolling(orderId);
+        })
+        .catch(function(err) {
+          var expiredNotice = document.getElementById('mops-expired-notice');
+          if (expiredNotice) {
+            var p = expiredNotice.querySelector('p');
+            if (p) { p.textContent = err.message || 'Không ghi nhận được. Vui lòng thử lại.'; }
+            expiredNotice.hidden = false;
+          }
+          reportBtn.disabled    = false;
+          reportBtn.textContent = 'Tôi đã chuyển khoản xong';
+        });
+    });
+  }
+
+  // ── Close popup ───────────────────────────────────────────────────────────────
+
+  var closeBtn = document.getElementById('mops-popup-close');
+  if (closeBtn) { closeBtn.addEventListener('click', closePopup); }
+
+  var popupEl = document.getElementById('mops-popup');
+  if (popupEl) {
+    popupEl.addEventListener('click', function(e) { if (e.target === popupEl) { closePopup(); } });
+  }
+
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closePopup(); } });
+
+})();
+</script>

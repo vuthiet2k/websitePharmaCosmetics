@@ -1,0 +1,427 @@
+<link rel="preload" as='style' type="text/css" href="{{ 'global_core.scss.css' | asset_url }}">
+{%- comment -%} Preload /cart.js trên trang cart — giúp ajaxCart.load() có sẵn dữ liệu khi DOM ready {%- endcomment -%}
+{%- if template contains 'cart' -%}
+<link rel="preload" as="fetch" href="/cart.js" crossorigin>
+{%- endif -%}
+{%if template contains 'index'%}
+<link rel="preload" as='style'  type="text/css" href="{{ 'page_home.scss.css' | asset_url }}">
+{%endif%}
+{%if template contains '404'%}
+<link rel="preload" as='style'  type="text/css" href="{{ 'page_404.scss.css' | asset_url }}">
+{%endif%}
+<link rel="preload" as='style'  type="text/css" href="{{ 'vendor_bootstrap.css' | asset_url }}">
+{%- unless template contains 'page.dat_hang_nhanh' -%}
+<link rel="preload" as='style'  type="text/css" href="{{ 'comp_quickview_cart.scss.css' | asset_url }}">
+{%- endunless -%}
+<style>
+	/* Ẩn Google Translate toolbar */
+	.goog-te-banner-frame,
+	.goog-te-ftab-float,
+	#goog-gt-tt,
+	.goog-te-balloon-frame { display: none !important; }
+	body { top: 0 !important; }
+	.skiptranslate > iframe { display: none !important; }
+
+	:root {
+		/* ══ A. Brand Colors ══════════════════════════════════════════ */
+		--mainColor:         {{settings.theme_main_color}};
+		--mainColorDark:     #267348;    /* dùng cho Title/Heading — độ tương phản cao */
+		--mainColorLight:    #eaf7ee;    /* dùng cho hover bg, icon nền */
+		--mainColorGradient: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+		--subColor:          {{settings.theme_sub_color}};
+		--hover:             {{settings.theme_sub_color}};
+		--accentColor:       #E35D5D;
+		--accentColor-rgb:   227, 93, 93;
+
+		/* ── Editorial palette (REOPEN 2026-09-10, ADR-007/T-70 — palette xlsx mới, thay giá trị
+		   init-data-2026-08 cũ; dùng cho hero/testimonials/ingredients hệ mới) ─ */
+		--primary:      {{settings.theme_main_color | default: '#3cb371'}};   /* alias --mainColor, = brand-primary xlsx */
+		--primary-deep: {{settings.theme_sub_color  | default: '#166B55'}};   /* alias --subColor, = brand-dark xlsx */
+		--ink:          #13241F;                 /* deep editorial ink, = text-main xlsx (không đổi) */
+		--ink-soft:     #4B5B54;                 /* body copy, meta */
+		--clay:         #D79A7D;                 /* accent tương phản với primary, = peach xlsx */
+		--clay-soft:    #F6E3D8;                 /* nền phụ ấm — subtle section, = peach-light xlsx */
+		--line:         #E2E8F0;                 /* border editorial 1px, = border-clinical xlsx */
+		--surface:      #FFFFFF;                 /* nền card / khối content */
+		--bg-page:      {{settings.theme_body_bg | default: '#F8FAF7'}};   /* nền body editorial, = bg-page xlsx */
+		--radius-editorial: 2px;                 /* boxy — không bo tròn */
+
+		/* ══ B. Section Backgrounds ═══════════════════════════════════ */
+		--bg-default:  #ffffff;                  /* section--light */
+		--bg-subtle:   #F8F9FA;                  /* section--subtle, xen kẽ với default */
+		--bg-surface:  #eaf7ee;                  /* nền xanh lá cực nhạt */
+
+		/* Gradients theo ngữ cảnh */
+		--bg-gradient-green:    linear-gradient(135deg, #f4fcf6 0%, #e8f5e9 100%);  /* section--brand: Hero, Testimonials */
+		--bg-gradient-sale:     linear-gradient(135deg, #fff5f5 0%, #ffe3e3 100%);  /* section--sale: Flash Sale */
+		--bg-gradient-clinical: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);  /* section--clinical: Ingredients, Y khoa */
+		--bg-gradient: var(--bg-gradient-green);  /* alias backward-compat */
+
+		/* ══ C. Text Colors ══════════════════════════════════════════ */
+		--textColor:   {{settings.theme_body_text_color}};
+		--textBody:    #2D3436;
+		--textSub:     #636E72;
+		--lineColor:   #DFE6E9;
+		--white:       #ffffff;
+
+		--star-color:  #f5a623;       /* star rating — dùng var(--star-color) thay hardcode */
+
+		/* ══ D. Status / Functional ══════════════════════════════════ */
+		--price:             {{settings.color_price}};   /* legacy — dùng trong code cũ */
+		--price-color:       var(--mainColorDark);        /* dùng biến này cho code mới — đậm hơn, tạo tin cậy */
+		--sale-color:        #FF4D00;
+		--sale-color-dark:   #cc3d00;
+		--sale-gradient:     linear-gradient(295deg, #CD1A0C 0%, #FF5246 98.45%);
+		--sale-bar-gradient: linear-gradient(90deg, var(--sale-color), #ffcc00);
+
+		/* ══ E. Header / Layout ══════════════════════════════════════ */
+		/* Header/footer bám theo primary-deep (REOPEN 2026-09-10, brand-dark xlsx) — dải điều
+		   hướng đậm tương phản với --primary #3cb371 dùng ở button/tag. */
+		--bgHeader:  {{settings.theme_sub_color | default: '#166B55'}};
+		--txtHeader: {{settings.txt_header}};
+		--bgBodySub: {{settings.body_bg_sub}};
+		--bgBody:    #F8F9FA;
+		--bgincol:   {{ settings.col_gradient | default: settings.theme_main_color }};
+		--textorder: {{ settings.color_txt_order | default: settings.theme_body_text_color }};
+
+		/* ══ F. Font Families ════════════════════════════════════════ */
+		--font-primary:   'Montserrat', sans-serif;   /* Heading, Button, Nav */
+		--font-secondary: 'Inter', sans-serif;         /* Body, Description */
+		--font-display:   'Playfair Display', serif;   /* REOPEN 2026-09-10: xlsx mới — Editorial H1/H2 — hero, testimonials */
+		--font-mono:      'IBM Plex Mono', ui-monospace, monospace;/* Eyebrow, tag, meta */
+
+		/* ══ G. Typography Scale (1rem = 16px — Bootstrap 5 standard) ══ */
+		--fs-xs:   0.75rem;   /* 12px — caption, thông tin phụ */
+		--fs-sm:   0.875rem;  /* 14px — mô tả sản phẩm, text phụ */
+		--fs-base: 1rem;      /* 16px — body mặc định toàn trang */
+		--fs-md:   1.125rem;  /* 18px — tiêu đề phụ, giá tiền lớn */
+		--fs-lg:   1.25rem;   /* 20px — h3, heading nhỏ */
+		--fs-xl:   1.5rem;    /* 24px — h2, section heading */
+		--fs-2xl:  2rem;      /* 32px — h1, big banner */
+		--fs-3xl:  2.5rem;    /* 40px — landing page đặc biệt */
+
+		/* ══ H. Motion (Duration + Easing) ══════════════════════════ */
+		--dur-fast:  150ms;
+		--dur-base:  300ms;
+		--dur-slow:  500ms;
+		--dur-xslow: 800ms;
+		--ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+		--ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+		--ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+		--ease-linear: linear;
+	}
+	{%- comment -%}
+	  REOPEN 2026-09-10 (ADR-007/T-71): dark theme cho "Editorial palette" (--primary/--clay/
+	  --line/--bg-page) — chỉ áp cho các biến CSS custom property đang định nghĩa trong khối này,
+	  đồng bộ cơ chế @media/[data-theme] với snippets/pharma_ui_kit.bwt.
+	{%- endcomment -%}
+	@media (prefers-color-scheme: dark) {
+		:root:not([data-theme="light"]) {
+			--primary-deep: #2DD4BF;
+			--clay:         #E8A588;
+			--clay-soft:    #2E1D16;
+			--line:         #1E3A2B;
+			--bg-page:      #0B1712;
+		}
+	}
+	:root[data-theme="dark"] {
+		--primary-deep: #2DD4BF;
+		--clay:         #E8A588;
+		--clay-soft:    #2E1D16;
+		--line:         #1E3A2B;
+		--bg-page:      #0B1712;
+	}
+	{% if settings.popup_banner_enable %}
+	#modal-banner {
+		bottom: 0;
+		left: 0;
+		overflow-x: auto;
+		overflow-y: auto;
+		position: fixed;
+		right: 0;
+		top: 0 !important;
+		z-index: 9999;
+	}
+
+	#modal-banner .modal-banner-promo {
+		position: absolute;
+		width: 400px;
+		top: 50%;
+		left: 50%;
+		height: auto;
+		margin: 0 auto;
+		padding: 5px;
+		transform: translate(-50%, -50%);
+		background-color: transparent;
+		z-index: 8011;
+	}
+
+	#modal-banner .modal-banner-promo .modal-body {
+		position: relative;
+		width: 100%;
+		opacity: 0;
+		animation-delay: 0.2s;
+		animation-duration: 0.3s;
+		animation-timing-function: ease-out;
+		animation-fill-mode: forwards;
+		animation-name: popup-fade-in-up;
+		aspect-ratio: 400/566; /* Thay thế {{settings.popup_banner_width}}/{{settings.popup_banner_height}} nếu dùng trong HTML thì xử lý bằng JS hoặc inline style */
+	}
+
+	#modal-banner .modal-banner-promo .modal-body img.lazyload {
+		opacity: 0;
+		background: transparent !important;
+	}
+
+	#modal-banner .modal-banner-promo .modal-body img.lazyload.loaded {
+		opacity: 1;
+		background: transparent;
+	}
+
+	#modal-banner .modal-banner-promo .modal-body form {
+		margin: 0px;
+	}
+
+	#modal-banner .modal-banner-promo .modal-body form a.banner-promotion {
+		display: flex;
+		background: #ddd;
+		border-radius: 10px;
+	}
+
+	#modal-banner .modal-banner-promo .modal-body form a.banner-promotion img {
+		width: 100%;
+		border-radius: 10px;
+	}
+
+	#modal-banner .modal-banner-promo .modal-body form .check-close {
+		display: flex;
+		align-items: center;
+		color: #fff;
+		justify-content: center;
+		margin-top: 12px;
+	}
+
+	#modal-banner .modal-banner-promo .modal-body form .check-close input {
+		display: inline-block;
+		background: #fff;
+		width: 20px;
+		height: 20px;
+		opacity: 1;
+		position: relative;
+		top: inherit;
+		left: inherit;
+		margin-right: 8px;
+		cursor: pointer;
+	}
+
+	#modal-banner .modal-banner-promo .modal-body form .check-close label {
+		margin: 0px;
+		text-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+	}
+
+	@media (max-width: 767px) {
+		#modal-banner .modal-banner-promo {
+			width: calc(100% - 40px);
+		}
+	}
+
+	#modal-banner .modal-banner-promo .modalbanner-close {
+		background-color: var(--mainColor);
+		border-radius: 10px;
+		height: 30px;
+		width: 30px;
+		position: absolute;
+		text-align: center;
+		top: 0;
+		right: 0;
+		color: #fff;
+		opacity: 1;
+		font-weight: normal;
+		text-shadow: none;
+		padding: 0;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		float: none;
+	}
+
+	#modal-banner .modal-banner-promo .modalbanner-close svg {
+		width: 20px;
+		height: 20px;
+	}
+
+	#modal-banner .modal-banner-promo .modalbanner-close:hover {
+		background: var(--subColor);
+	}
+
+	#modal-banner .modalbanner-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: 1040;
+		width: 100vw;
+		height: 100vh;
+		background-color: #000;
+		opacity: 0.8;
+	}
+	{% endif %}
+	{% if settings.sale_pop %}
+	.jas-sale-pop {
+	background: #fff;
+	bottom: -100%;
+	left: 20px;
+	right: 15px;
+	padding: 10px 30px 10px 10px;
+	box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+	border-radius: 3px;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.35s ease, visibility 0.35s ease;
+	z-index: 99999;
+	position: fixed;
+	right: auto;
+	overflow: hidden;
+}
+
+.jas-sale-pop a img {
+	max-width: 65px;
+	width: auto;
+	height: auto;
+}
+
+.jas-sale-pop .mr__20 {
+	margin-right: 10px;
+	width: 65px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.jas-sale-pop h4 {
+	color: #222;
+	margin: 0;
+	font-size: var(--fs-sm);
+	font-weight: normal;
+	margin-bottom: 5px;
+}
+
+.jas-sale-pop h3 {
+	margin: 0;
+	font-size: var(--fs-sm);
+	max-width: 255px;
+	line-height: 20px;
+	text-transform: capitalize;
+	max-height: 40px;
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+}
+
+.jas-sale-pop h3 a {
+	color: #222;
+	margin: 0;
+	font-size: var(--fs-sm);
+}
+
+.jas-sale-pop .jas-sale-pop-timeago {
+	color: #878787;
+	font-size: var(--fs-xs);
+}
+
+.jas-sale-pop .pe-7s-close {
+	right: 5px;
+	top: 5px;
+	cursor: pointer;
+	position: absolute;
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	background: url('close.svg');
+	background-repeat: no-repeat;
+	background-size: cover;
+	background-position: center;
+}
+
+.jas-sale-pop.slideUp {
+	bottom: 20px;
+	opacity: 1;
+	visibility: visible;
+}
+
+.jas-sale-pop.middle-xs {
+	-webkit-box-align: center;
+	-ms-flex-align: center;
+}
+
+.jas-sale-pop.flex {
+	box-sizing: border-box;
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+}
+
+.jas-sale-pop.flex {
+	z-index: 1024;
+	top: auto !important;
+}
+
+@media (max-width: 480px) {
+	.jas-sale-pop {
+		left: 10px;
+		right: 10px;
+		max-width: 290px;
+	}
+	.jas-sale-pop .jas-sale-pop-content {
+		overflow: hidden;
+		max-width: 180px;
+	}
+}
+
+@media (max-width: 321px) {
+	.jas-sale-pop {
+		left: 10px;
+		right: 10px;
+		max-width: 220px;
+	}
+	.jas-sale-pop .jas-sale-pop-content {
+		max-width: 180px;
+	}
+}
+{% endif %}
+
+
+/* Ẩn ngôn ngữ + tài khoản khi pc-bottom-nav hiện (≤991px) */
+@media (max-width: 991px) {
+	.lang-switcher,
+	.topbar-account { display: none !important; }
+}
+</style>
+{{ 'global_core.scss.css' | asset_url | stylesheet_tag }}
+{{ 'comp_footer_categories.scss.css' | asset_url | stylesheet_tag }}
+{{ 'comp_mobile_nav.scss.css' | asset_url | stylesheet_tag }}
+{{ 'comp_mobile_search.scss.css' | asset_url | stylesheet_tag }}
+<link rel="stylesheet" href="{{'vendor_bootstrap.css' | asset_url}}">
+{%if template != 'index'%}{{ 'comp_breadcrumb.scss.css' | asset_url | stylesheet_tag }}{%endif%}
+{%if template contains 'index'%}{{ 'page_home.scss.css' | asset_url | stylesheet_tag }}{%endif%}
+{%if template contains '404'%}{{ 'page_404.scss.css' | asset_url | stylesheet_tag }}{%endif%}
+{%if template contains 'page'%}{{ 'page_static.scss.css' | asset_url | stylesheet_tag }}{%endif%}
+{%if template contains 'cart'%}{{ 'page_cart.scss.css' | asset_url | stylesheet_tag }}{%endif%}
+{%if template contains 'blog' or template contains 'article'%}{{ 'page_blog.scss.css' | asset_url | stylesheet_tag }}{%endif%}
+{%if template contains 'blog' or template contains 'article'%}{{ 'comp_sidebar.scss.css' | asset_url | stylesheet_tag }}{%endif%}
+{%if template contains 'product'%}{{ 'page_product.scss.css' | asset_url | stylesheet_tag }}{%endif%}
+{%if template contains 'contact'%}{{ 'page_contact.scss.css' | asset_url | stylesheet_tag }}{%endif%}
+{%if template contains 'customers'%}{{ 'page_account.scss.css' | asset_url | stylesheet_tag }}{%endif%}
+{%if template contains 'page.khuyen-mai'%}{{ 'page_promo.scss.css' | asset_url | stylesheet_tag }}{%endif%}
+{%if template contains 'collection' or template contains 'search'%}{{ 'page_collection.scss.css' | asset_url | stylesheet_tag }}{%endif%}
+{%if template contains 'search'%}{{ 'page_search.scss.css' | asset_url | stylesheet_tag }}{%endif%}
+{%- if customer -%}{{ 'comp_loyalty.scss.css' | asset_url | stylesheet_tag }}{%- endif -%}
+{%if template contains 'product' or template contains 'index' or template contains 'search' or template contains 'article' or template contains 'page.khuyen-mai' or template contains 'collection' or template contains 'page' or template contains 'cart' %}
+{%- unless template contains 'page.dat_hang_nhanh' -%}
+{{ 'comp_quickview_cart.scss.css' | asset_url | stylesheet_tag }}
+{%- endunless -%}
+{%endif%}
+{%- if template contains 'page.dat_hang_nhanh' -%}
+<link rel="preload" as='style'  type="text/css" href="{{ 'comp_quickview_buy.scss.css' | asset_url }}">
+{{ 'comp_quickview_buy.scss.css' | asset_url | stylesheet_tag }}
+{%- endif -%}

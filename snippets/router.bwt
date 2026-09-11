@@ -1,0 +1,31 @@
+{% comment %}
+  router.bwt — Forced domain/path redirect (client-side).
+  Sapo Liquid không thể detect domain phụ khách đang gõ (store.domain luôn trả về
+  domain chính *.mysapo.net) nên buộc phải check bằng location.hostname phía client.
+  Thêm rule mới: chỉ sửa mảng ROUTES dưới đây, không đụng logic.
+{% endcomment %}
+<script>
+(function () {
+    if (location.search.indexOf('preview_theme_id') !== -1) return;
+
+    var host = location.hostname.replace(/^www\./, '');
+    var path = location.pathname || '/';
+
+    var ROUTES = [
+        {
+            host: 'skinhealthvietnam.vn',
+            from: '/',
+            to: '/skin-health-beauty'
+        }
+    ];
+
+    for (var i = 0; i < ROUTES.length; i++) {
+        var r = ROUTES[i];
+
+        if (host === r.host && path === r.from) {
+            location.replace(r.to);
+            return;
+        }
+    }
+})();
+</script>

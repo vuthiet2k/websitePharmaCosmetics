@@ -1,0 +1,44 @@
+{%- comment -%}
+  section_expert_team.bwt — redesign T-20 (pharma brand). Trước đây mượn CSS của
+  section_testimonials.bwt (pc-testi-card/pc-testi-avatar) — dependency chéo giòn (đổi
+  testimonials là gãy style ở đây). Viết lại tự chứa 100% bằng Tailwind + snippets/pharma_ui_kit
+  (badge-clinical, btn-secondary, font-heading) — không phụ thuộc file khác ngoài include global
+  ở layouts/theme.bwt. Giữ nguyên vòng lặp `doctors` (data/doctors.js) + limit 4 + link CTA
+  /pages/chuyen-gia (trang chi tiết bác sĩ theo alias sẽ có ở T-33, chưa tồn tại nên chưa link
+  thẳng theo doc.alias để tránh 404).
+{%- endcomment -%}
+<section class="pc-section py-14 bg-white">
+  <div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-2xl mx-auto mb-10">
+      <span class="text-xs font-bold text-clinical-700 uppercase tracking-widest">Hội Đồng Chuyên Môn</span>
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 font-heading mt-2">
+        Đội Ngũ Bác Sĩ &amp; Dược Sĩ Da Liễu
+      </h2>
+      <p class="text-sm text-gray-600 mt-2">
+        Mỗi phác đồ đều được xây dựng và theo sát bởi chuyên gia chuyên khoa — không áp dụng đại trà.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {% for doc in doctors limit: 4 %}
+      <div class="rounded-2xl bg-white border border-gray-200 shadow-sm hover:shadow-lg hover:border-clinical-600 transition p-6 text-center">
+        <img src="{{ doc.photo.src }}" alt="{{ doc.photo.alt | default: doc.name }}" loading="lazy"
+          class="w-20 h-20 rounded-full object-cover mx-auto border-4 border-mint-100 mb-3"
+          onerror="this.onerror=null;this.src='https://placehold.co/160x160/0B4F30/ffffff?text={{ doc.name | slice: 0, 2 | upcase }}';">
+        <h3 class="text-base font-bold text-forest-900 font-heading">{{ doc.name }}</h3>
+        <p class="text-xs text-clinical-700 font-semibold mt-0.5">{{ doc.title }}</p>
+        {%- if doc.specialty != blank -%}
+        <span class="pc-kit-badge-clinical mt-3 inline-flex text-[11px]">{{ doc.specialty }}</span>
+        {%- endif -%}
+        {%- if doc.years_experience != blank -%}
+        <p class="text-[11px] text-gray-500 mt-3">{{ doc.years_experience }}+ năm kinh nghiệm</p>
+        {%- endif -%}
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="text-center mt-10">
+      <a href="/pages/chuyen-gia" class="pc-kit-btn-secondary text-sm px-6 py-3">Xem Tất Cả Chuyên Gia <i class="fas fa-arrow-right"></i></a>
+    </div>
+  </div>
+</section>

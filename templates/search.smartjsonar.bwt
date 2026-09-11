@@ -1,0 +1,23 @@
+{%- layout none -%}
+{
+{%- if search.results.size > 0 -%}
+"searchResultCount": "{{-search.results_count-}}",
+{% endif %}
+{%- if search.results.size -%}
+{%- for result in search.results limit: 4 -%}
+{%- if result.object_type == 'article' -%}
+{% assign thumbURL = result.image.src | img_url:'compact' %}
+{% if result.variants[0].price > 0 %}
+{% assign priceURL = result.variants[0].price | money %}
+{% else %}
+{% assign priceURL = 'Liên hệ' %}
+{% endif %}
+"{{result.id}}": {
+"name": "{{ result.title | escape}}",
+"url": "{{ result.url }}",
+"image": "{{ thumbURL }}"
+}{% unless forloop.last %},{% endunless %}
+{%- endif -%}
+{%- endfor -%}
+{%- endif -%}
+}

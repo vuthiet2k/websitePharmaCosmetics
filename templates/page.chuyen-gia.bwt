@@ -1,0 +1,81 @@
+{{ 'page_chuyen_gia.scss.css' | asset_url | stylesheet_tag }}
+{% include 'breadcrumb' %}
+
+<section class="pc-cg-hero">
+	<div class="container">
+		<span class="pc-testi-treatment-tag">👩‍⚕️ ĐỘI NGŨ CHUYÊN GIA</span>
+		<h1 class="pc-section-title">Đội Ngũ Bác Sĩ &amp; Dược Sĩ Da Liễu</h1>
+		<p class="pc-cg-hero-desc">Mỗi phác đồ tại Pharma Cosmetics đều được xây dựng và theo sát bởi đội ngũ bác sĩ, dược sĩ chuyên khoa da liễu — không phác đồ nào áp dụng đại trà.</p>
+	</div>
+</section>
+
+<section class="pc-cg-grid-section">
+	<div class="container">
+		<div class="pc-cg-grid">
+			{% for doc in doctors %}
+			<div class="pc-testi-card pc-cg-card">
+				<div class="pc-testi-card-inner">
+					<div class="pc-cg-avatar-row">
+						<div class="pc-testi-avatar pc-cg-avatar{% if doc.photo.src != blank %} pc-testi-avatar--img{% endif %}">
+							<img src="{{ doc.photo.src }}" alt="{{ doc.photo.alt }}" loading="lazy"
+								onerror="this.onerror=null;this.closest('.pc-testi-avatar').classList.remove('pc-testi-avatar--img');this.remove();">
+							<span class="pc-testi-avatar-initials">{{ doc.name | slice: 0, 2 | upcase }}</span>
+						</div>
+						<div class="pc-cg-name-block">
+							<h3 class="pc-testi-result-title pc-cg-name">{{ doc.name }}</h3>
+							<span class="pc-cg-role">{{ doc.title }}</span>
+						</div>
+					</div>
+					<span class="pc-testi-treatment-tag pc-cg-specialty">{{ doc.specialty }}</span>
+					<p class="pc-testi-result-desc pc-cg-bio">{{ doc.bio }}</p>
+					<div class="pc-cg-meta-row">
+						<span>🎓 {{ doc.education }}</span>
+						<span>•</span>
+						<span>{{ doc.years_experience }} năm kinh nghiệm</span>
+					</div>
+					{% if doc.quote != blank %}
+					<blockquote class="pc-cg-quote">{{ doc.quote }}</blockquote>
+					{% endif %}
+					{% if doc.alias == 'bs-ckii-nguyen-minh-anh' %}
+					<a href="/pages/chuyen-gia-detail" class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800 mt-2">Xem hồ sơ đầy đủ →</a>
+					{% endif %}
+				</div>
+			</div>
+			{% endfor %}
+		</div>
+	</div>
+</section>
+
+<section class="pc-cg-testi-section">
+	<div class="container">
+		<h2 class="pc-section-title pc-cg-testi-title">Khách Hàng Nói Gì</h2>
+		<div class="pc-cg-testi-grid">
+			{% for t in patient_testimonials %}
+			<div class="pc-testi-card pc-cg-testi-card">
+				<div class="pc-testi-card-inner">
+					<p class="pc-testi-result-desc pc-cg-testi-quote">"{{ t.quote }}"</p>
+					<div class="pc-testi-author-row">
+						<div class="pc-testi-avatar{% if t.avatar.src != blank %} pc-testi-avatar--img{% endif %}">
+							<img src="{{ t.avatar.src }}" alt="{{ t.avatar.alt }}" loading="lazy"
+								onerror="this.onerror=null;this.closest('.pc-testi-avatar').classList.remove('pc-testi-avatar--img');this.remove();">
+							<span class="pc-testi-avatar-initials">{{ t.name | slice: 0, 2 | upcase }}</span>
+						</div>
+						<div>
+							<div class="pc-testi-author-name">{{ t.name }}</div>
+							<div class="pc-cg-testi-result">{{ t.result_title }}</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			{% endfor %}
+		</div>
+	</div>
+</section>
+
+<section class="pc-cg-cta">
+	<div class="container">
+		<h2 class="pc-section-title">Cần Tư Vấn Trực Tiếp Từ Chuyên Gia?</h2>
+		<p>Đặt lịch khám miễn phí — bác sĩ sẽ đánh giá và xây dựng phác đồ riêng cho làn da của bạn.</p>
+		<a href="/pages/dat-lich-tu-van" class="pc-cg-cta-btn">Đặt Lịch Khám ➔</a>
+	</div>
+</section>

@@ -1,0 +1,26 @@
+<nav class="collection-paginate clearfix relative nav_pagi w_100">
+	<ul class="pagination clearfix">
+		{% if paginate.previous %}
+		<li class="page-item"><a class="page-link link-next-pre" onclick="doSearch({{ paginate.current_page | minus: 1 }})" href="javascript:;" title="{{ paginate.previous.title }}">&laquo;</a></li>
+		{% else %}  
+		<li class="page-item disabled"><a class="page-link" href="#">&laquo;</a></li>
+		{% endif %}
+		
+		{% for part in paginate.parts %}
+		{% if part.is_link %}
+		<li class="page-item"><a class="page-link" onclick="doSearch({{ part.title }})" href="javascript:;">{{ part.title }}</a></li>
+		{% else %}
+		{% if part.title == paginate.current_page %}
+		<li class="active page-item disabled"><a class="page-link" href="javascript:;" style="pointer-events:none">{{ part.title }}</a></li>
+		{% else %}
+		<li class="page-item"><a class="page-link" href="javascript:;">{{ part.title }}</a></li>
+		{% endif %}
+		{% endif %}
+		{% endfor %}                
+		{% if paginate.next %}
+		<li class="page-item"><a class="page-link link-next-pre" onclick="doSearch({{ paginate.current_page | plus: 1 }})" href="javascript:;" title="{{ paginate.next.title }}">&raquo;</a></li>
+		{% else %}
+		<li class="page-item disabled"><a class="page-link" href="#">&raquo;</a></li>
+		{% endif %}     
+	</ul>
+</nav>

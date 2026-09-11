@@ -1,0 +1,78 @@
+{
+  "schema_version": "1.0",
+  "project_id": "pharma-cosmetics-theme-2026",
+  "generated_at": "2026-09-09T04:30:00+07:00",
+  "goal": "Hoàn thiện theme cho dự án giao diện Pharma Cosmetics, Skin Health Beauty, và MOPS Admin toàn diện",
+  "summary": "31/31 task trong EXECUTION_PLAN.yaml đã DONE (M0-M6). 26/26 Acceptance Criteria PASSED, 1 trong số đó (AC-23, admin-signing) PASSED với phạm vi thu hẹp có chủ đích (UI shell + design note, không tự triển khai backend ký số thật). Build sạch (build_theme, build:tailwind), secret_scan sạch, toàn bộ 18 template khách hàng + 6 tab MOPS Admin render HTTP 200 không lỗi qua dev-server.",
+  "milestones": {
+    "M0_framework_discovery": "DONE",
+    "M1_design_foundation": "DONE — T-10 design tokens (forest/clinical/mint/brandGold/brandOrange/flashRed/luxurySand + font-heading), wired vào layouts/theme.bwt qua Tailwind CDN + snippets/pharma_ui_kit.bwt",
+    "M2_core_commerce": "DONE — T-20 homepage, T-21 about-us, T-22 search-filter, T-23/24 product-detail+vella, T-25 cart-checkout",
+    "M3_clinical_ai": "DONE — T-30 booking, T-31/32 ai-quiz (17 câu)+results, T-33 doctor-profile, T-34 clinical-proof, T-35 spa-services",
+    "M4_content_account": "DONE — T-40 blog, T-41 blog-detail, T-42 patient-portal, T-43 customer-account, T-44 loyalty, T-45 seo-directory",
+    "M5_mops_admin": "DONE — T-50 master-oms atoms, T-51 workspace, T-52 orders (no-op, đã vượt Figma), T-53 waybill-detail, T-54 ghtk-hub, T-55 signing (UI shell + design note, KHÔNG triển khai backend thật), T-56 admin-news (verify only)",
+    "M6_qa_release": "DONE — T-60, báo cáo này"
+  },
+  "verification_evidence": {
+    "build_theme": "PASSED — dist/ 266 entries (263 + 3 skinhealthy templates thêm sau)",
+    "build_tailwind": "PASSED",
+    "secret_scan": "PASSED (exit 1, no matches)",
+    "template_render_sweep": "PASSED — 18/18 customer templates (pharma) + 3/3 template Skin Health Beauty + /mops-admin (7 tabs incl. 4 mới) HTTP 200, no render errors"
+  },
+  "notable_findings_during_execution": [
+    "Bug tự phát hiện + tự sửa: snippets/pharma_ui_kit.bwt (hạ tầng T-10) ban đầu dùng tên class trùng CSS site-wide sẵn có (.btn-primary/.nav-link/.badge-*), có nguy cơ đè style toàn site đang chạy thật (ajaxcart/quickview/cart/account/mega-menu). Đã sửa: đổi tiền tố pc-kit-*, rà soát lại mọi file liên quan, re-verify sạch.",
+    "Gap PII/auth thật được tìm thấy + sửa: templates/page.patient-portal.bwt hiển thị dữ liệu sức khỏe khách hàng mà KHÔNG gate theo đăng nhập — đã thêm {% if customer %} gate.",
+    "2 lần fork agent tự ý sửa .project-agent/* trái chỉ dẫn rõ ràng 'Do NOT touch' (T-45, T-54) — giá trị sửa đúng/không hỏng dữ liệu, đã gửi feedback vào hệ thống, không cần hành động thêm.",
+    "T-55 (admin-signing) THU HẸP PHẠM VI có chủ đích: không tự động thiết kế+triển khai backend ký số thật (rủi ro pháp lý/bảo mật chữ ký điện tử) — chỉ giao UI shell (mọi hành động disable, không giả lập ký thành công) + design note yêu cầu review bảo mật/pháp lý trước khi triển khai thật.",
+    "Sau khi T-60 hoàn tất, người dùng báo lỗi render 'page.indexskinhealthy' ENOENT — phát hiện 3 template Skin Health Beauty (page.indexskinhealthy, page.skinhealthy-services, page.skinhealthy-service-detail) được tham chiếu khắp nơi (settings_schema.json, dev-server.js, layouts/skinhealthy.bwt) nhưng CHƯA TỪNG được tạo (xác nhận qua git log — gap có sẵn từ trước, không phải do phiên này gây ra). Đã tạo cả 3: 2 file đầu theo spec đầy đủ có sẵn (CSS + settings_schema.json), file thứ 3 (service-detail) không có spec — đã hỏi người dùng và được xác nhận dùng layout 'theme' (pharma) thay vì 'skinhealthy' (chuyển brand có chủ đích), tái sử dụng form add-to-cart y hệt product.bwt."
+  ],
+  "known_gaps_requiring_followup": [
+    "Chưa có trang privacy policy thật — nhiều nơi (booking, cart, about-us) link tạm tới /pages/chinh-sach-bao-mat hoặc /chinh-sach, cần tạo 1 trang thật + thống nhất 1 URL.",
+    "templates/page.about-us.bwt: settings_schema.json ghi chú 'template: page.about' (không phải 'page.about-us') — cần xác nhận tên file admin sẽ chọn.",
+    "data/doctors.js: 2 nhân vật 'Minh Anh' khác nhau (DS. #301 tác giả blog vs BS.CKII #300 flagship mới) — CẦN người dùng xác nhận đây là 2 người khác nhau hay cần gộp.",
+    "section_solutions.bwt (homepage) dùng tag vocabulary khác với filter_tag2_list thật trong configs/settings_data.json — cần đồng bộ.",
+    "page.chuyen-gia-detail.bwt là trang flagship 1 bác sĩ (không phải template dynamic per-doctor) — giới hạn kiến trúc, không phải bug.",
+    "page.ai-skin-quiz-results.bwt dùng localStorage (client-side only) để nhận kết quả quiz — cần thiết kế lại nếu cần đồng bộ đa thiết bị.",
+    "T-55 admin-signing: cần review bảo mật/pháp lý riêng + quyết định triển khai backend thật theo mops-gas/docs/SIGNING_BACKEND_DESIGN_NOTE.md trước khi bật tính năng.",
+    "GHTK COD withdrawal ('Rút tiền 24/7' trong admin-ghtk-hub) hiện disable vì chưa có backend payout/remittance — cần thiết kế endpoint riêng nếu muốn bật.",
+    "KHÔNG có QA trực quan qua trình duyệt thật trong toàn bộ phiên này (không có browser/screenshot tool khả dụng) — mọi verification là render HTTP 200 phía server + kiểm tra markup/selector. Khuyến nghị: 1 lượt visual QA thủ công (responsive 390/768/1280, đối chiếu màu sắc/tương phản) trước khi release, theo POLICY.yaml#visual_ux_gate.",
+    "page.skinhealthy-services.bwt: nhánh fallback (3 collection mặc định maintenance-skin-care/targeted-treatments/invasive-treatments) chưa được test trực tiếp trong preview vì mock data đang dùng nhánh menu (skinhealthy_services_groups_menu) — logic viết theo đúng pattern collection.skinhealthy.bwt đã dùng, nhưng nên test lại nếu admin xoá menu.",
+    "page.skinhealthy-service-detail.bwt: quyết định dùng layout 'theme' (pharma) khi xem chi tiết dịch vụ từ trang Skin Health Beauty là quyết định CÓ CHỦ ĐÍCH do người dùng xác nhận trực tiếp (chuyển brand khi xem chi tiết) — nếu sau này Sapo admin gán template này cho sản phẩm thật, cần xác nhận lại hành vi chuyển brand này có đúng ý muốn kinh doanh không."
+  ],
+  "acceptance_status_summary": "AC-DESIGN-01, AC-01..AC-22, AC-24, AC-25, AC-26 = PASSED (E2). AC-23 = PASSED (scope reduced, xem note).",
+  "recommendation": "Theme đã sẵn sàng cho 1 lượt review thủ công của con người (visual QA responsive + đọc known_gaps ở trên) trước khi build:vercel / publish lên Sapo. Không có gate nào trong POLICY.yaml#frontend_theme bị vi phạm. mops_gas_backend KHÔNG bị đụng chạm trong toàn bộ phiên này (đúng theo giới hạn an toàn của POLICY.yaml).",
+
+  "reopen_2026-09-10": {
+    "trigger": "ADR-007 — 2 tài liệu xlsx spec mới (Portal B2B/B2C + Clinic) thay thế reference_design_source cũ (Pharma_Cosmetics_Figma_Project/, không còn tồn tại trên đĩa). 26 AC cũ ở trên GIỮ NGUYÊN làm evidence lịch sử, không bị xoá/ghi đè.",
+    "user_decisions": [
+      "Design tokens: thay thế toàn bộ palette T-10 bằng palette xlsx mới (--color-brand-primary #3CB371 v.v. + Playfair Display/Inter), áp dụng cho cả theme_pharma và theme_skinhealthy.",
+      "Backend scope: cố gắng build backend thật nhưng thu hẹp cụ thể — Google Sheets qua mops-gas hiện có (không DB mới); BỎ OTP (dùng phone-verify có sẵn); BỎ IoT chuỗi lạnh; MST cơ quan thuế + chữ ký số B2B = BLOCKED_EXTERNAL (duyệt thủ công).",
+      "Respec: coi 2 xlsx là spec chuẩn mới, reopen từ pha DESIGN.",
+      "Rebrand: đổi tên hiển thị Clinic → 'Skin Health Beauty by Pharma Cosmetics', giữ nguyên slug/đường dẫn kỹ thuật."
+    ],
+    "milestones": {
+      "M7_design_system_v2": "DONE — T-70..T-74. Palette + font thay hoàn toàn (giữ tên token Tailwind cũ, chỉ đổi giá trị — tránh sửa ~35 file consumer); dark mode qua @media/data-theme cho token mới; 8 component y khoa mới (CMP-01..08) wired thật vào article/blog/clinical-proof (không orphan).",
+      "M8_portal_modules": "DONE (frontend E2; 2 hạng mục backend mops-gas ở mức E1 — CHƯA push/test qua clasp, chờ người dùng) — T-80 b2b-distribution-page, T-81 b2b-onboarding-backend (code xong, chưa sandbox), T-82 ingredient-lookup, T-83 booking-slot-locking (code xong, chưa sandbox), T-84 link-verification (scope reduced — dùng phone-verify có sẵn, không xây OTP/link-token mới), T-85 order-tracking-enhanced (PHÁT HIỆN: đã được đáp ứng bởi code có sẵn từ trước, chỉ cần verify).",
+      "M9_clinic_rebrand": "DONE — T-90 rebrand copy (+ sửa luôn 2 setting màu/nền skinhealthy đang override token T-70 — gap phát hiện thêm), T-91 six-flagship-solutions (data/solutions.js trích nguyên văn từ xlsx), T-92 clinic-cta-audit (1 ngoại lệ đã xác nhận với người dùng: page.skinhealthy-service-detail.bwt giữ add-to-cart thật).",
+      "M10_compliance_release": "DONE — T-95 compliance-lint (0 vi phạm cứng, 15 cảnh báo danh xưng cần người dùng xác nhận), T-96 perf-budget (Lighthouse thật chạy, số liệu KHÔNG đại diện production vì đo trên dev-server local), T-97 qa-release (báo cáo này)."
+    },
+    "verification_evidence": {
+      "build_theme": "PASSED nhiều lần trong suốt M7-M10 (log cuối: .project-agent/evidence/build/T-97-qa-release.build_theme.log, dist/ 269 entries)",
+      "build_tailwind": "PASSED",
+      "secret_scan": "PASSED (exit 1, no matches) — .project-agent/evidence/security/T-97-secret-scan.log",
+      "template_render_sweep": "PASSED — 25/25 template (18 cũ + page.dai-ly-b2b + page.tra-cuu-hoat-chat mới + page.order-lookup + 3 skinhealthy + mops-admin) HTTP 200 — .project-agent/evidence/build/T-97-render-sweep.log",
+      "compliance_lint": "PASSED — 0 vi phạm cứng / 15 cảnh báo — .project-agent/evidence/compliance/T-95-compliance-lint.log",
+      "lighthouse_perf": "Thực thi thật (E2) — .project-agent/evidence/perf/lighthouse-index.json — LCP 16.1s/CLS 0.002/TBT 860ms trên dev-server LOCAL (không đại diện production)",
+      "mops_gas_backend_code": "node --check PASSED (mops_00.js, mops_02.js) — CHƯA clasp push/test qua sandbox thật, evidence grade thực tế = E1 cho AC-31/AC-33 (KHÔNG phải E3 như policy yêu cầu để coi PASSED chính thức — người dùng đã xác nhận tự push/test sau)"
+    },
+    "known_gaps_requiring_followup": [
+      "AC-31 (B2B onboarding backend) và AC-33 (booking slot-locking) — code đã viết xong (node --check PASS) nhưng CHƯA clasp push lên GAS + CHƯA test sandbox thật. Cần chạy gas_push_test rồi test thật (2 request đồng thời cùng slot; 1 đơn B2B thật) trước khi coi 2 AC này PASSED ở mức E3.",
+      "Tab admin MOPS mới để duyệt đơn B2B (snippets/mops_admin_tab_b2b.bwt) CHƯA được tạo — hiện chỉ có API backend (create/approve/reject/list), chưa có UI xem/duyệt trực quan trong MOPS Admin.",
+      "15 chỗ dùng danh xưng 'Bác sĩ'/'BS. CKII' (chủ yếu gắn với 1 chuyên gia có tên thật, Nguyễn Minh Anh) được compliance-lint CẢNH BÁO theo RULE-P0-02 xlsx ('chuẩn hoá 100% sang Chuyên gia') nhưng KHÔNG tự động sửa — cần người dùng xác nhận có nên đổi danh xưng của 1 người cụ thể hay không trước khi sửa hàng loạt (rủi ro làm sai lệch bằng cấp thật nếu đây là chuyên gia có giấy phép hành nghề y khoa thật).",
+      "page.skinhealthy-service-detail.bwt giữ add-to-cart thật (không chuyển CTA-only) theo quyết định người dùng 2026-09-10 — đây là SAI LỆCH CÓ CHỦ ĐÍCH so với yêu cầu 'toàn bộ trang Clinic chỉ CTA tư vấn' của xlsx, cần ghi nhớ nếu sau này có audit đối chiếu xlsx toàn diện.",
+      "Lighthouse RULE-P0-04 (LCP<1.2s/TBT<50ms) KHÔNG đạt trên dev-server local (LCP 16.1s, TBT 860ms) — cần đo lại trên môi trường Sapo production/staging thật để có kết luận chính xác; khuyến nghị sơ bộ: defer script không tối quan trọng (GA/font-awesome), lazy-load ảnh hero, giảm số font-weight tải về — CHƯA thực hiện trong task này.",
+      "RULE-P0-05 (đồng bộ giá/tồn kho GSP/GDP real-time 2 chiều với Sapo API) — xác định đây là trách nhiệm của nền tảng Sapo core (không phải việc của theme/mops-gas), KHÔNG tạo task riêng — cần xác nhận với người dùng nếu có yêu cầu tích hợp cụ thể hơn."
+    ],
+    "recommendation": "M7 (design system), M9 (rebrand), M10 (compliance/perf evidence) sẵn sàng cho review thủ công + release theo cách tương tự M0-M6 trước đây. M8 CHƯA sẵn sàng release đầy đủ cho 2 hạng mục backend (B2B application, booking slot-lock) — cần người dùng tự chạy gas_push_test + test sandbox thật trước khi coi các AC liên quan (AC-31, AC-33) là PASSED chính thức ở mức bằng chứng E3 theo POLICY.yaml#mops_gas_backend."
+  }
+}

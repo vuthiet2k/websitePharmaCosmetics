@@ -1,0 +1,47 @@
+{% if product.content contains '<h6>' %}
+{% assign description_parts = product.content | split: "<h6>" %}
+{% for part in description_parts %}
+{% assign fp = part | append: " " | split: "</h6>" | last %}
+{% assign p = part | append: " " | split: "</h6>" | last | strip_html | replace: "&nbsp;", "" | replace: " ", "" | strip_newlines %}
+{% if p != "" or fp contains "<img" or fp contains "<iframe" %}
+{% if forloop.index0 == '1' %}
+<div class="specifications">
+	<div class="title">{{settings.product_specifications_title}}</div>
+	<div class="box_content_spe">
+		{{ part | split: "</h6>" | last | replace: "<div", "<span" | replace: "</div", "</span"}}
+	</div>
+	<div class="text-center specifications-button-show d-none">
+		<button type="button" class="btn duration-300 btn-primary specifications-button" data-toggle="modal" data-target="#specificationsModal" title="Xem cấu hình chi tiết">Xem thông số chi tiết <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill" viewBox="0 0 16 16">
+			<path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+			</svg></button>
+	</div>
+</div>
+<script>
+	$(".specifications-button-show").removeClass('d-none');
+	$(document).on('click', '.specifications-close, #specificationsModal .modalsize-overlay, .fancybox-overlay', function(e){
+		$("#specificationsModal").fadeOut(0);
+		awe_hidePopup();
+	});
+	$(document).ready(function ($){
+
+		var modal = $('.modal-specifications');
+		var btn = $('.specifications-button');
+		var span = $('.specifications-close');
+		btn.click(function () {
+			modal.show();
+		});
+		span.click(function () {
+			modal.hide();
+		});
+		$(window).on('click', function (e) {
+			if ($(e.target).is('.modal')) {
+				modal.hide();
+			}
+		});
+	});
+
+</script>
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endif %}

@@ -1,0 +1,586 @@
+      
+      
+      <div id="tab-settings" v-show="activeTab === 'settings'" class="ma-tab-pane">
+        <div class="flex flex-col md:flex-row gap-4 pb-28">
+
+          
+          <nav class="w-full md:w-[220px] flex-shrink-0 flex md:flex-col gap-1 overflow-x-auto md:overflow-visible">
+            <button v-for="cfgTab in cfgTabs" :key="cfgTab.key" @click="setSettingsPanel(cfgTab.key)" type="button"
+              class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-label-md font-bold whitespace-nowrap transition-all"
+              :class="settings.panel === cfgTab.key ? 'bg-primary-container text-on-primary-container' : 'text-on-surface-variant hover:bg-surface-container-high'">
+              <span class="material-symbols-outlined text-[18px]">[[ cfgTab.icon ]]</span><span class="ma-nav-label">[[ cfgTab.label ]]</span>
+            </button>
+          </nav>
+
+          
+          <div class="flex-1 min-w-0 max-w-2xl">
+
+            <div v-show="settings.panel === 'status'">
+              <h2 class="ma-heading">Trạng thái hệ thống</h2>
+              <p class="text-body-sm text-on-surface-variant mt-2 mb-4">Phiên bản hiện tại và chế độ bảo trì. Chỉ hiển thị với OWNER.</p>
+              <div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+                <div class="flex flex-wrap items-center gap-stack-md text-body-sm mb-4">
+                  <span class="text-on-surface-variant">Phiên bản: <strong class="text-on-surface">[[ settings.appVersion || '—' ]]</strong></span>
+                  <span class="text-on-surface-variant">Môi trường: <strong class="text-on-surface">[[ settings.env || '—' ]]</strong></span>
+                </div>
+                <label class="flex items-center gap-3">
+                  <input type="checkbox" v-model="settings.maintenance" class="w-5 h-5 rounded border-outline-variant text-error focus:ring-error">
+                  <span class="text-body-sm">Bật chế độ bảo trì (chặn toàn bộ request trừ health check)</span>
+                </label>
+              </div>
+            </div>
+
+            <div v-show="settings.panel === 'bank'">
+              <h2 class="ma-heading">Tài khoản ngân hàng</h2>
+              <p class="text-body-sm text-on-surface-variant mt-2 mb-4">Cấu hình tài khoản nhận thanh toán QR cho các giao dịch đơn hàng tự động.</p>
+
+              
+              <div v-if="!settings.bankEditing" class="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <span class="block text-label-md text-on-surface-variant mb-1">Ngân hàng</span>
+                    <span class="text-body-md font-bold">[[ settings.bankCode || '—' ]]</span>
+                  </div>
+                  <div>
+                    <span class="block text-label-md text-on-surface-variant mb-1">Số tài khoản</span>
+                    <span class="text-body-md font-bold">[[ maskedAccountNo ]]</span>
+                  </div>
+                  <div>
+                    <span class="block text-label-md text-on-surface-variant mb-1">Tên chủ tài khoản</span>
+                    <span class="text-body-md font-bold">[[ settings.accountName || '—' ]]</span>
+                  </div>
+                </div>
+                <button @click="settings.bankEditing = true" type="button" class="ma-btn-outline">
+                  <span class="material-symbols-outlined text-[18px]">edit</span> Sửa
+                </button>
+              </div>
+
+              
+              <div v-else class="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm space-y-4">
+                <div>
+                  <label class="ma-label">Mã ngân hàng</label>
+                  <input type="text" v-model="settings.bankCode" list="cfg-bank-list" placeholder="vd: MB, VCB, TCB, BIDV..."
+                    class="w-full h-9 px-4 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+                  <datalist id="cfg-bank-list">
+                    <option value="MB">MB Bank</option>
+                    <option value="VCB">Vietcombank</option>
+                    <option value="TCB">Techcombank</option>
+                    <option value="BIDV">BIDV</option>
+                    <option value="ACB">ACB</option>
+                    <option value="TPB">TPBank</option>
+                    <option value="VPB">VPBank</option>
+                    <option value="STB">Sacombank</option>
+                    <option value="VIB">VIB</option>
+                    <option value="MSB">MSB</option>
+                    <option value="SHB">SHB</option>
+                    <option value="HDB">HDBank</option>
+                    <option value="OCB">OCB</option>
+                    <option value="EIB">Eximbank</option>
+                    <option value="AGRIBANK">Agribank</option>
+                  </datalist>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="ma-label">Số tài khoản</label>
+                    <input type="text" v-model="settings.accountNo" class="w-full h-9 px-4 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+                  </div>
+                  <div>
+                    <label class="ma-label">Tên chủ tài khoản</label>
+                    <input type="text" v-model="settings.accountName" class="w-full h-9 px-4 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+                  </div>
+                </div>
+                <div class="p-4 bg-emerald-50 rounded-lg border border-emerald-200 flex items-start gap-3">
+                  <span class="material-symbols-outlined text-primary text-[20px]">info</span>
+                  <p class="text-body-sm text-emerald-800">Mã QR thanh toán được tạo tự động dựa trên 3 thông tin trên (chuẩn VietQR) — không cần cấu hình gì thêm.</p>
+                </div>
+                <button @click="cancelBankEdit" type="button" class="inline-flex items-center gap-2 text-on-surface-variant px-4 py-2 rounded-lg font-bold text-label-md hover:bg-surface-container-high transition-all">
+                  ← Quay lại xem
+                </button>
+              </div>
+            </div>
+
+            <div v-show="settings.panel === 'sapo'">
+              <h2 class="ma-heading">SAPO API</h2>
+              <p class="text-body-sm text-on-surface-variant mt-2 mb-4">Thông tin kết nối SAPO để đồng bộ sản phẩm (tab Sản phẩm).</p>
+              <div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm space-y-4">
+                <div>
+                  <label class="ma-label">Store domain</label>
+                  <input type="text" v-model="settings.sapoStore" placeholder="vd: pharmacosmetics-vn.mysapo.net"
+                    class="w-full h-9 px-4 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+                </div>
+                <div>
+                  <label class="flex items-center gap-2 text-label-md text-on-surface-variant mb-1.5">API Key
+                    <span v-if="settings.sapoKeySet" class="ma-badge ma-badge--success">🔒 Đã cấu hình</span>
+                    <span v-else class="ma-badge ma-badge--danger">🔒 Chưa cấu hình</span>
+                  </label>
+                  <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">lock</span>
+                    <input :type="settings.sapoKeyVisible ? 'text' : 'password'" v-model="settings.sapoKey" placeholder="Để trống nếu không đổi" autocomplete="new-password"
+                      class="w-full h-9 pl-10 pr-10 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+                    <button @click="settings.sapoKeyVisible = !settings.sapoKeyVisible" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors" aria-label="Hiện/ẩn giá trị vừa nhập">
+                      <span class="material-symbols-outlined text-[20px]">[[ settings.sapoKeyVisible ? 'visibility_off' : 'visibility' ]]</span>
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label class="flex items-center gap-2 text-label-md text-on-surface-variant mb-1.5">API Secret
+                    <span v-if="settings.sapoSecretSet" class="ma-badge ma-badge--success">🔒 Đã cấu hình</span>
+                    <span v-else class="ma-badge ma-badge--danger">🔒 Chưa cấu hình</span>
+                  </label>
+                  <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">lock</span>
+                    <input :type="settings.sapoSecretVisible ? 'text' : 'password'" v-model="settings.sapoSecret" placeholder="Để trống nếu không đổi" autocomplete="new-password"
+                      class="w-full h-9 pl-10 pr-10 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+                    <button @click="settings.sapoSecretVisible = !settings.sapoSecretVisible" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors" aria-label="Hiện/ẩn giá trị vừa nhập">
+                      <span class="material-symbols-outlined text-[20px]">[[ settings.sapoSecretVisible ? 'visibility_off' : 'visibility' ]]</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            
+            <div v-show="settings.panel === 'goship'">
+              <h2 class="ma-heading">Vận chuyển Goship <span class="text-body-sm font-normal text-on-surface-variant">(đa hãng)</span></h2>
+              <p class="text-body-sm text-on-surface-variant mt-2 mb-4">Một kết nối duy nhất, so sánh giá &amp; đặt vận đơn với <strong>nhiều hãng</strong>. Lấy <strong>Client ID / Client Secret</strong> tại Goship.io &gt; Kết nối API. Bí mật — để trống nếu không đổi.</p>
+              <p class="text-body-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4 max-w-lg">⚠️ Adapter theo tài liệu doc.goship.io, <strong>chưa test sandbox</strong>. Sau khi điền: chạy tay <code>testGoshipToken()</code> → <code>testGoshipCities()</code> (lấy mã kho lấy hàng) → <code>testGoshipRates(orderId)</code> → <code>testGoshipCreate(orderId)</code> trong Apps Script Editor.</p>
+              <div class="space-y-4 max-w-lg">
+                <div>
+                  <label class="text-label-md font-bold">Môi trường</label>
+                  <select v-model="settings.goshipEnv" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                    <option value="stg">Sandbox (sandbox.goship.io)</option>
+                    <option value="prod">Production (api.goship.io)</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="text-label-md font-bold">Access Token <span class="font-normal opacity-60">(ưu tiên; token Goship sống ~10 năm)</span></label>
+                    <span v-if="settings.goshipTokenSet" class="ma-badge ma-badge--success">🔒 Đã cấu hình</span>
+                  </div>
+                  <div class="relative">
+                    <input :type="settings.goshipTokenVisible ? 'text' : 'password'" v-model="settings.goshipToken" placeholder="Để trống nếu không đổi" autocomplete="new-password"
+                      class="w-full h-9 pl-3 pr-10 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+                    <button @click="settings.goshipTokenVisible = !settings.goshipTokenVisible" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors" aria-label="Hiện/ẩn">
+                      <span class="material-symbols-outlined text-[20px]">[[ settings.goshipTokenVisible ? 'visibility_off' : 'visibility' ]]</span>
+                    </button>
+                  </div>
+                  <p class="text-label-sm ma-text-sub mt-1">Không có token sẵn? Điền 4 trường dưới, hệ thống tự đăng nhập lấy token (cache 6 giờ).</p>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div><label class="text-label-md font-bold">Username (email Goship)</label><input v-model="settings.goshipUsername" placeholder="tài khoản Goship.vn" autocomplete="off" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"></div>
+                  <div>
+                    <div class="flex items-center justify-between mb-1"><label class="text-label-md font-bold">Password</label><span v-if="settings.goshipPasswordSet" class="ma-badge ma-badge--success ma-badge--sm">🔒</span></div>
+                    <input :type="settings.goshipPasswordVisible ? 'text' : 'password'" v-model="settings.goshipPassword" placeholder="Để trống nếu không đổi" autocomplete="new-password" class="w-full h-9 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div><label class="text-label-md font-bold">Client ID</label><input v-model="settings.goshipClientId" placeholder="từ Goship > Kết nối API" autocomplete="off" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"></div>
+                  <div>
+                    <div class="flex items-center justify-between mb-1"><label class="text-label-md font-bold">Client Secret</label><span v-if="settings.goshipClientSecretSet" class="ma-badge ma-badge--success ma-badge--sm">🔒</span></div>
+                    <input :type="settings.goshipClientSecretVisible ? 'text' : 'password'" v-model="settings.goshipClientSecret" placeholder="Để trống nếu không đổi" autocomplete="new-password" class="w-full h-9 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div><label class="text-label-md font-bold">Tên người gửi (kho)</label><input v-model="settings.goshipFromName" placeholder="Để trống → tên tài khoản" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"></div>
+                  <div><label class="text-label-md font-bold">SĐT người gửi</label><input v-model="settings.goshipFromPhone" placeholder="vd: 0909xxxxxx" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"></div>
+                </div>
+                <div>
+                  <label class="text-label-md font-bold">Địa chỉ kho lấy hàng (số nhà, đường)</label>
+                  <input v-model="settings.goshipFromStreet" placeholder="vd: 123 Nguyễn Trãi" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                  <div>
+                    <label class="text-label-md font-bold">Tỉnh/TP <span class="text-error">*</span></label>
+                    <select v-model="settings.goshipFromCity" @change="onGoshipCityChange" @focus="loadGoshipCities" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                      <option value="" disabled>[[ settings.goshipCityLoading ? 'Đang tải…' : (settings.goshipCityOptions.length ? '— Chọn tỉnh/TP —' : 'Bấm để tải danh sách') ]]</option>
+                      <option v-for="c in settings.goshipCityOptions" :key="c.id || c.code" :value="String(c.id || c.code)">[[ c.name ]]</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="text-label-md font-bold">Quận/Huyện <span class="text-error">*</span></label>
+                    <select v-model="settings.goshipFromDistrict" @change="onGoshipDistrictChange" :disabled="!settings.goshipFromCity || settings.goshipDistrictLoading" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                      <option value="" disabled>[[ settings.goshipDistrictLoading ? 'Đang tải…' : (settings.goshipFromCity ? '— Chọn quận/huyện —' : 'Chọn Tỉnh trước') ]]</option>
+                      <option v-for="d in settings.goshipDistrictOptions" :key="d.id || d.code" :value="String(d.id || d.code)">[[ d.name ]]</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="text-label-md font-bold">Phường/Xã <span class="ma-text-hint">(tuỳ chọn)</span></label>
+                    <select v-model="settings.goshipFromWard" :disabled="!settings.goshipFromDistrict || settings.goshipWardLoading" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                      <option value="">[[ settings.goshipWardLoading ? 'Đang tải…' : (settings.goshipFromDistrict ? '— (tuỳ chọn) —' : 'Chọn Quận trước') ]]</option>
+                      <option v-for="w in settings.goshipWardOptions" :key="w.id || w.code" :value="String(w.id || w.code)">[[ w.name ]]</option>
+                    </select>
+                  </div>
+                </div>
+                <p class="text-label-sm ma-text-sub">Danh mục địa giới của <strong>Goship</strong> (khác GHN/GHTK/Viettel Post). Cascade tự động fetch qua GAS proxy — cần nhập token/login trước để BE gọi Goship master-data được.</p>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="text-label-md font-bold">Tự chọn hãng khi không chỉ định</label>
+                    <select v-model="settings.goshipAutoPick" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                      <option value="cheapest">Phí thấp nhất</option>
+                      <option value="best_success">Tỉ lệ giao thành công cao nhất</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="text-label-md font-bold">Ai trả cước</label>
+                    <select v-model="settings.goshipPayer" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                      <option value="1">Shop trả cước</option>
+                      <option value="0">Khách trả cước</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="pt-2 border-t border-outline-variant">
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="text-label-md font-bold">Khoá xác thực Webhook</label>
+                    <span v-if="settings.goshipWebhookKeySet" class="ma-badge ma-badge--success">🔒 Đã đặt</span>
+                    <span v-else class="ma-badge ma-badge--danger">⚠️ Chưa đặt — webhook đang mở</span>
+                  </div>
+                  <div class="flex gap-2">
+                    <input :type="settings.goshipWebhookKeyVisible ? 'text' : 'password'" v-model="settings.goshipWebhookKey" placeholder="Để trống nếu không đổi" autocomplete="new-password"
+                      class="flex-1 h-9 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                    <button @click="settings.goshipWebhookKeyVisible = !settings.goshipWebhookKeyVisible" type="button" class="h-9 px-2 rounded-lg border border-outline-variant text-on-surface-variant hover:text-primary" aria-label="Hiện/ẩn">
+                      <span class="material-symbols-outlined text-[20px]">[[ settings.goshipWebhookKeyVisible ? 'visibility_off' : 'visibility' ]]</span>
+                    </button>
+                    <button @click="genGoshipWebhookKey" type="button" class="h-9 px-3 rounded-lg border border-outline-variant font-bold text-label-md hover:bg-surface-container-high transition-colors">Tạo khoá</button>
+                  </div>
+                  <p class="text-body-sm text-on-surface-variant bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-2 mt-2">
+                    <strong>Cách khai webhook:</strong> vào Goship &gt; Kết nối API &gt; Webhooks, dán URL Web App của MOPS <strong>kèm khoá</strong> ở cuối:<br>
+                    <code class="text-label-sm break-all">https://script.google.com/…/exec?wh=<em>KHOÁ Ở TRÊN</em></code><br>
+                    Apps Script không đọc được header nên không kiểm được chữ ký HMAC của Goship — khoá trong URL là lớp xác thực khả thi ở đây. MOPS chỉ nhận <strong>trạng thái</strong>, <strong>không</strong> lấy số tiền từ webhook; tiền chốt qua đối soát.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div v-show="settings.panel === 'ghn'">
+              <h2 class="ma-heading">Vận chuyển GHN</h2>
+              <p class="text-body-sm text-on-surface-variant mt-2 mb-4">Giao Hàng Nhanh. Đăng ký sandbox tại <strong>5sao.ghn.dev</strong> (Chủ cửa hàng → xem &amp; sao chép Token/ShopID; cập nhật địa chỉ cửa hàng để lấy District/Ward gửi hàng). Token là bí mật — để trống nếu không đổi.</p>
+              <div class="space-y-4 max-w-lg">
+                <div>
+                  <label class="text-label-md font-bold">Môi trường</label>
+                  <select v-model="settings.ghnEnv" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                    <option value="dev">Sandbox (dev-online-gateway.ghn.vn)</option>
+                    <option value="prod">Production (online-gateway.ghn.vn)</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="text-label-md font-bold">GHN Token</label>
+                    <span v-if="settings.ghnTokenSet" class="ma-badge ma-badge--success">🔒 Đã cấu hình</span>
+                  </div>
+                  <div class="relative">
+                    <input :type="settings.ghnTokenVisible ? 'text' : 'password'" v-model="settings.ghnToken" placeholder="Để trống nếu không đổi" autocomplete="new-password"
+                      class="w-full h-9 pl-3 pr-10 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+                    <button @click="settings.ghnTokenVisible = !settings.ghnTokenVisible" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors" aria-label="Hiện/ẩn">
+                      <span class="material-symbols-outlined text-[20px]">[[ settings.ghnTokenVisible ? 'visibility_off' : 'visibility' ]]</span>
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label class="text-label-md font-bold">Shop ID</label>
+                  <input v-model="settings.ghnShopId" placeholder="vd: 885" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div><label class="text-label-md font-bold">District ID gửi hàng</label><input v-model="settings.ghnFromDistrictId" placeholder="vd: 1442" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"></div>
+                  <div><label class="text-label-md font-bold">Ward Code gửi hàng</label><input v-model="settings.ghnFromWardCode" placeholder="vd: 20308" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"></div>
+                </div>
+                <div>
+                  <label class="text-label-md font-bold">Kích thước kiện mặc định (cm) <span class="font-normal opacity-60">— SAPO không có kích thước SP nên dùng chung để tính cước</span></label>
+                  <div class="grid grid-cols-3 gap-3 mt-1">
+                    <input v-model="settings.ghnDefaultLength" type="number" placeholder="Dài" class="w-full h-9 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                    <input v-model="settings.ghnDefaultWidth" type="number" placeholder="Rộng" class="w-full h-9 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                    <input v-model="settings.ghnDefaultHeight" type="number" placeholder="Cao" class="w-full h-9 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                  </div>
+                </div>
+                <div>
+                  <label class="text-label-md font-bold">Quỹ nhận COD (Account ID)</label>
+                  <input v-model="settings.ghnCodAccountId" placeholder="Để trống → dùng quỹ bán hàng mặc định" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                </div>
+              </div>
+            </div>
+
+            <div v-show="settings.panel === 'ahamove'">
+              <h2 class="ma-heading">Vận chuyển Ahamove</h2>
+              <p class="text-body-sm text-on-surface-variant mt-2 mb-4">Giao <strong>nội thành / trong ngày</strong> theo toạ độ. Đăng ký Open API tại <strong>Ahamove for Developers</strong> để lấy <strong>API Key</strong> + số điện thoại tài khoản. Địa chỉ người nhận đẩy dạng chuỗi để Ahamove tự geocode. API Key là bí mật — để trống nếu không đổi.</p>
+              <p class="text-body-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4 max-w-lg">⚠️ Adapter viết theo tài liệu Open API v1, <strong>chưa test sandbox</strong>. Sau khi điền API Key + SĐT + Service ID + Địa chỉ kho, chạy tay <code>testAhamoveToken()</code> → <code>testAhamoveEstimate(orderId)</code> trong Apps Script Editor để xác nhận trước khi dùng thật.</p>
+              <div class="space-y-4 max-w-lg">
+                <div>
+                  <label class="text-label-md font-bold">Môi trường</label>
+                  <select v-model="settings.ahamoveEnv" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                    <option value="stg">Sandbox (apistg.ahamove.com)</option>
+                    <option value="prod">Production (api.ahamove.com)</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="text-label-md font-bold">Ahamove API Key</label>
+                    <span v-if="settings.ahamoveApiKeySet" class="ma-badge ma-badge--success">🔒 Đã cấu hình</span>
+                    <span v-else class="ma-badge ma-badge--danger">🔒 Chưa cấu hình</span>
+                  </div>
+                  <div class="relative">
+                    <input :type="settings.ahamoveApiKeyVisible ? 'text' : 'password'" v-model="settings.ahamoveApiKey" placeholder="Để trống nếu không đổi" autocomplete="new-password"
+                      class="w-full h-9 pl-3 pr-10 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+                    <button @click="settings.ahamoveApiKeyVisible = !settings.ahamoveApiKeyVisible" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors" aria-label="Hiện/ẩn">
+                      <span class="material-symbols-outlined text-[20px]">[[ settings.ahamoveApiKeyVisible ? 'visibility_off' : 'visibility' ]]</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div><label class="text-label-md font-bold">SĐT tài khoản Ahamove</label><input v-model="settings.ahamoveMobile" placeholder="vd: 0909xxxxxx" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"></div>
+                  <div><label class="text-label-md font-bold">Service ID <span class="font-normal opacity-60">theo TP</span></label><input v-model="settings.ahamoveServiceId" placeholder="vd: SGN-BIKE / HAN-BIKE" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"></div>
+                </div>
+                <div>
+                  <label class="text-label-md font-bold">Địa chỉ kho lấy hàng <span class="font-normal opacity-60">— dùng để Ahamove geocode điểm lấy</span></label>
+                  <input v-model="settings.ahamoveFromAddress" placeholder="Số nhà, đường, phường, quận, tỉnh/TP" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div><label class="text-label-md font-bold">Toạ độ kho — Vĩ độ (lat) <span class="font-normal opacity-60">tuỳ chọn</span></label><input v-model="settings.ahamoveFromLat" placeholder="vd: 10.7769" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"></div>
+                  <div><label class="text-label-md font-bold">Toạ độ kho — Kinh độ (lng) <span class="font-normal opacity-60">tuỳ chọn</span></label><input v-model="settings.ahamoveFromLng" placeholder="vd: 106.7009" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div><label class="text-label-md font-bold">Người liên hệ lấy hàng</label><input v-model="settings.ahamovePickupName" placeholder="Để trống → dùng tên tài khoản" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"></div>
+                  <div><label class="text-label-md font-bold">SĐT liên hệ lấy hàng</label><input v-model="settings.ahamovePickupMobile" placeholder="vd: 0909xxxxxx" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"></div>
+                </div>
+              </div>
+            </div>
+
+            <div v-show="settings.panel === 'ghtk'">
+              <h2 class="ma-heading">Vận chuyển GHTK</h2>
+              <p class="text-body-sm text-on-surface-variant mt-2 mb-4">Sau khi nhập <strong>API Token</strong>, MOPS tải các kho đã có trong tài khoản GHTK và dùng kho đã chọn làm mặc định. MOPS không tự tạo kho.</p>
+              <p class="text-body-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">⚠️ Adapter theo docs GHTK, <strong>chưa test sandbox</strong>. Sau khi điền, chạy tay <code>testGhtkFee(orderId)</code> → <code>testGhtkCreate(orderId)</code> trong Apps Script Editor.</p>
+              <div class="space-y-4">
+                <div>
+                  <label class="text-label-md font-bold">Môi trường</label>
+                  <select v-model="settings.ghtkEnv" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                    <option value="stg">Sandbox (services-staging.ghtklab.com)</option>
+                    <option value="prod">Production (services.giaohangtietkiem.vn)</option>
+                  </select>
+                </div>
+                
+                <div class="border border-outline-variant rounded-xl bg-surface-container-lowest p-4" style="max-width:540px;">
+                  <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                      <span class="material-symbols-outlined text-[20px] text-primary">link</span>
+                      <label class="text-label-md font-bold">Kết nối GHTK</label>
+                    </div>
+                    <span v-if="settings.ghtkTokenSet" class="ma-badge ma-badge--success">🔒 Đã kết nối</span>
+                    <span v-else class="ma-badge ma-badge--danger">🔒 Chưa kết nối</span>
+                  </div>
+                  <p v-if="settings.ghtkConfigured" class="text-label-sm text-emerald-700 mb-3">✓ Đã chọn kho GHTK mặc định; vào Đối tác vận chuyển để bật kết nối GHTK.</p>
+                  <p v-else-if="settings.ghtkTokenSet" class="text-label-sm text-amber-700 mb-3">Token đã lưu. Bấm “Tải kho từ GHTK” để chọn kho đang có.</p>
+                  <div class="flex items-center justify-between gap-3 mb-3 rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2">
+                    <span class="text-body-sm text-on-surface-variant">Tải lại thông tin GHTK đã lưu trên hệ thống</span>
+                    <button @click="loadSettingsData" type="button" :disabled="settings.loading || settings.saving || settings.ghtkConnecting"
+                      class="ma-btn-secondary whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed">
+                      <span v-if="settings.loading" class="material-symbols-outlined ma-spin text-[16px]">progress_activity</span>
+                      <span v-else class="material-symbols-outlined text-[16px]">refresh</span>
+                      [[ settings.loading ? 'Đang tải…' : 'Tải thông tin đã lưu' ]]
+                    </button>
+                  </div>
+
+                  
+                  <div class="flex gap-1 border-b border-outline-variant mb-4">
+                    <button type="button" @click="settings.ghtkConnectTab = 'login'"
+                      class="px-3 py-2 text-body-sm font-semibold border-b-2 transition-all"
+                      :class="settings.ghtkConnectTab === 'login' ? 'border-primary text-primary' : 'border-transparent text-on-surface-variant hover:text-on-surface'">
+                      Đăng nhập
+                    </button>
+                    <button type="button" @click="settings.ghtkConnectTab = 'token'"
+                      class="px-3 py-2 text-body-sm font-semibold border-b-2 transition-all"
+                      :class="settings.ghtkConnectTab === 'token' ? 'border-primary text-primary' : 'border-transparent text-on-surface-variant hover:text-on-surface'">
+                      Nâng cao (API Token)
+                    </button>
+                  </div>
+
+                  
+                  <div v-show="settings.ghtkConnectTab === 'login'" class="space-y-3">
+                    <p class="text-body-sm text-on-surface-variant">Hệ thống sẽ tự lấy Token từ GHTK bằng tài khoản đăng nhập. Email/Mật khẩu <strong>không được lưu</strong> — chỉ Token được ghi vào bộ nhớ an toàn.</p>
+                    <div class="flex items-center gap-3">
+                      <label class="text-label-md font-bold text-on-surface-variant" style="width:140px; flex:none;">Email GHTK</label>
+                      <input type="email" v-model="settings.ghtkConnectEmail" placeholder="you@shop.com" autocomplete="off"
+                        class="flex-1 h-9 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <label class="text-label-md font-bold text-on-surface-variant" style="width:140px; flex:none;">Mật khẩu</label>
+                      <div class="relative flex-1">
+                        <input :type="settings.ghtkConnectPasswordVisible ? 'text' : 'password'" v-model="settings.ghtkConnectPassword"
+                          placeholder="Mật khẩu tài khoản GHTK" autocomplete="new-password"
+                          class="w-full h-9 pl-3 pr-10 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+                        <button @click="settings.ghtkConnectPasswordVisible = !settings.ghtkConnectPasswordVisible" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors" aria-label="Hiện/ẩn">
+                          <span class="material-symbols-outlined text-[20px]">[[ settings.ghtkConnectPasswordVisible ? 'visibility_off' : 'visibility' ]]</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="flex items-center justify-end pt-2">
+                      <button @click="ghtkConnectByLogin" type="button" :disabled="settings.ghtkConnecting || !settings.ghtkConnectEmail || !settings.ghtkConnectPassword"
+                        class="ma-btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span v-if="settings.ghtkConnecting" class="material-symbols-outlined ma-spin text-[16px]">progress_activity</span>
+                        <span v-else class="material-symbols-outlined text-[16px]">bolt</span>
+                        [[ settings.ghtkConnecting ? 'Đang kết nối…' : 'Kiểm tra & Kết nối' ]]
+                      </button>
+                    </div>
+                  </div>
+
+                  
+                  <div v-show="settings.ghtkConnectTab === 'token'" class="space-y-3">
+                    <p class="text-body-sm text-on-surface-variant">Dán API Token lấy từ khonh doanh nghiệp GHTK. Để trống nếu không đổi. Token sẽ được lưu khi bấm <strong>Lưu cấu hình</strong>.</p>
+                    <div class="flex items-center gap-3">
+                      <label class="text-label-md font-bold text-on-surface-variant" style="width:140px; flex:none;">API Token</label>
+                      <div class="relative flex-1">
+                        <input :type="settings.ghtkTokenVisible ? 'text' : 'password'" v-model="settings.ghtkToken" placeholder="Để trống nếu không đổi" autocomplete="new-password"
+                          class="w-full h-9 pl-3 pr-10 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+                        <button @click="settings.ghtkTokenVisible = !settings.ghtkTokenVisible" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors" aria-label="Hiện/ẩn">
+                          <span class="material-symbols-outlined text-[20px]">[[ settings.ghtkTokenVisible ? 'visibility_off' : 'visibility' ]]</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="settings.ghtkTokenSet" class="border border-outline-variant rounded-xl bg-surface-container-lowest p-4" style="max-width:540px;">
+                  <div class="flex items-center justify-between gap-3 mb-3">
+                    <div><label class="text-label-md font-bold">Kho lấy hàng mặc định</label><p class="text-label-sm text-on-surface-variant mt-1">Chỉ hiển thị kho đã tạo trên tài khoản GHTK.</p></div>
+                    <button @click="loadGhtkPickAddresses" type="button" :disabled="settings.ghtkPickAddressesLoading || settings.ghtkConnecting" class="ma-btn-secondary whitespace-nowrap disabled:opacity-50"><span class="material-symbols-outlined text-[16px]" :class="{'ma-spin': settings.ghtkPickAddressesLoading}">refresh</span> [[ settings.ghtkPickAddressesLoading ? 'Đang tải…' : 'Tải kho từ GHTK' ]]</button>
+                  </div>
+                  <select v-model="settings.ghtkPickAddressId" @change="onGhtkPickAddressChange" :disabled="settings.ghtkPickAddressesLoading" class="w-full h-9 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary"><option value="">Chọn kho GHTK</option><option v-for="warehouse in settings.ghtkPickAddresses" :key="warehouse.pick_address_id" :value="warehouse.pick_address_id">[[ warehouse.pick_name || 'Kho GHTK' ]] — [[ warehouse.address ]]</option></select>
+                  <p class="text-label-sm text-on-surface-variant mt-2">Chọn kho khác rồi bấm <strong>Lưu cấu hình</strong>. Khi tạo/tính phí vận đơn, MOPS luôn dùng <strong>ID và địa giới động của đúng kho được chọn</strong>, không dùng địa chỉ tĩnh của kho khác. Cần thêm kho? <a href="https://khachhang.giaohangtietkiem.vn/" target="_blank" rel="noopener noreferrer" class="text-primary underline">Quản lý kho trên GHTK</a>, sau đó tải lại danh sách.</p>
+                </div>
+                <div class="border-t border-outline-variant pt-4"><button type="button" @click="settings.ghtkManualSettingsOpen = !settings.ghtkManualSettingsOpen" class="text-label-md font-bold text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">[[ settings.ghtkManualSettingsOpen ? 'expand_less' : 'expand_more' ]]</span>Thiết lập địa chỉ thủ công (nâng cao)</button><p class="text-label-sm text-on-surface-variant mt-1">Chỉ dùng khi tài khoản/API GHTK không trả được danh sách kho.</p></div>
+                <div v-show="settings.ghtkManualSettingsOpen" class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                  <div><label class="text-label-md font-bold">Tên người gửi (kho)</label><input v-model="settings.ghtkPickName" placeholder="Để trống → dùng tên tài khoản" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"></div>
+                  <div><label class="text-label-md font-bold">SĐT người gửi</label><input v-model="settings.ghtkPickTel" placeholder="vd: 0909xxxxxx" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"></div>
+                </div>
+                <div>
+                  <label class="text-label-md font-bold">Địa chỉ kho lấy hàng (số nhà, đường)</label>
+                  <input v-model="settings.ghtkPickAddress" placeholder="vd: 123 Nguyễn Trãi" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                  <div><label class="text-label-md font-bold">Tỉnh/TP</label><select v-model="settings.ghtkPickProvince" @change="onGhtkPickProvinceChange" :disabled="settings.ghtkAddressLoading" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"><option value="">[[ settings.ghtkAddressLoading ? 'Đang tải…' : 'Chọn Tỉnh/TP' ]]</option><option v-for="province in ghtkProvinces" :key="province.code" :value="province.name">[[ province.name ]]</option></select></div>
+                  <div><label class="text-label-md font-bold">Quận/Huyện</label><select v-model="settings.ghtkPickDistrict" @change="onGhtkPickDistrictChange" :disabled="!settings.ghtkPickProvince || settings.ghtkAddressLoading" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"><option value="">Chọn Quận/Huyện</option><option v-for="district in ghtkDistricts" :key="district.code" :value="district.name">[[ district.name ]]</option></select></div>
+                  <div><label class="text-label-md font-bold">Phường/Xã</label><select v-model="settings.ghtkPickWard" :disabled="!settings.ghtkPickDistrict || settings.ghtkAddressLoading" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"><option value="">Chọn Phường/Xã</option><option v-for="ward in ghtkWards" :key="ward.code" :value="ward.name">[[ ward.name ]]</option></select></div>
+                </div>
+                <div>
+                  <label class="text-label-md font-bold">Hình thức vận chuyển</label>
+                  <select v-model="settings.ghtkTransport" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                    <option value="road">Đường bộ (road)</option>
+                    <option value="fly">Đường bay (fly)</option>
+                  </select>
+                </div>
+                </div>
+              </div>
+            </div>
+
+            <div v-show="settings.panel === 'vtp'">
+              <h2 class="ma-heading">Vận chuyển Viettel Post</h2>
+              <p class="text-body-sm text-on-surface-variant mt-2 mb-4">Viettel Post. Địa chỉ theo <strong>ID riêng của VTP</strong> — hệ thống tự dò từ tên tỉnh/quận đơn hàng. Đăng nhập bằng <strong>Token</strong> (portal) hoặc <strong>Username + Password</strong>. Bí mật — để trống nếu không đổi.</p>
+              <p class="text-body-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4 max-w-lg">⚠️ Adapter theo docs VTP v2, <strong>chưa test sandbox</strong>. VTP cập nhật trạng thái chủ yếu qua webhook. ID gửi hàng (Tỉnh/Quận) là <strong>ID của VTP</strong>, không phải ID GHN. Chạy tay <code>testVtpToken()</code> → <code>testVtpCreate(orderId)</code>.</p>
+              <div class="space-y-4 max-w-lg">
+                <div>
+                  <label class="text-label-md font-bold">Môi trường</label>
+                  <select v-model="settings.vtpEnv" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                    <option value="stg">Sandbox (partnerdev.viettelpost.vn)</option>
+                    <option value="prod">Production (partner.viettelpost.vn)</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="text-label-md font-bold">VTP Token <span class="font-normal opacity-60">(ưu tiên; để trống thì dùng Username/Password)</span></label>
+                    <span v-if="settings.vtpTokenSet" class="ma-badge ma-badge--success">🔒 Đã cấu hình</span>
+                  </div>
+                  <div class="relative">
+                    <input :type="settings.vtpTokenVisible ? 'text' : 'password'" v-model="settings.vtpToken" placeholder="Để trống nếu không đổi" autocomplete="new-password"
+                      class="w-full h-9 pl-3 pr-10 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+                    <button @click="settings.vtpTokenVisible = !settings.vtpTokenVisible" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors" aria-label="Hiện/ẩn">
+                      <span class="material-symbols-outlined text-[20px]">[[ settings.vtpTokenVisible ? 'visibility_off' : 'visibility' ]]</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div><label class="text-label-md font-bold">Username</label><input v-model="settings.vtpUsername" placeholder="Tài khoản VTP" autocomplete="off" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"></div>
+                  <div>
+                    <div class="flex items-center justify-between mb-1"><label class="text-label-md font-bold">Password</label><span v-if="settings.vtpPasswordSet" class="ma-badge ma-badge--success ma-badge--sm">🔒</span></div>
+                    <input :type="settings.vtpPasswordVisible ? 'text' : 'password'" v-model="settings.vtpPassword" placeholder="Để trống nếu không đổi" autocomplete="new-password" class="w-full h-9 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                  </div>
+                </div>
+                <div>
+                  <label class="text-label-md font-bold">Mã dịch vụ (ORDER_SERVICE)</label>
+                  <input v-model="settings.vtpServiceCode" placeholder="vd: VCN (nhanh) / VTK (tiết kiệm)" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div><label class="text-label-md font-bold">Tên người gửi</label><input v-model="settings.vtpSenderName" placeholder="Để trống → tên tài khoản" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"></div>
+                  <div><label class="text-label-md font-bold">SĐT người gửi</label><input v-model="settings.vtpSenderPhone" placeholder="vd: 0909xxxxxx" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"></div>
+                </div>
+                <div>
+                  <label class="text-label-md font-bold">Địa chỉ kho lấy hàng</label>
+                  <input v-model="settings.vtpSenderAddress" placeholder="Số nhà, đường" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all">
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                  <div><label class="text-label-md font-bold">ID Tỉnh (VTP)</label><input v-model="settings.vtpSenderProvince" type="number" placeholder="vd: 2" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"></div>
+                  <div><label class="text-label-md font-bold">ID Quận (VTP)</label><input v-model="settings.vtpSenderDistrict" type="number" placeholder="vd: 28" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"></div>
+                  <div><label class="text-label-md font-bold">ID Phường (VTP)</label><input v-model="settings.vtpSenderWard" type="number" placeholder="tuỳ chọn" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary transition-all"></div>
+                </div>
+              </div>
+            </div>
+
+            <div v-show="settings.panel === 'telegram'">
+              <h2 class="ma-heading">Telegram</h2>
+              <p class="text-body-sm text-on-surface-variant mt-2 mb-4">Gửi thông báo đơn hàng / thanh toán tới nhóm Telegram.</p>
+              <div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm space-y-4">
+                <div>
+                  <label class="ma-label">Chat ID nhận thông báo</label>
+                  <input type="text" v-model="settings.telegramChatId" placeholder="vd: 123456789"
+                    class="w-full h-9 px-4 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+                </div>
+                <div>
+                  <label class="flex items-center gap-2 text-label-md text-on-surface-variant mb-1.5">Bot Token
+                    <span v-if="settings.telegramTokenSet" class="ma-badge ma-badge--success">🔒 Đã cấu hình</span>
+                    <span v-else class="ma-badge ma-badge--danger">🔒 Chưa cấu hình</span>
+                  </label>
+                  <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">lock</span>
+                    <input :type="settings.telegramTokenVisible ? 'text' : 'password'" v-model="settings.telegramToken" placeholder="Để trống nếu không đổi" autocomplete="new-password"
+                      class="w-full h-9 pl-10 pr-10 rounded-lg border border-outline-variant bg-surface text-body-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+                    <button @click="settings.telegramTokenVisible = !settings.telegramTokenVisible" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors" aria-label="Hiện/ẩn giá trị vừa nhập">
+                      <span class="material-symbols-outlined text-[20px]">[[ settings.telegramTokenVisible ? 'visibility_off' : 'visibility' ]]</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div v-show="settings.panel === 'security'">
+              <h2 class="ma-heading">Bảo mật hệ thống</h2>
+              <p class="text-body-sm text-on-surface-variant mt-2 mb-4">Xác thực nâng cao cho vai trò OWNER.</p>
+              <div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm flex items-center justify-between opacity-60" title="Tính năng chưa triển khai">
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center">
+                    <span class="material-symbols-outlined text-on-surface-variant">verified_user</span>
+                  </div>
+                  <div>
+                    <h4 class="text-label-md font-bold">Xác thực 2 yếu tố (2FA)</h4>
+                    <p class="ma-text-sub">Chưa khả dụng — sẽ có trong bản cập nhật sau</p>
+                  </div>
+                </div>
+                <div class="relative inline-flex items-center">
+                  <input type="checkbox" class="sr-only peer" disabled>
+                  <div class="w-11 h-6 bg-surface-variant rounded-full cursor-not-allowed after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        
+        <footer id="cfg-footer" class="fixed bottom-0 left-0 md:left-[260px] right-0 h-20 bg-surface-container-lowest border-t border-outline-variant px-margin-mobile md:px-margin-desktop flex items-center justify-between z-40">
+          <div class="flex items-center gap-2 text-body-sm text-on-surface-variant">
+            <span class="material-symbols-outlined text-primary text-[18px]">history</span>
+            <span>[[ settings.lastSaved || 'Chưa có thay đổi nào được ghi nhận' ]]</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <button @click="cancelSettings" type="button" class="px-6 py-2.5 rounded-lg text-label-md font-bold text-on-surface-variant hover:bg-surface-container-high transition-colors">Hủy bỏ</button>
+            <button @click="saveSettings" :disabled="settings.saving" type="button" class="px-8 py-2.5 rounded-lg bg-primary text-on-primary text-label-md font-bold flex items-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-md">
+              <span class="material-symbols-outlined text-[20px]">save</span> Lưu cấu hình
+            </button>
+          </div>
+        </footer>
+      </div>

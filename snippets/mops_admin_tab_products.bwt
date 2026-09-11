@@ -1,0 +1,580 @@
+      
+      <div id="tab-products" v-show="activeTab === 'products'" class="ma-tab-pane">
+        <template v-if="workspaceView !== 'products.detail'">
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-gutter mb-stack-lg">
+          <div v-for="card in productsStatsCards" :key="card.label" class="bg-surface-container-lowest rounded-xl p-4 border border-outline-variant shadow-sm flex items-center justify-between">
+            <div><p class="text-label-md text-on-surface-variant uppercase tracking-wider">[[ card.label ]]</p><h3 class="text-headline-md font-bold mt-1">[[ card.value ]]</h3></div>
+            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" :class="card.colorCls"><span class="material-symbols-outlined">[[ card.icon ]]</span></div>
+          </div>
+        </div>
+
+        
+        <div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+          <div class="p-4 border-b border-outline-variant flex flex-wrap items-center justify-between gap-3">
+            <button type="button" @click="mobileFilterOpen = true"
+              class="ma-filter-trigger items-center gap-2 p-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-body-sm font-bold text-on-surface active:scale-95 transition-all">
+              <span class="material-symbols-outlined text-[18px]">tune</span><span>Bộ lọc</span>
+              <span v-if="(products.search?1:0)+(products.filterStatus?1:0)+(products.filterCategory?1:0)+(products.filterMapped?1:0)+(products.filterStock?1:0)" class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-label-sm font-bold bg-primary text-white">[[ (products.search?1:0)+(products.filterStatus?1:0)+(products.filterCategory?1:0)+(products.filterMapped?1:0)+(products.filterStock?1:0) ]]</span>
+            </button>
+            <div class="ma-toolbar ma-toolbar--sheet flex flex-wrap items-center gap-3" :class="{ 'is-filter-open': mobileFilterOpen }">
+              <div class="ma-filter-sheet-head"><span class="text-title-sm font-bold text-on-surface">Bộ lọc sản phẩm</span><button type="button" @click="mobileFilterOpen = false" class="w-8 h-8 inline-flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">close</span></button></div>
+              
+              <div class="relative">
+                <span class="material-symbols-outlined text-[18px] text-on-surface-variant absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">search</span>
+                <input type="text" v-model="products.search" placeholder="Tìm tên, SKU, barcode..."
+                  class="h-9 w-56 rounded-lg border border-outline-variant text-body-sm pl-8 pr-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+              </div>
+              <select v-model="products.filterStatus" @change="products.page = 1" class="h-9 rounded-lg border border-outline-variant text-body-sm px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                <option value="">Tất cả trạng thái</option>
+                <option value="active">Đang bán</option>
+                <option value="deleted">Ngừng kinh doanh</option>
+              </select>
+              
+              <select v-if="productCategories.length" v-model="products.filterCategory" @change="products.page = 1" class="h-9 rounded-lg border border-outline-variant text-body-sm px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                <option value="">Tất cả danh mục</option>
+                <option v-for="cat in productCategories" :key="cat" :value="cat">[[ cat ]]</option>
+              </select>
+              <select v-model="products.filterMapped" @change="products.page = 1" class="h-9 rounded-lg border border-outline-variant text-body-sm px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                <option value="">Trong MOPS: Tất cả</option>
+                <option value="1">Đã map</option>
+                <option value="0">Chưa map</option>
+              </select>
+              
+              <select v-model="products.filterStock" @change="products.page = 1" class="h-9 rounded-lg border border-outline-variant text-body-sm px-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                <option value="">Tất cả tồn kho</option>
+                <option value="in_stock">Còn hàng</option>
+                <option value="out_of_stock">Hết hàng</option>
+                <option value="low_stock">Sắp hết hàng</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-1">
+              <input ref="productImportFile" @change="onProductImportFile" type="file" accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" class="hidden">
+              <button @click="openProductImport" type="button" class="p-2 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg" aria-label="Nhập Excel hoặc CSV" title="Nhập Excel hoặc CSV">
+                <span class="material-symbols-outlined text-[20px]">upload</span>
+              </button>
+              <button @click="exportProductsCsv" type="button" class="p-2 text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg" aria-label="Xuất CSV" title="Xuất CSV">
+              <span class="material-symbols-outlined text-[20px]">download</span>
+              </button>
+            </div>
+          </div>
+          <div class="ma-filter-backdrop" v-if="mobileFilterOpen" @click="mobileFilterOpen = false"></div>
+
+          
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="ma-table ma-data-table">
+              <thead><tr class="ma-thead-row">
+                <th class="px-6 py-3"></th>
+                <th class="ma-th-lg">Tên sản phẩm</th>
+                <th class="ma-th-lg">SKU</th>
+                
+                <th class="px-6 py-3 font-label-md text-on-surface-variant tracking-wider uppercase text-right cursor-pointer select-none hover:text-on-surface transition-colors" @click="sortProductsBy('price')">
+                  Giá<span v-if="products.sortBy === 'price'" class="material-symbols-outlined text-[14px] align-middle ml-0.5">[[ products.sortDir === 'desc' ? 'arrow_downward' : 'arrow_upward' ]]</span>
+                </th>
+                <th class="px-6 py-3 font-label-md text-on-surface-variant tracking-wider uppercase text-right cursor-pointer select-none hover:text-on-surface transition-colors" @click="sortProductsBy('inventory_qty')">
+                  Tồn kho<span v-if="products.sortBy === 'inventory_qty'" class="material-symbols-outlined text-[14px] align-middle ml-0.5">[[ products.sortDir === 'desc' ? 'arrow_downward' : 'arrow_upward' ]]</span>
+                </th>
+                <th class="px-6 py-3 font-label-md text-on-surface-variant tracking-wider uppercase text-right cursor-pointer select-none hover:text-on-surface transition-colors" @click="sortProductsBy('sold_qty')">
+                  Sức bán<span v-if="products.sortBy === 'sold_qty'" class="material-symbols-outlined text-[14px] align-middle ml-0.5">[[ products.sortDir === 'desc' ? 'arrow_downward' : 'arrow_upward' ]]</span>
+                </th>
+                
+                <th class="ma-th-lg">Trạng thái</th>
+                <th class="px-6 py-3 font-label-md text-on-surface-variant tracking-wider uppercase text-right">Hành động</th>
+              </tr></thead>
+              <tbody class="ma-rows-divide">
+                
+                <template v-if="products.loading">
+                  <tr v-for="n in 6" :key="'skeleton' + n">
+                    <td class="px-6 py-4"><div class="w-10 h-10 rounded bg-surface-container-low animate-pulse"></div></td>
+                    <td class="px-6 py-4"><div class="h-4 w-36 rounded bg-surface-container-low animate-pulse"></div></td>
+                    <td class="px-6 py-4"><div class="h-4 w-16 rounded bg-surface-container-low animate-pulse"></div></td>
+                    <td class="px-6 py-4"><div class="h-4 w-16 rounded bg-surface-container-low animate-pulse ml-auto"></div></td>
+                    <td class="px-6 py-4"><div class="h-4 w-10 rounded bg-surface-container-low animate-pulse ml-auto"></div></td>
+                    <td class="px-6 py-4"><div class="h-4 w-10 rounded bg-surface-container-low animate-pulse ml-auto"></div></td>
+                    <td class="px-6 py-4"><div class="h-5 w-24 rounded-full bg-surface-container-low animate-pulse"></div></td>
+                    <td class="px-6 py-4"><div class="h-4 w-16 rounded bg-surface-container-low animate-pulse ml-auto"></div></td>
+                  </tr>
+                </template>
+                <tr v-else-if="products.error">
+                  <td colspan="8" class="px-6 py-16 text-center">
+                    <span class="material-symbols-outlined text-error text-[48px]">error</span>
+                    <p class="ma-empty-hint">[[ products.error ]]</p>
+                    <button @click="loadProducts" type="button" class="ma-btn-outline mt-3">Thử lại</button>
+                  </td>
+                </tr>
+                <tr v-else-if="productsEmptyMessage">
+                  <td colspan="8" class="px-6 py-16 text-center">
+                    <span class="material-symbols-outlined text-on-surface-variant text-[56px] opacity-[.35]">inventory_2</span>
+                    <p class="ma-empty-hint">[[ productsEmptyMessage ]]</p>
+                  </td>
+                </tr>
+                <tr v-else v-for="p in productsPageItems" :key="p.variant_id || p.handle" class="cursor-pointer hover:bg-surface-container-low/60 transition-colors" :class="productRowBg(p)" @click="openProductDetail(p)">
+                  <td class="px-6 py-4">
+                    <img v-if="p.image" :src="p.image" loading="lazy" width="40" height="40" class="w-10 h-10 rounded object-cover bg-surface-container-low flex-shrink-0" :alt="p.title || p.handle">
+                    <div v-else class="w-10 h-10 rounded bg-surface-container-low flex-shrink-0 flex items-center justify-center text-on-surface-variant/40"><span class="material-symbols-outlined text-[18px]">image</span></div>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span class="font-body-md font-semibold">[[ p.title || '—' ]]</span>
+                      
+                      <span v-if="p.variant_title" class="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-xs font-semibold flex-shrink-0">[[ p.variant_title ]]</span>
+                      
+                      <span v-if="stockBadge(p)" :class="stockBadge(p).cls" class="px-2 py-0.5 rounded text-xs flex-shrink-0">[[ stockBadge(p).text ]]</span>
+                    </div>
+                    <code class="ma-text-sub block mb-1">[[ p.handle ]]</code>
+                    
+                    <div v-if="p.in_mops" class="flex items-center gap-1 flex-wrap">
+                      <span class="ma-badge ma-badge--info ma-badge--sm">Đã lưu MOPS</span>
+                      <span v-if="p.mops_enabled" class="ma-badge ma-badge--success ma-badge--sm">Đã bật bán</span>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 font-body-sm text-on-surface-variant">[[ p.sku || '—' ]]</td>
+                  <td class="px-6 py-4 font-body-md font-bold text-right">[[ formatMoney(p.price) ]]</td>
+                  
+                  <td class="px-6 py-4 text-right font-body-sm" :class="p.inventory_qty < 0 ? 'text-red-600 font-bold' : 'text-on-surface-variant'">
+                    <span v-if="p.inventory_qty < 0" class="material-symbols-outlined text-[14px] align-middle mr-0.5">warning</span>[[ (p.inventory_qty || 0).toLocaleString('vi-VN') ]]
+                  </td>
+                  <td class="px-6 py-4 text-right font-body-sm text-on-surface-variant">[[ (p.sold_qty || 0).toLocaleString('vi-VN') ]]</td>
+                  <td class="px-6 py-4">
+                    <span :class="productStatusBadge(p).cls" class="px-2.5 py-0.5 rounded-full text-label-md font-bold">[[ productStatusBadge(p).text ]]</span>
+                  </td>
+                  
+                  <td class="px-6 py-4 text-right">
+                    <div class="flex items-center justify-end gap-1">
+                      <button @click.stop="openProductDetail(p)" type="button" class="ma-icon-btn" aria-label="Xem chi tiết" title="Xem chi tiết">
+                        <span class="material-symbols-outlined text-[18px]">visibility</span>
+                      </button>
+                      <button @click.stop="openProductEdit(p)" type="button" class="ma-icon-btn" aria-label="Sửa" title="Sửa">
+                        <span class="material-symbols-outlined text-[18px]">edit</span>
+                      </button>
+                      <button v-if="p.in_mops" @click.stop="confirmDisconnectProduct(p)" type="button" class="p-1.5 text-red-600 hover:bg-red-50 rounded-full transition-colors" aria-label="Xóa khỏi MOPS" title="Xóa khỏi MOPS">
+                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                      </button>
+                      <button v-else @click.stop="connectProduct(p.handle, p.title || p.handle)" type="button" class="p-1.5 text-primary hover:bg-primary/10 rounded-full transition-colors" aria-label="Kết nối vào MOPS" title="Kết nối vào MOPS">
+                        <span class="material-symbols-outlined text-[18px]">link</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-if="!products.loading && !productsEmptyMessage" class="p-4 bg-surface-container-low/50 border-t border-outline-variant flex flex-wrap items-center justify-between gap-3">
+            <p class="text-label-sm text-on-surface-variant">
+              Hiển thị [[ productsPageFrom ]]-[[ productsPageTo ]] trên [[ productsFiltered.length ]] sản phẩm
+              <span v-if="products.hydrating || (!products.hydrated && products.serverTotal > products.all.length)" class="ml-2 inline-flex items-center gap-1 text-primary">
+                <span class="material-symbols-outlined ma-spin text-[14px] align-middle">progress_activity</span>Đang tải đủ danh mục ([[ products.all.length ]]/[[ products.serverTotal ]])…
+              </span>
+            </p>
+            <div class="flex items-center gap-1">
+              <button type="button" @click="products.page--" :disabled="products.page <= 1" class="p-1 rounded hover:bg-surface-container-high transition-colors disabled:opacity-30"><span class="material-symbols-outlined">chevron_left</span></button>
+              <template v-for="(pn, idx) in productsPageNumbers" :key="idx">
+                <span v-if="pn === '...'" class="px-1 text-label-md">...</span>
+                <button v-else type="button" @click="products.page = pn" class="px-3 py-1 rounded text-label-md" :class="pn === products.page ? 'bg-primary text-white' : 'hover:bg-surface-container-high'">[[ pn ]]</button>
+              </template>
+              <button type="button" @click="products.page++" :disabled="products.page >= productsTotalPages" class="p-1 rounded hover:bg-surface-container-high transition-colors disabled:opacity-30"><span class="material-symbols-outlined">chevron_right</span></button>
+            </div>
+          </div>
+        </div>
+        </template>
+
+        <div v-if="products.imp.show" class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/45" @click.self="closeProductImport">
+          <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-surface-container-lowest shadow-xl">
+            <div class="flex items-center justify-between gap-3 p-5 border-b border-outline-variant">
+              <div>
+                <h2 class="text-title-lg font-bold text-on-surface">Nhập sản phẩm từ Excel / CSV</h2>
+                <p class="text-body-sm text-on-surface-variant mt-1">Chỉ tạo sản phẩm LOCAL mới; không cập nhật hoặc ghi đè sản phẩm đã có.</p>
+              </div>
+              <button @click="closeProductImport" type="button" class="ma-icon-btn" aria-label="Đóng"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="p-5 space-y-4">
+              <template v-if="products.imp.step === 'select'">
+                <div class="flex justify-end"><button @click="downloadProductImportTemplate" type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant px-3 py-2 text-label-md font-bold text-on-surface hover:bg-surface-container-low"><span class="material-symbols-outlined text-[16px]">download</span>Tải Excel mẫu</button></div>
+                <button @click="$refs.productImportFile.click()" :disabled="products.imp.reading" type="button" class="w-full min-h-36 p-6 border-2 border-dashed border-outline-variant rounded-xl text-center hover:border-primary hover:bg-primary/5 transition-colors disabled:opacity-60">
+                  <span class="material-symbols-outlined text-[36px] text-primary">upload_file</span>
+                  <p class="font-bold mt-2">Chọn file Excel hoặc CSV</p>
+                  <p class="text-body-sm text-on-surface-variant mt-1">Hỗ trợ .xlsx, .xls, .csv · chỉ đọc sheet đầu tiên</p>
+                </button>
+                <div class="text-body-sm text-on-surface-variant rounded-lg bg-surface-container-low p-3">
+                  <strong>Cột bắt buộc:</strong> Tên sản phẩm / Title. <strong>Giá bán:</strong> Price / Giá bán (mặc định 0).<br>
+                  Cột tùy chọn: SKU, Giá gốc, Giá vốn, Tiền cọc, Thương hiệu, Loại sản phẩm, Đơn vị tính, Khối lượng (gram), Mã vạch, Cần vận chuyển.
+                </div>
+                <p v-if="products.imp.error" class="p-3 rounded-lg bg-error-container text-on-error-container text-body-sm">[[ products.imp.error ]]</p>
+              </template>
+              <template v-else-if="products.imp.step === 'preview'">
+                <p class="text-body-sm">Tệp <strong>[[ products.imp.fileName ]]</strong>: đọc được <strong>[[ products.imp.rows.length ]]</strong> sản phẩm.</p>
+                <p v-if="products.imp.unknownCols.length" class="text-body-sm text-on-surface-variant">Bỏ qua cột không nhận diện: [[ products.imp.unknownCols.join(', ') ]]</p>
+                <div class="overflow-x-auto border border-outline-variant rounded-lg max-h-72">
+                  <table class="w-full text-body-sm">
+                    <thead class="sticky top-0 bg-surface-container-low"><tr><th class="p-2 text-left">#</th><th class="p-2 text-left">Tên</th><th class="p-2 text-right">Giá bán</th><th class="p-2 text-left">SKU</th></tr></thead>
+                    <tbody><tr v-for="(row, index) in products.imp.rows.slice(0, 20)" :key="index" class="border-t border-outline-variant"><td class="p-2">[[ index + 1 ]]</td><td class="p-2">[[ row.title ]]</td><td class="p-2 text-right">[[ formatMoney(row.price) ]]</td><td class="p-2">[[ row.sku || '—' ]]</td></tr></tbody>
+                  </table>
+                </div>
+                <p v-if="products.imp.rows.length > 20" class="text-body-sm text-on-surface-variant">Chỉ hiển thị 20 dòng đầu để xem trước.</p>
+                <p v-if="products.imp.error" class="p-3 rounded-lg bg-error-container text-on-error-container text-body-sm">[[ products.imp.error ]]</p>
+                <div class="flex justify-end gap-2">
+                  <button @click="products.imp.step = 'select'; products.imp.error = ''" :disabled="products.imp.importing" type="button" class="ma-btn-outline">Chọn lại</button>
+                  <button @click="commitProductImport" :disabled="products.imp.importing" type="button" class="inline-flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-bold text-label-md hover:opacity-90 transition-all active:scale-95 disabled:opacity-50">[[ products.imp.importing ? 'Đang nhập lô ' + products.imp.completedBatches + '/' + products.imp.totalBatches + '…' : 'Nhập ' + products.imp.rows.length + ' sản phẩm' ]]</button>
+                </div>
+              </template>
+              <template v-else>
+                <div class="text-center py-7"><span class="material-symbols-outlined text-[42px] text-emerald-600">check_circle</span><p class="font-bold mt-2">Đã hoàn tất nhập sản phẩm</p><p class="text-body-sm text-on-surface-variant mt-1">Tạo: [[ products.imp.result.created ]] · Bỏ qua: [[ products.imp.result.skipped ]] · Lỗi: [[ products.imp.result.error ]]</p></div>
+                <div class="flex justify-end"><button @click="closeProductImport" type="button" class="inline-flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-bold text-label-md hover:opacity-90 transition-all active:scale-95">Đóng</button></div>
+              </template>
+            </div>
+          </div>
+        </div>
+
+
+  <!-- ================================================================================
+       PRODUCT DETAIL — 2-column layout (2026-08-09)
+       Header sticky (breadcrumb + action buttons) · CỘT CHÍNH 70% (Thông tin cơ bản +
+       Giá&Tồn kho grid 4 + Lịch sử) · CỘT PHỤ 30% (Trạng thái&Kênh + Phân loại&Thông số).
+       ================================================================================ -->
+  <section v-if="workspaceView === 'products.detail' && rightPanel.product" class="ma-workspace-detail text-on-surface font-body-sm">
+
+    <!-- HEADER STICKY: breadcrumb + action buttons (đổi tuỳ chế độ xem/sửa)
+         2026-08-22 rev: bỏ nút "Quay lại" (arrow_back) ở trái, thay bằng nút Đóng (×) ở phải
+         cho đồng bộ với Order + Customer detail. closeRightPanel dùng chung cho cả 2 chỗ. -->
+    <div class="sticky top-0 z-10 flex flex-none items-center gap-3 border-b border-outline-variant bg-surface-container-lowest px-4 py-3 md:px-6">
+      <div class="flex min-w-0 flex-1 items-center gap-1.5 truncate text-body-sm text-on-surface-variant">
+        <span>Sản phẩm</span><span class="text-outline">/</span>
+        <span class="truncate font-semibold text-on-surface">[[ rightPanel.product.title || rightPanel.product.handle ]]</span>
+        <span v-if="rightPanel.product.variant_title" class="ml-1 px-1.5 py-0.5 rounded bg-primary/10 text-primary text-xs font-semibold flex-shrink-0">[[ rightPanel.product.variant_title ]]</span>
+      </div>
+      <!-- Chế độ XEM: nút "Sửa" · Chế độ SỬA: nút "Huỷ" + "Lưu thay đổi" -->
+      <div class="flex items-center gap-2">
+        <template v-if="!rightPanel.editing">
+          <button @click="startEditProduct" type="button"
+            class="inline-flex items-center gap-1.5 border border-outline-variant px-3 py-1.5 rounded-lg text-label-md font-bold hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-[16px]">edit</span>Sửa
+          </button>
+        </template>
+        <template v-else>
+          <button @click="rightPanel.editing = false" type="button" :disabled="rightPanel.saving"
+            class="inline-flex items-center gap-1.5 border border-outline-variant px-3 py-1.5 rounded-lg text-label-md font-bold text-on-surface hover:bg-surface-container-high transition-colors disabled:opacity-50">
+            Huỷ
+          </button>
+          <button @click="saveProductEdit" :disabled="rightPanel.saving" type="button"
+            class="inline-flex items-center gap-1.5 bg-primary text-on-primary px-3 py-1.5 rounded-lg text-label-md font-bold hover:opacity-90 transition-all active:scale-95 disabled:opacity-50">
+            <span class="material-symbols-outlined text-[16px]" :class="{ 'ma-spin': rightPanel.saving }">[[ rightPanel.saving ? 'progress_activity' : 'save' ]]</span>[[ rightPanel.saving ? 'Đang lưu…' : 'Lưu thay đổi' ]]
+          </button>
+        </template>
+      </div>
+      <button @click="closeRightPanel" type="button" class="ma-icon-btn" aria-label="Đóng">
+        <span class="material-symbols-outlined text-[20px]">close</span>
+      </button>
+    </div>
+
+    <!-- GRID 2-COLUMN: cột chính 70% + cột phụ 30% (stack trên mobile). bg-surface-bright
+         cho body — đồng bộ với Order + Customer detail (rev 2026-08-22). -->
+    <div class="bg-surface-bright grid grid-cols-1 gap-4 p-4 md:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] md:p-6">
+
+      <!-- ================== CỘT CHÍNH (70%) ================== -->
+      <div class="space-y-4">
+
+        <!-- CARD 1: Thông tin cơ bản (Ảnh + Tên + Slug + SKU + Mã vạch) -->
+        <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-sm">
+          <h3 class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider mb-3">
+            <span class="material-symbols-outlined text-[16px] align-middle mr-1">info</span>Thông tin cơ bản
+          </h3>
+          <div class="flex gap-4">
+            <div class="flex-shrink-0">
+              <img v-if="rightPanel.product.image" :src="rightPanel.product.image" loading="lazy"
+                class="w-24 h-24 rounded-xl object-cover bg-surface-container-low border border-outline-variant"
+                :alt="rightPanel.product.title || rightPanel.product.handle">
+              <div v-else class="w-24 h-24 rounded-xl bg-surface-container-low border border-outline-variant flex items-center justify-center text-on-surface-variant/40">
+                <span class="material-symbols-outlined text-[32px]">image</span>
+              </div>
+            </div>
+            <!-- Chế độ XEM: text readonly -->
+            <div v-if="!rightPanel.editing" class="flex-1 min-w-0 space-y-2">
+              <div>
+                <div class="text-label-sm text-on-surface-variant">Tên sản phẩm</div>
+                <div class="text-body-md font-semibold text-on-surface">[[ rightPanel.product.title || '—' ]]</div>
+              </div>
+              <div>
+                <div class="text-label-sm text-on-surface-variant">Slug (Handle)</div>
+                <code class="text-body-sm text-on-surface-variant bg-surface-container-low px-1.5 py-0.5 rounded">[[ rightPanel.product.handle ]]</code>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <div class="text-label-sm text-on-surface-variant">SKU</div>
+                  <div class="text-body-sm font-semibold">[[ rightPanel.product.sku || '—' ]]</div>
+                </div>
+                <div>
+                  <div class="text-label-sm text-on-surface-variant">Mã vạch</div>
+                  <div class="text-body-sm font-semibold">[[ rightPanel.product.barcode || '—' ]]</div>
+                </div>
+              </div>
+            </div>
+            <!-- Chế độ SỬA: form inputs -->
+            <div v-else class="flex-1 min-w-0 space-y-2">
+              <div>
+                <label class="text-label-sm text-on-surface-variant">Tên sản phẩm *</label>
+                <input type="text" v-model="rightPanel.editForm.title" class="ma-input mt-0.5">
+              </div>
+              <div>
+                <label class="text-label-sm text-on-surface-variant">Slug (Handle)</label>
+                <input type="text" :value="rightPanel.product.handle" readonly
+                  class="ma-input mt-0.5 opacity-60 cursor-not-allowed" title="Slug do SAPO/system tạo — không sửa được">
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-label-sm text-on-surface-variant">SKU</label>
+                  <input type="text" :value="rightPanel.product.sku" readonly
+                    class="ma-input mt-0.5 opacity-60 cursor-not-allowed" title="SKU đồng bộ từ SAPO">
+                </div>
+                <div>
+                  <label class="text-label-sm text-on-surface-variant">Mã vạch</label>
+                  <input type="text" v-model="rightPanel.editForm.barcode" class="ma-input mt-0.5" placeholder="8936...">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 2: Giá & Tồn kho — Grid 4 ô -->
+        <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-sm">
+          <h3 class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider mb-3">
+            <span class="material-symbols-outlined text-[16px] align-middle mr-1">payments</span>Giá &amp; Tồn kho
+          </h3>
+          <!-- Chế độ XEM: 4 stat boxes -->
+          <div v-if="!rightPanel.editing" class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="p-3 bg-surface-container-low rounded-lg border border-outline-variant">
+              <div class="text-label-sm text-on-surface-variant uppercase tracking-wider">Giá bán</div>
+              <div class="text-title-md font-black mt-1">[[ formatMoney(rightPanel.product.price) ]]</div>
+              <div class="text-label-sm text-on-surface-variant opacity-70 mt-0.5">Mirror từ SAPO</div>
+            </div>
+            <div class="p-3 bg-surface-container-low rounded-lg border border-outline-variant">
+              <div class="text-label-sm text-on-surface-variant uppercase tracking-wider">Giá gốc</div>
+              <div class="text-title-md font-black mt-1" :class="rightPanel.product.compare_at_price > 0 ? 'text-on-surface line-through opacity-70' : 'text-on-surface-variant/40'">[[ rightPanel.product.compare_at_price ? formatMoney(rightPanel.product.compare_at_price) : '—' ]]</div>
+              <div class="text-label-sm text-on-surface-variant opacity-70 mt-0.5">CompareAtPrice · MOPS</div>
+            </div>
+            <div class="p-3 bg-surface-container-low rounded-lg border border-outline-variant">
+              <div class="text-label-sm text-on-surface-variant uppercase tracking-wider">Giá vốn</div>
+              <div class="text-title-md font-black mt-1" :class="rightPanel.product.cost_price > 0 ? 'text-on-surface' : 'text-on-surface-variant/40'">[[ rightPanel.product.cost_price ? formatMoney(rightPanel.product.cost_price) : '—' ]]</div>
+              <div class="text-label-sm text-on-surface-variant opacity-70 mt-0.5">Cost · dùng cho báo cáo lãi lỗ</div>
+            </div>
+            <div class="p-3 bg-surface-container-low rounded-lg border border-outline-variant">
+              <div class="text-label-sm text-on-surface-variant uppercase tracking-wider">Tồn kho</div>
+              <div class="text-title-md font-black mt-1"
+                :class="rightPanel.product.inventory_qty < 0 ? 'text-red-600' : (rightPanel.product.inventory_qty === 0 ? 'text-amber-600' : 'text-on-surface')">
+                <span v-if="rightPanel.product.inventory_qty < 0" class="material-symbols-outlined text-[18px] align-middle mr-0.5">warning</span>[[ (rightPanel.product.inventory_qty || 0).toLocaleString('vi-VN') ]]
+              </div>
+              <div class="text-label-sm text-on-surface-variant opacity-70 mt-0.5">MOPS-owned</div>
+            </div>
+          </div>
+          <!-- Chế độ SỬA: 4 inputs (Price/CompareAtPrice/InventoryQty editable, Cost hiển thị readonly nếu backend chưa expose) -->
+          <div v-else class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div>
+              <label class="text-label-sm text-on-surface-variant uppercase tracking-wider">Giá bán (VNĐ)</label>
+              <input type="number" min="0" v-model="rightPanel.editForm.price" class="ma-input mt-1">
+              <p class="text-label-sm text-on-surface-variant opacity-70 mt-0.5">SAPO sẽ ghi đè khi Đồng bộ</p>
+            </div>
+            <div>
+              <label class="text-label-sm text-on-surface-variant uppercase tracking-wider">Giá gốc (VNĐ)</label>
+              <input type="number" min="0" v-model="rightPanel.editForm.compare_at_price" class="ma-input mt-1">
+              <p class="text-label-sm text-on-surface-variant opacity-70 mt-0.5">MOPS-owned, không bị ghi đè</p>
+            </div>
+            <div>
+              <label class="text-label-sm text-on-surface-variant uppercase tracking-wider">Giá vốn (VNĐ)</label>
+              <input type="number" min="0" :value="rightPanel.product.cost_price" readonly
+                class="ma-input mt-1 opacity-60 cursor-not-allowed" title="Backend chưa expose cost_price trong get_product/update_product — chỉnh trực tiếp ProductMappings sheet">
+              <p class="text-label-sm text-on-surface-variant opacity-70 mt-0.5">Sửa trong ProductMappings sheet</p>
+            </div>
+            <div>
+              <label class="text-label-sm text-on-surface-variant uppercase tracking-wider">Tồn kho</label>
+              <input type="number" v-model="rightPanel.editForm.inventory_qty" class="ma-input mt-1">
+              <p class="text-label-sm text-on-surface-variant opacity-70 mt-0.5">MOPS-owned</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 3: Lịch sử — 2 tabs (Biến động kho / Đơn hàng chứa SP) -->
+        <div class="rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm overflow-hidden">
+          <div class="border-b border-outline-variant px-4 py-3 flex items-center justify-between gap-2">
+            <h3 class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider">
+              <span class="material-symbols-outlined text-[16px] align-middle mr-1">history</span>Lịch sử
+            </h3>
+            <div class="flex items-center rounded-lg border border-outline-variant overflow-hidden">
+              <button type="button" @click="rightPanel.historyTab = 'movements'"
+                class="px-3 py-1.5 text-label-md font-bold transition-colors"
+                :class="rightPanel.historyTab !== 'orders' ? 'bg-primary text-on-primary' : 'text-on-surface-variant hover:bg-surface-container-low'">
+                <span class="material-symbols-outlined text-[14px] align-middle mr-1">warehouse</span>Biến động kho
+              </button>
+              <button type="button" @click="rightPanel.historyTab = 'orders'"
+                class="px-3 py-1.5 text-label-md font-bold transition-colors"
+                :class="rightPanel.historyTab === 'orders' ? 'bg-primary text-on-primary' : 'text-on-surface-variant hover:bg-surface-container-low'">
+                <span class="material-symbols-outlined text-[14px] align-middle mr-1">shopping_cart</span>Đơn hàng chứa SP
+              </button>
+            </div>
+          </div>
+          <!-- Tab: Biến động kho -->
+          <div v-if="rightPanel.historyTab !== 'orders'" class="p-4">
+            <div v-if="(rightPanel.product.recent_movements || []).length" class="space-y-2">
+              <div v-for="mv in (rightPanel.product.recent_movements || []).slice(0, 10)" :key="mv.movement_id || mv.created_at"
+                class="flex items-center justify-between gap-2 p-2.5 rounded-lg border border-outline-variant bg-surface-container-low">
+                <div class="min-w-0">
+                  <div class="text-body-sm font-semibold text-on-surface truncate">
+                    <span class="text-label-sm text-on-surface-variant">[[ mv.source_type || mv.type || '—' ]] ·</span>
+                    <code class="text-primary">[[ mv.source_ref || mv.movement_id || '—' ]]</code>
+                  </div>
+                  <div class="text-label-sm text-on-surface-variant">[[ mv.note || '' ]] · [[ formatDate(mv.created_at) ]]</div>
+                </div>
+                <div class="text-title-md font-black" :class="Number(mv.qty) > 0 ? 'text-emerald-600' : 'text-red-600'">
+                  [[ Number(mv.qty) > 0 ? '+' : '' ]][[ mv.qty ]]
+                </div>
+              </div>
+            </div>
+            <div v-else class="text-center py-8 text-body-sm text-on-surface-variant">
+              <span class="material-symbols-outlined text-[42px] opacity-40">warehouse</span>
+              <p class="mt-2">Chưa có biến động kho cho SP này.</p>
+              <p class="text-label-sm opacity-70 mt-1">(Endpoint <code>list_product_movements</code> chưa có ở backend — hiện dựa vào <code>rightPanel.product.recent_movements</code> nếu <code>get_product</code> enrich.)</p>
+            </div>
+          </div>
+          <!-- Tab: Đơn hàng chứa SP -->
+          <div v-else class="p-4">
+            <div v-if="(rightPanel.product.recent_orders || []).length" class="space-y-2">
+              <div v-for="o in (rightPanel.product.recent_orders || []).slice(0, 10)" :key="o.order_id"
+                class="flex items-center justify-between gap-2 p-2.5 rounded-lg border border-outline-variant bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer"
+                @click="setActiveTab('orders'); toggleOrderDetail(o.order_id, true)">
+                <div class="min-w-0">
+                  <div class="text-body-sm font-semibold text-on-surface truncate">
+                    <code class="text-primary">[[ o.order_id ]]</code> · [[ o.customer_name || o.customer_phone || '—' ]]
+                  </div>
+                  <div class="text-label-sm text-on-surface-variant">[[ o.source || '—' ]] · [[ formatDate(o.created_at) ]]</div>
+                </div>
+                <div class="text-right">
+                  <div class="text-body-md font-bold text-on-surface">[[ formatMoney(o.total_amount) ]]</div>
+                  <div class="text-label-sm text-on-surface-variant">SL: [[ o.qty || 1 ]]</div>
+                </div>
+              </div>
+            </div>
+            <div v-else class="text-center py-8 text-body-sm text-on-surface-variant">
+              <span class="material-symbols-outlined text-[42px] opacity-40">shopping_cart</span>
+              <p class="mt-2">Chưa có đơn hàng nào chứa SP này.</p>
+              <p class="text-label-sm opacity-70 mt-1">(Endpoint <code>list_product_orders</code> chưa có ở backend — dựa vào <code>rightPanel.product.recent_orders</code>.)</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ================== CỘT PHỤ (30%) ================== -->
+      <div class="space-y-4">
+
+        <!-- CARD 4: Trạng thái & Kênh -->
+        <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-sm">
+          <h3 class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider mb-3">
+            <span class="material-symbols-outlined text-[16px] align-middle mr-1">tune</span>Trạng thái &amp; Kênh
+          </h3>
+          <div class="space-y-3">
+            <!-- SAPO status (read-only, đồng bộ từ SAPO) -->
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <div class="text-body-sm font-semibold text-on-surface">SAPO</div>
+                <div class="text-label-sm text-on-surface-variant">Trạng thái sản phẩm</div>
+              </div>
+              <span v-if="rightPanel.product.status === 'deleted'" class="ma-badge ma-badge--danger">Ngừng kinh doanh</span>
+              <span v-else class="ma-badge ma-badge--success">Đang bán</span>
+            </div>
+            <!-- MOPS enabled toggle -->
+            <div class="flex items-center justify-between gap-2 pt-2 border-t border-outline-variant/50">
+              <div>
+                <div class="text-body-sm font-semibold text-on-surface">MOPS</div>
+                <div class="text-label-sm text-on-surface-variant">Bật trong MOPS (checkout / đặt lịch)</div>
+              </div>
+              <span v-if="rightPanel.product.mops_enabled" class="ma-badge ma-badge--success">✓ Đã bật</span>
+              <span v-else-if="rightPanel.product.in_mops" class="ma-badge ma-badge--warning">Đã map · chưa bật</span>
+              <span v-else class="ma-badge ma-badge--neutral">Chưa map</span>
+            </div>
+            <!-- Dịch vụ (mapping) -->
+            <div class="flex items-center justify-between gap-2 pt-2 border-t border-outline-variant/50">
+              <div>
+                <div class="text-body-sm font-semibold text-on-surface">Dịch vụ MOPS</div>
+                <div class="text-label-sm text-on-surface-variant">Đã map ProductMappings</div>
+              </div>
+              <span v-if="rightPanel.product.in_mops" class="ma-badge ma-badge--success">✓ Đã map</span>
+              <span v-else class="ma-badge ma-badge--neutral">Chưa map</span>
+            </div>
+            <!-- Actions -->
+            <div class="pt-3 border-t border-outline-variant/50 space-y-2">
+              <button v-if="!rightPanel.product.in_mops"
+                @click="connectProduct(rightPanel.product.handle, rightPanel.product.title || rightPanel.product.handle); closeRightPanel()" type="button"
+                class="w-full inline-flex items-center justify-center gap-1.5 bg-primary text-on-primary py-2 rounded-lg font-bold text-label-md hover:opacity-90 transition-all active:scale-95">
+                <span class="material-symbols-outlined text-[16px]">link</span>Kết nối vào MOPS
+              </button>
+              <button v-if="rightPanel.product.in_mops"
+                @click="confirmDisconnectProduct(rightPanel.product); closeRightPanel()" type="button"
+                class="w-full inline-flex items-center justify-center gap-1.5 border border-red-300 text-red-600 py-2 rounded-lg font-bold text-label-md hover:bg-red-50 transition-all">
+                <span class="material-symbols-outlined text-[16px]">link_off</span>Gỡ khỏi MOPS
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 5: Phân loại & Thông số -->
+        <div class="rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-sm">
+          <h3 class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider mb-3">
+            <span class="material-symbols-outlined text-[16px] align-middle mr-1">category</span>Phân loại &amp; Thông số
+          </h3>
+          <!-- Chế độ XEM -->
+          <div v-if="!rightPanel.editing" class="space-y-2.5">
+            <div class="flex items-center justify-between gap-2 py-1">
+              <span class="text-body-sm text-on-surface-variant">Thương hiệu</span>
+              <span class="text-body-sm font-semibold">[[ rightPanel.product.vendor || '—' ]]</span>
+            </div>
+            <div class="flex items-center justify-between gap-2 py-1 border-t border-outline-variant/50">
+              <span class="text-body-sm text-on-surface-variant">Loại sản phẩm</span>
+              <span class="text-body-sm font-semibold">[[ rightPanel.product.product_type || '—' ]]</span>
+            </div>
+            <div class="flex items-center justify-between gap-2 py-1 border-t border-outline-variant/50">
+              <span class="text-body-sm text-on-surface-variant">Đơn vị tính</span>
+              <span class="text-body-sm font-semibold">[[ rightPanel.product.unit || '—' ]]</span>
+            </div>
+            <div class="flex items-center justify-between gap-2 py-1 border-t border-outline-variant/50">
+              <span class="text-body-sm text-on-surface-variant">Khối lượng</span>
+              <span class="text-body-sm font-semibold">[[ rightPanel.product.weight ? rightPanel.product.weight + ' kg' : '—' ]]</span>
+            </div>
+            <div class="flex items-center justify-between gap-2 py-1 border-t border-outline-variant/50">
+              <span class="text-body-sm text-on-surface-variant">Cần vận chuyển</span>
+              <span class="text-body-sm font-semibold">[[ rightPanel.product.requires_shipping ? '✓ Có' : '— Không' ]]</span>
+            </div>
+          </div>
+          <!-- Chế độ SỬA: inputs -->
+          <div v-else class="space-y-3">
+            <div>
+              <label class="text-label-sm text-on-surface-variant">Thương hiệu</label>
+              <input type="text" v-model="rightPanel.editForm.vendor" class="ma-input mt-0.5">
+            </div>
+            <div>
+              <label class="text-label-sm text-on-surface-variant">Loại sản phẩm</label>
+              <input type="text" v-model="rightPanel.editForm.product_type" class="ma-input mt-0.5">
+            </div>
+            <div v-if="rightPanel.product.in_mops">
+              <label class="text-label-sm text-on-surface-variant">Đơn vị tính</label>
+              <input type="text" v-model="rightPanel.editForm.unit" placeholder="cái / hộp / chai / kg..." class="ma-input mt-0.5">
+            </div>
+            <div>
+              <label class="text-label-sm text-on-surface-variant">Khối lượng (kg)</label>
+              <input type="number" min="0" step="0.01" v-model="rightPanel.editForm.weight" class="ma-input mt-0.5">
+            </div>
+            <label class="flex items-center gap-2 py-1 cursor-pointer">
+              <input type="checkbox" v-model="rightPanel.editForm.requires_shipping" class="w-4 h-4">
+              <span class="text-body-sm text-on-surface-variant">Cần vận chuyển vật lý</span>
+            </label>
+            <p v-if="!rightPanel.product.in_mops" class="text-label-sm text-on-surface-variant opacity-70 mt-2 rounded-lg bg-amber-50 border border-amber-200 p-2">
+              <span class="material-symbols-outlined text-[13px] align-middle">info</span>
+              SP chưa "Kết nối" vào MOPS — không sửa được Đơn vị tính (thuộc ProductMappings).
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+
+      </div>

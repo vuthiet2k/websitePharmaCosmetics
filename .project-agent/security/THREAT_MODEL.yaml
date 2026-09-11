@@ -1,0 +1,40 @@
+# THREAT_MODEL.yaml — rút gọn theo ADR-003 (không STRIDE đầy đủ).
+# Chỉ liệt kê trust boundary + PII touchpoint thật, có mitigation cụ thể.
+
+trust_boundaries:
+  - id: TB-01
+    name: "Form thu thập PII/dữ liệu sức khoẻ phía khách hàng"
+    touchpoints: [booking, ai-quiz, ai-results, patient-portal, loyalty-rewards, customer-account, cart-checkout]
+    risk: "Lộ/lạm dụng dữ liệu cá nhân, sức khoẻ (Luật 91/2025/QH15)"
+    mitigation:
+      - "Consent checkbox + link chính sách bảo mật bắt buộc trên mọi form (pii_form_gate)"
+      - "patient-portal chỉ hiển thị sau xác thực khách hàng (AC-15)"
+      - "Không log payload PII ra console/preview debug output"
+
+  - id: TB-02
+    name: "Checkout ẩn danh gọi mops-gas (executeAs USER_DEPLOYING, access ANYONE_ANONYMOUS)"
+    touchpoints: [cart-checkout]
+    risk: "Bất kỳ ai cũng gọi được endpoint /exec — nguy cơ spam đơn hàng giả, thao túng giá/tồn kho nếu backend không validate."
+    mitigation:
+      - "Validate schema đầu vào phía GAS trước khi ghi đơn hàng (data_integrity_gate)"
+      - "Idempotency key cho request tạo đơn — tránh double-submit"
+      - "KHÔNG đổi access sang ANYONE (sẽ khoá checkout khách vãng lai) — xem POLICY.yaml#forbidden"
+
+  - id: TB-03
+    name: "Tích hợp bên thứ 3 (GHTK, SPX, X-Signs) qua admin-ghtk-hub / admin-waybill-detail / admin-signing"
+    touchpoints: [admin-ghtk-hub, admin-waybill-detail, admin-signing]
+    risk: "Giả mạo webhook, payload sai lệch dẫn tới cập nhật sai trạng thái đơn hàng/chữ ký"
+    mitigation:
+      - "Verify payload + chữ ký (nếu API hỗ trợ) thay vì chỉ check HTTP 200 (integration_gate)"
+      - "Test qua sandbox trước khi bật production (min_evidence_grade E3)"
+
+  - id: TB-04
+    name: "MOPS Admin UI — thao tác quản trị (orders, waybill, ghtk, signing, news)"
+    touchpoints: [admin-workspace, admin-orders, admin-news]
+    risk: "Truy cập trái phép nếu layout mops-admin không có kiểm soát quyền truy cập rõ ràng"
+    mitigation:
+      - "Xác nhận cơ chế auth hiện có cho layouts/mops-admin.bwt trước khi thêm tab mới (kiểm tra trong task T-50, không giả định)"
+
+note: >
+  File này sẽ được cập nhật khi T-02 (grep mops-gas cho UF-02) hoàn tất — có thể phát hiện
+  thêm trust boundary cụ thể trong code backend chưa lộ ra ở tầng UI.

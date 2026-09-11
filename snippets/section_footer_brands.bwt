@@ -1,0 +1,201 @@
+{%- comment -%}
+  FOOTER SEO — gộp 4 khối hiển thị cuối trang (mọi template).
+
+  Thứ tự render: brands → categories → keywords-1 → keywords-2
+
+  Mỗi khối điều khiển độc lập qua setting "display":
+    footer_brands_display   — thương hiệu + loại (inline)
+    footer_cate_display     — danh mục SEO (grid 4 nhóm)
+    footer_search_display   — từ khóa xu hướng block 1
+    footer_search_2_display — từ khóa xu hướng block 2
+
+  Giá trị display: all | desktop | mobile | none
+    all     → hiện cả desktop & mobile
+    desktop → sm-hidden (ẩn mobile, hiện desktop)
+    mobile  → md-hidden (ẩn desktop, hiện mobile)
+    none    → không render
+
+  Linklist-first: Brands/Types/Cate đọc linklists[handle].links trực tiếp.
+  Admin tạo menu trong Sapo Admin → điền handle vào settings.
+  CSS: Assets/comp_footer_categories.scss.bwt
+{%- endcomment -%}
+{%- comment %} ══════ BLOCK 1: TOP THƯƠNG HIỆU + MUA SẮM THEO LOẠI ══════ {%- endcomment -%}
+{%- assign _fbd = settings.footer_brands_display | default: 'all' -%}
+{%- unless _fbd == 'none' -%}
+  {%- assign _fb_menu = settings.footer_brands_menu | default: '' -%}
+  {%- assign _ft_menu = settings.footer_types_menu  | default: '' -%}
+  {%- assign _fb_ll = linklists[_fb_menu] -%}
+  {%- assign _ft_ll = linklists[_ft_menu] -%}
+  {%- assign _fb_has = false -%}
+  {%- assign _ft_has = false -%}
+  {%- if _fb_menu != blank and _fb_ll.links.size > 0 -%}{%- assign _fb_has = true -%}{%- endif -%}
+  {%- if _ft_menu != blank and _ft_ll.links.size > 0 -%}{%- assign _ft_has = true -%}{%- endif -%}
+  {%- if _fb_has or _ft_has -%}
+    {%- assign _fbd_cls = '' -%}
+    {%- if _fbd == 'desktop' -%}{%- assign _fbd_cls = ' sm-hidden' -%}{%- endif -%}
+    {%- if _fbd == 'mobile'  -%}{%- assign _fbd_cls = ' md-hidden' -%}{%- endif -%}
+<section class="pc-footer-brands{{ _fbd_cls }}"
+         aria-label="{{ settings.footer_brands_title | default: 'Top thương hiệu nổi bật' | escape }}">
+  <div class="container">
+    {%- if _fb_has -%}
+    <div class="pc-footer-brands__block">
+      <h2 class="pc-footer-brands__title">{{ settings.footer_brands_title | default: 'TOP THƯƠNG HIỆU NỔI BẬT' }}</h2>
+      <div class="pc-footer-brands__list">
+        {%- assign fb_first = true -%}
+        {%- for link in _fb_ll.links -%}
+          {%- unless fb_first -%}<span class="pc-footer-brands__sep" aria-hidden="true">|</span>{%- endunless -%}
+          <a href="{{ link.url }}">{{ link.title }}</a>
+          {%- assign fb_first = false -%}
+        {%- endfor -%}
+        {%- if settings.footer_brands_viewall != blank -%}
+        <a class="pc-footer-brands__more" href="{{ settings.footer_brands_viewall }}">Xem tất cả thương hiệu »</a>
+        {%- endif -%}
+      </div>
+    </div>
+    {%- endif -%}
+    {%- if _ft_has -%}
+    <div class="pc-footer-brands__block">
+      <h2 class="pc-footer-brands__title">{{ settings.footer_types_title | default: 'MUA SẮM THEO LOẠI' }}</h2>
+      <div class="pc-footer-brands__list">
+        {%- assign ft_first = true -%}
+        {%- for link in _ft_ll.links -%}
+          {%- unless ft_first -%}<span class="pc-footer-brands__sep" aria-hidden="true">|</span>{%- endunless -%}
+          <a href="{{ link.url }}">{{ link.title }}</a>
+          {%- assign ft_first = false -%}
+        {%- endfor -%}
+        {%- if settings.footer_types_viewall != blank -%}
+        <a class="pc-footer-brands__more" href="{{ settings.footer_types_viewall }}">Xem tất cả »</a>
+        {%- endif -%}
+      </div>
+    </div>
+    {%- endif -%}
+  </div>
+</section>
+  {%- endif -%}
+{%- endunless -%}
+{%- comment %} ══════ BLOCK 2: DANH MỤC SẢN PHẨM (SEO grid 4 nhóm) ══════ {%- endcomment -%}
+{%- assign _fcd = settings.footer_cate_display | default: 'all' -%}
+{%- unless _fcd == 'none' -%}
+  {%- assign fc_has_data = false -%}
+  {%- for i in (1..4) -%}
+    {%- capture _km %}footer_cate_group_{{ i }}_menu{% endcapture -%}
+    {%- assign _fc_h = settings[_km] | default: '' -%}
+    {%- if _fc_h != blank -%}
+      {%- assign _fc_ll = linklists[_fc_h] -%}
+      {%- if _fc_ll.links.size > 0 -%}{%- assign fc_has_data = true -%}{%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- if fc_has_data -%}
+    {%- assign _fcd_cls = '' -%}
+    {%- if _fcd == 'desktop' -%}{%- assign _fcd_cls = ' sm-hidden' -%}{%- endif -%}
+    {%- if _fcd == 'mobile'  -%}{%- assign _fcd_cls = ' md-hidden' -%}{%- endif -%}
+  <section class="pc-footer-cats{{ _fcd_cls }}"
+           aria-label="{{ settings.footer_cate_title | default: 'Khám phá theo nhu cầu' | escape }}">
+    <div class="container">
+      {%- if settings.footer_cate_title != blank or settings.footer_cate_subtitle != blank -%}
+      <div class="pc-footer-cats__header">
+        {%- if settings.footer_cate_title != blank -%}
+        <h2 class="pc-footer-cats__heading">{{ settings.footer_cate_title }}</h2>
+        {%- endif -%}
+        {%- if settings.footer_cate_subtitle != blank -%}
+        <p class="pc-footer-cats__sub">{{ settings.footer_cate_subtitle }}</p>
+        {%- endif -%}
+      </div>
+      {%- endif -%}
+      <div class="pc-footer-cats__grid">
+        {%- for i in (1..4) -%}
+          {%- capture _kt %}footer_cate_group_{{ i }}_title{% endcapture -%}
+          {%- capture _km %}footer_cate_group_{{ i }}_menu{% endcapture -%}
+          {%- assign fc_group_title  = settings[_kt] | default: '' -%}
+          {%- assign fc_menu_handle  = settings[_km] | default: '' -%}
+          {%- if fc_menu_handle != blank -%}
+            {%- assign fc_ll = linklists[fc_menu_handle] -%}
+            {%- if fc_ll.links.size > 0 -%}
+            <div class="pc-footer-cats__col">
+              {%- if fc_group_title != blank -%}
+              <div class="pc-footer-cats__head">
+                <span class="pc-footer-cats__title">{{ fc_group_title }}</span>
+                <button type="button" class="pc-footer-cats__toggle"
+                        aria-expanded="false"
+                        aria-label="Mở rộng {{ fc_group_title | escape }}">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+              {%- endif -%}
+              <ul class="pc-footer-cats__links">
+                {%- for link in fc_ll.links -%}
+                  <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+                {%- endfor -%}
+              </ul>
+            </div>
+            {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </section>
+  <script>
+  (function() {
+    var root = document.querySelector('.pc-footer-cats');
+    if (!root) return;
+    root.addEventListener('click', function(e) {
+      var btn = e.target.closest('.pc-footer-cats__toggle');
+      if (!btn) return;
+      if (window.matchMedia('(min-width: 768px)').matches) return;
+      var col = btn.closest('.pc-footer-cats__col');
+      var open = col.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  })();
+  </script>
+  {%- endif -%}
+{%- endunless -%}
+{%- comment %} ══════ BLOCK 3: TỪ KHÓA XU HƯỚNG — Block 1 ══════ {%- endcomment -%}
+{%- assign _fsd1 = settings.footer_search_display | default: 'all' -%}
+{%- unless _fsd1 == 'none' -%}
+  {%- if settings.footer_search_menu != blank -%}
+    {%- assign _fsd1_cls = '' -%}
+    {%- if _fsd1 == 'desktop' -%}{%- assign _fsd1_cls = ' sm-hidden' -%}{%- endif -%}
+    {%- if _fsd1 == 'mobile'  -%}{%- assign _fsd1_cls = ' md-hidden' -%}{%- endif -%}
+<div class="pc-footer-keywords{{ _fsd1_cls }}">
+  <div class="container">
+    <h3 class="pc-footer-keywords__title">{{ settings.footer_search_title_2 | default: 'TỪ KHÓA XU HƯỚNG' }}</h3>
+    <div class="pc-footer-keywords__tags">
+      {%- assign _fsk1 = settings.footer_search_menu | split: ';' -%}
+      {%- for _fsi in _fsk1 -%}
+        {%- assign _fskw = _fsi | strip -%}
+        {%- if _fskw != '' -%}
+          <a href="/search?q={{ _fskw | url_encode }}&amp;type=product" title="{{ _fskw | escape }}">{{ _fskw }}</a>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</div>
+  {%- endif -%}
+{%- endunless -%}
+{%- comment %} ══════ BLOCK 4: TỪ KHÓA — Block 2 ══════ {%- endcomment -%}
+{%- assign _fsd2 = settings.footer_search_2_display | default: 'none' -%}
+{%- unless _fsd2 == 'none' -%}
+  {%- if settings.footer_search_2_menu != blank -%}
+    {%- assign _fsd2_cls = '' -%}
+    {%- if _fsd2 == 'desktop' -%}{%- assign _fsd2_cls = ' sm-hidden' -%}{%- endif -%}
+    {%- if _fsd2 == 'mobile'  -%}{%- assign _fsd2_cls = ' md-hidden' -%}{%- endif -%}
+<div class="pc-footer-keywords{{ _fsd2_cls }}">
+  <div class="container">
+    <h3 class="pc-footer-keywords__title">{{ settings.footer_search_2_title | default: 'Có thể bạn đang tìm kiếm' }}</h3>
+    <div class="pc-footer-keywords__tags">
+      {%- assign _fsk2 = settings.footer_search_2_menu | split: ';' -%}
+      {%- for _fsi2 in _fsk2 -%}
+        {%- assign _fskw2 = _fsi2 | strip -%}
+        {%- if _fskw2 != '' -%}
+          <a href="/search?q={{ _fskw2 | url_encode }}&amp;type=product" title="{{ _fskw2 | escape }}">{{ _fskw2 }}</a>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</div>
+  {%- endif -%}
+{%- endunless -%}

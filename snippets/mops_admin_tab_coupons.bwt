@@ -1,0 +1,59 @@
+      
+      <div id="tab-coupons" v-show="activeTab === 'coupons'" class="ma-tab-pane">
+        <button type="button" @click="mobileFilterOpen = true"
+          class="ma-filter-trigger items-center gap-2 w-full justify-center mb-stack-md p-3 bg-surface-bright border border-outline-variant rounded-xl text-body-sm font-bold text-on-surface active:scale-95 transition-all">
+          <span class="material-symbols-outlined text-[18px]">tune</span><span>Bộ lọc</span>
+          <span v-if="couponsMgmt.search" class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-label-sm font-bold bg-primary text-white">1</span>
+        </button>
+        <div class="ma-toolbar ma-toolbar--sheet flex flex-wrap items-center gap-stack-md mb-stack-md p-4 bg-surface-bright border border-outline-variant rounded-xl" :class="{ 'is-filter-open': mobileFilterOpen }">
+          <div class="ma-filter-sheet-head"><span class="text-title-sm font-bold text-on-surface">Bộ lọc mã giảm giá</span><button type="button" @click="mobileFilterOpen = false" class="w-8 h-8 inline-flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">close</span></button></div>
+          <input type="text" v-model="couponsMgmt.search" placeholder="Tìm theo mã..."
+            class="w-[220px] bg-surface-container-lowest border border-outline-variant text-body-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+        </div>
+        <div class="ma-filter-backdrop" v-if="mobileFilterOpen" @click="mobileFilterOpen = false"></div>
+
+        <div v-if="couponsMgmt.loading" class="ma-table-skeleton" aria-label="Đang tải mã giảm giá"><span></span><span></span><span></span><span></span></div>
+        <div v-else-if="couponsEmptyMessage" class="ma-empty-state">
+          <span class="material-symbols-outlined text-on-surface-variant text-[56px] opacity-[.35]">sell</span>
+          <p class="ma-empty-hint">[[ couponsEmptyMessage ]]</p>
+          <button @click="loadCoupons" type="button" class="ma-btn-outline">Thử lại</button>
+        </div>
+        <div v-else class="ma-card">
+          <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+            <thead><tr class="ma-thead-row">
+              <th class="ma-th-lg">Mã</th>
+              <th class="ma-th-lg">Loại giảm</th>
+              <th class="ma-th-lg">Đơn tối thiểu</th>
+              <th class="ma-th-lg">Đã dùng / Tối đa</th>
+              <th class="ma-th-lg">Hiệu lực</th>
+              <th class="ma-th-lg">Trạng thái</th>
+              <th class="ma-th-lg">Thao tác</th>
+            </tr></thead>
+            <tbody class="ma-rows-divide">
+              <tr v-for="c in couponsFiltered" :key="c.code">
+                <td class="px-6 py-3">
+                  <div class="font-body-md font-bold">[[ c.code ]]</div>
+                  <div v-if="c.title" class="font-body-sm text-on-surface">[[ c.title ]]</div>
+                  <div v-if="c.description" class="font-body-sm text-on-surface-variant">[[ c.description ]]</div>
+                  <div class="font-body-sm text-on-surface-variant mt-0.5">
+                    <span class="material-symbols-outlined text-[13px] align-middle">sell</span> [[ couponScopeLabel(c) ]]
+                  </div>
+                </td>
+                <td class="px-6 py-3 font-body-sm">[[ c.value_type === 'fixed' ? formatMoney(c.value) : c.value + '%' ]]</td>
+                <td class="px-6 py-3 font-body-sm">[[ c.min_order_amount ? formatMoney(c.min_order_amount) : '—' ]]</td>
+                <td class="px-6 py-3 font-body-sm">[[ c.used_count ]] / [[ c.max_uses || '∞' ]]</td>
+                <td class="px-6 py-3"><small class="font-body-sm text-on-surface-variant">[[ c.start_at ? formatDate(c.start_at) : '—' ]] → [[ c.expires_at ? formatDate(c.expires_at) : '—' ]]</small></td>
+                <td class="px-6 py-3">
+                  <span v-if="c.enabled" class="ma-badge ma-badge--success">Bật</span>
+                  <span v-else class="ma-badge ma-badge--neutral">Tắt</span>
+                </td>
+                <td class="px-6 py-3 whitespace-nowrap">
+                  <button @click="doToggleCouponActive(c)" type="button" class="px-2.5 py-1 rounded-lg text-label-md text-white transition-all" :class="c.enabled ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'">[[ c.enabled ? 'Tắt' : 'Bật' ]]</button>
+                </td>
+              </tr>
+            </tbody>
+          </table></div>
+          <p class="text-body-sm text-on-surface-variant mt-3 px-4 pb-4">[[ couponsFiltered.length ]] / [[ couponsMgmt.all.length ]] mã giảm giá</p>
+        </div>
+
+      </div>

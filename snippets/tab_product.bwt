@@ -1,0 +1,168 @@
+<div class="product-tab e-tabs not-dqtab">
+	<ul class="tabs tabs-title clearfix">	
+		<li class="tab-link active" data-tab="#tab-1">
+			<h3>{{settings.product_tab1_title}}</h3>
+		</li>																	
+		{%if settings.product_tab2_enable %}
+		<li class="tab-link" data-tab="#tab-2">
+			<h3>{{settings.product_tab2_title}}</h3>
+		</li>																	
+		{% endif %}
+		{%if settings.product_tab3_enable %}
+		<li class="tab-link" data-tab="#tab-3">
+			<h3>{{settings.product_tab3_title}}</h3>
+		</li>																	
+		{% endif %}
+	</ul>																									
+	<div class="tab-float">
+		<div id="tab-1" class="tab-content active content_extab">
+			<div class="rte product_getcontent product-review-content">
+				<div class="size-content-detail">
+					<div class="lc-switch-size">
+						<p class="size-text">Kích thước chữ</p>
+						<div class="lc-option-box-size">
+							<div class="cursor-pointer active">
+								<p class="css-osuj7x ">Mặc định </p>
+							</div><div class="cursor-pointer">
+							<p class="css-osuj7x">Lớn hơn</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				{% assign a = product.content | size %}
+				{% if a > 0 %}
+				{% assign mycontent = product.content | split:'<h5>' %}
+				{% assign mycontents = mycontent[0] | split:'<h6>' %}
+				<div class="ba-text-fpt {% if a > 4000 %}has-height{% endif %}">
+					{{ mycontents[0] }}
+				</div>
+				{% if a > 4000 %}
+				<div class="show-more hidden-lg hidden-md hidden-sm">
+					<div class="btn btn-primary btn-default btn--view-more duration-300">
+						<span class="more-text">Xem thêm <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill" viewBox="0 0 16 16">
+							<path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+							</svg></span>
+						<span class="less-text">Thu gọn <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-up-fill" viewBox="0 0 16 16">
+							<path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+							</svg></span>
+					</div>
+				</div>
+				{% endif %}
+				{% else %}
+				<div class="alert alert-success alert-dismissible fade show" role="alert">
+					Nội dung sản phẩm đang cập nhật.	
+				</div>
+				{% endif %}
+			</div>
+			{%if settings.kiemduyet_user_enable%}
+			{%if duocsi%}
+			{% assign target_article = articles[itemduocsi] %}
+			<div class="box_kiem_duyet">
+				<div class="item_store">
+					<div class="item_image_store">
+						<div class="image">
+							<img width="100" height="100" class="lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC" 
+								 data-src="{{target_article.image.src | img_url}}" alt="{{target_article.title}}"/>
+						</div>
+					</div>
+					<div class="info_store">
+						<div class="box_content_kiemd">
+							<p class="name_title">{{target_article.title}}</p>
+							<div class="kiem_d_content text_title">
+								<svg enable-background="new 0 0 512 512" height="512" viewBox="0 0 512 512" width="512" xmlns="http://www.w3.org/2000/svg"><path clip-rule="evenodd" d="m256 0c-141.2 0-256 114.8-256 256s114.8 256 256 256 256-114.8 256-256-114.8-256-256-256z" fill="#4bae4f" fill-rule="evenodd"/><path d="m206.7 373.1c-32.7-32.7-65.2-65.7-98-98.4-3.6-3.6-3.6-9.6 0-13.2l37.7-37.7c3.6-3.6 9.6-3.6 13.2 0l53.9 53.9 138.6-138.7c3.7-3.6 9.6-3.6 13.3 0l37.8 37.8c3.7 3.7 3.7 9.6 0 13.2l-183.3 183.1c-3.6 3.7-9.5 3.7-13.2 0z" fill="#fff"/></svg> 
+								{{settings.kiem_duyet_title}}
+							</div>
+						</div>
+						<div class="content_kiemd">
+							<div class="mb-0">{{ target_article.summary }}</div>
+							<a class="text-body2" href="{{target_article.url}}" title="Xem thêm thông tin">Xem thêm thông tin <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="#fff" d="M342.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L274.7 256 105.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg></a>
+						</div>
+					</div>
+				</div>
+			</div>
+			{% else %}
+			<div class="box_kiem_duyet">
+				<div class="item_store">
+					<div class="item_image_store">
+						<div class="image">
+							<img width="100" height="100" class="lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC"  data-src="{{'img_kiemd_icon.jpg' | asset_url }}" alt="{{settings.kiem_duyet_name}}"/>
+						</div>
+					</div>
+					<div class="info_store">
+						<div class="box_content_kiemd">
+							<p class="name_title">{{settings.kiem_duyet_name}}</p>
+							<div class="kiem_d_content text_title">
+								<svg enable-background="new 0 0 512 512" height="512" viewBox="0 0 512 512" width="512" xmlns="http://www.w3.org/2000/svg"><path clip-rule="evenodd" d="m256 0c-141.2 0-256 114.8-256 256s114.8 256 256 256 256-114.8 256-256-114.8-256-256-256z" fill="#4bae4f" fill-rule="evenodd"/><path d="m206.7 373.1c-32.7-32.7-65.2-65.7-98-98.4-3.6-3.6-3.6-9.6 0-13.2l37.7-37.7c3.6-3.6 9.6-3.6 13.2 0l53.9 53.9 138.6-138.7c3.7-3.6 9.6-3.6 13.3 0l37.8 37.8c3.7 3.7 3.7 9.6 0 13.2l-183.3 183.1c-3.6 3.7-9.5 3.7-13.2 0z" fill="#fff"/></svg> 
+								{{settings.kiem_duyet_title}}
+							</div>
+						</div>
+						<div class="content_kiemd">
+							<div class="mb-0">{{settings.kiem_duyet_content}}</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			{% endif %}
+			{% endif %}
+			{%if settings.product_cate_enable or settings.product_the_enable%}
+			<div class="box_cate_tag">
+				{%if settings.product_cate_enable %}
+				{% if product.collections.size > 0 %}
+				<div class="box_cate_pro">
+					<span>Danh mục:</span> 
+					{% for collection in product.collections %}
+					<a href="{{ collection.url }}" title="{{ collection.name | escape}}">{{ collection.name }}{%unless forloop.last%},{%endunless%}</a>
+					{% endfor %}
+				</div>
+				{% endif %}
+				{% endif %}
+				{%if settings.product_the_enable %}
+				{%- assign valid_tags = "" -%}
+				{%- for tag in product.tags -%}
+				{%- unless tag contains 'duocsi_' or tag contains 'combo_' or tag contains 'quycach_' or tag contains 'video' or tag contains 'daban_' or tag contains 'order' -%}
+				{%- assign valid_tags = valid_tags | append: tag | append: "||" -%}
+				{%- endunless -%}
+				{%- endfor -%}
+
+				{%- assign valid_tags_array = valid_tags | split: "||" -%}
+
+				{%- assign final_tags_array = "" -%}
+				{%- for tag in valid_tags_array -%}
+				{%- if tag != "" -%}
+				{%- assign final_tags_array = final_tags_array | append: tag | append: "|" -%}
+				{%- endif -%}
+				{%- endfor -%}
+				{%- assign final_tags_array = final_tags_array | split: "|" -%}
+				{%- if final_tags_array.size > 0 and final_tags_array[0] != "" -%}
+				<div class="box_cate_pro">
+					<span>Thẻ:</span> 
+					{%- for tag in final_tags_array -%}
+					{% assign current_index = forloop.index0  | plus: 3%}
+					<a href="/search?query=tags:(({{ tag | replace: ' ', '%20'}}))" title="{{ tag }}">{{ tag }}{% unless forloop.last or current_index > forloop.length %},{% endunless %}</a>
+					{%- endfor -%}
+				</div>
+				{%- endif -%}
+				{% endif %}
+			</div>
+			{% endif %}
+		</div>
+		{%if settings.product_tab2_enable %}
+		<div id="tab-2" class="tab-content content_extab">
+			<div class="rte">
+				{%- if settings.product_tab2_page != blank and pages[settings.product_tab2_page].content != blank -%}
+				{{ pages[settings.product_tab2_page].content }}
+				{%- else -%}
+				<p>Chưa cấu hình trang nội dung. Vào <strong>Admin → Giao diện → Tùy chỉnh → Tab sản phẩm</strong> để chọn trang.</p>
+				{%- endif -%}
+			</div>
+		</div>	
+		{% endif %}
+		{%if settings.product_tab3_enable %}
+		<div id="tab-3" class="tab-content content_extab">
+			<div class="box_review">
+				{% include 'product-reviews' %}
+			</div>
+		</div>	
+		{% endif %}
+	</div>	
+</div>

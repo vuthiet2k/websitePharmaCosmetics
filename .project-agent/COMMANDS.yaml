@@ -1,0 +1,103 @@
+# COMMANDS.yaml — nguồn sự thật cho mọi lệnh CLI dùng trong verification.
+# Theo 30. COMMAND_DISCOVERY_RULE: ưu tiên lệnh native đã có trong package.json.
+
+- id: preview
+  name: "Start dev preview server"
+  cwd: "."
+  command: "npm run preview"
+  timeout_sec: 20
+  expected_exit_code: null   # long-running process, không chờ exit
+  evidence_path: ".project-agent/evidence/preview/"
+  note: "Dùng để visual QA thủ công qua trình duyệt (http://localhost:PORT theo dev-server.js)."
+
+- id: build_theme
+  name: "Full theme build (tailwind + build-theme.js)"
+  cwd: "."
+  command: "npm run build"
+  timeout_sec: 120
+  expected_exit_code: 0
+  evidence_path: ".project-agent/evidence/build/"
+
+- id: build_tailwind
+  name: "Tailwind build only"
+  cwd: "."
+  command: "npm run build:tailwind"
+  timeout_sec: 60
+  expected_exit_code: 0
+  evidence_path: ".project-agent/evidence/build/"
+
+- id: build_vercel
+  name: "Build for Vercel deployment target"
+  cwd: "."
+  command: "npm run build:vercel"
+  timeout_sec: 120
+  expected_exit_code: 0
+  evidence_path: ".project-agent/evidence/build/"
+
+- id: secret_scan
+  name: "Grep quét secrets hard-code trong theme trước khi commit"
+  cwd: "."
+  command: "grep -rEn \"(AKfyc|api[_-]?key|secret|password)\\s*[:=]\\s*['\\\"][A-Za-z0-9]{10,}\" templates snippets assets --include='*.bwt' --include='*.js'"
+  timeout_sec: 30
+  expected_exit_code: 1   # grep trả 1 = không tìm thấy match = OK
+  evidence_path: ".project-agent/evidence/security/"
+
+- id: gas_deployments_list
+  name: "Liệt kê deployment GAS hiện có (KHÔNG deploy)"
+  cwd: "mops-gas"
+  command: "clasp deployments"
+  timeout_sec: 30
+  expected_exit_code: 0
+  evidence_path: ".project-agent/evidence/mops_gas/"
+  note: "Dùng để xác nhận deploymentId cố định trước khi release, theo mops-gas/README.md."
+
+- id: gas_push_test
+  name: "Push code GAS lên bản HEAD để test (KHÔNG phát hành)"
+  cwd: "mops-gas"
+  command: "clasp push"
+  timeout_sec: 60
+  expected_exit_code: 0
+  evidence_path: ".project-agent/evidence/mops_gas/"
+
+- id: compliance_lint
+  name: "Quét ngôn từ vi phạm RULE-P0-02/06 (danh xưng y tế, cấp phép, cơ quan y tế)"
+  cwd: "."
+  command: "node scripts/compliance-lint.js"
+  timeout_sec: 30
+  expected_exit_code: 0
+  evidence_path: ".project-agent/evidence/compliance/"
+  note: "REOPEN ADR-007 — thay thế 'CI Audit Gatekeeper' bằng script cục bộ (không có CI thật)."
+
+- id: perf_budget_lighthouse
+  name: "Lighthouse CLI cục bộ nhắm dev-server preview, đối chiếu RULE-P0-04 (LCP/CLS/TBT)"
+  cwd: "."
+  command: "npx lighthouse http://localhost:3000 --output=json --output-path=.project-agent/evidence/perf/lighthouse-report.json --chrome-flags=\"--headless\""
+  timeout_sec: 90
+  expected_exit_code: 0
+  evidence_path: ".project-agent/evidence/perf/"
+  note: "REOPEN ADR-007 — evidence E2 cục bộ, KHÔNG phải cổng CI tự động (ADR-001 vẫn giữ nguyên ranh giới không có enterprise CI). Yêu cầu 'npm run preview' đang chạy ở cổng tương ứng trước khi gọi."
+
+- id: visual_regression_test
+  name: "Playwright pixel-based visual regression (Testing Gate — Visual Regression Gate)"
+  cwd: "."
+  command: "npx playwright test"
+  timeout_sec: 90
+  expected_exit_code: 0
+  evidence_path: ".project-agent/evidence/visual/"
+  note: >
+    REOPEN 2026-09-11. Yêu cầu npm run preview đang chạy tại localhost:3000 trước khi gọi.
+    maxDiffPixelRatio 0.0005 (0.05%) cấu hình trong playwright.config.js. LẦN CHẠY ĐẦU TIÊN cho
+    1 trang sẽ "fail" vì chưa có baseline (Playwright tự ghi baseline mới, không phải regression
+    thật) — chỉ coi là PASSED thật (E3) từ LẦN CHẠY THỨ 2 trở đi so với baseline đã có. Báo cáo
+    HTML đầy đủ lưu tại .project-agent/evidence/visual/report/index.html. Baseline ảnh gốc lưu ở
+    tests/visual/__snapshots__/ — commit cùng code khi baseline thay đổi có chủ đích (redesign),
+    KHÔNG tự ý xoá baseline để "cho qua" gate (Anti-Gaming Integrity).
+
+- id: gas_deploy_production
+  name: "Phát hành GAS vào đúng deploymentId cố định (yêu cầu xác nhận thủ công)"
+  cwd: "mops-gas"
+  command: "clasp deploy -i AKfycby3CJub4AtuXZ_q8mkC2mvIBuhqZ4Po8NOTHrr6e08tvDdw-eWgzEXtSFt0HnEQSbx4 -d \"<mô tả giai đoạn>\""
+  timeout_sec: 60
+  expected_exit_code: 0
+  evidence_path: ".project-agent/evidence/mops_gas/"
+  note: "KHÔNG bao giờ chạy 'clasp deploy' không có -i. Chỉ chạy sau khi qua integration_gate."

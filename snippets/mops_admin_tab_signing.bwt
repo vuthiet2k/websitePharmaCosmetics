@@ -1,0 +1,120 @@
+{%- comment -%}
+  mops_admin_tab_signing.bwt (T-55) — UI SHELL ONLY, KHÔNG có backend. ADR-005 (grep toàn bộ
+  mops-gas/*.js) xác nhận KHÔNG có endpoint/khái niệm "X-Signs"/ký số điện tử nào tồn tại — đây
+  là tính năng hoàn toàn mới, effort cao (EXECUTION_PLAN.yaml#T-55, effort_flag: HIGH). Ký số hồ
+  sơ lao động/pháp lý là năng lực nhạy cảm về bảo mật + pháp lý (giá trị pháp lý chữ ký, chống
+  chối bỏ, nhật ký kiểm toán, Luật 91/2025/QH15 nếu hồ sơ chứa PII) — KHÔNG được tự ý thiết kế +
+  triển khai backend thật trong 1 task tự động, không có review bảo mật/pháp lý riêng.
+
+  Xem thiết kế backend cần có: mops-gas/docs/SIGNING_BACKEND_DESIGN_NOTE.md (chỉ là ghi chú,
+  KHÔNG phải code thực thi — không tự động triển khai từ đó).
+
+  Quy tắc BẮT BUỘC ở file này: mọi nút hành động (thêm hồ sơ, ký ngay, xem luồng ký) đều DISABLE
+  + ghi chú rõ "chưa có backend" — TUYỆT ĐỐI không mô phỏng 1 hành động ký số thành công khi
+  không có backend thật đứng sau (khác với Figma admin-signing.html vốn có toast giả lập
+  "Ký số điện tử thành công!" cho 1 tính năng không tồn tại — đây là hành vi KHÔNG được lặp lại).
+  Dữ liệu trong bảng là minh hoạ tĩnh (không bind Vue data thật, vì không có nguồn thật).
+{%- endcomment -%}
+
+<div id="tab-signing" v-show="activeTab === 'signing'" class="ma-tab-pane">
+
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-stack-md">
+    <div>
+      <h2 class="text-title-sm font-bold text-on-surface">Hồ Sơ Ký Số X-Signs</h2>
+      <p class="text-label-sm text-on-surface-variant">Quản lý hồ sơ ký số điện tử cho văn bản lao động/hành chính.</p>
+    </div>
+    <div class="flex gap-2">
+      <button type="button" disabled title="Chưa có backend ký số — xem mops-gas/docs/SIGNING_BACKEND_DESIGN_NOTE.md"
+        class="ma-btn-primary opacity-40 cursor-not-allowed">
+        <span class="material-symbols-outlined text-[16px] align-middle">lock</span> + Thêm Hồ Sơ Ký
+      </button>
+      <button type="button" disabled title="Chưa có backend ký số"
+        class="ma-btn-outline opacity-40 cursor-not-allowed">
+        <span class="material-symbols-outlined text-[16px] align-middle">filter_alt</span> Bộ Lọc Nâng Cao
+      </button>
+    </div>
+  </div>
+
+  <div class="flex items-start gap-3 p-4 mb-stack-lg rounded-xl border border-warning bg-error-container/40 text-on-error-container">
+    <span class="material-symbols-outlined flex-shrink-0">construction</span>
+    <p class="text-body-sm font-semibold">
+      🚧 Tính năng đang trong giai đoạn thiết kế — chưa có backend, dữ liệu bên dưới chỉ mang tính minh hoạ bố cục.
+      Không có hồ sơ nào được lưu hay ký thật ở đây. Xem yêu cầu thiết kế backend tại
+      <code class="font-mono">mops-gas/docs/SIGNING_BACKEND_DESIGN_NOTE.md</code>.
+    </p>
+  </div>
+
+  <!-- Status tabs — minh hoạ bố cục, không phải filter thật (không có dữ liệu thật để lọc) -->
+  <div class="flex flex-wrap gap-2 text-label-sm font-semibold bg-surface-container-lowest p-3 rounded-xl border border-outline-variant mb-stack-lg">
+    <span class="ma-badge ma-badge--neutral">Tất Cả (0)</span>
+    <span class="ma-badge ma-badge--neutral">Nháp (0)</span>
+    <span class="ma-badge ma-badge--info">Đang Chờ (0)</span>
+    <span class="ma-badge ma-badge--gold">Chờ Bạn Ký (0) ✍️</span>
+    <span class="ma-badge ma-badge--success">Hoàn Thành (0)</span>
+    <span class="ma-badge ma-badge--danger">Đã Hủy / Bị Từ Chối (0)</span>
+  </div>
+
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-body-sm">
+        <thead class="bg-surface-container text-on-surface-variant uppercase text-label-sm border-b border-outline-variant">
+          <tr>
+            <th class="px-3 py-2.5">#</th>
+            <th class="px-3 py-2.5">Tiêu đề hồ sơ &amp; mã luồng</th>
+            <th class="px-3 py-2.5">Loại văn bản</th>
+            <th class="px-3 py-2.5">Ngày tạo</th>
+            <th class="px-3 py-2.5">Hạn ký</th>
+            <th class="px-3 py-2.5">Trạng thái</th>
+            <th class="px-3 py-2.5 text-right">Hành động</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant/60">
+          <tr class="hover:bg-surface-container-low/50">
+            <td class="px-3 py-2.5 font-bold text-on-surface">1</td>
+            <td class="px-3 py-2.5">
+              <div class="font-bold text-on-surface">Hợp đồng lao động — Nguyễn Văn A (minh hoạ)</div>
+              <div class="text-label-sm text-on-surface-variant">HS-DEMO-000123 &bull; Ký tuần tự (3 bước)</div>
+            </td>
+            <td class="px-3 py-2.5"><span class="ma-badge ma-badge--info ma-badge--outline">Lao động</span></td>
+            <td class="px-3 py-2.5 text-on-surface-variant">—</td>
+            <td class="px-3 py-2.5 text-on-surface-variant">—</td>
+            <td class="px-3 py-2.5"><span class="ma-badge ma-badge--orange">Đang chờ ký ⏳</span></td>
+            <td class="px-3 py-2.5 text-right">
+              <button type="button" disabled title="Chưa có backend ký số" class="ma-btn-outline opacity-40 cursor-not-allowed text-label-sm">Luồng ký</button>
+            </td>
+          </tr>
+          <tr class="hover:bg-surface-container-low/50">
+            <td class="px-3 py-2.5 font-bold text-on-surface">2</td>
+            <td class="px-3 py-2.5">
+              <div class="font-bold text-on-surface">Quyết định điều động cán bộ (minh hoạ)</div>
+              <div class="text-label-sm text-on-surface-variant">HS-DEMO-000122 &bull; Ký tuần tự</div>
+            </td>
+            <td class="px-3 py-2.5"><span class="ma-badge ma-badge--accent ma-badge--outline">Văn bản điều hành</span></td>
+            <td class="px-3 py-2.5 text-on-surface-variant">—</td>
+            <td class="px-3 py-2.5 text-on-surface-variant">—</td>
+            <td class="px-3 py-2.5"><span class="ma-badge ma-badge--gold">Chờ bạn ký ✍️</span></td>
+            <td class="px-3 py-2.5 text-right">
+              <button type="button" disabled title="Chưa có backend ký số — xem SIGNING_BACKEND_DESIGN_NOTE.md" class="ma-btn-primary opacity-40 cursor-not-allowed text-label-sm">
+                <span class="material-symbols-outlined text-[14px] align-middle">lock</span> Ký ngay
+              </button>
+            </td>
+          </tr>
+          <tr class="hover:bg-surface-container-low/50">
+            <td class="px-3 py-2.5 font-bold text-on-surface">3</td>
+            <td class="px-3 py-2.5">
+              <div class="font-bold text-on-surface">Biên bản bàn giao thiết bị (minh hoạ)</div>
+              <div class="text-label-sm text-on-surface-variant">HS-DEMO-000121 &bull; Ký đơn</div>
+            </td>
+            <td class="px-3 py-2.5"><span class="ma-badge ma-badge--neutral ma-badge--outline">Hành chính</span></td>
+            <td class="px-3 py-2.5 text-on-surface-variant">—</td>
+            <td class="px-3 py-2.5 text-on-surface-variant">—</td>
+            <td class="px-3 py-2.5"><span class="ma-badge ma-badge--success">Hoàn thành ✓</span></td>
+            <td class="px-3 py-2.5 text-right">
+              <button type="button" disabled title="Chưa có backend ký số" class="ma-btn-outline opacity-40 cursor-not-allowed text-label-sm">Xem hồ sơ</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

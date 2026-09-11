@@ -1,0 +1,206 @@
+      
+      <div id="tab-inventory" v-show="activeTab === 'inventory'" class="ma-tab-pane">
+        <div class="flex flex-wrap items-center gap-1 mb-stack-lg border-b border-outline-variant">
+          <button v-for="p in inventoryPanels" :key="p.key" @click="setInventoryPanel(p.key)" type="button"
+            class="px-4 py-2.5 text-label-md font-bold border-b-2 -mb-px transition-all"
+            :class="inventory.activePanel === p.key ? 'border-primary text-primary' : 'border-transparent text-on-surface-variant hover:text-on-surface'">
+            [[ p.label ]]
+          </button>
+        </div>
+
+        
+        <div v-show="inventory.activePanel === 'suppliers'">
+          <div class="flex flex-wrap items-center justify-end gap-stack-md mb-stack-lg">
+            <button @click="inventory.suppliers.showAddForm = true" type="button" class="ma-btn-primary">
+              <span class="material-symbols-outlined text-[18px]">add</span>Thêm nhà cung cấp
+            </button>
+          </div>
+
+          {%- include 'mops_admin_state_block', loading_expr: 'inventory.suppliers.loading', error_expr: 'inventory.suppliers.error', empty_expr: "!inventory.suppliers.list.length ? 'Chưa có nhà cung cấp nào.' : ''", retry_fn: 'loadSuppliers', icon: 'store', skeleton_label: 'Đang tải nhà cung cấp' -%}
+          <div v-else class="ma-card">
+            <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+              <thead><tr class="ma-thead-row">
+                <th class="ma-th w-16">STT</th>
+                <th class="ma-th">Tên</th>
+                <th class="ma-th">Điện thoại</th>
+                <th class="ma-th">Trạng thái</th>
+                <th class="ma-th-right">Thao tác</th>
+              </tr></thead>
+              <tbody class="ma-rows-divide">
+                
+                <tr v-for="(s, index) in inventory.suppliers.list" :key="s.supplier_id" class="hover:bg-surface-container-low/50 transition-colors">
+                  <td class="px-6 py-2 text-on-surface-variant">[[ index + 1 ]]</td>
+                  <td class="ma-td-cell">[[ s.name ]]</td>
+                  <td class="ma-td-cell-muted">[[ s.phone || '—' ]]</td>
+                  <td class="px-6 py-2">
+                    <span v-if="s.active" class="ma-badge ma-badge--success">Đang hợp tác</span>
+                    <span v-else class="inline-flex items-center px-2.5 py-0.5 rounded-full text-label-md bg-surface-container-high text-on-surface-variant">Ngừng hợp tác</span>
+                  </td>
+                  <td class="px-6 py-2 text-right whitespace-nowrap">
+                    <button @click="openSupplierDrawer(s)" type="button" class="p-1.5 text-on-surface-variant hover:text-primary hover:bg-surface-container-high rounded-full transition-colors" aria-label="Xem chi tiết" title="Xem chi tiết">
+                      <span class="material-symbols-outlined text-[18px]">visibility</span>
+                    </button>
+                    <button @click="startEditSupplier(s)" type="button" class="p-1.5 text-on-surface-variant hover:text-primary hover:bg-surface-container-high rounded-full transition-colors" aria-label="Chỉnh sửa" title="Chỉnh sửa">
+                      <span class="material-symbols-outlined text-[18px]">edit</span>
+                    </button>
+                    
+                    <button @click="confirmDeleteSupplier(s)" type="button" class="p-1.5 text-red-600 hover:bg-red-50 rounded-full transition-colors" aria-label="Xoá" title="Xoá">
+                      <span class="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table></div>
+          </div>
+
+        </div>
+
+        
+        <div v-show="inventory.activePanel === 'purchase_orders'">
+          <div class="flex flex-wrap items-center justify-between gap-stack-md mb-stack-lg">
+            <select v-model="inventory.purchaseOrders.filterStatus" @change="loadPurchaseOrders" class="ma-input-inline">
+              <option value="">Tất cả trạng thái</option>
+              <option value="Draft">Draft</option>
+              <option value="Posted">Posted</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+            <button @click="openPurchaseOrderForm" type="button" class="ma-btn-primary">
+              <span class="material-symbols-outlined text-[18px]">add</span>Lập phiếu nhập hàng
+            </button>
+          </div>
+
+          {%- include 'mops_admin_state_block', loading_expr: 'inventory.purchaseOrders.loading', error_expr: 'inventory.purchaseOrders.error', empty_expr: "!inventory.purchaseOrders.list.length ? 'Chưa có phiếu nhập hàng nào.' : ''", retry_fn: 'loadPurchaseOrders', icon: 'inventory_2', skeleton_label: 'Đang tải phiếu nhập hàng' -%}
+          <div v-else class="ma-card">
+            <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+              <thead><tr class="ma-thead-row">
+                <th class="ma-th">Mã phiếu</th>
+                <th class="ma-th">Nhà cung cấp</th>
+                <th class="ma-th">Sản phẩm</th>
+                <th class="ma-th-right">Tổng tiền</th>
+                <th class="ma-th">Trạng thái</th>
+                <th class="ma-th">Thao tác</th>
+              </tr></thead>
+              <tbody class="ma-rows-divide">
+                <tr v-for="po in inventory.purchaseOrders.list" :key="po.purchase_order_id">
+                  
+                  <td class="px-6 py-2 font-body-md font-bold text-primary cursor-pointer hover:underline" @click="openPurchaseOrderDetail(po)">[[ po.purchase_order_id ]]</td>
+                  <td class="ma-td-cell">[[ supplierName(po.supplier_id) ]]</td>
+                  <td class="ma-td-cell-muted cursor-pointer hover:underline" @click="openPurchaseOrderDetail(po)">[[ po.items.length ]] sản phẩm</td>
+                  <td class="ma-td-amount">[[ formatMoney(po.total_amount) ]]</td>
+                  
+                  <td class="px-6 py-2">
+                    <span :class="financeDocStatusClass(po.status)">[[ po.status ]]</span>
+                    <br><small class="text-on-surface-variant">[[ po.payment_terms === 'DEPOSIT' ? 'Cọc ' + formatMoney(po.deposit_amount) : 'Trả đủ' ]]</small>
+                  </td>
+                  
+                  <td class="px-6 py-2 text-right">
+                    <button @click="togglePurchaseOrderMenu(po, $event)" type="button" class="ma-icon-btn" aria-label="Thao tác" title="Thao tác">
+                      <span class="material-symbols-outlined text-[18px]">more_vert</span>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table></div>
+          </div>
+
+          
+          <teleport to="body">
+            <div v-if="purchaseOrderMenuTarget" class="fixed inset-0 z-40" @click="inventory.purchaseOrders.menuOpenId = null"></div>
+            <div v-if="purchaseOrderMenuTarget" class="fixed z-50 w-56 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-2xl overflow-hidden py-1"
+              :style="{ top: inventory.purchaseOrders.menuPos.top + 'px', left: inventory.purchaseOrders.menuPos.left + 'px' }">
+              <button @click="openPurchaseOrderDetail(purchaseOrderMenuTarget)" type="button" class="w-full flex items-center gap-2 px-3 py-2 text-left text-body-sm hover:bg-surface-container-low transition-colors">
+                <span class="material-symbols-outlined text-[18px] text-on-surface-variant">visibility</span>Xem chi tiết
+              </button>
+              <template v-if="purchaseOrderMenuTarget.status === 'Draft'">
+                <button @click="openEditPurchaseOrderForm(purchaseOrderMenuTarget)" type="button" class="w-full flex items-center gap-2 px-3 py-2 text-left text-body-sm hover:bg-surface-container-low transition-colors">
+                  <span class="material-symbols-outlined text-[18px] text-on-surface-variant">edit</span>Chỉnh sửa
+                </button>
+                <button v-if="purchaseOrderMenuTarget.payment_terms === 'DEPOSIT'" @click="inventory.purchaseOrders.menuOpenId = null; openDepositVoucherForm(purchaseOrderMenuTarget)" type="button" class="w-full flex items-center gap-2 px-3 py-2 text-left text-body-sm hover:bg-surface-container-low transition-colors">
+                  <span class="material-symbols-outlined text-[18px] text-blue-600">payments</span>Trả cọc NCC
+                </button>
+                <button @click="inventory.purchaseOrders.menuOpenId = null; postPurchaseOrderAction(purchaseOrderMenuTarget)" type="button" class="w-full flex items-center gap-2 px-3 py-2 text-left text-body-sm hover:bg-surface-container-low transition-colors">
+                  <span class="material-symbols-outlined text-[18px] text-emerald-600">rocket_launch</span>Ghi sổ (Post)
+                </button>
+              </template>
+              <button v-if="purchaseOrderMenuTarget.status !== 'Cancelled'" @click="inventory.purchaseOrders.menuOpenId = null; cancelPurchaseOrderAction(purchaseOrderMenuTarget)" type="button" class="w-full flex items-center gap-2 px-3 py-2 text-left text-body-sm text-red-600 hover:bg-red-50 transition-colors border-t border-outline-variant mt-1">
+                <span class="material-symbols-outlined text-[18px]">close</span>Huỷ phiếu
+              </button>
+            </div>
+          </teleport>
+
+          
+          <div v-if="inventory.purchaseOrders.detailId" @click="closePurchaseOrderDetail" class="ma-modal-backdrop"></div>
+          <div v-if="inventory.purchaseOrders.detailId" class="ma-modal-panel ma-modal-panel--detail flex flex-col">
+            <div class="ma-modal-head">
+              <h3 class="ma-heading">Chi tiết phiếu nhập — [[ inventory.purchaseOrders.detailId ]]</h3>
+              <button @click="closePurchaseOrderDetail" type="button" class="ma-icon-btn" aria-label="Đóng">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+            <div v-if="purchaseOrderDetailTarget" class="ma-modal-body flex-1 overflow-y-auto custom-scrollbar space-y-stack-lg">
+              <div class="flex items-center justify-between">
+                <span :class="financeDocStatusClass(purchaseOrderDetailTarget.status)">[[ purchaseOrderDetailTarget.status ]]</span>
+                <span class="ma-text-sub">[[ formatDate(purchaseOrderDetailTarget.created_at) ]]</span>
+              </div>
+              <div>
+                <p class="ma-section-label mb-1">Nhà cung cấp</p>
+                <p class="text-body-md font-bold">[[ supplierName(purchaseOrderDetailTarget.supplier_id) ]]</p>
+              </div>
+              <div>
+                <p class="ma-section-label mb-2">Sản phẩm ([[ purchaseOrderDetailTarget.items.length ]])</p>
+                <div class="border border-outline-variant rounded-lg divide-y divide-outline-variant">
+                  <div v-for="it in purchaseOrderDetailTarget.items" :key="it.purchase_item_id" class="flex items-center gap-3 px-3 py-2">
+                    <img v-if="purchaseItemImage(it)" :src="purchaseItemImage(it)" width="40" height="40" class="w-10 h-10 rounded object-cover bg-surface-container-low flex-shrink-0" :alt="it.product_name">
+                    <div v-else class="w-10 h-10 rounded bg-surface-container-low flex-shrink-0 flex items-center justify-center text-on-surface-variant/40"><span class="material-symbols-outlined text-[18px]">image</span></div>
+                    <div class="flex-1 min-w-0">
+                      <div class="text-body-sm font-semibold truncate">[[ it.product_name ]]</div>
+                      <div class="ma-text-sub">[[ formatMoney(it.unit_cost) ]] × [[ it.qty ]]</div>
+                    </div>
+                    <div class="font-body-md font-bold flex-shrink-0">[[ formatMoney(it.line_total) ]]</div>
+                  </div>
+                </div>
+              </div>
+              <div class="pt-3 border-t border-outline-variant space-y-1">
+                <div v-if="purchaseOrderDetailTarget.shipping_cost" class="flex justify-between text-body-sm"><span class="ma-text-sub">Phí vận chuyển</span><span>[[ formatMoney(purchaseOrderDetailTarget.shipping_cost) ]]</span></div>
+                <div v-if="purchaseOrderDetailTarget.storage_cost" class="flex justify-between text-body-sm"><span class="ma-text-sub">Phí lưu kho</span><span>[[ formatMoney(purchaseOrderDetailTarget.storage_cost) ]]</span></div>
+                <div v-if="purchaseOrderDetailTarget.vat_amount" class="flex justify-between text-body-sm"><span class="ma-text-sub">Thuế VAT</span><span>[[ formatMoney(purchaseOrderDetailTarget.vat_amount) ]]</span></div>
+                <div v-if="purchaseOrderDetailTarget.discount_amount" class="flex justify-between text-body-sm"><span class="ma-text-sub">Chiết khấu NCC</span><span>-[[ formatMoney(purchaseOrderDetailTarget.discount_amount) ]]</span></div>
+                <div class="flex justify-between text-body-md font-bold pt-1"><span>Tổng giá trị nhập</span><span>[[ formatMoney(purchaseOrderDetailTarget.total_amount) ]]</span></div>
+                <div class="flex justify-between text-body-sm"><span class="ma-text-sub">Điều khoản</span><span>[[ purchaseOrderDetailTarget.payment_terms === 'DEPOSIT' ? 'Cọc ' + formatMoney(purchaseOrderDetailTarget.deposit_amount) : 'Trả đủ' ]]</span></div>
+              </div>
+              <div v-if="purchaseOrderDetailTarget.note">
+                <p class="ma-section-label mb-1">Ghi chú</p>
+                <p class="text-body-sm">[[ purchaseOrderDetailTarget.note ]]</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        
+        <div v-show="inventory.activePanel === 'bills'">
+          {%- include 'mops_admin_state_block', loading_expr: 'inventory.bills.loading', error_expr: 'inventory.bills.error', empty_expr: "!inventory.bills.list.length ? 'Chưa có công nợ nhà cung cấp nào.' : ''", retry_fn: 'loadBills', icon: 'receipt_long', skeleton_label: 'Đang tải công nợ nhà cung cấp' -%}
+          <div v-else class="ma-card">
+            <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+              <thead><tr class="ma-thead-row">
+                <th class="ma-th">Mã Bill</th>
+                <th class="ma-th">Nhà cung cấp</th>
+                <th class="ma-th-right">Tổng nợ</th>
+                <th class="ma-th-right">Đã trả</th>
+                <th class="ma-th-right">Còn nợ</th>
+                <th class="ma-th">Trạng thái</th>
+              </tr></thead>
+              <tbody class="ma-rows-divide">
+                <tr v-for="b in inventory.bills.list" :key="b.bill_id">
+                  <td class="px-6 py-2 font-body-md font-bold text-primary">[[ b.bill_id ]]</td>
+                  <td class="ma-td-cell-muted">[[ supplierName(b.party_id) ]]</td>
+                  <td class="px-6 py-2 text-right font-body-md">[[ formatMoney(b.amount) ]]</td>
+                  <td class="px-6 py-2 text-right font-body-md text-emerald-700">[[ formatMoney(b.paid_amount) ]]</td>
+                  <td class="ma-td-amount" :class="b.remaining_amount > 0 ? 'text-red-600' : ''">[[ formatMoney(b.remaining_amount) ]]</td>
+                  <td class="px-6 py-2"><span :class="billStatusClass(b.status)">[[ b.status ]]</span></td>
+                </tr>
+              </tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>

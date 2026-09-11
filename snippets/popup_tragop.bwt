@@ -1,0 +1,90 @@
+<div id="modal-tragop-product" class="modaltragop-product" style="display:none;">
+	<div class="modaltragop-overlay fancybox-overlay fancybox-overlay-fixed"></div>
+	<div class="modal-tragop-product">
+		<div class="row">
+			<div class="col-md-12 col-12">
+				<div class="chosee_size">
+					<h4 class="modal-title"><strong><i class="fa fa-money"></i> {{settings.product_installment_title_pop}}</strong></h4>
+				</div>
+
+				<div class="pagebody">
+					<div class="row">
+						<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12 col-12">
+							<div class="form-group modal-product-name">
+								<div class="img_popup">
+									<img class="lazyload duration-300" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC"  data-src="{{ product.featured_image.src | img_url:'large' }}" alt="{{ product.name }}">
+								</div>
+								<div class="info_name"><p class="modal-product-detail">{{ product.name | escape}}</p></div>
+							</div>
+						</div>
+						<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12 col-12">
+							<div class="sapo_regis">
+								<form action="/contact" method="post" id="contact">
+								<div class="group_contact">
+									<div class="row">
+										<div class="col-lg-6 col-md-6 col-sm-12 col-12">
+											<input placeholder="Họ và tên" type="text" class="form-control  form-control-lg" required value="{% if customer %}{{ customer.first_name }} {{ customer.last_name }}{% endif %}" name="contact[Name]">
+											<input placeholder="Sản phẩm đặt trước" type="text" class="form-control  form-control-lg d-none hidden" required value="{{ product.name | escape}}" name="contact[Product]">
+										</div>
+										<div class="col-lg-6 col-md-6 col-sm-12 col-12">
+											<input placeholder="Email" type="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$" required id="email1" class="form-control form-control-lg" value="{% if customer %}{{ customer.email }}{% endif %}" name="contact[email]">
+										</div>
+										<div class="col-lg-12 col-md-12 col-sm-12 col-12">
+											<input type="number" placeholder="Điện thoại" name="contact[phone]"  class="form-control form-control-lg" required>
+										</div>
+										<div class="col-lg-12 col-md-12 col-sm-12 col-12">
+											<textarea placeholder="Nội dung" name="contact[body]" id="comment" class="form-control content-area form-control-lg" rows="5" Required></textarea>
+											<button type="submit" class="btn btn-primary btn-lienhe">Đăng ký ngay</button>
+										</div>
+									</div>
+								</div>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<a title="Close" class="modaltragop-close close-window" href="javascript:;">
+			<svg aria-hidden="true" focusable="false" data-prefix="far" data-icon="times" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" class="svg-inline--fa fa-times fa-w-10"><path fill="currentColor" d="M207.6 256l107.72-107.72c6.23-6.23 6.23-16.34 0-22.58l-25.03-25.03c-6.23-6.23-16.34-6.23-22.58 0L160 208.4 52.28 100.68c-6.23-6.23-16.34-6.23-22.58 0L4.68 125.7c-6.23 6.23-6.23 16.34 0 22.58L112.4 256 4.68 363.72c-6.23 6.23-6.23 16.34 0 22.58l25.03 25.03c6.23 6.23 16.34 6.23 22.58 0L160 303.6l107.72 107.72c6.23 6.23 16.34 6.23 22.58 0l25.03-25.03c6.23-6.23 6.23-16.34 0-22.58L207.6 256z" class=""></path></svg>
+		</a>
+	</div>
+</div>
+<script>
+	$(document).on('click', '.modaltragop-close, #modal-tragop-product .modaltragop-overlay, .fancybox-overlay', function(e){
+		$("#modal-tragop-product").fadeOut(0);
+		awe_hidePopup();
+	});
+	$(document).ready(function ($){
+		var modal = $('.modaltragop-product');
+		var btn = $('.tragop-button');
+		var span = $('.modaltragop-close');
+		btn.click(function () {
+			modal.show();
+
+		});
+		span.click(function () {
+			modal.hide();
+		});
+		$(window).on('click', function (e) {
+			if ($(e.target).is('.modal')) {
+				modal.hide();
+			}
+		});
+		$('#modal-tragop-product form#contact').submit( function(e){
+			if ($(".g-recaptcha").size()){
+				if(grecaptcha.getResponse() == "") {
+					e.preventDefault();
+					alert("Câu trả lời của bạn chưa đúng. Hãy thử lại.");
+				}
+				else{
+					alert("Cảm ơn bạn đã đặt sản phẩm. Chúng tôi sẽ liên hệ bạn sớm nhất có thể.");
+				}
+			}else{
+				alert("Cảm ơn bạn đã đặt sản phẩm. Chúng tôi sẽ liên hệ bạn sớm nhất có thể.");
+			}
+		});
+	});
+
+
+</script>

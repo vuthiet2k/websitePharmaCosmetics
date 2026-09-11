@@ -1,0 +1,108 @@
+<section class="pc-section pc-stats-section">
+  <div class="container">
+    <div class="pc-stats-grid">
+      <div class="pc-stat-item pc-reveal pc-reveal--d1">
+        <span class="pc-stat-number"
+              data-target="{{ settings.home_stat_1_target | default: 98 }}"
+              data-suffix="{{ settings.home_stat_1_suffix | default: '%' }}">0</span>
+        <span class="pc-stat-label">{{ settings.home_stat_1_label | default: 'Khách hàng hài lòng' }}</span>
+        {%- if settings.home_stat_1_source -%}
+        <span class="pc-stat-source">{{ settings.home_stat_1_source }}</span>
+        {%- endif -%}
+      </div>
+      <div class="pc-stat-item pc-reveal pc-reveal--d2">
+        <span class="pc-stat-number"
+              data-target="{{ settings.home_stat_2_target | default: 15 }}"
+              data-suffix="{{ settings.home_stat_2_suffix | default: '+' }}">0</span>
+        <span class="pc-stat-label">{{ settings.home_stat_2_label | default: 'Thương hiệu uy tín' }}</span>
+        {%- if settings.home_stat_2_source -%}
+        <span class="pc-stat-source">{{ settings.home_stat_2_source }}</span>
+        {%- endif -%}
+      </div>
+      <div class="pc-stat-item pc-reveal pc-reveal--d3">
+        <span class="pc-stat-number"
+              data-target="{{ settings.home_stat_3_target | default: 10000 }}"
+              data-suffix="{{ settings.home_stat_3_suffix | default: '+' }}"
+              data-format="k">0</span>
+        <span class="pc-stat-label">{{ settings.home_stat_3_label | default: 'Khách hàng tin dùng' }}</span>
+        {%- if settings.home_stat_3_source -%}
+        <span class="pc-stat-source">{{ settings.home_stat_3_source }}</span>
+        {%- endif -%}
+      </div>
+      <div class="pc-stat-item pc-reveal pc-reveal--d4">
+        <span class="pc-stat-number pc-stat-number--text">{{ settings.home_stat_4_text | default: '24/7' }}</span>
+        <span class="pc-stat-label">{{ settings.home_stat_4_label | default: 'Chuyên gia hỗ trợ' }}</span>
+        {%- if settings.home_stat_4_source -%}
+        <span class="pc-stat-source">{{ settings.home_stat_4_source }}</span>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.pc-stats-section .pc-stat-source {
+  display: block;
+  margin-top: 6px;
+  font-size: var(--fs-xs);
+  color: var(--textSub);
+  opacity: 0.75;
+  font-style: italic;
+}
+</style>
+
+<script>
+(function() {
+  var els = document.querySelectorAll('.pc-stats-section .pc-stat-number[data-target]');
+  if (!els.length) return;
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function formatValue(value, suffix, format) {
+    if (format === 'k' && value >= 1000) {
+      var k = value / 1000;
+      return (k >= 10 ? k.toFixed(0) : k.toFixed(1)) + 'k' + suffix;
+    }
+    return value + suffix;
+  }
+
+  function countUp(el) {
+    var target = parseInt(el.dataset.target, 10) || 0;
+    var suffix = el.dataset.suffix || '';
+    var format = el.dataset.format || '';
+
+    if (reduceMotion) {
+      el.textContent = formatValue(target, suffix, format);
+      return;
+    }
+
+    var duration = 1800;
+    var start = null;
+    function frame(now) {
+      if (start === null) start = now;
+      var progress = Math.min((now - start) / duration, 1);
+      var eased = 1 - Math.pow(1 - progress, 3);
+      var value = Math.floor(target * eased);
+      el.textContent = formatValue(value, suffix, format);
+      if (progress < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  if (!('IntersectionObserver' in window)) {
+    els.forEach(countUp);
+    return;
+  }
+
+  var io = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        countUp(entry.target);
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  els.forEach(function(el) { io.observe(el); });
+})();
+</script>

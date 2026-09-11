@@ -1,0 +1,99 @@
+{% comment %}
+  product_grid_skinhealthy.bwt — Service card cho Skin Healthy Beauty
+  Usage: {% include 'product_grid_skinhealthy', product: product, group_badge: 'Maintenance' %}
+  Variables:
+    product      — required
+    group_badge  — optional string (nhóm dịch vụ)
+    show_add     — optional boolean, default true (hiện nút đặt lịch)
+{% endcomment %}
+
+{%- assign sel_var   = product.selected_or_first_available_variant -%}
+{%- assign svc_price = sel_var.price -%}
+{%- assign svc_cmp   = sel_var.compare_at_price -%}
+{%- assign is_contact = false -%}
+{%- if svc_price == 0 -%}{%- assign is_contact = true -%}{%- endif -%}
+{%- assign on_sale = false -%}
+{%- if svc_cmp > svc_price and is_contact == false -%}{%- assign on_sale = true -%}{%- endif -%}
+
+{%- comment -%} Detect group badge from product tags if not passed {%- endcomment -%}
+{%- unless group_badge -%}
+  {%- assign group_badge = '' -%}
+  {%- for tag in product.tags -%}
+    {%- assign t = tag | downcase -%}
+    {%- if t == 'maintenance' or t contains 'chăm sóc duy trì' -%}{%- assign group_badge = 'Duy Trì' -%}
+    {%- elsif t == 'targeted' or t contains 'targeted' -%}{%- assign group_badge = 'Nhắm Mục Tiêu' -%}
+    {%- elsif t == 'invasive' or t contains 'xâm lấn' -%}{%- assign group_badge = 'Xâm Lấn' -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endunless -%}
+
+{%- unless show_add == false -%}{%- assign show_add = true -%}{%- endunless -%}
+
+{%- comment -%} Detail URL: dùng setting nếu có, fallback về product.url {%- endcomment -%}
+{%- assign _detail_dest = settings.skinhealthy_detail_url | default: '' -%}
+{%- if _detail_dest != blank -%}
+  {%- assign _detail_url = _detail_dest | append: '?handle=' | append: product.alias -%}
+{%- else -%}
+  {%- assign _detail_url = product.url -%}
+{%- endif -%}
+
+<article class="svc-card" data-mops-handle="{{ product.alias }}">
+
+  <a href="{{ _detail_url }}" class="svc-card__img-wrap" tabindex="-1" aria-hidden="true">
+    {%- if product.featured_image -%}
+      <img
+        class="lazyload svc-card__img"
+        width="400" height="300"
+        src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII="
+        data-src="{{ product.featured_image.src | img_url: 'large' }}"
+        alt="{{ product.name | escape }}"
+        onerror="this.closest('.svc-card__img-wrap').classList.add('svc-card__img-wrap--empty');this.remove()">
+    {%- else -%}
+      <div class="svc-card__img-wrap--empty"></div>
+    {%- endif -%}
+
+    {%- if group_badge != '' -%}
+      <span class="svc-card__group-badge">{{ group_badge }}</span>
+    {%- endif -%}
+
+    {%- if on_sale -%}
+      {%- assign disc = svc_cmp | minus: svc_price | times: 100 | divided_by: svc_cmp | round -%}
+      <span class="svc-card__sale-badge">-{{ disc }}%</span>
+    {%- endif -%}
+  </a>
+
+  <div class="svc-card__body">
+
+    {%- if product.vendor != blank -%}
+      <span class="svc-card__brand">{{ product.vendor }}</span>
+    {%- endif -%}
+
+    <a href="{{ _detail_url }}" class="svc-card__name">{{ product.name }}</a>
+
+    <div class="svc-card__price-row">
+      {%- if is_contact -%}
+        <span class="svc-card__price svc-card__price--contact">Liên hệ</span>
+      {%- else -%}
+        <span class="svc-card__price">{{ svc_price | money }}</span>
+        {%- if on_sale -%}
+          <span class="svc-card__compare">{{ svc_cmp | money }}</span>
+        {%- endif -%}
+      {%- endif -%}
+    </div>
+
+    {%- if show_add -%}
+      <div class="svc-card__actions">
+        <a href="{{ _detail_url }}" class="svc-card__detail-btn">Xem chi tiết</a>
+        {%- assign _book_dest = booking_url | default: '/dat-lich-tu-van' -%}
+        {%- assign _book_url  = _book_dest | append: '?handle=' | append: product.alias -%}
+        {%- if is_contact -%}
+          <a href="{{ _book_url }}" class="svc-card__book-btn">Đặt lịch</a>
+        {%- else -%}
+          <a href="{{ _book_url }}" class="svc-card__book-btn">Đặt ngay</a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+  </div>
+
+</article>

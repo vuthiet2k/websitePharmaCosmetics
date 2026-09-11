@@ -1,0 +1,205 @@
+{%- comment -%} section_product_viewed.bwt — Sản phẩm đã xem gần đây {%- endcomment -%}
+
+<div class="section-recenview-product pc-section section--subtle pc-viewed-products">
+  <div class="container">
+
+    <div class="pc-viewed__header pc-featured__header">
+      <div class="pc-section-header pc-section-header--left">
+        {%- if settings.product_viewed_eyebrow != blank -%}
+        <p class="pc-section-eyebrow">{{ settings.product_viewed_eyebrow }}</p>
+        {%- endif -%}
+        <h2 class="pc-section-title">{{ settings.product_viewed_title | default: 'Sản phẩm đã xem' }}</h2>
+      </div>
+    </div>
+
+    <div class="pc-viewed__swiper swiper_viewed swiper-container">
+      <div class="swiper-wrapper"></div>
+
+      <div class="swiper-button-prev pc-viewed__prev">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="swiper-button-next pc-viewed__next">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <div class="swiper-pagination pc-viewed__pagination"></div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+/* ── Section Product Viewed ── */
+.pc-viewed-products {
+  overflow: hidden;
+}
+
+.pc-viewed__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.pc-viewed__header .pc-section-header {
+  margin-bottom: 0;
+}
+.pc-viewed__header .pc-section-title {
+  margin-bottom: 4px;
+}
+
+.pc-viewed__swiper {
+  overflow: hidden;
+  padding-bottom: 40px;
+}
+
+.pc-viewed__prev,
+.pc-viewed__next {
+  width: 40px;
+  height: 40px;
+  background: #fff;
+  border: 1.5px solid var(--lineColor);
+  border-radius: 50%;
+  color: var(--mainColorDark);
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  transition: background .2s, border-color .2s, color .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pc-viewed__prev::after,
+.pc-viewed__next::after { display: none; }
+.pc-viewed__prev:hover,
+.pc-viewed__next:hover {
+  background: var(--mainColorDark);
+  border-color: var(--mainColorDark);
+  color: #fff;
+}
+
+.pc-viewed__pagination {
+  bottom: 8px !important;
+}
+.pc-viewed__pagination .swiper-pagination-bullet {
+  background: var(--lineColor);
+  opacity: 1;
+  width: 8px;
+  height: 8px;
+  transition: background .2s, width .2s;
+}
+.pc-viewed__pagination .swiper-pagination-bullet-active {
+  background: var(--mainColorDark);
+  width: 24px;
+  border-radius: 4px;
+}
+
+/* Override card flash-sale colors trong context này */
+.pc-viewed-products .pc-btn--action {
+  background: var(--mainColorDark);
+}
+.pc-viewed-products .pc-btn--action:hover {
+  background: var(--mainColor);
+  transform: translateY(-1px);
+}
+.pc-viewed-products .pc-btn--action--disabled:hover {
+  transform: none;
+}
+.pc-viewed-products .pc-flashsale__badge {
+  background: var(--mainColorDark);
+}
+.pc-viewed-products .pc-flashsale__progress {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .pc-viewed__header {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+  .pc-viewed__swiper {
+    padding-bottom: 48px;
+  }
+}
+</style>
+
+<script>
+$(document).ready(function() {
+  if (!localStorage.last_viewed_products) return;
+
+  var last_viewd_pro_array = JSON.parse(localStorage.last_viewed_products);
+  var size_pro_review = Math.min(last_viewd_pro_array.length, 14);
+
+  if (size_pro_review < 1) return;
+
+  var recentview_promises = [];
+  for (var i = 0; i < size_pro_review; i++) {
+    var alias_product = last_viewd_pro_array[i];
+    if (!!alias_product.alias) {
+      (function(alias) {
+        var promise = new Promise(function(resolve, reject) {
+          $.ajax({
+            url: '/' + alias + '?view=viewed',
+            success: function(html) { resolve(html); },
+            error:   function()     { resolve(''); }
+          });
+        });
+        recentview_promises.push(promise);
+      })(alias_product.alias);
+    }
+  }
+
+  Promise.all(recentview_promises).then(function(values) {
+    $.each(values, function(i, v) {
+      if (v !== '') {
+        $('.swiper_viewed .swiper-wrapper').append(v);
+      } else {
+        last_viewd_pro_array.splice(i, 1);
+      }
+    });
+
+    localStorage.setItem('last_viewed_products', JSON.stringify(last_viewd_pro_array));
+    $('.section-recenview-product').removeClass('d-none');
+
+    setTimeout(function() {
+      new Swiper('.swiper_viewed', {
+        slidesPerView: 4,
+        spaceBetween: 20,
+        slidesPerGroup: 1,
+        pagination: {
+          el: '.swiper_viewed .pc-viewed__pagination',
+          clickable: true,
+        },
+        navigation: {
+          nextEl: '.swiper_viewed .pc-viewed__next',
+          prevEl: '.swiper_viewed .pc-viewed__prev',
+        },
+        breakpoints: {
+          280: { slidesPerView: 1.4, spaceBetween: 12 },
+          480: { slidesPerView: 2,   spaceBetween: 12 },
+          768: { slidesPerView: 3,   spaceBetween: 16 },
+          993: { slidesPerView: 4,   spaceBetween: 20 },
+        }
+      });
+      awe_lazyloadImage();
+    }, 100);
+
+    {%- if settings.iwish_enable -%}
+    favoriBean.Wishlist.wishlistProduct();
+    {%- endif -%}
+
+  }).catch(function(productId) {
+    var listLocalStorage = JSON.parse(localStorage.getItem('last_viewed_products')) || [];
+    for (var i = 0; i < listLocalStorage.length; ++i) {
+      if (listLocalStorage[i].id == productId) {
+        listLocalStorage.splice(i, 1);
+        break;
+      }
+    }
+    localStorage.setItem('last_viewed_products', JSON.stringify(listLocalStorage));
+  });
+});
+</script>

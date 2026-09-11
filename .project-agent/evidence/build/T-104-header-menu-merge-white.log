@@ -1,0 +1,47 @@
+T-104-header-menu-merge-white — 2026-09-11
+Nguoi dung yeu cau TRUC TIEP (nguyen van): "chỉnh lại màu sắc header như mẫu giao diện, bỏ đi
+header-menu, tích hợp vèo header, top-header để màu xanh, header màu trắng, chèn menu vào header
+luôn" — ghi de quyet dinh than trong cua T-102 (khong gop header-menu, giu box-hearder xanh).
+
+THAY DOI THUC HIEN:
+1. snippets/header.bwt: di chuyen NGUYEN VEN (khong duplicate) toan bo khoi <div class="header-
+   menu"> (Danh muc + site-nav mega-menu + phan drawer mobile ben trong) tu 1 hang rieng thanh 1
+   flex-item chung hang voi .box-hearder (chen ngay sau .header-logo, truoc .header-mid). Moi
+   id/class/JS ben trong giu nguyen 100% - khong sinh phan tu trung lap.
+2. snippets/pharma_ui_kit.bwt (@media min-width:992px):
+   - header.header .box-hearder { background:#fff } - header trang nhu yeu cau.
+   - .header-menu { flex:1 1 auto; min-width:0 } + .container { max-width:none } - de menu lay
+     phan khong gian con lai trong hang thay vi bi ep theo % Bootstrap cu (tinh theo full page
+     width truoc day).
+   - .sudes-cate-header (Danh muc trigger) { flex:0 0 auto; min-width:152px } + .sudes-main-header
+     (nav) { flex:1 1 auto } - sua GIAI PHAP TRIET DE cho van de "Danh muc" bi cat thanh "Danh..."
+     phat hien ngay trong luc verify (do cot bi ep con ~130px, khong du cho nhan + icon dropdown).
+   - Logo icon (assets/logoPC.svg, mark trang thuan fill="white") duoc dat tren 1 khoi nen mau
+     brand (background: var(--primary-emerald-700), border-radius:10px, padding:8px) - TAI SU
+     DUNG dung pattern da co san trong layouts/mops-admin.bwt (.ma-loader-mark, dong ~298-313,
+     comment goc: "Logo la anh trang - nen trang truoc day lam anh gan nhu vo hinh - doi sang mau
+     chinh thuong hieu de logo trang noi ro") - giai quyet TAN GOC van de tung gap o T-102 (lan do
+     thu doi nen trang roi phai revert vi logo bien mat), khong ne tranh nua.
+   - logo-store-name/logo-store-sub + icon wishlist/cart/search (goc dung color:var(--txtHeader)
+     =#ffffff, thiet ke cho nen xanh) doi mau chu/icon sang toi (var(--color-text-main)) vi gio
+     nam tren nen trang that.
+
+VERIFY (E2 — Playwright thuc, nhieu do rong + tuong tac that):
+1. Desktop 1280/1440/992px: header hien thi dung 1 khoi trang duy nhat (topbar xanh rieng +
+   header trang gom logo+Danh muc+nav+icon), dung tinh than yeu cau. "Danh muc" hien du chu (khong
+   con bi cat).
+2. page.on('pageerror') tren ca 5 kich ban (1280/1440/992/mobile/scroll): 0 loi JS.
+3. Click that vao "Danh muc": flyout .sudes-list-cate mo dung (active=true, opacity:1,
+   visibility:visible, w=182px h=352px) - mega-menu category KHONG bi vo do doi vi tri DOM.
+4. Scroll test: .hSticky van kich hoat dung, header-menu chuyen thanh thanh dinh o top (hanh vi co
+   chu dich tu truoc, khong doi).
+5. Mobile 390px: khong doi (scope CSS chi min-width:992px). Click that #btn-menu-mobile: drawer mo
+   dung, hien du 6 nav item + link phu (Tich diem doi qua, San pham yeu thich) - xac nhan di
+   chuyen DOM KHONG lam hong drawer mobile.
+6. navItemCount = 6 (dung, khong mat item nao).
+7. npm run build: PASS. compliance-lint: 0 vi pham cung, 18 canh bao khong doi.
+8. npx playwright test --update-snapshots: 39/39 PASS (baseline cap nhat chu dich - thay doi CSS
+   anh huong toan site qua pharma_ui_kit.bwt).
+
+EVIDENCE_GRADE: E2 (Playwright + build/click/scroll/drawer that, chua co xac nhan mat nguoi dung
+tren thiet bi that).

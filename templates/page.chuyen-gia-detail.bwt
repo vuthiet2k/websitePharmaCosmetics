@@ -1,0 +1,102 @@
+{%- comment -%}
+  page.chuyen-gia-detail.bwt (T-33) — Hồ sơ chuyên khoa flagship, adapt từ
+  Pharma_Cosmetics_Figma_Project/doctor-profile.html (chỉ 1 bác sĩ cụ thể: BS. CKII Nguyễn
+  Minh Anh — không phải template dynamic theo alias, vì routing Sapo CMS page + dev-server
+  ?tpl= không hỗ trợ tham số per-record như product/collection). Binding: tìm doctors record
+  alias 'bs-ckii-nguyen-minh-anh' (id 300, xem data/doctors.js) bằng vòng lặp + assign, tránh
+  phụ thuộc filter 'where' không chắc có sẵn trong engine Liquid ở đây.
+{%- endcomment -%}
+{%- assign flagship_doctor = null -%}
+{%- for doc in doctors -%}
+  {%- if doc.alias == 'bs-ckii-nguyen-minh-anh' -%}
+    {%- assign flagship_doctor = doc -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{% include 'breadcrumb' %}
+
+<main class="bg-white py-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    {%- if flagship_doctor -%}
+    <!-- Doctor Main Info Hero -->
+    <div class="bg-gradient-to-br from-emerald-50 to-teal-50/40 rounded-3xl p-8 sm:p-12 border border-emerald-100 mb-12">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+        <div class="md:col-span-4 flex justify-center">
+          <div class="relative">
+            <img src="{{ flagship_doctor.photo.src }}" alt="{{ flagship_doctor.photo.alt }}" loading="lazy"
+              class="w-64 h-64 rounded-2xl object-cover shadow-xl border-4 border-white">
+            <span class="absolute -bottom-3 left-1/2 -translate-x-1/2 pc-kit-badge-clinical text-xs font-bold whitespace-nowrap shadow">
+              ✓ BÁC SĨ CKII &bull; HỘI ĐỒNG TW
+            </span>
+          </div>
+        </div>
+
+        <div class="md:col-span-8 space-y-4">
+          <div class="inline-block px-3 py-1 rounded-full bg-emerald-200 text-emerald-900 text-xs font-bold">
+            {{ flagship_doctor.years_experience }}+ NĂM KINH NGHIỆM BV DA LIỄU TRUNG ƯƠNG
+          </div>
+          <h1 class="text-3xl sm:text-4xl font-extrabold text-forest-900 font-heading">
+            {{ flagship_doctor.name }}
+          </h1>
+          <p class="text-sm font-semibold text-emerald-800">
+            {{ flagship_doctor.specialty }}
+          </p>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 py-2 border-y border-emerald-200/60 text-xs">
+            <div>
+              <div class="text-xl font-bold text-forest-900">{{ flagship_doctor.years_experience }}+ Năm</div>
+              <div class="text-gray-500">Kinh nghiệm</div>
+            </div>
+            <div>
+              <div class="text-xl font-bold text-emerald-700">{{ flagship_doctor.stats.patients_treated }}</div>
+              <div class="text-gray-500">Bệnh nhân phục hồi</div>
+            </div>
+            <div>
+              <div class="text-xl font-bold text-forest-900">{{ flagship_doctor.stats.clinical_efficacy }}</div>
+              <div class="text-gray-500">Hiệu quả lâm sàng</div>
+            </div>
+            <div>
+              <div class="text-xl font-bold text-amber-600">⭐ {{ flagship_doctor.stats.rating }}</div>
+              <div class="text-gray-500">({{ flagship_doctor.stats.rating_count }} Đánh giá)</div>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-4 pt-2">
+            <a href="/pages/dat-lich-tu-van" class="pc-kit-btn-primary text-sm py-3 px-6 shadow-md">
+              <i class="fas fa-calendar-check"></i> Đặt Lịch Khám 1:1 Cùng Bác Sĩ
+            </a>
+            <a href="tel:0967194063" class="pc-kit-btn-secondary text-sm py-3 px-6">
+              <i class="fas fa-phone-alt"></i> Tư Vấn Trực Tuyến Miễn Phí
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Credentials & Timeline -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+      <div class="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm space-y-4">
+        <h3 class="text-base font-bold text-forest-900 uppercase tracking-wider flex items-center gap-2">
+          <i class="fas fa-graduation-cap text-emerald-700"></i> Học Vấn & Bằng Cấp Chuyên Khoa
+        </h3>
+        <p class="text-xs sm:text-sm text-gray-700 leading-relaxed">{{ flagship_doctor.education }}</p>
+      </div>
+
+      <div class="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm space-y-4">
+        <h3 class="text-base font-bold text-forest-900 uppercase tracking-wider flex items-center gap-2">
+          <i class="fas fa-hospital text-emerald-700"></i> Kinh Nghiệm Công Tác & Vị Trí
+        </h3>
+        <p class="text-xs sm:text-sm text-gray-700 leading-relaxed">{{ flagship_doctor.bio }}</p>
+      </div>
+    </div>
+
+    {%- if flagship_doctor.quote != blank -%}
+    <blockquote class="bg-emerald-900 text-white rounded-3xl p-8 sm:p-10 mb-16 shadow-lg italic text-sm sm:text-base text-emerald-100 leading-relaxed">
+      {{ flagship_doctor.quote }}
+    </blockquote>
+    {%- endif -%}
+    {%- else -%}
+    <p class="text-sm text-gray-500 py-10 text-center">Không tìm thấy hồ sơ bác sĩ.</p>
+    {%- endif -%}
+
+  </div>
+</main>

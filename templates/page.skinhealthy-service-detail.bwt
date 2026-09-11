@@ -1,0 +1,148 @@
+{% layout 'theme' %}
+{%- comment -%}
+  page.skinhealthy-service-detail.bwt — Chi tiết 1 dịch vụ/liệu trình Skin Health Beauty.
+
+  QUYẾT ĐỊNH KIẾN TRÚC (xác nhận trực tiếp bởi chủ dự án): trang này dùng layout PHARMA
+  ({% layout 'theme' %}), KHÔNG dùng layout 'skinhealthy' như page.indexskinhealthy.bwt /
+  page.skinhealthy-services.bwt. Đây là bàn giao thương hiệu chéo có chủ đích — khách bấm 1
+  dịch vụ từ hub Skin Health Beauty sẽ thấy header/footer/màu sắc Pharma Cosmetics, không phải
+  Skin Health Beauty. Không đổi lại thành layout skinhealthy nếu không có xác nhận mới.
+
+  "Dịch vụ" ở đây LÀ 1 sản phẩm Sapo thật (nằm trong 1 trong 3 collection fallback của
+  page.skinhealthy-services.bwt: maintenance-skin-care / targeted-treatments /
+  invasive-treatments) — dùng object `product` chuẩn, KHÔNG phải data giả lập riêng.
+
+  Form add-to-cart replicate ĐÚNG contract mà snippets/ajaxcartfunction.bwt lắng nghe toàn site
+  (selector '[data-cart-form]', xem dòng ~150 file đó): action="/cart/add", method="post",
+  enctype="multipart/form-data", input name="variantId" + name="quantity", nút submit. Không
+  cần viết JS mới — handler global đã xử lý AJAX add-to-cart cho MỌI form có data-cart-form.
+
+  Lược bớt so với templates/product.bwt (~1300 dòng, đọc tham khảo): bỏ combo/buy-x-get-y,
+  bỏ "Thành Phần Hoạt Chất" (dịch vụ spa không có hoạt chất như sản phẩm bôi), thay bằng khối
+  "Dịch vụ bao gồm" dùng product.tags thật (không bịa field không tồn tại).
+{%- endcomment -%}
+
+{%- assign variantCount = product.variants | size -%}
+{%- assign on_var = false -%}
+{%- if variantCount > 1 -%}{%- assign on_var = true -%}{%- endif -%}
+{%- assign current_variant = product.selected_or_first_available_variant -%}
+{%- assign price = current_variant.price | default: product.variants[0].price -%}
+{%- assign compare_at_price = current_variant.compare_at_price | default: product.variants[0].compare_at_price -%}
+{%- assign svc_services_url = pages[settings.skinhealthy_services_page].url | default: settings.skinhealthy_services_url | default: '/dich-vu-skin-healthy-beauty' -%}
+
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+
+  {%- comment -%} Breadcrumb — quay lại hub dịch vụ Skin Health Beauty {%- endcomment -%}
+  <nav class="text-xs text-gray-500 mb-6 flex items-center gap-2" aria-label="Breadcrumb">
+    <a href="{{ svc_services_url }}" class="hover:text-clinical-700">Dịch vụ Skin Health Beauty</a>
+    <span aria-hidden="true">/</span>
+    <span class="text-gray-800 font-medium">{{ product.name }}</span>
+  </nav>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+    {%- comment -%} Ảnh {%- endcomment -%}
+    <div class="lg:col-span-5">
+      {%- if product.images.size > 0 -%}
+      <div class="rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+        <img src="{{ product.images.first.src | img_url: 'grande' }}" alt="{{ product.name | escape }}"
+          class="w-full h-[360px] sm:h-[440px] object-cover" loading="eager">
+      </div>
+      {%- if product.images.size > 1 -%}
+      <div class="grid grid-cols-4 gap-2 mt-3">
+        {%- for image in product.images limit: 4 -%}
+        <img src="{{ image.src | img_url: 'medium' }}" alt="{{ product.name | escape }}"
+          class="rounded-lg object-cover h-16 w-full border border-gray-200" loading="lazy">
+        {%- endfor -%}
+      </div>
+      {%- endif -%}
+      {%- else -%}
+      <div class="rounded-2xl bg-mint-50 border border-gray-200 h-[360px] flex items-center justify-center text-clinical-700">
+        <i class="fas fa-spa text-5xl" aria-hidden="true"></i>
+      </div>
+      {%- endif -%}
+    </div>
+
+    {%- comment -%} Nội dung chính {%- endcomment -%}
+    <div class="lg:col-span-7">
+      {%- if product.type != blank -%}
+      <span class="pc-kit-badge-clinical mb-3">{{ product.type }}</span>
+      {%- endif -%}
+
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-forest-900 font-heading mb-3">{{ product.name }}</h1>
+
+      {%- if product.tags.size > 0 -%}
+      <div class="flex flex-wrap gap-2 mb-5">
+        {%- for tag in product.tags -%}
+        {%- unless tag contains '_' -%}
+        <span class="pc-kit-badge-gold">{{ tag }}</span>
+        {%- endunless -%}
+        {%- endfor -%}
+      </div>
+      {%- endif -%}
+
+      {%- comment -%} Giá {%- endcomment -%}
+      <div class="flex items-baseline gap-3 mb-6">
+        {%- if price == 0 -%}
+        <a href="https://zalo.me/{{ settings.contact_zalo | remove: ' ' }}" target="_blank" rel="noopener"
+          class="text-xl font-bold text-clinical-700">Liên hệ tư vấn giá</a>
+        {%- else -%}
+        <span class="text-2xl font-extrabold text-clinical-700">{{ price | money }}</span>
+        {%- if compare_at_price > price and compare_at_price > 0 -%}
+        <span class="text-sm text-gray-400 line-through">{{ compare_at_price | money }}</span>
+        {%- endif -%}
+        {%- endif -%}
+      </div>
+
+      {%- comment -%}
+        Add-to-cart form — GIỮ NGUYÊN contract (action/method/enctype/data-cart-form + tên field
+        variantId/quantity) để dùng chung handler AJAX toàn site (snippets/ajaxcartfunction.bwt).
+      {%- endcomment -%}
+      <form enctype="multipart/form-data" data-cart-form id="add-to-cart-form" action="/cart/add" method="post" class="space-y-4">
+        {%- if on_var -%}
+        <select id="product-selectors" name="variantId" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-clinical-600">
+          {%- for variant in product.variants -%}
+          <option value="{{ variant.id }}" {% if variant == current_variant %}selected="selected"{% endif %}>{{ variant.title | escape }} — {{ variant.price | money }}</option>
+          {%- endfor -%}
+        </select>
+        {%- else -%}
+        <input type="hidden" name="variantId" value="{{ product.variants[0].id }}">
+        {%- endif -%}
+
+        <div class="flex items-center gap-3">
+          <label for="qtym" class="text-sm text-gray-700 font-medium">Số lượng</label>
+          <input type="number" id="qtym" name="quantity" value="1" min="1" max="99"
+            class="w-20 border border-gray-300 rounded-lg px-3 py-2 text-sm text-center"
+            onchange="if(!this.value||this.value<1)this.value=1;">
+        </div>
+
+        <div class="flex flex-wrap gap-3 pt-2">
+          {%- if product.available and price > 0 -%}
+          <button type="submit" class="pc-kit-btn-primary">
+            <i class="fas fa-calendar-check" aria-hidden="true"></i> Đặt dịch vụ ngay
+          </button>
+          {%- elsif price == 0 -%}
+          <a href="{{ settings.skinhealthy_booking_page | default: '/dat-lich-tu-van' }}" class="pc-kit-btn-primary">
+            <i class="fas fa-phone" aria-hidden="true"></i> Đặt lịch tư vấn miễn phí
+          </a>
+          {%- else -%}
+          <button type="button" disabled class="pc-kit-btn-primary is-disabled">Tạm hết lịch — vui lòng quay lại sau</button>
+          {%- endif -%}
+          <a href="{{ svc_services_url }}" class="pc-kit-btn-secondary">Xem dịch vụ khác</a>
+        </div>
+      </form>
+
+      {%- comment -%} "Dịch vụ bao gồm" — chỉ hiện nếu có mô tả thật, không bịa nội dung y khoa {%- endcomment -%}
+      {%- if product.description != blank -%}
+      <div class="mt-8 pt-6 border-t border-gray-100">
+        <h2 class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3">Chi tiết dịch vụ</h2>
+        <div class="prose prose-sm max-w-none text-gray-600">{{ product.description }}</div>
+      </div>
+      {%- endif -%}
+
+      <div class="mt-6 flex items-center gap-2 text-xs text-gray-500">
+        <i class="fas fa-user-md text-clinical-600" aria-hidden="true"></i>
+        Thực hiện bởi chuyên gia Skin Health Beauty — tư vấn 1:1 trước mỗi liệu trình.
+      </div>
+    </div>
+  </div>
+</div>

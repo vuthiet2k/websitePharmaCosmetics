@@ -1,0 +1,98 @@
+T-106-ui-ux-audit-fixes — 2026-09-11
+Nguon: nguoi dung gui bao cao danh gia UI/UX chi tiet (14 hang muc, dua tren pharmacosmetics-vn.com
+production + localhost:3000), yeu cau tu mo trinh duyet that de test sau khi fix.
+
+=== BUG THAT DA SUA (code defect, verify qua Playwright that) ===
+
+1. Dropdown menu "trong suot": ul.dropdown-menu:not(.level1) (assets/global_core.scss.bwt dong
+   ~2953) co box-shadow: rgba(0,0,0,0.15%) - LOI GO, "%" thua khien alpha = 0.15 PHAN TRAM =
+   0.0015 (gan nhu vo hinh). Sua thanh 0.15 (dung), them border 1px nhe. Verify: click that vao
+   "DIEU TRI CHUYEN NGHIEP", dropdown gio hien ro card trang co shadow/border tach biet khoi
+   hero image ben duoi (truoc: hoa lan vao nen, sau: card ro rang).
+   LUU Y: cung tim thay 2 cho khac co CUNG loi go he thong (rgba(...,0.04%)) o
+   assets/comp_quickview_cart.scss.bwt + assets/page_product.scss.bwt (nut mui ten carousel) -
+   da sua ca 2 luon (cung 1 loai bug, an toan/tam thuong de sua).
+
+2. "Hover-out" dropdown khong dong: DA KIEM TRA KY - day KHONG PHAI bug. Test lai voi diem chuot
+   thuc su nam NGOAI ca .nav-item lan .dropdown-menu (rect that cua dropdown) xac nhan CSS :hover
+   hoat dong dung, dropdown dong ngay. Lan dau nghi ngo la do vo tinh di chuot toi 1 diem VAN NAM
+   BEN TRONG dropdown's own tall bounding box (height:600px) - hanh vi dung, khong sua.
+
+3. Danh muc giai phap ("GIAI PHAP CHO TUNG VAN DE") hien khoi xam don dieu, khong icon: BUG THAT -
+   settings that (configs/settings_data.json) chi cau hinh home_solutions_N_icon (class Font
+   Awesome, vd "fas fa-leaf") nhung code cu (snippets/section_solutions.bwt) chi doc
+   home_solutions_N_image (setting KHONG TON TAI) - khoi icon khong bao gio render. Sua doc dung
+   *_icon lam nguon chinh (fallback icon mac dinh fas fa-spa neu ca 2 deu blank), giu *_image lam
+   override neu co anh dep hon. Verify: card gio hien icon FA mau mint ro rang (leaf/sun/water/
+   hourglass/tint-slash/heart dung tung loai van de da), hover border+shadow van hoat dong (code
+   CSS cu von da dung, chi thieu icon).
+
+4. 3 anh nho o section Spa (duoi phan lieu trinh) khong chu thich/hover: BUG THAT - dung chung 1
+   alt text, khong lien ket voi 3 buoc phac do (section_protocol.bwt). Them chu thich rieng tung
+   anh (Buoc 01/02/03 khop dung ten buoc), gradient overlay de doc chu, hover scale+shadow. Verify
+   screenshot xac nhan hien du 3 nhan "Buoc 01 - Chan doan da / Buoc 02 - Phac do dieu tri /
+   Buoc 03 - Dong hanh 1:1" tren tung anh.
+
+5. Dropdown menu goc phai co the tran man hinh: ul.dropdown-menu dung "left:auto;width:210px" neo
+   theo mep TRAI cua nav-item cha - voi cac muc gan rìa phai (VD "BLOG"), 210px se tran qua vien
+   phai. Mock data hien tai chi co 2/6 muc co du lieu con (has-childs) nen chua tai hien du 100%,
+   nhung day la rui ro he thong that (CSS logic). Fix phong ngua: 2 muc CUOI CUNG (nth-last-
+   child(-n+2)) neo dropdown theo mep PHAI (right:0) thay vi trai - an toan, khong anh huong cac
+   muc con lai.
+
+6. Dinh dang so dien thoai: "0967194063" khong co dau phan cach -> doi settings.store_phone thanh
+   "0967.194.063" (khop dung quy uoc file mau tham chieu). Code | remove:' '|remove:'.' cho the
+   href="tel:" DA CO SAN tu truoc (thiet ke von di anh doi dinh dang co dau cham/khoang trang) -
+   chi can sua GIA TRI setting, khong can sua code. Icon dien thoai SVG DA CO SAN va render dung
+   (kiem tra qua zoom screenshot) - khong phai loi thieu icon nhu bao cao.
+
+=== KHONG PHAI CODE BUG - CAN NGUOI DUNG/ADMIN XU LY RIENG ===
+
+7. Chu topbar bi cat giua cau ("Dong Hanh Cung Ban Tren Hanh Trinh..."): noi dung nay KHONG khop
+   voi settings.header_topbar_text hien tai trong repo ("Giao Hang Toan Quoc | Tri Lieu Da Ca Nhan
+   Hoa Chuan Y Khoa" - hien thi DAY DU, khong cat, da xac nhan qua nhieu screenshot). Day la NOI
+   DUNG rieng tren production, dai hon cot cho phep + dung .line-clamp-1-new (co chu dich, chong
+   vo layout). Khuyen nghi: dung dau ";" co san trong header_topbar_text de tach thanh nhieu cau
+   NGAN luan phien (Swiper da ho tro autoplay rotation) thay vi 1 cau qua dai.
+
+8. Ten thuong hieu doi tac loi chinh ta "L.C.A LABORATORI DI CHIMICA APPLICAM S..L" (hai dau cham
+   lien tiep): XAC NHAN qua code (snippets/section_brand_marquee.bwt) - ten nay lay TRUC TIEP tu
+   store.vendors (du lieu that nhap trong Sapo Admin > San pham > Nha cung cap), KHONG co trong
+   bat ky file template/data nao cua repo. Day la loi go du lieu, can sua truc tiep trong Sapo
+   Admin, khong phai loi code.
+
+9. Anh so sanh Truoc/Sau bi chu de tieu de ("LIEU TRINH CHAM SOC DA MUN") de len anh, kem san
+   nhan "BEFORE"/"AFTER" tieng Anh: XAC NHAN qua settings_data.json - URL anh
+   (home_testi_1_before/after) la "screenshot-2026-06-10-....png" - TUC LA MOT ANH CHUP MAN HINH
+   duoc dung tam nhu placeholder, KHONG PHAI anh lam sang that duoc thiet ke rieng. Chu/nhan nhin
+   thay la BAKED-IN trong chinh file anh (khong phai CSS overlay cua theme). KHONG THE sua bang
+   CSS/code - can thay bang anh lam sang that (KHONG tu tao anh minh hoa gia lap vi day la du lieu
+   y te/lam dep, vi pham nguyen tac Zero Hallucination va co the la van de tuan thu quang cao).
+
+10. Dinh dang tien te "99.000d" dinh lien: XAC NHAN dev-server.js#money filter DA CO khoang trang
+    dung (vi-VN format + ' d/₫') - hien thi dung trong local preview (xem screenshot
+    check-badge.png: "850.000 d" co khoang trang). Tren PRODUCTION, dinh dang tien te la CAI DAT
+    O CAP SAPO PLATFORM (Admin > Cai dat chung > Dinh dang tien te), KHONG phai code theme - can
+    sua trong Sapo Admin.
+
+11. Nut CTA khong dong nhat ("Mua ngay" vs "Thom vao gio"/"Xem chi tiet"): XAC NHAN qua code -
+    section_flash_sale (product_grid_office_sale.bwt) dung "Mua ngay" (tao cam giac khan cap, phu
+    hop flash-sale) trong khi section_featured_products (product_grid_office.bwt) dung "Them vao
+    gio"/"Xem chi tiet" (duyet nhe nhang hon). Day la MAU THIET KE E-COMMERCE PHO BIEN (Shopee/Tiki
+    cung phan biet flash-sale CTA voi listing CTA thuong) - KHONG sua vi co the la lua chon co chu
+    dich, can nguoi dung xac nhan neu muon dong nhat thanh 1 cum tu duy nhat.
+
+12. Tieu de san pham bi cat "...": .product-name dung line-clamp-2-new (dung 2 dong, khong phai
+    1 dong nhu ten class de gay hieu lam) - day la pattern chuan cua hau het site e-commerce (giu
+    chieu cao card dong deu). KHONG sua vi la thiet ke hop ly, khong phai loi.
+
+13. Badge giam gia dinh sat mep: XAC NHAN qua screenshot that (check-badge.png) - badge DA CO
+    padding 8px tu mep + padding noi bo 3px 8px, KHONG dinh sat mep nhu mo ta. Co the la van de
+    rieng tren production (anh san pham ty le khac), KHONG tai hien duoc trong du lieu hien tai.
+
+=== VERIFY TONG THE ===
+- npm run build: PASS (678ms, dist 275 entries).
+- compliance-lint: 0 vi pham cung, 18 canh bao danh xung khong doi.
+- npx playwright test --update-snapshots: 39/39 PASS (baseline cap nhat chu dich - nhieu section
+  thay doi CSS/markup that: solutions icon, spa caption, dropdown shadow, header phone format).
+- page.on('pageerror'): 0 loi JS trong tat ca kich ban test.

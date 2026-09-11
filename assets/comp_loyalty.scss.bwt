@@ -1,0 +1,191 @@
+// comp_loyalty.scss.bwt
+// Style đồng bộ AppBulk Loyalty widget với theme PHARMA COSMETICS
+// Load điều kiện: chỉ khi customer đăng nhập (snippet appbulk-loyalty-widgets.bwt)
+//
+// ─────────────────────────────────────────────────────────────────────────────
+// PHẦN A — CSS này apply được từ store (ngoài iframe)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Trigger button (div.appbulk-loyalty-widget + nút floating do AppBulk inject) ──
+.appbulk-loyalty-widget {
+	// AppBulk JS sẽ inject nút floating vào đây hoặc cạnh đây
+}
+
+// Nút floating AppBulk thường có class/id dạng ab-* hoặc loyalty-*
+[id^="ab-floating"],
+[class*="ab-floating"],
+[class*="loyalty-float"],
+[class*="loyaty-float"] {
+	background-color: var(--mainColor) !important;
+	border-color: var(--mainColor) !important;
+	color: #fff !important;
+	box-shadow: 0 4px 16px rgba(60, 179, 113, 0.4) !important;
+	transition: background-color 0.2s ease, transform 0.2s ease !important;
+
+	&:hover {
+		background-color: var(--subColor) !important;
+		border-color: var(--subColor) !important;
+		transform: translateY(-2px) !important;
+	}
+}
+
+// ── Popup container (inject vào DOM của store, NGOÀI iframe) ──
+// AppBulk JS set inline style="height:204px" → cần !important để override
+.loyaty-overlay-menu {
+	border-radius: 12px !important;
+	overflow: hidden !important;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.20) !important;
+	border: 1px solid rgba(60, 179, 113, 0.20) !important;
+	// Override inline height từ AppBulk JS
+	height: auto !important;
+	min-height: 500px !important;
+
+	// Ẩn scrollbar trên container ngoài
+	&::-webkit-scrollbar { display: none; }
+	scrollbar-width: none;
+
+	iframe {
+		display: block !important;
+		width: 100% !important;
+		border: none !important;
+		// AppBulk JS set inline style="height:184px" → override
+		height: 480px !important;
+		min-height: 480px !important;
+	}
+}
+
+// ── Trang full /apps/tich-diem-doi-qua (nếu app render trong theme layout) ──
+// Sapo wrap app content vào .app-content hoặc tương tự
+.app-content,
+.loyalty-full-page,
+#loyalty-page-container {
+	max-width: 760px;
+	margin: 0 auto;
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.10);
+
+	iframe {
+		display: block;
+		width: 100%;
+		min-height: 600px;
+		border: none;
+	}
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PHẦN B — CSS dán vào AppBulk Admin > Cài đặt > Custom CSS  (TRONG iframe)
+// KHÔNG tự động apply — cần copy/paste thủ công vào admin app
+// URL admin: https://loyaltyrewards.sapoapps.vn/Admin hoặc qua Sapo Apps
+// ─────────────────────────────────────────────────────────────────────────────
+/*
+=== DÁN VÀO APPBULK ADMIN > CUSTOM CSS ===
+
+.overlay-menu-form-content {
+    background-color: #3CB371 !important;
+    background-image: linear-gradient(135deg, #3CB371 0%, #2d6a4f 100%) !important;
+    font-family: 'Montserrat', 'Open Sans', sans-serif !important;
+}
+
+#ProgramName_Default h2 {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    letter-spacing: 0.02em;
+}
+
+#overlay-menu > li > a,
+#overlay-menu > li > a:hover {
+    background-color: transparent !important;
+    color: rgba(255, 255, 255, 0.70) !important;
+    border-color: transparent !important;
+    font-size: 13px !important;
+    font-weight: 500;
+    padding: 8px 12px 8px 0 !important;
+    transition: color 0.2s ease;
+}
+
+#overlay-menu > li > a:hover {
+    color: #ffffff !important;
+}
+
+.select-menu {
+    border-color: #ffffff !important;
+    border-bottom-width: 2px !important;
+}
+
+#overlay-menu > li.select-menu > a span,
+#overlay-menu > li.select-menu > a {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+.hr-reward {
+    border-top: 1px solid rgba(255, 255, 255, 0.30) !important;
+}
+
+table tr th {
+    border-color: rgba(255, 255, 255, 0.30) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.30) !important;
+    color: #ffffff !important;
+    font-size: 12px !important;
+}
+
+table tr td {
+    border-color: rgba(255, 255, 255, 0.20) !important;
+    border-top: none !important;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.20) !important;
+    color: rgba(255, 255, 255, 0.90) !important;
+    font-size: 13px !important;
+}
+
+.content.boder-bottom {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.30) !important;
+    padding-bottom: 12px !important;
+    margin-bottom: 12px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+}
+
+.color-link-popup {
+    background-color: #ffffff !important;
+    border-color: #ffffff !important;
+    color: #2d6a4f !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    padding: 4px 14px !important;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.color-link-popup:hover:not([disabled]) {
+    background-color: #eaf7ee !important;
+    color: #1f4d39 !important;
+}
+
+.color-link-popup[disabled] {
+    background-color: rgba(255,255,255,0.35) !important;
+    border-color: transparent !important;
+    color: rgba(255,255,255,0.60) !important;
+    cursor: not-allowed !important;
+}
+
+.text-link-popup {
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.text-color-overlay {
+    color: #ffffff !important;
+}
+
+.text-link {
+    color: rgba(255, 255, 255, 0.70) !important;
+}
+
+.title-mobile {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+=== HẾT PHẦN CUSTOM CSS ===
+*/

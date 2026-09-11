@@ -1,0 +1,125 @@
+/* ==========================================================================
+   comp_mobile_nav — Thanh điều hướng dưới (mobile bottom navigation)
+   Chỉ hiển thị ≤991px. Ẩn hoàn toàn trên desktop.
+   Tất cả var() đều có fallback cứng — tránh transparent khi :root chưa parse.
+   ========================================================================== */
+
+.pc-bottom-nav { display: none; }
+
+@media (max-width: 991px) {
+
+  /* Chừa khoảng trống dưới body để nội dung không bị nav che */
+  body {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .pc-bottom-nav {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9990;
+    background: #{"var(--white, #ffffff)"};
+    border-top: 1px solid var(--lineColor, #DFE6E9);
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+
+    &__list {
+      display: flex;
+      align-items: stretch;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      &::-webkit-scrollbar { display: none; }
+    }
+
+    &__item {
+      flex: 1 1 0;
+      min-width: 56px;
+      text-align: center;
+
+      a {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        height: 56px;
+        padding: 6px 2px;
+        color: var(--textSub, #636E72);
+        text-decoration: none;
+        transition: color 0.2s ease;
+
+        /* Tránh rơi về màu hover xanh mặc định của Bootstrap (#0056b3) */
+        &:hover,
+        &:focus,
+        &:active { color: var(--mainColorDark, #267348); }
+      }
+    }
+
+    &__icon {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+
+      svg {
+        width: 24px;
+        height: 24px;
+        display: block;
+      }
+
+      /* Font Awesome icon — căn giữa, cùng size với SVG */
+      i {
+        font-size: 18px;
+        line-height: 1;
+        display: block;
+      }
+    }
+
+    &__label {
+      font-family: var(--font-primary, 'Montserrat', sans-serif);
+      font-size: var(--fs-xs, 0.75rem);
+      font-weight: 500;
+      line-height: 1.1;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 72px;
+    }
+
+    /* Badge số lượng (yêu thích) */
+    &__badge {
+      position: absolute;
+      top: -5px;
+      right: -7px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      font-family: var(--font-secondary, 'Inter', sans-serif);
+      font-size: var(--fs-xs, 0.75rem);
+      font-weight: 600;
+      line-height: 16px;
+      color: #{"var(--white, #ffffff)"};
+      background: var(--accentColor, #E35D5D);
+      border-radius: 9px;
+      text-align: center;
+
+      /* Ẩn khi = 0 */
+      &:empty { display: none; }
+    }
+
+    /* Trạng thái active */
+    &__item.is-active a {
+      color: var(--mainColorDark, #267348);
+      font-weight: 600;
+    }
+  }
+}

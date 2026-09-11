@@ -1,0 +1,311 @@
+{% comment %} mops-admin-overview.js.bwt — Mixin domain "Tổng quan" (tab Overview: KPI chính +
+  5 sub-report "site Báo cáo": Bán hàng/Khách hàng/Nhập hàng/Kho/Tài chính) cho MOPS Admin. Tách
+  khỏi Assets/mops-admin.js.bwt (2026-07-16, theo mẫu mops-admin-audit.js.bwt) — TÁCH SAU CÙNG vì
+  đây chính là domain đã gây ra bug "reading 'length'"/"reading 'entity'" (trắng trang sau login)
+  đầu phiên này qua loadOverview(); xem memory project_mops_vue_typeerror_bug.
+  Script TOP-LEVEL — đẩy mixin vào window.MopsAdminMixins TRƯỚC khi Assets/mops-admin.js.bwt đọc
+  mảng này. Gọi helper dùng chung (kể cả renderColumnChart/renderRankedBarChart — 2 hàm vẽ chart
+  dùng chung với domain Tài chính) qua window.MopsAdminCore. Load TRƯỚC Assets/mops-admin.js.bwt.
+  canViewFinance (gate quyền tab Tài chính + sub-tab "Tài chính" ở đây) vẫn ở core.
+  _syncSubToUrl() (URL routing dùng chung với domain Cấu hình) cũng vẫn ở core. {% endcomment %}
+(function() {
+  'use strict';
+
+  window.MopsAdminRegisteredDomains = window.MopsAdminRegisteredDomains || [];
+  window.MopsAdminRegisteredDomains.push('overview');
+
+  window.MopsAdminMixins = window.MopsAdminMixins || [];
+  window.MopsAdminMixins.push({
+    data: function() {
+      return {
+        overview: { from: '', to: '', groupBy: 'day', loading: false, error: '', metrics: null, subTab: 'overview', subLoaded: {} },
+        // Site "Báo cáo" — 4 sub-report (docs/mops.md §21), lazy-load khi mở sub-tab lần đầu
+        // (giống pattern inventory.panelLoaded) — dùng chung bộ lọc overview.from/to/groupBy.
+        salesReport:     { loading: false, error: '', data: null },
+        customerReport:  { loading: false, error: '', data: null },
+        purchaseReport:  { loading: false, error: '', data: null },
+        inventoryReport: { loading: false, error: '', data: null },
+        // Tài chính (sub-tab) — chủ yếu lắp lại get_analytics + list_cash_accounts + list_bills
+        // đã có sẵn; missingReceipts là action riêng (đối soát đơn PAID thiếu/chưa-Posted Receipt).
+        financeReport:   { loading: false, error: '', analytics: null, accounts: [], bills: [], missingReceipts: [] }
+      };
+    },
+    computed: {
+      overviewCards: function() {
+        if (!this.overview.metrics) return [];
+        var core = window.MopsAdminCore;
+        var k = this.overview.metrics.kpi || {};
+        return [
+          { label: 'Doanh thu tháng này', value: core.formatMoney(k.revenue_month), accent: 'text-primary' },
+          { label: 'Đơn mới hôm nay',     value: k.new_orders_today || 0, accent: 'text-emerald-700' },
+          { label: 'Tỷ lệ thanh toán',    value: core.formatPercent(k.payment_rate), accent: 'text-emerald-700' },
+          { label: 'Tỷ lệ huỷ',           value: core.formatPercent(k.cancellation_rate), accent: 'text-red-600' }
+        ];
+      },
+      // Dải riêng, không nhét vào lưới 4 cột overviewCards — server chỉ trả net_profit_month khi
+      // role có 'reports.finance.view', nên field này undefined với staff thường.
+      overviewNetProfitCard: function() {
+        if (!this.overview.metrics || !this.canViewFinance) return null;
+        var k = this.overview.metrics.kpi || {};
+        if (k.net_profit_month === undefined) return null;
+        return {
+          label: 'Lợi nhuận ròng tháng này',
+          value: window.MopsAdminCore.formatMoney(k.net_profit_month),
+          accent: k.net_profit_month >= 0 ? 'text-emerald-700' : 'text-red-600'
+        };
+      },
+      overviewCardsSecondary: function() {
+        if (!this.overview.metrics) return [];
+        var core = window.MopsAdminCore;
+        var k = this.overview.metrics.kpi || {};
+        return [
+          { label: 'Doanh thu hôm nay', value: core.formatMoney(k.revenue_today), accent: 'text-on-surface' },
+          { label: 'Doanh thu tuần này', value: core.formatMoney(k.revenue_week), accent: 'text-on-surface' },
+          { label: 'Giá trị đơn TB (AOV)', value: core.formatMoney(k.avg_order_value), accent: 'text-on-surface' },
+          { label: 'Khách quay lại',    value: core.formatPercent(k.returning_customer_rate), accent: 'text-on-surface' },
+          { label: 'Tỷ lệ hoàn tiền',   value: core.formatPercent(k.refund_rate), accent: 'text-red-600' }
+        ];
+      },
+      // Chỉ 2 nhóm loại trừ nhau — PAID là điểm kết thúc luồng thành công, funnel.paid dùng thẳng.
+      overviewOrderRatio: function() {
+        if (!this.overview.metrics) return null;
+        var f = this.overview.metrics.funnel || {};
+        var created = f.created || 0;
+        var paid    = f.paid    || 0;
+        var pending = Math.max(created - paid, 0);
+        return {
+          total: created,
+          paid: paid,
+          pending: pending,
+          paidPct: created > 0 ? Math.round((paid / created) * 100) : 0
+        };
+      },
+      overviewTopServices: function() {
+        return (this.overview.metrics && this.overview.metrics.top_services) || [];
+      },
+      overviewTopCustomers: function() {
+        return (this.overview.metrics && this.overview.metrics.top_customers) || [];
+      },
+      overviewStaffPerformance: function() {
+        return (this.overview.metrics && this.overview.metrics.staff_performance) || [];
+      },
+      overviewRevenueBuckets: function() {
+        return (this.overview.metrics && this.overview.metrics.revenue_series && this.overview.metrics.revenue_series.buckets) || [];
+      },
+      overviewRevenueByStore: function() {
+        return (this.overview.metrics && this.overview.metrics.revenue_by_store) || [];
+      },
+      // Chiều cao canvas bar ngang tỉ lệ theo số dòng — không cắt bớt danh sách để vừa khung cố định.
+      overviewRevenueByStoreChartHeight: function() {
+        return Math.max(140, this.overviewRevenueByStore.length * 40) + 'px';
+      },
+      /* ── Site "Báo cáo" — sub-tab (docs/mops.md §21) ──
+         Sub-tab "Tài chính" chỉ hiện khi có reports.finance.view — cùng gate với nav tab "Tài
+         chính" chính ở groupedNavTabs (canViewFinance, core), tránh mở tab rồi mới báo lỗi quyền. */
+      reportSubTabs: function() {
+        var tabs = [
+          { key: 'overview',  label: 'Tổng quan' },
+          { key: 'sales',     label: 'Bán hàng' },
+          { key: 'customer',  label: 'Khách hàng' },
+          { key: 'purchase',  label: 'Nhập hàng' },
+          { key: 'inventory', label: 'Kho' }
+        ];
+        if (this.canViewFinance) tabs.push({ key: 'finance', label: 'Tài chính' });
+        return tabs;
+      },
+      salesByOrderType:    function() { return (this.salesReport.data && this.salesReport.data.by_order_type) || []; },
+      salesBySource:       function() { return (this.salesReport.data && this.salesReport.data.by_source) || []; },
+      salesCouponStats:    function() { return (this.salesReport.data && this.salesReport.data.coupon_stats) || []; },
+      // Chống thất thoát — server chỉ trả field này khi role có reports.finance.view — undefined
+      // với staff thường, không phải rỗng.
+      salesDiscountByStaff: function() { return (this.salesReport.data && this.salesReport.data.discount_by_staff) || []; },
+
+      customerByGroup:     function() { return (this.customerReport.data && this.customerReport.data.by_group) || []; },
+      customerBySource:    function() { return (this.customerReport.data && this.customerReport.data.by_source) || []; },
+      customerNewInRange:  function() { return (this.customerReport.data && this.customerReport.data.new_customers_in_range) || 0; },
+
+      purchaseKpi:         function() { return (this.purchaseReport.data && this.purchaseReport.data.kpi) || {}; },
+      purchaseBySupplier:  function() { return (this.purchaseReport.data && this.purchaseReport.data.by_supplier) || []; },
+      purchaseTopProducts: function() { return (this.purchaseReport.data && this.purchaseReport.data.top_products) || []; },
+      purchaseByStatus:    function() { return (this.purchaseReport.data && this.purchaseReport.data.by_status) || []; },
+
+      inventoryLowStock:   function() { return (this.inventoryReport.data && this.inventoryReport.data.low_stock) || []; },
+      inventoryMovements:  function() { return (this.inventoryReport.data && this.inventoryReport.data.movements_in_range) || []; },
+
+      // Chỉ hiện Bill chưa trả hết — tách riêng thành computed thay vì filter inline trong template.
+      financeReportOpenBills: function() {
+        return (this.financeReport.bills || []).filter(function(b) { return b.status !== 'PAID'; });
+      },
+      // Lắp lại đúng field của get_analytics() (total_revenue_range/total_expense_range/
+      // net_profit_range), cùng công thức financeCards ở mixin Tài chính (domain khác).
+      financeReportCards: function() {
+        var a = this.financeReport.analytics;
+        if (!a) return [];
+        var core = window.MopsAdminCore;
+        return [
+          { label: 'Tổng thu (kỳ)',       value: core.formatMoney(a.total_revenue_range), accent: 'text-emerald-700' },
+          { label: 'Tổng chi (kỳ)',       value: core.formatMoney(a.total_expense_range), accent: 'text-red-600' },
+          { label: 'Lợi nhuận ròng (kỳ)', value: core.formatMoney(a.net_profit_range),
+            accent: (a.net_profit_range || 0) >= 0 ? 'text-emerald-700' : 'text-red-600' }
+        ];
+      }
+    },
+    methods: {
+      /* ── Tổng quan ── */
+      loadOverview: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.overview.loading = true;
+        this.overview.error = '';
+        this.overview.metrics = null;
+        var params = { action: 'get_analytics', group_by: this.overview.groupBy };
+        if (this.overview.from) params.from = this.overview.from;
+        if (this.overview.to)   params.to   = this.overview.to;
+        core.gasGet(params)
+          .then(function(d) {
+            self.overview.loading = false;
+            if (!d || !d.success) { self.overview.error = 'Không tải được dữ liệu.'; return; }
+            self.overview.metrics = d;
+            self.$nextTick(function() { self.renderOverviewCharts(); }); // canvas chỉ tồn tại sau khi v-if render xong
+          })
+          .catch(function() { self.overview.loading = false; self.overview.error = 'Lỗi kết nối. Kiểm tra GAS_URL.'; });
+      },
+      renderOverviewCharts: function() {
+        var core = window.MopsAdminCore;
+        if (this.overviewRevenueBuckets.length) core.renderColumnChart('overviewRevenueChart', this.overviewRevenueBuckets, 'revenue', '#059669');
+        if (this.overviewOrderRatio) {
+          core.renderDoughnutChart('overviewOrderRatioChart', [
+            { label: 'Đã thanh toán', value: this.overviewOrderRatio.paid, color: '#059669' },
+            { label: 'Chờ xác nhận', value: this.overviewOrderRatio.pending, color: '#d97706' }
+          ], this.overviewOrderRatio.total + ' đơn');
+        }
+        if (this.overviewRevenueByStore.length) {
+          core.renderDoughnutChart('overviewRevenueByStoreChart', this.overviewRevenueByStore.map(function(s, index) {
+            return { label: s.store, value: s.revenue, color: ['#5b45cf', '#059669', '#d97706', '#dc2626', '#0284c7', '#7c3aed', '#0f766e', '#c2410c'][index % 8], extra: s.order_count + ' đơn' };
+          }), window.MopsAdminCore.formatMoney(this.overviewRevenueByStore.reduce(function(total, s) { return total + Number(s.revenue || 0); }, 0)));
+        }
+      },
+      /* ── Site "Báo cáo" — 4 sub-report + lắp lại Tài chính (docs/mops.md §21) ──
+         Lazy-load per-sub-tab, giống setInventoryPanel()/setFinanceCorePanel() — chỉ gọi API lần
+         đầu mở sub-tab đó, dùng chung bộ lọc overview.from/to/groupBy. */
+      setReportSubTab: function(key) {
+        this.overview.subTab = key;
+        this._syncSubToUrl(key); // helper dùng chung — vẫn ở core
+        if (this.overview.subLoaded[key]) return;
+        this.overview.subLoaded[key] = true;
+        if (key === 'sales')      this.loadSalesReport();
+        if (key === 'customer')   this.loadCustomerReport();
+        if (key === 'purchase')   this.loadPurchaseReport();
+        if (key === 'inventory')  this.loadInventoryReport();
+        if (key === 'finance')    this.loadFinanceReport();
+      },
+      // Nút "Xem" dùng chung cho mọi sub-tab — reload đúng sub-tab đang mở thay vì luôn luôn
+      // gọi loadOverview() như trước khi tách site Báo cáo.
+      refreshReportSubTab: function() {
+        var key = this.overview.subTab;
+        if (key === 'overview')  { this.loadOverview(); return; }
+        if (key === 'sales')     { this.loadSalesReport(); return; }
+        if (key === 'customer')  { this.loadCustomerReport(); return; }
+        if (key === 'purchase')  { this.loadPurchaseReport(); return; }
+        if (key === 'inventory') { this.loadInventoryReport(); return; }
+        if (key === 'finance')   { this.loadFinanceReport(); return; }
+      },
+      loadSalesReport: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.salesReport.loading = true;
+        this.salesReport.error = '';
+        var params = { action: 'get_sales_report', group_by: this.overview.groupBy };
+        if (this.overview.from) params.from = this.overview.from;
+        if (this.overview.to)   params.to   = this.overview.to;
+        core.gasGet(params)
+          .then(function(d) {
+            self.salesReport.loading = false;
+            if (!d || !d.success) { self.salesReport.error = (d && d.error) || 'Không tải được dữ liệu.'; return; }
+            self.salesReport.data = d;
+          })
+          .catch(function() { self.salesReport.loading = false; self.salesReport.error = 'Lỗi kết nối. Kiểm tra GAS_URL.'; });
+      },
+      loadCustomerReport: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.customerReport.loading = true;
+        this.customerReport.error = '';
+        var params = { action: 'get_customer_report' };
+        if (this.overview.from) params.from = this.overview.from;
+        if (this.overview.to)   params.to   = this.overview.to;
+        core.gasGet(params)
+          .then(function(d) {
+            self.customerReport.loading = false;
+            if (!d || !d.success) { self.customerReport.error = (d && d.error) || 'Không tải được dữ liệu.'; return; }
+            self.customerReport.data = d;
+          })
+          .catch(function() { self.customerReport.loading = false; self.customerReport.error = 'Lỗi kết nối. Kiểm tra GAS_URL.'; });
+      },
+      loadPurchaseReport: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.purchaseReport.loading = true;
+        this.purchaseReport.error = '';
+        var params = { action: 'get_purchase_report' };
+        if (this.overview.from) params.from = this.overview.from;
+        if (this.overview.to)   params.to   = this.overview.to;
+        core.gasGet(params)
+          .then(function(d) {
+            self.purchaseReport.loading = false;
+            if (!d || !d.success) { self.purchaseReport.error = (d && d.error) || 'Không tải được dữ liệu.'; return; }
+            self.purchaseReport.data = d;
+          })
+          .catch(function() { self.purchaseReport.loading = false; self.purchaseReport.error = 'Lỗi kết nối. Kiểm tra GAS_URL.'; });
+      },
+      loadInventoryReport: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.inventoryReport.loading = true;
+        this.inventoryReport.error = '';
+        var params = { action: 'get_inventory_report' };
+        if (this.overview.from) params.from = this.overview.from;
+        if (this.overview.to)   params.to   = this.overview.to;
+        core.gasGet(params)
+          .then(function(d) {
+            self.inventoryReport.loading = false;
+            if (!d || !d.success) { self.inventoryReport.error = (d && d.error) || 'Không tải được dữ liệu.'; return; }
+            self.inventoryReport.data = d;
+          })
+          .catch(function() { self.inventoryReport.loading = false; self.inventoryReport.error = 'Lỗi kết nối. Kiểm tra GAS_URL.'; });
+      },
+      // Đa số lắp lại API đã LIVE (get_analytics/list_cash_accounts/list_bills) — accounts/bills lỗi
+      // quyền chỉ để rỗng, không chặn cả tab vì phần P&L (get_analytics) vẫn đọc được với quyền
+      // reports.finance.view. get_receipt_reconciliation — đối soát đơn PAID thiếu/chưa-Posted Receipt.
+      loadFinanceReport: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.financeReport.loading = true;
+        this.financeReport.error = '';
+        var analyticsParams = { action: 'get_analytics', group_by: this.overview.groupBy };
+        if (this.overview.from) analyticsParams.from = this.overview.from;
+        if (this.overview.to)   analyticsParams.to   = this.overview.to;
+        Promise.all([
+          core.gasGet(analyticsParams),
+          core.gasGet({ action: 'list_cash_accounts' }),
+          core.gasGet({ action: 'list_bills' }),
+          core.gasGet({ action: 'get_receipt_reconciliation' })
+        ]).then(function(results) {
+          self.financeReport.loading = false;
+          var analytics = results[0], accountsRes = results[1], billsRes = results[2], reconRes = results[3];
+          if (!analytics || !analytics.success || !analytics.can_view_finance) {
+            self.financeReport.error = 'Tài khoản này không có quyền xem báo cáo tài chính.';
+            return;
+          }
+          self.financeReport.analytics       = analytics;
+          self.financeReport.accounts        = (accountsRes && accountsRes.success && accountsRes.accounts) || [];
+          self.financeReport.bills           = (billsRes && billsRes.success && billsRes.bills) || [];
+          self.financeReport.missingReceipts = (reconRes && reconRes.success && reconRes.missing_receipts) || [];
+        }).catch(function() {
+          self.financeReport.loading = false;
+          self.financeReport.error = 'Lỗi kết nối. Kiểm tra GAS_URL.';
+        });
+      }
+    }
+  });
+})();

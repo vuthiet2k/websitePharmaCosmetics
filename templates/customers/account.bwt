@@ -1,0 +1,301 @@
+{% include 'breadcrumb' %}
+
+{%- comment -%} ═══════════════════════════════════════════════════════════════
+   ACCOUNT V2.1 — TRUNG TÂM KHÁCH HÀNG. IA gọn, EMPTY-STATE là hạng mục chính.
+   2 trạng thái theo customer.orders_count:
+     A. Chưa có đơn  → Identity + Welcome block + nhóm "Tài khoản"
+     B. Có đơn       → Identity + Đơn đang đến + Lưới 4 trạng thái + Tài khoản + Mua lại
+   Backend logic (đếm đơn theo shipping_status+cancelled, active order, reorder /cart/add.js) GIỮ NGUYÊN.
+   ═══════════════════════════════════════════════════════════════ {%- endcomment -%}
+
+{%- assign is_vip = false -%}
+{%- for tag in customer.tags -%}{%- if tag == 'VIP' or tag contains 'vip' -%}{%- assign is_vip = true -%}{%- endif -%}{%- endfor -%}
+
+{%- comment -%} Đếm 4 bucket (đồng bộ convention §12.6 — shipping_status + cancelled):
+   hủy/hoàn trả→Đã hủy · delivered→Hoàn thành · delivering→Đang giao · còn lại→Chờ xử lý.
+   returning/returned merge vào cnt_cancelled (chu kỳ đơn kết thúc, không giao thành công). {%- endcomment -%}
+{%- assign cnt_pending = 0 -%}{%- assign cnt_delivering = 0 -%}{%- assign cnt_done = 0 -%}{%- assign cnt_cancelled = 0 -%}
+{%- for o in customer.orders -%}
+	{%- if o.cancelled or o.status == 'cancelled' or o.shipping_status == 'cancelled' or o.shipping_status == 'returning' or o.shipping_status == 'returned' -%}{%- assign cnt_cancelled = cnt_cancelled | plus: 1 -%}
+	{%- elsif o.shipping_status == 'delivered' -%}{%- assign cnt_done = cnt_done | plus: 1 -%}
+	{%- elsif o.shipping_status == 'delivering' -%}{%- assign cnt_delivering = cnt_delivering | plus: 1 -%}
+	{%- else -%}{%- assign cnt_pending = cnt_pending | plus: 1 -%}{%- endif -%}
+{%- endfor -%}
+{%- assign active_total = cnt_pending | plus: cnt_delivering -%}
+
+{%- comment -%} Giới hạn admin chỉnh (settings_data → current; có default nếu trống) {%- endcomment -%}
+{%- assign reorder_limit = settings.account_reorder_limit | plus: 0 -%}
+{%- if reorder_limit < 1 -%}{%- assign reorder_limit = 8 -%}{%- endif -%}
+{%- assign active_limit = settings.account_active_limit | plus: 0 -%}
+{%- if active_limit < 1 -%}{%- assign active_limit = 2 -%}{%- endif -%}
+
+{%- comment -%} Gom sản phẩm "Mua lại" — dedup theo product.id, ưu tiên đơn mới, tối đa reorder_limit. {%- endcomment -%}
+{%- assign seen_ids = ',' -%}{%- assign reorder_n = 0 -%}
+{%- capture reorder_cards -%}
+	{%- for o in customer.orders -%}
+		{%- for li in o.line_items -%}
+			{%- assign vid = li.variant.id | default: li.variant_id | default: 0 -%}
+			{%- assign pid = li.product.id | default: li.id | default: 0 -%}
+			{%- assign seen_key = pid | prepend: ',' | append: ',' -%}
+			{%- if vid > 0 and reorder_n < reorder_limit -%}
+				{%- unless seen_ids contains seen_key -%}
+					{%- assign seen_ids = seen_ids | append: pid | append: ',' -%}
+					{%- assign reorder_n = reorder_n | plus: 1 -%}
+					<div class="pc-hub-reorder__card{% if reorder_n > 4 %} pc-hub-reorder__card--extra{% endif %}">
+						<a class="pc-hub-reorder__thumb" href="{{ li.url | default: li.product.url }}">
+							<img class="lazyload" width="120" height="120"
+								src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII="
+								data-src="{{ li.image | img_url: 'medium' }}" alt="{{ li.title | escape }}"
+								onerror="this.onerror=null;this.style.visibility='hidden';">
+						</a>
+						<a class="pc-hub-reorder__name line-clamp line-clamp-2" href="{{ li.url | default: li.product.url }}">{{ li.title }}</a>
+						<span class="pc-hub-reorder__price">{{ li.price_final | default: li.price | money }}</span>
+						<button type="button" class="pc-hub-reorder__btn js-reorder-add" data-variant-id="{{ vid }}" aria-label="Thêm {{ li.title | escape }} vào giỏ">
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+							<span class="js-reorder-label">Thêm vào giỏ</span>
+						</button>
+					</div>
+				{%- endunless -%}
+			{%- endif -%}
+		{%- endfor -%}
+	{%- endfor -%}
+{%- endcapture -%}
+
+<section class="page_account pc-hub">
+	<div class="container">
+
+		{% if form.posted_successfully %}
+		<div class="pc-hub__flash">Đổi mật khẩu thành công.</div>
+		{% endif %}
+
+		{%- comment -%} ═══ 1. IDENTITY (cả 2 trạng thái) — chỉ tên + VIP + email, KHÔNG stats ═══ {%- endcomment -%}
+		<header class="pc-hub__id">
+			<p class="pc-hub__hello">Xin chào,</p>
+			<h1 class="pc-hub__name font-heading">{{ customer.first_name | default: customer.name }}{% if is_vip %} <span class="pc-hub__vip pc-kit-badge-gold ml-2">👑 VIP Member</span>{% endif %}</h1>
+			<p class="pc-hub__meta">{{ customer.email }}</p>
+		</header>
+
+		<section class="pc-hub-block pc-acct-info-block">
+			<div class="pc-hub-block__head">
+				<h2 class="pc-hub-block__title font-heading">Thông Tin Cá Nhân</h2>
+			</div>
+			<div class="pc-acct-info-grid">
+				<div><span class="pc-acct-info-label">Họ và tên</span><span class="pc-acct-info-value">{{ customer.name }}</span></div>
+				<div><span class="pc-acct-info-label">Email</span><span class="pc-acct-info-value">{{ customer.email }}</span></div>
+				<div><span class="pc-acct-info-label">Số điện thoại</span><span class="pc-acct-info-value">{{ customer.phone | default: 'Chưa cập nhật' }}</span></div>
+				<div><span class="pc-acct-info-label">Hạng thành viên</span><span class="pc-acct-info-value pc-kit-badge-clinical">🏅 Hạng {{ customer.tier | default: 'Thành viên' }}</span></div>
+			</div>
+		</section>
+
+		{%- if customer.addresses_count > 0 -%}
+		<section class="pc-hub-block pc-acct-addr-block">
+			<div class="pc-hub-block__head">
+				<h2 class="pc-hub-block__title font-heading">Sổ Địa Chỉ Giao Hàng ({{ customer.addresses_count }} địa chỉ đã lưu)</h2>
+				<a class="pc-hub-block__action" href="/account/addresses">Quản lý
+					<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+				</a>
+			</div>
+			<div class="pc-acct-addr-grid">
+				{% for addr in customer.addresses limit: 2 %}
+				<div class="pc-acct-addr-card{% if addr.default %} pc-acct-addr-card--default{% endif %}">
+					{% if addr.default %}<span class="pc-acct-addr-tag">✓ Mặc định</span>{% endif %}
+					<div class="pc-acct-addr-name">{{ addr.name }}</div>
+					<div class="pc-acct-addr-line">{{ addr.address1 }}{% if addr.address2 != blank %}, {{ addr.address2 }}{% endif %}, {{ addr.district }}, {{ addr.city }}</div>
+					<div class="pc-acct-addr-phone">SĐT: {{ addr.phone }}</div>
+				</div>
+				{% endfor %}
+			</div>
+		</section>
+		{%- endif -%}
+
+		{%- if customer.orders_count > 0 -%}
+		{%- comment -%} ═══════════ TRẠNG THÁI B — KHÁCH CÓ ĐƠN ═══════════ {%- endcomment -%}
+
+			{%- comment -%} 2. ĐƠN ĐANG ĐẾN (tự ẩn nếu không có) {%- endcomment -%}
+			{%- if active_total > 0 -%}
+			{%- assign active_shown = 0 -%}
+			{%- for o in customer.orders -%}
+				{%- assign is_active = false -%}
+				{%- unless o.cancelled or o.status == 'cancelled' or o.shipping_status == 'cancelled' -%}{%- if o.shipping_status != 'delivered' -%}{%- assign is_active = true -%}{%- endif -%}{%- endunless -%}
+				{%- if is_active and active_shown < active_limit -%}
+				{%- assign active_shown = active_shown | plus: 1 -%}
+				<a class="pc-hub-track" href="{{ o.customer_url }}">
+					<span class="pc-hub-track__icon">
+						<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+					</span>
+					<span class="pc-hub-track__body">
+						<span class="pc-hub-track__label">Đơn {{ o.name }} {% if o.shipping_status == 'delivering' %}đang trên đường giao{% else %}đang được xử lý{% endif %}</span>
+						<span class="pc-hub-track__sub">Đặt ngày {{ o.created_on | date: 'dd/MM/yyyy' }} · {{ o.total_price | money }}</span>
+					</span>
+					<span class="pc-hub-track__cta">Theo dõi
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+					</span>
+				</a>
+				{%- endif -%}
+			{%- endfor -%}
+			{%- assign active_more = active_total | minus: active_limit -%}
+			{%- if active_more > 0 -%}
+			<a class="pc-hub-track-more" href="/account/orders">
+				<span>+{{ active_more }} đơn khác đang xử lý</span>
+				<span class="pc-hub-track-more__cta">Xem tất cả
+					<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+				</span>
+			</a>
+			{%- endif -%}
+			{%- endif -%}
+
+			{%- comment -%} 3. ĐƠN HÀNG — lưới 4 trạng thái có icon + số đếm {%- endcomment -%}
+			<section class="pc-hub-block">
+				<div class="pc-hub-block__head">
+					<h2 class="pc-hub-block__title font-heading">Đơn hàng của tôi</h2>
+					<a class="pc-hub-block__action" href="/account/orders">Xem tất cả
+						<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+					</a>
+				</div>
+				<div class="pc-hub-orderstat pc-hub-orderstat--4">
+					<a class="pc-hub-orderstat__item" href="/account/orders">
+						<span class="pc-hub-orderstat__icon">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+							{%- if cnt_pending > 0 -%}<span class="pc-hub-orderstat__badge">{{ cnt_pending }}</span>{%- endif -%}
+						</span>
+						<span class="pc-hub-orderstat__label">Chờ xử lý</span>
+					</a>
+					<a class="pc-hub-orderstat__item" href="/account/orders">
+						<span class="pc-hub-orderstat__icon">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+							{%- if cnt_delivering > 0 -%}<span class="pc-hub-orderstat__badge">{{ cnt_delivering }}</span>{%- endif -%}
+						</span>
+						<span class="pc-hub-orderstat__label">Đang giao</span>
+					</a>
+					<a class="pc-hub-orderstat__item" href="/account/orders">
+						<span class="pc-hub-orderstat__icon">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+							{%- if cnt_done > 0 -%}<span class="pc-hub-orderstat__badge">{{ cnt_done }}</span>{%- endif -%}
+						</span>
+						<span class="pc-hub-orderstat__label">Hoàn thành</span>
+					</a>
+					<a class="pc-hub-orderstat__item" href="/account/orders">
+						<span class="pc-hub-orderstat__icon">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+							{%- if cnt_cancelled > 0 -%}<span class="pc-hub-orderstat__badge pc-hub-orderstat__badge--neg">{{ cnt_cancelled }}</span>{%- endif -%}
+						</span>
+						<span class="pc-hub-orderstat__label">Đã hủy</span>
+					</a>
+				</div>
+			</section>
+
+		{%- else -%}
+		{%- comment -%} ═══════════ TRẠNG THÁI A — KHÁCH CHƯA CÓ ĐƠN (welcome) ═══════════ {%- endcomment -%}
+			<div class="pc-hub-welcome">
+				<svg class="pc-hub-welcome__icon" width="72" height="72" viewBox="0 0 80 80" fill="none">
+					<circle cx="40" cy="40" r="40" fill="var(--mainColorLight, #eaf7ee)"/>
+					<path d="M26 30h28l-2.4 22a3 3 0 0 1-3 2.7H31.4a3 3 0 0 1-3-2.7L26 30z" stroke="var(--mainColor, #3cb371)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					<path d="M33 30v-3a7 7 0 0 1 14 0v3" stroke="var(--mainColor, #3cb371)" stroke-width="2" stroke-linecap="round"/>
+				</svg>
+				<h2 class="pc-hub-welcome__title">Chào mừng đến Pharma Cosmetics!</h2>
+				<p class="pc-hub-welcome__desc">Bạn chưa có đơn hàng nào. Khám phá sản phẩm chuẩn y khoa hoặc để chuyên gia tư vấn lộ trình phù hợp với làn da bạn.</p>
+				<div class="pc-hub-welcome__actions">
+					<a class="pc-hub-welcome__btn pc-hub-welcome__btn--primary" href="/collections/all">Khám phá sản phẩm</a>
+					<a class="pc-hub-welcome__btn pc-hub-welcome__btn--ghost" href="/dat-lich-tu-van">Tư vấn chuyên gia</a>
+				</div>
+			</div>
+		{%- endif -%}
+
+		{%- comment -%} ═══ 4. TÀI KHOẢN (nhóm nav — cả 2 trạng thái) ═══ {%- endcomment -%}
+		<section class="pc-hub-block">
+			<div class="pc-hub-block__head">
+				<h2 class="pc-hub-block__title font-heading">Tài khoản</h2>
+			</div>
+			<div class="pc-hub-nav">
+				<a class="pc-hub-link" href="/account/addresses">
+					<span class="pc-hub-link__icon">
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+					</span>
+					<span class="pc-hub-link__label">Sổ địa chỉ{% if customer.addresses_count > 0 %} <span class="pc-hub-link__count">({{ customer.addresses_count }})</span>{% endif %}</span>
+					<svg class="pc-hub-link__chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+				</a>
+				{%- if settings.iwish_enable -%}
+				<a class="pc-hub-link" href="{{ pages[settings.wishlist_page].url }}">
+					<span class="pc-hub-link__icon">
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+					</span>
+					<span class="pc-hub-link__label">Danh sách yêu thích <span class="pc-hub-link__count">(<span class="js-wishlist-count">0</span>)</span></span>
+					<svg class="pc-hub-link__chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+				</a>
+				{%- endif -%}
+				<a class="pc-hub-link" href="/account/changepassword">
+					<span class="pc-hub-link__icon">
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+					</span>
+					<span class="pc-hub-link__label">Bảo mật &amp; đổi mật khẩu</span>
+					<svg class="pc-hub-link__chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+				</a>
+				<a class="pc-hub-link pc-hub-link--danger" href="/account/logout">
+					<span class="pc-hub-link__icon">
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+					</span>
+					<span class="pc-hub-link__label">Đăng xuất</span>
+					<svg class="pc-hub-link__chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+				</a>
+			</div>
+		</section>
+
+		{%- comment -%} ═══ 5. MUA LẠI (chỉ trạng thái B, cuối trang) ═══ {%- endcomment -%}
+		{%- if reorder_n > 0 -%}
+		<section class="pc-hub-block">
+			<div class="pc-hub-block__head">
+				<h2 class="pc-hub-block__title font-heading">Mua lại nhanh</h2>
+			</div>
+			<p class="pc-hub-block__hint">Thêm lại sản phẩm đã dùng vào giỏ. Cần nâng cấp lộ trình hay đổi nồng độ? <a href="/dat-lich-tu-van">Đặt lịch tư vấn với chuyên gia &rsaquo;</a></p>
+			<div class="pc-hub-reorder">{{ reorder_cards }}</div>
+			{%- if reorder_n > 4 -%}
+			<button type="button" class="pc-hub-reorder__more js-reorder-more">Xem thêm {{ reorder_n | minus: 4 }} sản phẩm</button>
+			{%- endif -%}
+		</section>
+		{%- endif -%}
+
+	</div>
+</section>
+
+<section class="pc-booking-faq-section pc-account-faq-section">
+	<div class="container">
+	<h2 class="pc-section-title pc-booking-faq-title">Câu Hỏi Thường Gặp</h2>
+	<div class="pc-booking-faq-list">
+		{% for item in faqs.account %}
+		<details class="pc-faq-item">
+			<summary class="pc-faq-q">{{ item.q }}</summary>
+			<div class="pc-faq-a">{{ item.a }}</div>
+		</details>
+		{% endfor %}
+	</div>
+	</div>
+</section>
+
+<script>
+$(function() {
+	/* Reorder: thêm vào giỏ (primitive /cart/add.js) */
+	$(document).on('click', '.js-reorder-add', function() {
+		var $btn = $(this);
+		var vid = $btn.attr('data-variant-id');
+		if (!vid || vid === '0' || $btn.hasClass('is-done') || $btn.prop('disabled')) return;
+		$btn.prop('disabled', true).addClass('is-loading');
+		jQuery.post('/cart/add.js', { variantId: vid, quantity: 1 })
+			.done(function() {
+				$btn.removeClass('is-loading').addClass('is-done');
+				$btn.find('.js-reorder-label').text('Đã thêm');
+				if (typeof updateCart === 'function') { try { updateCart(); } catch (e) {} }
+				if (window.Bizweb && typeof window.Bizweb.getCart === 'function') { try { window.Bizweb.getCart(); } catch (e) {} }
+			})
+			.fail(function() {
+				$btn.prop('disabled', false).removeClass('is-loading');
+				alert('Sản phẩm hiện không khả dụng. Vui lòng thử lại sau.');
+			});
+	});
+
+	/* Reorder: "Xem thêm" (mobile) */
+	$(document).on('click', '.js-reorder-more', function() {
+		$(this).closest('.pc-hub-block').find('.pc-hub-reorder').addClass('is-expanded');
+		$(this).hide();
+	});
+});
+</script>

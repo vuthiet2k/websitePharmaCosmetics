@@ -1,0 +1,44 @@
+<div class="side-right-stick">
+	{%- if settings.right_aside_blog -%}
+	{%- include 'aside-cate-blog' -%}
+	{%- endif -%}
+	{%- if settings.right_aside_noibat -%}
+	{%- assign blog_count = blogs[settings.relate_blog]articles_count -%}
+	<div class="blog_noibat">
+		<h2 class="h2_sidebar_blog">
+			<a href="{{settings.relate_blog}}" title="{{ settings.news_relate }}">{{ settings.news_relate }}</a>
+		</h2>
+		{%- if blog_count > 0 -%}
+		<div class="blog_content">
+			{% for article in blogs[settings.relate_blog].articles | limit: settings.number_relate_blog %}
+			<div class="item clearfix">
+				<div class="post-thumb">
+					<a class="image-blog scale_hover" href="{{ article.url }}" title="{{ article.title }}">
+						{% if article.image != null %}
+						<img class="img_blog lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC" data-src="{{ article.image.src }}"  alt="{{ article.title }}">
+						{%else%}
+						<img class="img_blog lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC" data-src="{{ 'no-image.jpg' | asset_url }}" alt="{{ article.title }}" title="{{ article.title }}"/>
+						{% endif %}
+					</a>
+				</div>
+				<div class="contentright">
+					<h3><a title="{{ article.title }}" href="{{ article.url }}">{{ article.title }}</a></h3>
+					<p class="time-post">
+						<span>
+							{{ article.published_on | date:'dd/MM/yyy' }}
+						</span>
+					</p>
+				</div>
+			</div>
+			{% endfor %}
+		</div>
+		{%- else -%}
+		<div class="box_alert">
+			<div class="alert alert-warning alert-warning2 alert-dismissible margin-top-15 section">
+				Danh mục đang được cập nhật.
+			</div>
+		</div>				
+		{%- endif -%}
+	</div>
+	{%- endif -%}
+</div>

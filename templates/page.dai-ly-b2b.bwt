@@ -1,0 +1,162 @@
+{%- comment -%}
+  page.dai-ly-b2b.bwt (REOPEN 2026-09-10, ADR-007/T-80, MOD-04 xlsx "Đại Lý Phân Phối B2B") —
+  CREATE mới (design/FILE_PLAN.yaml). Layout theme (header/footer từ layouts/theme.bwt).
+
+  Form đăng ký gọi thẳng mops-gas action 'create_b2b_application' (T-81) — CÙNG pattern
+  fetch(GAS_URL,...) đã dùng ở templates/page.dat_lich_tu_van.bwt. MST/chữ ký số KHÔNG tự động
+  xác minh (BLOCKED_EXTERNAL, ADR-007) — đơn vào 'pending_review', đội ngũ kinh doanh liên hệ
+  xác nhận thủ công trong 24h (copy nêu rõ, không hứa hẹn xử lý tự động tức thời).
+{%- endcomment -%}
+{% include 'breadcrumb' %}
+
+<main class="py-12">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <div class="text-center max-w-3xl mx-auto mb-12">
+      <span class="pc-kit-badge-clinical text-xs font-bold">🤝 ĐẠI LÝ PHÂN PHỐI B2B</span>
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-forest-900 font-heading mt-3">
+        Trở Thành Đại Lý Phân Phối Pharma Cosmetics
+      </h1>
+      <p class="text-sm text-gray-600 mt-3">
+        Chính sách giá theo tier, hỗ trợ marketing và đào tạo sản phẩm cho hệ thống đại lý toàn quốc.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-14">
+      {%- for tier in b2b_tiers -%}
+      <div class="rounded-2xl p-6 border {% if tier.featured %}border-brand-primary shadow-md{% else %}border-border-clinical{% endif %} bg-white flex flex-col">
+        {%- if tier.featured -%}
+        <span class="pc-cmp-verified-badge mb-2 self-start">Phổ biến nhất</span>
+        {%- endif -%}
+        <h3 class="text-lg font-bold text-forest-900 font-heading">{{ tier.name }}</h3>
+        <p class="text-xs text-gray-500 mt-1">Giá trị đơn hàng tối thiểu: {{ tier.min_order_value }}</p>
+        <div class="text-3xl font-extrabold text-brand-green font-heading mt-3">{{ tier.discount_pct }}</div>
+        <p class="text-xs text-gray-500 mb-4">chiết khấu trên giá niêm yết</p>
+        <ul class="space-y-2 text-xs text-gray-600 flex-1">
+          {%- for f in tier.features -%}
+          <li class="flex items-start gap-2">
+            <span class="text-brand-primary">✓</span><span>{{ f }}</span>
+          </li>
+          {%- endfor -%}
+        </ul>
+        <a href="#b2b-form" class="pc-kit-btn-primary text-xs py-3 px-5 mt-5 text-center">Đăng Ký Tier Này</a>
+      </div>
+      {%- endfor -%}
+    </div>
+
+    <div id="b2b-form" class="max-w-2xl mx-auto bg-white rounded-2xl border border-border-clinical p-6 sm:p-8">
+      <h2 class="text-xl font-bold text-forest-900 font-heading mb-1">Đăng Ký Làm Đại Lý</h2>
+      <p class="text-xs text-gray-500 mb-6">
+        Đội ngũ kinh doanh sẽ liên hệ xác nhận thông tin (bao gồm mã số thuế) trong vòng 24h làm
+        việc — chúng tôi KHÔNG tự động duyệt đơn qua hệ thống.
+      </p>
+
+      <div id="b2b-success" class="hidden pc-cmp-expert-callout mb-4">
+        Đăng ký thành công! Mã đơn: <strong id="b2b-app-id"></strong>. Đội ngũ kinh doanh sẽ liên hệ sớm.
+      </div>
+      <div id="b2b-error" class="hidden text-xs text-red-600 mb-4"></div>
+
+      <form id="b2b-application-form" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Tên công ty / hộ kinh doanh *</label>
+          <input required name="company_name" type="text" class="w-full rounded-lg border border-border-clinical px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Mã số thuế *</label>
+          <input required name="tax_code" type="text" pattern="[0-9]{10,13}" class="w-full rounded-lg border border-border-clinical px-3 py-2 text-sm" placeholder="10-13 số">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Người liên hệ *</label>
+          <input required name="contact_name" type="text" class="w-full rounded-lg border border-border-clinical px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Số điện thoại *</label>
+          <input required name="phone" type="tel" pattern="0[0-9]{8,9}" class="w-full rounded-lg border border-border-clinical px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Email</label>
+          <input name="email" type="email" class="w-full rounded-lg border border-border-clinical px-3 py-2 text-sm">
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Địa chỉ kinh doanh</label>
+          <input name="address" type="text" class="w-full rounded-lg border border-border-clinical px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Loại hình kinh doanh</label>
+          <select name="business_type" class="w-full rounded-lg border border-border-clinical px-3 py-2 text-sm">
+            <option value="nha_thuoc">Nhà thuốc</option>
+            <option value="spa_clinic">Spa / Phòng khám da liễu</option>
+            <option value="online_reseller">Bán lẻ online</option>
+            <option value="khac">Khác</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Dự kiến sản lượng/tháng</label>
+          <input name="expected_volume" type="text" class="w-full rounded-lg border border-border-clinical px-3 py-2 text-sm" placeholder="VD: 50-100 sản phẩm">
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Ghi chú</label>
+          <textarea name="note" rows="3" class="w-full rounded-lg border border-border-clinical px-3 py-2 text-sm"></textarea>
+        </div>
+        <div class="sm:col-span-2">
+          <button type="submit" id="b2b-submit-btn" class="pc-kit-btn-primary text-sm py-3 px-6 w-full sm:w-auto">Gửi Đăng Ký</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</main>
+
+<script>
+(function () {
+  var GAS_URL = {{ settings.mops_gas_url | json }};
+  var form = document.getElementById('b2b-application-form');
+  var successBox = document.getElementById('b2b-success');
+  var errorBox = document.getElementById('b2b-error');
+  var appIdEl = document.getElementById('b2b-app-id');
+  var submitBtn = document.getElementById('b2b-submit-btn');
+  if (!form) return;
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    errorBox.classList.add('hidden');
+    successBox.classList.add('hidden');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Đang gửi...';
+
+    var fd = new FormData(form);
+    var payload = { action: 'create_b2b_application' };
+    fd.forEach(function (value, key) { payload[key] = value; });
+
+    var ctrl = new AbortController();
+    var toid = setTimeout(function () { ctrl.abort(); }, 20000);
+    fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      signal: ctrl.signal,
+      body: JSON.stringify(payload)
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        clearTimeout(toid);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Gửi Đăng Ký';
+        if (res && res.success && res.data) {
+          appIdEl.textContent = res.data.application_id || '';
+          successBox.classList.remove('hidden');
+          form.reset();
+        } else {
+          errorBox.textContent = (res && res.error) || 'Có lỗi xảy ra, vui lòng thử lại.';
+          errorBox.classList.remove('hidden');
+        }
+      })
+      .catch(function () {
+        clearTimeout(toid);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Gửi Đăng Ký';
+        errorBox.textContent = 'Không thể kết nối máy chủ, vui lòng thử lại sau.';
+        errorBox.classList.remove('hidden');
+      });
+  });
+})();
+</script>

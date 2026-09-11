@@ -1,0 +1,98 @@
+{%- comment -%} Mobile Search Overlay — BEM, đồng bộ settings desktop search {%- endcomment -%}
+<div class="search-overlay" id="mb-search-popup" aria-hidden="true">
+
+  {%- comment -%} Header: Back ← · Form (input + clear X) · Submit icon {%- endcomment -%}
+  <div class="search-overlay__header">
+
+    <button class="search-overlay__back" id="mb-search-close" type="button" aria-label="Quay lại">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+      </svg>
+    </button>
+
+    <form class="search-overlay__form" action="/search" method="get" id="mb-search-form">
+      <input
+        type="text"
+        name="query"
+        id="mb-search-input"
+        class="search-overlay__input"
+        placeholder="Tìm sản phẩm, thương hiệu..."
+        autocomplete="off"
+        spellcheck="false"
+        enterkeyhint="search"
+      >
+      <input type="hidden" name="type" value="product">
+      <button type="button" class="search-overlay__clear" id="mb-search-clear" aria-label="Xóa" hidden>
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true">
+          <path d="M9.13.87L5 5 .87.87.87.87 0 1.74l.01.01L4.13 5 0 8.88l.87.87L5 5.87l4.13 4.13.87-.87L5.87 5 9.13 1.74z"/>
+        </svg>
+      </button>
+    </form>
+
+    <button type="submit" form="mb-search-form" class="search-overlay__submit" aria-label="Tìm kiếm">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+      </svg>
+    </button>
+
+  </div>
+
+  {%- comment -%} Body: Promo · Recent · Suggest {%- endcomment -%}
+  <div class="search-overlay__body">
+
+    {%- comment -%} Promo banner — cấu hình qua settings.header_search_promo {%- endcomment -%}
+    {%- if settings.header_search_promo != blank -%}
+    <a class="coupon_search" href="{{settings.header_search_gg_url}}" title="{{settings.header_search_gg_title}}">
+      <div class="search-overlay__promo">
+        <span class="search-overlay__promo-icon" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 12 20 22 4 22 4 12"/>
+            <rect x="2" y="7" width="20" height="5"/>
+            <line x1="12" y1="22" x2="12" y2="7"/>
+            <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+            <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+          </svg>
+        </span>
+        <p class="search-overlay__promo-text">{{ settings.header_search_promo }}</p>
+      </div>
+    </a>
+    {%- endif -%}
+
+    {%- comment -%} Lịch sử tìm kiếm — JS render từ localStorage {%- endcomment -%}
+    <div class="search-overlay__section" id="mb-recent" style="display:none">
+      <p class="search-overlay__section-label">Tìm kiếm gần đây</p>
+      <ul class="search-overlay__recent-list" id="mb-recent-list"></ul>
+    </div>
+
+    {%- comment -%} Đề xuất phổ biến — từ settings, horizontal scroll {%- endcomment -%}
+    {%- if settings.header_search_suggest and settings.header_search_suggest_list != blank -%}
+    <div class="search-overlay__section">
+      <p class="search-overlay__section-label">
+        {%- if settings.header_search_suggest_title != blank -%}
+          {{ settings.header_search_suggest_title }}
+        {%- else -%}
+          Đề xuất phổ biến
+        {%- endif -%}
+      </p>
+      <div class="search-overlay__tags" id="mb-suggest-tags">
+        {%- assign mb_keywords = settings.header_search_suggest_list | split: ',' -%}
+        {%- for mb_kw in mb_keywords -%}
+          {%- assign mb_kw_clean = mb_kw | strip -%}
+          {%- if mb_kw_clean != blank -%}
+          <a class="search-overlay__tag" href="/search?query={{ mb_kw_clean | url_encode }}&type=product">{{ mb_kw_clean }}</a>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </div>
+    {%- endif -%}
+
+    {%- comment -%} Kết quả smart search AJAX — JS render, ẩn khi không có query {%- endcomment -%}
+    {%- if settings.header_search_smart -%}
+    <div class="search-overlay__smart" id="mb-smart-results" style="display:none">
+      <div class="list-search list-search-style" id="mb-list-search"></div>
+      <div class="list-search2 list-search-style" id="mb-list-search2"></div>
+    </div>
+    {%- endif -%}
+
+  </div>
+</div>

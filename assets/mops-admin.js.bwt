@@ -1,0 +1,2583 @@
+{% comment %} mops-admin.js.bwt — JS cho MOPS Admin (Templates/page.mops-admin.bwt).
+  Vue 3 local compile #mops-app-template với delimiters ['[[',']]'] để không đụng {{ }} Liquid; quản lý TOÀN BỘ 11 tab:
+  auth (login/logout/session), sidebar (collapse/mobile drawer/active tab, ẩn tab Cấu hình
+  nếu không phải OWNER và ẩn tab Tài chính nếu !canViewFinance — chỉ là UX, quyền thật luôn
+  xác thực lại ở code.gs qua token), Tổng quan, Đơn hàng, Sản phẩm, Khách hàng, Tài chính,
+  Kho & NCC, Thông báo, Nhật ký, Nhân viên, Mã giảm giá, Cấu hình.
+  Kiến trúc/boot invariant: docs/mops-admin-frontend.md. {% endcomment %}
+(function() {
+function bootstrapMopsAdmin() {
+  'use strict';
+
+  window.__mopsAdminRuntime = window.__mopsAdminRuntime || {};
+  window.__mopsAdminRuntime.startedAt = new Date().toISOString();
+  window.__mopsAdminRuntime.state = 'starting';
+
+  // Idempotency guard — nếu trang bị deploy lỗi khiến toàn bộ script này xuất hiện
+  // nhiều lần, CHỈ bản đầu tiên được phép khởi tạo.
+  if (window.__mopsAdminBooted) {
+    console.warn('[MOPS Admin] Phát hiện script bị nạp nhiều lần trên cùng trang — bỏ qua bản lặp. Kiểm tra lại quá trình đồng bộ/deploy theme.');
+    return;
+  }
+  window.__mopsAdminBooted = true;
+
+  /* ── Config ── */
+  var GAS_URL   = {{ settings.mops_gas_url | json }};
+  // Zero-Wait Path (2026-08-10): nếu Vercel Edge proxy đã deploy, dùng nó thay GAS trực tiếp.
+  // Edge sẽ tự cache reads + enqueue non-critical writes + rate limit trước khi tới GAS. Để trống
+  // → FE gọi thẳng GAS như cũ (fallback không mất chức năng).
+  var EDGE_URL  = {{ settings.mops_edge_url | json }};
+  var API_URL   = EDGE_URL ? (String(EDGE_URL).replace(/\/+$/, '') + '/api/gas') : GAS_URL;
+  var TOKEN_KEY = 'mops_token';
+  var STAFF_KEY = 'mops_staff';
+  var REMEMBER_TOKEN_KEY = 'mops_remember_token';
+  var REMEMBER_STAFF_KEY = 'mops_remember_staff';
+  var REMEMBER_USERNAME_KEY = 'mops_remember_username';
+  // Danh mục Tỉnh/Xã dùng chung cho mọi form địa chỉ (Khách hàng/Chi nhánh/NCC/Nhân viên/Đơn hàng)
+  // — API công khai, cập nhật theo cấu trúc hành chính 2 cấp từ 01/07/2025 (bỏ cấp huyện), xem
+  // ensureProvincesLoaded()/loadWardsForProvince() (review 2026-07-16).
+  var PROVINCE_API = 'https://provinces.open-api.vn/api/v2';
+  var appInstance = null; // gán sau Vue.mount()
+
+  // Không để một CDN bị chặn/lỗi biến thành lỗi mơ hồ "Vue is not defined".
+  // Giữ preloader trên màn hình và hiển thị nguyên nhân có thể hành động được.
+  if (!window.Vue || typeof window.Vue.createApp !== 'function') {
+    var dependencyPreloader = document.getElementById('ma-preloader');
+    var dependencyStatus = dependencyPreloader && dependencyPreloader.querySelector('.ma-loader-status');
+    if (dependencyStatus) {
+      dependencyStatus.textContent = 'Không tải được thư viện Vue. Kiểm tra kết nối mạng, extension chặn nội dung hoặc chính sách bảo mật trình duyệt rồi tải lại trang.';
+    }
+    if (dependencyPreloader) dependencyPreloader.classList.add('is-error');
+    window.__mopsAdminRuntime.state = 'dependency-error';
+    console.error('[MOPS Admin] Vue CDN không khả dụng; app không thể khởi tạo.', window.Vue);
+    return;
+  }
+
+  function getToken()     { return sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(REMEMBER_TOKEN_KEY) || ''; }
+  function getStaffInfo() { try { return JSON.parse(sessionStorage.getItem(STAFF_KEY) || localStorage.getItem(REMEMBER_STAFF_KEY) || 'null'); } catch(e) { return null; } }
+  function setSession(token, staff, remember) {
+    sessionStorage.setItem(TOKEN_KEY, token);
+    sessionStorage.setItem(STAFF_KEY, JSON.stringify(staff));
+    if (remember) {
+      localStorage.setItem(REMEMBER_TOKEN_KEY, token);
+      localStorage.setItem(REMEMBER_STAFF_KEY, JSON.stringify(staff));
+    } else {
+      localStorage.removeItem(REMEMBER_TOKEN_KEY);
+      localStorage.removeItem(REMEMBER_STAFF_KEY);
+    }
+  }
+  function clearSession() {
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(STAFF_KEY);
+    localStorage.removeItem(REMEMBER_TOKEN_KEY);
+    localStorage.removeItem(REMEMBER_STAFF_KEY);
+  }
+  // Token hết hạn (phát hiện qua gasGet/gasPost) → đá về màn login.
+  function forceLogin() {
+    clearSession();
+    if (appInstance) { appInstance.staff = null; appInstance.screen = 'login'; }
+  }
+
+  /* ── HTTP helpers ── */
+  // Đọc dữ liệu: ĐI QUA POST (token nằm trong body) — KHÔNG gắn token vào query string.
+  // Trước đây dựng '?...&token=' → token lộ qua URL / lịch sử trình duyệt / Referer / redirect
+  // googleusercontent, replay được tới 6h. Giữ nguyên tên + chữ ký để mọi caller (kể cả các module
+  // gọi qua window.MopsAdminCore.gasGet) không phải thay đổi.
+  function gasGet(params) {
+    return gasPost(params || {});
+  }
+
+  // Zero-Wait Path cache (2026-08-10): sessionStorage lưu response theo (action, params, _gen).
+  // Bắt được: chuyển tab lần 2 = 0 API call. Reload trang = chỉ 1 API get_cache_gen (~5ms edge).
+  // Danh sách action được cache — reads đắt tiền + ít thay đổi. Loại trừ: reports/analytics
+  // (thời gian thực), get_cache_gen (bản thân là poll), staff_me (per-request), bulk_bootstrap
+  // (Edge đã cache riêng, FE cần data mới nhất mỗi lần vào lại).
+  var CACHEABLE_READS = {
+    list_products: 1, list_products_lite: 1, list_customers: 1, list_customers_lite: 1,
+    list_orders_lite: 1, list_branches: 1, list_bank_accounts: 1, list_carriers: 1,
+    list_coupons: 1, list_cash_accounts: 1, list_categories: 1, list_suppliers: 1,
+    list_mappings: 1
+  };
+  var LOCAL_GEN_KEY  = 'mops_local_gen';
+  var CACHE_PREFIX   = 'mops:cache:';
+  function _stableKey(action, body) {
+    var copy = {}; for (var k in body) if (body.hasOwnProperty(k) && k !== 'token' && k !== 'action') copy[k] = body[k];
+    var keys = Object.keys(copy).sort();
+    var out = {}; for (var i = 0; i < keys.length; i++) out[keys[i]] = copy[keys[i]];
+    return action + '|' + JSON.stringify(out);
+  }
+  function _getLocalGen() { try { return sessionStorage.getItem(LOCAL_GEN_KEY) || ''; } catch (e) { return ''; } }
+  function _setLocalGen(g) { if (!g) return; try { sessionStorage.setItem(LOCAL_GEN_KEY, String(g)); } catch (e) {} }
+  function _invalidateAllReadCaches() {
+    // Xoá mọi key mops:cache:* — dùng khi FE tự write (bump gen local) hoặc phát hiện gen server đổi.
+    try {
+      var toDel = [];
+      for (var i = 0; i < sessionStorage.length; i++) {
+        var k = sessionStorage.key(i);
+        if (k && k.indexOf(CACHE_PREFIX) === 0) toDel.push(k);
+      }
+      for (var j = 0; j < toDel.length; j++) sessionStorage.removeItem(toDel[j]);
+    } catch (e) {}
+  }
+  function _cacheGet(action, body) {
+    if (!CACHEABLE_READS[action]) return null;
+    var gen = _getLocalGen();
+    if (!gen) return null;
+    try {
+      var raw = sessionStorage.getItem(CACHE_PREFIX + _stableKey(action, body) + ':' + gen);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+  function _cachePut(action, body, response) {
+    if (!CACHEABLE_READS[action] || !response || !response.success) return;
+    var gen = String(response._gen || '');
+    if (!gen) return;
+    _setLocalGen(gen);
+    try {
+      var key = CACHE_PREFIX + _stableKey(action, body) + ':' + gen;
+      var s = JSON.stringify(response);
+      if (s.length < 500000) sessionStorage.setItem(key, s); // ~500KB cap mỗi key
+    } catch (e) { /* quota — bỏ qua, không phải lỗi nghiệp vụ */ }
+  }
+
+  // Timeout mặc định cho mọi gasPost (2026-08-12) — trước đây fetch không giới hạn thời gian,
+  // Edge/GAS treo → spinner nút quay vô hạn, user bấm nhiều lần → nguy cơ double-submit.
+  // 30s khớp với timeout của Vercel Edge Functions (Edge tự cắt ~30s). Riêng staff_me lúc restore
+  // session dùng 10s riêng (line ~1927) vì boot cần quyết định nhanh (login ngay nếu chậm).
+  var GAS_POST_TIMEOUT_MS = 30000;
+
+  // fetchWithTimeout (2026-09-04) — 1 helper dùng chung cho MỌI fetch tới GAS/Edge, thay cho các
+  // bản AbortController+setTimeout viết tay rải rác (gasPost, polling, doLogin, doLogout, staff_me
+  // restore session). Trước đây doLogin/doLogout KHÔNG có timeout — có thể treo vô hạn nếu Edge/GAS
+  // không phản hồi. Giữ nguyên các mốc thời gian đã có (gasPost 30s, polling/staff_me 10s), chỉ gộp
+  // code trùng lặp và bổ sung timeout cho 2 chỗ còn thiếu.
+  function fetchWithTimeout(url, fetchOpts, timeoutMs) {
+    var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var timedOut   = false;
+    var timeoutId  = setTimeout(function() {
+      // Chỉ tự nhận "đã timeout" khi có controller để THỰC SỰ abort() — nếu không có AbortController
+      // (trình duyệt rất cũ), fetch vẫn chạy tiếp sau mốc này; gắn timedOut=true vô điều kiện sẽ gán
+      // nhầm mọi lỗi fetch xảy ra sau đó (network reset, DNS...) thành "timeout" dù nguyên nhân khác
+      // (review 2026-09-05 — 3 chỗ mới dùng chung fetchWithTimeout, trước đây không có timeout nên
+      // không gặp trường hợp này: doLogin/doLogout/staff_me).
+      if (controller) { timedOut = true; controller.abort(); }
+    }, timeoutMs);
+    var opts = Object.assign({}, fetchOpts);
+    if (controller) opts.signal = controller.signal;
+    return fetch(url, opts).then(function(r) {
+      clearTimeout(timeoutId);
+      return r;
+    }).catch(function(err) {
+      clearTimeout(timeoutId);
+      if (timedOut || (err && err.name === 'AbortError')) {
+        var e = new Error('Kết nối quá chậm (>' + Math.round(timeoutMs / 1000) + 's) hoặc không phản hồi. Vui lòng thử lại.');
+        e.kind = 'timeout';
+        throw e;
+      }
+      err.kind = err.kind || 'network';
+      throw err;
+    });
+  }
+
+  function gasPost(body) {
+    if (!body || !body.action) {
+      return Promise.reject(new Error('Thiếu action khi gọi API MOPS. Vui lòng tải lại trang rồi thử lại.'));
+    }
+    var action = body.action;
+    var b = Object.assign({}, body, { token: getToken() });
+
+    // Cache HIT — trả ngay từ sessionStorage, không network. Kết quả có _cache='HIT-FE'
+    // để caller phân biệt nếu cần.
+    var hit = _cacheGet(action, b);
+    if (hit) return Promise.resolve(Object.assign({}, hit, { _cache: 'HIT-FE' }));
+
+    var fetchOpts = {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(b)
+    };
+
+    return fetchWithTimeout(API_URL, fetchOpts, GAS_POST_TIMEOUT_MS).then(function(r) {
+      return r.text().then(function(text) {
+        var contentType = (r.headers && r.headers.get('content-type')) || '';
+        if (!r.ok || /^\s*</.test(text) || contentType.indexOf('json') === -1) {
+          // err.status/httpStatus/kind (2026-09-04) — cho phép caller MỚI phân biệt 403/500/502/...
+          // nếu cần; 158 caller cũ chỉ đọc err.message nên không bị ảnh hưởng gì (thuần bổ sung).
+          var httpErr = new Error('API MOPS không trả JSON (HTTP ' + r.status + '). Kiểm tra Edge URL/GAS URL và deployment đang hoạt động.');
+          httpErr.status = r.status;
+          httpErr.httpStatus = r.status;
+          httpErr.kind = !r.ok ? 'http' : 'parse';
+          throw httpErr;
+        }
+        try { return JSON.parse(text); }
+        catch (e) { var pe = new Error('Phản hồi API không hợp lệ, không thể đọc JSON.'); pe.kind = 'parse'; throw pe; }
+      });
+    })
+      .then(function(d) {
+        if (!d.success && (d.error || '').indexOf('hết hạn') !== -1) {
+          forceLogin(); throw new Error(d.error);
+        }
+        // Zero-Wait: mỗi response mang _gen; đồng bộ local gen. Nếu là write thành công (không thuộc
+        // read cache-able) → gen server đã bump → xoá cache local để lần đọc sau lấy tươi.
+        if (d && d.success && d._gen) {
+          var prev = _getLocalGen();
+          if (prev && prev !== String(d._gen)) _invalidateAllReadCaches();
+          _setLocalGen(d._gen);
+          _cachePut(action, b, d);
+        }
+        return d;
+      })
+      .catch(function(err) {
+        // Gắn lại tên action + "GAS" vào message timeout (review 2026-09-05: fetchWithTimeout dùng
+        // chung nên message gốc mất action — trước đây 158 caller .catch(e){ showToast(e.message) }
+        // dựa vào đúng nội dung này để biết action nào treo mà không cần mở DevTools).
+        if (err && err.kind === 'timeout') {
+          var te = new Error('Kết nối GAS quá chậm (>' + Math.round(GAS_POST_TIMEOUT_MS / 1000) + 's) hoặc không phản hồi. Vui lòng thử lại. (' + action + ')');
+          te.kind = 'timeout';
+          throw te;
+        }
+        throw err;
+      });
+  }
+
+  // gasPostOptimistic — wrapper cho write hành động: hiển thị kết quả trước khi server xác nhận.
+  //   onOptimistic(tempId) — chạy NGAY (đồng bộ) trước khi fetch. Trả về data tạm để FE render.
+  //   onConfirm(realData) — chạy khi server trả 2xx {success:true} — thay thế state tạm bằng data thật.
+  //   onRollback(err)     — chạy nếu server 4xx/5xx hoặc {success:false} — huỷ state tạm, toast lỗi.
+  // Trả về Promise resolve khi onConfirm chạy xong (hoặc reject nếu rollback).
+  function gasPostOptimistic(body, onOptimistic, onConfirm, onRollback) {
+    var tempId = 'tmp_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    try { if (typeof onOptimistic === 'function') onOptimistic(tempId); } catch (e) {}
+    return gasPost(body).then(function(d) {
+      if (!d.success) {
+        try { if (typeof onRollback === 'function') onRollback(new Error(d.error || 'Lỗi máy chủ'), tempId); } catch (e) {}
+        throw new Error(d.error || 'Lỗi máy chủ');
+      }
+      try { if (typeof onConfirm === 'function') onConfirm(d, tempId); } catch (e) {}
+      return d;
+    }).catch(function(err) {
+      try { if (typeof onRollback === 'function') onRollback(err, tempId); } catch (e) {}
+      throw err;
+    });
+  }
+
+  // Poll get_cache_gen mỗi 30s khi tab visible — bắt được write từ máy khác (nhân viên B thấy đơn
+  // nhân viên A vừa tạo trong ≤30s). Endpoint này Edge cache 5s → chi phí ~5ms.
+  // Timeout 10s (2026-08-12) — poll interval 30s, timeout ngắn hơn để tránh 2 request overlap
+  // khi Edge/GAS treo (poll #2 nổ trước khi poll #1 hoàn tất). Silent fail — không toast.
+  function _startGenPolling() {
+    var POLL_MS = 30000;
+    var POLL_TIMEOUT_MS = 10000;
+    function tick() {
+      if (document.hidden) return; // im lặng khi tab ẩn
+      var pollOpts = {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'get_cache_gen' })
+      };
+      fetchWithTimeout(API_URL, pollOpts, POLL_TIMEOUT_MS).then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (!d || !d._gen) return;
+          var prev = _getLocalGen();
+          if (prev && prev !== String(d._gen)) {
+            _invalidateAllReadCaches();
+            _setLocalGen(d._gen);
+          } else if (!prev) {
+            _setLocalGen(d._gen);
+          }
+        }).catch(function() { /* im lặng — không làm phiền user */ });
+    }
+    setInterval(tick, POLL_MS);
+  }
+  // Chạy 1 lần sau khi bundle load. Nếu chưa login (token rỗng) get_cache_gen vẫn public → chạy được.
+  try { _startGenPolling(); } catch (e) {}
+
+  /* ── Format helpers (expose làm Vue methods bên dưới) ── */
+  function formatMoney(n) {
+    if (!n && n !== 0) return '—';
+    return Number(n).toLocaleString('vi-VN') + ' ₫';
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    if (isNaN(d)) return iso;
+    var pad = function(x) { return String(x).padStart(2, '0'); };
+    return pad(d.getDate()) + '/' + pad(d.getMonth()+1) + '/' + d.getFullYear()
+      + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  // numberToVietnameseWords — chuyển sang mixin Assets/mops-admin-orders.js.bwt (dùng bởi
+  // _buildOrderPrintHtml unified — 2026-08-24 sau khi bỏ printOrderInvoice legacy).
+
+  // Ghép Địa chỉ/Xã/Tỉnh thành 1 dòng hiển thị cho bảng danh sách (Chi nhánh/NCC/Nhân viên) —
+  // lọc bỏ phần rỗng, không để dính 2 dấu phẩy liền khi thiếu Ward hoặc Province.
+  function formatAddress(street, ward, province) {
+    var parts = [street, ward, province].filter(function(x) { return (x || '').trim(); });
+    return parts.length ? parts.join(', ') : '—';
+  }
+
+  // LOW_STOCK_THRESHOLD — chuyển sang mixin Assets/mops-admin-products.js.bwt.
+
+  function formatPercent(n) {
+    if (n === undefined || n === null || isNaN(n)) return '—';
+    return Math.round(n * 100) + '%';
+  }
+
+  // Dạng rút gọn cho trục biểu đồ (formatMoney đầy đủ dùng trong tooltip/bảng) — "1,2tr", "500k"
+  function formatCompactVnd(n) {
+    n = Number(n) || 0;
+    var abs = Math.abs(n);
+    if (abs >= 1e9) return (n / 1e9).toFixed(1).replace(/\.0$/, '') + ' tỷ';
+    if (abs >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + ' tr';
+    if (abs >= 1e3) return (n / 1e3).toFixed(0) + 'k';
+    return String(n);
+  }
+
+  /* ── Biểu đồ (Chart.js CDN — xem layouts/mops-admin.bwt) ──────────────────────
+     Sapo không có thư viện biểu đồ cho trang admin custom này (kiểm tra 2026-07-08).
+     Quy ước theo skill dataviz nội bộ: 1 hue/series (Thu=emerald, Chi=red — tái dùng
+     đúng màu đã dùng cho badge IN/OUT ở Finance Core), bar ngang cho xếp hạng theo
+     danh mục (đã có label trục, không cần palette nhiều màu), line+area cho xu hướng
+     theo thời gian, tooltip 1 điểm cho mọi series (mode:'index', intersect:false),
+     gridline hairline 1 màu xám nhạt, không bao giờ 2 trục y. */
+  var chartInstances = {}; // canvasId -> Chart instance, KHÔNG phải Vue reactive data (Chart.js instance quá nặng cho Proxy)
+  var CHART_GRID_COLOR = 'rgba(60, 74, 66, 0.12)'; // hairline, 1 nấc so với surface — xem marks-and-anatomy
+  var CHART_TEXT_COLOR = '#3c4a42'; // = --on-surface-variant, đồng bộ với text-on-surface-variant trong UI
+  var CHART_TOOLTIP_BG = '#213145'; // = --inverse-surface
+
+  // Zero-Wait 2026-08-10: Chart.js giờ lazy-load. Nếu render được gọi khi thư viện chưa có → kick
+  // load và retry khi tải xong. Không đổi chữ ký các hàm render (giữ nguyên caller). Guard cũ
+  // `if (typeof Chart === 'undefined') return;` được thay bằng _ensureChart(cb) — chạy cb khi sẵn sàng.
+  function _ensureChart(cb) {
+    if (typeof Chart !== 'undefined') { cb(); return; }
+    if (!window.MopsAssets) return; // fallback: Layout chưa expose helper → im lặng (env test)
+    window.MopsAssets.loadChart().then(function() {
+      Chart.defaults.font.family = "'Inter', sans-serif";
+      Chart.defaults.color = CHART_TEXT_COLOR;
+      cb();
+    }).catch(function() { /* nuốt lỗi mạng — render sẽ vẽ lại ở lần sau */ });
+  }
+
+  if (typeof Chart !== 'undefined') {
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = CHART_TEXT_COLOR;
+  }
+
+  function destroyChart(canvasId) {
+    if (chartInstances[canvasId]) { chartInstances[canvasId].destroy(); delete chartInstances[canvasId]; }
+  }
+
+  // Doanh thu theo kỳ (ngày/tháng) — CỘT dọc, không phải line+area. Khác quy ước mặc định ở
+  // đầu file ("line+area cho xu hướng theo thời gian") có chủ đích: mỗi kỳ ở đây là 1 khối dữ
+  // liệu rời (bucket ngày/tháng), không phải 1 phép đo liên tục — cột so sánh độ cao giữa các
+  // kỳ rõ hơn line khi số điểm ít (theo tháng thường <12 điểm). Giữ 1 hue (mark spec bar ≤24px,
+  // 4px bo góc đầu cột/square baseline), tooltip mode như renderTrendChart.
+  function renderColumnChart(canvasId, buckets, valueKey, hexColor) {
+    _ensureChart(function() { _renderColumnChart(canvasId, buckets, valueKey, hexColor); });
+  }
+  function _renderColumnChart(canvasId, buckets, valueKey, hexColor) {
+    var el = document.getElementById(canvasId);
+    if (!el) return;
+    destroyChart(canvasId);
+    var counts = buckets.map(function(b) { return b.order_count; });
+    chartInstances[canvasId] = new Chart(el.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: buckets.map(function(b) { return b.key; }),
+        datasets: [{
+          data: buckets.map(function(b) { return b[valueKey]; }),
+          backgroundColor: hexColor, borderRadius: 4, borderSkipped: 'bottom', // bo góc đầu cột, vuông ở baseline
+          maxBarThickness: 24, // ≤24px theo mark spec
+          _counts: counts
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }, // 1 series — không cần legend box
+          tooltip: {
+            backgroundColor: CHART_TOOLTIP_BG, padding: 10, cornerRadius: 8,
+            titleColor: '#ffffff', bodyColor: '#ffffff', bodyFont: { weight: '700' },
+            callbacks: {
+              label: function(ctx) { return formatMoney(ctx.parsed.y); },
+              afterLabel: function(ctx) {
+                var c = ctx.dataset._counts && ctx.dataset._counts[ctx.dataIndex];
+                return c !== undefined ? c + ' đơn' : '';
+              }
+            }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+          y: {
+            beginAtZero: true,
+            grid: { color: CHART_GRID_COLOR, drawTicks: false },
+            border: { display: false },
+            ticks: { font: { size: 11 }, callback: function(v) { return formatCompactVnd(v); } }
+          }
+        }
+      }
+    });
+  }
+
+  // Xếp hạng theo danh mục/chi nhánh — bar NGANG, 1 hue (mỗi mục đã có nhãn trên trục,
+  // không cần gán 1 màu/mục — xem choosing-a-form §Job "Compare magnitude" → sequential 1 hue).
+  function renderRankedBarChart(canvasId, items, labelKey, valueKey, hexColor, tooltipExtraFn) {
+    _ensureChart(function() { _renderRankedBarChart(canvasId, items, labelKey, valueKey, hexColor, tooltipExtraFn); });
+  }
+  function _renderRankedBarChart(canvasId, items, labelKey, valueKey, hexColor, tooltipExtraFn) {
+    var el = document.getElementById(canvasId);
+    if (!el) return;
+    destroyChart(canvasId);
+    chartInstances[canvasId] = new Chart(el.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: items.map(function(it) { return it[labelKey]; }),
+        datasets: [{
+          data: items.map(function(it) { return it[valueKey]; }),
+          backgroundColor: hexColor, borderRadius: 4, borderSkipped: 'left', // 4px bo góc đầu dữ liệu, vuông ở baseline
+          maxBarThickness: 22 // ≤24px theo mark spec
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: CHART_TOOLTIP_BG, padding: 10, cornerRadius: 8,
+            titleColor: '#ffffff', bodyColor: '#ffffff', bodyFont: { weight: '700' },
+            callbacks: {
+              label: function(ctx) { return formatMoney(ctx.parsed.x); },
+              afterLabel: function(ctx) { return tooltipExtraFn ? tooltipExtraFn(items[ctx.dataIndex]) : ''; }
+            }
+          }
+        },
+        scales: {
+          x: {
+            beginAtZero: true, grid: { color: CHART_GRID_COLOR }, border: { display: false },
+            ticks: { font: { size: 11 }, callback: function(v) { return formatCompactVnd(v); } }
+          },
+          y: { grid: { display: false }, border: { display: false }, ticks: { font: { size: 12 } } }
+        }
+      }
+    });
+  }
+
+  function renderDoughnutChart(canvasId, items, centerLabel) {
+    _ensureChart(function() { _renderDoughnutChart(canvasId, items, centerLabel); });
+  }
+  function _renderDoughnutChart(canvasId, items, centerLabel) {
+    var el = document.getElementById(canvasId);
+    if (!el) return;
+    destroyChart(canvasId);
+    var values = items.map(function(item) { return Number(item.value) || 0; });
+    var hasValue = values.some(function(value) { return value > 0; });
+    var centerText = {
+      id: 'maCenterText',
+      afterDraw: function(chart) {
+        var ctx = chart.ctx, area = chart.chartArea;
+        if (!area) return;
+        var x = (area.left + area.right) / 2, y = (area.top + area.bottom) / 2;
+        ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#1c1b1f'; ctx.font = '700 14px Inter, system-ui, sans-serif'; ctx.fillText(centerLabel || '', x, y - 8);
+        ctx.fillStyle = '#777680'; ctx.font = '500 11px Inter, system-ui, sans-serif'; ctx.fillText('Tổng trong kỳ', x, y + 10);
+        ctx.restore();
+      }
+    };
+    chartInstances[canvasId] = new Chart(el.getContext('2d'), {
+      type: 'doughnut',
+      data: { labels: items.map(function(item) { return item.label; }), datasets: [{ data: hasValue ? values : [1], backgroundColor: hasValue ? items.map(function(item) { return item.color; }) : ['#e7e0ec'], borderColor: '#ffffff', borderWidth: 3, hoverOffset: 5 }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '64%', plugins: { legend: { position: 'right', labels: { boxWidth: 10, boxHeight: 10, padding: 14, font: { size: 12 } } }, tooltip: { enabled: hasValue, backgroundColor: CHART_TOOLTIP_BG, padding: 10, cornerRadius: 8, titleColor: '#ffffff', bodyColor: '#ffffff', callbacks: { label: function(ctx) { var item = items[ctx.dataIndex]; return item.label + ': ' + (canvasId === 'overviewOrderRatioChart' ? ctx.parsed + ' đơn' : formatMoney(ctx.parsed)); }, afterLabel: function(ctx) { return items[ctx.dataIndex].extra || ''; } } } } },
+      plugins: [centerText]
+    });
+  }
+
+  // Crosshair dọc mỏng (hairline, không đứt nét) khi hover line chart — Chart.js không có
+  // sẵn, xem interaction.md "The crosshair finds the X". Áp dụng cho mọi chart có bật
+  // options.plugins.crosshair.enabled — không ảnh hưởng bar chart (không bật cờ này).
+  // Zero-Wait 2026-08-10: Chart giờ lazy — đăng ký plugin cũng phải đợi. _ensureChart tự bảo
+  // đảm chỉ chạy khi Chart đã load, nên bọc luôn Chart.register vào đây.
+  _ensureChart(function() {
+    Chart.register({
+      id: 'crosshairLine',
+      afterDatasetsDraw: function(chart) {
+        var opts = chart.options.plugins && chart.options.plugins.crosshair;
+        if (!opts || !opts.enabled) return;
+        var tooltip = chart.tooltip;
+        if (!tooltip || !tooltip.getActiveElements || !tooltip.getActiveElements().length) return;
+        var x = tooltip.getActiveElements()[0].element.x;
+        var ctx = chart.ctx;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(x, chart.chartArea.top);
+        ctx.lineTo(x, chart.chartArea.bottom);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = CHART_GRID_COLOR;
+        ctx.stroke();
+        ctx.restore();
+      }
+    });
+  });
+
+  /* ── Lookup tables dùng chung nhiều tab ── */
+  var STATUS_COLORS = {
+    PENDING: 'amber', PAYMENT_REPORTED: 'blue', PAID: 'emerald', PROCESSING: 'blue',
+    COMPLETED: 'emerald', CANCELLED: 'red', EXPIRED: 'gray', REFUNDED: 'violet',
+    SENT: 'emerald', FAILED: 'red', SKIPPED: 'gray'
+  };
+  // Nhãn PENDING dùng chữ 'Chờ xác nhận' (không phải 'Chờ TT') vì với COD tiền do vận
+  // chuyển thu — MOPS không track khoảng "chờ chuyển khoản" cho đơn COD. Với VIETQR/CASH,
+  // 'Chờ xác nhận' vẫn đúng nghĩa: chờ staff xác nhận đã nhận tiền. Đọc thêm phần bổ nghĩa
+  // theo payment_method ở fulfillmentLabel (pending_payment = 'Chờ khách chuyển khoản' —
+  // chỉ VIETQR mới rơi vào bước này).
+  var STATUS_LABELS = {
+    PENDING: 'Chờ xác nhận', PAYMENT_REPORTED: 'Đã báo', PAID: 'Đã TT', PROCESSING: 'Đang xử lý',
+    COMPLETED: 'Hoàn thành', CANCELLED: 'Đã huỷ', EXPIRED: 'Hết hạn', REFUNDED: 'Hoàn tiền',
+    SENT: 'Đã gửi', FAILED: 'Lỗi', SKIPPED: 'Bỏ qua'
+  };
+  // NOTIF_LABELS — đã chuyển sang Assets/mops-admin-notifications.js.bwt.
+  // AUDIT_CAT_ENTITIES, AUDIT_ACTION_COLOR — đã chuyển sang Assets/mops-admin-audit.js.bwt
+  // cùng với data/computed/methods của tab Nhật ký (tách domain đầu tiên, 2026-07-16).
+  // FINANCE_CATEGORIES — chuyển sang mixin Assets/mops-admin-finance.js.bwt.
+  // PERM_LABELS/ROLE_CHIP_COLOR/SENSITIVE_PERMISSIONS — chuyển sang mixin
+  // Assets/mops-admin-staff.js.bwt (chỉ Staff dùng, đã grep xác nhận).
+
+  var _toastTimer = null;
+  // 2026-08-28: 'bg-on-surface'/'text-surface' KHÔNG có trong mops-tailwind.css biên dịch sẵn (grep xác
+  // nhận 0 kết quả — 'on-surface' chỉ tồn tại dạng text-*, không có bg-* tương ứng) → toast info/warning
+  // trước đây không có màu. Đổi sang class đã có sẵn trong file compiled: bg-surface-container-high +
+  // text-on-surface (info), bg-amber-100 + text-amber-900 (warning, dùng cho bulkPrintGoshipLabels).
+  var TOAST_STYLES = {
+    success: 'bg-emerald-600 text-white',
+    error:   'bg-red-600 text-white',
+    warning: 'bg-amber-100 text-amber-900',
+    info:    'bg-surface-container-high text-on-surface'
+  };
+
+  // showToast(msg, type, opts?) — opts.duration mặc định 3500ms; truyền 0 (hoặc âm) để hiện
+  // persistent (dùng cho luồng async như Tạo đơn V4 2026-08-04: bấm Submit → toast Đang xử lý…
+  // không tự tắt, chờ response mới thay bằng success/error toast). Call tiếp theo tự clearTimeout
+  // của call trước rồi replace, không cần dismissToast() giữa các bước.
+  function showToast(msg, type, opts) {
+    opts = opts || {};
+    var el = document.getElementById('ma-toast');
+    if (!el) { console.warn('[MOPS Admin] Không tìm thấy #ma-toast:', msg); return; }
+    el.textContent = msg;
+    el.className = 'fixed bottom-6 right-6 z-[100] px-4 py-3 rounded-lg shadow-lg text-body-sm font-medium max-w-xs ' + (TOAST_STYLES[type] || TOAST_STYLES.info);
+    clearTimeout(_toastTimer);
+    var duration = opts.duration != null ? opts.duration : 3500;
+    if (duration > 0) _toastTimer = setTimeout(function() { el.classList.add('hidden'); }, duration);
+  }
+  function dismissToast() {
+    clearTimeout(_toastTimer);
+    var el = document.getElementById('ma-toast');
+    if (el) el.classList.add('hidden');
+  }
+
+  /* ── Confirm dialog (Promise-based) — dùng trước khi đổi secret trong tab Cấu hình ── */
+  function showConfirm(title, message) {
+    return new Promise(function(resolve) {
+      var overlay   = document.getElementById('ma-confirm-overlay');
+      var dialog    = document.getElementById('ma-confirm-dialog');
+      var okBtn     = document.getElementById('ma-confirm-ok');
+      var cancelBtn = document.getElementById('ma-confirm-cancel');
+      var titleEl   = document.getElementById('ma-confirm-title');
+      var msgEl     = document.getElementById('ma-confirm-message');
+      if (!overlay || !dialog || !okBtn || !cancelBtn || !titleEl || !msgEl) {
+        console.warn('[MOPS Admin] Thiếu phần tử confirm dialog — huỷ hành động để an toàn.');
+        resolve(false);
+        return;
+      }
+      titleEl.textContent = title;
+      msgEl.textContent   = message;
+      overlay.style.display = 'block';
+      dialog.style.display = 'block';
+      function cleanup(result) {
+        overlay.style.display = 'none';
+        dialog.style.display = 'none';
+        okBtn.removeEventListener('click', onOk);
+        cancelBtn.removeEventListener('click', onCancel);
+        overlay.removeEventListener('click', onCancel);
+        resolve(result);
+      }
+      function onOk() { cleanup(true); }
+      function onCancel() { cleanup(false); }
+      okBtn.addEventListener('click', onOk);
+      cancelBtn.addEventListener('click', onCancel);
+      overlay.addEventListener('click', onCancel);
+    });
+  }
+
+  // validateSettingClient — chuyển sang mixin Assets/mops-admin-settings.js.bwt.
+
+  // _loadPermsOnce / _loadPermCatalogOnce — chuyển sang mixin Assets/mops-admin-staff.js.bwt.
+
+  function downloadCsv(filename, lines) {
+    var blob = new Blob([String.fromCharCode(0xFEFF) + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+  }
+  function csvCell(v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
+
+  // isValidResponse / registerRecovery (2026-09-04) — lớp bảo vệ chung cho state "detail"/"report"
+  // được ghi từ NHIỀU action khác nhau (vd shipping.detail từ 5 action đối soát): kiểm tra d.success
+  // VÀ (tuỳ chọn) hình dạng field kỳ vọng TRƯỚC khi domain gán vào state reactive, thay vì chỉ tin
+  // truthy .success như trước (bug lớp này: r.order thiếu ở orders.js.bwt, đã fix riêng — đây là bản
+  // dùng chung để domain khác không lặp lại). Đây là predicate thuần (không tự gán) để mỗi call site
+  // chỉ đổi điều kiện if, không phải viết lại toàn bộ logic toast/reload xung quanh.
+  // Đồng thời ghi "breadcrumb" resource vừa được kiểm tra — app.config.errorHandler dùng để biết nên
+  // rollback state nào nếu render ngay sau đó throw (xem registerRecovery + errorHandler bên dưới).
+  function isValidResponse(d, shapeCheck, resourceName) {
+    window.__mopsAdminRuntime.lastResource = { key: resourceName || '', ts: Date.now() };
+    if (!d || !d.success) return false;
+    if (typeof shapeCheck === 'function') {
+      try {
+        if (!shapeCheck(d)) {
+          console.warn('[MOPS Admin] Response thiếu field mong đợi cho ' + (resourceName || '(unknown)') + ':', d);
+          return false;
+        }
+      } catch (e) { console.warn('[MOPS Admin] shapeCheck lỗi cho ' + resourceName, e); return false; }
+    }
+    return true;
+  }
+  var _resourceRecovery = {};
+  // registerRecovery(key, fn) — domain mixin gọi trong mounted() riêng của mixin đó để đăng ký cách
+  // đưa 1 resource (đã qua isValidResponse) về trạng thái an toàn (đóng detail/tắt loading) nếu
+  // render sau khi gán resource đó bị lỗi. fn(vm) nhận thẳng root instance.
+  function registerRecovery(key, fn) { _resourceRecovery[key] = fn; }
+
+  // Namespace share cho các file domain tách riêng (bắt đầu 2026-07-16 với Nhật ký —
+  // domain nhỏ nhất, dùng làm bản mẫu trước khi tách tiếp các tab khác). File domain
+  // KHÔNG nằm trong IIFE này nên không thấy trực tiếp gasGet/showToast/... — phải gọi
+  // qua MopsAdminCore.xxx(...). Chỉ thêm hàm vào đây khi có domain khác thật sự cần dùng.
+  window.MopsAdminCore = { gasGet: gasGet, gasPost: gasPost, gasPostOptimistic: gasPostOptimistic, showToast: showToast, dismissToast: dismissToast, showConfirm: showConfirm, downloadCsv: downloadCsv, csvCell: csvCell, formatMoney: formatMoney, formatDate: formatDate, formatPercent: formatPercent, renderColumnChart: renderColumnChart, renderRankedBarChart: renderRankedBarChart, renderDoughnutChart: renderDoughnutChart, isValidResponse: isValidResponse, registerRecovery: registerRecovery };
+
+  // An toàn khi tách domain (2026-07-16) — nếu 1 file domain (vd mops-admin-audit.js.bwt) quên
+  // tạo trên Sapo / bị 404 / lỡ nạp SAU file này, window.MopsAdminMixins sẽ thiếu domain đó.
+  // KHÔNG để cả trang trắng vì thiếu 1 object domain (bài học "reading 'length'"/"reading 'entity'"
+  // — v-show khiến MỌI tab, kể cả tab domain lỗi, đều bị evaluate mỗi lần render bất kỳ tab nào
+  // khác đổi state) — tự chèn data() rỗng thay thế + báo lỗi rõ ràng thay vì crash mù mờ.
+  // Mỗi domain tách ra thêm 1 dòng vào map này.
+  // LƯU Ý: fallback phải khớp CẢ data VÀ methods được template gọi TRẦN không kèm ()
+  // (@click="loadAuditLogs", @keydown.enter="loadAuditLogs") — khác với gọi có tham số
+  // (@click="setAuditCat(cat.key)") chỉ nằm trong v-for nên tự an toàn khi list rỗng, các
+  // handler trần này luôn nằm ngoài v-for/v-if nên LUÔN được Vue resolve mỗi lần render,
+  // dù domain có bị vô hiệu hay không — thiếu method (không chỉ thiếu data) cũng crash
+  // (Vue nội bộ ném "Cannot read properties of undefined (reading '_withKeys')" khi
+  // withKeys() nhận fn = undefined — bài học từ lần domain audit bị thiếu asset thật).
+  var MOPS_DOMAIN_FALLBACKS = {
+    shipping: function() {
+      return {
+        data: function() {
+          return { shipping: { subtab: 'recon', carriers: [], carriersLoading: false,
+            reconList: [], reconLoading: false, reconError: 'Không tải được module Vận chuyển (mops-admin-shipping.js) — báo dev kiểm tra deploy.',
+            filterCarrier: '', filterStatus: '', createForm: { show: false }, detail: null, detailLoading: false, acting: false,
+            report: null, reportLoading: false, reportFrom: '', reportTo: '' } };
+        },
+        computed: { shippingReconEmpty: function() { return this.shipping.reconError; } },
+        methods: {
+          setShippingSubtab: function() {}, loadCarriers: function() {}, toggleCarrier: function() {},
+          shipStatusBadge: function() { return ''; }, loadReconciliations: function() {}, openReconCreate: function() {},
+          submitReconCreate: function() {}, openReconDetail: function() {}, saveReconItem: function() {},
+          confirmRecon: function() {}, payRecon: function() {}, loadShippingReport: function() {}
+        }
+      };
+    },
+    audit: function() {
+      return {
+        data: function() {
+          return {
+            audit: { activeCat: '', entity: '', logAction: '', entityId: '', loading: false,
+              error: 'Không tải được module Nhật ký (mops-admin-audit.js) — báo dev kiểm tra deploy.', list: [] },
+            auditCats: []
+          };
+        },
+        computed: {
+          auditEmptyMessage: function() { return this.audit.error; }
+        },
+        methods: {
+          setAuditCat: function() {},
+          loadAuditLogs: function() {},
+          auditActionClass: function() { return 'text-on-surface'; },
+          exportAuditCsv: function() { console.error('[MOPS Admin] Module Nhật ký chưa tải — không thể xuất CSV.'); }
+        }
+      };
+    },
+    coupons: function() {
+      return {
+        data: function() {
+          return {
+            couponsMgmt: { all: [], loading: false, error: 'Không tải được module Mã giảm giá (mops-admin-coupons.js) — báo dev kiểm tra deploy.',
+              search: '', creating: false, showAddForm: false,
+              newCoupon: { code: '', valueType: 'percent', value: '', minOrderAmount: '', maxUses: '', startAt: '', expiresAt: '', description: '' } }
+          };
+        },
+        computed: {
+          couponsFiltered: function() { return []; },
+          couponsEmptyMessage: function() { return this.couponsMgmt.error; }
+        },
+        methods: {
+          loadCoupons: function() {},
+          createCoupon: function() {},
+          doToggleCouponActive: function() {}
+        }
+      };
+    },
+    customers: function() {
+      return {
+        data: function() {
+          return {
+            customers: { all: [], search: '', loading: false,
+              error: 'Không tải được module Khách hàng (mops-admin-customers.js) — báo dev kiểm tra deploy.',
+              expandedId: null, detail: null, detailLoading: false, orderSearch: '', notesSaving: false,
+              showEditForm: false, editTarget: null,
+              editForm: { name: '', email: '', customerGroup: 'LẺ', defaultDiscountPercent: '',
+                addressStreet: '', addressWard: '', addressDistrict: '', addressCity: '',
+                birthday: '', acquisitionChannel: '', loyaltyPoints: '', membershipTier: '' },
+              editSaving: false }
+          };
+        },
+        computed: {
+          customersFiltered: function() { return []; },
+          customersEmptyMessage: function() { return this.customers.error; },
+          customersPaidOrders: function() { return []; },
+          customersTotalPaid: function() { return 0; },
+          customerOrdersFiltered: function() { return []; }
+        },
+        methods: {
+          loadCustomers: function() {},
+          openCustomerDrawer: function() {},
+          closeCustomerDrawer: function() {},
+          viewOrderFromCustomer: function() {},
+          startEditCustomer: function() {},
+          saveCustomerEdit: function() {},
+          saveCustomerNotes: function() {},
+          copyCustomerAddress: function() {},
+          membershipTierMeta: function() { return null; }
+        }
+      };
+    },
+    branches: function() {
+      return {
+        data: function() {
+          return {
+            branches: { all: [], loading: false,
+              error: 'Không tải được module Chi nhánh (mops-admin-branches.js) — báo dev kiểm tra deploy.',
+              search: '', filterActive: '', showAddForm: false, submitting: false,
+              newBranch: { name_vi: '', name_en: '', phone: '', email: '', address: '', tax_code: '', province: '', ward: '' },
+              showEditForm: false, editTarget: null,
+              editForm: { name_vi: '', name_en: '', phone: '', email: '', address: '', tax_code: '', active: true, is_default: false, province: '', ward: '' },
+              editSaving: false },
+            // bankAccounts PHẢI có trong fallback — modal Thêm/Sửa TK ngân hàng nằm ngoài tab
+            // (page.mops-admin.bwt:1013 dùng v-if="bankAccounts.showForm") và bảng liệt kê ở
+            // tab Chi nhánh (mops_admin_tab_branches.bwt:17-30) đều v-show → luôn evaluate. Thiếu
+            // object cha → TypeError "reading 'showForm'/'loading'/'all'" → trắng toàn trang.
+            bankAccounts: { all: [], loading: false, error: '', submitting: false,
+              showForm: false, editing: false,
+              form: { bank_account_id: '', bank_code: '', account_no: '', account_name: '', is_default: false, active: true } }
+          };
+        },
+        // activeBranches PHẢI có trong fallback — dropdown chi nhánh ở form Tạo đơn thủ công
+        // (domain Đơn hàng) và Thêm tài khoản quỹ (domain Tài chính) dùng computed này dù đang ở
+        // tab nào (v-show render mọi tab), không riêng gì tab Chi nhánh.
+        computed: {
+          activeBranches: function() { return []; },
+          activeBankAccounts: function() { return []; },
+          branchesFiltered: function() { return []; },
+          branchesEmptyMessage: function() { return this.branches.error; }
+        },
+        methods: {
+          ensureBranchesLoaded: function() {},
+          loadBranches: function() {},
+          submitBranch: function() {},
+          openEditBranch: function() {},
+          saveBranchEdit: function() {}
+        }
+      };
+    },
+    staff: function() {
+      return {
+        data: function() {
+          return {
+            staffMgmt: { all: [], loading: false,
+              error: 'Không tải được module Nhân viên (mops-admin-staff.js) — báo dev kiểm tra deploy.',
+              search: '', filterRole: '', filterActive: '', showAddForm: false, showResetForm: false,
+              newStaff: { name: '', username: '', password: '', role: 'staff', telegram: '', address: '', province: '', ward: '' },
+              resetTarget: null, resetPassword: '',
+              expandedPermsId: null, permsTarget: null, permsLoading: false, currentPerms: [], currentPermsIsOwner: false,
+              permCatalog: [], individualPerms: [], permsSaving: false,
+              showEditForm: false, editTarget: null, editForm: { name: '', role: '', telegram: '', notes: '' }, editSaving: false }
+          };
+        },
+        computed: {
+          staffFiltered: function() { return []; },
+          staffEmptyMessage: function() { return this.staffMgmt.error; }
+        },
+        methods: {
+          loadStaff: function() {},
+          roleColor: function() { return 'gray'; },
+          permLabel: function(p) { return p; },
+          isSelfStaff: function() { return false; },
+          canModifyStaff: function() { return false; },
+          canToggleStaff: function() { return false; },
+          createStaff: function() {},
+          doToggleStaffActive: function() {},
+          showResetPassword: function() {},
+          showEditStaff: function() {},
+          editRoleOptions: function() { return []; },
+          saveEditStaff: function() {},
+          confirmResetPassword: function() {},
+          toggleStaffPerms: function() {},
+          hasPermViaRole: function() { return false; },
+          isPermLockedForCaller: function() { return false; },
+          toggleIndividualPerm: function() {},
+          savePermissions: function() {}
+        }
+      };
+    },
+    notifications: function() {
+      return {
+        data: function() {
+          return {
+            notifications: { event: '', status: '',
+              error: 'Không tải được module Thông báo (mops-admin-notifications.js) — báo dev kiểm tra deploy.',
+              loading: false, list: [] }
+          };
+        },
+        methods: {
+          loadNotifications: function() {},
+          notifLabel: function(event) { return event; }
+        }
+      };
+    },
+    orders: function() {
+      return {
+        data: function() {
+          return {
+            orders: { status: '', from: '', to: '', orderId: '',
+              error: 'Không tải được module Đơn hàng (mops-admin-orders.js) — báo dev kiểm tra deploy.',
+              loading: false, list: [], expandedId: null, detail: null, detailLoading: false, pulling: false },
+            qrLightboxUrl: null,
+            // shipModal PHẢI có trong fallback — modal "Tạo vận đơn" ở mops_admin_tab_orders.bwt:407
+            // (v-if="shipModal.show") nằm trong khối tab-orders (v-show → luôn evaluate). Thiếu object
+            // cha → TypeError "reading 'show'" → trắng toàn trang. Shape đồng bộ mops-admin-orders.js.bwt:74.
+            shipModal: {
+              show: false, order: null, carriers: [], loading: false,
+              carrier: '', serviceTypeId: '2', requiredNote: 'CHOXEMHANGKHONGTHU',
+              packedConfirmed: true, fee: null, feeLoading: false, feeError: '',
+              selfCarrierName: 'Tự giao', manualTracking: '', manualFee: '', submitting: '',
+              rates: [], rateId: '', rateSort: 'fee', rateCarrier: '',
+              packageWeight: '', packageDims: '',
+              pickBranchId: '', showBranchPicker: false
+            },
+            manualOrder: {
+              showForm: false, itemSearch: '', cart: [],
+              itemSearchFocused: false, categoryFilter: '',
+              quickAdd: { show: false, title: '', price: '', inventoryQty: '', sku: '', productType: '', vendor: '', image: '', saving: false },
+              orderType: 'deposit', branchId: '', appointmentDate: '', appointmentTime: '',
+              customerName: '', phone: '', note: '',
+              customerSearch: '', selectedCustomer: null,
+              discountType: '%', discountValue: '', discountReason: '',
+              couponCode: '', couponChecking: false, couponPreview: null,
+              wantsShipping: false, shipReceiverName: '', shipPhone: '', shipAddress: '', shipProvince: '', shipWard: '',
+              submitting: false, error: '', result: null
+            }
+          };
+        },
+        computed: {
+          manualOrderSearchResults: function() { return []; },
+          manualOrderCategories: function() { return []; },
+          manualOrderNoResults: function() { return false; },
+          manualOrderAmounts: function() { return { subtotal: 0, discount: 0, fee: 0, total: 0 }; },
+          ordersEmptyMessage: function() { return this.orders.error; }
+        },
+        // loadOrders/confirmPullFromSapo PHẢI có — @keydown.enter/@click bare reference trong
+        // toolbar tab Đơn hàng luôn render (không gated), thiếu method (không chỉ thiếu data)
+        // sẽ crash "reading '_withKeys'" giống bài học domain audit.
+        methods: {
+          loadOrders: function() { return Promise.resolve(); },
+          toggleOrderDetail: function() {},
+          orderActions: function() { return []; },
+          confirmUpdateOrderStatus: function() {},
+          confirmPullFromSapo: function() {},
+          canPushToSapo: function() { return false; },
+          confirmPushToSapo: function() {},
+          openManualOrderForm: function() {},
+          manualOrderCustomerResults: function() { return []; },
+          pickManualOrderCustomer: function() {},
+          onManualOrderCustomerFieldInput: function() {},
+          addToManualOrderCart: function() {},
+          removeFromManualOrderCart: function() {},
+          incManualOrderCartQty: function() {},
+          decManualOrderCartQty: function() {},
+          onManualOrderSearchBlur: function() {},
+          openManualOrderQuickAdd: function() {},
+          closeManualOrderQuickAdd: function() {},
+          submitManualOrderQuickAdd: function() {},
+          closeManualOrderForm: function() {},
+          printOrderInvoice: function() {},
+          printManualOrderResult: function() {},
+          printOrderDetail: function() {},
+          viewCustomerFromOrder: function() {},
+          openQrLightbox: function() {},
+          closeQrLightbox: function() {},
+          applyManualOrderCoupon: function() {},
+          manualOrderDiscountValid: function() { return true; },
+          submitManualOrder: function() {}
+        }
+      };
+    },
+    products: function() {
+      return {
+        data: function() {
+          return {
+            products: { all: [], loading: false,
+              error: 'Không tải được module Sản phẩm (mops-admin-products.js) — báo dev kiểm tra deploy.',
+              filterStatus: '', filterMapped: '', filterStock: '', filterCategory: '',
+              search: '', searchDebounced: '', sortBy: '', sortDir: 'desc',
+              page: 1, pageSize: 10, syncing: false, showAddForm: false, creating: false,
+              newProduct: { title: '', price: '', deposit: '', costPrice: '', sku: '', image: '',
+                compareAtPrice: '', vendor: '', productType: '', unit: '', weight: '', barcode: '', requiresShipping: false,
+                imageFileName: '', imagePreview: '', imagePreparing: false } },
+            rightPanel: { open: false, title: '', product: null, editing: false,
+              editForm: { title: '', price: '', compare_at_price: '', inventory_qty: '',
+                vendor: '', product_type: '', unit: '', weight: '', barcode: '', requires_shipping: false },
+              saving: false }
+          };
+        },
+        computed: {
+          productsFiltered: function() { return []; },
+          productCategories: function() { return []; },
+          productsTotalPages: function() { return 1; },
+          productsPageItems: function() { return []; },
+          productsPageFrom: function() { return 0; },
+          productsPageTo: function() { return 0; },
+          productsPageNumbers: function() { return []; },
+          productsStatsCards: function() { return []; },
+          productsEmptyMessage: function() { return this.products.error; }
+        },
+        // loadProducts/confirmSyncProducts/exportProductsCsv/createLocalProduct PHẢI có — bare
+        // reference trong toolbar tab Sản phẩm (v-show, luôn evaluate) hoặc @click gated theo
+        // activeTab==='products' (v-if thật nhưng vẫn cần method tồn tại 1 khi đã chuyển tab đó).
+        methods: {
+          sortProductsBy: function() {},
+          productStatusBadge: function() { return { text: '', cls: '' }; },
+          isStockTracked: function() { return false; },
+          stockBadge: function() { return null; },
+          loadProducts: function() {},
+          confirmSyncProducts: function() {},
+          productRowBg: function() { return ''; },
+          connectProduct: function() {},
+          openProductDetail: function() {},
+          openProductEdit: function() {},
+          closeRightPanel: function() {},
+          confirmDisconnectProduct: function() {},
+          startEditProduct: function() {},
+          saveProductEdit: function() {},
+          exportProductsCsv: function() {},
+          createLocalProduct: function() {},
+          onNewProductImageFile: function() {}
+        }
+      };
+    },
+    settings: function() {
+      return {
+        data: function() {
+          return {
+            cfgTabs: [],
+            settings: { panel: 'status', appVersion: '', env: '', maintenance: false,
+              bankCode: '', accountNo: '', accountName: '', telegramChatId: '', sapoStore: '',
+              telegramToken: '', sapoKey: '', sapoSecret: '',
+              telegramTokenSet: false, sapoKeySet: false, sapoSecretSet: false,
+              lastSaved: 'Không tải được module Cấu hình (mops-admin-settings.js) — báo dev kiểm tra deploy.',
+              bankEditing: false, saving: false,
+              sapoKeyVisible: false, sapoSecretVisible: false, telegramTokenVisible: false },
+            settingsSnapshot: null
+          };
+        },
+        computed: {
+          maskedAccountNo: function() { return '—'; }
+        },
+        // saveSettings/cancelSettings bare reference trong footer sticky luôn render khi ở tab
+        // Cấu hình (activeTab==='settings' — v-if thật ở nav, nhưng nội dung bên trong vẫn v-show).
+        methods: {
+          cancelBankEdit: function() {},
+          setSettingsPanel: function() {},
+          loadSettingsData: function() {},
+          cancelSettings: function() {},
+          saveSettings: function() {}
+        }
+      };
+    },
+    inventory: function() {
+      return {
+        data: function() {
+          return {
+            inventory: {
+              activePanel: 'suppliers', panelLoaded: {},
+              suppliers: { list: [], loading: false,
+                error: 'Không tải được module Kho & NCC (mops-admin-inventory.js) — báo dev kiểm tra deploy.',
+                showAddForm: false, submitting: false,
+                newSupplier: { name: '', phone: '', address: '', note: '', contactPerson: '', email: '', taxCode: '', province: '', ward: '' },
+                showEditForm: false, editTarget: null, editSaving: false,
+                editForm: { name: '', phone: '', address: '', note: '', contactPerson: '', email: '', taxCode: '', active: true, province: '', ward: '' },
+                drawerId: null, detail: null, detailLoading: false },
+              purchaseOrders: { list: [], loading: false, error: '', filterStatus: '',
+                showAddForm: false, submitting: false,
+                editingId: null, detailId: null, menuOpenId: null, menuPos: { top: 0, left: 0 },
+                newPO: { supplier_id: '', note: '', shipping_cost: '', storage_cost: '', vat_amount: '', discount_amount: '', allocation_basis: 'QTY',
+                  payment_terms: 'FULL', deposit_amount: '',
+                  items: [{ product_id: '', product_name: '', qty: 1, unit_cost: '', weight: '' }] } },
+              bills: { list: [], loading: false, error: '' }
+            }
+          };
+        },
+        computed: {
+          inventoryPanels: function() { return []; },
+          openBillsForVoucher: function() { return []; },
+          openDepositPOsForVoucher: function() { return []; },
+          purchaseOrderMenuTarget: function() { return null; },
+          purchaseOrderDetailTarget: function() { return null; }
+        },
+        // loadPurchaseOrders/openPurchaseOrderForm bare/@change reference trong toolbar tab Kho
+        // & NCC luôn render khi panel đó mở.
+        methods: {
+          setInventoryPanel: function() {},
+          loadSuppliers: function() {},
+          submitSupplier: function() {},
+          startEditSupplier: function() {},
+          saveSupplierEdit: function() {},
+          confirmDeleteSupplier: function() {},
+          openSupplierDrawer: function() {},
+          closeSupplierDrawer: function() {},
+          addPOItemRow: function() {},
+          removePOItemRow: function() {},
+          poItemsSubtotal: function() { return 0; },
+          poItemSearchResults: function() { return []; },
+          pickPOItemProduct: function() {},
+          openPurchaseOrderForm: function() {},
+          openEditPurchaseOrderForm: function() {},
+          loadPurchaseOrders: function() {},
+          supplierName: function(id) { return id; },
+          submitPurchaseOrder: function() {},
+          postPurchaseOrderAction: function() {},
+          cancelPurchaseOrderAction: function() {},
+          openPurchaseOrderDetail: function() {},
+          closePurchaseOrderDetail: function() {},
+          purchaseItemImage: function() { return ''; },
+          togglePurchaseOrderMenu: function() {},
+          loadBills: function() {},
+          billStatusClass: function() { return ''; }
+        }
+      };
+    },
+    finance: function() {
+      return {
+        data: function() {
+          return {
+            finance: { from: '', to: '', groupBy: 'day', loading: false,
+              error: 'Không tải được module Tài chính (mops-admin-finance.js) — báo dev kiểm tra deploy.',
+              metrics: null, list: [], listLoading: false, listError: '', showAddForm: false, submitting: false,
+              newTx: { type: 'EXPENSE', category: '', amount: '', reference: '', note: '', account: 'Tiền mặt' } },
+            financeCore: {
+              activePanel: 'legacy', panelLoaded: {},
+              accounts: { list: [], loading: false, error: '', showAddForm: false, submitting: false,
+                newAccount: { name: '', type: 'CASH', branch: '', opening_balance: '' } },
+              receipts: { list: [], loading: false, error: '', filterStatus: '', showAddForm: false, submitting: false, categories: [],
+                newReceipt: { account_id: '', party_id: '', category_id: '', amount: '', note: '' },
+                showAddCategory: false, categorySaving: false, newCategory: { group: '', name: '' } },
+              vouchers: { list: [], loading: false, error: '', filterStatus: '', showAddForm: false, submitting: false, categories: [],
+                newVoucher: { account_id: '', party_id: '', category_id: '', amount: '', note: '', attachment_url: '', bill_id: '' },
+                showAddCategory: false, categorySaving: false, newCategory: { group: '', name: '' } },
+              transfers: { list: [], loading: false, error: '', filterStatus: '', showAddForm: false, submitting: false,
+                newTransfer: { from_account_id: '', to_account_id: '', amount: '', note: '' } },
+              adjustments: { list: [], loading: false, error: '', filterStatus: '', showAddForm: false, submitting: false,
+                newAdjustment: { account_id: '', direction: 'DECREASE', amount: '', reason: '' } }
+            }
+          };
+        },
+        computed: {
+          financeCategoriesForType: function() { return []; },
+          financeCards: function() { return []; },
+          financeGrossProfitCard: function() { return null; },
+          financeExpenseByCategory: function() { return []; },
+          financeExpenseByCategoryChartHeight: function() { return '140px'; },
+          financeCorePanels: function() { return []; }
+        },
+        methods: {
+          onFinanceTypeChange: function() {},
+          loadFinance: function() {},
+          renderFinanceLegacyChart: function() {},
+          submitCashTransaction: function() {},
+          doVoidCashTransaction: function() {},
+          setFinanceCorePanel: function() {},
+          loadFinanceCoreAccounts: function() {},
+          loadFinanceCoreCategories: function() {},
+          createCashAccount: function() {},
+          createFinanceCategory: function() {},
+          loadReceipts: function() {},
+          submitReceipt: function() {},
+          postReceiptAction: function() {},
+          cancelReceiptAction: function() {},
+          loadVouchers: function() {},
+          submitVoucher: function() {},
+          openDepositVoucherForm: function() {},
+          submitVoucherAction: function() {},
+          approveVoucherAction: function() {},
+          postVoucherAction: function() {},
+          cancelVoucherAction: function() {},
+          loadTransfers: function() {},
+          createTransfer: function() {},
+          postTransferAction: function() {},
+          cancelTransferAction: function() {},
+          loadAdjustments: function() {},
+          createAdjustment: function() {},
+          submitAdjustmentAction: function() {},
+          approveAdjustmentAction: function() {},
+          postAdjustmentAction: function() {},
+          cancelAdjustmentAction: function() {}
+        }
+      };
+    },
+    overview: function() {
+      return {
+        data: function() {
+          return {
+            overview: { from: '', to: '', groupBy: 'day', loading: false,
+              error: 'Không tải được module Tổng quan (mops-admin-overview.js) — báo dev kiểm tra deploy.',
+              metrics: null, subTab: 'overview', subLoaded: {} },
+            salesReport:     { loading: false, error: '', data: null },
+            customerReport:  { loading: false, error: '', data: null },
+            purchaseReport:  { loading: false, error: '', data: null },
+            inventoryReport: { loading: false, error: '', data: null },
+            financeReport:   { loading: false, error: '', analytics: null, accounts: [], bills: [], missingReceipts: [] }
+          };
+        },
+        computed: {
+          overviewCards: function() { return []; },
+          overviewNetProfitCard: function() { return null; },
+          overviewCardsSecondary: function() { return []; },
+          overviewOrderRatio: function() { return null; },
+          overviewTopServices: function() { return []; },
+          overviewTopCustomers: function() { return []; },
+          overviewStaffPerformance: function() { return []; },
+          overviewRevenueBuckets: function() { return []; },
+          overviewRevenueByStore: function() { return []; },
+          overviewRevenueByStoreChartHeight: function() { return '140px'; },
+          reportSubTabs: function() { return [{ key: 'overview', label: 'Tổng quan' }]; }, // v-for trần trong tab_overview — không để undefined
+          salesByOrderType: function() { return []; },
+          salesBySource: function() { return []; },
+          salesCouponStats: function() { return []; },
+          salesDiscountByStaff: function() { return []; },
+          customerByGroup: function() { return []; },
+          customerBySource: function() { return []; },
+          customerNewInRange: function() { return 0; },
+          purchaseKpi: function() { return {}; },
+          purchaseBySupplier: function() { return []; },
+          purchaseTopProducts: function() { return []; },
+          purchaseByStatus: function() { return []; },
+          inventoryLowStock: function() { return []; },
+          inventoryMovements: function() { return []; },
+          financeReportOpenBills: function() { return []; },
+          financeReportCards: function() { return []; }
+        },
+        methods: {
+          loadOverview: function() {},
+          renderOverviewCharts: function() {},
+          setReportSubTab: function() {},
+          refreshReportSubTab: function() {},
+          loadSalesReport: function() {},
+          loadCustomerReport: function() {},
+          loadPurchaseReport: function() {},
+          loadInventoryReport: function() {},
+          loadFinanceReport: function() {}
+        }
+      };
+    }
+  };
+  (function() {
+    var registered = window.MopsAdminRegisteredDomains || [];
+    Object.keys(MOPS_DOMAIN_FALLBACKS).forEach(function(name) {
+      if (registered.indexOf(name) === -1) {
+        console.error('[MOPS Admin] Domain "' + name + '" chưa được nạp — thiếu Assets tương ứng trên Sapo, 404, hoặc script nạp sai thứ tự (phải nạp TRƯỚC mops-admin.js). Dùng dữ liệu rỗng tạm thời để tránh crash toàn trang.');
+        window.MopsAdminMixins = window.MopsAdminMixins || [];
+        window.MopsAdminMixins.push(MOPS_DOMAIN_FALLBACKS[name]());
+      }
+    });
+  })();
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     VUE APP — toàn bộ 9 tab (shell + auth + Tổng quan + Đơn hàng + Sản phẩm +
+     Khách hàng + Tài chính + Thông báo + Nhật ký + Nhân viên + Mã giảm giá + Cấu hình)
+     Nhật ký đã tách ra Assets/mops-admin-audit.js.bwt (mixin, xem window.MopsAdminMixins) —
+     load TRƯỚC file này trong Layouts/mops-admin.bwt.
+  ══════════════════════════════════════════════════════════════════════════ */
+  var mopsTemplateSource = document.getElementById('mops-app-template');
+  if (!mopsTemplateSource) {
+    window.__mopsAdminRuntime.state = 'template-error';
+    window.__mopsAdminRuntime.error = '#mops-app-template không tồn tại.';
+    console.error('[MOPS Admin] Không tìm thấy template inert #mops-app-template.');
+    return;
+  }
+
+  var app = Vue.createApp({
+    // Không compile trực tiếp DOM page. Liquid markup được giữ trong <template> inert cho
+    // tới khi Vue đọc content này; mount lỗi thì #mops-app vẫn rỗng, không lộ v-if/[[...]].
+    template: mopsTemplateSource.innerHTML,
+    delimiters: ['[[', ']]'],
+    // Domain tách riêng (Nhật ký — xem Assets/mops-admin-audit.js.bwt) tự đăng ký data/computed/
+    // methods của mình vào đây qua mixins, thay vì khai báo trực tiếp trong data()/computed/methods
+    // bên dưới. Vue tự gộp — không cần merge tay.
+    mixins: window.MopsAdminMixins || [],
+    data: function() {
+      return {
+        screen: 'booting', // 'booting' | 'login' | 'dashboard'
+        loginForm: { username: (function() { try { return localStorage.getItem(REMEMBER_USERNAME_KEY) || ''; } catch(e) { return ''; } })(), password: '' },
+        loginShowPassword: false,
+        rememberLogin: (function() { try { return !!localStorage.getItem(REMEMBER_TOKEN_KEY); } catch(e) { return false; } })(),
+        loginError: '',
+        loginLoading: false,
+        staff: null,
+        paymentConfigured: true, // true cho tới khi staff_me/login trả về false thật — tránh flash cảnh báo sai trong lúc GAS cũ chưa deploy field này
+        canViewFinance: false, // false cho tới khi staff_me/login trả về true — mặc định khoá tab Tài chính, không giống paymentConfigured (mặc định false an toàn hơn vì đây là gate quyền, không phải banner cấu hình)
+        activeTab: 'overview',
+        // View manager nội bộ SPA. Tab quyết định domain; view quyết định màn hình lớn trong
+        // workspace. Bắt đầu với Orders để thay drawer detail bằng trang detail thực thụ.
+        workspaceView: 'overview',
+        // Lịch sử workspace chỉ lưu navigation nội bộ. Không dùng browser router/pushState vì
+        // MOPS vẫn là một SPA và sidebar không được tạo lịch sử Back cho từng lần đổi tab.
+        workspaceViewStack: [],
+        sidebarCollapsed: (function() { try { return localStorage.getItem('mops_sidebar_collapsed') === '1'; } catch(e) { return false; } })(),
+        sidebarOpenMobile: false,
+        // Bộ lọc mobile (≤767px): toolbar filter mỗi tab bị ẩn sau 1 nút "Bộ lọc", bấm mới bung
+        // thành bottom-sheet (tái dùng token .ma-detail-sheet). 1 cờ dùng chung cho mọi tab vì chỉ
+        // 1 tab hiển thị tại 1 thời điểm (v-show) — reset false mỗi lần đổi tab (setActiveTab).
+        mobileFilterOpen: false,
+        // App Launcher (2026-08-21) — nâng cấp từ Springboard mobile cũ (.ma-spring iOS-swipe) sang
+        // full-page grid responsive dùng chung mọi kích thước, pattern Salesforce Lightning App
+        // Launcher (13 app > ngưỡng 9 của Google Waffle popover). Vào MOPS không có ?tab= → thấy
+        // launcher đầu tiên; bấm app → setActiveTab → URL ?tab=<key>. Direct URL có ?tab= bypass.
+        //   open=true mặc định (data). initDashboard đóng lại nếu URL có ?tab= (deep-link / reload).
+        //   query: search input filter navTabs theo label (bỏ dấu tương lai). filterGroup: chip
+        //     lọc theo group (mobile). page/searchOpen giữ để backward-compat với springboard cũ
+        //     đang chưa gỡ hoàn toàn.
+        //   recent: 4 tabKey mới nhất staff mở qua launcher, đọc/ghi localStorage 'mops_launcher_recent'
+        //     (M365 Recently Used pattern). Không sync sang server — mỗi trình duyệt/máy riêng.
+        mobileHome: (function() {
+          var recent = [];
+          try {
+            var raw = localStorage.getItem('mops_launcher_recent');
+            if (raw) recent = JSON.parse(raw) || [];
+          } catch (e) { recent = []; }
+          return { open: true, filterGroup: '', page: 0, searchOpen: true, query: '', recent: recent };
+        })(),
+        // App Launcher V2 (2026-08-22 — Windows Store card style): key của card đang hover
+        // để render popover 1 lần duy nhất (không render 13 popover ẩn). null = không hover.
+        launcherHoveredKey: null,
+        // Vị trí popover (rev3 2026-08-22): position:fixed toạ độ viewport, tính từ
+        // getBoundingClientRect() của card lúc @mouseenter. Bypass overflow container →
+        // không bị .ma-launcher__body clip; đè lên các card khác bằng z-index.
+        launcherPopPos: { top: 0, left: 0 },
+        // qrLightboxUrl — chuyển sang mixin Assets/mops-admin-orders.js.bwt.
+        // Danh mục Tỉnh/Xã dùng chung — xem ensureProvincesLoaded()/loadWardsForProvince()/
+        // onProvinceChange()/wardsFor() (review 2026-07-16). wardsByProvince/wardsLoading keyed
+        // theo provinceCode (số), KHÔNG phải theo tên — vì API cần code để tra wards.
+        addressBook: { provinces: [], provincesLoading: false, provincesError: '', wardsByProvince: {}, wardsLoading: {} },
+        globalSearch: '',
+        // group: null = mục đứng độc lập ngoài sidebar. group: '<key>' = gộp vào
+        // dropdown cha tương ứng khai báo ở navGroups; Báo cáo và Tài chính được mở rộng
+        // thành các sub-panel trong groupedNavTabs (xem navStructure cho thứ tự hiển thị).
+        navTabs: [
+          { key: 'overview',      icon: 'assessment',             label: 'Báo cáo',       group: 'reports' },
+          { key: 'orders',        icon: 'shopping_cart',          label: 'Đơn hàng',      group: 'sales' },
+          { key: 'shipping',      icon: 'local_shipping',         label: 'Vận chuyển',    group: 'shipping' },
+          // T-53: chi tiết 1 vận đơn cụ thể — timeline thật cho GHTK/carrier có webhook (shipment_timeline
+          // từ getOrder), KHÔNG giả lập timeline cho carrier chỉ nhập tay (ADR-005).
+          { key: 'waybill_detail', icon: 'local_shipping',        label: 'Chi tiết Vận đơn', group: 'shipping' },
+          // T-54: bulk-ops đơn GHTK, lọc client-side từ orders.list đã fetch (không API mới).
+          { key: 'ghtk_hub',      icon: 'local_shipping',         label: 'GHTK Operations Hub', group: 'shipping' },
+          { key: 'coupons',       icon: 'sell',                   label: 'Mã giảm giá',   group: 'sales' },
+          // REOPEN 2026-09-11 (ADR-007/T-81) — duyệt đơn đăng ký đại lý B2B (MOD-04 xlsx).
+          // MST/chữ ký số KHÔNG tự động verify (BLOCKED_EXTERNAL) — chỉ hiển thị + duyệt/từ
+          // chối thủ công, mirror pattern approveOrder (pending_approval → pending_packing).
+          { key: 'b2b',           icon: 'handshake',              label: 'Đại lý B2B',    group: 'sales' },
+          { key: 'products',      icon: 'inventory_2',            label: 'Sản phẩm',      group: 'catalog' },
+          { key: 'inventory',     icon: 'input_circle',           label: 'Nhập hàng & NCC', group: 'catalog' },
+          { key: 'customers',     icon: 'group',                  label: 'Khách hàng',    group: null },
+          { key: 'finance',       icon: 'account_balance_wallet', label: 'Tài chính',     group: 'finance' },
+          { key: 'staff',         icon: 'badge',                  label: 'Nhân viên',     group: 'ops' },
+          { key: 'branches',      icon: 'store',                  label: 'Chi nhánh',     group: 'ops' },
+          { key: 'notifications', icon: 'notifications',          label: 'Thông báo',     group: 'system' },
+          { key: 'audit',         icon: 'history',                label: 'Nhật ký',       group: 'system' },
+          { key: 'settings',      icon: 'admin_panel_settings',   label: 'Cấu hình',      group: 'system' },
+          // T-50: trang tham chiếu component (badge/button/table-row atom) dùng chung cho
+          // Đơn hàng/Vận chuyển/GHTK Hub/Chi tiết vận đơn — không phải module nghiệp vụ OMS
+          // riêng (ADR-005, .project-agent/DECISIONS.md).
+          { key: 'master_oms',    icon: 'view_module',            label: 'Master OMS & Atoms', group: 'system' },
+          // T-55: UI-shell demo only — KHÔNG có backend ký số (ADR-005, grep mops-gas/*.js
+          // xác nhận không có endpoint X-Signs nào). Xem mops-gas/docs/SIGNING_BACKEND_DESIGN_NOTE.md.
+          { key: 'signing',       icon: 'draw',                    label: 'Ký số X-Signs (Beta)', group: 'system' }
+        ],
+        navGroups: [
+          { key: 'reports', icon: 'assessment',    label: 'Báo cáo' },
+          { key: 'finance', icon: 'account_balance_wallet', label: 'Tài chính' },
+          { key: 'sales',   icon: 'point_of_sale', label: 'Quản lý bán hàng' },
+          { key: 'shipping', icon: 'local_shipping', label: 'Vận chuyển' },
+          { key: 'catalog', icon: 'inventory',     label: 'Sản phẩm & Kho' },
+          { key: 'ops',     icon: 'apartment',     label: 'Quản lý vận hành' },
+          { key: 'system',  icon: 'settings',      label: 'Hệ thống' }
+        ],
+        // Thứ tự hiển thị thật trong sidebar — xen kẽ mục độc lập và nhóm dropdown.
+        navStructure: [
+          { type: 'group', key: 'reports' },
+          { type: 'group', key: 'sales' },
+          { type: 'group', key: 'shipping' },
+          { type: 'group', key: 'catalog' },
+          { type: 'tab',   key: 'customers' },
+          { type: 'group', key: 'finance' },
+          { type: 'group', key: 'ops' },
+          { type: 'group', key: 'system' }
+        ],
+        expandedNavGroup: null, // accordion: chỉ 1 nhóm mở tại 1 thời điểm, setActiveTab tự mở nhóm chứa tab đang chọn
+        tabTitles: {
+          overview: 'Báo cáo', orders: 'Đơn hàng', products: 'Sản phẩm', customers: 'Khách hàng',
+          finance: 'Tài chính', inventory: 'Kho & NCC', notifications: 'Thông báo', audit: 'Nhật ký', staff: 'Nhân viên',
+          branches: 'Chi nhánh', coupons: 'Mã giảm giá', b2b: 'Đại lý B2B', shipping: 'Vận chuyển', settings: 'Cấu hình',
+          master_oms: 'Master OMS & Atoms', waybill_detail: 'Chi tiết Vận đơn', ghtk_hub: 'GHTK Operations Hub',
+          signing: 'Ký số X-Signs (Beta)'
+        },
+        tabLoaded: {},
+
+        // overview / salesReport / customerReport / purchaseReport / inventoryReport / financeReport
+        // — chuyển sang mixin Assets/mops-admin-overview.js.bwt.
+
+        // finance / financeCore — chuyển sang mixin Assets/mops-admin-finance.js.bwt.
+
+        // inventory — chuyển sang mixin Assets/mops-admin-inventory.js.bwt.
+
+        // orders — chuyển sang mixin Assets/mops-admin-orders.js.bwt.
+
+        // products / rightPanel — chuyển sang mixin Assets/mops-admin-products.js.bwt.
+
+        // manualOrder — chuyển sang mixin Assets/mops-admin-orders.js.bwt.
+
+        // customers — chuyển sang mixin Assets/mops-admin-customers.js.bwt.
+
+        // notifications — chuyển sang mixin Assets/mops-admin-notifications.js.bwt.
+
+        // audit / auditCats — chuyển sang mixin Assets/mops-admin-audit.js.bwt (tách domain đầu tiên).
+
+        // staffMgmt — chuyển sang mixin Assets/mops-admin-staff.js.bwt.
+
+        // Hồ sơ của tôi (update_my_profile) — form nhẹ, KHÔNG prefetch dữ liệu hiện tại (staff
+        // thường không có quyền staff.manage để gọi list_staffs xem lại chính mình) — để trống
+        // = giữ nguyên giá trị cũ trên server, chỉ field nào gõ mới được gửi đi.
+        myProfile: { open: false, saving: false, form: { name: '', telegram: '', notes: '', currentPassword: '', newPassword: '' } },
+
+        // branches — chuyển sang mixin Assets/mops-admin-branches.js.bwt.
+
+        // couponsMgmt — chuyển sang mixin Assets/mops-admin-coupons.js.bwt.
+
+        // cfgTabs / settings / settingsSnapshot — chuyển sang mixin Assets/mops-admin-settings.js.bwt.
+      };
+    },
+    computed: {
+      // CHỈ dùng để ẩn/hiện UI (v-if) — KHÔNG dùng để xin quyền. Mọi request lên
+      // GAS chỉ gửi token; server tự tra role thật từ token, không tin isOwner này.
+      isOwner: function() {
+        return !!(this.staff && String(this.staff.role || '').toLowerCase() === 'owner');
+      },
+      // Dựng danh sách sidebar theo navStructure: mục 'tab' render thẳng, mục 'group'
+      // gộp các navTabs cùng group thành 1 dropdown cha. Luật ẩn/hiện quyền áp cho cả 2:
+      // settings → isOwner, finance → canViewFinance. Nhóm rỗng sau khi lọc quyền thì tự
+      // ẩn cả header, không để dropdown cha trống ruột.
+      groupedNavTabs: function() {
+        var self = this;
+        function tabVisible(tab) { return self.isTabVisible(tab); }
+        var tabsByKey = {};
+        this.navTabs.forEach(function(t) { tabsByKey[t.key] = t; });
+        var groupsByKey = {};
+        this.navGroups.forEach(function(g) { groupsByKey[g.key] = g; });
+
+        var result = [];
+        this.navStructure.forEach(function(entry) {
+          if (entry.type === 'tab') {
+            var tab = tabsByKey[entry.key];
+            if (tab && tabVisible(tab)) result.push({ type: 'tab', tab: tab });
+            return;
+          }
+          var group = groupsByKey[entry.key];
+          if (entry.key === 'shipping') {
+            var shippingChildren = [
+              // 2026-08-23: subtab 'shipments' là mặc định khi vào tab Vận chuyển — trước đây thiếu mục
+              // sidebar tương ứng, staff phải click tab cha rồi tự chọn chip Vận đơn. Đưa lên đầu để
+              // hành trình click "Vận đơn" từ sidebar → thẳng vào list vận đơn (đúng UX kỳ vọng).
+              { key: 'shipping-shipments', shippingSubtab: 'shipments', label: 'Vận đơn', icon: 'inventory_2' },
+              { key: 'shipping-recon', shippingSubtab: 'recon', label: 'Đối soát COD/Phí', icon: 'fact_check' },
+              { key: 'shipping-report', shippingSubtab: 'report', label: 'Báo cáo vận đơn', icon: 'summarize' },
+              { key: 'shipping-carriers', shippingSubtab: 'carriers', label: 'Đối tác vận chuyển', icon: 'local_shipping' }
+            ];
+            if (group) result.push({ type: 'group', group: group, children: shippingChildren, hasActiveChild: self.activeTab === 'shipping' });
+            return;
+          }
+          // Báo cáo là một điểm vào duy nhất (tab overview), nhưng sidebar cần dẫn thẳng tới
+          // từng sub-report. Các child này không phải SPA tab độc lập: openReportSubTab() sẽ
+          // luôn giữ activeTab là overview rồi chọn đúng sub-tab.
+          if (entry.key === 'reports') {
+            var reportChildren = self.reportSubTabs.map(function(report) {
+              return {
+                key: report.key,
+                subTab: report.key,
+                label: report.key === 'overview' ? 'Tổng quan' : 'Báo cáo ' + report.label,
+                icon: ({ overview: 'dashboard', sales: 'trending_up', customer: 'group', purchase: 'inventory_2', inventory: 'warehouse', finance: 'account_balance_wallet' })[report.key] || 'assessment'
+              };
+            });
+            if (group && reportChildren.length) {
+              result.push({
+                type: 'group',
+                group: group,
+                children: reportChildren,
+                hasActiveChild: self.activeTab === 'overview'
+              });
+            }
+            return;
+          }
+          // Tài chính cũng chỉ dùng tab finance, còn các mục con chọn đúng panel của
+          // Finance Core. Sổ quỹ giữ key legacy để tương thích với dữ liệu V1 hiện có.
+          if (entry.key === 'finance') {
+            var financeTab = tabsByKey.finance;
+            var financeChildren = financeTab && tabVisible(financeTab) && self.financeCorePanels.map(function(panel) {
+              return {
+                key: panel.key,
+                financePanel: panel.key,
+                label: panel.label,
+                icon: ({ legacy: 'account_balance', accounts: 'account_balance_wallet', receipts: 'receipt_long', vouchers: 'request_quote', transfers: 'swap_horiz', adjustments: 'tune' })[panel.key] || 'account_balance_wallet'
+              };
+            });
+            if (group && financeChildren && financeChildren.length) {
+              result.push({
+                type: 'group',
+                group: group,
+                children: financeChildren,
+                hasActiveChild: self.activeTab === 'finance'
+              });
+            }
+            return;
+          }
+          var children = self.navTabs.filter(function(t) { return t.group === entry.key && tabVisible(t); });
+          if (!group || !children.length) return;
+          result.push({
+            type: 'group',
+            group: group,
+            children: children,
+            hasActiveChild: children.some(function(c) { return c.key === self.activeTab; })
+          });
+        });
+        return result;
+      },
+      tabTitle: function() { return this.tabTitles[this.activeTab] || 'MOPS Admin'; },
+      staffInitial: function() {
+        var n = (this.staff && (this.staff.name || this.staff.username)) || '?';
+        return n.trim().charAt(0).toUpperCase();
+      },
+      // Mobile App Springboard — dùng chung isTabVisible() với groupedNavTabs (không phải bản
+      // sao riêng — 2 luật lệch nhau là đúng bug đã gặp ở review 2026-07-17) nhưng trả về danh
+      // sách PHẲNG vì lưới ứng dụng không có khái niệm dropdown cha/con như sidebar desktop.
+      // Lọc thêm theo chip danh mục đang chọn (dùng đúng key group có sẵn trong navTabs —
+      // không tạo taxonomy riêng cho mobile).
+      mobileSpringboardApps: function() {
+        var self = this;
+        var list = this.navTabs.filter(function(t) { return self.isTabVisible(t); });
+        if (this.mobileHome.filterGroup) {
+          list = list.filter(function(t) { return t.group === self.mobileHome.filterGroup; });
+        }
+        return list;
+      },
+      // Chia trang kiểu springboard thật (iOS/Android): 8 app/trang = lưới 4 cột × 2 dòng,
+      // vuốt ngang giữa các trang, có dot ở dưới. Luôn trả về ít nhất 1 trang (rỗng) để lưới
+      // không "biến mất" khi 1 danh mục không còn app nào sau khi lọc quyền.
+      // Giữ backward-compat cho template mobile cũ trong lúc migrate — nút gọi cùng nguồn.
+      mobileSpringboardPages: function() {
+        var apps = this.mobileSpringboardApps, pages = [], size = 8;
+        for (var i = 0; i < apps.length; i += size) pages.push(apps.slice(i, i + size));
+        return pages.length ? pages : [[]];
+      },
+      // ── App Launcher (unified, 2026-08-21) ──
+      // Danh sách app khả dụng theo quyền + query search. Chuẩn hoá bỏ dấu để user gõ không dấu vẫn ra.
+      launcherApps: function() {
+        var self = this;
+        var list = this.navTabs.filter(function(t) { return self.isTabVisible(t); });
+        var q = (this.mobileHome.query || '').trim().toLowerCase();
+        if (q) {
+          var qn = self._launcherNorm(q);
+          list = list.filter(function(t) {
+            var label = self._launcherNorm(String(t.label || '').toLowerCase());
+            return label.indexOf(qn) !== -1 || String(t.key || '').indexOf(q) !== -1;
+          });
+        }
+        return list;
+      },
+      // 3 super-category (2026-08-21): gom 7 navGroups → 3 heading không collapse, theo research
+      // Salesforce/Fiori (grouping cứng, không để user tự sắp xếp lại — MOPS tool nội bộ, không cần
+      // personalization complexity). key trong `groups` khớp field `group` trong navTabs.
+      launcherSections: function() {
+        var supers = [
+          { key: 'ops',    label: 'Vận hành',        groups: ['sales', 'shipping', 'catalog', null] }, // null = customers standalone
+          { key: 'admin',  label: 'Quản trị',        groups: ['ops', 'system'] },
+          { key: 'report', label: 'Báo cáo & Tài chính', groups: ['reports', 'finance'] }
+        ];
+        var apps = this.launcherApps;
+        return supers.map(function(s) {
+          var items = apps.filter(function(a) { return s.groups.indexOf(a.group) !== -1; });
+          return { key: s.key, label: s.label, apps: items };
+        }).filter(function(s) { return s.apps.length; });
+      },
+      // Recently used tiles hiển thị top: max 4 tile, resolve từ launcher.recent (localStorage) sang
+      // navTabs (giữ nguyên object app để tile render đồng nhất với section grid). Filter mất quyền
+      // để tránh hiển thị tile khách không click được (staff bị gỡ quyền finance sau khi đã dùng).
+      launcherRecent: function() {
+        var self = this;
+        var byKey = {};
+        this.navTabs.forEach(function(t) { byKey[t.key] = t; });
+        return (this.mobileHome.recent || [])
+          .map(function(key) { return byKey[key]; })
+          .filter(function(t) { return t && self.isTabVisible(t); })
+          .slice(0, 4);
+      },
+      // overviewCards / overviewNetProfitCard / overviewCardsSecondary / overviewOrderRatio /
+      // overviewTopServices / overviewTopCustomers / overviewStaffPerformance / overviewRevenueBuckets /
+      // overviewRevenueByStore / overviewRevenueByStoreChartHeight / reportSubTabs / salesByOrderType /
+      // salesBySource / salesCouponStats / salesDiscountByStaff / customerByGroup / customerBySource /
+      // customerNewInRange / purchaseKpi / purchaseBySupplier / purchaseTopProducts / purchaseByStatus /
+      // inventoryLowStock / inventoryMovements / financeReportOpenBills / financeReportCards —
+      // chuyển sang mixin Assets/mops-admin-overview.js.bwt.
+
+      // financeCategoriesForType / financeCards / financeGrossProfitCard / financeExpenseByCategory /
+      // financeExpenseByCategoryChartHeight / financeCorePanels — chuyển sang mixin
+      // Assets/mops-admin-finance.js.bwt.
+      // activeBranches — chuyển sang mixin Assets/mops-admin-branches.js.bwt.
+      // inventoryPanels / openBillsForVoucher / openDepositPOsForVoucher — chuyển sang mixin
+      // Assets/mops-admin-inventory.js.bwt.
+      // maskedAccountNo — chuyển sang mixin Assets/mops-admin-settings.js.bwt.
+
+      // productsFiltered / productCategories / productsTotalPages / productsPageItems /
+      // productsPageFrom / productsPageTo / productsPageNumbers / productsStatsCards /
+      // productsEmptyMessage — chuyển sang mixin Assets/mops-admin-products.js.bwt.
+
+      // manualOrderSearchResults / manualOrderCategories / manualOrderNoResults /
+      // manualOrderAmounts — chuyển sang mixin Assets/mops-admin-orders.js.bwt.
+
+      /* ── Khách hàng: filter client-side, giống staffFiltered ── */
+      // customersFiltered / customersEmptyMessage / customersPaidOrders / customersTotalPaid /
+      // customerOrdersFiltered — chuyển sang mixin Assets/mops-admin-customers.js.bwt.
+
+      /* ── Nhân viên: filter client-side ── */
+      // staffFiltered / staffEmptyMessage — chuyển sang mixin Assets/mops-admin-staff.js.bwt.
+      // couponsFiltered / couponsEmptyMessage — chuyển sang mixin Assets/mops-admin-coupons.js.bwt.
+      // branchesFiltered / branchesEmptyMessage — chuyển sang mixin Assets/mops-admin-branches.js.bwt.
+      // auditEmptyMessage — chuyển sang mixin Assets/mops-admin-audit.js.bwt.
+      // ordersEmptyMessage — chuyển sang mixin Assets/mops-admin-orders.js.bwt.
+      // purchaseOrderMenuTarget / purchaseOrderDetailTarget — chuyển sang mixin
+      // Assets/mops-admin-inventory.js.bwt (bug gốc "reading 'length'" trắng trang từng ở đây khi
+      // 2 hàm này bị đặt nhầm trong methods — giữ đúng computed: khi tách domain).
+    },
+    watch: {
+      sidebarCollapsed: function(v) {
+        try { localStorage.setItem('mops_sidebar_collapsed', v ? '1' : '0'); } catch(e) {}
+      },
+      // 2026-08-22: khoá scroll body khi App Launcher mở — .ma-launcher là fixed inset:0
+      // che toàn màn nhưng #ma-wrap bên dưới vẫn có scroll riêng (content dài), gây "2
+      // thanh scroll" — thanh ngoài không tương tác được vì bị launcher che, chỉ gây rối
+      // trải nghiệm. Dùng CLASS RIÊNG (ma-launcher-open, không dùng ma-modal-open) để
+      // tránh xung đột với syncModalScrollLock() (mutation observer trên .ma-modal-backdrop
+      // sẽ vô tình gỡ class khi modal đóng dù launcher vẫn mở). immediate:true để lần
+      // render đầu (mobileHome.open=true default trong data) cũng set class ngay.
+      'mobileHome.open': {
+        immediate: true,
+        handler: function(open) {
+          try {
+            document.documentElement.classList.toggle('ma-launcher-open', !!open);
+            document.body.classList.toggle('ma-launcher-open', !!open);
+          } catch (e) {}
+        }
+      }
+      // 'products.search' debounce watch — chuyển sang mixin Assets/mops-admin-products.js.bwt.
+    },
+    methods: {
+      /* ── aliases để template gọi được các hàm format ── */
+      formatMoney: formatMoney,
+      formatDate: formatDate,
+      formatPercent: formatPercent,
+      formatAddress: formatAddress,
+
+      // SĐT lưu trên Google Sheets dễ bị rụng số 0 đầu (Sheets hiểu chuỗi toàn số là Number:
+      // "0967194063" → 967194063). Phòng vệ ở FE cho dữ liệu cũ đã lỡ mất 0: chuỗi đúng 9 chữ số
+      // và không bắt đầu bằng 0 → tự bù "0" đầu. Dữ liệu mới đã được GAS ép Plain text nên không lệch.
+      formatPhone: function(phone) {
+        if (phone === null || phone === undefined || phone === '') return '—';
+        var s = String(phone).replace(/\s+/g, '');
+        if (!s) return '—';
+        if (s.length === 9 && /^[1-9]/.test(s)) return '0' + s;
+        return s;
+      },
+
+      // 2026-08-08 — statusMeta nhận thêm 2 param optional (method, fulfillment) để bổ ngữ nhãn
+      // theo NGỮ CẢNH cho đơn PENDING:
+      //   • PENDING + COD + delivered  → "Đã giao, chờ đối soát COD" (blue) — flow chuẩn: tiền
+      //     còn ở ĐVVC, đợi payReconciliation() tự set Status=PAID + sinh Receipt (mops_02.js:81).
+      //   • PENDING + COD + returned   → "Đã hoàn hàng" (gray) — không còn thu COD được.
+      //   • PENDING + COD + delivery_cancelled → "Huỷ giao — chờ nhận lại" (amber).
+      //   • Còn lại → dùng STATUS_LABELS/STATUS_COLORS như cũ ("Chờ xác nhận" mặc định).
+      // Call site cũ gọi statusMeta(status) 1 param vẫn OK — method/fulfillment undefined → fallback.
+      statusMeta: function(status, method, fulfillment) {
+        var label = STATUS_LABELS[status] || status;
+        var color = STATUS_COLORS[status] || 'gray';
+        if (status === 'PENDING' && String(method || '').toUpperCase() === 'COD') {
+          var ff = String(fulfillment || '');
+          if (ff === 'delivered') { label = 'Đã giao, chờ đối soát COD'; color = 'blue'; }
+          else if (ff === 'returned') { label = 'Đã hoàn hàng'; color = 'gray'; }
+          else if (ff === 'delivery_cancelled') { label = 'Huỷ giao — chờ nhận lại'; color = 'amber'; }
+        }
+        return {
+          label: label,
+          wrapClass: 'inline-flex items-center px-2.5 py-0.5 rounded-full text-label-md bg-' + color + '-50 text-' + color + '-700 border border-' + color + '-200',
+          dotClass: 'w-1.5 h-1.5 rounded-full mr-1.5 bg-' + color + '-600'
+        };
+      },
+
+      // Luật ẩn/hiện quyền theo tab — NGUỒN DUY NHẤT, dùng lại ở groupedNavTabs (sidebar
+      // desktop), mobileSpringboardApps (lưới app mobile) và _resolveInitialTab (?tab= URL) để
+      // 3 nơi này không bao giờ lệch nhau khi có tab bị khoá quyền mới trong tương lai.
+      isTabVisible: function(tab) {
+        if (tab.key === 'settings') return this.isOwner;
+        if (tab.key === 'finance')  return this.canViewFinance;
+        return true;
+      },
+      // Sidebar rút gọn 72px (rail): luôn coi mọi nhóm là "mở" — nhãn + chevron đã ẩn
+      // qua CSS .is-sidebar-collapsed nên accordion không còn ý nghĩa, hiện phẳng icon
+      // cho dễ bấm thay vì bắt user mở rộng sidebar trước mới thấy được mục con.
+      isNavGroupOpen: function(key) {
+        return this.sidebarCollapsed || this.expandedNavGroup === key;
+      },
+      toggleNavGroup: function(key) {
+        this.expandedNavGroup = (this.expandedNavGroup === key) ? null : key;
+      },
+      isNavChildActive: function(child) {
+        if (child.subTab) return this.activeTab === 'overview' && this.overview.subTab === child.subTab;
+        if (child.financePanel) return this.activeTab === 'finance' && this.financeCore.activePanel === child.financePanel;
+        if (child.shippingSubtab) return this.activeTab === 'shipping' && this.shipping.subtab === child.shippingSubtab;
+        return this.activeTab === child.key;
+      },
+      activateNavChild: function(child) {
+        if (child.subTab) {
+          this.openReportSubTab(child.subTab);
+          return;
+        }
+        if (child.financePanel) {
+          this.openFinancePanel(child.financePanel);
+          return;
+        }
+        if (child.shippingSubtab) {
+          this.setActiveTab('shipping');
+          this.setShippingSubtab(child.shippingSubtab);
+          return;
+        }
+        this.setActiveTab(child.key);
+      },
+      // Điều hướng từ Sidebar Báo cáo: một thao tác chọn đúng phân hệ, đồng thời vẫn dùng
+      // lifecycle lazy-load, URL sync và kiểm soát quyền của tab overview hiện có.
+      openReportSubTab: function(key) {
+        this.setActiveTab('overview');
+        this.setReportSubTab(key);
+      },
+      // Điều hướng từ Sidebar Tài chính: giữ một tab finance duy nhất rồi mở đúng panel.
+      openFinancePanel: function(key) {
+        this.setActiveTab('finance');
+        this.setFinanceCorePanel(key);
+      },
+      // Đồng bộ tab/sub-tab đang xem lên query string (?tab=...&sub=...) — mục đích DUY NHẤT là
+      // reload không bị bật về Tổng quan hay mất vị trí sub-panel (bug cũ: initDashboard() luôn
+      // set cứng 'overview'). Dùng replaceState (không phải pushState) vì đây là đổi tab trong 1
+      // trang, không phải điều hướng trang mới — pushState sẽ làm nút Back của trình duyệt phải
+      // bấm lại từng tab đã xem, không phải hành vi người dùng mong đợi ở 1 sidebar app.
+      _updateUrlParam: function(key, value) {
+        try {
+          var url = new URL(window.location.href);
+          if (value) url.searchParams.set(key, value); else url.searchParams.delete(key);
+          history.replaceState(null, '', url.toString());
+        } catch (e) { /* best-effort — không chặn chuyển tab nếu URL API lỗi */ }
+      },
+      // Điều hướng tab chính phải loại bỏ action/order_id/sub/filter cũ. Deep-link
+      // chỉ được giữ trong lúc boot bằng setActiveTab(..., { keepQuery: true }).
+      _setCleanTabUrl: function(name, sub) {
+        try {
+          var url = new URL(window.location.href);
+          url.search = '';
+          url.searchParams.set('tab', name);
+          if (sub) url.searchParams.set('sub', sub);
+          history.replaceState(null, '', url.pathname + '?' + url.searchParams.toString() + url.hash);
+        } catch (e) { /* best-effort */ }
+      },
+      // clearSub=true khi ĐỔI sang tab khác (sub-tab cũ thuộc tab khác, không còn liên quan) —
+      // false khi gọi lại setActiveTab() với đúng tab đang mở (vd bấm lại link sidebar, hoặc lúc
+      // boot đang tự set về đúng tab đã có trong URL) để không xoá mất ?sub= sắp được set lại.
+      _syncTabToUrl: function(name, clearSub) {
+        this._updateUrlParam('tab', name);
+        if (clearSub) this._updateUrlParam('sub', '');
+      },
+      _syncSubToUrl: function(key) {
+        if (this.activeTab === 'shipping') this._setCleanTabUrl('shipping', key);
+        else this._updateUrlParam('sub', key);
+      },
+      setActiveTab: function(name, options) {
+        options = options || {};
+        // Push vào recent trước setActiveTab thực (side-effect nhẹ, không throw). Boot deep-link
+        // (initDashboard) gọi keepQuery=true → cũng track lần đầu vào, đủ context cho recent.
+        if (typeof this.pushLauncherRecent === 'function') this.pushLauncherRecent(name);
+        this.activeTab = name;
+        // Bấm sidebar tab (kể cả đang ở tab đó) → luôn về workspace gốc của tab, xoá stack.
+        // Không loại trừ riêng 'orders' — nếu đang xem orders.detail/create/edit thì click
+        // "Đơn hàng" phải quay lại list (đúng kỳ vọng "về trang chủ tab"). Các luồng lập trình
+        // (openManualOrderForm/openOrderFromUrl/viewOrderFromCustomer) đều tự set workspaceView
+        // sau setActiveTab nên không bị reset này can thiệp.
+        this.workspaceView = name;
+        this.workspaceViewStack = [];
+        this.sidebarOpenMobile = false;
+        this.mobileFilterOpen = false; // đổi tab thì đóng sheet bộ lọc mobile (nếu đang mở)
+        if (options.keepQuery) this._updateUrlParam('tab', name);
+        else this._setCleanTabUrl(name);
+        var targetTab = this.navTabs.filter(function(t) { return t.key === name; })[0];
+        if (targetTab && targetTab.group) this.expandedNavGroup = targetTab.group;
+        if (!this.tabLoaded[name]) {
+          this.tabLoaded[name] = true;
+          if (name === 'overview')      this.loadOverview();
+          if (name === 'orders')        this.loadOrders();
+          if (name === 'products')      this.loadProducts();
+          if (name === 'customers')     this.loadCustomers();
+          if (name === 'finance')       this.loadFinance();
+          if (name === 'inventory')     this.setInventoryPanel(this.inventory.activePanel);
+          if (name === 'notifications') this.loadNotifications();
+          if (name === 'audit')         this.loadAuditLogs();
+          if (name === 'staff')         this.loadStaff();
+          if (name === 'branches')      this.ensureBranchesLoaded();
+          if (name === 'coupons')       this.loadCoupons();
+          if (name === 'b2b')           this.loadB2BApplications();
+          if (name === 'settings')      this.loadSettingsData();
+          if (name === 'shipping')      this.setShippingSubtab(this.shipping.subtab);
+        }
+      },
+      openWorkspaceView: function(view, context) {
+        var current = { view: this.workspaceView, tab: this.activeTab, context: context || null };
+        this.workspaceViewStack.push(current);
+        this.workspaceView = view;
+      },
+      restoreWorkspaceView: function(fallback) {
+        var previous = this.workspaceViewStack.pop();
+        this.workspaceView = previous && previous.view ? previous.view : fallback;
+        return previous || null;
+      },
+      submitGlobalSearch: function() {
+        var q = (this.globalSearch || '').trim();
+        if (!q) return;
+        this.setActiveTab('customers');
+        this.customers.search = q; // lọc client-side trên danh sách vừa tải, không gọi API riêng nữa
+        this.mobileHome.open = false; // tìm từ Springboard mobile thì cũng phải vào thẳng kết quả
+      },
+      // ── App Launcher (2026-08-21 unified) ──
+      openMobileApp: function(tabKey) {
+        // Tắt popover trước khi chuyển tab — tránh khi user quay lại launcher lần sau
+        // popover còn treo (state launcherHoveredKey còn giữ). _closeLauncherPop cũng
+        // huỷ luôn 2 timer đang chờ (enter 700ms / leave 180ms) khỏi bị fire nhầm.
+        if (typeof this._closeLauncherPop === 'function') this._closeLauncherPop();
+        this.pushLauncherRecent(tabKey);
+        this.setActiveTab(tabKey); // đã tự đóng sidebar drawer + lazy-load tab, xem setActiveTab()
+        this.mobileHome.open = false;
+      },
+      // Nguồn duy nhất quyết định trạng thái Launcher mỗi lần MỞ LẠI — searchOpen luôn về
+      // true (mặc định hiện sẵn thanh tìm kiếm, xem data()) để không có nơi nào khác phải tự
+      // nhớ reset field này khi đóng. Reset query mỗi lần mở để không giữ residual filter.
+      goMobileHome: function() {
+        this.mobileHome.open = true;
+        this.mobileHome.searchOpen = true;
+        this.mobileHome.query = '';
+      },
+      // Alias semantic-clear cho header desktop (mobile vẫn dùng goMobileHome cho backward compat).
+      openLauncher: function() { this.goMobileHome(); },
+      // Chuẩn hoá NFD (tách dấu) + strip combining marks + đ→d để search không dấu ("don hang" → "đơn hàng").
+      // Bổ sung để hỗ trợ input Vietnamese thường không gõ dấu ngay (goi nhanh trên mobile).
+      _launcherNorm: function(s) {
+        try {
+          return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+            .replace(/đ/g, 'd').replace(/Đ/g, 'D');
+        } catch (e) { return String(s || ''); }
+      },
+      // Push tabKey vào đầu launcher.recent, dedupe + cap 4, persist localStorage. Gọi từ 2 chỗ:
+      // (1) openMobileApp — bấm tile trong launcher, (2) setActiveTab — bấm sidebar/nav khác cũng
+      // được tính là "used" (nếu không, sidebar user không bao giờ đưa app vào recent — kém UX).
+      pushLauncherRecent: function(tabKey) {
+        if (!tabKey || tabKey === 'launcher') return;
+        var recent = (this.mobileHome.recent || []).slice();
+        var idx = recent.indexOf(tabKey);
+        if (idx !== -1) recent.splice(idx, 1);
+        recent.unshift(tabKey);
+        recent = recent.slice(0, 4);
+        this.mobileHome.recent = recent;
+        try { localStorage.setItem('mops_launcher_recent', JSON.stringify(recent)); } catch (e) {}
+      },
+      setMobileFilterGroup: function(groupKey) {
+        var self = this;
+        this.mobileHome.filterGroup = groupKey;
+        this.mobileHome.page = 0;
+        // Đổi danh mục xong phải cuộn carousel về trang đầu — số trang thay đổi theo danh
+        // mục nên vị trí cuộn cũ (theo px) không còn khớp trang nào cả.
+        this.$nextTick(function() {
+          if (self.$refs.mobileSpringPages) self.$refs.mobileSpringPages.scrollLeft = 0;
+        });
+      },
+      onMobileSpringScroll: function(e) {
+        var el = e.target;
+        if (!el.clientWidth) return;
+        // Clamp vì iOS rubber-band overscroll có thể đẩy scrollLeft vượt trang cuối trong lúc
+        // nảy lại — không kẹp thì mobileHome.page trỏ tới 1 trang không tồn tại, không dot nào
+        // sáng cho tới khi cuộn ổn định lại (review 2026-07-17).
+        var maxPage = Math.max(0, this.mobileSpringboardPages.length - 1);
+        this.mobileHome.page = Math.max(0, Math.min(maxPage, Math.round(el.scrollLeft / el.clientWidth)));
+      },
+      // Hook chấm thông báo trên icon app. Best-effort — chỉ hiện khi tab đã load ít nhất 1 lần
+      // (fulfillmentCounts / notifications.list chỉ set sau khi user vào tab). Chưa preload
+      // qua bulk_bootstrap → khi vừa vào launcher, badge = null; sau khi ghé Orders/Notifications
+      // 1 lần rồi mở lại launcher → badge có số đúng. Cap 99+ để không dài phá layout tile.
+      mobileAppBadge: function(tabKey) {
+        var cap = function(n) { return n > 99 ? '99+' : String(n); };
+        if (tabKey === 'orders' && this.orders && this.orders.fulfillmentCounts) {
+          var c = (this.orders.fulfillmentCounts.pending_approval || 0) + (this.orders.fulfillmentCounts.pending_packing || 0);
+          return c > 0 ? cap(c) : null;
+        }
+        if (tabKey === 'notifications' && this.notifications && Array.isArray(this.notifications.list)) {
+          var unread = this.notifications.list.filter(function(n) { return n && !n.is_read; }).length;
+          return unread > 0 ? cap(unread) : null;
+        }
+        if (tabKey === 'shipping' && this.orders && this.orders.fulfillmentCounts) {
+          var s = (this.orders.fulfillmentCounts.ready_to_pick || 0) + (this.orders.fulfillmentCounts.redelivery || 0);
+          return s > 0 ? cap(s) : null;
+        }
+        return null;
+      },
+      // ── App Launcher V2 (2026-08-22 — Microsoft Store card style) ──
+      // Palette + mô tả ngắn cho từng app. 3 màu hex (color/bg/soft) hardcode để né
+      // color-mix() không hoạt động ổn trên Sapo (memory feedback_sapo_css_safe: chỉ
+      // giá trị tĩnh, tránh CSS4 mới). Popover hover đọc từ đây.
+      launcherAppMeta: function(tabKey) {
+        var meta = {
+          overview:      { color: '#0d9488', bg: '#ccfbf1', soft: '#5eead4', desc: 'Báo cáo doanh thu, khách hàng, kho, tài chính — tổng quan toàn hệ thống.' },
+          orders:        { color: '#16a34a', bg: '#dcfce7', soft: '#86efac', desc: 'Tạo/sửa đơn hàng, xử lý thanh toán, theo dõi trạng thái xử lý và giao hàng.' },
+          shipping:      { color: '#2563eb', bg: '#dbeafe', soft: '#93c5fd', desc: 'Vận đơn Goship, đối soát COD/phí, báo cáo giao vận, danh mục đối tác.' },
+          coupons:       { color: '#db2777', bg: '#fce7f3', soft: '#f9a8d4', desc: 'Mã giảm giá, chương trình khuyến mãi cho khách sỉ/lẻ.' },
+          b2b:           { color: '#166534', bg: '#dcfce7', soft: '#86efac', desc: 'Đơn đăng ký đại lý B2B — duyệt/từ chối thủ công (MST/chữ ký số xác minh ngoài hệ thống).' },
+          products:      { color: '#d97706', bg: '#fef3c7', soft: '#fcd34d', desc: 'Danh mục sản phẩm, giá bán, ảnh, biến thể, đồng bộ với SAPO.' },
+          inventory:     { color: '#ea580c', bg: '#ffedd5', soft: '#fdba74', desc: 'Phiếu nhập, nhà cung cấp, chi phí phụ, tồn kho theo chi nhánh.' },
+          customers:     { color: '#9333ea', bg: '#f3e8ff', soft: '#d8b4fe', desc: 'Danh sách khách hàng, phân nhóm sỉ/lẻ, sổ địa chỉ, nhập/xuất Excel.' },
+          finance:       { color: '#059669', bg: '#d1fae5', soft: '#6ee7b7', desc: 'Sổ quỹ, phiếu thu/chi, chuyển khoản, điều chỉnh, đối soát ngân hàng.' },
+          staff:         { color: '#4f46e5', bg: '#e0e7ff', soft: '#a5b4fc', desc: 'Nhân viên, phân quyền, đổi mật khẩu, kênh Telegram thông báo.' },
+          branches:      { color: '#0891b2', bg: '#cffafe', soft: '#67e8f9', desc: 'Chi nhánh, kho, tài khoản ngân hàng nhận tiền theo chi nhánh.' },
+          notifications: { color: '#dc2626', bg: '#fee2e2', soft: '#fca5a5', desc: 'Thông báo hệ thống, log Telegram, đơn cần duyệt và cảnh báo.' },
+          audit:         { color: '#475569', bg: '#e2e8f0', soft: '#cbd5e1', desc: 'Nhật ký thao tác nhân viên, truy vết mọi thay đổi dữ liệu.' },
+          settings:      { color: '#334155', bg: '#e2e8f0', soft: '#cbd5e1', desc: 'Cấu hình hệ thống, tích hợp SAPO, VietQR, giao diện Admin.' }
+        };
+        return meta[tabKey] || { color: '#64748b', bg: '#f1f5f9', soft: '#cbd5e1', desc: '' };
+      },
+      // Sub-menu cho popover hover. Nguồn dữ liệu: reportSubTabs (overview) /
+      // financeCorePanels (finance) / cfgTabs (settings) / hardcode 3 subtab
+      // shipping. Trả về mảng {key, label} — action điều hướng đi qua
+      // openMobileAppSub. Nếu app không có sub-panel → trả mảng rỗng.
+      launcherSubMenus: function(tabKey) {
+        if (tabKey === 'overview') {
+          return (this.reportSubTabs || []).map(function(t) {
+            return { key: t.key, label: t.key === 'overview' ? 'Tổng quan' : 'Báo cáo ' + t.label };
+          });
+        }
+        if (tabKey === 'finance') {
+          return (this.financeCorePanels || []).map(function(p) { return { key: p.key, label: p.label }; });
+        }
+        if (tabKey === 'shipping') {
+          return [
+            { key: 'recon',    label: 'Đối soát COD/Phí' },
+            { key: 'report',   label: 'Báo cáo vận đơn' },
+            { key: 'carriers', label: 'Đối tác vận chuyển' }
+          ];
+        }
+        if (tabKey === 'settings') {
+          return (this.cfgTabs || []).map(function(t) { return { key: t.key, label: t.label }; });
+        }
+        return [];
+      },
+      // Label nhóm hiển thị trên header popover ("Vận hành / Quản trị / …"). Dùng cùng
+      // navGroups đang có → 1 nguồn sự thật, đổi nhãn nhóm ở sidebar tự đồng bộ.
+      launcherGroupLabel: function(groupKey) {
+        if (!groupKey) return '';
+        var g = (this.navGroups || []).filter(function(x) { return x.key === groupKey; })[0];
+        return g ? g.label : '';
+      },
+      // Object navTab của app đang hover — dùng cho popover fixed 1 instance (rev3
+      // 2026-08-22, thay hướng render popover con trong TỪNG card). Lookup theo key
+      // qua navTabs (O(N)=14, không đáng lo). Trả null khi không hover.
+      launcherHoveredApp: function() {
+        var key = this.launcherHoveredKey;
+        if (!key) return null;
+        return (this.navTabs || []).filter(function(t) { return t.key === key; })[0] || null;
+      },
+      // Hover popover controller — 2 timer: enter (700ms trước khi show, giống tooltip
+      // Windows Store, tránh popover nhấp nháy khi cursor đi ngang qua) + leave (180ms
+      // sau khi rời card, cho cursor thời gian đi vào popover). event optional — chỉ
+      // khi kích hoạt từ card mới có rect; call từ popover mouseenter chỉ để huỷ leave.
+      // Popover position: ĐÈ THẲNG lên card (top/left = rect.top/left), width 320
+      // extend ra phải + xuống dưới → hiệu ứng "nở ra tại chỗ" như MS Store. Chỉ shift
+      // ngang/dọc khi thò khỏi viewport.
+      onLauncherEnter: function(key, event) {
+        var self = this;
+        if (this._launcherLeaveTimer) { clearTimeout(this._launcherLeaveTimer); this._launcherLeaveTimer = null; }
+        // Nếu đang hover đúng key + không có event (call từ popover mouseenter): chỉ huỷ leave timer.
+        if (!event && this.launcherHoveredKey === key) return;
+        // Popover đang mở cho key khác → đóng ngay + reset enter timer để tránh chuyển tức thời.
+        if (this.launcherHoveredKey && this.launcherHoveredKey !== key) {
+          this.launcherHoveredKey = null;
+        }
+        if (this._launcherEnterTimer) { clearTimeout(this._launcherEnterTimer); this._launcherEnterTimer = null; }
+        if (!event || !event.currentTarget || typeof event.currentTarget.getBoundingClientRect !== 'function') return;
+        var rect = event.currentTarget.getBoundingClientRect();
+        this._launcherEnterTimer = setTimeout(function() {
+          self._launcherEnterTimer = null;
+          // Recompute rect ngay trước khi show (card có thể đã dịch chuyển do scroll/resize
+          // trong 700ms delay). Dùng rect cache nếu getBoundingClientRect không còn dùng
+          // được (element đã unmount) — thấp rủi ro với card fixed grid.
+          var W = 320, H = 340, margin = 12;
+          var vw = window.innerWidth, vh = window.innerHeight;
+          // Đè ngay lên card: top/left từ card rect, popover 320 wide extend right + down.
+          var left = rect.left;
+          var top  = rect.top;
+          // Clamp: nếu popover vượt viewport → shift ngược lại.
+          if (left + W + margin > vw) left = vw - W - margin;
+          if (top  + H + margin > vh) top  = vh - H - margin;
+          left = Math.max(margin, left);
+          top  = Math.max(margin, top);
+          self.launcherPopPos = { top: top, left: left };
+          self.launcherHoveredKey = key;
+        }, 700);
+      },
+      onLauncherLeave: function() {
+        var self = this;
+        // Huỷ enter đang chờ (nếu cursor rời card trước 700ms → hoàn toàn không show).
+        if (this._launcherEnterTimer) { clearTimeout(this._launcherEnterTimer); this._launcherEnterTimer = null; }
+        if (this._launcherLeaveTimer) clearTimeout(this._launcherLeaveTimer);
+        this._launcherLeaveTimer = setTimeout(function() {
+          self.launcherHoveredKey = null;
+          self._launcherLeaveTimer = null;
+        }, 180);
+      },
+      // Tất cả path mở app từ launcher đều tắt popover ngay (2026-08-22): user bấm ứng
+      // dụng → chuyển tab, quay lại launcher lần sau KHÔNG được thấy popover còn treo
+      // từ lần trước. Dùng riêng helper _closeLauncherPop cho các call site.
+      _closeLauncherPop: function() {
+        if (this._launcherEnterTimer) { clearTimeout(this._launcherEnterTimer); this._launcherEnterTimer = null; }
+        if (this._launcherLeaveTimer) { clearTimeout(this._launcherLeaveTimer); this._launcherLeaveTimer = null; }
+        this.launcherHoveredKey = null;
+      },
+      // Bấm sub-menu từ popover → mở tab + set đúng panel con. Router theo tabKey
+      // vì mỗi tab có setter riêng (setReportSubTab / setFinanceCorePanel / …).
+      openMobileAppSub: function(tabKey, subKey) {
+        this._closeLauncherPop();
+        this.openMobileApp(tabKey);
+        var self = this;
+        // setTimeout 0 để openMobileApp kịp setActiveTab (trigger tabLoaded + load hook)
+        // rồi mới đổi sub-panel — tránh race với các watcher đang tải data.
+        setTimeout(function() {
+          if (tabKey === 'overview'  && typeof self.setReportSubTab      === 'function') self.setReportSubTab(subKey);
+          else if (tabKey === 'finance'  && typeof self.setFinanceCorePanel === 'function') self.setFinanceCorePanel(subKey);
+          else if (tabKey === 'shipping' && typeof self.setShippingSubtab   === 'function') self.setShippingSubtab(subKey);
+          else if (tabKey === 'settings' && typeof self.setSettingsPanel    === 'function') self.setSettingsPanel(subKey);
+        }, 0);
+      },
+
+      // loadOverview / renderOverviewCharts / setReportSubTab / refreshReportSubTab /
+      // loadSalesReport / loadCustomerReport / loadPurchaseReport / loadInventoryReport /
+      // loadFinanceReport — chuyển sang mixin Assets/mops-admin-overview.js.bwt.
+
+      // loadOrders / toggleOrderDetail / orderActions / confirmUpdateOrderStatus /
+      // confirmPullFromSapo / canPushToSapo / confirmPushToSapo / openManualOrderForm /
+      // manualOrderCustomerResults / pickManualOrderCustomer / onManualOrderCustomerFieldInput /
+      // addToManualOrderCart / removeFromManualOrderCart / incManualOrderCartQty /
+      // decManualOrderCartQty / onManualOrderSearchBlur / openManualOrderQuickAdd /
+      // closeManualOrderQuickAdd / submitManualOrderQuickAdd / closeManualOrderForm /
+      // printOrderInvoice / printManualOrderResult / printOrderDetail / viewCustomerFromOrder /
+      // openQrLightbox / closeQrLightbox — chuyển sang mixin Assets/mops-admin-orders.js.bwt.
+      // ── Tỉnh/Xã dùng chung cho mọi form địa chỉ (review 2026-07-16) ──
+      // Lưu theo TÊN (không lưu code) — khớp cách các cột Address*/Province/Ward hiện tại đều là
+      // text thuần, chỗ nào đang hiển thị `[[ x.province ]]` không cần đổi gì thêm.
+      ensureProvincesLoaded: function() {
+        var self = this;
+        var ab = this.addressBook;
+        if (ab.provinces.length || ab.provincesLoading) return;
+        ab.provincesLoading = true;
+        ab.provincesError = '';
+        fetch(PROVINCE_API + '/p/')
+          .then(function(r) { return r.json(); })
+          .then(function(list) {
+            ab.provincesLoading = false;
+            ab.provinces = (list || []).map(function(p) { return { code: p.code, name: p.name }; });
+          })
+          .catch(function() {
+            ab.provincesLoading = false;
+            ab.provincesError = 'Không tải được danh sách tỉnh/thành phố. Kiểm tra kết nối mạng.';
+          });
+      },
+      loadWardsForProvince: function(provinceCode) {
+        var ab = this.addressBook;
+        if (!provinceCode || ab.wardsByProvince[provinceCode] || ab.wardsLoading[provinceCode]) return;
+        ab.wardsLoading[provinceCode] = true;
+        fetch(PROVINCE_API + '/p/' + provinceCode + '?depth=2')
+          .then(function(r) { return r.json(); })
+          .then(function(p) {
+            ab.wardsLoading[provinceCode] = false;
+            ab.wardsByProvince[provinceCode] = (p.wards || [])
+              .map(function(w) { return { code: w.code, name: w.name }; })
+              .sort(function(a, b) { return a.name.localeCompare(b.name, 'vi'); });
+          })
+          .catch(function() {
+            ab.wardsLoading[provinceCode] = false;
+            showToast('Không tải được danh sách xã/phường.', 'error');
+          });
+      },
+      // Đổi tỉnh → xoá xã đang chọn (không còn thuộc tỉnh mới) + tải xã của tỉnh mới nếu chưa có cache.
+      // provinceKey/wardKey mặc định 'province'/'ward' — Khách hàng dùng tên cột cũ (addressCity/
+      // addressWard) nên truyền tên field tường minh, xem customers.editForm trong template.
+      onProvinceChange: function(form, provinceKey, wardKey) {
+        provinceKey = provinceKey || 'province';
+        wardKey = wardKey || 'ward';
+        form[wardKey] = '';
+        var prov = this.addressBook.provinces.filter(function(p) { return p.name === form[provinceKey]; })[0];
+        if (prov) this.loadWardsForProvince(prov.code);
+      },
+      wardsFor: function(provinceName) {
+        var prov = this.addressBook.provinces.filter(function(p) { return p.name === provinceName; })[0];
+        if (!prov) return [];
+        return this.addressBook.wardsByProvince[prov.code] || [];
+      },
+      // Mở form Sửa với địa chỉ đã lưu sẵn → phải tải trước danh sách xã của tỉnh đó (khác
+      // onProvinceChange: KHÔNG xoá xã đang chọn, chỉ nạp cache để <select> có option khớp).
+      preloadWardsFor: function(provinceName) {
+        if (!provinceName) return;
+        var prov = this.addressBook.provinces.filter(function(p) { return p.name === provinceName; })[0];
+        if (prov) this.loadWardsForProvince(prov.code);
+      },
+      // applyManualOrderCoupon / manualOrderDiscountValid / submitManualOrder — chuyển sang
+      // mixin Assets/mops-admin-orders.js.bwt.
+
+      // sortProductsBy / productStatusBadge / isStockTracked / stockBadge / loadProducts /
+      // confirmSyncProducts / productRowBg / connectProduct / openProductDetail /
+      // openProductEdit / closeRightPanel / confirmDisconnectProduct / startEditProduct /
+      // saveProductEdit / exportProductsCsv / createLocalProduct — chuyển sang mixin
+      // Assets/mops-admin-products.js.bwt.
+
+      // loadCustomers / openCustomerDrawer / closeCustomerDrawer / viewOrderFromCustomer /
+      // startEditCustomer / saveCustomerEdit / saveCustomerNotes / copyCustomerAddress /
+      // membershipTierMeta — chuyển sang mixin Assets/mops-admin-customers.js.bwt.
+
+      // loadNotifications / notifLabel — chuyển sang mixin Assets/mops-admin-notifications.js.bwt.
+
+      // setAuditCat / loadAuditLogs / auditActionClass / exportAuditCsv — chuyển sang mixin
+      // Assets/mops-admin-audit.js.bwt (tách domain đầu tiên, 2026-07-16).
+
+      // loadStaff / roleColor / permLabel / isSelfStaff / canModifyStaff / canToggleStaff /
+      // createStaff / doToggleStaffActive / showResetPassword / showEditStaff / editRoleOptions /
+      // saveEditStaff / confirmResetPassword / toggleStaffPerms / hasPermViaRole /
+      // isPermLockedForCaller / toggleIndividualPerm / savePermissions — chuyển sang mixin
+      // Assets/mops-admin-staff.js.bwt.
+
+      /* ── Hồ sơ của tôi (update_my_profile) ── */
+      openMyProfile: function() {
+        this.myProfile.form = { name: '', telegram: '', notes: '', currentPassword: '', newPassword: '' };
+        this.myProfile.open = true;
+      },
+      saveMyProfile: function() {
+        var self = this;
+        var f = this.myProfile.form;
+        var name = (f.name || '').trim();
+        var telegram = (f.telegram || '').trim();
+        var notes = (f.notes || '').trim();
+        var payload = { action: 'update_my_profile' };
+        if (name)     payload.name = name;
+        if (telegram) payload.telegram_chat_id = telegram;
+        if (notes)    payload.notes = notes;
+        if (f.newPassword || f.currentPassword) {
+          if (!f.newPassword || f.newPassword.length < 8) { showToast('Mật khẩu mới phải ít nhất 8 ký tự', 'error'); return; }
+          if (!f.currentPassword) { showToast('Nhập mật khẩu hiện tại để đổi mật khẩu', 'error'); return; }
+          payload.new_password = f.newPassword;
+          payload.current_password = f.currentPassword;
+        }
+        if (!payload.name && !payload.telegram_chat_id && !payload.notes && !payload.new_password) {
+          showToast('Chưa điền gì để lưu — bỏ trống trường nào không muốn đổi', 'error'); return;
+        }
+        this.myProfile.saving = true;
+        gasPost(payload)
+          .then(function(d) {
+            self.myProfile.saving = false;
+            if (!d.success) throw new Error(d.error || 'Lưu hồ sơ thất bại');
+            showToast('Đã lưu hồ sơ của bạn', 'success');
+            self.myProfile.open = false;
+            if (name && self.staff) {
+              self.staff.name = name;
+              try { setSession(getToken(), self.staff); } catch (e) {}
+            }
+          })
+          .catch(function(e) { self.myProfile.saving = false; showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+
+      // loadCoupons / createCoupon / doToggleCouponActive — chuyển sang mixin
+      // Assets/mops-admin-coupons.js.bwt.
+
+      /* ── Tài chính (Thu Chi) ── */
+      // onFinanceTypeChange / loadFinance / renderFinanceLegacyChart / submitCashTransaction /
+      // doVoidCashTransaction — chuyển sang mixin Assets/mops-admin-finance.js.bwt.
+
+      /* ── Finance Core (Phase 01 Bước 1-2, docs/architecture/finance.md) ──
+         Sub-nav trong tab Tài chính — chạy song song với khối `finance.*` (V1) ở trên. */
+      financeDocStatusClass: function(status) {
+        var map = {
+          Draft: 'ma-badge ma-badge--neutral',
+          PendingApproval: 'ma-badge ma-badge--warning',
+          Approved: 'ma-badge ma-badge--info',
+          Posted: 'ma-badge ma-badge--success',
+          Cancelled: 'ma-badge ma-badge--danger ma-badge--strike'
+        };
+        return map[status] || map.Draft;
+      },
+      // setFinanceCorePanel / loadFinanceCoreAccounts / loadFinanceCoreCategories /
+      // createCashAccount / createFinanceCategory / loadReceipts / submitReceipt /
+      // postReceiptAction / cancelReceiptAction / loadVouchers / submitVoucher /
+      // openDepositVoucherForm / submitVoucherAction / approveVoucherAction / postVoucherAction /
+      // cancelVoucherAction / loadTransfers / createTransfer / postTransferAction /
+      // cancelTransferAction / loadAdjustments / createAdjustment / submitAdjustmentAction /
+      // approveAdjustmentAction / postAdjustmentAction / cancelAdjustmentAction — chuyển sang
+      // mixin Assets/mops-admin-finance.js.bwt.
+
+      // setInventoryPanel / loadSuppliers / submitSupplier / startEditSupplier / saveSupplierEdit /
+      // confirmDeleteSupplier / openSupplierDrawer / closeSupplierDrawer / addPOItemRow /
+      // removePOItemRow / poItemsSubtotal / poItemSearchResults / pickPOItemProduct /
+      // openPurchaseOrderForm / openEditPurchaseOrderForm / loadPurchaseOrders / supplierName /
+      // submitPurchaseOrder / postPurchaseOrderAction / cancelPurchaseOrderAction /
+      // openPurchaseOrderDetail / closePurchaseOrderDetail / purchaseItemImage /
+      // togglePurchaseOrderMenu / loadBills / billStatusClass — chuyển sang mixin
+      // Assets/mops-admin-inventory.js.bwt.
+
+      // cancelBankEdit / setSettingsPanel / loadSettingsData / cancelSettings / saveSettings —
+      // chuyển sang mixin Assets/mops-admin-settings.js.bwt.
+
+      /* ── Auth ── */
+      doLogin: function() {
+        var self = this;
+        if (!this.loginForm.username || !this.loginForm.password) {
+          this.loginError = 'Vui lòng nhập đầy đủ username và mật khẩu';
+          return;
+        }
+        this.loginLoading = true;
+        this.loginError = '';
+        try {
+          if (this.rememberLogin) localStorage.setItem(REMEMBER_USERNAME_KEY, this.loginForm.username.trim());
+          else localStorage.removeItem(REMEMBER_USERNAME_KEY);
+        } catch (e) {}
+        fetchWithTimeout(GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'staff_login', username: this.loginForm.username, password: this.loginForm.password })
+        }, GAS_POST_TIMEOUT_MS)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (!d.success) throw new Error(d.error || 'Đăng nhập thất bại');
+          setSession(d.token, d.staff, self.rememberLogin);
+          // Login mới (khác auto-restore staff_me): xoá mọi query cũ (?tab=/?sub=/?order_id=/…)
+          // để luôn vào launcher với URL sạch `/mops-admin`. Nếu không, staff logout ở ?tab=orders
+          // rồi login lại sẽ nhảy thẳng vào orders theo initDashboard deep-link — không phải hành
+          // vi mong đợi ở lượt đăng nhập mới. Auto-restore token cũ vẫn tôn trọng ?tab= (reload/
+          // bookmark) — đó là mục đích của check ?tab= trong initDashboard.
+          try { history.replaceState(null, '', window.location.pathname); } catch (e) {}
+          // mobileHome đã được reset trong doLogout; khôi phục lại đây phòng trường hợp login
+          // trực tiếp không qua logout (session hết hạn giữa chừng, initApp() rơi về login screen).
+          self.mobileHome = { open: true, filterGroup: '', page: 0, searchOpen: true, query: '', recent: self.mobileHome.recent || [] };
+          self.initDashboard(d);
+        })
+        .catch(function(e) { self.loginError = e.message || 'Lỗi kết nối. Vui lòng thử lại.'; })
+        .finally(function() { self.loginLoading = false; });
+      },
+      doLogout: function() {
+        var token = getToken();
+        clearSession();
+        this.staff = null;
+        this.screen = 'login';
+        // Reset về trạng thái Springboard "sạch" cho lượt đăng nhập tiếp theo trên cùng
+        // trình duyệt (máy dùng chung/kiosk) — nếu không, staff kế tiếp login (không reload
+        // trang) sẽ kế thừa mobileHome.open=false của người trước, bỏ qua màn hình chủ.
+        this.mobileHome = { open: true, filterGroup: '', page: 0, searchOpen: true };
+        if (token) {
+          fetchWithTimeout(GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'staff_logout', token: token })
+          }, GAS_POST_TIMEOUT_MS).catch(function() {});
+        }
+      },
+      // Đọc tab từ query string (?tab=...) khi vào dashboard — cả lúc login mới lẫn lúc reload
+      // với token cũ (initApp() → staff_me → initDashboard()) đều đi qua đây, nên fix 1 chỗ là
+      // đủ cho cả 2 luồng. Validate lại theo đúng quyền hiện tại (isOwner/canViewFinance) — không
+      // tin thẳng param URL, phòng trường hợp role đổi/hết quyền sau khi link đã share/bookmark.
+      _resolveInitialTab: function() {
+        var requested = new URLSearchParams(window.location.search).get('tab');
+        if (!requested) return 'overview';
+        var tab = this.navTabs.filter(function(t) { return t.key === requested; })[0];
+        if (!tab || !this.isTabVisible(tab)) return 'overview';
+        return requested;
+      },
+      // Đọc sub-tab từ query string (?sub=...) — chỉ áp dụng cho các tab có sub-panel thật.
+      _resolveInitialSub: function(tab) {
+        var requested = new URLSearchParams(window.location.search).get('sub');
+        if (!requested) return null;
+        if (tab === 'overview') {
+          return this.reportSubTabs.some(function(t) { return t.key === requested; }) ? requested : null;
+        }
+        if (tab === 'settings') {
+          return this.cfgTabs.some(function(t) { return t.key === requested; }) ? requested : null;
+        }
+        if (tab === 'finance') {
+          return this.financeCorePanels.some(function(t) { return t.key === requested; }) ? requested : null;
+        }
+        if (tab === 'shipping') {
+          return ['recon', 'report', 'carriers'].indexOf(requested) !== -1 ? requested : null;
+        }
+        return null;
+      },
+      initDashboard: function(res) {
+        this.staff = res.staff;
+        if (res.payment_configured !== undefined) this.paymentConfigured = !!res.payment_configured;
+        this.canViewFinance = !!res.can_view_finance;
+        this.screen = 'dashboard';
+        this.tabLoaded = {};
+        // ?tab= có mặt trong URL (reload, hoặc link share/bookmark) → đây là ý định vào THẲNG
+        // 1 tab cụ thể, không phải lượt vào dashboard "sạch" đầu tiên trên mobile — đóng
+        // Springboard ngay để không che tab vừa được khôi phục đúng (review 2026-07-17: trước
+        // đây mobileHome.open giữ nguyên default=true nên tab đã tải đúng vẫn bị lưới app che).
+        var hasTabParam = !!new URLSearchParams(window.location.search).get('tab');
+        if (hasTabParam) this.mobileHome.open = false;
+        var tab = this._resolveInitialTab();
+        var sub = this._resolveInitialSub(tab);
+        var initialQuery = new URLSearchParams(window.location.search);
+        // Detail customer đã có endpoint riêng theo customer_id. Không tải toàn bộ danh sách 500
+        // khách chỉ để mở đúng một hồ sơ; list chỉ tải khi người dùng đóng detail quay về bảng.
+        if (tab === 'customers' && initialQuery.get('action') === 'view' && initialQuery.get('customer_id')) {
+          this.tabLoaded.customers = true;
+        }
+        // Launcher đang mở (chưa có ?tab= trong URL) → set nội bộ activeTab='overview' để sidebar
+        // desktop có highlight đúng khi staff bung sidebar, nhưng KHÔNG gọi setActiveTab để tránh
+        // _updateUrlParam ghi ngầm ?tab=overview vào URL (bug 2026-08-22: URL bị "tự khai"
+        // ?tab=overview trong khi launcher vẫn hiện → reload lần 2 tưởng nhầm là deep-link và
+        // đóng launcher, staff không quay về màn hình apps được nếu không xoá query tay).
+        if (this.mobileHome.open) {
+          this.activeTab = tab;
+          this.workspaceView = tab;
+        } else {
+          // Giữ action/order_id/customer_id khi khôi phục deep-link; click điều hướng
+          // thông thường sẽ dùng URL sạch qua setActiveTab() mặc định.
+          this.setActiveTab(tab, { keepQuery: true });
+        }
+        if (typeof this.openOrderFromUrl === 'function') this.openOrderFromUrl();
+        if (typeof this.openCustomerFromUrl === 'function') this.openCustomerFromUrl();
+        if (tab === 'overview' && sub) this.setReportSubTab(sub);
+        if (tab === 'settings' && sub) this.setSettingsPanel(sub);
+        if (tab === 'finance' && sub) this.setFinanceCorePanel(sub);
+        if (tab === 'shipping' && sub && ['recon', 'report', 'carriers'].indexOf(sub) !== -1) this.setShippingSubtab(sub);
+      },
+      initApp: function() {
+        var self = this;
+        var token = getToken();
+        if (!token) { this.screen = 'login'; return; }
+
+        if (!GAS_URL) {
+          console.warn('[MOPS Admin] settings.mops_gas_url chưa được cấu hình.');
+          this.screen = 'login';
+          return;
+        }
+
+        // BẢO MẬT: staff_me gọi bằng POST (token trong body) — không gắn token vào URL.
+        var _meOpts = {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'staff_me', token: token })
+        };
+        fetchWithTimeout(GAS_URL, _meOpts, 10000)
+          .then(function(r) { return r.json(); })
+          .then(function(d) {
+            if (d.success && d.staff) { self.initDashboard(d); }
+            else { clearSession(); self.screen = 'login'; }
+          })
+          .catch(function(err) {
+            if (err && err.kind === 'timeout') showToast('Kết nối GAS quá chậm hoặc không phản hồi. Vui lòng thử lại.', 'error');
+            self.screen = 'login';
+          });
+      }
+    },
+    mounted: function() {
+      this.initApp();
+      this.ensureProvincesLoaded(); // 34 tỉnh — nhẹ, tải sẵn 1 lần lúc boot cho mọi form địa chỉ
+      // Đóng dropdown ⋮ Phiếu nhập khi cuộn trang (review 2026-07-16) — menu định vị fixed theo
+      // toạ độ chụp lúc mở, không tự đuổi theo khi cuộn; true = capture phase để bắt cả cuộn trong
+      // .overflow-x-auto của bảng, không chỉ cuộn window.
+      var selfPO = this;
+      window.addEventListener('scroll', function() { selfPO.inventory.purchaseOrders.menuOpenId = null; }, true);
+    }
+  });
+
+  // Domain assets đăng ký component trước khi core tạo app. Đăng ký ở đây (thay vì
+  // mỗi domain tự gọi Vue.createApp) để tất cả component dùng chung đúng một root app.
+  Object.keys(window.MopsAdminComponents || {}).forEach(function(name) {
+    app.component(name, window.MopsAdminComponents[name]);
+  });
+
+  // Lưới an toàn toàn cục (review 2026-07-16) — 1 root instance duy nhất, không có child
+  // component nào để đặt error boundary riêng, nên đây là chỗ DUY NHẤT chặn được lỗi render
+  // trước khi nó làm app.mount() bỏ dở giữa chừng (triệu chứng "trắng trang" người dùng báo).
+  // Không tự F5 giùm (dễ vòng lặp nếu lỗi lặp lại mỗi lần load) — chỉ log đủ chi tiết để tra
+  // + báo cho staff biết thay vì im lặng trắng trang không dấu hiệu gì.
+  var maInitialRenderFailed = false;
+  var maInitialRenderSettled = false;
+  var maRootObserver = null;
+  var maModalObserver = null;
+
+  // Mọi modal dùng shell `.ma-modal-backdrop`/`.ma-modal-panel`. Khoá scroll ở một
+  // điểm giúp các form cũ lẫn modal mới nhất quán, thay vì mỗi modal tự quản lý body.
+  // `modal-open` chỉ áp dụng sau khi Vue mount để không tác động preloader/đăng nhập.
+  function syncModalScrollLock() {
+    var hasOpenModal = !!document.querySelector('.ma-modal-backdrop');
+    document.documentElement.classList.toggle('ma-modal-open', hasOpenModal);
+    document.body.classList.toggle('ma-modal-open', hasOpenModal);
+  }
+
+  function findRawVueTemplate(root) {
+    if (!root) return { type: 'missing-root', value: '#mops-app không tồn tại' };
+    var elements = [root].concat(Array.prototype.slice.call(root.querySelectorAll('*')));
+    for (var i = 0; i < elements.length; i += 1) {
+      var element = elements[i];
+      for (var j = 0; j < element.attributes.length; j += 1) {
+        var attribute = element.attributes[j];
+        if (/^(v-|@|:)/.test(attribute.name)) {
+          return { type: 'directive', value: element.outerHTML.slice(0, 360) };
+        }
+      }
+    }
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    var node;
+    while ((node = walker.nextNode())) {
+      if (/\[\[[\s\S]*?\]\]/.test(node.nodeValue || '')) {
+        return { type: 'interpolation', value: (node.parentElement ? node.parentElement.outerHTML : node.nodeValue).slice(0, 360) };
+      }
+    }
+    return null;
+  }
+
+  function showInitialRenderFailure(reason) {
+    var root = document.getElementById('mops-app');
+    if (root) {
+      root.classList.remove('is-vue-ready');
+      root.hidden = true;
+      root.style.setProperty('display', 'none', 'important');
+      root.setAttribute('aria-busy', 'true');
+    }
+    var preloader = document.getElementById('ma-preloader');
+    if (!preloader) return;
+    var status = preloader.querySelector('.ma-loader-status');
+    if (status) {
+      status.textContent = reason || 'MOPS Admin không thể khởi tạo. Vui lòng tải lại trang. Nếu lỗi lặp lại, liên hệ quản trị viên.';
+    }
+    preloader.classList.remove('is-hidden');
+    preloader.classList.add('is-error');
+  }
+
+  function revealMopsRoot(root) {
+    root.classList.add('is-vue-ready');
+    root.setAttribute('aria-busy', 'false');
+  }
+
+  // showRecoveryBanner (2026-09-04) — banner DOM thuần (KHÔNG qua Vue) cho lỗi render SAU khi trang
+  // đã settled. Lý do không dùng state Vue + @click: nếu chính hiệu ứng render đang lỗi, gán thêm
+  // state reactive để "hiện banner" chỉ xếp hàng thêm 1 lượt render có thể throw lại y hệt — banner
+  // phải tồn tại độc lập, và nút của nó dùng addEventListener thường chứ không phải @click.
+  function showRecoveryBanner(message) {
+    var banner = document.getElementById('ma-recovery-banner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'ma-recovery-banner';
+      banner.setAttribute('role', 'alert');
+      banner.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#7c2d12;color:#fff;padding:12px 16px;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;font:14px/1.4 system-ui,-apple-system,sans-serif;box-shadow:0 -2px 12px rgba(0,0,0,.25);';
+      var text = document.createElement('span');
+      text.id = 'ma-recovery-banner-text';
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = 'Tải lại trang';
+      btn.style.cssText = 'background:#fff;color:#7c2d12;border:0;border-radius:6px;padding:6px 14px;font-weight:700;cursor:pointer;flex-shrink:0;';
+      btn.addEventListener('click', function() { location.reload(); });
+      banner.appendChild(text);
+      banner.appendChild(btn);
+      document.body.appendChild(banner);
+    }
+    var textEl = document.getElementById('ma-recovery-banner-text');
+    if (textEl) textEl.textContent = message;
+    banner.style.display = 'flex';
+  }
+
+  function failInitialRender(reason, rawTemplate) {
+    maInitialRenderFailed = true;
+    window.__mopsAdminRuntime.state = 'render-error';
+    window.__mopsAdminRuntime.error = reason;
+    window.__mopsAdminRuntime.rawTemplate = rawTemplate || '';
+    console.error('[MOPS Admin] ' + reason, rawTemplate || '');
+    showInitialRenderFailure('MOPS Admin không thể hiển thị an toàn. Tải lại trang; nếu lặp lại, mở Console và gửi lỗi [MOPS Admin].');
+  }
+
+  app.config.errorHandler = function(err, instance, info) {
+    // Vue báo lỗi render đầu tiên qua errorHandler nhưng mount() vẫn có thể return bình thường.
+    // Không được tháo preloader trong trường hợp đó: DOM chưa patch sẽ làm các v-if trở thành
+    // attribute HTML thường, khiến mọi modal và nội suy [[ ... ]] bị phơi ra.
+    if (!maInitialRenderSettled) {
+      maInitialRenderFailed = true;
+      failInitialRender('Vue ' + info + ' thất bại: ' + String(err && (err.message || err)), '');
+    } else {
+      // Lỗi render SAU khi trang đã settled (vd mở chi tiết đơn/đối soát với response thiếu field).
+      // Safety net ở trên (failInitialRender) chỉ bảo vệ LẦN RENDER ĐẦU TIÊN — từ đây về sau, nếu
+      // không làm gì thêm thì DOM giữ nguyên bản patch cuối (không trắng trang) nhưng state reactive
+      // đã đổi trong khi UI không cập nhật nữa ("mất giao diện" đúng nghĩa app đứng hình, đúng bug đã
+      // gặp khi mở chi tiết đơn). Rollback đúng resource vừa gây lỗi (breadcrumb do isValidResponse
+      // ghi lại) về trạng thái an toàn để lượt render kế tiếp (do bất kỳ tương tác nào khác) có cơ
+      // hội thành công, thay vì tiếp tục throw mãi trên cùng 1 field.
+      // Cửa sổ 500ms (review 2026-09-05: 2000ms cũ dễ "bắt nhầm" — breadcrumb của resource A vẫn còn
+      // mới khi lỗi render B hoàn toàn không liên quan xảy ra, khiến rollback sai resource. Vue flush
+      // render qua microtask ngay sau khi state đổi (thường dưới vài chục ms) nên 500ms vẫn đủ rộng
+      // cho trường hợp thật, trong khi thu hẹp đáng kể cửa sổ trùng hợp ngẫu nhiên. Đây vẫn là suy đoán
+      // theo thời gian, không phải liên kết nhân-quả thật — chấp nhận đánh đổi vì không có cách rẻ hơn
+      // để biết chính xác effect nào vừa throw mà không sửa sâu vào Vue runtime).
+      var breadcrumb = window.__mopsAdminRuntime.lastResource;
+      var recovered = false;
+      if (breadcrumb && breadcrumb.key && (Date.now() - breadcrumb.ts) < 500) {
+        window.__mopsAdminRuntime.recoveryCount = window.__mopsAdminRuntime.recoveryCount || {};
+        var _rcCount = window.__mopsAdminRuntime.recoveryCount[breadcrumb.key] || 0;
+        // Circuit breaker: tối đa 2 lần tự phục hồi/resource/phiên — tránh vòng lặp vô hạn nếu
+        // resource đó lỗi thật sự (shape hỏng liên tục), không phải 1 lần thoáng qua. Đếm NGAY khi
+        // thử (không chỉ khi thành công) — review 2026-09-05: đếm sau try{} cũ khiến 1 recovery fn tự
+        // lỗi (throw) không bao giờ bị tính, circuit breaker không bao giờ kích hoạt cho resource đó.
+        if (_rcCount < 2 && _resourceRecovery[breadcrumb.key] && appInstance) {
+          window.__mopsAdminRuntime.recoveryCount[breadcrumb.key] = _rcCount + 1;
+          try {
+            _resourceRecovery[breadcrumb.key](appInstance);
+            recovered = true;
+          } catch (re) { console.error('[MOPS Admin] Recovery cho ' + breadcrumb.key + ' cũng lỗi:', re); }
+        }
+      }
+      try {
+        showRecoveryBanner(recovered
+          ? 'Đã xảy ra lỗi hiển thị và hệ thống tự khôi phục về màn hình trước đó. Nếu vẫn gặp lỗi, tải lại trang (F5).'
+          : 'Đã xảy ra lỗi hiển thị. Vui lòng tải lại trang (F5). Nếu lặp lại, chụp Console (F12) gửi cho dev.');
+      } catch (be) { console.error('[MOPS Admin] showRecoveryBanner lỗi:', be); }
+    }
+    console.error('[MOPS Admin] Lỗi không bắt được (' + info + '):', err);
+    if (err && err.stack) console.error(err.stack);
+    // Tự trích đoạn code render function đã compile quanh vị trí crash (line:col trong
+    // err.stack, dạng "<anonymous>:LINE:COL") — giúp định vị chính xác biểu thức lỗi trong
+    // template gốc mà không cần người dùng tự mở DevTools Sources (review 2026-07-16, bug
+     // "Cannot read properties of undefined (reading 'length')" ngay sau login chưa tìm ra
+     // gốc bằng static review).
+    try {
+      var m = err && err.stack && /<anonymous>:(\d+):(\d+)/.exec(err.stack);
+      // instance ở đây là public proxy (app.config.errorHandler nhận instance.proxy nội bộ của
+      // Vue, không phải ComponentInternalInstance) — proxy KHÔNG expose field `render` (không có
+      // trong publicPropertiesMap của Vue 3), nên `instance.render` luôn undefined và khối trích
+      // dòng/cột này chưa từng chạy được. Render function đã compile từ template nằm ở
+      // `$options.render` (Vue gán vào Component.render khi biên dịch in-DOM template, và
+      // `$options` (resolveMergedOptions) là field public proxy CÓ expose).
+      var renderFn = instance && instance.$options && instance.$options.render;
+      if (m && renderFn) {
+        var lines = renderFn.toString().split('\n');
+        var lineNo = parseInt(m[1], 10) - 1;
+        var colNo  = parseInt(m[2], 10) - 1;
+        var line = lines[lineNo] || '';
+        console.error('[MOPS Admin] Dòng ' + m[1] + ' cột ' + m[2] + ' trong render() đã compile:');
+        console.error(line.substring(Math.max(0, colNo - 250), colNo + 100));
+        console.error('[MOPS Admin] --- toàn bộ dòng ' + m[1] + ' ---');
+        console.error(line);
+      } else {
+        console.error('[MOPS Admin] Không trích được dòng/cột render (m=' + !!m + ', renderFn=' + !!renderFn + ').');
+      }
+    } catch (e3) { console.error('[MOPS Admin] Không trích được ngữ cảnh:', e3); }
+    try { showToast('Đã xảy ra lỗi hiển thị. Vui lòng tải lại trang (F5). Nếu lặp lại, chụp Console (F12) gửi cho dev.', 'error'); } catch (e2) {}
+  };
+
+  try {
+    appInstance = app.mount('#mops-app');
+    window.__mopsAdminRuntime.state = 'mounted';
+    window.__mopsAdminRuntime.mounted = true;
+  } catch (mountErr) {
+    maInitialRenderFailed = true;
+    maInitialRenderSettled = true;
+    window.__mopsAdminRuntime.state = 'mount-error';
+    window.__mopsAdminRuntime.error = String(mountErr && (mountErr.stack || mountErr.message || mountErr));
+    console.error('[MOPS Admin] app.mount() thất bại:', mountErr);
+    showInitialRenderFailure();
+    return;
+  }
+
+  // Chỉ gỡ preloader sau khi Vue flush xong lượt render đầu tiên và không báo lỗi.
+  // app.mount() không throw với lỗi được app.config.errorHandler xử lý, nên không thể dùng
+  // try/catch quanh mount() làm tiêu chí thành công.
+  Vue.nextTick(function() {
+    maInitialRenderSettled = true;
+    var maRoot = document.getElementById('mops-app');
+    var rawTemplate = findRawVueTemplate(maRoot);
+    window.__mopsAdminRuntime.rawTemplate = rawTemplate ? rawTemplate.value : '';
+    if (rawTemplate) failInitialRender('Vue mount hoàn tất nhưng template thô vẫn còn (' + rawTemplate.type + ').', rawTemplate.value);
+    if (maInitialRenderFailed) {
+      showInitialRenderFailure();
+      return;
+    }
+    revealMopsRoot(maRoot);
+    window.__mopsAdminRuntime.state = 'ready';
+    window.__mopsAdminRuntime.ready = true;
+    maRootObserver = new MutationObserver(function() {
+      if (maInitialRenderFailed) return;
+      var changedTemplate = findRawVueTemplate(maRoot);
+      if (changedTemplate) {
+        failInitialRender('DOM MOPS bị thay sau khi Vue mount; template thô xuất hiện (' + changedTemplate.type + ').', changedTemplate.value);
+        if (maRootObserver) maRootObserver.disconnect();
+      }
+    });
+    maRootObserver.observe(maRoot, { childList: true, subtree: true, attributes: true, characterData: true });
+    syncModalScrollLock();
+    maModalObserver = new MutationObserver(syncModalScrollLock);
+    maModalObserver.observe(maRoot, { childList: true, subtree: true });
+    var maPreloader = document.getElementById('ma-preloader');
+    if (maPreloader) {
+      maPreloader.classList.add('is-hidden');
+    }
+  });
+}
+
+// Asset scripts can be injected by a theme runtime after DOMContentLoaded.
+// Registering only an event listener in that case means this function never
+// runs, leaving raw Vue directives and every modal visible in the DOM.
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bootstrapMopsAdmin, { once: true });
+} else {
+  bootstrapMopsAdmin();
+}
+})();

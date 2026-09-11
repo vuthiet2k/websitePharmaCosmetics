@@ -1,0 +1,430 @@
+{% comment %} mops-admin-inventory.js.bwt — Mixin domain "Kho & NCC" (tab Inventory: Nhà cung
+  cấp/Phiếu nhập hàng/Công nợ) cho MOPS Admin. Tách khỏi Assets/mops-admin.js.bwt (2026-07-16,
+  theo mẫu mops-admin-audit.js.bwt). Script TOP-LEVEL — đẩy mixin vào window.MopsAdminMixins
+  TRƯỚC khi Assets/mops-admin.js.bwt đọc mảng này. Gọi helper dùng chung qua window.MopsAdminCore.
+  Load TRƯỚC Assets/mops-admin.js.bwt.
+  KHÔNG gồm financeDocStatusClass() — dùng chung với domain Tài chính (Receipts/Vouchers/
+  Transfers/Adjustments cũng cùng state machine Draft/PendingApproval/Approved/Posted/Cancelled),
+  vẫn ở core. openBillsForVoucher()/openDepositPOsForVoucher() đọc inventory.bills/
+  purchaseOrders nhưng được domain Tài chính (form Lập Phiếu chi) gọi qua this.* — cross-domain
+  bình thường vì Vue mixins share chung 1 instance.
+  purchaseOrderMenuTarget/purchaseOrderDetailTarget — 2 computed này CHÍNH LÀ nơi bug gốc
+  "reading 'length'" (trắng trang sau login) từng xảy ra khi bị đặt nhầm trong methods — giữ
+  đúng trong computed: khi tách domain, không lặp lại lỗi cũ. {% endcomment %}
+(function() {
+  'use strict';
+
+  window.MopsAdminRegisteredDomains = window.MopsAdminRegisteredDomains || [];
+  window.MopsAdminRegisteredDomains.push('inventory');
+
+  window.MopsAdminMixins = window.MopsAdminMixins || [];
+  window.MopsAdminMixins.push({
+    data: function() {
+      return {
+        inventory: {
+          activePanel: 'suppliers',
+          panelLoaded: {},
+          suppliers: {
+            list: [], loading: false, error: '',
+            showAddForm: false, submitting: false,
+            newSupplier: { name: '', phone: '', address: '', note: '', contactPerson: '', email: '', taxCode: '', province: '', ward: '' },
+            showEditForm: false, editTarget: null, editSaving: false,
+            editForm: { name: '', phone: '', address: '', note: '', contactPerson: '', email: '', taxCode: '', active: true, province: '', ward: '' },
+            drawerId: null, detail: null, detailLoading: false
+          },
+          purchaseOrders: {
+            list: [], loading: false, error: '', filterStatus: '',
+            showAddForm: false, submitting: false,
+            editingId: null, detailId: null, menuOpenId: null, menuPos: { top: 0, left: 0 },
+            newPO: {
+              supplier_id: '', note: '',
+              shipping_cost: '', storage_cost: '', vat_amount: '', discount_amount: '', allocation_basis: 'QTY',
+              payment_terms: 'FULL', deposit_amount: '',
+              items: [{ product_id: '', variant_id: '', variant_title: '', product_name: '', qty: 1, unit_cost: '', weight: '' }]
+            }
+          },
+          bills: { list: [], loading: false, error: '' }
+        }
+      };
+    },
+    computed: {
+      inventoryPanels: function() {
+        return [
+          { key: 'suppliers',       label: 'Nhà cung cấp' },
+          { key: 'purchase_orders', label: 'Phiếu nhập hàng' },
+          { key: 'bills',           label: 'Công nợ NCC' }
+        ];
+      },
+      openBillsForVoucher: function() {
+        var partyId = this.financeCore.vouchers.newVoucher.party_id;
+        return this.inventory.bills.list.filter(function(b) {
+          if (b.status !== 'OPEN' && b.status !== 'PARTIAL') return false;
+          return !partyId || b.party_id === partyId;
+        });
+      },
+      // Cọc trả NCC TRƯỚC khi PO Posted (docs/mops.md §6) — chỉ PO còn Draft + PaymentTerms=DEPOSIT
+      // mới hợp lệ để chọn ở đây (khớp đúng validate createPaymentVoucher() ở server).
+      openDepositPOsForVoucher: function() {
+        return this.inventory.purchaseOrders.list.filter(function(po) {
+          return po.status === 'Draft' && po.payment_terms === 'DEPOSIT';
+        });
+      },
+      // Dropdown ⋮/Drawer chi tiết — cả 2 đều teleport ra ngoài v-for nên cần tra lại po hiện
+      // hành theo id thay vì nhận trực tiếp qua tham số. Gate theo tab/panel đang mở — <teleport>
+      // đẩy menu ra <body>, THOÁT KHỎI v-show của panel cha, nên tự chuyển tab/panel trong lúc
+      // menu đang mở sẽ KHÔNG tự ẩn nếu chỉ dựa vào menuOpenId trần.
+      purchaseOrderMenuTarget: function() {
+        if (this.activeTab !== 'inventory' || this.inventory.activePanel !== 'purchase_orders') return null;
+        var id = this.inventory.purchaseOrders.menuOpenId;
+        if (!id) return null;
+        return this.inventory.purchaseOrders.list.filter(function(x) { return x.purchase_order_id === id; })[0] || null;
+      },
+      purchaseOrderDetailTarget: function() {
+        var id = this.inventory.purchaseOrders.detailId;
+        if (!id) return null;
+        return this.inventory.purchaseOrders.list.filter(function(x) { return x.purchase_order_id === id; })[0] || null;
+      }
+    },
+    methods: {
+      /* ── Kho & NCC (Phase 02 Inventory + Phase 04 Bước 3 AP) ── */
+      setInventoryPanel: function(key) {
+        this.inventory.activePanel = key;
+        if (this.inventory.panelLoaded[key]) return;
+        this.inventory.panelLoaded[key] = true;
+        if (key === 'suppliers') this.loadSuppliers();
+        if (key === 'purchase_orders') { this.loadSuppliers(); this.loadPurchaseOrders(); }
+        if (key === 'bills') this.loadBills();
+      },
+      loadSuppliers: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.inventory.suppliers.loading = true;
+        this.inventory.suppliers.error = '';
+        core.gasGet({ action: 'list_suppliers' })
+          .then(function(d) {
+            self.inventory.suppliers.loading = false;
+            if (!d || !d.success) { self.inventory.suppliers.error = d && d.error || 'Không tải được danh sách nhà cung cấp.'; return; }
+            self.inventory.suppliers.list = d.suppliers || [];
+          })
+          .catch(function() { self.inventory.suppliers.loading = false; self.inventory.suppliers.error = 'Lỗi kết nối.'; });
+      },
+      submitSupplier: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var ns = this.inventory.suppliers.newSupplier;
+        if (!(ns.name || '').trim()) { core.showToast('Vui lòng nhập tên nhà cung cấp.', 'error'); return; }
+
+        this.inventory.suppliers.submitting = true;
+        core.gasPost({
+          action: 'create_supplier', name: ns.name.trim(),
+          phone: (ns.phone || '').trim(), address: (ns.address || '').trim(), note: (ns.note || '').trim(),
+          contact_person: (ns.contactPerson || '').trim(), email: (ns.email || '').trim(), tax_code: (ns.taxCode || '').trim(),
+          province: ns.province || '', ward: ns.ward || ''
+        })
+          .then(function(d) {
+            self.inventory.suppliers.submitting = false;
+            if (!d.success) throw new Error(d.error || 'Tạo nhà cung cấp thất bại');
+            core.showToast('Đã thêm nhà cung cấp ' + d.supplier_id, 'success');
+            self.inventory.suppliers.showAddForm = false;
+            self.inventory.suppliers.newSupplier = { name: '', phone: '', address: '', note: '', contactPerson: '', email: '', taxCode: '', province: '', ward: '' };
+            self.loadSuppliers();
+          })
+          .catch(function(e) { self.inventory.suppliers.submitting = false; core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      startEditSupplier: function(s) {
+        this.inventory.suppliers.editTarget = s;
+        this.inventory.suppliers.editForm = {
+          name: s.name || '', phone: s.phone || '', address: s.address || '', note: s.note || '',
+          contactPerson: s.contact_person || '', email: s.email || '', taxCode: s.tax_code || '',
+          active: !!s.active, province: s.province || '', ward: s.ward || ''
+        };
+        this.inventory.suppliers.showEditForm = true;
+        this.preloadWardsFor(this.inventory.suppliers.editForm.province); // helper dùng chung — vẫn ở core
+      },
+      saveSupplierEdit: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var s = this.inventory.suppliers.editTarget;
+        var f = this.inventory.suppliers.editForm;
+        if (!s) return;
+        var name = (f.name || '').trim();
+        if (!name) { core.showToast('Tên nhà cung cấp không được để trống', 'error'); return; }
+        this.inventory.suppliers.editSaving = true;
+        core.gasPost({
+          action: 'update_supplier', supplier_id: s.supplier_id, name: name,
+          phone: (f.phone || '').trim(), address: (f.address || '').trim(), note: (f.note || '').trim(),
+          contact_person: (f.contactPerson || '').trim(), email: (f.email || '').trim(),
+          tax_code: (f.taxCode || '').trim(), active: !!f.active,
+          province: f.province || '', ward: f.ward || ''
+        })
+          .then(function(d) {
+            self.inventory.suppliers.editSaving = false;
+            if (!d.success) throw new Error(d.error || 'Lưu thất bại');
+            core.showToast('Đã lưu "' + name + '"', 'success');
+            var patch = {
+              name: name, phone: (f.phone || '').trim(), address: (f.address || '').trim(), note: (f.note || '').trim(),
+              contact_person: (f.contactPerson || '').trim(), email: (f.email || '').trim(),
+              tax_code: (f.taxCode || '').trim(), active: !!f.active,
+              province: f.province || '', ward: f.ward || ''
+            };
+            Object.assign(s, patch);
+            var listRow = self.inventory.suppliers.list.filter(function(x) { return x.supplier_id === s.supplier_id; })[0];
+            if (listRow && listRow !== s) Object.assign(listRow, patch);
+            self.inventory.suppliers.showEditForm = false;
+          })
+          .catch(function(e) { self.inventory.suppliers.editSaving = false; core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      // Xoá — server tự chặn nếu NCC đã có phiếu nhập hàng, dùng showConfirm() thay vì confirm() trình duyệt.
+      confirmDeleteSupplier: function(s) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        core.showConfirm('Xoá nhà cung cấp',
+          'Xoá "' + s.name + '" (' + s.supplier_id + ')? Chỉ xoá được nếu NCC này chưa có phiếu nhập hàng nào. Hành động không thể hoàn tác.'
+        ).then(function(ok) {
+          if (!ok) return;
+          core.gasPost({ action: 'delete_supplier', supplier_id: s.supplier_id })
+            .then(function(d) {
+              if (!d.success) throw new Error(d.error || 'Xoá thất bại');
+              core.showToast('Đã xoá "' + s.name + '"', 'success');
+              self.inventory.suppliers.list = self.inventory.suppliers.list.filter(function(x) { return x.supplier_id !== s.supplier_id; });
+              if (self.inventory.suppliers.drawerId === s.supplier_id) self.closeSupplierDrawer();
+            })
+            .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+        });
+      },
+      // Drawer Xem chi tiết — lịch sử nhập hàng + tổng đã nhập + công nợ (nếu caller có finance.view).
+      openSupplierDrawer: function(s) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        if (this.inventory.suppliers.drawerId === s.supplier_id) return;
+        this.inventory.suppliers.drawerId = s.supplier_id;
+        this.inventory.suppliers.detail = null;
+        this.inventory.suppliers.detailLoading = true;
+        core.gasGet({ action: 'get_supplier_detail', supplier_id: s.supplier_id })
+          .then(function(d) {
+            self.inventory.suppliers.detailLoading = false;
+            self.inventory.suppliers.detail = (d && d.success && d.found) ? d : null;
+          })
+          .catch(function() { self.inventory.suppliers.detailLoading = false; self.inventory.suppliers.detail = null; });
+      },
+      closeSupplierDrawer: function() {
+        this.inventory.suppliers.drawerId = null;
+        this.inventory.suppliers.detail = null;
+      },
+      addPOItemRow: function() {
+        this.inventory.purchaseOrders.newPO.items.push({ product_id: '', variant_id: '', variant_title: '', product_name: '', qty: 1, unit_cost: '', weight: '' });
+      },
+      removePOItemRow: function(idx) {
+        var items = this.inventory.purchaseOrders.newPO.items;
+        if (items.length <= 1) return; // luôn giữ ít nhất 1 dòng
+        items.splice(idx, 1);
+      },
+      // Tổng giá trị nhập tạm tính (Σ qty×unit_cost) — mốc tham khảo khi nhập Số tiền cọc.
+      // Gọi có () trong template (poItemsSubtotal()) — PHẢI ở methods, không phải computed.
+      poItemsSubtotal: function() {
+        return this.inventory.purchaseOrders.newPO.items.reduce(function(sum, it) {
+          return sum + (Number(it.qty) || 0) * (Number(it.unit_cost) || 0);
+        }, 0);
+      },
+      // Ô tìm-và-chọn sản phẩm cho từng dòng Phiếu nhập hàng — không lọc theo in_mops/mops_enabled
+      // (khác manualOrderSearchResults ở Đơn hàng) — nhập hàng cho MỌI sản phẩm đang active.
+      poItemSearchResults: function(query) {
+        var q = (query || '').trim().toLowerCase();
+        if (!q) return [];
+        return this.products.all.filter(function(p) {
+          if (p.status !== 'active') return false;
+          return String(p.title || '').toLowerCase().indexOf(q) !== -1 ||
+                 String(p.handle || '').toLowerCase().indexOf(q) !== -1 ||
+                 String(p.variant_title || '').toLowerCase().indexOf(q) !== -1 ||
+                 String(p.sku || '').toLowerCase().indexOf(q) !== -1;
+        }).slice(0, 6);
+      },
+      pickPOItemProduct: function(it, p) {
+        // Đa-biến-thể (2026-07-17): nhập hàng đúng biến thể — giữ variant_id để gửi lên, tên kèm nhãn.
+        it.product_id = p.product_id;
+        it.variant_id = p.variant_id || '';
+        it.variant_title = p.variant_title || '';
+        it.product_name = (p.title || p.handle) + (p.variant_title ? ' — ' + p.variant_title : '');
+      },
+      // Cùng bug/fix như openManualOrderForm() (tab Đơn hàng) — panel Kho&NCC chỉ tự loadSuppliers()/
+      // loadPurchaseOrders(), không có lý do gì tự loadProducts() sẵn, nên phải tải bù ở đây.
+      openPurchaseOrderForm: function() {
+        this.inventory.purchaseOrders.editingId = null;
+        this.inventory.purchaseOrders.newPO = {
+          supplier_id: '', note: '',
+          shipping_cost: '', storage_cost: '', vat_amount: '', discount_amount: '', allocation_basis: 'QTY',
+          payment_terms: 'FULL', deposit_amount: '',
+          items: [{ product_id: '', variant_id: '', variant_title: '', product_name: '', qty: 1, unit_cost: '', weight: '' }]
+        };
+        this.inventory.purchaseOrders.showAddForm = true;
+        if (!this.products.all.length && !this.products.loading) this.loadProducts();
+      },
+      // Sửa phiếu Draft — tái dùng NGUYÊN modal/validate của Lập phiếu (chỉ sửa được khi còn
+      // Draft, server chặn lại lần nữa). editingId có giá trị → submitPurchaseOrder() tự đổi
+      // sang gọi update_purchase_order.
+      openEditPurchaseOrderForm: function(po) {
+        this.inventory.purchaseOrders.menuOpenId = null;
+        this.inventory.purchaseOrders.editingId = po.purchase_order_id;
+        this.inventory.purchaseOrders.newPO = {
+          supplier_id: po.supplier_id, note: po.note || '',
+          shipping_cost: po.shipping_cost || '', storage_cost: po.storage_cost || '',
+          vat_amount: po.vat_amount || '', discount_amount: po.discount_amount || '',
+          allocation_basis: po.allocation_basis || 'QTY',
+          payment_terms: po.payment_terms || 'FULL', deposit_amount: po.deposit_amount || '',
+          items: (po.items || []).map(function(it) {
+            return { product_id: it.product_id || '', variant_id: it.variant_id || '', variant_title: it.variant_title || '', product_name: it.product_name, qty: it.qty, unit_cost: it.unit_cost, weight: it.weight || '' };
+          })
+        };
+        this.inventory.purchaseOrders.showAddForm = true;
+        if (!this.products.all.length && !this.products.loading) this.loadProducts();
+      },
+      loadPurchaseOrders: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.inventory.purchaseOrders.loading = true;
+        this.inventory.purchaseOrders.error = '';
+        var params = { action: 'list_purchase_orders' };
+        if (this.inventory.purchaseOrders.filterStatus) params.status = this.inventory.purchaseOrders.filterStatus;
+        core.gasGet(params)
+          .then(function(d) {
+            self.inventory.purchaseOrders.loading = false;
+            if (!d || !d.success) { self.inventory.purchaseOrders.error = d && d.error || 'Không tải được danh sách phiếu nhập hàng.'; return; }
+            self.inventory.purchaseOrders.list = d.purchase_orders || [];
+          })
+          .catch(function() { self.inventory.purchaseOrders.loading = false; self.inventory.purchaseOrders.error = 'Lỗi kết nối.'; });
+      },
+      supplierName: function(supplierId) {
+        var s = this.inventory.suppliers.list.filter(function(x) { return x.supplier_id === supplierId; })[0];
+        return s ? s.name : supplierId;
+      },
+      submitPurchaseOrder: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var np = this.inventory.purchaseOrders.newPO;
+        if (!np.supplier_id) { core.showToast('Vui lòng chọn nhà cung cấp.', 'error'); return; }
+        var items = np.items.filter(function(it) { return (it.product_name || '').trim(); });
+        if (!items.length) { core.showToast('Cần ít nhất 1 dòng sản phẩm có tên.', 'error'); return; }
+        for (var i = 0; i < items.length; i++) {
+          if (!(Number(items[i].qty) > 0)) { core.showToast('Dòng ' + (i + 1) + ': Số lượng phải > 0.', 'error'); return; }
+          if (!(Number(items[i].unit_cost) > 0)) { core.showToast('Dòng ' + (i + 1) + ': Giá nhập phải > 0.', 'error'); return; }
+          if (np.allocation_basis === 'WEIGHT' && !(Number(items[i].weight) > 0)) {
+            core.showToast('Dòng ' + (i + 1) + ': cần Khối lượng (kg) > 0 khi phân bổ chi phí theo trọng lượng.', 'error'); return;
+          }
+        }
+        var subtotal = items.reduce(function(sum, it) { return sum + Number(it.qty) * Number(it.unit_cost); }, 0);
+        if (np.payment_terms === 'DEPOSIT' && !(Number(np.deposit_amount) > 0 && Number(np.deposit_amount) <= subtotal)) {
+          core.showToast('Số tiền cọc phải > 0 và không vượt quá tổng giá trị nhập (' + core.formatMoney(subtotal) + ').', 'error'); return;
+        }
+
+        var editingId = this.inventory.purchaseOrders.editingId;
+        this.inventory.purchaseOrders.submitting = true;
+        var payload = {
+          action: editingId ? 'update_purchase_order' : 'create_purchase_order',
+          supplier_id: np.supplier_id, note: (np.note || '').trim(),
+          shipping_cost: Number(np.shipping_cost) || 0, storage_cost: Number(np.storage_cost) || 0,
+          vat_amount: Number(np.vat_amount) || 0, discount_amount: Number(np.discount_amount) || 0,
+          allocation_basis: np.allocation_basis,
+          payment_terms: np.payment_terms, deposit_amount: np.payment_terms === 'DEPOSIT' ? Number(np.deposit_amount) : 0,
+          items: items.map(function(it) {
+            return {
+              product_id: (it.product_id || '').trim(), variant_id: (it.variant_id || '').trim(),
+              product_name: it.product_name.trim(),
+              qty: Number(it.qty), unit_cost: Number(it.unit_cost), weight: Number(it.weight) || 0
+            };
+          })
+        };
+        if (editingId) payload.purchase_order_id = editingId;
+        core.gasPost(payload)
+          .then(function(d) {
+            self.inventory.purchaseOrders.submitting = false;
+            if (!d.success) throw new Error(d.error || (editingId ? 'Sửa phiếu nhập hàng thất bại' : 'Lập phiếu nhập hàng thất bại'));
+            core.showToast(editingId
+              ? 'Đã lưu Phiếu nhập hàng ' + editingId
+              : 'Đã lập Phiếu nhập hàng ' + d.purchase_order_id + ' (Draft)' + (np.payment_terms === 'DEPOSIT' ? ' — dùng nút "Trả cọc NCC" để trả trước' : ' — nhớ Post để ghi nhận nợ NCC'),
+              'success');
+            self.inventory.purchaseOrders.showAddForm = false;
+            self.inventory.purchaseOrders.editingId = null;
+            self.inventory.purchaseOrders.newPO = {
+              supplier_id: '', note: '',
+              shipping_cost: '', storage_cost: '', vat_amount: '', discount_amount: '', allocation_basis: 'QTY',
+              payment_terms: 'FULL', deposit_amount: '',
+              items: [{ product_id: '', variant_id: '', variant_title: '', product_name: '', qty: 1, unit_cost: '', weight: '' }]
+            };
+            self.loadPurchaseOrders();
+          })
+          .catch(function(e) { self.inventory.purchaseOrders.submitting = false; core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      postPurchaseOrderAction: function(po) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        if (!confirm('Post Phiếu nhập hàng ' + po.purchase_order_id + ' (' + core.formatMoney(po.total_amount) + ')? Sẽ ghi nhận nợ nhà cung cấp (Bill) và không sửa được nữa.')) return;
+        core.gasPost({ action: 'post_purchase_order', purchase_order_id: po.purchase_order_id })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Post thất bại');
+            core.showToast('Đã Post Phiếu nhập hàng', 'success');
+            self.loadPurchaseOrders();
+            self.inventory.panelLoaded.bills = false; // buộc load lại Bills lần sau vào panel đó
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      cancelPurchaseOrderAction: function(po) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        if (!confirm('Huỷ Phiếu nhập hàng ' + po.purchase_order_id + '? Chỉ huỷ được nếu chưa có Phiếu chi nào trả nhà cung cấp cho phiếu này.')) return;
+        core.gasPost({ action: 'cancel_purchase_order', purchase_order_id: po.purchase_order_id })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Huỷ thất bại');
+            core.showToast('Đã huỷ Phiếu nhập hàng', 'success');
+            self.loadPurchaseOrders();
+            self.inventory.panelLoaded.bills = false;
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      // ── Drawer chi tiết + dropdown Thao tác ── listPurchaseOrders() đã trả sẵn po.items đầy đủ.
+      openPurchaseOrderDetail: function(po) {
+        this.inventory.purchaseOrders.menuOpenId = null;
+        this.inventory.purchaseOrders.detailId = po.purchase_order_id;
+      },
+      closePurchaseOrderDetail: function() {
+        this.inventory.purchaseOrders.detailId = null;
+      },
+      // Ảnh sản phẩm cho Drawer chi tiết — join tay theo product_id với cache products.all.
+      purchaseItemImage: function(it) {
+        if (!it.product_id) return '';
+        var p = this.products.all.filter(function(x) { return x.product_id === it.product_id; })[0];
+        return p ? p.image : '';
+      },
+      // Dropdown ⋮ — vị trí tính từ nút bấm, teleport ra <body> để KHÔNG bị .overflow-x-auto của
+      // bảng cắt mất phần dưới. Đóng bằng: click lại nút ⋮, click ra ngoài, hoặc cuộn trang.
+      togglePurchaseOrderMenu: function(po, ev) {
+        var pos = this.inventory.purchaseOrders;
+        if (pos.menuOpenId === po.purchase_order_id) { pos.menuOpenId = null; return; }
+        var rect = ev.currentTarget.getBoundingClientRect();
+        pos.menuPos = { top: rect.bottom + 4, left: Math.max(8, rect.right - 224) };
+        pos.menuOpenId = po.purchase_order_id;
+      },
+      loadBills: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.inventory.bills.loading = true;
+        this.inventory.bills.error = '';
+        core.gasGet({ action: 'list_bills' })
+          .then(function(d) {
+            self.inventory.bills.loading = false;
+            if (!d || !d.success) { self.inventory.bills.error = d && d.error || 'Không tải được công nợ nhà cung cấp.'; return; }
+            self.inventory.bills.list = d.bills || [];
+          })
+          .catch(function() { self.inventory.bills.loading = false; self.inventory.bills.error = 'Lỗi kết nối.'; });
+      },
+      billStatusClass: function(status) {
+        var map = {
+          OPEN:      'ma-badge ma-badge--neutral',
+          PARTIAL:   'ma-badge ma-badge--warning',
+          PAID:      'ma-badge ma-badge--success',
+          CANCELLED: 'ma-badge ma-badge--danger ma-badge--strike'
+        };
+        return map[status] || map.OPEN;
+      }
+    }
+  });
+})();

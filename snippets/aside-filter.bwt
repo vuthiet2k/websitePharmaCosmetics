@@ -1,0 +1,436 @@
+<style>
+/* ── Filter: search input ── */
+.filter-search-wrap {
+	position: relative;
+}
+.filter-search-icon {
+	position: absolute;
+    right: 9px;
+    top: 50%;
+	transform: translateY(-50%);
+	color: #bbb;
+	pointer-events: none;
+	display: flex;
+	align-items: center;
+}
+.filter-group-search {
+	width: 100%;
+	padding: 7px 10px 7px 30px;
+	border: 1px solid #e4e4e4;
+	border-radius: 6px;
+	font-family: var(--font-secondary);
+	font-size: var(--fs-sm);
+	color: var(--textColor, #333);
+	background: #f8f8f8;
+	outline: none;
+	box-sizing: border-box;
+	transition: border-color 0.2s, background 0.2s;
+    margin-bottom: 0 !important;
+}
+.filter-group-search:focus {
+	border-color: var(--mainColor, #3cb371);
+	background: #fff;
+}
+
+/* ── Filter: show-more button ── */
+.filter-showmore-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	width: 100%;
+	margin-top: 8px;
+	padding: 6px 12px;
+	background: none;
+	border: 1px dashed color-mix(in srgb, var(--mainColor, #3cb371) 60%, transparent);
+	border-radius: 5px;
+	font-family: var(--font-secondary);
+	font-size: var(--fs-sm);
+	color: var(--mainColor, #3cb371);
+	cursor: pointer;
+	transition: background 0.2s, color 0.2s, border-color 0.2s;
+	line-height: 1.4;
+}
+.filter-showmore-btn:hover {
+	background: var(--mainColor, #3cb371);
+	border-color: var(--mainColor, #3cb371);
+	color: #fff;
+}
+.filter-showmore-btn svg {
+	flex-shrink: 0;
+	transition: inherit;
+}
+
+/* ── Filter: hidden item ── */
+.filter-item-hidden { display: none !important; }
+
+/* ── Filter: no results message ── */
+.filter-no-results {
+	display: none;
+	font-family: var(--font-secondary);
+	font-size: var(--fs-sm);
+	color: #aaa;
+	font-style: italic;
+	padding: 4px 0 2px;
+}
+.filter-no-results.is-visible { 
+	display: block;
+    text-align: center; 
+}
+</style>
+
+<div class="filter-content">
+	<div class="filter-container">
+
+		{%- comment -%}
+		"Bạn chọn" đã được tách ra khỏi sidebar — xem #afw-active-bar trong collection.bwt.
+		Nằm phía trên grid sản phẩm để user luôn thấy filter đang bật khi cuộn xem SP.
+		{%- endcomment -%}
+
+		<div class="aside-filter-groups">
+
+			{%- if settings.filter_type and collection.all_types.size > 0 -%}
+			<div class="filter-group">
+				<h3 class="filter-heading filter-group-toggle">{{ settings.filter_type_title | default: 'LOẠI SẢN PHẨM' }}</h3>
+				<div class="filter-items-list">
+					{%- for type in collection.all_types -%}
+					{%- if type != '' -%}
+					<label class="sapo-filter-item">
+						<input type="checkbox"
+							class="sapo-filter-checkbox filter-checkbox-input"
+							data-group="PRODUCT_TYPE"
+							data-field="product_type.filter_key"
+							data-text="{{ type }}"
+							data-operator="OR"
+							value="(&#34;{{ type }}&#34;)"
+							/>
+						<span class="sapo-filter-text">{{ type }}</span>
+					</label>
+					{%- endif -%}
+					{%- endfor -%}
+				</div>
+			</div>
+			{%- endif -%}
+
+			{%- if settings.filter_tag1 and settings.filter_tag1_list != '' -%}
+			<div class="filter-group">
+				<h3 class="filter-heading filter-group-toggle">{{ settings.filter_tag1_title | default: 'BỘ LỌC' }}</h3>
+				<div class="filter-items-list">
+					{%- assign tags1 = settings.filter_tag1_list | split: ';' -%}
+					{%- for t in tags1 -%}
+					{%- assign tag = t | strip -%}
+					{%- if tag != '' -%}
+					<label class="sapo-filter-item">
+						<input type="checkbox"
+							class="sapo-filter-checkbox filter-checkbox-input"
+							data-group="{{ settings.filter_tag1_title | default: 'tag1' }}"
+							data-field="tags"
+							data-text="{{ tag }}"
+							data-operator="OR"
+							value="(&#34;{{ tag }}&#34;)"
+							/>
+						<span class="sapo-filter-text">{{ tag }}</span>
+					</label>
+					{%- endif -%}
+					{%- endfor -%}
+				</div>
+			</div>
+			{%- endif -%}
+
+			{%- if settings.filter_tag2 and settings.filter_tag2_list != '' -%}
+			<div class="filter-group">
+				<h3 class="filter-heading filter-group-toggle">{{ settings.filter_tag2_title | default: 'VẤN ĐỀ VỀ DA' }}</h3>
+				<div class="filter-pills-wrapper">
+					{%- assign tags2 = settings.filter_tag2_list | split: ';' -%}
+					{%- for t in tags2 -%}
+					{%- assign tag = t | strip -%}
+					{%- if tag != '' -%}
+					<button type="button"
+						class="filter-pill-btn"
+						data-group="{{ settings.filter_tag2_title | default: 'tag2' }}"
+						data-field="tags"
+						data-text="{{ tag }}"
+						data-operator="OR"
+						data-value="(&#34;{{ tag }}&#34;)">{{ tag }}</button>
+					{%- endif -%}
+					{%- endfor -%}
+				</div>
+			</div>
+			{%- endif -%}
+
+			{%- if settings.filter_tag3 and settings.filter_tag3_list != '' -%}
+			<div class="filter-group">
+				<h3 class="filter-heading filter-group-toggle">{{ settings.filter_tag3_title | default: 'BỘ LỌC' }}</h3>
+				<div class="filter-items-list">
+					{%- assign tags3 = settings.filter_tag3_list | split: ';' -%}
+					{%- for t in tags3 -%}
+					{%- assign tag = t | strip -%}
+					{%- if tag != '' -%}
+					<label class="sapo-filter-item">
+						<input type="checkbox"
+							class="sapo-filter-checkbox filter-checkbox-input"
+							data-group="{{ settings.filter_tag3_title | default: 'tag3' }}"
+							data-field="tags"
+							data-text="{{ tag }}"
+							data-operator="OR"
+							value="(&#34;{{ tag }}&#34;)"
+							/>
+						<span class="sapo-filter-text">{{ tag }}</span>
+					</label>
+					{%- endif -%}
+					{%- endfor -%}
+				</div>
+			</div>
+			{%- endif -%}
+
+			{%- if settings.filter_vendor and collection.all_vendors.size > 0 -%}
+			<div class="filter-group">
+				<h3 class="filter-heading filter-group-toggle">{{ settings.filter_vendor_title | default: 'THƯƠNG HIỆU' }}</h3>
+				<div class="filter-items-list">
+					{%- for vendor in collection.all_vendors -%}
+					{%- if vendor != '' -%}
+					<label class="sapo-filter-item">
+						<input type="checkbox"
+							class="sapo-filter-checkbox filter-checkbox-input"
+							data-group="Hãng"
+							data-field="vendor"
+							data-text="{{ vendor }}"
+							data-operator="OR"
+							value="(&#34;{{ vendor }}&#34;)"
+							/>
+						<span class="sapo-filter-text">{{ vendor }}</span>
+					</label>
+					{%- endif -%}
+					{%- endfor -%}
+				</div>
+			</div>
+			{%- endif -%}
+
+			{%- if settings.filter_price -%}
+			<div class="filter-group">
+				<h3 class="filter-heading filter-group-toggle">{{ settings.filter_price_title | default: 'KHOẢNG GIÁ' }}</h3>
+				<div class="filter-price-slider">
+					<div class="filter-price-track">
+						<div class="filter-price-fill" id="afw-price-fill"></div>
+					</div>
+					<div class="filter-price-handles">
+						<input type="range" min="0" max="5000000" step="50000" value="0"
+							class="filter-range-input filter-range-min" id="afw-price-min"
+							aria-label="Giá tối thiểu">
+						<input type="range" min="0" max="5000000" step="50000" value="5000000"
+							class="filter-range-input filter-range-max" id="afw-price-max"
+							aria-label="Giá tối đa">
+					</div>
+					<div class="filter-price-labels">
+						<span class="filter-price-label" id="afw-label-min">0đ</span>
+						<span class="filter-price-label" id="afw-label-max">5.000.000đ+</span>
+					</div>
+				</div>
+			</div>
+			{%- endif -%}
+
+		</div>
+
+		{%- include 'filter-cate-col' -%}
+	</div>
+</div>
+
+<script>
+(function () {
+	/* ── toggleFilter: visual feedback when checkbox is checked ── */
+	function toggleFilter(el) {
+		var item = el.closest('.sapo-filter-item');
+		if (item) item.classList.toggle('is-active', el.checked);
+	}
+	window.toggleFilter = toggleFilter;
+
+	/* ── Price range slider ── */
+	var elMin  = document.getElementById('afw-price-min');
+	var elMax  = document.getElementById('afw-price-max');
+	var fill   = document.getElementById('afw-price-fill');
+	var lblMin = document.getElementById('afw-label-min');
+	var lblMax = document.getElementById('afw-label-max');
+
+	if (elMin && elMax) {
+		function formatPrice(val) {
+			return parseInt(val, 10).toLocaleString('vi-VN') + 'đ';
+		}
+		function updateSlider() {
+			var min = parseInt(elMin.value, 10);
+			var max = parseInt(elMax.value, 10);
+			if (min > max) {
+				var tmp = min; min = max; max = tmp;
+				elMin.value = min; elMax.value = max;
+			}
+			var pMin = (min / 5000000) * 100;
+			var pMax = (max / 5000000) * 100;
+			fill.style.left  = pMin + '%';
+			fill.style.width = (pMax - pMin) + '%';
+			lblMin.textContent = formatPrice(min);
+			lblMax.textContent = max >= 5000000 ? '5.000.000đ+' : formatPrice(max);
+		}
+		elMin.addEventListener('input', updateSlider);
+		elMax.addEventListener('input', updateSlider);
+		updateSlider();
+	}
+
+	/* ════════════════════════════════════════════════
+	   ── Show-more + Search cho filter groups ──
+	   Chạy sau tất cả DOMContentLoaded handlers
+	   (setTimeout 0 để đợi jQuery ready và restore-from-URL)
+	   ════════════════════════════════════════════════ */
+	var FILTER_LIMIT = 8;
+
+	var SVG_DOWN = '<svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M19 9l-7 7-7-7"/></svg>';
+	var SVG_UP   = '<svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M5 15l7-7 7 7"/></svg>';
+	var SVG_SEARCH = '<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>';
+
+	/* Collapse: ẩn item > LIMIT (trừ item đang checked) */
+	function applyCollapse(items) {
+		var visible = 0;
+		items.forEach(function (item) {
+			var checked = !!item.querySelector('input:checked');
+			if (checked) {
+				item.classList.remove('filter-item-hidden');
+			} else if (visible < FILTER_LIMIT) {
+				item.classList.remove('filter-item-hidden');
+				visible++;
+			} else {
+				item.classList.add('filter-item-hidden');
+			}
+		});
+	}
+
+	function countHidden(items) {
+		return items.filter(function (i) { return i.classList.contains('filter-item-hidden'); }).length;
+	}
+
+	/* ── Checkbox group (filter-items-list) ── */
+	function initCheckboxGroup(group) {
+		var list = group.querySelector('.filter-items-list');
+		if (!list) return;
+		var items = Array.prototype.slice.call(list.querySelectorAll('.sapo-filter-item'));
+		if (items.length <= FILTER_LIMIT) return;
+
+		applyCollapse(items);
+
+		/* Search input */
+		var searchWrap = document.createElement('div');
+		searchWrap.className = 'filter-search-wrap';
+		searchWrap.innerHTML =
+			'<span class="filter-search-icon">' + SVG_SEARCH + '</span>' +
+			'<input type="text" class="filter-group-search" placeholder="Tìm trong nhóm..." autocomplete="off">';
+		var noResults = document.createElement('p');
+		noResults.className = 'filter-no-results';
+		noResults.textContent = 'Không tìm thấy kết quả.';
+		list.parentNode.insertBefore(searchWrap, list);
+		list.parentNode.insertBefore(noResults, list);
+
+		/* Show-more button */
+		var btn = document.createElement('button');
+		btn.type = 'button';
+		btn.className = 'filter-showmore-btn';
+		list.parentNode.insertBefore(btn, list.nextSibling);
+
+		function updateBtn() {
+			var h = countHidden(items);
+			btn.innerHTML = h > 0
+				? SVG_DOWN + ' Xem thêm (' + h + ')'
+				: SVG_UP   + ' Thu gọn';
+		}
+		updateBtn();
+
+		btn.addEventListener('click', function () {
+			var anyHidden = items.some(function (i) { return i.classList.contains('filter-item-hidden'); });
+			if (anyHidden) {
+				items.forEach(function (i) { i.classList.remove('filter-item-hidden'); });
+			} else {
+				applyCollapse(items);
+			}
+			updateBtn();
+		});
+
+		/* Search */
+		var searchInput = searchWrap.querySelector('.filter-group-search');
+		searchInput.addEventListener('input', function () {
+			var q = this.value.trim().toLowerCase();
+			var matched = 0;
+			if (!q) {
+				applyCollapse(items);
+				noResults.classList.remove('is-visible');
+				btn.style.display = '';
+				updateBtn();
+				return;
+			}
+			btn.style.display = 'none';
+			items.forEach(function (item) {
+				var text = (item.querySelector('.sapo-filter-text') || item).textContent.trim().toLowerCase();
+				var show = text.indexOf(q) !== -1;
+				item.classList.toggle('filter-item-hidden', !show);
+				if (show) matched++;
+			});
+			noResults.classList.toggle('is-visible', matched === 0);
+		});
+
+		/* Khi checkbox được check từ JS (restore-from-URL): un-hide item */
+		list.addEventListener('change', function (e) {
+			if (e.target.matches('.filter-checkbox-input') && e.target.checked) {
+				var item = e.target.closest('.sapo-filter-item');
+				if (item) item.classList.remove('filter-item-hidden');
+			}
+			updateBtn();
+		});
+	}
+
+	/* ── Pill group (filter-pills-wrapper) ── */
+	function initPillGroup(group) {
+		var list = group.querySelector('.filter-pills-wrapper');
+		if (!list) return;
+		var items = Array.prototype.slice.call(list.querySelectorAll('.filter-pill-btn'));
+		if (items.length <= FILTER_LIMIT) return;
+
+		items.forEach(function (item, i) {
+			if (i >= FILTER_LIMIT && !item.classList.contains('active')) {
+				item.classList.add('filter-item-hidden');
+			}
+		});
+
+		var btn = document.createElement('button');
+		btn.type = 'button';
+		btn.className = 'filter-showmore-btn';
+		list.parentNode.insertBefore(btn, list.nextSibling);
+
+		function updateBtn() {
+			var h = countHidden(items);
+			btn.innerHTML = h > 0
+				? SVG_DOWN + ' Xem thêm (' + h + ')'
+				: SVG_UP   + ' Thu gọn';
+		}
+		updateBtn();
+
+		btn.addEventListener('click', function () {
+			var anyHidden = items.some(function (i) { return i.classList.contains('filter-item-hidden'); });
+			if (anyHidden) {
+				items.forEach(function (i) { i.classList.remove('filter-item-hidden'); });
+			} else {
+				items.forEach(function (item, i) {
+					if (i >= FILTER_LIMIT && !item.classList.contains('active')) {
+						item.classList.add('filter-item-hidden');
+					}
+				});
+			}
+			updateBtn();
+		});
+	}
+
+	/* Chạy sau tất cả DOMContentLoaded handlers (kể cả jQuery restore-from-URL) */
+	document.addEventListener('DOMContentLoaded', function () {
+		setTimeout(function () {
+			document.querySelectorAll('.filter-group').forEach(function (group) {
+				initCheckboxGroup(group);
+				initPillGroup(group);
+			});
+		}, 0);
+	});
+})();
+</script>

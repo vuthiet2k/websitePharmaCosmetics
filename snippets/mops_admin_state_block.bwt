@@ -1,0 +1,23 @@
+{%- comment -%}
+  mops_admin_state_block — khối loading/error/empty dùng chung cho MOPS Admin (governance §10:
+  mọi list/detail/report phải có đủ loading → loaded | empty | error, kèm Retry, không trắng màn
+  hình). Chỉ render 3 nhánh v-if/v-else-if ĐẦU (loading, error, empty) — nhánh v-else nội dung đã
+  tải nằm ở nơi gọi, ngay sau include này (xem Snippets/mops_admin_tab_customers.bwt:31-41 làm mẫu
+  gốc). Include bằng include có trim 2 đầu để không chèn text node trắng phá chuỗi v-if/v-else-if.
+
+  Tham số:
+    loading_expr (bắt buộc) — biểu thức JS boolean, vd 'inventory.suppliers.loading'
+    error_expr   (bắt buộc) — biểu thức JS, falsy/rỗng khi không lỗi, vd 'inventory.suppliers.error'
+    empty_expr   (bắt buộc) — biểu thức JS boolean, true khi đã tải xong nhưng không có dữ liệu
+    retry_fn     (tuỳ chọn) — tên method gọi khi bấm "Thử lại"; bỏ trống thì không hiện nút Retry
+    icon         (tuỳ chọn) — icon Material Symbols cho empty state, mặc định 'inbox'
+    skeleton     ('table' | 'center', mặc định 'table') — dạng loading
+    skeleton_label (tuỳ chọn) — aria-label cho skeleton dạng 'table'
+{%- endcomment -%}
+{%- if skeleton == 'center' -%}
+<div v-if="{{ loading_expr }}" class="ma-loading-center"><span class="material-symbols-outlined text-primary ma-spin text-[32px]">progress_activity</span></div>
+{%- else -%}
+<div v-if="{{ loading_expr }}" class="ma-table-skeleton"{% if skeleton_label %} aria-label="{{ skeleton_label }}"{% endif %}><span></span><span></span><span></span><span></span></div>
+{%- endif -%}
+<div v-else-if="{{ error_expr }}" class="ma-empty-state"><span class="material-symbols-outlined text-error text-[48px]">error</span><p class="ma-empty-hint">[[ {{ error_expr }} ]]</p>{% if retry_fn %}<button @click="{{ retry_fn }}" type="button" class="ma-btn-outline">Thử lại</button>{% endif %}</div>
+<div v-else-if="{{ empty_expr }}" class="ma-empty-state"><span class="material-symbols-outlined text-on-surface-variant text-[56px] opacity-[.35]">{{ icon | default: 'inbox' }}</span><p class="ma-empty-hint">[[ {{ empty_expr }} ]]</p></div>

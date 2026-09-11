@@ -1,0 +1,113 @@
+      
+      <div id="tab-notifications" v-show="activeTab === 'notifications'" class="ma-tab-pane">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm mb-stack-lg">
+          <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
+            <span class="text-label-md font-bold text-on-surface uppercase tracking-wider">Ma trận phân phối thông báo</span>
+            <span class="ma-badge ma-badge--success">Chỉ đọc</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="ma-thead-row">
+                  <th class="px-6 py-3 font-label-md text-on-surface-variant tracking-wider uppercase min-w-[180px]">Sự kiện</th>
+                  <th class="ma-th-lg">Mô tả</th>
+                  <th class="ma-th-lg">Nhận thông báo</th>
+                </tr>
+              </thead>
+              <tbody class="ma-rows-divide">
+                <tr>
+                  <td class="px-6 py-3"><code class="text-body-sm bg-surface-container-low px-1.5 py-0.5 rounded">ORDER_CREATED</code></td>
+                  <td class="px-6 py-3 text-body-sm">Đơn hàng mới được tạo</td>
+                  <td class="px-6 py-3 space-x-1"><span class="ma-role-chip ma-role-chip--blue">ADMIN</span><span class="ma-role-chip ma-role-chip--gray">STAFF</span></td>
+                </tr>
+                <tr>
+                  <td class="px-6 py-3"><code class="text-body-sm bg-surface-container-low px-1.5 py-0.5 rounded">PAYMENT_REPORTED</code></td>
+                  <td class="px-6 py-3 text-body-sm">Khách báo đã chuyển khoản</td>
+                  <td class="px-6 py-3 space-x-1"><span class="ma-role-chip ma-role-chip--blue">ADMIN</span><span class="ma-role-chip ma-role-chip--amber">ACCOUNTANT</span></td>
+                </tr>
+                <tr>
+                  <td class="px-6 py-3"><code class="text-body-sm bg-surface-container-low px-1.5 py-0.5 rounded">PAYMENT_CONFIRMED</code></td>
+                  <td class="px-6 py-3 text-body-sm">Thanh toán được xác nhận</td>
+                  <td class="px-6 py-3 space-x-1"><span class="ma-role-chip ma-role-chip--blue">ADMIN</span><span class="ma-role-chip ma-role-chip--gray">STAFF</span></td>
+                </tr>
+                <tr>
+                  <td class="px-6 py-3"><code class="text-body-sm bg-surface-container-low px-1.5 py-0.5 rounded">ORDER_CANCELLED</code></td>
+                  <td class="px-6 py-3 text-body-sm">Đơn hàng bị huỷ</td>
+                  <td class="px-6 py-3 space-x-1"><span class="ma-role-chip ma-role-chip--blue">ADMIN</span><span class="ma-role-chip ma-role-chip--amber">ACCOUNTANT</span></td>
+                </tr>
+                <tr>
+                  <td class="px-6 py-3"><code class="text-body-sm bg-surface-container-low px-1.5 py-0.5 rounded">PAYMENT_EXPIRED</code></td>
+                  <td class="px-6 py-3 text-body-sm">Hết hạn thanh toán (cron)</td>
+                  <td class="px-6 py-3"><span class="ma-role-chip ma-role-chip--blue">ADMIN</span></td>
+                </tr>
+                <tr>
+                  <td class="px-6 py-3"><code class="text-body-sm bg-surface-container-low px-1.5 py-0.5 rounded">PRODUCT_SYNC_FAILED</code></td>
+                  <td class="px-6 py-3 text-body-sm">Đồng bộ sản phẩm thất bại</td>
+                  <td class="px-6 py-3 space-x-1"><span class="ma-role-chip ma-role-chip--violet">OWNER</span><span class="ma-role-chip ma-role-chip--blue">ADMIN</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="text-body-sm text-on-surface-variant px-6 py-3 bg-surface-container-low">Thông báo gửi qua Telegram cho các nhân viên đang hoạt động thuộc vai trò tương ứng và đã cấu hình Telegram Chat ID.</p>
+        </div>
+
+        <button type="button" @click="mobileFilterOpen = true"
+          class="ma-filter-trigger items-center gap-2 w-full justify-center mb-stack-md p-3 bg-surface-bright border border-outline-variant rounded-xl text-body-sm font-bold text-on-surface active:scale-95 transition-all">
+          <span class="material-symbols-outlined text-[18px]">tune</span><span>Bộ lọc</span>
+          <span v-if="(notifications.event?1:0)+(notifications.status?1:0)" class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-label-sm font-bold bg-primary text-white">[[ (notifications.event?1:0)+(notifications.status?1:0) ]]</span>
+        </button>
+        <div class="ma-toolbar ma-toolbar--sheet flex flex-wrap items-center gap-stack-md mb-stack-lg p-4 bg-surface-bright border border-outline-variant rounded-xl" :class="{ 'is-filter-open': mobileFilterOpen }">
+          <div class="ma-filter-sheet-head"><span class="text-title-sm font-bold text-on-surface">Bộ lọc thông báo</span><button type="button" @click="mobileFilterOpen = false" class="w-8 h-8 inline-flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">close</span></button></div>
+          <select v-model="notifications.event" class="ma-input-inline">
+            <option value="">Tất cả sự kiện</option>
+            <option value="ORDER_CREATED">Đơn mới</option>
+            <option value="PAYMENT_REPORTED">Báo chuyển khoản</option>
+            <option value="PAYMENT_CONFIRMED">Xác nhận TT</option>
+            <option value="ORDER_CANCELLED">Huỷ đơn</option>
+            <option value="PAYMENT_EXPIRED">Hết hạn TT</option>
+            <option value="PRODUCT_SYNC_FAILED">Lỗi đồng bộ SP</option>
+          </select>
+          <select v-model="notifications.status" class="ma-input-inline">
+            <option value="">Tất cả trạng thái</option>
+            <option value="SENT">Đã gửi</option>
+            <option value="FAILED">Lỗi</option>
+            <option value="PENDING">Chờ gửi</option>
+            <option value="SKIPPED">Bỏ qua</option>
+          </select>
+          <button @click="loadNotifications(); mobileFilterOpen = false" type="button" class="ma-btn-primary">Lọc</button>
+        </div>
+        <div class="ma-filter-backdrop" v-if="mobileFilterOpen" @click="mobileFilterOpen = false"></div>
+
+        <div v-if="notifications.loading" class="ma-table-skeleton" aria-label="Đang tải thông báo"><span></span><span></span><span></span><span></span></div>
+        <div v-else-if="notifications.error" class="ma-empty-state">
+          <span class="material-symbols-outlined text-on-surface-variant text-[56px] opacity-[.35]">notifications_off</span>
+          <p class="ma-empty-hint">[[ notifications.error ]]</p>
+          <button @click="loadNotifications" type="button" class="ma-btn-outline">Thử lại</button>
+        </div>
+        <div v-else>
+          <div class="ma-card"><div class="overflow-x-auto"><table class="ma-table ma-data-table">
+            <thead><tr class="ma-thead-row">
+              <th class="ma-th-lg w-16">STT</th>
+              <th class="ma-th-lg">Mã đơn</th>
+              <th class="ma-th-lg">Sự kiện</th>
+              <th class="ma-th-lg">Kênh</th>
+              <th class="ma-th-lg">Trạng thái</th>
+              <th class="ma-th-lg">Thời gian gửi</th>
+              <th class="ma-th-lg">Lỗi</th>
+            </tr></thead>
+            <tbody class="ma-rows-divide">
+              <tr v-for="(n, index) in notifications.list" :key="n.notif_id" class="hover:bg-surface-container-low/50 transition-colors">
+                <td class="px-6 py-4 text-on-surface-variant">[[ index + 1 ]]</td>
+                <td class="px-6 py-4 font-body-sm">[[ n.order_id || '—' ]]</td>
+                <td class="px-6 py-4 font-body-sm">[[ notifLabel(n.event) ]]</td>
+                <td class="px-6 py-4 font-body-sm text-on-surface-variant">[[ n.channel || '—' ]]</td>
+                <td class="px-6 py-4"><span :class="statusMeta(n.status).wrapClass"><span :class="statusMeta(n.status).dotClass"></span>[[ statusMeta(n.status).label ]]</span></td>
+                <td class="px-6 py-4 font-body-sm text-on-surface-variant">[[ formatDate(n.sent_at || n.created_at) ]]</td>
+                <td v-if="n.error_msg" class="px-6 py-4 text-red-600 cursor-help" :title="n.error_msg">⚠ Chi tiết</td>
+                <td v-else class="px-6 py-4 text-on-surface-variant">—</td>
+              </tr>
+            </tbody>
+          </table></div></div>
+          <p class="text-body-sm text-on-surface-variant mt-3">[[ notifications.list.length ]] thông báo</p>
+        </div>
+      </div>

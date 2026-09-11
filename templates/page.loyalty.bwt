@@ -1,0 +1,106 @@
+{{ 'page_loyalty.scss.css' | asset_url | stylesheet_tag }}
+{%- comment -%}
+  T-44 (loyalty-rewards): restyle theo Pharma_Cosmetics_Figma_Project/loyalty-rewards.html
+  (gradient forest-900/emerald-800/teal-900 hero, tier card, howto steps). Điểm/hạng THẬT của
+  khách hàng đăng nhập do widget bên thứ 3 {% include 'appbulk-loyalty-widgets' %} tự fetch qua
+  JS (customer_id) — KHÔNG hard-code số điểm mẫu ở đây (Figma có hero card "10 điểm thưởng" chỉ
+  là dữ liệu demo 1 khách, không phải template dùng chung). Bảng đổi thưởng bên dưới là nội
+  dung minh hoạ (không có cơ chế đổi thưởng backend thật) nên KHÔNG có nút "Đổi ngay" giả lập
+  hành động — chỉ liệt kê tham khảo + CTA liên hệ, tránh UI trông như chạy được nhưng thực ra
+  không làm gì (đã dùng snippets/pharma_ui_kit.bwt bản pc-kit-* prefix, xem file đó để biết lý
+  do đổi tên tránh trùng CSS site-wide).
+{%- endcomment -%}
+{% include 'breadcrumb' %}
+
+<section class="bg-gradient-to-r from-forest-900 via-emerald-800 to-teal-900 text-white">
+	<div class="container max-w-5xl mx-auto px-4 py-10 sm:py-14 text-center">
+		<span class="pc-kit-badge-gold text-xs">🎁 LOYALTY REWARDS</span>
+		<h1 class="font-heading text-2xl sm:text-3xl font-extrabold mt-3">Tích Điểm &amp; Đổi Quà Cùng Pharma Cosmetics</h1>
+		<p class="text-sm text-emerald-100 mt-2 max-w-2xl mx-auto">Mỗi lần mua sắm hoặc điều trị đều được tích điểm — càng thân thiết, ưu đãi càng lớn.</p>
+	</div>
+</section>
+
+{% if customer %}
+<section class="pc-loy-widget-section">
+	<div class="container">
+		{% include 'appbulk-loyalty-widgets' %}
+	</div>
+</section>
+{% endif %}
+
+<section class="bg-gray-50 py-12">
+	<div class="container max-w-6xl mx-auto px-4">
+		{%- comment -%}
+		  T-109 (2026-09-11): tiêu đề từng hardcode "4 Hạng Thành Viên" — khi data/loyalty-tiers.js
+		  mở rộng lên 6 hạng (chuẩn bị demo data đầy đủ) thì con số cũ sai. Đổi sang đếm động theo
+		  loyalty_tiers.size để không lệch lại nếu số hạng thay đổi sau này. Đổi lg:grid-cols-4 →
+		  lg:grid-cols-3 để 6 thẻ chia đều 3x2 thay vì 4+2 lệch dòng.
+		{%- endcomment -%}
+		<h2 class="font-heading text-xl sm:text-2xl font-extrabold text-forest-900 text-center mb-8">{{ loyalty_tiers.size }} Hạng Thành Viên</h2>
+		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+			{% for tier in loyalty_tiers %}
+			<div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 border-t-4" style="border-top-color: {{ tier.color }}">
+				<span class="pc-kit-badge-gold text-xs">{{ tier.name }}</span>
+				<div class="text-xs text-gray-500 mt-3">
+					{% if tier.threshold_points == 0 %}
+						Mặc định khi đăng ký
+					{% else %}
+						Từ {{ tier.threshold_points }} điểm
+					{% endif %}
+				</div>
+				<ul class="text-xs text-gray-700 space-y-1.5 mt-3">
+					{% for perk in tier.perks %}
+					<li class="flex items-start gap-2"><i class="fas fa-check-circle text-emerald-600 mt-0.5"></i><span>{{ perk }}</span></li>
+					{% endfor %}
+				</ul>
+			</div>
+			{% endfor %}
+		</div>
+	</div>
+</section>
+
+<section class="bg-white py-12 border-t border-gray-100">
+	<div class="container max-w-6xl mx-auto px-4">
+		<h2 class="font-heading text-xl sm:text-2xl font-extrabold text-forest-900 text-center mb-8">Cách Thức Hoạt Động</h2>
+		<div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+			<div class="text-center px-4">
+				<span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-emerald-700 text-white font-bold font-heading mb-3">1</span>
+				<h3 class="text-sm font-bold text-gray-900 mb-1">Mua sắm &amp; Điều trị</h3>
+				<p class="text-xs text-gray-600">Mỗi đơn hàng hoặc liệu trình đều tự động tích điểm vào tài khoản của bạn.</p>
+			</div>
+			<div class="text-center px-4">
+				<span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-emerald-700 text-white font-bold font-heading mb-3">2</span>
+				<h3 class="text-sm font-bold text-gray-900 mb-1">Lên hạng thành viên</h3>
+				<p class="text-xs text-gray-600">Điểm tích luỹ càng nhiều, hạng thành viên càng cao — ưu đãi tự động mở khoá.</p>
+			</div>
+			<div class="text-center px-4">
+				<span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-emerald-700 text-white font-bold font-heading mb-3">3</span>
+				<h3 class="text-sm font-bold text-gray-900 mb-1">Đổi quà &amp; Ưu đãi</h3>
+				<p class="text-xs text-gray-600">Dùng điểm để giảm giá trực tiếp trên đơn hàng hoặc đổi quà tặng độc quyền.</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<section class="bg-gray-50 py-12 border-t border-gray-100">
+	<div class="container max-w-4xl mx-auto px-4">
+		<h2 class="font-heading text-xl sm:text-2xl font-extrabold text-forest-900 text-center mb-8">Ưu Đãi Có Thể Đổi (Tham Khảo)</h2>
+		<div class="space-y-4">
+			<div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between gap-4">
+				<div>
+					<h4 class="text-sm font-bold text-gray-900">Giảm 5% Cho Tất Cả Đơn Hàng</h4>
+					<p class="text-xs text-gray-500 mt-0.5">Chi phí: 100 Điểm</p>
+				</div>
+				<span class="pc-kit-badge-clinical text-xs whitespace-nowrap">Xem trong tài khoản</span>
+			</div>
+			<div class="bg-white rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 flex items-center justify-between gap-4">
+				<div>
+					<h4 class="text-sm font-bold text-forest-900">Voucher Soi Da Vi Điểm AI Miễn Phí</h4>
+					<p class="text-xs text-gray-600 mt-0.5">Trị giá tham khảo 500.000₫ tại Clinic Hà Nội</p>
+				</div>
+				<a href="/pages/dat-lich-tu-van" class="pc-kit-btn-secondary text-xs py-1.5 px-3 whitespace-nowrap">Đặt lịch tư vấn</a>
+			</div>
+		</div>
+		<p class="text-[11px] text-gray-400 text-center mt-4">Số điểm/ưu đãi khả dụng thực tế hiển thị trong khu vực tài khoản đăng nhập ở trên.</p>
+	</div>
+</section>

@@ -1,0 +1,675 @@
+{% layout 'skinhealthy' %}
+{%- comment -%}
+  REOPEN 2026-09-11 — BUG THẬT phát hiện qua Playwright screenshot: thiếu chính dòng
+  "{% layout 'skinhealthy' %}" ở trên khiến trang này render bằng layouts/theme.bwt (header/
+  footer/màu Pharma chính) thay vì layouts/skinhealthy.bwt như comment ngay dưới đây đã mô tả
+  đúng ý định từ đầu — đây chính là lỗi "header/footer sai" người dùng báo cáo. Đã thêm dòng
+  layout tag còn thiếu (page.skinhealthy-services.bwt/collection.skinhealthy.bwt đã có đúng,
+  chỉ riêng file này bị sót).
+
+  page.indexskinhealthy.bwt — Trang chủ thương hiệu Skin Health Beauty.
+  Render trong layouts/skinhealthy.bwt (KHÔNG phải layouts/theme.bwt). Header/footer/drawer/
+  service-cart-bar đã có sẵn trong layout — file này chỉ render nội dung {{ content_for_layout }}.
+  Nội dung lấy từ configs/settings_schema.json mục "IV. TRANG CHỦ" → "IV-I" (13 section).
+  CSS section Hero/Concerns/Categories/Programs/Editorial (tĩnh) đã có sẵn ở
+  assets/page_skinhealthy_home.scss.bwt (load qua layouts/skinhealthy.bwt khi
+  `template contains 'indexskinhealthy'`) — dùng ĐÚNG tên class sh-* đã định nghĩa ở đó,
+  KHÔNG tạo trùng. Các section không có CSS sẵn (before/after, journey, story, philosophy,
+  team, FAQ) dùng class mới tiền tố "sh2-" (định nghĩa trong <style> ngay dưới đây, biến CSS
+  custom property --sh-* để tự động theo đúng màu thương hiệu qua settings) + Tailwind utility
+  thuần cho layout/spacing (Tailwind CDN preflight:false đã bật sẵn ở layout, không reset gì).
+{%- endcomment -%}
+
+{%- comment -%} — Đường dẫn chung, dùng lại nhiều nơi (booking / dịch vụ) — {%- endcomment -%}
+{%- assign sh_book_page = pages[settings.skinhealthy_booking_page] -%}
+{%- assign sh_book_url = sh_book_page.url | default: pages['dat-lich-tu-van'].url | default: '/dat-lich-tu-van' -%}
+{%- assign sh_services_page = pages[settings.skinhealthy_services_page] -%}
+{%- assign sh_services_url = sh_services_page.url | default: settings.skinhealthy_services_url | default: '/dich-vu-tri-lieu' -%}
+
+<style>
+  /* ── sh2-* : section KHÔNG có CSS sẵn (before/after, journey, story, philosophy, team, FAQ) ── */
+  .sh2-eyebrow {
+    display: block; font-family: var(--sh-sans); font-size: 0.6875rem; font-weight: 500;
+    letter-spacing: .2em; text-transform: uppercase; color: var(--sh-gold); margin-bottom: 16px;
+  }
+  .sh2-title { font-family: var(--sh-serif); font-weight: 300; color: var(--sh-ink); letter-spacing: .02em; }
+  .sh2-body  { font-family: var(--sh-sans); color: var(--sh-ink-60); line-height: 1.75; }
+  .sh2-quote {
+    font-family: var(--sh-serif); font-style: italic; color: var(--sh-ink);
+    border-left: 2px solid var(--sh-gold); padding-left: 20px; line-height: 1.6;
+  }
+
+  /* Before/After comparison slider */
+  .sh2-ba-slider { position: relative; aspect-ratio: 1; overflow: hidden; background: var(--sh-ivory-dark); cursor: ew-resize; user-select: none; }
+  .sh2-ba-slider img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .sh2-ba-slider__after { clip-path: inset(0 0 0 var(--sh2-ba-pos, 50%)); }
+  .sh2-ba-slider__handle {
+    position: absolute; top: 0; bottom: 0; left: var(--sh2-ba-pos, 50%); width: 2px; background: #fff;
+    transform: translateX(-1px); pointer-events: none;
+  }
+  .sh2-ba-slider__handle::after {
+    content: '⇔'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 36px; height: 36px; border-radius: 50%; background: #fff; color: var(--sh-ink);
+    display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  .sh2-ba-slider__label { position: absolute; top: 10px; z-index: 2; font-family: var(--sh-sans); font-size: 0.625rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #fff; background: rgba(19,36,31,.55); padding: 4px 10px; }
+  .sh2-ba-slider__label--before { left: 10px; }
+  .sh2-ba-slider__label--after  { right: 10px; }
+
+  /* Journey steps */
+  .sh2-journey-step__num {
+    font-family: var(--sh-serif); font-size: 1.5rem; font-weight: 300; color: var(--sh-gold);
+  }
+  .sh2-journey-step__dur {
+    display: inline-flex; align-items: center; gap: 4px; font-family: var(--sh-sans); font-size: 0.6875rem;
+    color: var(--sh-ink-60); background: var(--sh-ivory-dark); padding: 3px 10px; margin-top: 8px;
+  }
+
+  /* Clinic tour tabs */
+  .sh2-tour-tab { text-align: left; background: transparent; border: none; cursor: pointer; padding: 18px 0; border-bottom: 1px solid var(--sh-line); width: 100%; }
+  .sh2-tour-tab.is-active { border-bottom-color: var(--sh-gold); }
+  .sh2-tour-tab.is-active .sh2-tour-tab__title { color: var(--sh-gold); }
+  .sh2-tour-tab__title { font-family: var(--sh-serif); font-size: 1.0625rem; color: var(--sh-ink); transition: color 200ms; }
+
+  /* FAQ accordion */
+  .sh2-faq-item { border-bottom: 1px solid var(--sh-line); }
+  .sh2-faq-q { width: 100%; text-align: left; background: transparent; border: none; cursor: pointer; padding: 22px 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; font-family: var(--sh-serif); font-size: 1.0625rem; color: var(--sh-ink); }
+  .sh2-faq-q__icon { flex-shrink: 0; transition: transform 250ms var(--sh-ease); color: var(--sh-ink-60); }
+  .sh2-faq-item.is-open .sh2-faq-q__icon { transform: rotate(45deg); }
+  .sh2-faq-a { max-height: 0; overflow: hidden; transition: max-height 300ms var(--sh-ease); }
+  .sh2-faq-item.is-open .sh2-faq-a { max-height: 480px; }
+  .sh2-faq-a__inner { padding-bottom: 22px; font-family: var(--sh-sans); font-size: 0.875rem; line-height: 1.7; color: var(--sh-ink-60); }
+
+  @media (max-width: 767px) {
+    .sh2-ba-slider { aspect-ratio: 4/5; }
+  }
+</style>
+
+{%- comment -%} ═══ 01. HERO ═══ {%- endcomment -%}
+{%- assign sh_hero_cta_url = settings.skinhealthy_hero_cta_url | default: sh_services_url -%}
+<section class="sh-hero{% if settings.skinhealthy_hero_img == blank %} sh-hero--no-img{% endif %}">
+  {%- if settings.skinhealthy_hero_img != blank -%}
+  <div class="sh-hero__bg">
+    <img src="{{ settings.skinhealthy_hero_img | img_url: '1440x' }}" alt="{{ settings.skinhealthy_hero_title | default: 'Skin Health Beauty' }}" width="1440" height="900">
+  </div>
+  <div class="sh-hero__overlay"></div>
+  {%- endif -%}
+  <div class="sh-hero__content sh-container">
+    <div class="sh-hero__text-col">
+      <span class="sh-hero__eyebrow">{{ settings.skinhealthy_hero_eyebrow | default: 'Skin Healthy' }}</span>
+      <h1 class="sh-hero__title">{{ settings.skinhealthy_hero_title | default: 'Khoa Học Vì Làn Da' }}</h1>
+      <p class="sh2-body" style="color:rgba(247,244,239,.82);max-width:480px;margin-bottom:32px;">
+        {{ settings.skinhealthy_hero_sub | default: 'Khoa học vì làn da — Kết quả bền vững từ phác đồ cá nhân hóa tuyệt đối.' }}
+      </p>
+      <a href="{{ sh_hero_cta_url }}" class="sh-hero__cta">
+        <span>{{ settings.skinhealthy_hero_cta_text | default: 'Khám phá ngay' }}</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+{%- comment -%} ═══ 02. MUA SẮM THEO NHU CẦU DA ═══ {%- endcomment -%}
+<section class="sh-concerns sh-reveal">
+  <div class="sh-container">
+    <div class="sh-concerns__header">
+      <span class="sh2-eyebrow">Nhu Cầu Của Bạn</span>
+      <h2 class="sh2-title" style="font-size:1.75rem;">Mua Sắm Theo Nhu Cầu Da</h2>
+    </div>
+    {%- assign sh_concern_ll = linklists[settings.skinhealthy_concern_menu] -%}
+    <div class="sh-concerns__grid" style="--sh-concern-cols:4;">
+      {%- if settings.skinhealthy_concern_menu != blank and sh_concern_ll and sh_concern_ll.links.size > 0 -%}
+        {%- for link in sh_concern_ll.links limit: 8 -%}
+          {%- if link.object and link.object.image -%}
+          <a href="{{ link.url }}" class="sh-concern-card">
+            <div class="sh-concern-card__img">
+              <img src="{{ link.object.image.src | img_url: '600x' }}" alt="{{ link.title }}" loading="lazy">
+            </div>
+            <div class="sh-concern-card__overlay"></div>
+            <div class="sh-concern-card__body">
+              <span class="sh-concern-card__label">Điều trị</span>
+              <span class="sh-concern-card__name">{{ link.title }}</span>
+            </div>
+          </a>
+          {%- else -%}
+          <a href="{{ link.url }}" class="sh-concern-card sh-concern-card--text">
+            <div class="sh-concern-card__body">
+              <span class="sh-concern-card__label">Điều trị</span>
+              <span class="sh-concern-card__name">{{ link.title }}</span>
+            </div>
+          </a>
+          {%- endif -%}
+        {%- endfor -%}
+      {%- else -%}
+        {%- comment -%} Fallback: nhu cầu da phổ biến, khớp danh mục thật đã dùng ở data/navigation.js {%- endcomment -%}
+        {%- assign sh_concern_fallback = 'Điều trị mụn|/tri-mun,Điều trị nám|/tri-nam,Chống lão hoá|/chong-lao-hoa,Phục hồi hàng rào|/duong-am' | split: ',' -%}
+        {%- for item in sh_concern_fallback -%}
+          {%- assign parts = item | split: '|' -%}
+          <a href="{{ parts[1] }}" class="sh-concern-card sh-concern-card--text">
+            <div class="sh-concern-card__body">
+              <span class="sh-concern-card__label">Điều trị</span>
+              <span class="sh-concern-card__name">{{ parts[0] }}</span>
+            </div>
+          </a>
+        {%- endfor -%}
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+{%- comment -%} ═══ 03. MUA SẮM THEO DANH MỤC ═══ {%- endcomment -%}
+<section class="sh-categories sh-reveal">
+  <div class="sh-container">
+    <div class="sh-concerns__header">
+      <span class="sh2-eyebrow">Danh Mục</span>
+      <h2 class="sh2-title" style="font-size:1.75rem;">Mua Sắm Theo Danh Mục</h2>
+    </div>
+    {%- assign sh_cat_ll = linklists[settings.skinhealthy_cat_menu] -%}
+    <div class="sh-categories__grid">
+      {%- if settings.skinhealthy_cat_menu != blank and sh_cat_ll and sh_cat_ll.links.size > 0 -%}
+        {%- for link in sh_cat_ll.links limit: 4 -%}
+        <a href="{{ link.url }}" class="sh-cat-card">
+          <div class="sh-cat-card__img-wrap">
+            {%- if link.object and link.object.image -%}
+            <img src="{{ link.object.image.src | img_url: '600x' }}" alt="{{ link.title }}" loading="lazy">
+            {%- else -%}
+            <div class="sh-cat-card__img-placeholder">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            </div>
+            {%- endif -%}
+          </div>
+          <div>
+            <span class="sh-cat-card__name">{{ link.title }}</span>
+            {%- if link.object and link.object.all_products_count > 0 -%}
+            <span class="sh-cat-card__count">{{ link.object.all_products_count }} sản phẩm</span>
+            {%- endif -%}
+          </div>
+        </a>
+        {%- endfor -%}
+      {%- else -%}
+        {%- assign sh_cat_fallback = 'Chăm Sóc Duy Trì|/collections/maintenance-skin-care,Điều Trị Nhắm Mục Tiêu|/collections/targeted-treatments,Xâm Lấn Tối Thiểu|/collections/invasive-treatments,Chăm Sóc Tại Nhà|/collections/all' | split: ',' -%}
+        {%- for item in sh_cat_fallback -%}
+          {%- assign parts = item | split: '|' -%}
+          <a href="{{ parts[1] }}" class="sh-cat-card">
+            <div class="sh-cat-card__img-wrap">
+              <div class="sh-cat-card__img-placeholder">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              </div>
+            </div>
+            <span class="sh-cat-card__name">{{ parts[0] }}</span>
+          </a>
+        {%- endfor -%}
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+{%- comment -%} ═══ 04. EDITORIAL BANNER + VIRTUAL CLINIC TOUR (Swiper fade + lightbox, dùng .sh-edit-swiper/.sh-clinic-lb từ layout) ═══ {%- endcomment -%}
+{%- assign sh_edit_imgs = '' | split: '' -%}
+{%- if settings.skinhealthy_edit_img != blank -%}{%- assign sh_edit_imgs = sh_edit_imgs | push: settings.skinhealthy_edit_img -%}{%- endif -%}
+{%- if settings.skinhealthy_edit_img_2 != blank -%}{%- assign sh_edit_imgs = sh_edit_imgs | push: settings.skinhealthy_edit_img_2 -%}{%- endif -%}
+{%- if settings.skinhealthy_edit_img_3 != blank -%}{%- assign sh_edit_imgs = sh_edit_imgs | push: settings.skinhealthy_edit_img_3 -%}{%- endif -%}
+{%- if settings.skinhealthy_edit_img_4 != blank -%}{%- assign sh_edit_imgs = sh_edit_imgs | push: settings.skinhealthy_edit_img_4 -%}{%- endif -%}
+{%- if settings.skinhealthy_edit_img_5 != blank -%}{%- assign sh_edit_imgs = sh_edit_imgs | push: settings.skinhealthy_edit_img_5 -%}{%- endif -%}
+{%- assign sh_edit_cta_url = settings.skinhealthy_edit_cta_url | default: sh_book_url -%}
+<section class="sh-editorial sh-reveal">
+  {%- if sh_edit_imgs.size > 0 -%}
+  <div class="sh-edit-swiper swiper">
+    <div class="swiper-wrapper">
+      {%- for img in sh_edit_imgs -%}
+      <div class="swiper-slide">
+        <img src="{{ img | img_url: '1440x' }}" alt="Không gian phòng khám Skin Health Beauty" loading="lazy">
+      </div>
+      {%- endfor -%}
+    </div>
+    {%- if sh_edit_imgs.size > 1 -%}
+    <div class="sh-edit-swiper__dots"></div>
+    {%- endif -%}
+    <button type="button" class="sh-edit-swiper__zoom" id="sh-clinic-zoom-btn" aria-label="Phóng to xem không gian phòng khám">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+    </button>
+  </div>
+  <div class="sh-editorial__overlay"></div>
+  {%- endif -%}
+  <div class="sh-container">
+    <div class="sh-editorial__content">
+      <span class="sh-editorial__eyebrow">{{ settings.skinhealthy_edit_eyebrow | default: 'Phương pháp khoa học' }}</span>
+      <h2 class="sh-editorial__title">{{ settings.skinhealthy_edit_title | default: 'Chẩn đoán da<br><em>cá nhân hóa</em>' }}</h2>
+      <p class="sh-editorial__desc">{{ settings.skinhealthy_edit_desc | default: 'Mỗi làn da là duy nhất. Chúng tôi xây dựng routine chính xác dựa trên trạng thái da thực tế của bạn — không phải xu hướng.' }}</p>
+      <a href="{{ sh_edit_cta_url }}" class="sh-editorial__cta">
+        <span>{{ settings.skinhealthy_edit_cta_text | default: 'Đặt lịch tư vấn' }}</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+{%- comment -%} Virtual Clinic Tour — 3 tab, dùng lại đúng ảnh editorial ở trên qua lightbox {%- endcomment -%}
+<section class="sh-reveal" style="padding:72px 0;background:var(--sh-white);border-top:1px solid var(--sh-line);">
+  <div class="sh-container" style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start;">
+    <div>
+      <span class="sh2-eyebrow">Trải Nghiệm Không Gian</span>
+      <h2 class="sh2-title" style="font-size:2rem;margin-bottom:20px;">Virtual Clinic Tour</h2>
+      {%- if settings.skinhealthy_clinic_video_id != blank -%}
+      <a href="https://www.youtube.com/watch?v={{ settings.skinhealthy_clinic_video_id }}" target="_blank" rel="noopener" class="sh-editorial__cta" style="color:var(--sh-ink);border-bottom-color:var(--sh-ink-30);margin-bottom:8px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <span>{{ settings.skinhealthy_clinic_video_label | default: 'Xem video giới thiệu không gian trị liệu' }}</span>
+      </a>
+      {%- endif -%}
+    </div>
+    <div>
+      <div id="sh-tour-tabs">
+        <button type="button" class="sh2-tour-tab is-active" data-tour-tab="0" data-lb-index="0">
+          <span class="sh2-tour-tab__title">{{ settings.skinhealthy_clinic_diag_title | default: 'Phòng Chẩn Đoán 1:1' }}</span>
+          <p class="sh2-body" style="font-size:0.8125rem;margin-top:8px;">{{ settings.skinhealthy_clinic_diag_desc | default: 'Không gian tư vấn độc quyền — chỉ bạn và chuyên gia. Thiết bị phân tích da công nghệ cao, kết quả chính xác đến từng lớp biểu bì.' }}</p>
+        </button>
+        <button type="button" class="sh2-tour-tab" data-tour-tab="1" data-lb-index="1">
+          <span class="sh2-tour-tab__title">{{ settings.skinhealthy_clinic_lab_title | default: 'Lab Pha Chế Hoạt Chất' }}</span>
+          <p class="sh2-body" style="font-size:0.8125rem;margin-top:8px;">{{ settings.skinhealthy_clinic_lab_desc | default: 'Phòng pha chế hoạt chất đạt chuẩn vô khuẩn y tế — nơi mỗi đơn điều trị được chuẩn bị riêng với nồng độ chính xác đến từng milligram.' }}</p>
+        </button>
+        <button type="button" class="sh2-tour-tab" data-tour-tab="2" data-lb-index="2">
+          <span class="sh2-tour-tab__title">{{ settings.skinhealthy_clinic_therapy_title | default: 'Phòng Trị Liệu Riêng Tư' }}</span>
+          <p class="sh2-body" style="font-size:0.8125rem;margin-top:8px;">{{ settings.skinhealthy_clinic_therapy_desc | default: 'Không gian trị liệu khép kín — ánh sáng thiết kế riêng cho từng liệu pháp, âm thanh cách âm hoàn toàn, thiết bị điều trị thế hệ mới.' }}</p>
+        </button>
+      </div>
+      <a href="{{ settings.skinhealthy_ing_url | default: '/thanh-phan-hoat-tinh' }}" class="sh-editorial__cta" style="color:var(--sh-ink);border-bottom-color:var(--sh-ink-30);margin-top:24px;">
+        <span>Truy cập Thư viện Hoạt chất Lâm sàng</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+{%- comment -%} Clinic lightbox — 1 instance dùng chung cho zoom icon + 3 tab tour {%- endcomment -%}
+{%- if sh_edit_imgs.size > 0 -%}
+<div class="sh-clinic-lb" id="sh-clinic-lb" aria-hidden="true">
+  <div class="sh-clinic-lb__back" id="sh-clinic-lb-back"></div>
+  <div class="sh-clinic-lb__stage">
+    <button type="button" class="sh-clinic-lb__close" id="sh-clinic-lb-close" aria-label="Đóng">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    {%- if sh_edit_imgs.size > 1 -%}
+    <button type="button" class="sh-clinic-lb__prev" id="sh-clinic-lb-prev" aria-label="Ảnh trước"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <button type="button" class="sh-clinic-lb__next" id="sh-clinic-lb-next" aria-label="Ảnh sau"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
+    {%- endif -%}
+    <img class="sh-clinic-lb__img" id="sh-clinic-lb-img" src="" alt="Không gian phòng khám Skin Health Beauty">
+    <div class="sh-clinic-lb__counter" id="sh-clinic-lb-counter"></div>
+  </div>
+</div>
+{%- endif -%}
+
+{%- comment -%} ═══ 05. LIỆU TRÌNH ═══ {%- endcomment -%}
+{%- assign sh_programs_url = settings.skinhealthy_programs_url | default: sh_book_url -%}
+<section class="sh-programs sh-reveal">
+  <div class="sh-container">
+    <div class="sh-programs__hd">
+      <span class="sh2-eyebrow">Lộ Trình Điều Trị</span>
+      <h2 class="sh2-title" style="font-size:1.75rem;">Liệu Trình</h2>
+      <p class="sh-programs__intro">Mỗi liệu trình được thiết kế theo mục tiêu điều trị cụ thể, từ chăm sóc duy trì đến can thiệp chuyên sâu.</p>
+    </div>
+    {%- assign sh_prog_ll = linklists[settings.skinhealthy_programs_menu] -%}
+    <ol class="sh-programs__list">
+      {%- if settings.skinhealthy_programs_menu != blank and sh_prog_ll and sh_prog_ll.links.size > 0 -%}
+        {%- for link in sh_prog_ll.links -%}
+        <li class="sh-program-item">
+          <a href="{{ link.url }}" class="sh-program-item__link">
+            <span class="sh-program-item__num">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
+            <span class="sh-program-item__name">{{ link.title }}</span>
+            <svg class="sh-program-item__arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </li>
+        {%- endfor -%}
+      {%- else -%}
+        {%- assign sh_prog_fallback = 'Chăm Sóc Duy Trì Hàng Tháng,Phục Hồi Hàng Rào Bảo Vệ Da,Điều Trị Nám & Tăng Sắc Tố,Trẻ Hóa & Chống Lão Hóa,Kiểm Soát Mụn Chuyên Sâu' | split: ',' -%}
+        {%- for name in sh_prog_fallback -%}
+        <li class="sh-program-item">
+          <a href="{{ sh_services_url }}" class="sh-program-item__link">
+            <span class="sh-program-item__num">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
+            <span class="sh-program-item__name">{{ name }}</span>
+            <svg class="sh-program-item__arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </li>
+        {%- endfor -%}
+      {%- endif -%}
+    </ol>
+    <div class="sh-programs__cta">
+      <a href="{{ sh_programs_url }}" class="sh-programs__cta-btn">
+        <span>Xem tất cả liệu trình</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+      <a href="{{ sh_book_url }}" class="sh-programs__cta-btn sh-programs__cta-btn--outline">Đặt lịch tư vấn</a>
+    </div>
+  </div>
+</section>
+
+{%- comment -%} ═══ 06. LIÊN KẾT PHARMA COSMETICS (IV-B) ═══ {%- endcomment -%}
+<section class="sh-reveal" style="padding:64px 0;background:var(--sh-ink);">
+  <div class="sh-container" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:24px;">
+    <div style="max-width:640px;">
+      <span class="sh2-eyebrow">{{ settings.skinhealthy_pharma_eyebrow | default: 'Một sản phẩm của Pharma Cosmetics' }}</span>
+      <p style="font-family:var(--sh-sans);font-size:0.875rem;line-height:1.7;color:rgba(247,244,239,.75);">
+        {{ settings.skinhealthy_pharma_desc | default: 'Pharma Cosmetics là nền tảng dược mỹ phẩm toàn cầu, cung cấp giải pháp dựa trên khoa học và dữ liệu để đồng hành cùng quá trình trị liệu tại spa.' }}
+      </p>
+    </div>
+    <a href="/" class="sh-editorial__cta">
+      <span>Khám phá Pharma Cosmetics</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+  </div>
+</section>
+
+{%- comment -%} ═══ 07. ẢNH TRƯỚC & SAU THEO NHÓM GIẢI PHÁP (IV-C, 6 nhóm) ═══ {%- endcomment -%}
+{%- assign sh_ba_names = 'Phục Hồi Hàng Rào Bảo Vệ,Điều Trị Nám & Sắc Tố,Kiểm Soát Mụn,Chống Lão Hóa,Se Khít Lỗ Chân Lông,Cấp Ẩm Chuyên Sâu' | split: ',' -%}
+{%- assign sh_ba_any = false -%}
+{%- for n in (1..6) -%}
+  {%- capture bk -%}skinhealthy_cat_{{ n }}_before{%- endcapture -%}
+  {%- capture ak -%}skinhealthy_cat_{{ n }}_after{%- endcapture -%}
+  {%- capture antk -%}skinhealthy_cat_{{ n }}_annotation{%- endcapture -%}
+  {%- if settings[bk] != blank or settings[ak] != blank or settings[antk] != blank -%}
+    {%- assign sh_ba_any = true -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- if sh_ba_any -%}
+<section class="sh-reveal" style="padding:80px 0;background:var(--sh-ivory);">
+  <div class="sh-container">
+    <div class="sh-concerns__header" style="text-align:center;max-width:640px;margin-left:auto;margin-right:auto;">
+      <span class="sh2-eyebrow">Kết Quả Thực Tế</span>
+      <h2 class="sh2-title" style="font-size:1.75rem;">Trước & Sau Theo Từng Giải Pháp</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:32px;">
+      {%- for n in (1..6) -%}
+        {%- capture bk -%}skinhealthy_cat_{{ n }}_before{%- endcapture -%}
+        {%- capture ak -%}skinhealthy_cat_{{ n }}_after{%- endcapture -%}
+        {%- capture antk -%}skinhealthy_cat_{{ n }}_annotation{%- endcapture -%}
+        {%- assign sh_ba_before = settings[bk] -%}
+        {%- assign sh_ba_after = settings[ak] -%}
+        {%- assign sh_ba_annotation = settings[antk] -%}
+        {%- assign sh_ba_name = sh_ba_names[forloop.index0] -%}
+        {%- if sh_ba_before != blank or sh_ba_after != blank or sh_ba_annotation != blank -%}
+        <div>
+          {%- if sh_ba_before != blank and sh_ba_after != blank -%}
+          <div class="sh2-ba-slider" data-ba-slider>
+            <img class="sh2-ba-slider__before" src="{{ sh_ba_before | img_url: '600x600' }}" alt="{{ sh_ba_name }} — trước điều trị">
+            <img class="sh2-ba-slider__after"  src="{{ sh_ba_after  | img_url: '600x600' }}" alt="{{ sh_ba_name }} — sau điều trị">
+            <div class="sh2-ba-slider__handle"></div>
+            <span class="sh2-ba-slider__label sh2-ba-slider__label--before">Trước</span>
+            <span class="sh2-ba-slider__label sh2-ba-slider__label--after">Sau</span>
+          </div>
+          {%- endif -%}
+          <h3 class="sh2-title" style="font-size:1.0625rem;margin-top:16px;">{{ sh_ba_name }}</h3>
+          {%- if sh_ba_annotation != blank -%}
+          <p class="sh2-body" style="font-size:0.8125rem;margin-top:6px;">{{ sh_ba_annotation }}</p>
+          {%- endif -%}
+        </div>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+{%- endif -%}
+
+{%- comment -%} ═══ 08. HÀNH TRÌNH 6 BƯỚC (IV-D) ═══ {%- endcomment -%}
+{%- comment -%} Tên bước lấy từ nhãn field ảnh trong settings_schema.json (không có setting text riêng cho tiêu đề bước) {%- endcomment -%}
+{%- assign sh_journey_titles = 'Khảo Sát Lâm Sàng,Số Hóa Hồ Sơ,Thiết Kế Phác Đồ,Trị Liệu 1:1,Kê Đơn Hoạt Chất,Tối Ưu Kết Quả' | split: ',' -%}
+{%- assign sh_journey_durs_default = '30–45 phút,15–20 phút,20–30 phút,60–120 phút,10–15 phút,Định kỳ theo phác đồ' | split: ',' -%}
+<section class="sh-reveal" style="padding:80px 0;background:var(--sh-white);border-top:1px solid var(--sh-line);">
+  <div class="sh-container">
+    <div class="sh-concerns__header">
+      <span class="sh2-eyebrow">Quy Trình</span>
+      <h2 class="sh2-title" style="font-size:1.75rem;">Hành Trình Điều Trị 6 Bước</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:40px;">
+      {%- for n in (1..6) -%}
+        {%- capture ik -%}skinhealthy_journey_img_{{ n }}{%- endcapture -%}
+        {%- capture dk -%}skinhealthy_journey_dur_{{ n }}{%- endcapture -%}
+        {%- assign sh_j_img = settings[ik] -%}
+        {%- assign sh_j_dur = settings[dk] | default: sh_journey_durs_default[forloop.index0] -%}
+        <div>
+          {%- if sh_j_img != blank -%}
+          <div style="aspect-ratio:4/3;overflow:hidden;background:var(--sh-ivory-dark);margin-bottom:16px;">
+            <img src="{{ sh_j_img | img_url: '600x' }}" alt="{{ sh_journey_titles[forloop.index0] }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">
+          </div>
+          {%- endif -%}
+          <span class="sh2-journey-step__num">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
+          <h3 class="sh2-title" style="font-size:1.0625rem;margin-top:8px;">{{ sh_journey_titles[forloop.index0] }}</h3>
+          <span class="sh2-journey-step__dur">⏱ {{ sh_j_dur }}</span>
+        </div>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+{%- comment -%} ═══ 09. CÂU CHUYỆN QUYẾT ĐỊNH (IV-E) ═══ {%- endcomment -%}
+<section class="sh-reveal" style="padding:80px 0;background:var(--sh-ivory);">
+  <div class="sh-container" style="max-width:860px;">
+    <div class="sh-concerns__header">
+      <span class="sh2-eyebrow">Ca Điều Trị Thật</span>
+      <h2 class="sh2-title" style="font-size:1.75rem;">Câu Chuyện Quyết Định</h2>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:48px;">
+      {%- if settings.skinhealthy_story_1_title != blank or settings.skinhealthy_story_1_body != blank -%}
+      <div>
+        <h3 class="sh2-title" style="font-size:1.25rem;margin-bottom:12px;">{{ settings.skinhealthy_story_1_title | default: 'Khi phác đồ ban đầu không còn phù hợp' }}</h3>
+        <p class="sh2-body" style="margin-bottom:16px;">{{ settings.skinhealthy_story_1_body | default: 'Một khách hàng bắt đầu với liệu trình phục hồi hàng rào bảo vệ da tiêu chuẩn, nhưng sau 2 buổi da xuất hiện phản ứng kích ứng nhẹ. Thay vì tiếp tục theo kế hoạch cũ, chuyên gia đã đổi hoạt chất và giảm tần suất trị liệu để da có thời gian thích nghi trước khi quay lại lộ trình chính.' }}</p>
+        <p class="sh2-quote">{{ settings.skinhealthy_story_1_quote | default: 'Sản phẩm sử dụng không cố định, điều chỉnh theo tình trạng thực tế.' }}</p>
+      </div>
+      {%- endif -%}
+      {%- if settings.skinhealthy_story_2_title != blank or settings.skinhealthy_story_2_body != blank -%}
+      <div>
+        <h3 class="sh2-title" style="font-size:1.25rem;margin-bottom:12px;">{{ settings.skinhealthy_story_2_title | default: 'Kết quả chậm hơn dự kiến, và tại sao điều đó ổn' }}</h3>
+        <p class="sh2-body" style="margin-bottom:16px;">{{ settings.skinhealthy_story_2_body | default: 'Một ca tăng sắc tố sau viêm cần thời gian dài hơn ước tính ban đầu vì cơ địa da đáp ứng chậm với hoạt chất điều hòa melanin. Thay vì tăng nồng độ để đẩy nhanh tiến độ, đội ngũ chọn giữ nguyên nồng độ an toàn và kéo dài thời gian theo dõi.' }}</p>
+        <p class="sh2-quote">{{ settings.skinhealthy_story_2_quote | default: 'Kết quả bền vững quan trọng hơn tốc độ.' }}</p>
+      </div>
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+{%- comment -%} ═══ 10. KHỐI KẾT — CAM KẾT GIÁ TRỊ (IV-F) ═══ {%- endcomment -%}
+<section class="sh-reveal" style="padding:56px 0;background:var(--sh-ink);text-align:center;">
+  <div class="sh-container">
+    <p style="font-family:var(--sh-serif);font-size:1.375rem;font-weight:300;color:var(--sh-ivory);letter-spacing:.02em;">
+      {{ settings.skinhealthy_commitment_tagline | default: 'Hiểu đúng làn da - Lựa chọn đúng giải pháp - Đồng hành đến kết quả' }}
+    </p>
+  </div>
+</section>
+
+{%- comment -%} ═══ 11. TRIẾT LÝ ĐIỀU TRỊ (IV-G) ═══ {%- endcomment -%}
+<section class="sh-reveal" style="padding:88px 0;background:var(--sh-white);">
+  <div class="sh-container" style="display:grid;grid-template-columns:{% if settings.skinhealthy_philosophy_img != blank %}5fr 7fr{% else %}1fr{% endif %};gap:64px;align-items:center;">
+    {%- if settings.skinhealthy_philosophy_img != blank -%}
+    <div style="aspect-ratio:4/5;overflow:hidden;background:var(--sh-ivory-dark);">
+      <img src="{{ settings.skinhealthy_philosophy_img | img_url: '800x' }}" alt="{{ settings.skinhealthy_philosophy_title | default: 'Triết lý điều trị' }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">
+    </div>
+    {%- endif -%}
+    <div style="max-width:560px;">
+      <span class="sh2-eyebrow">{{ settings.skinhealthy_philosophy_eyebrow | default: 'Triết lý điều trị' }}</span>
+      <h2 class="sh2-title" style="font-size:2rem;margin-bottom:24px;">{{ settings.skinhealthy_philosophy_title | default: 'Da khỏe không phải chỉ là da đẹp' }}</h2>
+      <p class="sh2-body" style="margin-bottom:16px;">{{ settings.skinhealthy_philosophy_body1 | default: 'Tại Skin Health Beauty, chúng tôi tiếp cận da theo cách một chuyên gia da liễu tiếp cận bệnh nhân — không phải như một beauty consultant tiếp cận khách hàng.' }}</p>
+      <p class="sh2-body" style="margin-bottom:28px;">{{ settings.skinhealthy_philosophy_body2 | default: 'Mỗi liệu trình bắt đầu bằng phân tích chuyên sâu: loại da, chỉ số ẩm và TEWL, hàng rào lipid, lịch sử điều trị và yếu tố lối sống. Từ đó, chúng tôi thiết kế phác đồ cá nhân hóa — không có công thức chung cho mọi người.' }}</p>
+      <p class="sh2-quote">{{ settings.skinhealthy_philosophy_quote | default: 'Làn da khỏe mạnh ở cấp độ tế bào là nền tảng của mọi vẻ đẹp. Chúng tôi không che giấu khuyết điểm — chúng tôi chữa lành từ bên trong.' }}</p>
+      <p style="font-family:var(--sh-sans);font-size:0.75rem;color:var(--sh-ink-60);margin-top:12px;">— {{ settings.skinhealthy_philosophy_cite | default: 'Đội ngũ chuyên gia, Skin Health Beauty' }}</p>
+    </div>
+  </div>
+</section>
+
+{%- comment -%} ═══ 12. CHUYÊN GIA PHỤ TRÁCH (IV-H) — mặc định TẮT theo settings.skinhealthy_team_enable ═══ {%- endcomment -%}
+{%- if settings.skinhealthy_team_enable -%}
+<section class="sh-reveal" style="padding:80px 0;background:var(--sh-ivory);">
+  <div class="sh-container" style="display:flex;flex-wrap:wrap;gap:40px;align-items:center;max-width:760px;margin:0 auto;">
+    {%- if settings.skinhealthy_team_1_img != blank -%}
+    <div style="width:180px;height:180px;flex-shrink:0;overflow:hidden;background:var(--sh-ivory-dark);">
+      <img src="{{ settings.skinhealthy_team_1_img | img_url: '400x400' }}" alt="{{ settings.skinhealthy_team_1_name | default: 'Chuyên gia phụ trách' }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">
+    </div>
+    {%- endif -%}
+    <div style="flex:1;min-width:260px;">
+      <span class="sh2-eyebrow">Chuyên Gia Phụ Trách</span>
+      <h3 class="sh2-title" style="font-size:1.5rem;">{{ settings.skinhealthy_team_1_name | default: 'ThS. Nguyễn Thị An' }}</h3>
+      <p style="font-family:var(--sh-sans);font-size:0.8125rem;color:var(--sh-ink-60);margin-top:4px;">{{ settings.skinhealthy_team_1_title | default: 'Chuyên gia Da liễu · Trị liệu Lâm sàng' }}</p>
+      <p style="font-family:var(--sh-sans);font-size:0.75rem;color:var(--sh-ink-60);margin-top:8px;">{{ settings.skinhealthy_team_1_credential | default: '15 năm kinh nghiệm lâm sàng' }}</p>
+      {%- if settings.skinhealthy_team_1_tags != blank -%}
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;">
+        {%- assign sh_team_tags = settings.skinhealthy_team_1_tags | split: ',' -%}
+        {%- for tag in sh_team_tags -%}
+        <span style="font-family:var(--sh-sans);font-size:0.6875rem;padding:4px 12px;background:var(--sh-ivory-dark);color:var(--sh-ink-60);">{{ tag | strip }}</span>
+        {%- endfor -%}
+      </div>
+      {%- endif -%}
+      {%- if settings.skinhealthy_team_1_quote != blank -%}
+      <p class="sh2-quote" style="margin-top:20px;font-size:0.9375rem;">{{ settings.skinhealthy_team_1_quote }}</p>
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+{%- endif -%}
+
+{%- comment -%} ═══ 13. CÂU HỎI THƯỜNG GẶP (IV-I) + FAQPage schema ═══ {%- endcomment -%}
+{%- assign sh_faqs = '' | split: '' -%}
+{%- for n in (1..6) -%}
+  {%- capture qk -%}skinhealthy_faq_{{ n }}_q{%- endcapture -%}
+  {%- capture ak2 -%}skinhealthy_faq_{{ n }}_a{%- endcapture -%}
+  {%- assign sh_faqs = sh_faqs | push: settings[qk] -%}
+{%- endfor -%}
+<section class="sh-reveal" style="padding:80px 0;background:var(--sh-white);border-top:1px solid var(--sh-line);">
+  <div class="sh-container" style="max-width:760px;">
+    <div class="sh-concerns__header" style="text-align:center;">
+      <span class="sh2-eyebrow">Giải Đáp</span>
+      <h2 class="sh2-title" style="font-size:1.75rem;">Câu Hỏi Thường Gặp</h2>
+    </div>
+    <div id="sh-faq-list">
+      {%- assign sh_faq_defaults_q = 'Điều trị tại Skin Health Beauty có đau không?,Tôi cần bao nhiêu buổi để thấy kết quả?,Da nhạy cảm có điều trị được không?,Chi phí điều trị tại Skin Health Beauty như thế nào?,Sau mỗi buổi điều trị tôi cần lưu ý gì?,Tôi có thể kết hợp điều trị tại spa với sản phẩm tự dùng ở nhà không?' | split: ',' -%}
+      {%- assign sh_faq_defaults_a = 'Tùy theo cấp độ liệu trình. Chăm sóc duy trì hoàn toàn không gây khó chịu. Điều trị nhắm mục tiêu có thể có cảm giác nhẹ như châm chích khi tẩy tế bào chết. Điều trị chuyên sâu sử dụng kem tê bề mặt trước khi thực hiện — hầu hết khách hàng mô tả là nhẹ và có thể chịu được tốt.@@@Phụ thuộc vào mức độ vấn đề ban đầu và loại liệu trình. Hầu hết khách hàng thấy cải thiện rõ sau 3–4 buổi. Lộ trình đầy đủ cho kết quả tối ưu thường từ 6–12 buổi, kết hợp với chăm sóc tại nhà theo hướng dẫn.@@@Có. Chúng tôi có phác đồ riêng cho da nhạy cảm với bước kiểm tra phản ứng (patch test) bắt buộc trước khi bắt đầu bất kỳ liệu trình nào.@@@Chi phí dao động tùy theo liệu trình và số buổi. Tư vấn ban đầu hoàn toàn miễn phí.@@@Chúng tôi cung cấp hướng dẫn chăm sóc sau điều trị bằng văn bản cho từng liệu trình cụ thể.@@@Hoàn toàn có thể và được khuyến khích. Đội ngũ Skin Health Beauty làm việc cùng hệ thống tư vấn sản phẩm của Pharma Cosmetics để thiết kế homecare routine bổ trợ.' | split: '@@@' -%}
+      {%- for n in (1..6) -%}
+        {%- capture qk -%}skinhealthy_faq_{{ n }}_q{%- endcapture -%}
+        {%- capture ak2 -%}skinhealthy_faq_{{ n }}_a{%- endcapture -%}
+        {%- assign sh_faq_q = settings[qk] | default: sh_faq_defaults_q[forloop.index0] -%}
+        {%- assign sh_faq_a = settings[ak2] | default: sh_faq_defaults_a[forloop.index0] -%}
+        <div class="sh2-faq-item{% if forloop.first %} is-open{% endif %}" data-faq-item>
+          <button type="button" class="sh2-faq-q" data-faq-toggle>
+            <span>{{ sh_faq_q }}</span>
+            <span class="sh2-faq-q__icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </span>
+          </button>
+          <div class="sh2-faq-a"><div class="sh2-faq-a__inner">{{ sh_faq_a }}</div></div>
+        </div>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {%- for n in (1..6) -%}
+      {%- capture qk -%}skinhealthy_faq_{{ n }}_q{%- endcapture -%}
+      {%- capture ak2 -%}skinhealthy_faq_{{ n }}_a{%- endcapture -%}
+      {%- assign sh_faq_q = settings[qk] | default: sh_faq_defaults_q[forloop.index0] -%}
+      {%- assign sh_faq_a = settings[ak2] | default: sh_faq_defaults_a[forloop.index0] -%}
+      {
+        "@type": "Question",
+        "name": {{ sh_faq_q | json }},
+        "acceptedAnswer": { "@type": "Answer", "text": {{ sh_faq_a | json }} }
+      }{% unless forloop.last %},{% endunless %}
+    {%- endfor -%}
+  ]
+}
+</script>
+
+{%- comment -%} ═══ SCRIPT: Editorial Swiper + Clinic lightbox + Before/After drag + FAQ accordion ═══ {%- endcomment -%}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  {%- if sh_edit_imgs.size > 0 -%}
+  var shEditSwiperEl = document.querySelector('.sh-edit-swiper');
+  var shEditSwiper = null;
+  if (shEditSwiperEl && typeof Swiper !== 'undefined') {
+    shEditSwiper = new Swiper(shEditSwiperEl, {
+      effect: 'fade',
+      fadeEffect: { crossFade: true },
+      loop: {% if sh_edit_imgs.size > 1 %}true{% else %}false{% endif %},
+      autoplay: { delay: 4500, disableOnInteraction: false },
+      pagination: shEditSwiperEl.querySelector('.sh-edit-swiper__dots') ? { el: '.sh-edit-swiper__dots', clickable: true } : false
+    });
+  }
+
+  /* ── Clinic lightbox ── */
+  var shImgs = {{ sh_edit_imgs | json }};
+  var lb = document.getElementById('sh-clinic-lb');
+  var lbImg = document.getElementById('sh-clinic-lb-img');
+  var lbCounter = document.getElementById('sh-clinic-lb-counter');
+  var lbIndex = 0;
+
+  function shOpenLightbox(idx) {
+    if (!lb || !shImgs.length) return;
+    lbIndex = ((idx % shImgs.length) + shImgs.length) % shImgs.length;
+    lbImg.src = shImgs[lbIndex];
+    if (lbCounter) { lbCounter.textContent = (lbIndex + 1) + ' / ' + shImgs.length; }
+    lb.classList.add('is-open');
+    lb.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+  function shCloseLightbox() {
+    if (!lb) return;
+    lb.classList.remove('is-open');
+    lb.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  var zoomBtn = document.getElementById('sh-clinic-zoom-btn');
+  if (zoomBtn) { zoomBtn.addEventListener('click', function () { shOpenLightbox(shEditSwiper ? shEditSwiper.activeIndex : 0); }); }
+
+  document.querySelectorAll('[data-lb-index]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      shOpenLightbox(parseInt(btn.getAttribute('data-lb-index'), 10) || 0);
+      document.querySelectorAll('#sh-tour-tabs [data-tour-tab]').forEach(function (b) { b.classList.remove('is-active'); });
+      btn.classList.add('is-active');
+    });
+  });
+
+  var lbClose = document.getElementById('sh-clinic-lb-close');
+  var lbBack  = document.getElementById('sh-clinic-lb-back');
+  var lbPrev  = document.getElementById('sh-clinic-lb-prev');
+  var lbNext  = document.getElementById('sh-clinic-lb-next');
+  if (lbClose) lbClose.addEventListener('click', shCloseLightbox);
+  if (lbBack)  lbBack.addEventListener('click', shCloseLightbox);
+  if (lbPrev)  lbPrev.addEventListener('click', function () { shOpenLightbox(lbIndex - 1); });
+  if (lbNext)  lbNext.addEventListener('click', function () { shOpenLightbox(lbIndex + 1); });
+  document.addEventListener('keydown', function (e) {
+    if (!lb || !lb.classList.contains('is-open')) return;
+    if (e.key === 'Escape') shCloseLightbox();
+    if (e.key === 'ArrowLeft') shOpenLightbox(lbIndex - 1);
+    if (e.key === 'ArrowRight') shOpenLightbox(lbIndex + 1);
+  });
+  {%- endif -%}
+
+  /* ── Before/After drag slider ── */
+  document.querySelectorAll('[data-ba-slider]').forEach(function (el) {
+    function setPos(clientX) {
+      var rect = el.getBoundingClientRect();
+      var pct = ((clientX - rect.left) / rect.width) * 100;
+      pct = Math.max(0, Math.min(100, pct));
+      el.style.setProperty('--sh2-ba-pos', pct + '%');
+    }
+    var dragging = false;
+    el.addEventListener('pointerdown', function (e) { dragging = true; setPos(e.clientX); });
+    window.addEventListener('pointermove', function (e) { if (dragging) setPos(e.clientX); });
+    window.addEventListener('pointerup', function () { dragging = false; });
+    el.addEventListener('touchstart', function (e) { if (e.touches[0]) setPos(e.touches[0].clientX); }, { passive: true });
+    el.addEventListener('touchmove',  function (e) { if (e.touches[0]) setPos(e.touches[0].clientX); }, { passive: true });
+  });
+
+  /* ── FAQ accordion ── */
+  document.querySelectorAll('[data-faq-toggle]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var item = btn.closest('[data-faq-item]');
+      if (!item) return;
+      var wasOpen = item.classList.contains('is-open');
+      item.parentElement.querySelectorAll('[data-faq-item]').forEach(function (i) { i.classList.remove('is-open'); });
+      if (!wasOpen) item.classList.add('is-open');
+    });
+  });
+
+});
+</script>

@@ -1,0 +1,171 @@
+{% comment %} mops-admin-coupons.js.bwt — Mixin domain "Mã giảm giá" (tab Coupons) cho MOPS Admin.
+  Tách khỏi Assets/mops-admin.js.bwt (2026-07-16, theo mẫu mops-admin-audit.js.bwt). Script
+  TOP-LEVEL (không bọc DOMContentLoaded) — chạy ngay khi parse, đẩy mixin vào
+  window.MopsAdminMixins TRƯỚC khi Assets/mops-admin.js.bwt (chạy trong DOMContentLoaded, luôn
+  sau) đọc mảng này. Gọi helper dùng chung qua window.MopsAdminCore (gasGet/gasPost/showToast).
+  Load TRƯỚC Assets/mops-admin.js.bwt trong Templates/page.mops-admin.bwt.
+  KHÔNG nhầm với manualOrder.couponCode/couponPreview/applyManualOrderCoupon (áp mã giảm giá lúc
+  tạo đơn thủ công) — đó là logic của domain Đơn hàng, không thuộc domain quản lý mã này. {% endcomment %}
+(function() {
+  'use strict';
+
+  window.MopsAdminRegisteredDomains = window.MopsAdminRegisteredDomains || [];
+  window.MopsAdminRegisteredDomains.push('coupons');
+
+  window.MopsAdminMixins = window.MopsAdminMixins || [];
+  window.MopsAdminMixins.push({
+    data: function() {
+      return {
+        couponsMgmt: {
+          all: [], loading: false, error: '', search: '', creating: false, showAddForm: false,
+          // Pha B — nguồn cho scope picker (lazy-load khi mở form): danh sách loại + sản phẩm.
+          productOptions: [], typeOptions: [], productsLoaded: false, productsLoading: false, productSearch: '',
+          newCoupon: { code: '', title: '', valueType: 'percent', value: '', minOrderAmount: '', maxUses: '', startAt: '', expiresAt: '', description: '', scopeTypes: [], scopeProducts: [] }
+        }
+      };
+    },
+    computed: {
+      couponsFiltered: function() {
+        var search = (this.couponsMgmt.search || '').trim().toLowerCase();
+        return this.couponsMgmt.all.filter(function(c) {
+          if (search && c.code.toLowerCase().indexOf(search) === -1) return false;
+          return true;
+        });
+      },
+      couponsEmptyMessage: function() {
+        if (this.couponsMgmt.error) return this.couponsMgmt.error;
+        if (!this.couponsFiltered.length) {
+          return this.couponsMgmt.all.length ? 'Không có kết quả phù hợp.' : 'Chưa có mã giảm giá nào.';
+        }
+        return '';
+      },
+      // Pha B — sản phẩm cho picker scope, lọc theo ô tìm (handle/tên).
+      couponProductsFiltered: function() {
+        var q = (this.couponsMgmt.productSearch || '').trim().toLowerCase();
+        var list = this.couponsMgmt.productOptions;
+        if (!q) return list.slice(0, 50);
+        return list.filter(function(p) {
+          return p.handle.indexOf(q) !== -1 || (p.title || '').toLowerCase().indexOf(q) !== -1;
+        }).slice(0, 50);
+      }
+    },
+    methods: {
+      /* ── Mã giảm giá ── */
+      loadCoupons: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.couponsMgmt.loading = true;
+        this.couponsMgmt.error = '';
+        core.gasGet({ action: 'list_coupons' })
+          .then(function(d) {
+            self.couponsMgmt.loading = false;
+            if (!d || !d.success) { self.couponsMgmt.error = d && d.error || 'Không tải được danh sách mã giảm giá.'; return; }
+            self.couponsMgmt.all = d.coupons || [];
+          })
+          .catch(function() { self.couponsMgmt.loading = false; self.couponsMgmt.error = 'Lỗi kết nối.'; });
+      },
+      createCoupon: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var nc = this.couponsMgmt.newCoupon;
+        var code = (nc.code || '').trim();
+        var value = Number(nc.value);
+        if (!code || !value) { core.showToast('Vui lòng nhập mã và giá trị giảm.', 'error'); return; }
+        this.couponsMgmt.creating = true;
+        core.gasPost({
+          action: 'create_coupon',
+          code: code,
+          title: (nc.title || '').trim(),
+          value_type: nc.valueType,
+          value: value,
+          min_order_amount: Number(nc.minOrderAmount) || 0,
+          max_uses: Number(nc.maxUses) || 0,
+          start_at: nc.startAt || '',
+          expires_at: nc.expiresAt || '',
+          description: (nc.description || '').trim(),
+          scope_types: nc.scopeTypes || [],
+          scope_products: nc.scopeProducts || []
+        })
+          .then(function(d) {
+            self.couponsMgmt.creating = false;
+            if (!d.success) throw new Error(d.error || 'Tạo mã giảm giá thất bại');
+            core.showToast('Đã tạo mã ' + code, 'success');
+            self.couponsMgmt.showAddForm = false;
+            self.couponsMgmt.productSearch = '';
+            self.couponsMgmt.newCoupon = { code: '', title: '', valueType: 'percent', value: '', minOrderAmount: '', maxUses: '', startAt: '', expiresAt: '', description: '', scopeTypes: [], scopeProducts: [] };
+            self.loadCoupons();
+          })
+          .catch(function(e) { self.couponsMgmt.creating = false; core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      doToggleCouponActive: function(c) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        if (!confirm(c.enabled ? 'Tắt mã giảm giá này?' : 'Bật lại mã giảm giá này?')) return;
+        core.gasPost({ action: 'toggle_coupon_active', code: c.code })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Thao tác thất bại');
+            core.showToast('Đã cập nhật trạng thái', 'success');
+            self.loadCoupons();
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+
+      /* ── Pha B: scope picker (giới hạn phạm vi giảm giá) ── */
+      // Mở form Thêm mã + lazy-load danh sách sản phẩm/loại cho picker (chỉ tải 1 lần).
+      openCouponAddForm: function() {
+        this.couponsMgmt.showAddForm = true;
+        if (!this.couponsMgmt.productsLoaded && !this.couponsMgmt.productsLoading) this.loadCouponProducts();
+      },
+      loadCouponProducts: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.couponsMgmt.productsLoading = true;
+        core.gasGet({ action: 'list_products' })
+          .then(function(d) {
+            self.couponsMgmt.productsLoading = false;
+            if (!d || !d.success) return; // im lặng — vẫn tạo được mã không scope
+            var seenH = {}, seenT = {}, prods = [], types = [];
+            (d.products || []).forEach(function(p) {
+              var h = String(p.handle || '').trim().toLowerCase();
+              if (h && !seenH[h]) { seenH[h] = true; prods.push({ handle: h, title: p.title || h, product_type: p.product_type || '' }); }
+              var t = String(p.product_type || '').trim();
+              var tl = t.toLowerCase();
+              if (t && !seenT[tl]) { seenT[tl] = true; types.push(t); }
+            });
+            prods.sort(function(a, b) { return a.title.localeCompare(b.title); });
+            types.sort(function(a, b) { return a.localeCompare(b); });
+            self.couponsMgmt.productOptions = prods;
+            self.couponsMgmt.typeOptions = types;
+            self.couponsMgmt.productsLoaded = true;
+          })
+          .catch(function() { self.couponsMgmt.productsLoading = false; });
+      },
+      // So khớp scope không phân biệt hoa/thường (trùng chuẩn hoá server-side _parseCsvList).
+      isCouponTypeSelected: function(t) {
+        return this.couponsMgmt.newCoupon.scopeTypes.indexOf(String(t).toLowerCase()) !== -1;
+      },
+      toggleCouponScopeType: function(t) {
+        var arr = this.couponsMgmt.newCoupon.scopeTypes;
+        var key = String(t).toLowerCase();
+        var i = arr.indexOf(key);
+        if (i === -1) arr.push(key); else arr.splice(i, 1);
+      },
+      isCouponProductSelected: function(h) {
+        return this.couponsMgmt.newCoupon.scopeProducts.indexOf(String(h).toLowerCase()) !== -1;
+      },
+      toggleCouponScopeProduct: function(h) {
+        var arr = this.couponsMgmt.newCoupon.scopeProducts;
+        var key = String(h).toLowerCase();
+        var i = arr.indexOf(key);
+        if (i === -1) arr.push(key); else arr.splice(i, 1);
+      },
+      // Nhãn phạm vi cho danh sách mã. Rỗng cả hai = toàn đơn.
+      couponScopeLabel: function(c) {
+        var parts = [];
+        if (c.scope_types && c.scope_types.length) parts.push('Loại: ' + c.scope_types.join(', '));
+        if (c.scope_products && c.scope_products.length) parts.push(c.scope_products.length + ' sản phẩm');
+        return parts.length ? parts.join(' · ') : 'Toàn đơn';
+      }
+    }
+  });
+})();

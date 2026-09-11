@@ -1,0 +1,276 @@
+{% paginate collection.products by settings.collection_number_product %}
+{%if collection.alias == 'dieu-tri-chuyen-nghiep' %}
+<div class="layout-collection">
+	{% include 'breadcrumb' %}  
+	<div class="container">
+		{%include 'product_grid_lieu_trinh'%}
+	</div>		
+</div>
+{%else%}
+<div class="layout-collection">
+	{% include 'breadcrumb' %}  
+	<div class="container">
+		<div class="col-title d-none">
+			<h1>{%if collection.name == 'All'%}Tất cả sản phẩm{%else%}{{ collection.name }}{%endif%}</h1>
+
+		</div>
+		<div class="row">
+			{%if settings.aside_coupon_enable%}
+			<div class="col-12">
+				<div class="section_coupons">
+					<div class="swiper_coupons swiper-container">
+						<div class="swiper-wrapper">
+							{%- for i in (1..6) -%}
+							{%- capture enable_slide -%}promo_coupon_{{i}}_enable{%- endcapture -%}
+							{%- capture code -%}promo_coupon_{{i}}_code{%- endcapture -%}
+							{%- capture time -%}promo_coupon_{{i}}_expires{%- endcapture -%}
+							{%- capture giatri -%}promo_coupon_{{i}}_value{%- endcapture -%}
+							{%- capture dieukien -%}promo_coupon_{{i}}_condition{%- endcapture -%}
+							{%if settings[enable_slide]%}
+							<div class="swiper-slide">
+								<div class="box-coupon">
+									<div class="image">
+										<img  width="128" height="128" class="lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC" data-src="{{ 'coupon.png' | asset_url}}" alt="{{settings[code]}}">
+									</div>
+									<div class="content_wrap">
+										<a title="Chi tiết" href="javascript:void(0)" class="info-button" data-coupon="{{settings[code]}}" data-time="{{settings[time] | remove: "Ngày hết hạn: "}}" data-content="{{settings[dieukien]}}">
+											<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512">
+												<path d="M144 80c0 26.5-21.5 48-48 48s-48-21.5-48-48s21.5-48 48-48s48 21.5 48 48zM0 224c0-17.7 14.3-32 32-32H96c17.7 0 32 14.3 32 32V448h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H64V256H32c-17.7 0-32-14.3-32-32z"></path>
+											</svg>
+										</a>
+										<div class="content-top">
+											{{settings[code]}}
+											<span class="line-clamp line-clamp-1">{{settings[giatri]}}</span>
+										</div>
+										<div class="content-bottom">
+											<span>HSD: {{settings[time]}}</span>
+											<div class="coupon-code js-copy" data-copy="{{settings[code]}}" title="Sao chép">Lấy mã</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							{%- endif -%}
+							{%- endfor -%}
+						</div>
+						<div class="swiper-button-prev">
+							<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+								<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</div>
+						<div class="swiper-button-next">
+							<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+								<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+							</svg>
+						</div>
+					</div>
+				</div>
+				<div class="popup-coupon">
+					<div class="content">
+						<div class="title">
+							Thông tin voucher
+						</div>
+						<div class="close-popup-coupon" title="Đóng" >
+							<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 512.001 512.001" style="enable-background:new 0 0 512.001 512.001;" xml:space="preserve"> <g> <g> <path d="M284.286,256.002L506.143,34.144c7.811-7.811,7.811-20.475,0-28.285c-7.811-7.81-20.475-7.811-28.285,0L256,227.717    L34.143,5.859c-7.811-7.811-20.475-7.811-28.285,0c-7.81,7.811-7.811,20.475,0,28.285l221.857,221.857L5.858,477.859    c-7.811,7.811-7.811,20.475,0,28.285c3.905,3.905,9.024,5.857,14.143,5.857c5.119,0,10.237-1.952,14.143-5.857L256,284.287    l221.857,221.857c3.905,3.905,9.024,5.857,14.143,5.857s10.237-1.952,14.143-5.857c7.811-7.811,7.811-20.475,0-28.285    L284.286,256.002z"></path> </g> </g> </svg>		
+						</div>
+						<ul> 
+							<li>
+								<span>Mã giảm giá:</span>
+								<span class="code"></span>
+							</li>
+							<li>
+								<span>Ngày hết hạn:</span>
+								<span class="time"></span>
+							</li>
+							<li>
+								<span>Điều kiện:</span>
+								<span class="dieukien">
+								</span>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+			{%endif%}
+			{%if settings.aside_category_enable_bot%}
+			<div class="col-12">
+				<div class="col-list-cate">
+					{%include 'menu-col-cate'%}
+				</div>
+			</div>
+			{%endif%}
+			<aside class="dqdt-sidebar left-content  col-lg-3 col-12">
+				<div class="close-filters d-lg-none d-xl-none" title="Đóng bộ lọc">
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+						<path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
+					</svg>
+				</div>
+				<div class="section-box-bg">
+					{%- include 'sidebar-collection' -%}
+				</div>
+			</aside>
+			<div class="block-collection col-lg-9 col-12">
+				<h1 class="title-page">
+					<span>{%if collection.name == 'All'%}Tất cả sản phẩm{%else%}{{ collection.name }}{%endif%}</span></h1>
+
+				{%- comment -%} ─── "Bạn chọn" — Active filter bar (desktop + mobile) ─── {%- endcomment -%}
+				<div id="afw-active-bar" class="afw-bar" hidden>
+					<div class="afw-bar__head">
+						<span class="afw-bar__count">Đang lọc <strong class="afw-bar__count-num">0</strong> tiêu chí</span>
+						<button type="button" class="afw-bar__clear" onclick="clearAllFiltered()">
+							<svg width="11" height="11" viewBox="0 0 365.696 365.696" aria-hidden="true"><path d="m243.1875 182.859375 113.132812-113.132813c12.5-12.5 12.5-32.765624 0-45.246093l-15.082031-15.082031c-12.503906-12.503907-32.769531-12.503907-45.25 0l-113.128906 113.128906-113.132813-113.152344c-12.5-12.5-32.765624-12.5-45.246093 0l-15.105469 15.082031c-12.5 12.503907-12.5 32.769531 0 45.25l113.152344 113.152344-113.128906 113.128906c-12.503907 12.503907-12.503907 32.769531 0 45.25l15.082031 15.082031c12.5 12.5 32.765625 12.5 45.246093 0l113.132813-113.132812 113.128906 113.132812c12.503907 12.5 32.769531 12.5 45.25 0l15.082031-15.082031c12.5-12.503906 12.5-32.769531 0-45.25zm0 0" fill="currentColor"/></svg>
+							Bỏ chọn hết
+						</button>
+					</div>
+					<div class="afw-bar__chips" id="afw-active-chips"></div>
+				</div>
+
+				<div id="ajax-result">
+				<div class="category-products products-view products-view-grid list_hover_pro">
+					<div class="filter-containers">
+						{% if collection.products.size > 0 %}
+						{%include 'collection-sortby'%}
+						{%endif%}
+					</div>
+					{% if collection.products.size > 0 %}
+					{%include 'products-grid-item'%}
+					{% else %}
+					<div class="alert alert-warning alert-dismissible margin-top-15 margin-bottom-20 section" role="alert">
+						Sản phẩm đang được cập nhật.
+					</div>
+					{% endif %}
+				</div>
+				</div>
+				<div class="col-box-content">
+					{%if page_title =="Tất cả sản phẩm"%}
+					<div class="descrip_coll {% if pages[settings.des_all_page].content.size > 700  %}content_coll{% endif %} add_apper">
+						{{ pages[settings.des_all_page].content }}
+						{% if pages[settings.des_all_page].content.size > 700  %}
+						<div class="bg_cl"></div>
+						{% endif %}
+					</div>
+					{% if pages[settings.des_all_page].content.size > 700  %}
+					<div class="view_mores">
+						<a class="one">Xem thêm <img width="90" height="90" src="{{'sortdown.png' | asset_url}}" alt="{{store.name}}"></a>
+						<a class="two active">Thu gọn <img width="90" height="90" src="{{'sortdown.png' | asset_url}}" alt="{{store.name}}"></a>
+					</div>
+					{% endif %}
+					{%else%}
+					{%if collection.description.size > 0%}
+					{% assign mycontent = collection.description | split:'<h5>' %}
+					<div class="descrip_coll {% if mycontent[0].size > 700  %}content_coll{% endif %} add_apper">
+						{{mycontent[0]}}
+						{% if mycontent[0].size > 700  %}
+						<div class="bg_cl"></div>
+						{% endif %}
+					</div>
+					{% if mycontent[0].size > 700   %}
+					<div class="view_mores">
+						<a class="one">Xem thêm <img width="90" height="90" src="{{'sortdown.png' | asset_url}}" alt="{{store.name}}"></a>
+						<a class="two active">Thu gọn <img width="90" height="90" src="{{'sortdown.png' | asset_url}}" alt="{{store.name}}"></a>
+					</div>
+					{% endif %}
+					{% endif %}
+					{% endif %}
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+	{%- comment -%} ─── Bottom of collection: Best seller + CTA tư vấn + SP đã xem ─── {%- endcomment -%}
+	{%- if collection.products.size > 0 -%}
+		{%- include 'section_collection_bestseller' -%}
+		{%- include 'section_collection_cta' -%}
+		{%- include 'section_product_viewed' -%}
+	{%- endif -%}
+</div>
+<script>
+	/* Set --header-h CSS variable dựa trên chiều cao thực tế của header */
+	(function () {
+		function setHeaderH() {
+			var h = document.querySelector('.main-header, header.header, #header');
+			if (h) document.documentElement.style.setProperty('--header-h', h.offsetHeight + 'px');
+		}
+		setHeaderH();
+		window.addEventListener('resize', setHeaderH);
+	})();
+
+	var colName = "{%if page_title == 'All'%}Tất cả sản phẩm{%else%}{{ page_title }}{%endif%}";
+	{% if collection.id > 0 %}
+	var colId = {{collection.id}};
+	{%else%}
+	var colId = 0;
+	{%endif%}
+	var selectedViewData = "{% if template contains '.list' %}data_list{% else %}data{% endif %}";
+	{%if settings.aside_coupon_enable%}
+	var swiper_coupons = null;
+	function initSwiperCoupons() {
+		swiper_coupons = new Swiper('.swiper_coupons', {
+			slidesPerView: 4,
+			spaceBetween: 16,
+			watchOverflow: true,
+			slidesPerGroup: 1,
+			navigation: {
+				nextEl: '.swiper_coupons .swiper-button-next',
+				prevEl: '.swiper_coupons .swiper-button-prev',
+			},
+			breakpoints: {
+				640: {
+					slidesPerView: 2,
+					spaceBetween: 14
+				},
+				768: {
+					slidesPerView: 2.3,
+					spaceBetween: 14
+				},
+				992: {
+					slidesPerView: 2.5,
+					spaceBetween: 20
+				},
+				1024: {
+					slidesPerView: 3,
+					spaceBetween: 16
+				},
+				1200: {
+					slidesPerView: 4,
+					spaceBetween: 16
+				}
+			}
+		});
+	}
+	function destroySwiperCoupons() {
+		if (swiper_coupons) {
+			swiper_coupons.destroy(true, true);
+			swiper_coupons = null;
+		}
+	}
+	function toggleSwiperCoupons() {
+		if ($(window).width() <= 767 && swiper_coupons) {
+			destroySwiperCoupons();
+		} else if ($(window).width() > 767 && !swiper_coupons) {
+			initSwiperCoupons();
+		}
+	}
+	toggleSwiperCoupons();
+	$(window).on('resize', function() {
+		toggleSwiperCoupons();
+	});
+	{%endif%}
+	$('.view_mores a.one').click(function() {
+		$(this).addClass('active');
+		$('.view_mores a.two').removeClass('active');
+		$('.content_coll').addClass('active');
+		$('.bg_cl').addClass('active');
+	});
+	$('.view_mores a.two').click(function() {
+		$(this).addClass('active');
+		$('.view_mores a.one').removeClass('active');
+		$('.content_coll').removeClass('active');
+		$('.bg_cl').removeClass('active');
+	});
+</script>
+<div class="ab-most-view-product-module ab-hide"></div>
+{% endif %}
+{% endpaginate %}

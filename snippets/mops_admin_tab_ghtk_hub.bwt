@@ -1,0 +1,137 @@
+{%- comment -%}
+  mops_admin_tab_ghtk_hub.bwt (T-54) — Bulk-ops view lọc riêng đơn GHTK từ orders.list đã fetch
+  sẵn (tab Đơn hàng) + báo cáo COD/cước theo hãng đã có sẵn (loadShippingReport/shipping.report,
+  assets/mops-admin-shipping.js.bwt:~414 — đã wire nhưng CHƯA có UI nào hiển thị). KHÔNG gọi API
+  mới, KHÔNG thêm computed/method mới trong file .js.bwt nào — lọc client-side ngay trong
+  v-for/expression của template này (Vue cho phép JS expression trong directive).
+
+  RÀNG BUỘC (ADR-005 + POLICY.yaml#mops_gas_backend money-movement): Figma admin-ghtk-hub.html
+  có nút "Rút tiền 24/7" với toast giả lập thành công. Đã grep toàn bộ mops-gas/*.js — KHÔNG có
+  endpoint rút tiền/payout/remittance nào. TUYỆT ĐỐI không mô phỏng 1 hành động rút tiền thật
+  thành công khi không có backend đứng sau — nút này disable + ghi chú rõ "chưa có backend",
+  không xoá hẳn (giữ đúng vị trí Figma để dễ nối dây sau khi có endpoint thật).
+{%- endcomment -%}
+
+<div id="tab-ghtk_hub" v-show="activeTab === 'ghtk_hub'" class="ma-tab-pane">
+
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-stack-md">
+    <div>
+      <h2 class="text-title-sm font-bold text-on-surface">GHTK Operations Hub</h2>
+      <p class="text-label-sm text-on-surface-variant">Thao tác hàng loạt trên các đơn đã tạo vận đơn GHTK — dùng lại đúng API tab Đơn hàng.</p>
+    </div>
+    <button type="button" @click="setActiveTab('orders')" class="ma-btn-outline">
+      <span class="material-symbols-outlined text-[16px] align-middle">shopping_cart</span> Sang tab Đơn hàng
+    </button>
+  </div>
+
+  <!-- Báo cáo COD/cước GHTK — dữ liệu THẬT từ getShippingReport (mops-gas/mops_02.js), qua
+       loadShippingReport() đã có sẵn ở assets/mops-admin-shipping.js.bwt. Bấm để tải, không tự
+       fetch ngầm (tránh gọi lại API mỗi lần chuyển tab). -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 mb-stack-lg">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+      <h3 class="text-label-sm font-bold text-on-surface-variant uppercase tracking-wider">Tổng hợp COD &amp; cước GHTK (đã đối soát)</h3>
+      <button type="button" @click="loadShippingReport" :disabled="!!shipping.reportLoading" class="ma-btn-outline">
+        <span class="material-symbols-outlined text-[16px] align-middle" :class="{ 'ma-spin': shipping.reportLoading }">refresh</span>
+        [[ shipping.report ? 'Tải lại' : 'Tải báo cáo' ]]
+      </button>
+    </div>
+
+    <div v-if="!shipping.report" class="text-body-sm text-on-surface-variant">
+      Chưa tải báo cáo — bấm "Tải báo cáo" để lấy số liệu COD/cước GHTK thật từ hệ thống đối soát.
+    </div>
+    <template v-else>
+      <template v-for="c in shipping.report.by_carrier.filter(function(x){ return x.carrier === 'GHTK'; })" :key="c.carrier">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div>
+            <div class="text-label-sm text-on-surface-variant">Số vận đơn</div>
+            <div class="text-title-sm font-bold text-on-surface">[[ c.waybills ]]</div>
+          </div>
+          <div>
+            <div class="text-label-sm text-on-surface-variant">Tổng COD</div>
+            <div class="text-title-sm font-bold text-primary">[[ formatMoney(c.cod) ]]</div>
+          </div>
+          <div>
+            <div class="text-label-sm text-on-surface-variant">Tổng cước (shop trả)</div>
+            <div class="text-title-sm font-bold text-on-surface">[[ formatMoney(c.fee) ]]</div>
+          </div>
+          <div>
+            <div class="text-label-sm text-on-surface-variant">Tỉ lệ giao thành công</div>
+            <div class="text-title-sm font-bold text-on-surface">[[ c.success_rate ]]%</div>
+          </div>
+        </div>
+      </template>
+      <p v-if="!shipping.report.by_carrier.some(function(x){ return x.carrier === 'GHTK'; })" class="text-body-sm text-on-surface-variant">
+        Chưa có vận đơn GHTK nào trong khoảng đối soát hiện tại.
+      </p>
+    </template>
+
+    <!-- "Rút tiền 24/7" theo Figma admin-ghtk-hub.html — KHÔNG có backend payout/withdrawal
+         (grep mops-gas/*.js xác nhận). Disable thật, không giả lập thành công. -->
+    <div class="mt-3 pt-3 border-t border-outline-variant flex items-center justify-between gap-3">
+      <p class="text-label-sm text-on-surface-variant">Rút tiền COD 24/7 — <strong>chưa có backend</strong>, cần thiết kế endpoint payout/remittance riêng trước khi bật tính năng này.</p>
+      <button type="button" disabled title="Chưa có backend rút tiền — xem ghi chú T-54" class="ma-btn-primary opacity-40 cursor-not-allowed">
+        <span class="material-symbols-outlined text-[16px] align-middle">lock</span> Rút tiền 24/7
+      </button>
+    </div>
+  </div>
+
+  <!-- Bảng đơn GHTK — lọc client-side từ orders.list đã fetch sẵn ở tab Đơn hàng, không gọi
+       API riêng. Nếu orders.list rỗng (chưa mở tab Đơn hàng lần nào), báo rõ thay vì trống lặng. -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-body-sm">
+        <thead class="bg-surface-container text-on-surface-variant uppercase text-label-sm border-b border-outline-variant">
+          <tr>
+            <th class="px-3 py-2.5">Mã vận đơn &amp; đơn hàng</th>
+            <th class="px-3 py-2.5">Người nhận</th>
+            <th class="px-3 py-2.5">Sản phẩm</th>
+            <th class="px-3 py-2.5 text-right">COD</th>
+            <th class="px-3 py-2.5">Trạng thái</th>
+            <th class="px-3 py-2.5 text-right">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant/60">
+          <tr v-if="!orders.list.length">
+            <td colspan="6" class="px-6 py-12 text-center text-on-surface-variant">
+              Chưa có dữ liệu đơn hàng — sang tab <button type="button" @click="setActiveTab('orders')" class="text-primary hover:underline">Đơn hàng</button> để tải trước.
+            </td>
+          </tr>
+          <template v-else v-for="tx in orders.list.filter(function(o){ return o.carrier === 'GHTK'; })" :key="tx.order_id">
+            <tr class="hover:bg-surface-container-low/50">
+              <td class="px-3 py-2.5">
+                <span class="font-mono font-bold text-on-surface">[[ tx.tracking_code || '—' ]]</span>
+                <span class="block text-label-sm text-on-surface-variant">[[ tx.order_id ]]</span>
+              </td>
+              <td class="px-3 py-2.5">
+                <div class="font-bold text-on-surface">[[ tx.customer_name || 'Khách lẻ' ]]</div>
+                <div class="text-label-sm text-on-surface-variant">[[ tx.customer_address || '—' ]]</div>
+              </td>
+              <td class="px-3 py-2.5 text-on-surface-variant">
+                <div class="w-[200px] max-w-full truncate">[[ tx.product_summary || tx.product_name || tx.item_summary || '—' ]]</div>
+              </td>
+              <td class="px-3 py-2.5 text-right font-bold tabular-nums text-on-surface">[[ formatMoney(tx.amount || tx.total_amount) ]]</td>
+              <td class="px-3 py-2.5">
+                <span :class="orderStatusBadgeClass(tx.status)">[[ statusMeta(tx.status, tx.payment_method, tx.fulfillment_status).label ]]</span>
+              </td>
+              <td class="px-3 py-2.5 text-right space-x-1">
+                <button type="button" @click="doFulfillmentAction(tx.order_id, { type: 'refresh', label: 'Cập nhật trạng thái giao', icon: 'sync' })"
+                        :disabled="!!orders.actionBusy" class="ma-icon-btn" title="Cập nhật trạng thái (ghtkRefreshTracking)">
+                  <span class="material-symbols-outlined text-[18px]">sync</span>
+                </button>
+                <button type="button" @click="openPrintModal(tx.order_id)" class="ma-icon-btn" title="In A6">
+                  <span class="material-symbols-outlined text-[18px]">print</span>
+                </button>
+                <button type="button" @click="toggleOrderDetail(tx.order_id); setActiveTab('waybill_detail')" class="ma-icon-btn" title="Xem chi tiết vận đơn">
+                  <span class="material-symbols-outlined text-[18px]">visibility</span>
+                </button>
+              </td>
+            </tr>
+          </template>
+          <tr v-if="orders.list.length && !orders.list.filter(function(o){ return o.carrier === 'GHTK'; }).length">
+            <td colspan="6" class="px-6 py-12 text-center text-on-surface-variant">Không có đơn GHTK nào trong danh sách đã tải (kiểm tra bộ lọc ở tab Đơn hàng).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,101 @@
+{% comment %} mops-admin-b2b.js.bwt — Mixin domain "Đại lý B2B" (tab B2B) cho MOPS Admin.
+  REOPEN 2026-09-11 (ADR-007/T-81 admin UI, hoàn thiện tab admin duyệt đơn B2B đã có backend từ
+  trước). Theo đúng mẫu mops-admin-coupons.js.bwt (script TOP-LEVEL, đẩy mixin vào
+  window.MopsAdminMixins TRƯỚC khi Assets/mops-admin.js.bwt đọc mảng này). Gọi helper dùng chung
+  qua window.MopsAdminCore (gasGet/gasPost/showToast). Load TRƯỚC Assets/mops-admin.js.bwt trong
+  Templates/page.mops-admin.bwt.
+
+  QUAN TRỌNG: MST cơ quan thuế + chữ ký số hợp đồng là BLOCKED_EXTERNAL (ADR-007) — tab này
+  CHỈ hiển thị + duyệt/từ chối thủ công (list_b2b_applications/approve_b2b_application/
+  reject_b2b_application, mops-gas/mops_02.js), KHÔNG có nút "xác minh MST tự động". {% endcomment %}
+(function() {
+  'use strict';
+
+  window.MopsAdminRegisteredDomains = window.MopsAdminRegisteredDomains || [];
+  window.MopsAdminRegisteredDomains.push('b2b');
+
+  window.MopsAdminMixins = window.MopsAdminMixins || [];
+  window.MopsAdminMixins.push({
+    data: function() {
+      return {
+        b2bMgmt: {
+          all: [], loading: false, error: '', statusFilter: '', acting: {},
+          reviewNoteDraft: {}
+        }
+      };
+    },
+    computed: {
+      b2bFiltered: function() {
+        var filter = this.b2bMgmt.statusFilter;
+        return this.b2bMgmt.all.filter(function(a) {
+          return !filter || a.status === filter;
+        });
+      },
+      b2bEmptyMessage: function() {
+        if (this.b2bMgmt.error) return this.b2bMgmt.error;
+        if (!this.b2bFiltered.length) {
+          return this.b2bMgmt.all.length ? 'Không có đơn phù hợp bộ lọc.' : 'Chưa có đơn đăng ký đại lý B2B nào.';
+        }
+        return '';
+      },
+      b2bPendingCount: function() {
+        return this.b2bMgmt.all.filter(function(a) { return a.status === 'pending_review'; }).length;
+      }
+    },
+    methods: {
+      /* ── Đại lý B2B ── */
+      loadB2BApplications: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.b2bMgmt.loading = true;
+        this.b2bMgmt.error = '';
+        core.gasGet({ action: 'list_b2b_applications' })
+          .then(function(d) {
+            self.b2bMgmt.loading = false;
+            if (!d || !d.success) { self.b2bMgmt.error = (d && d.error) || 'Không tải được danh sách đơn đăng ký B2B.'; return; }
+            self.b2bMgmt.all = (d.applications || []).slice().sort(function(a, b) {
+              return String(b.created_at).localeCompare(String(a.created_at));
+            });
+          })
+          .catch(function() { self.b2bMgmt.loading = false; self.b2bMgmt.error = 'Lỗi kết nối.'; });
+      },
+      doApproveB2B: function(a) {
+        this._setB2BStatus(a, 'approve_b2b_application', 'Đã duyệt đơn đăng ký B2B của ' + a.company_name);
+      },
+      doRejectB2B: function(a) {
+        if (!confirm('Từ chối đơn đăng ký của "' + a.company_name + '"?')) return;
+        this._setB2BStatus(a, 'reject_b2b_application', 'Đã từ chối đơn đăng ký B2B của ' + a.company_name);
+      },
+      _setB2BStatus: function(a, action, successMsg) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.b2bMgmt.acting = Object.assign({}, this.b2bMgmt.acting, this._acting(a.application_id, true));
+        core.gasPost({
+          action: action,
+          application_id: a.application_id,
+          review_note: (this.b2bMgmt.reviewNoteDraft[a.application_id] || '').trim()
+        })
+          .then(function(d) {
+            self.b2bMgmt.acting = Object.assign({}, self.b2bMgmt.acting, self._acting(a.application_id, false));
+            if (!d.success) throw new Error(d.error || 'Thao tác thất bại');
+            core.showToast(successMsg, 'success');
+            self.loadB2BApplications();
+          })
+          .catch(function(e) {
+            self.b2bMgmt.acting = Object.assign({}, self.b2bMgmt.acting, self._acting(a.application_id, false));
+            core.showToast(e.message || 'Lỗi kết nối', 'error');
+          });
+      },
+      _acting: function(id, val) { var o = {}; o[id] = val; return o; },
+      b2bStatusLabel: function(status) {
+        var map = { pending_review: 'Chờ duyệt', approved: 'Đã duyệt', rejected: 'Đã từ chối' };
+        return map[status] || status;
+      },
+      b2bStatusBadgeClass: function(status) {
+        if (status === 'approved') return 'ma-badge ma-badge--success';
+        if (status === 'rejected') return 'ma-badge ma-badge--danger';
+        return 'ma-badge ma-badge--warning';
+      }
+    }
+  });
+})();

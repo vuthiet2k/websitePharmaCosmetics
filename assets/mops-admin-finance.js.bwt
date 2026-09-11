@@ -1,0 +1,691 @@
+{% comment %} mops-admin-finance.js.bwt — Mixin domain "Tài chính" (tab Finance: Sổ quỹ V1 +
+  Finance Core Accounts/Receipts/Vouchers/Transfers/Adjustments) cho MOPS Admin. Tách khỏi
+  Assets/mops-admin.js.bwt (2026-07-16, theo mẫu mops-admin-audit.js.bwt). Script TOP-LEVEL —
+  đẩy mixin vào window.MopsAdminMixins TRƯỚC khi Assets/mops-admin.js.bwt đọc mảng này. Gọi
+  helper dùng chung qua window.MopsAdminCore. Load TRƯỚC Assets/mops-admin.js.bwt.
+  KHÔNG gồm financeDocStatusClass() — dùng chung với domain Kho & NCC (Purchase Orders/Bills
+  cùng state machine Draft/PendingApproval/Approved/Posted/Cancelled), vẫn ở core.
+  canViewFinance (gate quyền, dùng cả ở domain Tổng quan) cũng vẫn ở core.
+  openDepositVoucherForm() được domain Kho & NCC (nút "Trả cọc NCC" ở dropdown Phiếu nhập hàng)
+  gọi qua this.* — cross-domain bình thường vì Vue mixins share chung 1 instance; ngược lại
+  openBillsForVoucher()/openDepositPOsForVoucher() (đọc inventory.bills/purchaseOrders, dùng
+  trong form Lập Phiếu Chi ở đây) vẫn ở mixin Assets/mops-admin-inventory.js.bwt. {% endcomment %}
+(function() {
+  'use strict';
+
+  // Đồng bộ tay với CASH_TX_CATEGORIES trong code.gs — server luôn validate lại, đây chỉ để
+  // render dropdown đúng theo loại Thu/Chi đang chọn. Chỉ Finance V1 (finance.newTx) dùng.
+  var FINANCE_CATEGORIES = {
+    INCOME:  ['Thu khác', 'Hoàn tiền từ NCC', 'Khác'],
+    EXPENSE: ['Lương nhân viên', 'Thuê mặt bằng', 'Điện nước', 'Internet', 'Marketing', 'Nguyên vật liệu', 'Vận chuyển', 'Thuế', 'Hoàn tiền khách', 'Khác']
+  };
+
+  window.MopsAdminRegisteredDomains = window.MopsAdminRegisteredDomains || [];
+  window.MopsAdminRegisteredDomains.push('finance');
+
+  window.MopsAdminMixins = window.MopsAdminMixins || [];
+  window.MopsAdminMixins.push({
+    data: function() {
+      return {
+        finance: {
+          from: '', to: '', groupBy: 'day', loading: false, error: '', metrics: null,
+          list: [], listLoading: false, listError: '',
+          showAddForm: false, submitting: false,
+          newTx: { type: 'EXPENSE', category: '', amount: '', reference: '', note: '', account: 'Tiền mặt' }
+        },
+        // Finance Core (Phase 01 Bước 1-3, docs/architecture/finance.md) — chạy song song với
+        // khối `finance` (V1 CashTransactions) ở trên, chưa migrate. Sub-nav: 'legacy' (khối
+        // finance.* cũ) | 'accounts' | 'receipts' | 'vouchers' | 'transfers' | 'adjustments'.
+        financeCore: {
+          activePanel: 'legacy',
+          panelLoaded: {},
+          accounts: {
+            list: [], loading: false, error: '',
+            showAddForm: false, submitting: false,
+            newAccount: { name: '', type: 'CASH', branch: '', opening_balance: '' }
+          },
+          receipts: {
+            list: [], loading: false, error: '', filterStatus: '',
+            showAddForm: false, submitting: false, categories: [],
+            newReceipt: { account_id: '', party_id: '', category_id: '', amount: '', note: '' },
+            showAddCategory: false, categorySaving: false, newCategory: { group: '', name: '' }
+          },
+          vouchers: {
+            list: [], loading: false, error: '', filterStatus: '',
+            showAddForm: false, submitting: false, categories: [],
+            // bill_id (Phase 04 Bước 3, optional) — trả nợ 1 Bill cụ thể, xem loadBills()/inventory.bills
+            newVoucher: { account_id: '', party_id: '', category_id: '', amount: '', note: '', attachment_url: '', bill_id: '' },
+            showAddCategory: false, categorySaving: false, newCategory: { group: '', name: '' },
+            // Dropdown ⋮ thay 2-3 nút text nhồi 1 ô (review giao diện 2026-07-16, đúng pattern
+            // togglePurchaseOrderMenu ở domain Kho & NCC — cùng vòng đời chứng từ Draft/
+            // PendingApproval/Approved/Posted/Cancelled).
+            menuOpenId: null, menuPos: { top: 0, left: 0 }
+          },
+          transfers: {
+            list: [], loading: false, error: '', filterStatus: '',
+            showAddForm: false, submitting: false,
+            newTransfer: { from_account_id: '', to_account_id: '', amount: '', note: '' }
+          },
+          adjustments: {
+            list: [], loading: false, error: '', filterStatus: '',
+            showAddForm: false, submitting: false,
+            newAdjustment: { account_id: '', direction: 'DECREASE', amount: '', reason: '' },
+            // Cùng lý do với vouchers.menuOpenId ở trên — Điều chỉnh quỹ cũng có tới 3 hành động
+            // đồng thời (Duyệt/Từ chối/Huỷ) trước khi kebab hoá.
+            menuOpenId: null, menuPos: { top: 0, left: 0 }
+          }
+        }
+      };
+    },
+    computed: {
+      /* ── Tài chính (Thu Chi) ── */
+      financeCategoriesForType: function() {
+        return FINANCE_CATEGORIES[this.finance.newTx.type] || [];
+      },
+      financeCards: function() {
+        if (!this.finance.metrics) return [];
+        var core = window.MopsAdminCore;
+        return [
+          { label: 'Tổng thu (kỳ)',       value: core.formatMoney(this.finance.metrics.total_revenue_range), accent: 'text-emerald-700' },
+          { label: 'Tổng chi (kỳ)',       value: core.formatMoney(this.finance.metrics.total_expense_range), accent: 'text-red-600' },
+          { label: 'Lợi nhuận ròng (kỳ)', value: core.formatMoney(this.finance.metrics.net_profit_range),
+            accent: (this.finance.metrics.net_profit_range || 0) >= 0 ? 'text-emerald-700' : 'text-red-600' }
+        ];
+      },
+      // Gross Profit thật (Phase 02 Bước 4) — KHÁC "Lợi nhuận ròng" ở trên (net_profit_range =
+      // doanh thu − toàn bộ chi phí, không trừ giá vốn).
+      financeGrossProfitCard: function() {
+        if (!this.finance.metrics || this.finance.metrics.gross_profit_range === undefined) return null;
+        var m = this.finance.metrics;
+        var core = window.MopsAdminCore;
+        return {
+          value: core.formatMoney(m.gross_profit_range),
+          accent: (m.gross_profit_range || 0) >= 0 ? 'text-emerald-700' : 'text-red-600',
+          coveragePct: Math.round((m.cogs_coverage_rate || 0) * 100),
+          lowCoverage: (m.cogs_coverage_rate || 0) < 0.99
+        };
+      },
+      financeExpenseByCategory: function() {
+        return (this.finance.metrics && this.finance.metrics.expense_by_category) || [];
+      },
+      financeExpenseByCategoryChartHeight: function() {
+        return Math.max(140, this.financeExpenseByCategory.length * 40) + 'px';
+      },
+      financeCorePanels: function() {
+        return [
+          { key: 'legacy',      label: 'Sổ quỹ (Tổng quan)' },
+          { key: 'accounts',    label: 'Tài khoản ngân hàng / Quỹ' },
+          { key: 'receipts',    label: 'Phiếu Thu' },
+          { key: 'vouchers',    label: 'Phiếu Chi' },
+          { key: 'transfers',   label: 'Chuyển quỹ' },
+          { key: 'adjustments', label: 'Điều chỉnh quỹ' }
+        ];
+      },
+      // Dropdown ⋮ teleport ra <body> — gate theo đúng tab/panel đang mở, cùng lý do
+      // purchaseOrderMenuTarget (domain Kho & NCC): <teleport> thoát khỏi v-show của panel cha
+      // nên đổi tab/panel lúc menu đang mở sẽ không tự ẩn nếu chỉ dựa vào menuOpenId trần.
+      voucherMenuTarget: function() {
+        if (this.activeTab !== 'finance' || this.financeCore.activePanel !== 'vouchers') return null;
+        var id = this.financeCore.vouchers.menuOpenId;
+        if (!id) return null;
+        return this.financeCore.vouchers.list.filter(function(x) { return x.voucher_id === id; })[0] || null;
+      },
+      adjustmentMenuTarget: function() {
+        if (this.activeTab !== 'finance' || this.financeCore.activePanel !== 'adjustments') return null;
+        var id = this.financeCore.adjustments.menuOpenId;
+        if (!id) return null;
+        return this.financeCore.adjustments.list.filter(function(x) { return x.adjustment_id === id; })[0] || null;
+      }
+    },
+    methods: {
+      onFinanceTypeChange: function() {
+        // Danh mục phụ thuộc loại (Thu/Chi) — đổi loại thì danh mục cũ có thể
+        // không còn hợp lệ, reset để buộc chọn lại đúng danh sách mới.
+        this.finance.newTx.category = '';
+      },
+      loadFinance: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.finance.loading = true;
+        this.finance.listLoading = true;
+        this.finance.error = '';
+        this.finance.listError = '';
+        this.finance.metrics = null;
+
+        var analyticsParams = { action: 'get_analytics', group_by: this.finance.groupBy };
+        if (this.finance.from) analyticsParams.from = this.finance.from;
+        if (this.finance.to)   analyticsParams.to   = this.finance.to;
+
+        core.gasGet(analyticsParams)
+          .then(function(d) {
+            self.finance.loading = false;
+            if (!d || !d.success) { self.finance.error = 'Không tải được dữ liệu.'; return; }
+            if (!d.can_view_finance) { self.finance.error = 'Tài khoản này không có quyền xem báo cáo tài chính.'; return; }
+            self.finance.metrics = d;
+            self.$nextTick(function() { self.renderFinanceLegacyChart(); });
+          })
+          .catch(function() { self.finance.loading = false; self.finance.error = 'Lỗi kết nối. Kiểm tra GAS_URL.'; });
+
+        var listParams = { action: 'list_cash_transactions', limit: 200 };
+        if (this.finance.from) listParams.from = this.finance.from;
+        if (this.finance.to)   listParams.to   = this.finance.to;
+        core.gasGet(listParams)
+          .then(function(d) {
+            self.finance.listLoading = false;
+            if (!d || !d.success) { self.finance.listError = d && d.error || 'Không tải được sổ quỹ.'; return; }
+            self.finance.list = d.transactions || [];
+          })
+          .catch(function() { self.finance.listLoading = false; self.finance.listError = 'Lỗi kết nối.'; });
+      },
+      // Ghép Mã tham chiếu + Ghi chú thành 1 dòng phụ dưới Danh mục (review giao diện 2026-07-16,
+      // gộp cột thay vì hiển thị riêng — xem code.md §7.C).
+      financeTxSecondaryLine: function(tx) {
+        return [tx.reference, tx.note].filter(function(x) { return x; }).join(' · ');
+      },
+      // Resolve account_id (ACC001-style) → tên tài khoản hiển thị (review giao diện: bảng
+      // Chuyển quỹ/Điều chỉnh quỹ trước đây hiện thẳng mã nội bộ, không có giá trị cho người
+      // quản trị — cùng pattern supplierName() ở mops-admin-inventory.js.bwt).
+      accountName: function(accountId) {
+        var a = this.financeCore.accounts.list.filter(function(x) { return x.account_id === accountId; })[0];
+        return a ? a.name : accountId;
+      },
+      renderFinanceLegacyChart: function() {
+        if (this.financeExpenseByCategory.length) {
+          window.MopsAdminCore.renderRankedBarChart('financeExpenseByCategoryChart', this.financeExpenseByCategory, 'category', 'amount', '#dc2626',
+            function(c) { return c.count + ' giao dịch'; });
+        }
+      },
+      submitCashTransaction: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var tx = this.finance.newTx;
+        var amount = Number(tx.amount);
+        if (!tx.category) { core.showToast('Vui lòng chọn danh mục.', 'error'); return; }
+        if (!amount || amount <= 0) { core.showToast('Số tiền không hợp lệ.', 'error'); return; }
+
+        this.finance.submitting = true;
+        core.gasPost({
+          action: 'create_cash_transaction',
+          type: tx.type,
+          amount: amount,
+          category: tx.category,
+          reference: (tx.reference || '').trim(),
+          note: (tx.note || '').trim(),
+          account: (tx.account || 'Tiền mặt').trim()
+        })
+          .then(function(d) {
+            self.finance.submitting = false;
+            if (!d.success) throw new Error(d.error || 'Tạo giao dịch thất bại');
+            core.showToast(tx.type === 'INCOME' ? 'Đã ghi khoản thu' : 'Đã ghi khoản chi', 'success');
+            self.finance.showAddForm = false;
+            self.finance.newTx = { type: 'EXPENSE', category: '', amount: '', reference: '', note: '', account: 'Tiền mặt' };
+            self.loadFinance();
+          })
+          .catch(function(e) { self.finance.submitting = false; core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      doVoidCashTransaction: function(tx) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        // Hiện danh mục + ngày thay vì mã giao dịch nội bộ (review giao diện: transaction_id
+        // không có giá trị tham chiếu với người dùng, category+ngày mới là thứ họ nhận ra).
+        if (!confirm('Huỷ giao dịch "' + tx.category + '" ngày ' + core.formatDate(tx.created_at) + ' (' + core.formatMoney(tx.amount) + ')? Giao dịch huỷ vẫn được giữ lại để đối soát, không xoá khỏi hệ thống.')) return;
+        core.gasPost({ action: 'void_cash_transaction', transaction_id: tx.transaction_id })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Thao tác thất bại');
+            core.showToast('Đã huỷ giao dịch', 'success');
+            self.loadFinance();
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+
+      /* ── Finance Core (Phase 01 Bước 1-2, docs/architecture/finance.md) ──
+         Sub-nav trong tab Tài chính — chạy song song với khối `finance.*` (V1) ở trên. */
+      setFinanceCorePanel: function(key) {
+        this.financeCore.activePanel = key;
+        if (typeof this._syncSubToUrl === 'function') this._syncSubToUrl(key);
+        if (this.financeCore.panelLoaded[key]) return;
+        this.financeCore.panelLoaded[key] = true;
+        if (key === 'accounts') this.loadFinanceCoreAccounts();
+        if (key === 'receipts') { this.loadFinanceCoreAccounts(); this.loadReceipts(); }
+        if (key === 'vouchers') { this.loadFinanceCoreAccounts(); this.loadVouchers(); }
+        if (key === 'transfers') { this.loadFinanceCoreAccounts(); this.loadTransfers(); }
+        if (key === 'adjustments') { this.loadFinanceCoreAccounts(); this.loadAdjustments(); }
+      },
+      loadFinanceCoreAccounts: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.financeCore.accounts.loading = true;
+        this.financeCore.accounts.error = '';
+        core.gasGet({ action: 'list_cash_accounts' })
+          .then(function(d) {
+            self.financeCore.accounts.loading = false;
+            if (!d || !d.success) { self.financeCore.accounts.error = d && d.error || 'Không tải được danh sách tài khoản.'; return; }
+            self.financeCore.accounts.list = d.accounts || [];
+          })
+          .catch(function() { self.financeCore.accounts.loading = false; self.financeCore.accounts.error = 'Lỗi kết nối.'; });
+      },
+      loadFinanceCoreCategories: function(kind) {
+        var self = this;
+        var target = kind === 'INCOME' ? this.financeCore.receipts : this.financeCore.vouchers;
+        if (target.categories.length) return; // cache — danh mục hiếm khi đổi trong 1 phiên
+        window.MopsAdminCore.gasGet({ action: 'list_categories', kind: kind })
+          .then(function(d) {
+            if (d && d.success) target.categories = d.categories || [];
+          })
+          .catch(function() { /* form vẫn dùng được, chỉ dropdown rỗng — không chặn */ });
+      },
+      createCashAccount: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var na = this.financeCore.accounts.newAccount;
+        var name = (na.name || '').trim();
+        if (!name) { core.showToast('Nhập tên tài khoản', 'error'); return; }
+        this.financeCore.accounts.submitting = true;
+        core.gasPost({ action: 'create_cash_account', name: name, type: na.type, branch: (na.branch || '').trim(), opening_balance: Number(na.opening_balance) || 0 })
+          .then(function(d) {
+            self.financeCore.accounts.submitting = false;
+            if (!d.success) throw new Error(d.error || 'Tạo tài khoản thất bại');
+            core.showToast('Đã tạo tài khoản ' + name, 'success');
+            self.financeCore.accounts.showAddForm = false;
+            self.financeCore.accounts.newAccount = { name: '', type: 'CASH', branch: '', opening_balance: '' };
+            self.loadFinanceCoreAccounts();
+          })
+          .catch(function(e) { self.financeCore.accounts.submitting = false; core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      // Tạo danh mục Thu (INCOME, dùng trong form Lập Phiếu Thu) hoặc Chi (EXPENSE, form Lập Phiếu
+      // Chi) ngay tại chỗ đang chọn — không cần rời form sang 1 màn quản lý danh mục riêng.
+      createFinanceCategory: function(kind) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var target = kind === 'INCOME' ? this.financeCore.receipts : this.financeCore.vouchers;
+        var group = (target.newCategory.group || '').trim();
+        var name = (target.newCategory.name || '').trim();
+        if (!group || !name) { core.showToast('Nhập đủ Nhóm và Tên danh mục', 'error'); return; }
+        target.categorySaving = true;
+        core.gasPost({ action: 'create_category', kind: kind, group: group, name: name })
+          .then(function(d) {
+            target.categorySaving = false;
+            if (!d.success) throw new Error(d.error || 'Tạo danh mục thất bại');
+            var cat = { category_id: d.category_id, group: group, name: name };
+            target.categories.push(cat);
+            if (kind === 'INCOME') self.financeCore.receipts.newReceipt.category_id = cat.category_id;
+            else self.financeCore.vouchers.newVoucher.category_id = cat.category_id;
+            target.newCategory = { group: '', name: '' };
+            target.showAddCategory = false;
+            core.showToast('Đã tạo danh mục ' + name, 'success');
+          })
+          .catch(function(e) { target.categorySaving = false; core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      loadReceipts: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.financeCore.receipts.loading = true;
+        this.financeCore.receipts.error = '';
+        var params = { action: 'list_receipts', limit: 100 };
+        if (this.financeCore.receipts.filterStatus) params.status = this.financeCore.receipts.filterStatus;
+        core.gasGet(params)
+          .then(function(d) {
+            self.financeCore.receipts.loading = false;
+            if (!d || !d.success) { self.financeCore.receipts.error = d && d.error || 'Không tải được danh sách Phiếu Thu.'; return; }
+            self.financeCore.receipts.list = d.receipts || [];
+          })
+          .catch(function() { self.financeCore.receipts.loading = false; self.financeCore.receipts.error = 'Lỗi kết nối.'; });
+      },
+      submitReceipt: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var nr = this.financeCore.receipts.newReceipt;
+        var amount = Number(nr.amount);
+        if (!nr.account_id) { core.showToast('Vui lòng chọn tài khoản nhận.', 'error'); return; }
+        if (!nr.category_id) { core.showToast('Vui lòng chọn danh mục.', 'error'); return; }
+        if (!amount || amount <= 0) { core.showToast('Số tiền không hợp lệ.', 'error'); return; }
+
+        this.financeCore.receipts.submitting = true;
+        core.gasPost({
+          action: 'create_receipt', account_id: nr.account_id, total_amount: amount,
+          party_id: (nr.party_id || '').trim(), note: (nr.note || '').trim(),
+          lines: [{ category_id: nr.category_id, amount: amount }]
+        })
+          .then(function(d) {
+            self.financeCore.receipts.submitting = false;
+            if (!d.success) throw new Error(d.error || 'Lập Phiếu Thu thất bại');
+            core.showToast('Đã lập Phiếu Thu ' + d.receipt_id + ' (Draft) — nhớ Post để ghi vào Sổ Cái', 'success');
+            self.financeCore.receipts.showAddForm = false;
+            self.financeCore.receipts.newReceipt = { account_id: '', party_id: '', category_id: '', amount: '', note: '' };
+            self.loadReceipts();
+          })
+          .catch(function(e) { self.financeCore.receipts.submitting = false; core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      postReceiptAction: function(r) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        if (!confirm('Post Phiếu Thu ' + r.receipt_id + ' (' + core.formatMoney(r.total_amount) + ')? Sau khi Post sẽ khoá, muốn sửa phải Huỷ rồi lập lại.')) return;
+        core.gasPost({ action: 'post_receipt', receipt_id: r.receipt_id })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Post thất bại');
+            core.showToast('Đã Post Phiếu Thu', 'success');
+            self.loadReceipts();
+            self.loadFinanceCoreAccounts();
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      cancelReceiptAction: function(r) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var reason = r.status === 'Posted' ? prompt('Lý do huỷ (bắt buộc — sẽ ghi vào Sổ Cái đảo bút toán):') : null;
+        if (r.status === 'Posted' && !reason) return; // huỷ thao tác nếu không nhập lý do
+        if (!confirm('Huỷ Phiếu Thu ' + r.receipt_id + '?')) return;
+        core.gasPost({ action: 'cancel_receipt', receipt_id: r.receipt_id, reason: reason || '' })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Huỷ thất bại');
+            core.showToast('Đã huỷ Phiếu Thu', 'success');
+            self.loadReceipts();
+            self.loadFinanceCoreAccounts();
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+
+      loadVouchers: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.financeCore.vouchers.loading = true;
+        this.financeCore.vouchers.error = '';
+        var params = { action: 'list_payment_vouchers', limit: 100 };
+        if (this.financeCore.vouchers.filterStatus) params.status = this.financeCore.vouchers.filterStatus;
+        core.gasGet(params)
+          .then(function(d) {
+            self.financeCore.vouchers.loading = false;
+            if (!d || !d.success) { self.financeCore.vouchers.error = d && d.error || 'Không tải được danh sách Phiếu Chi.'; return; }
+            self.financeCore.vouchers.list = d.vouchers || [];
+          })
+          .catch(function() { self.financeCore.vouchers.loading = false; self.financeCore.vouchers.error = 'Lỗi kết nối.'; });
+      },
+      // Dropdown ⋮ — vị trí tính từ nút bấm, cùng công thức togglePurchaseOrderMenu() (domain
+      // Kho & NCC). Đóng bằng: click lại nút ⋮, click ra ngoài (backdrop), hoặc chọn 1 hành động.
+      toggleVoucherMenu: function(v, ev) {
+        var st = this.financeCore.vouchers;
+        if (st.menuOpenId === v.voucher_id) { st.menuOpenId = null; return; }
+        var rect = ev.currentTarget.getBoundingClientRect();
+        st.menuPos = { top: rect.bottom + 4, left: Math.max(8, rect.right - 224) };
+        st.menuOpenId = v.voucher_id;
+      },
+      submitVoucher: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var nv = this.financeCore.vouchers.newVoucher;
+        var amount = Number(nv.amount);
+        if (!nv.account_id) { core.showToast('Vui lòng chọn tài khoản chi.', 'error'); return; }
+        if (!nv.category_id) { core.showToast('Vui lòng chọn danh mục.', 'error'); return; }
+        if (!amount || amount <= 0) { core.showToast('Số tiền không hợp lệ.', 'error'); return; }
+        if (nv.bill_id && nv.purchase_order_id) { core.showToast('Chỉ chọn 1 trong 2: trả Bill hoặc cọc trước Phiếu nhập hàng.', 'error'); return; }
+
+        this.financeCore.vouchers.submitting = true;
+        core.gasPost({
+          action: 'create_payment_voucher', account_id: nv.account_id, total_amount: amount,
+          party_id: (nv.party_id || '').trim(), note: (nv.note || '').trim(),
+          attachment_url: (nv.attachment_url || '').trim(),
+          bill_id: nv.bill_id || '', // Phase 04 Bước 3 — optional, trả nợ 1 Bill cụ thể
+          purchase_order_id: nv.purchase_order_id || '', // §6 — cọc trả NCC trước khi PO Posted
+          lines: [{ category_id: nv.category_id, amount: amount }]
+        })
+          .then(function(d) {
+            self.financeCore.vouchers.submitting = false;
+            if (!d.success) throw new Error(d.error || 'Lập Phiếu Chi thất bại');
+            core.showToast('Đã lập Phiếu Chi ' + d.voucher_id + ' (Draft) — gửi duyệt để tiếp tục quy trình', 'success');
+            self.financeCore.vouchers.showAddForm = false;
+            self.financeCore.vouchers.newVoucher = { account_id: '', party_id: '', category_id: '', amount: '', note: '', attachment_url: '', bill_id: '', purchase_order_id: '' };
+            self.loadVouchers();
+          })
+          .catch(function(e) { self.financeCore.vouchers.submitting = false; core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      // Mở "Lập Phiếu Chi" đã điền sẵn purchase_order_id + đúng số tiền cọc đã chốt lúc lập phiếu
+      // nhập — gọi từ nút "Trả cọc NCC" ở dòng Phiếu nhập hàng (tab Kho & NCC, domain khác — Vue
+      // mixins share chung this nên gọi bình thường). Đổi sang tab Tài chính vì form này chỉ tồn
+      // tại trong DOM của tab đó (v-show="activeTab==='finance'").
+      openDepositVoucherForm: function(po) {
+        this.setActiveTab('finance');
+        this.setFinanceCorePanel('vouchers');
+        this.loadFinanceCoreCategories('EXPENSE');
+        this.financeCore.vouchers.newVoucher = {
+          account_id: '', party_id: '', category_id: '',
+          amount: po.deposit_amount || 0,
+          note: 'Cọc trả trước cho Phiếu nhập hàng ' + po.purchase_order_id,
+          attachment_url: '', bill_id: '', purchase_order_id: po.purchase_order_id
+        };
+        this.financeCore.vouchers.showAddForm = true;
+      },
+      submitVoucherAction: function(v) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        core.gasPost({ action: 'submit_payment_voucher', voucher_id: v.voucher_id })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Gửi duyệt thất bại');
+            core.showToast('Đã gửi duyệt Phiếu Chi ' + v.voucher_id, 'success');
+            self.loadVouchers();
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      approveVoucherAction: function(v, decision) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var reason = '';
+        if (decision === 'reject') {
+          reason = prompt('Lý do từ chối (bắt buộc):');
+          if (!reason) return;
+        } else if (!confirm('Duyệt Phiếu Chi ' + v.voucher_id + ' (' + core.formatMoney(v.total_amount) + ')?')) {
+          return;
+        }
+        core.gasPost({ action: 'approve_payment_voucher', voucher_id: v.voucher_id, decision: decision, reason: reason })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Thao tác thất bại');
+            core.showToast(decision === 'approve' ? 'Đã duyệt Phiếu Chi' : 'Đã từ chối — trả về Draft để sửa lại', 'success');
+            self.loadVouchers();
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      postVoucherAction: function(v) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        if (!confirm('Post Phiếu Chi ' + v.voucher_id + ' (' + core.formatMoney(v.total_amount) + ')? Sau khi Post sẽ khoá và trừ vào Sổ Cái.')) return;
+        core.gasPost({ action: 'post_payment_voucher', voucher_id: v.voucher_id })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Post thất bại');
+            core.showToast('Đã Post Phiếu Chi', 'success');
+            self.loadVouchers();
+            self.loadFinanceCoreAccounts();
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      cancelVoucherAction: function(v) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var reason = v.status === 'Posted' ? prompt('Lý do huỷ (bắt buộc — sẽ ghi vào Sổ Cái đảo bút toán):') : null;
+        if (v.status === 'Posted' && !reason) return;
+        if (!confirm('Huỷ Phiếu Chi ' + v.voucher_id + '?')) return;
+        core.gasPost({ action: 'cancel_payment_voucher', voucher_id: v.voucher_id, reason: reason || '' })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Huỷ thất bại');
+            core.showToast('Đã huỷ Phiếu Chi', 'success');
+            self.loadVouchers();
+            self.loadFinanceCoreAccounts();
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+
+      /* ── Chuyển quỹ (Transfer, Bước 3) — không có Lines, không cần duyệt ── */
+      loadTransfers: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.financeCore.transfers.loading = true;
+        this.financeCore.transfers.error = '';
+        var params = { action: 'list_transfers', limit: 100 };
+        if (this.financeCore.transfers.filterStatus) params.status = this.financeCore.transfers.filterStatus;
+        core.gasGet(params)
+          .then(function(d) {
+            self.financeCore.transfers.loading = false;
+            if (!d || !d.success) { self.financeCore.transfers.error = d && d.error || 'Không tải được danh sách Chuyển quỹ.'; return; }
+            self.financeCore.transfers.list = d.transfers || [];
+          })
+          .catch(function() { self.financeCore.transfers.loading = false; self.financeCore.transfers.error = 'Lỗi kết nối.'; });
+      },
+      createTransfer: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var nt = this.financeCore.transfers.newTransfer;
+        var amount = Number(nt.amount);
+        if (!nt.from_account_id || !nt.to_account_id) { core.showToast('Vui lòng chọn đủ tài khoản nguồn và đích.', 'error'); return; }
+        if (nt.from_account_id === nt.to_account_id) { core.showToast('Tài khoản nguồn và đích không được trùng nhau.', 'error'); return; }
+        if (!amount || amount <= 0) { core.showToast('Số tiền không hợp lệ.', 'error'); return; }
+
+        this.financeCore.transfers.submitting = true;
+        core.gasPost({
+          action: 'create_transfer', from_account_id: nt.from_account_id, to_account_id: nt.to_account_id,
+          amount: amount, note: (nt.note || '').trim()
+        })
+          .then(function(d) {
+            self.financeCore.transfers.submitting = false;
+            if (!d.success) throw new Error(d.error || 'Lập Chuyển quỹ thất bại');
+            core.showToast('Đã lập Chuyển quỹ ' + d.transfer_id + ' (Draft)', 'success');
+            self.financeCore.transfers.showAddForm = false;
+            self.financeCore.transfers.newTransfer = { from_account_id: '', to_account_id: '', amount: '', note: '' };
+            self.loadTransfers();
+          })
+          .catch(function(e) { self.financeCore.transfers.submitting = false; core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      postTransferAction: function(t) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        if (!confirm('Post Chuyển quỹ ' + t.transfer_id + ' (' + core.formatMoney(t.amount) + ')?')) return;
+        core.gasPost({ action: 'post_transfer', transfer_id: t.transfer_id })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Post thất bại');
+            core.showToast('Đã Post Chuyển quỹ', 'success');
+            self.loadTransfers();
+            self.loadFinanceCoreAccounts();
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      cancelTransferAction: function(t) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var reason = t.status === 'Posted' ? prompt('Lý do huỷ (bắt buộc — sẽ ghi vào Sổ Cái đảo bút toán):') : null;
+        if (t.status === 'Posted' && !reason) return;
+        if (!confirm('Huỷ Chuyển quỹ ' + t.transfer_id + '?')) return;
+        core.gasPost({ action: 'cancel_transfer', transfer_id: t.transfer_id, reason: reason || '' })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Huỷ thất bại');
+            core.showToast('Đã huỷ Chuyển quỹ', 'success');
+            self.loadTransfers();
+            self.loadFinanceCoreAccounts();
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+
+      /* ── Điều chỉnh quỹ (Cash Adjustment, Bước 3) — LUÔN bắt buộc qua duyệt,
+         không có nút "Post ngay" như Payment Voucher (xem finance.md §6.4, §7.1) ── */
+      loadAdjustments: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.financeCore.adjustments.loading = true;
+        this.financeCore.adjustments.error = '';
+        var params = { action: 'list_cash_adjustments', limit: 100 };
+        if (this.financeCore.adjustments.filterStatus) params.status = this.financeCore.adjustments.filterStatus;
+        core.gasGet(params)
+          .then(function(d) {
+            self.financeCore.adjustments.loading = false;
+            if (!d || !d.success) { self.financeCore.adjustments.error = d && d.error || 'Không tải được danh sách Điều chỉnh quỹ.'; return; }
+            self.financeCore.adjustments.list = d.adjustments || [];
+          })
+          .catch(function() { self.financeCore.adjustments.loading = false; self.financeCore.adjustments.error = 'Lỗi kết nối.'; });
+      },
+      toggleAdjustmentMenu: function(a, ev) {
+        var st = this.financeCore.adjustments;
+        if (st.menuOpenId === a.adjustment_id) { st.menuOpenId = null; return; }
+        var rect = ev.currentTarget.getBoundingClientRect();
+        st.menuPos = { top: rect.bottom + 4, left: Math.max(8, rect.right - 224) };
+        st.menuOpenId = a.adjustment_id;
+      },
+      createAdjustment: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var na = this.financeCore.adjustments.newAdjustment;
+        var amount = Number(na.amount);
+        if (!na.account_id) { core.showToast('Vui lòng chọn tài khoản.', 'error'); return; }
+        if (!amount || amount <= 0) { core.showToast('Số tiền không hợp lệ.', 'error'); return; }
+        if (!(na.reason || '').trim()) { core.showToast('Vui lòng nhập lý do điều chỉnh.', 'error'); return; }
+
+        this.financeCore.adjustments.submitting = true;
+        core.gasPost({
+          action: 'create_cash_adjustment', account_id: na.account_id, direction: na.direction,
+          amount: amount, reason: na.reason.trim()
+        })
+          .then(function(d) {
+            self.financeCore.adjustments.submitting = false;
+            if (!d.success) throw new Error(d.error || 'Lập Điều chỉnh quỹ thất bại');
+            core.showToast('Đã lập Điều chỉnh quỹ ' + d.adjustment_id + ' (Draft) — gửi duyệt để tiếp tục', 'success');
+            self.financeCore.adjustments.showAddForm = false;
+            self.financeCore.adjustments.newAdjustment = { account_id: '', direction: 'DECREASE', amount: '', reason: '' };
+            self.loadAdjustments();
+          })
+          .catch(function(e) { self.financeCore.adjustments.submitting = false; core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      submitAdjustmentAction: function(a) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        core.gasPost({ action: 'submit_cash_adjustment', adjustment_id: a.adjustment_id })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Gửi duyệt thất bại');
+            core.showToast('Đã gửi duyệt Điều chỉnh quỹ ' + a.adjustment_id, 'success');
+            self.loadAdjustments();
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      approveAdjustmentAction: function(a, decision) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var reason = '';
+        if (decision === 'reject') {
+          reason = prompt('Lý do từ chối (bắt buộc):');
+          if (!reason) return;
+        } else if (!confirm('Duyệt Điều chỉnh quỹ ' + a.adjustment_id + ' (' + core.formatMoney(a.amount) + ')?')) {
+          return;
+        }
+        core.gasPost({ action: 'approve_cash_adjustment', adjustment_id: a.adjustment_id, decision: decision, reason: reason })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Thao tác thất bại');
+            core.showToast(decision === 'approve' ? 'Đã duyệt Điều chỉnh quỹ' : 'Đã từ chối — trả về Draft để sửa lại', 'success');
+            self.loadAdjustments();
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      postAdjustmentAction: function(a) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        if (!confirm('Post Điều chỉnh quỹ ' + a.adjustment_id + ' (' + core.formatMoney(a.amount) + ')?')) return;
+        core.gasPost({ action: 'post_cash_adjustment', adjustment_id: a.adjustment_id })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Post thất bại');
+            core.showToast('Đã Post Điều chỉnh quỹ', 'success');
+            self.loadAdjustments();
+            self.loadFinanceCoreAccounts();
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      cancelAdjustmentAction: function(a) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var reason = prompt('Lý do huỷ (bắt buộc):');
+        if (!reason) return;
+        if (!confirm('Huỷ Điều chỉnh quỹ ' + a.adjustment_id + '?')) return;
+        core.gasPost({ action: 'cancel_cash_adjustment', adjustment_id: a.adjustment_id, reason: reason })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Huỷ thất bại');
+            core.showToast('Đã huỷ Điều chỉnh quỹ', 'success');
+            self.loadAdjustments();
+            self.loadFinanceCoreAccounts();
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      }
+    }
+  });
+})();

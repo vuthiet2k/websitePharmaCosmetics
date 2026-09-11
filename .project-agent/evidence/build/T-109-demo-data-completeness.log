@@ -1,0 +1,69 @@
+T-109-demo-data-completeness — 2026-09-11
+Nguon: nguoi dung yeu cau "chuan bi data demo cho du an - tranh de tinh trang trong, moi muc
+data can co 6 du lieu demo thuc te".
+
+=== KHAO SAT + MO RONG DATA (6 muc duoi 6 item, da mo rong len 6) ===
+1. data/testimonials.js: 4 -> 6 (them Quoc Bao, Diem Quynh, giu dung phong cach/format cu).
+2. data/articles.js blog 'tin-tuc': 5 -> 6 (them bai "Niacinamide va Zinc...").
+3. data/articles.js blog 'truoc-va-sau': 0 -> 6 (THIEU HOAN TOAN, blog nay truoc day trong rong
+   100%) - them 6 bai case-study dang CHU (khong tu tao anh lam sang gia lap - tuan thu Zero
+   Hallucination + tranh rui ro tuan thu quang cao y te).
+4. data/faqs.js: booking 3->6, product 3->6, account 2->6 (tong 15 -> 18 cau hoi).
+5. data/b2b-tiers.js: 3->6 tier (them Bronze/Silver/Exclusive, giu progression logic hop ly).
+6. data/loyalty-tiers.js: 4->6 hang (them Kim Cuong, Dai Su Thuong Hieu).
+7. data/navigation.js: cate-product-1 5->6, footer 5->6, footer-dich-vu 4->6 (cac danh sach
+   sidebar/footer hien thi that, khong dong cham topbar/skinhealthy-services vi la nhom khai
+   niem co dinh 3-4 muc, khong phai danh sach can "day them cho du").
+Khong dong: b2b da co 6 roi khong can them; collections.js da co 50+; doctors.js/ingredients.js/
+solutions.js da dung 6; products.js 15, quiz-questions.js 17 - khong can sua.
+
+=== 3 BUG THAT PHAT HIEN + SUA TRONG LUC VERIFY (khong lien quan so luong demo data, la loi co
+    san tu truoc, chi lo ra khi thuc su render/test) ===
+
+A. templates/page.loyalty.bwt dong 33: tieu de hardcode "4 Hang Thanh Vien" - sai ngay sau khi
+   mo rong loyalty-tiers len 6. Sua thanh {{loyalty_tiers.size}} (dong) + doi grid lg:grid-cols-4
+   -> lg:grid-cols-3 (6 the chia deu 3x2 thay vi lech 4+2).
+
+B. data/articles.js `blogs{}` object: templates/blog.bwt dung {{blog.name}} (khong phai .title)
+   va {% if blog.articles_count > 0 %} (khong phai .articles.size) de quyet dinh render tieu de
+   trang + TOAN BO luoi bai viet. Object blogs{} truoc day KHONG co 2 field nay -> tieu de trang
+   LUON TRONG + luoi bai viet KHONG BAO GIO hien (bat ke co bao nhieu bai) - day la 1 empty-state
+   AN TON TAI TU TRUOC, khong lien quan viec them demo data, chi lo ra khi thuc su mo trang blog
+   va nhin ky (truoc do co the chua ai kiem tra trang nay bang trinh duyet that). Sua: them
+   name/description/articles_count vao blogs{} (ham withBlogMeta helper), khop dung field Sapo
+   Liquid that cung cap.
+
+C. Toan bo 12 field `published_at` trong data/articles.js (bao gom 5 bai goc + bai moi) SAI TEN
+   so voi templates/blog.bwt, templates/article.bwt, snippets/blog_item_all.bwt, snippets/
+   blog_item.bwt, snippets/aside-blog.bwt - TAT CA deu dung `article.published_on`. Ket qua: MOI
+   the bai viet hien badge ngay thang "Invalid Date" thay vi ngay that - loi CO SAN TU TRUOC (ca
+   5 bai goc), khong phai do them demo data. Sua: doi published_at -> published_on toan bo file
+   (12 cho, sed thay the).
+
+D. assets/page_chuyen_gia.scss.bwt: template dung chung ten class .pc-testi-avatar/.pc-testi-
+   avatar-initials/.pc-testi-avatar--img voi snippets/section_testimonials.bwt nhung KHONG
+   include file do (chu dich, tranh dependency cheo gion - da ghi trong comment section_expert_
+   team.bwt) va CUNG KHONG tu dinh nghia lai rule nen tang cua cac class nay. Ket qua: TOAN BO 12
+   avatar (6 bac si + 6 khach hang) hien chu viet tat fallback ("NG", "TH"...) LUON hien song
+   song voi anh that, du anh da tai thanh cong - loi CO SAN TU TRUOC (anh huong ca 4 testimonial
+   goc + 6 bac si), khong phai do them 2 testimonial moi. Xac nhan qua page.evaluate(): ca 12
+   avatar co spanDisplay:"inline" (khong bao gio an) du hasImgClass:true + imgComplete:true. Sua:
+   them ban sao rule nen tang (bo tron, flex canh giua, overflow an, an fallback khi co anh) vao
+   dung file CSS rieng cua trang - tu chua, khong tao lai dependency cheo.
+
+=== VERIFY (E2 — Playwright that, khong chi doc code) ===
+1. page.loyalty: screenshot xac nhan 6 the hien du, tieu de dong dung so luong, grid 3x2 can doi.
+2. page.dai-ly-b2b: screenshot xac nhan 6 tier hien du trong grid 3x2, badge "Pho bien nhat" dung
+   vi tri (tier Growth).
+3. page.chuyen-gia (blog patient_testimonials): screenshot + page.evaluate xac nhan ca 6
+   testimonial (gom 2 moi) hien du, avatar sach (khong con fallback text du thua) sau khi sua CSS.
+4. blog tin-tuc (?tpl=blog): screenshot xac nhan tieu de "Tin tuc & Kien thuc" hien dung (truoc:
+   trong rong), luoi 6 bai viet hien du (gom bai moi "Niacinamide va Zinc"), ngay thang dung
+   dinh dang that (truoc: "Invalid Date" tren CA 6 the).
+5. npm run build: PASS. compliance-lint: 0 vi pham cung, 22 canh bao danh xung (tang tu 18 - do
+   tai su dung dung bylines BS.CKI/BS.CKII da co san trong codebase cho cac bai case-study moi,
+   CUNG mau/quy uoc voi 18 canh bao cu, khong phai loai vi pham moi - giu nguyen theo chinh sach
+   T-95 khong tu dong sua danh xung).
+6. npx playwright test --update-snapshots: 39/39 PASS (baseline cap nhat chu dich).
+
+EVIDENCE_GRADE: E2 (Playwright screenshot/evaluate that + build/test log that).

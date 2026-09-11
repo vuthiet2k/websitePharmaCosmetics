@@ -1,0 +1,50 @@
+<ul id="nav" class="nav">
+	{% assign i = 0 %}
+	{% for link in linklists[settings.main_menu].links %}
+	{% if settings.display_megamenu %}{% assign items_list = settings.megamenu_items | split:"," %}{% endif %}{% assign mega-title = link.title | downcase %}
+	{% if linklists[link.alias] %}
+	<li class="nav-item has-childs {% if link.active %}active{% endif %} {% if settings.display_megamenu and items_list contains mega-title %} has-mega has-mega-{{i | plus: 1}}{%endif%}{%if linklists[settings.main_menu].links.size >= 6 %} hover-left{% endif %}" data-section="header_nav">
+		<a href="{{ link.url }}" class="nav-link {%if link.title == settings.titel_cus_order%}acti-order{% endif %}" title="{{ link.title }}">{{ link.title }} {%if link.title == settings.titel_cus_order%}<img width="64" height="22" class="icon_order" src="{{'icon_menu_order.png' | asset_url}}" alt="{{ link.title }}">{% endif %}
+			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-right" viewBox="0 0 16 16">
+				<path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"/>
+			</svg>
+		</a>
+		<i class="open_mnu down_icon"></i>
+		<script type="text/x-custom-template" data-template="header_nav">
+		{% if settings.display_megamenu and items_list contains mega-title %}{% assign i = i | plus: 1 %}
+		{% include 'mega-menu' %}
+		{% else %}
+		<ul class="dropdown-menu">
+			{% for childlink in linklists[link.alias].links %}
+			{% if linklists[childlink.alias] %}
+			<li class="dropdown-submenu nav-item-lv2 has-childs2">
+				<a class="nav-link" href="{{ childlink.url }}" title="{{ childlink.title }}">{{ childlink.title }} <svg width="8" height="17" viewBox="0 0 8 17" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M7.13382 7.1278L7.13379 7.12777L0.512271 0.509686L0.795057 0.226752L0.51227 0.509685C0.512123 0.509538 0.51201 0.509431 0.511927 0.509356L7.13382 7.1278ZM7.13382 7.1278C7.62239 7.61603 7.622 8.40641 7.13301 8.89414L7.13298 8.89417L0.502368 15.5089C0.50222 15.509 0.502106 15.5091 0.502022 15.5092C0.501841 15.5092 0.501547 15.5093 0.501149 15.5093C0.500827 15.5093 0.500574 15.5093 0.500392 15.5092L7.13055 8.89499C7.13056 8.89498 7.13057 8.89497 7.13058 8.89495C7.61976 8.407 7.62011 7.61541 7.13138 7.12699L7.13382 7.1278Z"></path></svg></a>
+				<i class="open_mnu down_icon"></i>
+				<ul class="dropdown-menu">
+					{% for childlink2 in linklists[childlink.alias].links %}
+					<li class="nav-item-lv3">
+						<a class="nav-link" href="{{ childlink2.url }}" title="{{ childlink2.title }}">{{ childlink2.title }}</a>
+			</li>
+					{% endfor %}
+			</ul>
+			</li>
+			{% else %}
+			<li class="nav-item-lv2">
+				<a class="nav-link" href="{{ childlink.url }}" title="{{ childlink.title }}">{{ childlink.title }}</a>
+			</li>
+			{% endif %}
+			{% endfor %}
+			<li class="nav-item-lv2 nav-item-viewall">
+				<a class="nav-link" href="{{ link.url }}" title="Xem tất cả {{ link.title }}">Xem tất cả →</a>
+			</li>
+			</ul>
+			{% endif %}
+		</script>
+	</li>
+	{%else%}
+	<li class="nav-item {% if link.active %}active{% endif %}">
+		<a class="nav-link {%if link.title == settings.titel_cus_order%}acti-order{% endif %}" href="{{ link.url }}" title="{{ link.title }}">{{ link.title }} {%if link.title == settings.titel_cus_order%}<img width="64" height="22" class="icon_order" src="{{'icon_menu_order.png' | asset_url}}" alt="{{ link.title }}">{% endif %}</a>
+	</li>
+	{%endif%}
+	{%endfor%}
+</ul>

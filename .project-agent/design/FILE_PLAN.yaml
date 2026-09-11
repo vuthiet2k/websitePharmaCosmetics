@@ -1,0 +1,208 @@
+# FILE_PLAN.yaml — mapping 26 màn hình Figma -> file .bwt/snippet thật.
+# Theo 36. REUSE_BEFORE_CREATE_RULE: mỗi dòng phải nêu rõ reuse hay create, và lý do.
+
+- screen: homepage
+  action: EXTEND
+  target: templates/index.bwt
+  layout_ref: theme
+  reason: "Đã tồn tại, redesign nội dung/branding pharma thay vì tạo mới."
+
+- screen: about-us
+  action: CREATE
+  target: templates/page.about-us.bwt
+  layout_ref: theme
+  reason: "Không có template tương đương hiện tại."
+
+- screen: search-filter
+  action: EXTEND
+  target: templates/search.bwt
+  layout_ref: theme
+  reason: "search.bwt + search.data*.bwt đã cover; bổ sung filter theo tình trạng da/thành phần."
+
+- screen: product-detail
+  action: EXTEND
+  target: templates/product.bwt
+  layout_ref: theme
+  reason: "PDP chuẩn đã có, bổ sung block thành phần hoạt tính + chứng chỉ."
+
+- screen: product-vella
+  action: EXTEND
+  target: templates/product.bwt
+  layout_ref: theme
+  reason: "UF-01 resolved (ADR-004): chỉ là nội dung/SKU khác, dùng chung product.bwt — gộp vào task T-23."
+
+- screen: cart-checkout
+  action: EXTEND
+  target: templates/cart.bwt
+  layout_ref: theme
+  reason: "Luồng checkout đã tích hợp mops_gas_url — chỉ redesign UI, KHÔNG đổi logic gọi backend."
+
+- screen: booking
+  action: EXTEND
+  target: templates/page.dat_lich_tu_van.bwt
+  layout_ref: theme
+  reason: "Đã có trang đặt lịch tư vấn; map trực tiếp, thêm field 'soi da AI'."
+
+- screen: ai-quiz
+  action: EXTEND
+  target: templates/page.ai-skin-quiz.bwt
+  layout_ref: theme
+  reason: "Đã có; cần đối chiếu số câu hỏi hiện tại với 17 câu trong Figma (data/quiz-questions.js)."
+
+- screen: ai-results
+  action: CREATE
+  target: templates/page.ai-skin-quiz-results.bwt
+  layout_ref: theme
+  reason: "Chưa có template kết quả riêng biệt."
+
+- screen: doctor-profile
+  action: CREATE
+  target: templates/page.chuyen-gia-detail.bwt
+  layout_ref: theme
+  reason: "page.chuyen-gia.bwt hiện tại nhiều khả năng là trang listing chuyên gia (data/doctors.js) — cần template detail riêng cho từng bác sĩ."
+
+- screen: clinical-proof
+  action: CREATE
+  target: templates/page.clinical-proof.bwt
+  layout_ref: theme
+  reason: "Chưa có template minh chứng lâm sàng trước/sau."
+
+- screen: blog
+  action: EXTEND
+  target: templates/blog.bwt
+  layout_ref: theme
+  reason: "Đã có blog listing, chỉ redesign UI/branding."
+
+- screen: blog-detail
+  action: EXTEND
+  target: templates/article.bwt
+  layout_ref: theme
+  reason: "Đã có article template, bổ sung khối tác giả liên kết doctor-profile."
+
+- screen: patient-portal
+  action: EXTEND
+  target: templates/page.patient-portal.bwt
+  layout_ref: theme
+  reason: "Đã có; đối chiếu chức năng với Figma và bổ sung phần còn thiếu."
+
+- screen: customer-account
+  action: EXTEND
+  target: templates/customers/account.bwt
+  layout_ref: theme
+  reason: "Chuẩn Sapo account đã có."
+
+- screen: loyalty-rewards
+  action: EXTEND
+  target: templates/page.loyalty.bwt
+  layout_ref: theme
+  reason: "Đã có trang loyalty (data/loyalty-tiers.js)."
+
+- screen: spa-services
+  action: CREATE
+  target: templates/page.spa-services.bwt
+  layout_ref: theme
+  reason: "Chưa có template dịch vụ spa/trị liệu."
+
+- screen: seo-directory
+  action: EXTEND
+  target: templates/page.seo-directory.bwt
+  layout_ref: theme
+  reason: "Đã có, mở rộng taxonomy theo Figma."
+
+- screen: ui-design-system
+  action: REFERENCE_ONLY
+  target: "N/A — dùng làm nguồn design tokens cho M1, không phải trang publish bắt buộc"
+  layout_ref: n/a
+  reason: "Vai trò tài liệu, không phải tính năng khách hàng."
+
+- screen: admin-workspace
+  action: EXTEND
+  target: templates/page.mops-admin.bwt + snippets/mops_admin_tab_overview.bwt
+  layout_ref: mops-admin
+  reason: "Đã có dashboard tổng quan."
+
+- screen: admin-orders
+  action: EXTEND
+  target: snippets/mops_admin_tab_orders.bwt
+  layout_ref: mops-admin
+  reason: "Đã có tab đơn hàng."
+
+- screen: admin-waybill-detail
+  action: CREATE
+  target: snippets/mops_admin_tab_waybill_detail.bwt
+  layout_ref: mops-admin
+  reason: >
+    UF-02 resolved (ADR-005): backend CHỈ CÓ MỘT PHẦN. GHTK có ghtkRefreshTracking (mops_01.js)
+    -> timeline thật khả thi cho đơn GHTK. SPX không có API (nhập tay, xem
+    mops_admin_tab_orders.bwt:1149) -> KHÔNG được giả lập timeline SPX, chỉ hiển thị trạng thái
+    nhập tay hiện có. Thu hẹp phạm vi UI theo giới hạn backend thật.
+
+- screen: admin-ghtk-hub
+  action: CREATE
+  target: snippets/mops_admin_tab_ghtk_hub.bwt
+  layout_ref: mops-admin
+  reason: >
+    UF-02 resolved: backend GHTK đầy đủ (create/cancel/calcFee/refreshTracking/connectByLogin/
+    syncPickAddresses trong mops_01.js). Đây chủ yếu là việc dựng UI thao tác hàng loạt trên
+    các hàm đã có — KHÔNG cần thiết kế backend mới.
+
+- screen: admin-signing
+  action: CREATE
+  target: snippets/mops_admin_tab_signing.bwt
+  layout_ref: mops-admin
+  reason: >
+    UF-02 resolved: KHÔNG tìm thấy backend liên quan X-Signs/ký số trong toàn bộ mops-gas/.
+    Tính năng HOÀN TOÀN MỚI — cần thiết kế backend (lưu hồ sơ ký số, quy trình ký, xác thực
+    chữ ký) TRƯỚC khi xây UI. Effort/rủi ro cao hơn 3 tính năng admin còn lại, tách nhánh riêng.
+
+- screen: admin-news
+  action: USE_EXISTING_SAPO_BLOG_ADMIN
+  target: "N/A trong theme package — dùng khu vực quản trị Blog có sẵn của Sapo"
+  layout_ref: n/a
+  reason: >
+    UF-03 resolved (ADR-006): người dùng chọn dùng thẳng Sapo blog admin, không xây
+    mops_admin_tab_news.bwt. Việc còn lại: đảm bảo blog.bwt/article.bwt (M4) hiển thị đúng nội
+    dung, và cân nhắc (tuỳ chọn) thêm link điều hướng nhanh trong page.mops-admin.bwt.
+
+- screen: admin-master-oms
+  action: CREATE
+  target: snippets/mops_admin_tab_master_oms.bwt
+  layout_ref: mops-admin
+  reason: >
+    Bảng component/table atoms chuẩn dùng chung cho các tab admin — tạo trước để các tab khác
+    REUSE thay vì tự dựng lại table/badge/status chip riêng lẻ. LƯU Ý (ADR-005): không tìm thấy
+    khái niệm "OMS" riêng trong backend — đây là GIẢ ĐỊNH cần xác nhận với người dùng ngay khi
+    bắt đầu T-50, trước khi build.
+
+# --- REOPEN 2026-09-10 (ADR-007) — module moi tu xlsx Portal B2B/B2C + Clinic ---
+
+- screen: b2b-distribution
+  action: CREATE
+  target: templates/page.dai-ly-b2b.bwt
+  layout_ref: theme
+  reason: "MOD-04 xlsx moi, chua co template tuong duong. Backend onboarding dung SHEET.B2B_APPLICATIONS + hang doi duyet thu cong (MST/chu ky so BLOCKED_EXTERNAL, ADR-007)."
+
+- screen: ingredient-lookup
+  action: CREATE
+  target: templates/page.tra-cuu-hoat-chat.bwt
+  layout_ref: theme
+  reason: "MOD-05 xlsx moi, doc-only, chua co template tuong duong."
+
+- screen: order-tracking-v2
+  action: EXTEND
+  target: templates/page.order-lookup.bwt (hoac CREATE page.tra-cuu-don-hang-v2.bwt neu can giu nguyen trang cu song song)
+  layout_ref: theme
+  reason: "MOD-09 xlsx. Reuse getShipment/_shipmentHistoryList that (mops_01.js) — khong dung model timeline moi, khong IoT."
+
+- screen: six-flagship-solutions
+  action: EXTEND
+  target: templates/page.spa-services.bwt + templates/page.skinhealthy-service-detail.bwt
+  layout_ref: skinhealthy
+  reason: "Tai cau truc theo taxonomy SOL-SKH-01..06 (data/solutions.js), khong tao template moi."
+
+parallel_track_skinhealthy:
+  note: >
+    Theme skinhealthy tiếp tục nhận cải tiến song song, không nằm trong 26 màn hình trên.
+    Khi có yêu cầu cụ thể cho skinhealthy, thêm entry mới vào file này theo cùng format,
+    và ưu tiên REUSE các snippet/component vừa tạo cho pharma nếu ngữ nghĩa giống nhau
+    (theo 36.3 SHARED_KERNEL_RULE).

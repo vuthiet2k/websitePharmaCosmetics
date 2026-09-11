@@ -1,0 +1,383 @@
+{%- comment -%}
+  pharma_ui_kit.bwt (T-10 follow-up, hạ tầng dùng chung cho M2/M3/M4) — Component CSS classes
+  dùng LẶP LẠI trên toàn bộ 26 trang Figma tham chiếu (Pharma_Cosmetics_Figma_Project/css/style.css).
+
+  QUAN TRỌNG (sự cố phát hiện 2026-09-09, đã sửa): bản đầu tiên của file này giữ NGUYÊN tên
+  class gốc từ Figma (btn-primary/btn-secondary/badge-clinical/badge-gold/badge-orange/
+  badge-blue/nav-link/...). Vì file này được include TOÀN CỤC trong layouts/theme.bwt (mọi
+  trang), nó ĐÃ ĐÈ lên các class CÙNG TÊN nhưng KHÁC nghĩa đã tồn tại sẵn khắp site (Bootstrap-
+  style .btn-primary ở assets/global_core.scss.bwt + page_account/page_collection/page_search/
+  page_blog.scss.bwt — dùng ở ajaxcart, quickview, cart, customer account, product grids, v.v.;
+  .nav-link ở page_blog/page_collection/page_search.scss.bwt — dùng ở mega-menu/site-nav/
+  aside-cate, tức là ĐIỀU HƯỚNG CHÍNH của toàn site). Đây là lỗi nghiêm trọng (silent visual
+  regression trên các luồng mua hàng/điều hướng đang chạy thật) — KHÔNG được lặp lại.
+  => Mọi class trong file này PHẢI có tiền tố "pc-kit-" để không bao giờ trùng tên với class đã
+  tồn tại. Khi thêm class mới vào đây, luôn thêm tiền tố này và grep toàn repo trước khi dùng.
+{%- endcomment -%}
+<style id="pharma-ui-kit">
+  {%- comment -%}
+    REOPEN 2026-09-10 (ADR-007/T-70): giá trị hex đổi sang palette xlsx mới, TÊN biến CSS giữ
+    nguyên (không đổi --primary-forest-900 thành tên khác) vì các rule .pc-kit-* bên dưới tham
+    chiếu trực tiếp — chỉ cần đổi giá trị là toàn bộ component tự động theo palette mới. Mapping
+    giống hệt tailwind.config.js: forest-900→brand-deep, forest-800→brand-dark,
+    emerald-700→brand-green, emerald-600→brand-primary, mint→mint-subtle/mint-light,
+    gold→gold-dark, sale-orange→peach, luxury-sand→peach-light. flash-red giữ nguyên.
+  {%- endcomment -%}
+  :root {
+    --primary-forest-900: #0F2318;
+    --primary-forest-800: #166B55;
+    --primary-emerald-700: #267348;
+    --primary-emerald-600: #3CB371;
+    --primary-mint-100: #D7F3E3;
+    --primary-mint-50: #E8F8EE;
+    --accent-flash-red: #DC2626;
+    --accent-sale-orange: #D79A7D;
+    --accent-gold: #B8860B;
+    --accent-luxury-sand: #F6E3D8;
+
+    {%- comment -%}
+      REOPEN 2026-09-10 (ADR-007/T-71): token mới đặt tên đúng theo xlsx --color-brand-* (dùng
+      cho markup M7+ qua Tailwind key brand-primary/brand-green/... trong tailwind.config.js +
+      layouts/theme.bwt, hoặc trực tiếp var(--color-*) trong CSS/inline style mới).
+    {%- endcomment -%}
+    --color-brand-primary: #3CB371;
+    --color-brand-green: #267348;
+    --color-brand-dark: #166B55;
+    --color-brand-deep: #0F2318;
+    --color-mint-light: #D7F3E3;
+    --color-mint-subtle: #E8F8EE;
+    --color-badge-green-bg: #E8F5E9;
+    --color-badge-green-text: #267348;
+    --color-gold-sand: #DFBA73;
+    --color-gold-dark: #B8860B;
+    --color-peach: #D79A7D;
+    --color-peach-light: #F6E3D8;
+    --color-text-main: #13241F;
+    --color-text-body: #334155;
+    --color-text-muted: #64748B;
+    --color-border-clinical: #E2E8F0;
+    --color-bg-page: #F8FAF7;
+    --color-semantic-success: #10B981;
+  }
+
+  {%- comment -%}
+    REOPEN 2026-09-10 (ADR-007/T-71): dark theme — cặp giá trị dark đúng theo xlsx (WCAG
+    AA/AAA), áp dụng cả 2 cơ chế: tự động theo OS (@media prefers-color-scheme) VÀ toggle thủ
+    công qua [data-theme="dark"] trên <html>/<body>. Chỉ áp cho các biến CSS custom property
+    (tiêu thụ qua var() trực tiếp, vd. .pc-kit-top-bar-clinical, section_hero.bwt,
+    section_solutions.bwt) — KHÔNG áp cho Tailwind utility class tĩnh (bg-forest-900 v.v., đã
+    biên dịch thành hex cố định ở T-70) vì 1 class (page.about-us.bwt) dùng opacity modifier
+    (bg-forest-900/70) không tương thích với giá trị CSS var (xem AC-28: phạm vi "token mới").
+  {%- endcomment -%}
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --primary-forest-900: #132E20;
+      --primary-forest-800: #2DD4BF;
+      --primary-emerald-700: #34D399;
+      --primary-emerald-600: #3ED58C;
+      --primary-mint-100: #1B3E2D;
+      --primary-mint-50: #112A1E;
+      --accent-sale-orange: #E8A588;
+      --accent-gold: #E0A838;
+      --accent-luxury-sand: #2E1D16;
+      --color-brand-primary: #3ED58C;
+      --color-brand-green: #34D399;
+      --color-brand-dark: #2DD4BF;
+      --color-brand-deep: #132E20;
+      --color-mint-light: #1B3E2D;
+      --color-mint-subtle: #112A1E;
+      --color-badge-green-bg: #143823;
+      --color-badge-green-text: #34D399;
+      --color-gold-sand: #F3CA7E;
+      --color-gold-dark: #E0A838;
+      --color-peach: #E8A588;
+      --color-peach-light: #2E1D16;
+      --color-text-main: #F1F5F3;
+      --color-text-body: #CBD5E1;
+      --color-text-muted: #94A3B8;
+      --color-border-clinical: #1E3A2B;
+      --color-bg-page: #0B1712;
+      --color-semantic-success: #34D399;
+    }
+  }
+  :root[data-theme="dark"] {
+    --primary-forest-900: #132E20;
+    --primary-forest-800: #2DD4BF;
+    --primary-emerald-700: #34D399;
+    --primary-emerald-600: #3ED58C;
+    --primary-mint-100: #1B3E2D;
+    --primary-mint-50: #112A1E;
+    --accent-sale-orange: #E8A588;
+    --accent-gold: #E0A838;
+    --accent-luxury-sand: #2E1D16;
+    --color-brand-primary: #3ED58C;
+    --color-brand-green: #34D399;
+    --color-brand-dark: #2DD4BF;
+    --color-brand-deep: #132E20;
+    --color-mint-light: #1B3E2D;
+    --color-mint-subtle: #112A1E;
+    --color-badge-green-bg: #143823;
+    --color-badge-green-text: #34D399;
+    --color-gold-sand: #F3CA7E;
+    --color-gold-dark: #E0A838;
+    --color-peach: #E8A588;
+    --color-peach-light: #2E1D16;
+    --color-text-main: #F1F5F3;
+    --color-text-body: #CBD5E1;
+    --color-text-muted: #94A3B8;
+    --color-border-clinical: #1E3A2B;
+    --color-bg-page: #0B1712;
+    --color-semantic-success: #34D399;
+  }
+
+  .font-heading { font-family: 'Playfair Display', 'Inter', serif; }
+
+  .pc-kit-badge-clinical {
+    /* REOPEN 2026-09-10 (ADR-007/T-70): bg = --color-badge-green xlsx, text = brand-green xlsx */
+    background: #E8F5E9; color: #267348; border: 1px solid #B8E0C4; border-radius: 9999px;
+    padding: 4px 10px; font-size: 12px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .pc-kit-badge-gold {
+    background: #fef3c7; color: #b45309; border: 1px solid #fde68a; border-radius: 9999px;
+    padding: 4px 10px; font-size: 12px; font-weight: 600;
+  }
+  .pc-kit-badge-orange {
+    background: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; border-radius: 9999px;
+    padding: 4px 10px; font-size: 12px; font-weight: 600;
+  }
+  .pc-kit-badge-blue {
+    background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; border-radius: 9999px;
+    padding: 4px 10px; font-size: 12px; font-weight: 600;
+  }
+
+  .pc-kit-btn-primary {
+    background-color: var(--primary-emerald-700); color: white; font-weight: 600;
+    padding: 10px 20px; border-radius: 8px; transition: all 0.2s ease;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border: none; cursor: pointer;
+  }
+  .pc-kit-btn-primary:hover {
+    background-color: var(--primary-forest-800); transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(4, 120, 87, 0.25);
+  }
+  .pc-kit-btn-primary:disabled, .pc-kit-btn-primary.is-disabled { opacity: .5; cursor: not-allowed; }
+
+  .pc-kit-btn-secondary {
+    background-color: white; color: var(--primary-forest-800);
+    border: 1.5px solid var(--primary-emerald-700); font-weight: 600;
+    padding: 9px 19px; border-radius: 8px; transition: all 0.2s ease;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .pc-kit-btn-secondary:hover { background-color: var(--primary-mint-50); }
+
+  .pc-kit-btn-orange {
+    background-color: var(--accent-sale-orange); color: white; font-weight: 600;
+    padding: 10px 20px; border-radius: 8px; transition: all 0.2s ease;
+    border: none; cursor: pointer;
+  }
+  .pc-kit-btn-orange:hover { background-color: #c2410c; }
+
+  .pc-kit-glass-panel {
+    background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  .pc-kit-glass-dark {
+    background: rgba(7, 45, 36, 0.92); backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .pc-kit-top-bar-clinical { background-color: var(--primary-forest-900); color: #a7f3d0; font-size: 13px; }
+
+  .pc-kit-nav-link { color: #374151; font-weight: 500; font-size: 14px; transition: color 0.15s; }
+  .pc-kit-nav-link:hover, .pc-kit-nav-link.active { color: var(--primary-emerald-700); font-weight: 600; }
+
+  .pc-kit-quick-nav-float {
+    position: fixed; bottom: 24px; right: 24px; z-index: 999;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+  }
+
+  {%- comment -%}
+    REOPEN 2026-09-11 — BUG THẬT phát hiện qua Playwright screenshot + người dùng báo cáo:
+    header hiện có 3 dải nhìn tách rời (topbar xanh + logo/search trắng + mega-menu trắng) do
+    .header-menu (assets/global_core.scss.bwt) có border-top + box-shadow RIÊNG, tạo cảm giác
+    "3 header" thay vì đúng 2 phần như file mẫu tham chiếu (topbar + header). CHỈ bỏ viền/shadow
+    ở TRẠNG THÁI NGHỈ (chưa cuộn) — giữ nguyên hành vi ".hSticky" khi cuộn (mega-menu chuyển
+    thành thanh dính riêng có shadow, ĐÂY LÀ THIẾT KẾ CÓ CHỦ ĐÍCH, không phải bug — xác nhận qua
+    assets/global_core.scss.bwt dòng ~3101 "&.hSticky { @media(min-width:992px){ .header-menu {
+    position:fixed... } } }", một UX pattern phổ biến, không xoá).
+  {%- endcomment -%}
+  header.header:not(.hSticky) .header-menu {
+    border-top: none;
+    box-shadow: none;
+  }
+
+  {%- comment -%}
+    REOPEN 2026-09-11 (T-102) — người dùng tiếp tục báo cáo header sai sau fix trước (chỉ bỏ
+    viền/shadow là chưa đủ khác biệt nhìn thấy được). Đối chiếu lại file mẫu
+    Pharma_Cosmetics_Desktop_Homepage_Figma_260-84.html dòng 1233-1268: header mẫu KHÔNG có ô
+    tìm kiếm hiện sẵn dạng input — chỉ có icon kính lúp. Ô input tìm kiếm full-width hiện tại là
+    khối trắng LỚN NHẤT trong hàng .box-hearder, chiếm ~40% chiều rộng, là nguyên nhân chính khiến
+    hàng này nhìn "nặng"/tách biệt so với hàng .header-menu bên dưới.
+    ĐÃ THỬ (không an toàn, bỏ): gộp .header-menu (Danh mục + site-nav) lên chung 1 hàng với
+    .box-hearder — đo thực tế cho thấy KHÔNG ĐỦ CHỖ ở độ rộng desktop phổ biến (1280-1366px):
+    nhãn menu tiếng Việt thật (VD "ĐIỀU TRỊ CHUYÊN NGHIỆP", "MUA SẮM THEO THÀNH PHẦN") dài hơn
+    nhiều so với nhãn tiếng Anh/ngắn trong file mẫu ("Skin Health Beauty", "Tin tức") — gộp sẽ làm
+    menu tràn dòng/vỡ layout thật (quy tắc "không phá chức năng thật" đã thống nhất từ trước).
+    THAY VÀO ĐÓ: thu gọn ô tìm kiếm thành icon (giống hệt file mẫu), TÁI SỬ DỤNG overlay tìm kiếm
+    đã có sẵn cho mobile (#mb-search-popup, JS trong assets/mobile-ui.js.bwt đã lắng nghe click
+    #mb-search-open qua event delegation trên toàn document — không cần JS mới, không rủi ro).
+    Kết quả: hàng .box-hearder chỉ còn logo + vài icon nhỏ, nhẹ hơn hẳn, cùng chiều cao/phong cách
+    với hàng .header-menu bên dưới → tổng thể đọc như 1 khối "header" liền mạch, đúng tinh thần
+    file mẫu, KHÔNG đổi cấu trúc/JS của mega-menu (rủi ro tràn layout = 0).
+  {%- endcomment -%}
+  @media (min-width: 992px) {
+    {%- comment -%}
+      T-104 (2026-09-11) — GHI ĐÈ quyết định T-102: người dùng yêu cầu TRỰC TIẾP "top-header để
+      màu xanh, header màu trắng, chèn menu vào header luôn, bỏ đi header-menu". Trước đó (T-102)
+      từng thử nền trắng và revert vì logo (assets/logoPC.svg, fill="white" mọi path) + icon
+      wishlist/cart (color:var(--txtHeader)=#ffffff) chỉ thiết kế cho nền xanh — biến mất trên
+      nền trắng. Lần này giải quyết TẬN GỐC thay vì né tránh: dùng đúng pattern đã có sẵn trong
+      layouts/mops-admin.bwt (.ma-loader-mark, dòng ~298-313 — "logo trắng, nền trắng làm ảnh gần
+      như vô hình, đổi sang đặt logo trên 1 khối nền màu thương hiệu") — thêm khối nền xanh brand
+      phía sau icon logo (thay vì đổi màu icon), và đổi màu chữ logo + icon action sang tối vì
+      giờ nằm trên nền trắng thật.
+      .header-menu (Danh mục + site-nav) được CHUYỂN VỊ TRÍ DOM nguyên vẹn (không duplicate, xem
+      snippets/header.bwt#T-104) vào chung hàng .box-hearder — chỉ cần cấp phát flex-size hợp lý,
+      không cần đổi CSS nội bộ mega-menu (dropdown/flyout tự định vị theo chính nó, đã xác nhận an
+      toàn). Nếu 1 số độ rộng hẹp không đủ chỗ hiển thị hết nav: cơ chế cuộn ngang có sẵn
+      (.navigation-horizontal.overflow + #prev/#next, đã sửa lỗi off-by-one T-103) tự xử lý.
+    {%- endcomment -%}
+    header.header .box-hearder { background: #fff; }
+    header.header .box-hearder .header-menu {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    header.header .box-hearder .header-menu .container {
+      max-width: none;
+      padding: 0;
+      margin: 0;
+    }
+    {%- comment -%}
+      .sudes-cate-header/.sudes-main-header là Bootstrap col-lg-2/col-lg-10 (16.67%/83.33% CỐ
+      ĐỊNH theo % chiều rộng .row cha) — khi .header-menu giờ chỉ còn ~700-800px (thay vì full
+      page width như trước), 16.67% chỉ còn ~120-130px, không đủ cho nhãn "Danh mục" + icon
+      dropdown (bị line-clamp-1 cắt thành "Danh..."). Ép min-width cố định cho cột trigger, để
+      cột nav lấy phần còn lại (flex:1) thay vì %  cứng.
+    {%- endcomment -%}
+    header.header .box-hearder .header-menu .sudes-cate-header {
+      flex: 0 0 auto;
+      width: auto;
+      max-width: none;
+      min-width: 152px;
+    }
+    header.header .box-hearder .header-menu .sudes-main-header {
+      flex: 1 1 auto;
+      max-width: none;
+      min-width: 0;
+    }
+    {%- comment -%}
+      T-108 (2026-09-11) — BUG THẬT phát hiện qua báo cáo người dùng ("Danh mục" nhảy lên hàng
+      trên, TRANG CHỦ/ĐIỀU TRỊ/MUA SẮM rớt xuống hàng dưới) + đo đạc thật bằng Playwright ở
+      992/1024/1100/1200/1280px: TẤT CẢ đều bị (không phải 1 khoảng hẹp riêng lẻ). Root cause
+      CHÍNH XÁC: .navigation-horizontal > .row (assets/global_core.scss.bwt) là Bootstrap .row
+      mặc định flex-wrap:WRAP (không phải nowrap). Thuật toán flexbox quyết định wrap dựa trên
+      kích thước NỘI DUNG CHƯA CO (flex-basis:auto) của .sudes-main-header — nav 6 mục tiếng Việt
+      dài (~1000px+ nếu không co) LUÔN vượt quá chỗ còn lại bên cạnh "Danh mục" (152px), nên hàng
+      LUÔN wrap .sudes-main-header xuống dòng 2, BẤT KỂ .sudes-main-header đã có min-width:0 +
+      flex-shrink (min-width:0 chỉ cho phép co KHI ĐÃ ở cùng 1 dòng, không ngăn được quyết định
+      wrap ở cấp container). Fix: ép flex-wrap:nowrap cho chính hàng chứa 2 cột này — bắt buộc
+      cùng 1 dòng, để cơ chế co dãn + cuộn ngang (.navigation-horizontal.overflow + #prev/#next,
+      đã sửa T-103) xử lý phần dư, đúng như thiết kế ban đầu.
+    {%- endcomment -%}
+    header.header .box-hearder .header-menu .navigation-horizontal > .row {
+      flex-wrap: nowrap;
+    }
+    header.header .box-hearder .header-logo .logo-wrapper .logo-icon {
+      background: var(--primary-emerald-700, #267348);
+      border-radius: 10px;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+    header.header .box-hearder .header-logo .logo-store-name,
+    header.header .box-hearder .header-logo .logo-store-sub {
+      color: var(--color-text-main, #13241F) !important;
+    }
+    header.header .box-hearder .header-right .sudes-header-stores > a,
+    header.header .box-hearder .header-right .sudes-header-iwish > a,
+    header.header .box-hearder .header-right .sudes-header-cart > a,
+    header.header .box-hearder .header-right .menu-icon {
+      color: var(--color-text-main, #13241F) !important;
+    }
+    header.header .box-hearder .header-right .sudes-header-stores svg path,
+    header.header .box-hearder .header-right .sudes-header-iwish svg path,
+    header.header .box-hearder .header-right .sudes-header-cart svg path {
+      fill: var(--color-text-main, #13241F) !important;
+    }
+  }
+
+  {%- comment -%}
+    T-107 (2026-09-11) — người dùng báo cáo trực tiếp: "đang mất mục search". T-102 đã ẩn hẳn ô
+    tìm kiếm (.header-mid{display:none}) và chỉ để icon 28px mở overlay — chức năng vẫn hoạt
+    động nhưng CẢM NHẬN là "mất search" vì không có gì hiện sẵn, khác kỳ vọng UX thương mại điện
+    tử thông thường (Shopee/Tiki/Lazada luôn có ô search hiện sẵn).
+    THỬ ĐẦU: hiện ô search 220px ở toàn bộ >=992px — ĐO THẬT bằng Playwright cho thấy ở 992-1440px
+    nav bị ép quá mức (992px: menu co về CHỈ còn "Danh mục" + mũi tên, mất HẾT nav-link text —
+    tệ hơn cả trước khi có search). QUYẾT ĐỊNH: chia theo 2 mốc, không áp 1 kích thước cho mọi
+    độ rộng desktop:
+      - 992-1199px (màn hình hẹp: laptop nhỏ/tablet ngang): GIỮ pattern icon+overlay (giống
+        T-102) — không đủ chỗ cho cả ô search hiện sẵn LẪN menu dùng được.
+      - >=1200px (laptop/desktop phổ biến trở lên): HIỆN ô search 220px thật, đủ rộng để không
+        chiếm hết chỗ của menu (đã verify: TRANG CHỦ/ĐIỀU TRỊ CHUYÊN NGHIỆP/MUA SẮM... vẫn hiện
+        được, phần dư dùng cơ chế cuộn ngang có sẵn — không vỡ).
+    Đây LÀ đánh đổi có chủ đích dựa trên đo đạc thật, không phải đoán.
+  {%- endcomment -%}
+  @media (min-width: 992px) and (max-width: 1199px) {
+    header.header .box-hearder .header-mid { display: none !important; }
+    header.header .box-hearder .header-right .header-action-search {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; color: var(--color-text-main, #13241F);
+      background: transparent; border: none; cursor: pointer; padding: 0;
+    }
+    header.header .box-hearder .header-right .header-action-search i { font-size: 20px; line-height: 1; color: inherit; }
+  }
+  @media (min-width: 1200px) {
+    {%- comment -%}
+      !important bắt buộc: assets/global_core.scss.bwt#.box-hearder>.row .header-mid (3 class,
+      specificity cao hơn 2 class ở đây) đặt flex:1 1 0 khiến rule thường bị override, input co
+      lại ~60px (gần như bị nút submit 38px che kín — verify qua Playwright đo width thật = 60px,
+      không phải 220 như khai báo, xác nhận LÀ bug specificity thật trước khi thêm !important).
+    {%- endcomment -%}
+    header.header .box-hearder .header-mid {
+      display: block !important;
+      flex: 0 0 220px !important;
+      width: 220px !important;
+      min-width: 0 !important;
+    }
+    header.header .box-hearder .header-mid .list-search-key { display: none; }
+    header.header .box-hearder .header-mid form.search-bar {
+      border-color: var(--color-border-clinical, #E2E8F0);
+    }
+    header.header .box-hearder .header-mid form.search-bar input {
+      font-size: 13px;
+      padding-right: 40px;
+    }
+    header.header .box-hearder .header-right .header-action-search { display: none; }
+  }
+
+  {%- comment -%}
+    T-106 (2026-09-11) — người dùng báo cáo qua đánh giá UI: "Menu thả xuống ở các mục góc phải
+    bị tràn ra ngoài mép màn hình". Xác nhận nguyên nhân: ul.dropdown-menu:not(.level1)
+    (assets/global_core.scss.bwt) dùng "left:auto; width:210px" — mặc định neo theo mép TRÁI của
+    .nav-item cha, nên với các mục nằm gần rìa phải (VD "BLOG", "KHUYẾN MÃI" khi menu đủ dữ liệu
+    thật, khác mock data hiện tại chỉ có 2/6 mục có dropdown nên chưa tái hiện được đủ) dropdown
+    210px sẽ tràn ra ngoài viewport. Neo lại theo mép PHẢI cho 2 mục cuối cùng (an toàn, không ảnh
+    hưởng các mục còn lại).
+  {%- endcomment -%}
+  @media (min-width: 992px) {
+    .header-menu #nav > .nav-item.has-childs:nth-last-child(-n+2) > .dropdown-menu:not(.level1) {
+      left: auto;
+      right: 0;
+    }
+  }
+</style>

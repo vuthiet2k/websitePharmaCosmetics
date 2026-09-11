@@ -1,0 +1,76 @@
+{
+  "discovered_at": "2026-09-07",
+  "repo_is_git": false,
+  "platform": {
+    "storefront": "Sapo (proprietary, .bwt liquid-like templating)",
+    "backend": "Google Apps Script (clasp-managed, mops-gas/)",
+    "edge": "Vercel (api/gas.js proxy, Vercel KV / Upstash Redis for rate-limit/cache/queue)"
+  },
+  "local_toolchain": {
+    "package_manager": "npm",
+    "node_scripts": {
+      "preview": "node dev-server.js",
+      "build:tailwind": "tailwindcss --config tailwind.config.js --input scripts/mops-tailwind.input.css --output assets/mops-tailwind.css --minify && node scripts/strip-css-comments.js assets/mops-tailwind.css",
+      "build": "npm run build:tailwind && node scripts/build-theme.js",
+      "build:vercel": "npm run build:tailwind && node scripts/build-vercel.js"
+    },
+    "dependencies": ["chokidar", "liquidjs", "sass", "ws"],
+    "dev_dependencies": ["@tailwindcss/forms", "autoprefixer", "postcss", "tailwindcss"],
+    "gas_toolchain": "@google/clasp (clone/push/deploy) — see mops-gas/README.md"
+  },
+  "existing_layouts": [
+    "layouts/theme.bwt",
+    "layouts/skinhealthy.bwt",
+    "layouts/mops-admin.bwt"
+  ],
+  "existing_template_count_bwt": 30,
+  "existing_snippets_count_bwt": ">=50",
+  "mops_gas_scale": {
+    "files": ["mops_00.js","mops_01.js","mops_02.js","mops_03.js","mops_04.js","mops_05.js","mops_shared.js"],
+    "total_loc": 16890,
+    "note": "Not a small utility script — treat as production backend surface (see POLICY.yaml#mops_gas_backend)"
+  },
+  "settings_schema_sections": [
+    "Theme & Màu sắc", "Header & Điều hướng", "Trang chủ", "Trang danh mục",
+    "Trang sản phẩm", "Blog & Bài viết", "Giỏ hàng", "Tài khoản khách hàng",
+    "Mobile", "Chân trang", "SEO", "Liên hệ & Hỗ trợ", "Trang Về chúng tôi",
+    "Trang Thành phần hoạt tính", "Skin Healthy — Cấu hình Theme", "Nâng cao",
+    "Khuyến mãi & Voucher", "Thanh toán nhanh", "MOPS Admin"
+  ],
+  "reference_design_source": {
+    "path": "Pharma_Cosmetics_Figma_Project/",
+    "figma_file_id": "gMxiqp3nLgPGT90nAmEMPW",
+    "screen_count": 26,
+    "format": "static HTML export (Tailwind CDN + FontAwesome CDN), index.html = master index"
+  },
+  "unresolved_facts": [],
+  "resolved_facts": [
+    {
+      "id": "UF-01",
+      "resolved_at": "2026-09-07",
+      "resolution": "product-vella là nội dung khác (SKU khác) của product.bwt, không tách template riêng.",
+      "decided_by": "user",
+      "see": "DECISIONS.md#adr-004"
+    },
+    {
+      "id": "UF-02",
+      "resolved_at": "2026-09-07",
+      "resolution": "GHTK: backend day du (mops_01.js). SPX: khong co API, nhap tay. Signing/X-Signs: khong co backend, tinh nang hoan toan moi. Master OMS: khong co khai niem rieng trong backend, gia dinh la thu vien component/table-atom dung chung cho admin (can nguoi dung xac nhan o T-50).",
+      "decided_by": "grep mops-gas/mops_*.js + user confirmation ('ok')",
+      "see": "DECISIONS.md#adr-005"
+    },
+    {
+      "id": "UF-03",
+      "resolved_at": "2026-09-07",
+      "resolution": "admin-news dung thang Sapo blog admin co san, khong xay mops_admin_tab_news.bwt moi.",
+      "decided_by": "user",
+      "see": "DECISIONS.md#adr-006"
+    }
+  ],
+  "capabilities_required_estimate": [
+    "read/write file (Write/Edit)",
+    "run node build scripts (Bash)",
+    "start dev-server.js and visually inspect via preview (manual/browser)",
+    "grep/search across .bwt, .js, .js.bwt files"
+  ]
+}

@@ -1,0 +1,61 @@
+# MODULES.yaml — ranh giới trách nhiệm (bounded contexts thực tế của theme package)
+
+modules:
+  - id: MOD-theme-pharma
+    owns: ["layouts/theme.bwt", "templates/index.bwt", "templates/page.about-us.bwt (moi)", "templates/product*.bwt", "templates/cart.bwt", "templates/search*.bwt"]
+    depends_on: [MOD-shared-snippets, MOD-shared-assets]
+
+  - id: MOD-theme-skinhealthy
+    owns: ["layouts/skinhealthy.bwt", "templates/*.skinhealthy.bwt", "templates/collection.skinhealthy.bwt"]
+    depends_on: [MOD-shared-snippets, MOD-shared-assets]
+    note: "Song song với MOD-theme-pharma, KHONG bi thay the."
+
+  - id: MOD-clinical-experience
+    owns: ["templates/page.dat_lich_tu_van.bwt", "templates/page.ai-skin-quiz.bwt", "templates/page.ai-skin-quiz-results.bwt (moi)", "templates/page.chuyen-gia*.bwt", "templates/page.clinical-proof.bwt (moi)", "templates/page.spa-services.bwt (moi)"]
+    depends_on: [MOD-theme-pharma, MOD-shared-snippets]
+    note: "Nhom man hinh nhay cam PII/suc khoe nhat - xem security/THREAT_MODEL.yaml#TB-01"
+
+  - id: MOD-content-account
+    owns: ["templates/blog*.bwt", "templates/article.bwt", "templates/page.patient-portal.bwt", "templates/customers/*.bwt", "templates/page.loyalty.bwt", "templates/page.seo-directory.bwt"]
+    depends_on: [MOD-theme-pharma, MOD-shared-snippets]
+
+  - id: MOD-mops-admin-ui
+    owns: ["layouts/mops-admin.bwt", "templates/page.mops-admin.bwt", "snippets/mops_admin_tab_*.bwt"]
+    depends_on: [MOD-mops-gas-backend, MOD-shared-assets]
+    note: "Backend nang hon - xem POLICY.yaml#mops_gas_backend"
+
+  - id: MOD-mops-gas-backend
+    owns: ["mops-gas/mops_00..05.js", "mops-gas/mops_shared.js"]
+    depends_on: []
+    note: "Production system that. Khong duoc MOD nao khac chinh sua truc tiep ngoai quy trinh clasp push/deploy."
+
+  - id: MOD-shared-snippets
+    owns: ["snippets/header.bwt", "snippets/footer.bwt", "snippets/mega-menu.bwt", "snippets/breadcrumb.bwt", "..."]
+    depends_on: []
+    note: "SHARED_KERNEL - chi them vao day khi component thuc su dung chung xuyen module (36.3 SHARED_KERNEL_RULE)."
+
+  - id: MOD-shared-assets
+    owns: ["assets/*.scss.bwt", "assets/mops-tailwind.css", "tailwind.config.js"]
+    depends_on: []
+
+  # --- REOPEN 2026-09-10 (ADR-007) ---
+
+  - id: MOD-b2b-distribution
+    owns: ["templates/page.dai-ly-b2b.bwt (moi)", "data/b2b-tiers.js (moi)"]
+    depends_on: [MOD-theme-pharma, MOD-shared-snippets, MOD-mops-gas-backend]
+    note: "MOD-04 xlsx Portal B2B/B2C. Onboarding ghi vao SHEET.B2B_APPLICATIONS qua mops-gas; MST/chu ky so BLOCKED_EXTERNAL -> hang doi duyet thu cong (mirror pending_approval)."
+
+  - id: MOD-ingredient-lookup
+    owns: ["templates/page.tra-cuu-hoat-chat.bwt (moi)", "data/ingredients.js (moi)"]
+    depends_on: [MOD-theme-pharma, MOD-shared-snippets]
+    note: "MOD-05 xlsx. Doc-only, khong can mops-gas."
+
+  - id: MOD-order-tracking-v2
+    owns: ["templates/page.tra-cuu-don-hang-v2.bwt (moi, hoac extend order-lookup hien co)"]
+    depends_on: [MOD-theme-pharma, MOD-mops-gas-backend]
+    note: "MOD-09 xlsx. PHAI goi lai getShipment/_shipmentHistoryList that (mops_01.js), khong tu tao model timeline moi, khong truong IoT."
+
+dependency_rules:
+  - "MOD-mops-admin-ui KHONG duoc goi truc tiep vao mops-gas logic ngoai qua endpoint /exec da dinh nghia (khong doc/ghi truc tiep Sheet/DB tu frontend)."
+  - "MOD-theme-pharma va MOD-theme-skinhealthy KHONG duplicate snippet - neu giong nhau ve ngu nghia, dua vao MOD-shared-snippets (40. Duplication Gate)."
+  - "MOD-clinical-experience la module DUY NHAT duoc phep hien thi du lieu suc khoe ca nhan; cac module khac KHONG tu y hien thi lai du lieu nay."

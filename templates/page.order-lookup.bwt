@@ -1,0 +1,930 @@
+<style>
+/* Palette map — không hardcode: bind vào design tokens của theme (snippets/header_style.bwt).
+   Giữ prefix .pl-* để CSS tag mảng lookup, chỉ đổi VALUE từ hex sang var(--…). */
+.mops-lookup-v2{
+  --pl-green:      var(--mainColorDark);
+  --pl-green-2:    var(--mainColorDark);
+  --pl-green-tint: var(--mainColorLight);
+  --pl-clay:       var(--clay);
+  --pl-clay-tint:  var(--clay-soft);
+  --pl-bg:         var(--bg-page);
+  --pl-surface:    var(--surface);
+  --pl-surface-2:  var(--bg-subtle);
+  --pl-line:       var(--line);
+  --pl-line-2:     var(--lineColor);
+  --pl-ink:        var(--ink);
+  --pl-muted:      var(--ink-soft);
+  --pl-muted-2:    var(--textSub);
+  --pl-warn:       var(--star-color);
+  --pl-err:        var(--accentColor);
+}
+.mops-lookup-v2{font-family:var(--font-secondary);background:var(--pl-bg);color:var(--pl-ink);line-height:1.5;font-size:var(--fs-sm);-webkit-font-smoothing:antialiased;padding:32px 0 80px}
+.mops-lookup-v2 *,.mops-lookup-v2 *::before,.mops-lookup-v2 *::after{box-sizing:border-box}
+
+/* Header row */
+.pl-hdr{display:flex;align-items:center;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid var(--pl-line);margin-bottom:28px;gap:16px;flex-wrap:wrap}
+.pl-title h1{font-size:24px;font-weight:600;letter-spacing:-.01em;margin:0 0 6px;color:var(--pl-ink)}
+.pl-title .pl-sub{color:var(--pl-muted);font-size:13px;margin:0}
+.pl-title .pl-sub b{color:var(--pl-ink);font-weight:500}
+.pl-user{font-size:13px;color:var(--pl-muted);text-align:right}
+.pl-user b{color:var(--pl-ink);font-weight:500}
+.pl-user-phone{font-family:var(--font-mono);font-size:12px;color:var(--pl-green);letter-spacing:.02em}
+.pl-user-hint{font-size:12px;color:var(--pl-muted-2)}
+
+/* Search panel */
+.pl-panel{background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:10px;overflow:hidden;margin-bottom:24px}
+.pl-p-head{border-bottom:1px solid var(--pl-line);padding:12px 18px;display:flex;justify-content:space-between;align-items:center;background:var(--pl-surface-2);gap:12px;flex-wrap:wrap}
+.pl-p-head-t{font-size:13px;font-weight:500;color:var(--pl-ink)}
+.pl-p-head-t::before{content:"■ ";color:var(--pl-green);font-size:9px;vertical-align:middle}
+.pl-p-body{padding:20px}
+
+.pl-mode-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.pl-mode{padding:14px 12px;border:1px solid var(--pl-line);border-radius:8px;background:var(--pl-surface);cursor:pointer;text-align:left;transition:border-color .12s,background .12s;font-family:inherit;color:inherit}
+.pl-mode:hover{border-color:var(--pl-line-2)}
+.pl-mode.is-on{border-color:var(--pl-green);background:var(--pl-green-tint)}
+.pl-mode-t{font-weight:500;font-size:13px;color:var(--pl-ink);display:flex;align-items:center;gap:6px}
+.pl-mode.is-on .pl-mode-t{color:var(--pl-green)}
+.pl-mode-s{font-size:11px;color:var(--pl-muted);margin-top:4px;font-family:var(--font-mono);letter-spacing:.02em}
+.pl-kbd{display:inline-block;font-family:var(--font-mono);font-size:10px;padding:1px 5px;border:1px solid var(--pl-line-2);border-bottom-width:2px;border-radius:3px;color:var(--pl-muted);background:var(--pl-surface)}
+
+.pl-fields{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:stretch;margin:0}
+.pl-field{display:flex;align-items:center;background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:8px;padding:0 12px;transition:border-color .12s;margin-bottom: 0;}
+.pl-field:focus-within{border-color:var(--pl-green);box-shadow:0 0 0 3px var(--pl-green-tint)}
+.pl-field .pl-ic{color:var(--pl-muted);font-family:var(--font-mono);font-size:11px;padding-right:10px;border-right:1px solid var(--pl-line);margin-right:10px;letter-spacing:.06em}
+.pl-field input{border:0;outline:0;padding:12px 0;font:500 var(--fs-sm)/1 var(--font-mono);background:transparent;color:var(--pl-ink);width:100%;letter-spacing:.03em}
+.pl-field input::placeholder{color:var(--pl-muted-2);font-weight:400}
+.pl-submit{background:var(--pl-green);color:#fff;border:0;border-radius:8px;padding:0 22px;font:500 13px/1 var(--font-primary);cursor:pointer;letter-spacing:.01em;transition:background .12s;min-width:120px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.pl-submit:hover{background:var(--pl-green-2)}
+.pl-submit:disabled{opacity:.55;cursor:not-allowed}
+.pl-submit i{font-size:14px;line-height:1}
+.pl-submit-label{display:inline-block}
+
+.pl-second{margin-top:10px;display:none}
+.pl-second.is-on{display:block}
+.pl-helper-row{display:flex;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--pl-muted);gap:12px;flex-wrap:wrap}
+.pl-helper-row a{color:var(--pl-green);text-decoration:none;font-weight:500}
+
+/* Common panels */
+.pl-card{background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:10px;overflow:hidden;margin-bottom:20px}
+.pl-card:last-child{margin-bottom:0}
+.pl-card-hd{padding:12px 18px;border-bottom:1px solid var(--pl-line);display:flex;justify-content:space-between;align-items:center;background:var(--pl-surface-2);gap:8px;flex-wrap:wrap}
+.pl-card-t{font-size:12px;font-weight:600;color:var(--pl-ink);text-transform:uppercase;letter-spacing:.08em}
+.pl-card-bd{padding:18px}
+
+/* Not found + error */
+.pl-empty{padding:36px 24px;text-align:center;color:var(--pl-muted);font-size:14px}
+.pl-empty h3{font-size:17px;color:var(--pl-ink);margin:0 0 8px;font-weight:600}
+.pl-empty p{margin:0 auto;max-width:44ch}
+.pl-empty.err{color:var(--pl-err)}
+.pl-empty.err h3{color:var(--pl-err)}
+
+/* Skeleton */
+.pl-sk{background:linear-gradient(90deg,var(--pl-surface-2) 25%,var(--pl-line) 37%,var(--pl-surface-2) 63%);background-size:400% 100%;animation:plShimmer 1.4s ease infinite;border-radius:6px;display:block}
+@keyframes plShimmer{0%{background-position:100% 0}100%{background-position:0 0}}
+
+/* Result: 2-column grid */
+.pl-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:20px}
+
+/* Status hero */
+.pl-status-hero{padding:22px 18px;background:linear-gradient(180deg,var(--pl-green-tint),var(--pl-surface))}
+.pl-chips{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.pl-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;font-size:11px;font-weight:500;border-radius:99px;background:var(--pl-surface);border:1px solid var(--pl-line-2);color:var(--pl-muted);white-space:nowrap}
+.pl-chip.ok{background:var(--pl-green-tint);color:var(--pl-green);border-color:var(--pl-green)}
+.pl-chip.ok::before{content:"●";font-size:8px}
+.pl-chip.now{background:var(--pl-clay-tint);color:var(--pl-warn);border-color:var(--pl-clay)}
+.pl-chip.now::before{content:"●";font-size:8px;animation:plBlink 1.4s ease infinite}
+.pl-chip.err{background:#FBE9E9;color:var(--pl-err);border-color:#E5B5B5}
+.pl-chip.err::before{content:"●";font-size:8px}
+.pl-chip.muted{background:var(--pl-surface-2)}
+@keyframes plBlink{50%{opacity:.35}}
+.pl-status-h{font-size:28px;font-weight:600;letter-spacing:-.01em;margin:8px 0 4px;line-height:1.2}
+.pl-status-hint{color:var(--pl-muted);font-size:13.5px}
+.pl-status-hint b{color:var(--pl-ink)}
+
+/* Progress rail — 5 nodes */
+.pl-rail{padding:20px 18px 6px}
+.pl-rail-scale{display:grid;grid-template-columns:repeat(5,1fr);position:relative;margin-bottom:14px}
+.pl-rail-scale::before{content:"";position:absolute;top:11px;left:12px;right:12px;height:2px;background:var(--pl-line-2)}
+.pl-rail-scale::after{content:"";position:absolute;top:11px;left:12px;height:2px;background:var(--pl-green);transition:width .35s ease;width:calc((100% - 24px) * var(--pl-rail-fill, 0))}
+.pl-node{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;z-index:1}
+.pl-node .pl-dot{width:24px;height:24px;border-radius:50%;background:var(--pl-surface);border:2px solid var(--pl-line-2);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--pl-muted)}
+.pl-node.done .pl-dot{background:var(--pl-green);border-color:var(--pl-green);color:#fff}
+.pl-node.done .pl-dot::after{content:"✓";font-size:12px;font-weight:600}
+.pl-node.now .pl-dot{background:var(--pl-clay);border-color:var(--pl-clay);color:#fff;box-shadow:0 0 0 4px var(--pl-clay-tint)}
+.pl-node.now .pl-dot::after{content:"●"}
+.pl-node.err .pl-dot{background:var(--pl-err);border-color:var(--pl-err);color:#fff}
+.pl-node.err .pl-dot::after{content:"×";font-size:14px;font-weight:600}
+.pl-nlbl{font-size:11px;color:var(--pl-muted);text-align:center;font-weight:500;line-height:1.25}
+.pl-node.done .pl-nlbl,.pl-node.now .pl-nlbl,.pl-node.err .pl-nlbl{color:var(--pl-ink)}
+.pl-node.now .pl-nlbl{color:var(--pl-warn)}
+
+/* Timeline vertical */
+.pl-tl{list-style:none;padding:0;margin:0}
+.pl-tl-item{display:grid;grid-template-columns:110px 20px 1fr;gap:14px;padding:12px 0;border-bottom:1px dashed var(--pl-line);align-items:flex-start}
+.pl-tl-item:last-child{border-bottom:0}
+.pl-tl-t{font-family:var(--font-mono);font-size:12px;color:var(--pl-muted);white-space:nowrap;padding-top:2px}
+.pl-tl-mark{width:12px;height:12px;border-radius:50%;background:var(--pl-green);margin-top:5px;justify-self:center}
+.pl-tl-item.now .pl-tl-mark{background:var(--pl-clay);box-shadow:0 0 0 3px var(--pl-clay-tint)}
+.pl-tl-item.pending .pl-tl-mark{background:var(--pl-surface);border:1px dashed var(--pl-muted-2)}
+.pl-tl-item.err .pl-tl-mark{background:var(--pl-err)}
+.pl-tl-txt{font-size:13.5px;color:var(--pl-ink)}
+.pl-tl-item.pending .pl-tl-txt{color:var(--pl-muted)}
+.pl-tl-txt .pl-d{color:var(--pl-muted);font-size:12px;margin-top:2px;font-family:var(--font-mono)}
+
+/* KV rows */
+.pl-kv{display:grid;grid-template-columns:120px 1fr;gap:12px;padding:9px 0;border-bottom:1px dotted var(--pl-line);font-size:13px;margin:0}
+.pl-kv:last-child{border-bottom:0}
+.pl-kv dt{color:var(--pl-muted);font-size:12px;margin:0}
+.pl-kv dd{margin:0;color:var(--pl-ink)}
+.pl-mono{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.02em}
+.pl-pill{display:inline-block;padding:2px 8px;font-size:11px;background:var(--pl-surface-2);border-radius:4px;color:var(--pl-muted);font-family:var(--font-mono)}
+.pl-copy{color:var(--pl-green);text-decoration:none;font-size:11px;margin-left:6px;cursor:pointer;font-weight:500}
+.pl-copy:hover{text-decoration:underline}
+
+/* Amount footer */
+.pl-pay{display:flex;justify-content:space-between;align-items:baseline;padding:14px 18px;background:var(--pl-surface-2);border-top:1px solid var(--pl-line)}
+.pl-pay-l{font-size:12px;color:var(--pl-muted);text-transform:uppercase;letter-spacing:.08em}
+.pl-pay-r{font-family:var(--font-mono);font-size:20px;font-weight:600;color:var(--pl-ink)}
+
+/* QR block (nếu đơn còn ở PENDING) */
+.pl-qr{text-align:center;padding:18px 18px 6px}
+.pl-qr p{margin:0 0 12px;font-size:13px;color:var(--pl-muted)}
+.pl-qr img{width:200px;height:200px;object-fit:contain;border:1px solid var(--pl-line);border-radius:8px;background:#fff}
+
+/* Phone list (mode SĐT) */
+.pl-list-item{display:grid;grid-template-columns:1fr auto;gap:12px;padding:14px 18px;border-bottom:1px solid var(--pl-line);cursor:pointer;transition:background .12s;align-items:center}
+.pl-list-item:hover{background:var(--pl-surface-2)}
+.pl-list-item:last-child{border-bottom:0}
+.pl-list-l .pl-list-id{font-family:var(--font-mono);font-size:13px;color:var(--pl-green);font-weight:500}
+.pl-list-l .pl-list-meta{font-size:12px;color:var(--pl-muted);margin-top:4px}
+.pl-list-r{text-align:right;font-family:var(--font-mono);font-size:13px;color:var(--pl-ink);font-weight:500}
+.pl-list-r .pl-list-status{font-family:var(--font-secondary);font-size:11px;color:var(--pl-muted);font-weight:400;margin-top:4px;text-transform:none}
+
+/* Help strip */
+.pl-help{margin-top:24px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.pl-help-item{background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:8px;padding:14px 16px;font-size:13px;color:var(--pl-muted);display:flex;align-items:center;gap:10px}
+.pl-help-item b{color:var(--pl-ink);font-weight:500;display:block;font-size:13px;margin-bottom:2px}
+.pl-help-item .pl-glyph{width:32px;height:32px;background:var(--pl-surface-2);border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;color:var(--pl-green);font-weight:600;font-family:var(--font-mono)}
+.pl-help-item a{color:var(--pl-green);text-decoration:none;font-weight:500}
+
+/* Toast */
+.pl-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--pl-ink);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:1000;box-shadow:0 8px 20px rgba(0,0,0,.2);opacity:0;pointer-events:none;transition:opacity .2s ease}
+.pl-toast.show{opacity:1;pointer-events:auto}
+
+@media (max-width:820px){
+  .pl-grid{grid-template-columns:1fr}
+  .pl-mode-row{grid-template-columns:1fr}
+  .pl-help{grid-template-columns:1fr}
+  .pl-hdr{flex-direction:column;align-items:flex-start;gap:8px}
+  .pl-user{text-align:left}
+  .pl-title h1{font-size:20px}
+  .pl-status-h{font-size:22px}
+  .pl-kv{grid-template-columns:100px 1fr}
+  .pl-tl-item{grid-template-columns:88px 16px 1fr;gap:10px}
+  .pl-fields{grid-template-columns:1fr auto}
+  .pl-submit{padding:0 14px;min-width:auto}
+  .pl-submit-label{display:none}
+  .pl-list-item{grid-template-columns:1fr}
+  .pl-list-r{text-align:left}
+}
+</style>
+
+<div class="mops-lookup-v2">
+  <div class="container">
+
+    <!-- Header -->
+    <div class="pl-hdr">
+      <div class="pl-title">
+        <h1>Tra cứu đơn hàng</h1>
+        <p class="pl-sub">Nhập <b>mã đơn</b>, <b>số điện thoại</b> hoặc <b>mã vận đơn</b>. Chi tiết đầy đủ mở khoá bằng SĐT đã dùng khi đặt hàng.</p>
+      </div>
+      {%- if customer -%}
+        <div class="pl-user">Xin chào, <b>{{ customer.name | default: customer.email | default: 'khách' | escape }}</b><br>
+          {%- if customer.phone != blank -%}
+            <span class="pl-user-phone">{{ customer.phone | escape }}</span>
+          {%- else -%}
+            <span class="pl-user-hint">Chưa có SĐT trong hồ sơ — hãy nhập ở ô bên dưới</span>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    </div>
+
+    <!-- Search panel -->
+    <div class="pl-panel">
+      <div class="pl-p-head">
+        <div class="pl-p-head-t">Tra cứu</div>
+        <span class="pl-sub" id="pl-hint" style="font-size:12px;color:var(--pl-muted)"></span>
+      </div>
+      <div class="pl-p-body">
+        <div class="pl-mode-row" role="tablist">
+          <button class="pl-mode is-on" data-mode="code" type="button" role="tab" aria-selected="true">
+            <div class="pl-mode-t"><span class="pl-kbd">1</span> Mã đơn hàng</div>
+            <div class="pl-mode-s">PC-YYYYMMDD-XXX</div>
+          </button>
+          <button class="pl-mode" data-mode="phone" type="button" role="tab" aria-selected="false">
+            <div class="pl-mode-t"><span class="pl-kbd">2</span> Số điện thoại</div>
+            <div class="pl-mode-s">10 chữ số · xem tất cả đơn</div>
+          </button>
+          <button class="pl-mode" data-mode="tracking" type="button" role="tab" aria-selected="false">
+            <div class="pl-mode-t"><span class="pl-kbd">3</span> Mã vận đơn</div>
+            <div class="pl-mode-s">Mã từ Goship / GHN / VNPost</div>
+          </button>
+        </div>
+
+        <div class="pl-fields">
+          <label class="pl-field">
+            <span class="pl-ic" id="pl-ic">CODE</span>
+            <input id="pl-primary" placeholder="VD: PC-20260812-042" autocomplete="off" spellcheck="false" inputmode="text">
+          </label>
+          <button class="pl-submit" id="pl-submit" type="button" aria-label="Tìm kiếm">
+            <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+            <span class="pl-submit-label">Tìm kiếm</span>
+          </button>
+        </div>
+
+        <div class="pl-second" id="pl-second">
+          <label class="pl-field">
+            <span class="pl-ic">SĐT</span>
+            <input id="pl-secondary" placeholder="SĐT dùng khi đặt (tuỳ chọn, mở khoá QR + địa chỉ)" autocomplete="tel" inputmode="tel">
+          </label>
+        </div>
+
+        <div class="pl-helper-row">
+          <span id="pl-help-txt">Kèm SĐT để mở khoá QR thanh toán và địa chỉ giao đầy đủ.</span>
+          {%- unless customer -%}
+            <a href="/account/login">Đăng nhập để xem tất cả đơn của bạn →</a>
+          {%- endunless -%}
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading skeleton -->
+    <div id="pl-loading" class="pl-card" style="display:none">
+      <div class="pl-card-hd"><div class="pl-card-t">Đang tra cứu…</div></div>
+      <div class="pl-card-bd">
+        <span class="pl-sk" style="height:20px;width:60%;margin-bottom:10px"></span>
+        <span class="pl-sk" style="height:14px;width:80%;margin-bottom:8px"></span>
+        <span class="pl-sk" style="height:14px;width:50%"></span>
+      </div>
+    </div>
+
+    <!-- Not found / error -->
+    <div id="pl-notfound" class="pl-card" style="display:none">
+      <div class="pl-empty err">
+        <h3 id="pl-notfound-t">Không tìm thấy đơn hàng</h3>
+        <p id="pl-notfound-msg">Kiểm tra lại mã đơn và số điện thoại đã dùng khi đặt hàng.</p>
+      </div>
+    </div>
+
+    <!-- Phone lookup — list of orders -->
+    <div id="pl-list-panel" class="pl-card" style="display:none">
+      <div class="pl-card-hd">
+        <div class="pl-card-t">Đơn của bạn</div>
+        <span class="pl-pill" id="pl-list-count">0 đơn</span>
+      </div>
+      <div id="pl-list-body"></div>
+    </div>
+
+    <!-- Result — full detail (2col grid) -->
+    <div id="pl-result" style="display:none">
+      <div class="pl-grid">
+        <!-- Left column -->
+        <div>
+          <div class="pl-card">
+            <div class="pl-status-hero">
+              <div class="pl-chips" id="pl-status-chips"></div>
+              <div class="pl-status-h" id="pl-status-title">—</div>
+              <div class="pl-status-hint" id="pl-status-hint"></div>
+            </div>
+            <div class="pl-rail">
+              <div class="pl-rail-scale" id="pl-rail">
+                <!-- 5 nodes will be rendered by JS -->
+              </div>
+            </div>
+          </div>
+
+          <div class="pl-card" id="pl-timeline-card" style="display:none">
+            <div class="pl-card-hd">
+              <div class="pl-card-t">Timeline chi tiết</div>
+              <span class="pl-sub" style="font-size:12px;color:var(--pl-muted)" id="pl-timeline-meta"></span>
+            </div>
+            <div class="pl-card-bd">
+              <ol class="pl-tl" id="pl-timeline"></ol>
+            </div>
+          </div>
+
+          <!-- QR block (chỉ hiện khi đơn PENDING + có qr_url) -->
+          <div class="pl-card" id="pl-qr-card" style="display:none">
+            <div class="pl-card-hd"><div class="pl-card-t">Thanh toán VietQR</div></div>
+            <div class="pl-qr">
+              <p>Quét QR để hoàn tất thanh toán — đơn tự cập nhật sau khi bank xác nhận.</p>
+              <img id="pl-qr-img" alt="QR thanh toán">
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column -->
+        <div>
+          <div class="pl-card">
+            <div class="pl-card-hd">
+              <div class="pl-card-t">Chi tiết đơn</div>
+              <span class="pl-pill" id="pl-order-code">—</span>
+            </div>
+            <div class="pl-card-bd" id="pl-order-body">
+              <!-- rendered by JS -->
+            </div>
+            <div class="pl-pay">
+              <span class="pl-pay-l">Tổng thanh toán</span>
+              <span class="pl-pay-r" id="pl-order-total">—</span>
+            </div>
+          </div>
+
+          <div class="pl-card" id="pl-shipping-card" style="display:none">
+            <div class="pl-card-hd">
+              <div class="pl-card-t">Vận chuyển</div>
+              <span class="pl-pill" id="pl-shipping-carrier">—</span>
+            </div>
+            <div class="pl-card-bd" id="pl-shipping-body"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {%- comment -%}
+      Help strip — 3 khối gợi ý hỗ trợ, nội dung lấy từ Cấu hình → "TRANG TRA CỨU ĐƠN".
+      Icon cố định (?, ✉, ☏). Link tự ẩn nếu setting đích rỗng — không render <a href='#'> trống:
+        · Khối 2: cần chọn lookup_help_2_page + có lookup_help_2_link_text
+        · Khối 3: hotline lấy từ settings.store_phone (global), fallback store.phone_number
+    {%- endcomment -%}
+    <div class="pl-help">
+      <div class="pl-help-item">
+        <div class="pl-glyph">?</div>
+        <div><b>{{ settings.lookup_help_1_title | default: 'Đơn chưa cập nhật?' | escape }}</b>{{ settings.lookup_help_1_desc | default: 'Trạng thái mất tối đa 30 phút sau khi đơn vị vận chuyển quét gói.' | escape }}</div>
+      </div>
+      <div class="pl-help-item">
+        <div class="pl-glyph">✉</div>
+        <div>
+          <b>{{ settings.lookup_help_2_title | default: 'Sai địa chỉ / sản phẩm?' | escape }}</b>{{ settings.lookup_help_2_desc | default: 'Chỉ sửa được khi đơn còn ở "Chờ đóng gói".' | escape }}
+          {%- assign lookup_help_2_url = pages[settings.lookup_help_2_page].url -%}
+          {%- if lookup_help_2_url != blank and settings.lookup_help_2_link_text != blank -%}
+            <a href="{{ lookup_help_2_url }}"> {{ settings.lookup_help_2_link_text | escape }}</a>.
+          {%- endif -%}
+        </div>
+      </div>
+      <div class="pl-help-item">
+        <div class="pl-glyph">☏</div>
+        {%- assign lookup_help_3_phone = settings.store_phone | default: store.phone_number -%}
+        <div>
+          <b>{{ settings.lookup_help_3_title | default: 'Cần hỗ trợ nhanh' | escape }}</b>
+          {%- if lookup_help_3_phone != blank -%}
+            Hotline <a href="tel:{{ lookup_help_3_phone | remove: ' ' | remove: '.' }}">{{ lookup_help_3_phone }}</a>
+          {%- endif -%}
+          {%- if settings.lookup_help_3_hours != blank %} · {{ settings.lookup_help_3_hours | escape }}{% endif -%}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="pl-toast" id="pl-toast"></div>
+</div>
+
+<script>
+(function(){
+  var GAS_URL = {{ settings.mops_gas_url | json }};
+  var HIST_KEY = 'mops_booking_history';
+
+  // ── Config ───────────────────────────────────────────────────────────────
+
+  var MODES = {
+    code:     { ic:'CODE',     placeholder:'VD: PC-20260812-042',  needSecondary:true,  help:'Kèm SĐT để mở khoá QR thanh toán và địa chỉ giao đầy đủ.' },
+    phone:    { ic:'SDT',      placeholder:'VD: 0987 654 321',      needSecondary:false, help:'Nhập số điện thoại đã dùng khi đặt hàng để xem tất cả đơn của bạn.' },
+    tracking: { ic:'TRACKING', placeholder:'VD: LGHV3K52A78',       needSecondary:true,  help:'Kèm SĐT để mở khoá chi tiết đầy đủ. Không có SĐT chỉ thấy trạng thái chung.' }
+  };
+
+  var PAY_LABELS = {
+    PENDING:'Chờ thanh toán', BOOKED:'Đã đặt lịch', PAYMENT_REPORTED:'Đã báo chuyển khoản',
+    PAID:'Đã thanh toán', PROCESSING:'Đang xử lý', COMPLETED:'Hoàn thành',
+    CANCELLED:'Đã huỷ', EXPIRED:'Hết hạn', REFUNDED:'Đã hoàn tiền'
+  };
+
+  var FULFILL_LABELS = {
+    pending_approval:'Chờ duyệt', pending_payment:'Chờ thanh toán', pending_packing:'Chờ đóng gói',
+    ready_to_pick:'Chờ đơn vị vận chuyển lấy hàng', delivering:'Đang giao đến bạn',
+    redelivery:'Chờ giao lại', delivered:'Đã giao thành công',
+    delivery_cancelled:'Huỷ giao — chờ nhận', returned:'Đã hoàn trả', cancelled:'Đơn đã huỷ'
+  };
+
+  // 5 mốc trực quan cho khách. Trạng thái nghiệp vụ được collapse về bước gần nhất
+  // (redelivery vẫn ở "Đang giao", pending_approval gộp vào "Đặt thành công").
+  // Đơn deposit spa không cần vận chuyển → "Đã giao" đổi thành "Hoàn tất".
+  var RAIL_STEPS = ['Đặt\nthành công','Đã thanh\ntoán','Đã đóng gói\n+ tạo VĐ','Đang giao\nđến bạn','Giao\nthành công'];
+  var RAIL_STEPS_APPT = ['Đặt\nthành công','Đã thanh\ntoán','Đã xác nhận\nlịch','Đang phục vụ','Hoàn tất'];
+
+  function railIndex(order){
+    var f = String(order.fulfillment_status || '').toLowerCase();
+    var s = String(order.status || order.payment_status || '').toUpperCase();
+    // Cancelled / expired = err (không tiến, dừng ở bước hiện tại)
+    if (f === 'cancelled' || s === 'CANCELLED' || s === 'EXPIRED') {
+      return { idx:-1, err:true, note:'Đơn đã huỷ hoặc hết hạn.' };
+    }
+    if (f === 'delivered' || f === 'returned' || s === 'COMPLETED') return { idx:5 };
+    if (f === 'delivering' || f === 'redelivery' || f === 'delivery_cancelled') return { idx:4 };
+    if (f === 'ready_to_pick') return { idx:3 };
+    if (f === 'pending_packing') return { idx:2 };
+    // pending_approval / pending_payment
+    if (s === 'PAID' || s === 'PROCESSING' || f === 'pending_packing') return { idx:2 };
+    if (s === 'PAYMENT_REPORTED') return { idx:1 };
+    return { idx:1 }; // vừa đặt
+  }
+
+  function fmtMoney(n){
+    if (n == null || n === '' || Number(n) === 0) return 'Miễn phí';
+    return Number(n).toLocaleString('vi-VN') + ' ₫';
+  }
+  function maskPhone(p){
+    var s = String(p || '').replace(/\s/g,'');
+    if (s.length < 6) return s;
+    return s.slice(0,4) + '•••' + s.slice(-3);
+  }
+  function normPhone(p){
+    var s = String(p || '').replace(/\D/g,'');
+    if (s.charAt(0) === '0') return s;
+    if (s.slice(0,2) === '84') return '0' + s.slice(2);
+    return s;
+  }
+  function fmtDateTime(d){
+    if (!d && d !== 0) return '';
+    // Unix seconds (từ shipment_timeline.update_time) — chuyển sang Date rồi format.
+    if (typeof d === 'number') {
+      if (d <= 0) return '';
+      return fmtDateTime(new Date(d * 1000));
+    }
+    if (typeof d === 'string') {
+      var m = d.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+      if (m) return m[3] + '/' + m[2] + ' · ' + m[4] + ':' + m[5];
+      // GAS thường trả string dạng "Thu Aug 15 2026 22:14:00 GMT+0700 …" khi cột Date chưa được cast — parse thử
+      var asDate = new Date(d);
+      if (!isNaN(asDate.getTime())) return fmtDateTime(asDate);
+      return d;
+    }
+    if (d instanceof Date) {
+      var pad = function(n){ return String(n).padStart(2,'0'); };
+      return pad(d.getDate()) + '/' + pad(d.getMonth()+1) + ' · ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }
+    return String(d);
+  }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function toast(msg){
+    var t = document.getElementById('pl-toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(t._to); t._to = setTimeout(function(){ t.classList.remove('show'); }, 2200);
+  }
+
+  // ── GAS transport ────────────────────────────────────────────────────────
+
+  function gasGet(params){
+    if (!GAS_URL) return Promise.reject(new Error('GAS_URL chưa cấu hình.'));
+    var sep = GAS_URL.indexOf('?') !== -1 ? '&' : '?';
+    var query = Object.keys(params).map(function(k){
+      return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+    }).join('&');
+    var ctrl = new AbortController();
+    var toid = setTimeout(function(){ ctrl.abort(); }, 30000);
+    return fetch(GAS_URL + sep + query, { signal: ctrl.signal })
+      .then(function(r){ clearTimeout(toid); return r.json(); });
+  }
+
+  // ── State + UI toggles ───────────────────────────────────────────────────
+
+  var state = { mode:'code' };
+  var els = {
+    primary:   document.getElementById('pl-primary'),
+    secondary: document.getElementById('pl-secondary'),
+    ic:        document.getElementById('pl-ic'),
+    second:    document.getElementById('pl-second'),
+    submit:    document.getElementById('pl-submit'),
+    submitLabel: document.querySelector('#pl-submit .pl-submit-label'),
+    modes:     document.querySelectorAll('.pl-mode'),
+    hint:      document.getElementById('pl-hint'),
+    helpTxt:   document.getElementById('pl-help-txt'),
+    loading:   document.getElementById('pl-loading'),
+    notfound:  document.getElementById('pl-notfound'),
+    notfoundMsg: document.getElementById('pl-notfound-msg'),
+    listPanel: document.getElementById('pl-list-panel'),
+    listBody:  document.getElementById('pl-list-body'),
+    listCount: document.getElementById('pl-list-count'),
+    result:    document.getElementById('pl-result')
+  };
+
+  function setMode(m){
+    if (!MODES[m]) return;
+    state.mode = m;
+    var cfg = MODES[m];
+    els.primary.placeholder = cfg.placeholder;
+    els.ic.textContent = cfg.ic;
+    els.helpTxt.textContent = cfg.help;
+    els.second.classList.toggle('is-on', cfg.needSecondary);
+    els.modes.forEach(function(btn){
+      var on = btn.getAttribute('data-mode') === m;
+      btn.classList.toggle('is-on', on);
+      btn.setAttribute('aria-selected', on ? 'true':'false');
+    });
+    // Đổi mode → clear kết quả + notfound; không clear input để user thấy dữ liệu đang gõ
+    hideAllResults();
+    // Auto-set primary sang SĐT nếu customer signed-in đang bật mode phone
+    if (m === 'phone' && !els.primary.value && signedInPhone) {
+      els.primary.value = signedInPhone;
+    }
+  }
+  els.modes.forEach(function(btn){
+    btn.addEventListener('click', function(){ setMode(btn.getAttribute('data-mode')); });
+  });
+
+  function showLoading(){
+    hideAllResults();
+    els.loading.style.display = '';
+    els.submit.disabled = true;
+    if (els.submitLabel) els.submitLabel.textContent = 'Đang tra…';
+  }
+  function hideLoading(){
+    els.loading.style.display = 'none';
+    els.submit.disabled = false;
+    if (els.submitLabel) els.submitLabel.textContent = 'Tìm kiếm';
+  }
+  function hideAllResults(){
+    els.loading.style.display = 'none';
+    els.notfound.style.display = 'none';
+    els.listPanel.style.display = 'none';
+    els.result.style.display = 'none';
+  }
+  function showNotFound(msg){
+    hideAllResults();
+    els.notfoundMsg.textContent = msg || 'Kiểm tra lại thông tin và thử lại.';
+    els.notfound.style.display = '';
+  }
+
+  // ── Renderers ────────────────────────────────────────────────────────────
+
+  function renderRail(order){
+    var st = railIndex(order);
+    var isAppt = String(order.order_type || '').toUpperCase() === 'DEPOSIT'
+                 || !!order.appointment_date;
+    var labels = isAppt ? RAIL_STEPS_APPT : RAIL_STEPS;
+    var rail = document.getElementById('pl-rail');
+    var html = '';
+    for (var i = 0; i < 5; i++) {
+      var cls = '';
+      if (st.err) {
+        if (i < 5) cls = i < 2 ? 'done' : 'err';
+      } else {
+        if (i + 1 < st.idx) cls = 'done';
+        else if (i + 1 === st.idx) cls = 'now';
+      }
+      html += '<div class="pl-node ' + cls + '"><div class="pl-dot"></div><div class="pl-nlbl">' + labels[i].replace(/\n/g,'<br>') + '</div></div>';
+    }
+    rail.innerHTML = html;
+    // Progress bar width — chỉ set CSS var, ::after tính width qua calc trong CSS chính.
+    // Trước 2026-08-15 gán <style> inline vào bên trong grid → grid item ẩn (display:none)
+    // nhưng vẫn là DOM node dùng .querySelector('style') tra ngược lại → dễ nhầm.
+    var pctRaw = st.err ? 0.2 : ((st.idx - 1) / 4);
+    rail.style.setProperty('--pl-rail-fill', Math.max(0, Math.min(1, pctRaw)));
+  }
+
+  function renderStatus(order){
+    var chips = [];
+    var payStatus = String(order.status || order.payment_status || '').toUpperCase();
+    var f = String(order.fulfillment_status || '').toLowerCase();
+    if (payStatus === 'PAID' || payStatus === 'COMPLETED') chips.push({cls:'ok', text:'Đã thanh toán'});
+    else if (payStatus === 'PAYMENT_REPORTED') chips.push({cls:'now', text:'Chờ xác nhận CK'});
+    else if (payStatus === 'CANCELLED') chips.push({cls:'err', text:'Đã huỷ'});
+    else if (payStatus === 'EXPIRED') chips.push({cls:'err', text:'Hết hạn'});
+    else if (payStatus === 'REFUNDED') chips.push({cls:'muted', text:'Đã hoàn tiền'});
+    else chips.push({cls:'now', text: PAY_LABELS[payStatus] || 'Chờ thanh toán'});
+
+    if (f && f !== 'cancelled') {
+      var fLabel = FULFILL_LABELS[f];
+      if (fLabel) {
+        var cls = 'muted';
+        if (f === 'delivering' || f === 'redelivery') cls = 'now';
+        else if (f === 'delivered' || f === 'returned') cls = 'ok';
+        else if (f === 'delivery_cancelled') cls = 'err';
+        chips.push({cls: cls, text: fLabel});
+      }
+    }
+
+    if (order.carrier) chips.push({cls:'muted', text: esc(String(order.carrier).split('·')[0].trim())});
+
+    document.getElementById('pl-status-chips').innerHTML = chips.map(function(c){
+      return '<span class="pl-chip ' + c.cls + '">' + esc(c.text) + '</span>';
+    }).join('');
+
+    // Câu status chính
+    var title = 'Đơn của bạn', hint = '';
+    if (payStatus === 'PENDING') { title = 'Chờ bạn thanh toán'; hint = 'Quét QR bên dưới để hoàn tất — đơn tự cập nhật sau khi bank xác nhận.'; }
+    else if (payStatus === 'PAYMENT_REPORTED') { title = 'Đã nhận báo chuyển khoản'; hint = 'Nhân viên đang xác nhận — thường trong 5–15 phút.'; }
+    else if (payStatus === 'EXPIRED') { title = 'Đơn đã hết hạn'; hint = 'Vui lòng đặt lại đơn mới nếu vẫn muốn mua.'; }
+    else if (payStatus === 'CANCELLED') { title = 'Đơn đã huỷ'; hint = 'Nếu bạn không huỷ, hãy liên hệ hotline.'; }
+    else if (f === 'delivered' || payStatus === 'COMPLETED') { title = order.appointment_date ? 'Hoàn tất — cảm ơn bạn' : 'Đã giao thành công'; hint = 'Cảm ơn bạn đã mua hàng tại Pharma Cosmetics.'; }
+    else if (f === 'delivering' || f === 'redelivery') { title = 'Đơn đang trên đường đến bạn'; hint = 'Shipper sẽ liên hệ khi giao — vui lòng giữ máy.'; }
+    else if (f === 'ready_to_pick') { title = 'Đang chờ ĐVVC lấy hàng'; hint = 'Đã tạo vận đơn, chờ shipper qua kho lấy.'; }
+    else if (f === 'pending_packing') { title = 'Đang chuẩn bị đơn của bạn'; hint = 'Đơn đang được đóng gói tại kho.'; }
+    else if (order.appointment_date) { title = 'Đã ghi nhận đặt lịch'; hint = 'Hẹn gặp bạn ' + esc(order.appointment_date) + (order.appointment_time ? ' · ' + esc(order.appointment_time) : ''); }
+    else { title = 'Đã ghi nhận đơn'; hint = 'Đang xử lý — theo dõi tiến độ ở dưới.'; }
+
+    document.getElementById('pl-status-title').textContent = title;
+    document.getElementById('pl-status-hint').innerHTML = hint;
+  }
+
+  function renderOrderCard(order){
+    document.getElementById('pl-order-code').textContent = order.order_id || '—';
+    var rows = [];
+    if (order.product_name) rows.push(['Sản phẩm/DV', esc(order.product_name)]);
+    if (order.customer_name || order.customer_phone) {
+      rows.push(['Người đặt', esc(order.customer_name || '—') + (order.customer_phone ? ' · <span class="pl-mono">' + maskPhone(order.customer_phone) + '</span>' : '')]);
+    }
+    if (order.created_at) rows.push(['Đặt lúc', '<span class="pl-mono">' + esc(fmtDateTime(order.created_at)) + '</span>']);
+    if (order.appointment_date) rows.push(['Ngày hẹn', esc(order.appointment_date) + (order.appointment_time ? ' · ' + esc(order.appointment_time) : '')]);
+    if (order.payment_method) {
+      var pm = String(order.payment_method).toUpperCase();
+      rows.push(['Phương thức', pm === 'VIETQR' ? '<span class="pl-chip ok">VietQR đã trả</span>' : pm === 'COD' ? '<span class="pl-chip now">COD (thu hộ)</span>' : '<span class="pl-chip muted">' + esc(pm) + '</span>']);
+    }
+    document.getElementById('pl-order-body').innerHTML = rows.map(function(r){
+      return '<dl class="pl-kv"><dt>' + r[0] + '</dt><dd>' + r[1] + '</dd></dl>';
+    }).join('');
+
+    var total = order.pay_amount != null ? order.pay_amount : order.total_amount;
+    document.getElementById('pl-order-total').textContent = fmtMoney(total);
+  }
+
+  function renderShippingCard(order){
+    var sh = document.getElementById('pl-shipping-card');
+    if (!order.tracking_code && !order.carrier && !order.shipping_address) {
+      sh.style.display = 'none'; return;
+    }
+    sh.style.display = '';
+    document.getElementById('pl-shipping-carrier').textContent = order.carrier || 'Đang chờ';
+    var rows = [];
+    if (order.tracking_code) {
+      rows.push(['Mã vận đơn', '<span class="pl-mono">' + esc(order.tracking_code) + '</span><a class="pl-copy" data-copy="' + esc(order.tracking_code) + '">Copy</a>']);
+    }
+    if (order.shipping_address) {
+      var a = order.shipping_address;
+      var addr = [a.address, a.ward, a.district, a.province].filter(Boolean).join(', ');
+      rows.push(['Địa chỉ giao', esc(addr || '—')]);
+    }
+    if (order.package_weight) rows.push(['Trọng lượng', '<span class="pl-mono">' + esc(order.package_weight) + ' g' + (order.package_dims ? ' · ' + esc(order.package_dims) + ' cm' : '') + '</span>']);
+    if (order.shipping_fee != null) rows.push(['Phí ship', '<span class="pl-mono">' + fmtMoney(order.shipping_fee) + '</span>']);
+    document.getElementById('pl-shipping-body').innerHTML = rows.map(function(r){
+      return '<dl class="pl-kv"><dt>' + r[0] + '</dt><dd>' + r[1] + '</dd></dl>';
+    }).join('');
+
+    // Wire copy buttons
+    document.getElementById('pl-shipping-body').querySelectorAll('[data-copy]').forEach(function(a){
+      a.addEventListener('click', function(e){
+        e.preventDefault();
+        var val = a.getAttribute('data-copy');
+        if (navigator.clipboard) navigator.clipboard.writeText(val).then(function(){ toast('Đã copy mã vận đơn'); });
+        else { try { var ta = document.createElement('textarea'); ta.value = val; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); toast('Đã copy'); } catch(e){} }
+      });
+    });
+  }
+
+  function renderTimeline(order){
+    var card = document.getElementById('pl-timeline-card');
+    // Merge từ 2 nguồn: activity_logs (ghi tại các bước nghiệp vụ) + shipment_timeline (webhook ĐVVC).
+    // Cả hai đều có created_at → parse về ms để sort chuẩn chronological, không lệ thuộc thứ tự
+    // 2 array được push vào events.
+    var events = [];
+    function pushEv(when, text, detail){
+      if (!text) return;
+      var t = 0;
+      if (when instanceof Date) t = when.getTime();
+      else if (typeof when === 'number') t = when * 1000; // unix seconds → ms
+      else if (typeof when === 'string' && when) { var parsed = new Date(when); t = isNaN(parsed.getTime()) ? 0 : parsed.getTime(); }
+      events.push({ t: t, when: fmtDateTime(when), text: text, detail: detail || '' });
+    }
+
+    var friendlyActivity = {
+      ORDER_CREATED:'Đơn đặt thành công',
+      PAYMENT_REPORTED:'Bạn đã báo chuyển khoản',
+      PAYMENT_CONFIRMED:'Xác nhận thanh toán',
+      STATUS_CHANGED_TO_PAID:'Xác nhận đã thanh toán',
+      STATUS_CHANGED_TO_CANCELLED:'Đơn được huỷ',
+      STATUS_CHANGED_TO_REFUNDED:'Đã hoàn tiền',
+      FULFILLMENT_PENDING_PACKING:'Bắt đầu đóng gói',
+      FULFILLMENT_READY_TO_PICK:'Sẵn sàng bàn giao ĐVVC',
+      FULFILLMENT_DELIVERING:'Đang giao đến bạn',
+      FULFILLMENT_DELIVERED:'Đã giao thành công',
+      FULFILLMENT_RETURNED:'Đã nhận hàng hoàn'
+    };
+    if (Array.isArray(order.activity_logs)) {
+      order.activity_logs.forEach(function(a){
+        var label = friendlyActivity[a.action] || null;
+        // Fallback: nếu là mã "<CARRIER>_SHIPMENT_UNPACKED|<tracking>" → dùng label backend tạo
+        if (!label && a.label && String(a.action || '').indexOf('SHIPMENT') !== -1) label = a.label;
+        if (label) pushEv(a.created_at, label, '');
+      });
+    }
+    if (Array.isArray(order.shipment_timeline)) {
+      order.shipment_timeline.forEach(function(h){
+        var text = h.status_text || FULFILL_LABELS[h.fulfillment_status] || h.status_raw;
+        var when = h.created_at || (h.update_time ? h.update_time : 0);
+        // Bỏ nếu event trùng (label giống 1 activity_log đã push cùng phút)
+        var dup = events.some(function(e){ return e.text === text && Math.abs(e.t - (typeof when === 'number' ? when * 1000 : new Date(when).getTime())) < 60000; });
+        if (!dup) pushEv(when, text, h.note || (h.tracking_code ? 'Mã VĐ ' + h.tracking_code : ''));
+      });
+    }
+
+    if (!events.length) { card.style.display = 'none'; return; }
+
+    // Sort asc theo timestamp thật (không dựa vào thứ tự push)
+    events.sort(function(a, b){ return a.t - b.t; });
+
+    // Mốc cuối = "now" nếu đơn chưa delivered/cancelled/returned
+    var f = String(order.fulfillment_status || '').toLowerCase();
+    var payStatus = String(order.status || order.payment_status || '').toUpperCase();
+    var isFinal = (f === 'delivered' || f === 'returned' || f === 'cancelled' || payStatus === 'CANCELLED' || payStatus === 'EXPIRED' || payStatus === 'COMPLETED');
+    if (!isFinal && events.length) events[events.length - 1].type = 'now';
+    events.forEach(function(e){ if (!e.type) e.type = 'done'; });
+    if (!isFinal) {
+      var finalLabel = order.appointment_date ? 'Hoàn tất buổi hẹn' : 'Giao thành công';
+      events.push({ t: 9e15, when: 'dự kiến', text: finalLabel, detail: '', type: 'pending' });
+    }
+
+    document.getElementById('pl-timeline-meta').textContent = events.length + ' mốc · cập nhật gần nhất';
+    document.getElementById('pl-timeline').innerHTML = events.map(function(e){
+      return '<li class="pl-tl-item ' + e.type + '">'
+        + '<span class="pl-tl-t">' + esc(e.when || '—') + '</span>'
+        + '<span class="pl-tl-mark"></span>'
+        + '<span class="pl-tl-txt"><b>' + esc(e.text) + '</b>'
+        + (e.detail ? '<div class="pl-d">' + esc(e.detail) + '</div>' : '')
+        + '</span></li>';
+    }).join('');
+    card.style.display = '';
+  }
+
+  function renderQr(order){
+    var card = document.getElementById('pl-qr-card');
+    var payStatus = String(order.status || order.payment_status || '').toUpperCase();
+    if (order.qr_url && (payStatus === 'PENDING' || payStatus === 'PAYMENT_REPORTED')) {
+      document.getElementById('pl-qr-img').src = order.qr_url;
+      card.style.display = '';
+    } else {
+      card.style.display = 'none';
+    }
+  }
+
+  function renderDetail(order){
+    hideAllResults();
+    els.result.style.display = '';
+    renderStatus(order);
+    renderRail(order);
+    renderOrderCard(order);
+    renderShippingCard(order);
+    renderTimeline(order);
+    renderQr(order);
+    // Scroll vào view (đỡ khách phải cuộn)
+    els.result.scrollIntoView({ behavior:'smooth', block:'start' });
+    // Lưu vào history localStorage (để lần sau xem nhanh)
+    try {
+      var hist = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+      hist = hist.filter(function(h){ return h.order_id !== order.order_id; });
+      hist.unshift({ order_id:order.order_id, product_name:order.product_name || '', created_at:order.created_at || '' });
+      hist = hist.slice(0, 8);
+      localStorage.setItem(HIST_KEY, JSON.stringify(hist));
+    } catch(e){}
+  }
+
+  function renderOrderList(customerId, orders){
+    hideAllResults();
+    var count = orders.length;
+    els.listCount.textContent = count + ' đơn';
+    if (!count) {
+      els.listBody.innerHTML = '<div class="pl-empty"><h3>Chưa có đơn nào</h3><p>Số điện thoại này chưa từng đặt đơn tại Pharma Cosmetics. Kiểm tra lại số hoặc chọn tra bằng <b>Mã đơn</b>.</p></div>';
+    } else {
+      els.listBody.innerHTML = orders.map(function(o){
+        var payStatus = String(o.status || '').toUpperCase();
+        var payLabel = PAY_LABELS[payStatus] || payStatus;
+        return '<div class="pl-list-item" data-order-id="' + esc(o.order_id) + '" role="button" tabindex="0">'
+          + '<div class="pl-list-l">'
+            + '<div class="pl-list-id">' + esc(o.order_id) + '</div>'
+            + '<div class="pl-list-meta">' + esc(fmtDateTime(o.created_at)) + (o.appointment_date ? ' · lịch ' + esc(o.appointment_date) : '') + '</div>'
+          + '</div>'
+          + '<div class="pl-list-r">' + fmtMoney(o.amount) + '<div class="pl-list-status">' + esc(payLabel) + '</div></div>'
+        + '</div>';
+      }).join('');
+      els.listBody.querySelectorAll('.pl-list-item').forEach(function(it){
+        var open = function(){
+          var oid = it.getAttribute('data-order-id');
+          // Kèm phone đã dùng vừa nãy để mở khoá full detail
+          fetchDetail(oid, els.primary.value.trim());
+        };
+        it.addEventListener('click', open);
+        it.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+      });
+    }
+    els.listPanel.style.display = '';
+  }
+
+  // ── Actions ──────────────────────────────────────────────────────────────
+
+  var NOT_FOUND_MSG = 'Kiểm tra lại thông tin bạn nhập. Nếu là mã đơn, kèm SĐT đã dùng khi đặt để tăng bảo mật.';
+
+  function fetchDetail(orderId, phone){
+    showLoading();
+    var params = { action:'get_order', order_id: orderId };
+    if (phone) params.phone = normPhone(phone);
+    return gasGet(params)
+      .then(function(d){
+        hideLoading();
+        if (d && d.success && d.order_id) { renderDetail(d); }
+        else { showNotFound(NOT_FOUND_MSG); }
+      })
+      .catch(function(err){
+        hideLoading();
+        showNotFound(err && err.name === 'AbortError'
+          ? 'Server phản hồi quá lâu, vui lòng thử lại.'
+          : 'Không kết nối được máy chủ. Kiểm tra mạng và thử lại.');
+      });
+  }
+
+  function submit(){
+    var primary = (els.primary.value || '').trim();
+    var secondary = (els.secondary.value || '').trim();
+    if (!primary) { els.primary.focus(); toast('Vui lòng nhập thông tin tra cứu'); return; }
+
+    if (state.mode === 'code') {
+      fetchDetail(primary.toUpperCase(), secondary);
+    } else if (state.mode === 'phone') {
+      showLoading();
+      var normal = normPhone(primary);
+      if (normal.length < 9) { hideLoading(); showNotFound('Số điện thoại không hợp lệ.'); return; }
+      gasGet({ action:'get_orders_by_contact', phone: normal })
+        .then(function(d){
+          hideLoading();
+          if (d && d.success) { renderOrderList(d.customer_id, d.orders || []); }
+          else { showNotFound(NOT_FOUND_MSG); }
+        })
+        .catch(function(err){
+          hideLoading();
+          showNotFound(err && err.name === 'AbortError'
+            ? 'Server phản hồi quá lâu, vui lòng thử lại.'
+            : 'Không kết nối được máy chủ. Kiểm tra mạng và thử lại.');
+        });
+    } else if (state.mode === 'tracking') {
+      showLoading();
+      var tracking = primary.toUpperCase();
+      var params = { action:'get_order_by_tracking', tracking_code: tracking };
+      if (secondary) params.phone = normPhone(secondary);
+      gasGet(params)
+        .then(function(d){
+          hideLoading();
+          if (d && d.success && d.order_id) { renderDetail(d); }
+          else { showNotFound(NOT_FOUND_MSG); }
+        })
+        .catch(function(err){
+          hideLoading();
+          showNotFound(err && err.name === 'AbortError'
+            ? 'Server phản hồi quá lâu, vui lòng thử lại.'
+            : 'Không kết nối được máy chủ. Kiểm tra mạng và thử lại.');
+        });
+    }
+  }
+
+  els.submit.addEventListener('click', submit);
+  els.primary.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+  els.secondary.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+
+  // ── Bootstrap ────────────────────────────────────────────────────────────
+
+  var signedInPhone = {%- if customer -%}{{ customer.phone | default: '' | json }}{%- else -%}''{%- endif -%};
+  if (signedInPhone) {
+    // Prefill SĐT vào ô secondary để mode code / tracking dùng ngay
+    els.secondary.value = signedInPhone;
+  }
+
+  // URL params — /order?code=X | ?phone=X | ?tracking=X
+  var url = new URLSearchParams(window.location.search);
+  var initCode = url.get('code');
+  var initPhone = url.get('phone');
+  var initTracking = url.get('tracking');
+  if (initTracking) {
+    setMode('tracking'); els.primary.value = initTracking.toUpperCase();
+    if (initPhone) els.secondary.value = initPhone;
+    submit();
+  } else if (initCode) {
+    setMode('code'); els.primary.value = initCode.toUpperCase();
+    // ?code=X&phone=Y — cho phép caller truyền kèm SĐT để mở khoá full detail
+    if (initPhone) els.secondary.value = initPhone;
+    submit();
+  } else if (initPhone) {
+    setMode('phone'); els.primary.value = initPhone; submit();
+  } else if (signedInPhone) {
+    // Signed-in customer + không có URL param → auto load danh sách đơn của họ (thay vì để trang trống)
+    setMode('phone'); els.primary.value = signedInPhone; submit();
+  } else {
+    setMode('code');
+  }
+})();
+</script>

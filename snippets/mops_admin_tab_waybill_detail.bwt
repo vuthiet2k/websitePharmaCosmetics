@@ -1,0 +1,116 @@
+{%- comment -%}
+  mops_admin_tab_waybill_detail.bwt (T-53) — Chi tiết 1 vận đơn cụ thể, dùng chung state
+  `orders.detail` đã có sẵn từ tab Đơn hàng (mở 1 đơn ở tab "Đơn hàng" trước, rồi sang tab này
+  để xem dạng vận đơn/timeline đầy đủ hơn — không tự fetch riêng, tránh trùng lặp API).
+
+  RÀNG BUỘC KIẾN TRÚC (ADR-005, xem .project-agent/DECISIONS.md + FILE_PLAN.yaml):
+  - GHTK có API tra cứu thật (ghtkRefreshTracking, mops-gas/mops_01.js) → nút "Cập nhật trạng thái"
+    ở đây gọi lại ĐÚNG action 'refresh_tracking' mà tab Đơn hàng đã dùng (doFulfillmentAction, xem
+    assets/mops-admin-orders.js.bwt:~1387) — KHÔNG tạo API call mới.
+  - `getOrder()` (mops-gas/mops_02.js:~807) đã trả `shipment_timeline` thật (từ
+    ShipmentStatusHistory, ghi bởi webhook GHTK/GHN/VTP) — nếu mảng này có dữ liệu, hiển thị làm
+    timeline thật. Nếu KHÔNG có (carrier nhập tay/không webhook, vd SPX theo mops_admin_tab_orders.bwt
+    dòng ~1149 "Shopee Express không có API cho đơn ngoài sàn") → CHỈ hiển thị trạng thái hiện tại
+    (tracking_code/carrier/fulfillment_status), TUYỆT ĐỐI không tự bịa các bước "đang giao/đã lấy
+    hàng/..." như bản Figma admin-waybill-detail.html (file đó dùng SPX làm ví dụ nhưng vẽ timeline
+    5 bước — sai với thực tế backend nếu áp dụng y nguyên cho carrier không có webhook).
+{%- endcomment -%}
+
+<div id="tab-waybill_detail" v-show="activeTab === 'waybill_detail'" class="ma-tab-pane">
+
+  <div v-if="!orders.detail || !orders.detail.order_id" class="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 text-center">
+    <span class="material-symbols-outlined text-[40px] text-on-surface-variant opacity-50">local_shipping</span>
+    <p class="text-body-sm text-on-surface-variant mt-2">Chưa có đơn nào đang mở. Vào tab <b>Đơn hàng</b>, chọn 1 đơn, rồi quay lại đây để xem chi tiết vận đơn.</p>
+    <button type="button" @click="setActiveTab('orders')" class="ma-btn-outline mt-3">Sang tab Đơn hàng</button>
+  </div>
+
+  <div v-else class="space-y-stack-lg">
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <div class="text-label-sm text-on-surface-variant">
+          <button type="button" @click="setActiveTab('orders')" class="hover:underline text-primary">Đơn hàng</button>
+          <span class="mx-1">/</span> Chi tiết vận đơn
+        </div>
+        <h2 class="text-title-sm font-bold text-on-surface mt-0.5">
+          Đơn <span class="font-mono">[[ orders.detail.order_id ]]</span>
+          <template v-if="orders.detail.tracking_code"> · <span class="font-mono text-primary">[[ orders.detail.tracking_code ]]</span></template>
+        </h2>
+      </div>
+      <div class="flex gap-2">
+        <button type="button" v-if="orders.detail.tracking_code"
+          @click="doFulfillmentAction(orders.detail.order_id, { type: 'refresh', label: 'Cập nhật trạng thái giao', icon: 'sync' })"
+          :disabled="!!orders.actionBusy" class="ma-btn-outline">
+          <span class="material-symbols-outlined text-[16px] align-middle">sync</span> Cập nhật trạng thái
+        </button>
+        <button type="button" v-if="orders.detail.tracking_code" @click="openPrintModal(orders.detail.order_id)" class="ma-btn-primary">
+          <span class="material-symbols-outlined text-[16px] align-middle">print</span> In A6
+        </button>
+      </div>
+    </div>
+
+    <div v-if="!orders.detail.tracking_code" class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-body-sm text-amber-800">
+      Đơn này chưa tạo vận đơn — vào tab Đơn hàng để tạo vận đơn trước.
+    </div>
+
+    <div v-else class="grid grid-cols-1 lg:grid-cols-12 gap-stack-lg">
+      <div class="lg:col-span-7 space-y-stack-md">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 space-y-3">
+          <h3 class="text-label-sm font-bold text-on-surface-variant uppercase tracking-wider border-b border-outline-variant pb-2">Bên gửi &amp; bên nhận</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-body-sm">
+            <div class="p-3 bg-surface-container-low rounded-lg">
+              <div class="font-bold text-primary text-label-sm">BÊN GỬI</div>
+              <div class="mt-1">[[ orders.detail.store || 'Pharma Cosmetics' ]]</div>
+            </div>
+            <div class="p-3 bg-surface-container-low rounded-lg">
+              <div class="font-bold text-primary text-label-sm">BÊN NHẬN</div>
+              <div class="mt-1 font-bold">[[ orders.detail.customer_name || 'Khách lẻ' ]]</div>
+              <div class="font-mono text-on-surface-variant">[[ orders.detail.customer_phone ? formatPhone(orders.detail.customer_phone) : '—' ]]</div>
+              <div v-if="orders.detail.shipping_address" class="text-on-surface-variant text-label-sm mt-0.5">
+                [[ formatAddress(orders.detail.shipping_address.address, orders.detail.shipping_address.ward, orders.detail.shipping_address.province) ]]
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 space-y-2">
+          <h3 class="text-label-sm font-bold text-on-surface-variant uppercase tracking-wider border-b border-outline-variant pb-2">
+            Sản phẩm trong gói · [[ (orders.detail.items || []).length ]] mặt hàng
+          </h3>
+          <div v-for="item in (orders.detail.items || [])" :key="item.id || item.handle" class="flex justify-between py-1.5 border-b border-outline-variant/60 last:border-b-0 text-body-sm">
+            <span>[[ item.name || item.title ]] <span class="text-on-surface-variant">x[[ item.quantity || 1 ]]</span></span>
+          </div>
+          <div class="pt-2 text-label-sm text-on-surface-variant flex justify-between">
+            <span v-if="orders.detail.package_weight">[[ orders.detail.package_weight ]]g<template v-if="orders.detail.package_dims"> · [[ orders.detail.package_dims ]] cm</template></span>
+            <span class="font-bold text-on-surface">COD: [[ formatMoney(orders.detail.total_amount) ]]</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-5 space-y-stack-md">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 space-y-3">
+          <h3 class="text-label-sm font-bold text-on-surface-variant uppercase tracking-wider border-b border-outline-variant pb-2">
+            [[ (orders.detail.shipment_timeline || []).length ? 'Nhật ký hành trình (dữ liệu thật từ ĐVVC)' : 'Trạng thái vận đơn' ]]
+          </h3>
+
+          <div v-if="(orders.detail.shipment_timeline || []).length" class="space-y-3">
+            <div v-for="(ev, idx) in orders.detail.shipment_timeline" :key="idx" class="flex items-start gap-3 text-body-sm">
+              <span class="ma-badge ma-badge--sm" :class="idx === 0 ? 'ma-badge--info' : 'ma-badge--success'" style="min-width:22px;justify-content:center;">[[ idx === 0 ? '🚚' : '✓' ]]</span>
+              <div>
+                <div class="font-semibold text-on-surface">[[ formatDate(ev.ts || ev.created_at) ]]: [[ ev.label || fulfillmentLabel(ev.status) ]]</div>
+                <div v-if="ev.note" class="text-label-sm text-on-surface-variant">[[ ev.note ]]</div>
+              </div>
+            </div>
+          </div>
+
+          <div v-else class="text-body-sm text-on-surface-variant space-y-2">
+            <p>
+              <span class="ma-badge" :class="fulfillmentBadgeClass(orders.detail.fulfillment_status)">[[ fulfillmentLabel(orders.detail.fulfillment_status) ]]</span>
+            </p>
+            <p>Đối tác vận chuyển <b>[[ orders.detail.carrier || '—' ]]</b> không có webhook cập nhật hành trình tự động cho đơn này — trạng thái trên là lần cập nhật/nhập tay gần nhất, không phải theo dõi realtime từng bước.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

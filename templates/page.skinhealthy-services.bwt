@@ -1,0 +1,153 @@
+{% layout 'skinhealthy' %}
+{%- comment -%}
+  page.skinhealthy-services.bwt — Hub/landing giới thiệu 3 nhóm dịch vụ Skin Health Beauty,
+  mỗi nhóm link ra collection.skinhealthy (đã có sẵn) để xem đầy đủ. Theo
+  configs/settings_schema.json#"V. TRANG DỊCH VỤ": menu link_list (skinhealthy_services_groups_menu)
+  ưu tiên, fallback 3 collection cố định (skinhealthy_col_maintenance/targeted/invasive).
+  Card dùng lại snippets/product_grid_skinhealthy.bwt + CSS page_skinhealthy_services.scss.bwt
+  (đã build sẵn, không sửa) — class .svcs-* đã tồn tại, không tạo class song song.
+{%- endcomment -%}
+{{ 'comp_skinhealthy_card.scss.css' | asset_url | stylesheet_tag }}
+{{ 'page_skinhealthy_services.scss.css' | asset_url | stylesheet_tag }}
+
+{%- comment -%} Resolve nhóm dịch vụ: menu link_list ưu tiên, fallback 3 collection cố định {%- endcomment -%}
+{%- assign svcs_menu_ll = linklists[settings.skinhealthy_services_groups_menu] -%}
+{%- assign use_menu = false -%}
+{%- if settings.skinhealthy_services_groups_menu != blank and svcs_menu_ll and svcs_menu_ll.links.size > 0 -%}
+  {%- assign use_menu = true -%}
+{%- endif -%}
+
+<div class="svcs-hero">
+  <div class="sh-container">
+    <span class="svcs-hero__eyebrow">{{ settings.skinhealthy_brand_name | default: 'Skin Health Beauty' }}</span>
+    <h1 class="svcs-hero__title">Liệu Trình <em>Chăm Sóc Da</em><br>Chuyên Sâu Theo Nhu Cầu</h1>
+    <p class="svcs-hero__desc">
+      Mỗi nhóm dịch vụ được thiết kế theo mức độ can thiệp khác nhau — từ chăm sóc duy trì hằng
+      ngày đến các liệu trình chuyên sâu, luôn có chuyên gia đồng hành và tư vấn miễn phí trước
+      khi bắt đầu.
+    </p>
+    <a href="#svcs-groups" class="svcs-hero__cta">
+      Khám phá dịch vụ
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+    </a>
+  </div>
+</div>
+
+<nav class="svcs-subnav" aria-label="Chuyển nhanh giữa các nhóm dịch vụ" id="svcs-groups">
+  <div class="sh-container">
+    {%- if use_menu -%}
+      {%- for link in svcs_menu_ll.links -%}
+        <a href="#svcs-grp-{{ forloop.index }}" class="svcs-subnav__link">{{ link.title }}</a>
+      {%- endfor -%}
+    {%- else -%}
+      {%- assign g1 = collections[settings.skinhealthy_col_maintenance | default: 'maintenance-skin-care'] -%}
+      {%- assign g2 = collections[settings.skinhealthy_col_targeted    | default: 'targeted-treatments'] -%}
+      {%- assign g3 = collections[settings.skinhealthy_col_invasive    | default: 'invasive-treatments'] -%}
+      {%- if g1 -%}<a href="#svcs-grp-1" class="svcs-subnav__link">{{ g1.name }}</a>{%- endif -%}
+      {%- if g2 -%}<a href="#svcs-grp-2" class="svcs-subnav__link">{{ g2.name }}</a>{%- endif -%}
+      {%- if g3 -%}<a href="#svcs-grp-3" class="svcs-subnav__link">{{ g3.name }}</a>{%- endif -%}
+    {%- endif -%}
+  </div>
+</nav>
+
+{%- comment -%}
+  Danh sách nhóm để lặp đồng nhất cho cả 2 nhánh menu/fallback — group_obj = collection
+  (link.object khi qua menu, hoặc collections[handle] khi fallback), group_num = số thứ tự hiển thị.
+{%- endcomment -%}
+{%- if use_menu -%}
+  {%- comment -%}
+    QUAN TRỌNG: link.object (collection object mà 1 link_list item trỏ tới) là tính năng
+    runtime CỦA SAPO THẬT — mock preview cục bộ (data/navigation.js) không mô phỏng field
+    này (đã kiểm tra: helper link() trong file đó chỉ có title/url/alias/active/links,
+    không có object). Vì vậy KHÔNG được gate cả section theo group_obj — nếu không, section
+    biến mất hoàn toàn trong preview (và trong Sapo thật, nếu admin gắn link_list TRƯỚC khi
+    tạo xong collection tương ứng). Luôn dùng link.title/link.url làm nguồn chính, group_obj
+    chỉ làm PHONG PHÚ THÊM (tên đẹp hơn, mô tả, sản phẩm) khi có sẵn.
+  {%- endcomment -%}
+  {%- for link in svcs_menu_ll.links -%}
+    {%- assign group_obj = link.object -%}
+    <section class="svcs-group" id="svcs-grp-{{ forloop.index }}">
+      <div class="sh-container">
+        <div class="svcs-group__header">
+          <div class="svcs-group__meta">
+            <span class="svcs-group__number">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
+            <span class="svcs-group__label">Nhóm Dịch Vụ</span>
+            <h2 class="svcs-group__title">{{ group_obj.name | default: link.title }}</h2>
+            {%- if group_obj.description != blank -%}
+              <p class="svcs-group__desc">{{ group_obj.description | strip_html | truncate: 160 }}</p>
+            {%- endif -%}
+          </div>
+          <a href="{{ group_obj.url | default: link.url }}" class="svcs-group__viewall">
+            Xem tất cả
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </div>
+        <div class="svcs-group__grid">
+          {%- if group_obj.products_count > 0 -%}
+            {%- for product in group_obj.products limit: 3 -%}
+              {% include 'product_grid_skinhealthy', product: product, group_badge: group_obj.name %}
+            {%- endfor -%}
+          {%- else -%}
+            <div class="svcs-group__empty">
+              Dịch vụ đang được cập nhật — <a href="{{ group_obj.url | default: link.url }}">xem nhóm này</a> để biết thêm.
+            </div>
+          {%- endif -%}
+        </div>
+      </div>
+    </section>
+  {%- endfor -%}
+{%- else -%}
+  {%- assign group_col_handles = 'skinhealthy_col_maintenance|skinhealthy_col_targeted|skinhealthy_col_invasive' | split: '|' -%}
+  {%- assign group_col_defaults = 'maintenance-skin-care|targeted-treatments|invasive-treatments' | split: '|' -%}
+  {%- assign group_col_labels  = 'Chăm Sóc Duy Trì|Nhắm Mục Tiêu|Xâm Lấn Tối Thiểu' | split: '|' -%}
+  {%- for setting_key in group_col_handles -%}
+    {%- assign handle = settings[setting_key] | default: group_col_defaults[forloop.index0] -%}
+    {%- assign group_obj = collections[handle] -%}
+    {%- if group_obj -%}
+      <section class="svcs-group" id="svcs-grp-{{ forloop.index }}">
+        <div class="sh-container">
+          <div class="svcs-group__header">
+            <div class="svcs-group__meta">
+              <span class="svcs-group__number">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
+              <span class="svcs-group__label">Nhóm Dịch Vụ</span>
+              <h2 class="svcs-group__title">{{ group_obj.name | default: group_col_labels[forloop.index0] }}</h2>
+              {%- if group_obj.description != blank -%}
+                <p class="svcs-group__desc">{{ group_obj.description | strip_html | truncate: 160 }}</p>
+              {%- endif -%}
+            </div>
+            <a href="{{ group_obj.url }}" class="svcs-group__viewall">
+              Xem tất cả
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+          </div>
+          <div class="svcs-group__grid">
+            {%- if group_obj.products_count > 0 -%}
+              {%- for product in group_obj.products limit: 3 -%}
+                {% include 'product_grid_skinhealthy', product: product, group_badge: group_obj.name %}
+              {%- endfor -%}
+            {%- else -%}
+              <div class="svcs-group__empty">
+                Dịch vụ đang được cập nhật — <a href="{{ group_obj.url }}">xem nhóm này</a> để biết thêm.
+              </div>
+            {%- endif -%}
+          </div>
+        </div>
+      </section>
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
+{%- assign sh_book_page = pages[settings.skinhealthy_booking_page] -%}
+{%- assign sh_book_url = sh_book_page.url | default: pages['dat-lich-tu-van'].url | default: '/dat-lich-tu-van' -%}
+<div class="svcs-cta">
+  <div class="sh-container">
+    <h2 class="svcs-cta__title">Chưa Chắc Nên Bắt Đầu <em>Từ Đâu</em>?</h2>
+    <p class="svcs-cta__sub">Đặt lịch tư vấn miễn phí — chuyên gia sẽ đánh giá da và đề xuất nhóm dịch vụ phù hợp nhất.</p>
+    <div class="svcs-cta__btns">
+      <a href="{{ sh_book_url }}" class="svcs-cta__btn svcs-cta__btn--primary">Đặt lịch tư vấn</a>
+      {%- if settings.skinhealthy_services_all_url != blank -%}
+        <a href="{{ settings.skinhealthy_services_all_url }}" class="svcs-cta__btn svcs-cta__btn--outline">Xem tất cả dịch vụ</a>
+      {%- endif -%}
+    </div>
+  </div>
+</div>

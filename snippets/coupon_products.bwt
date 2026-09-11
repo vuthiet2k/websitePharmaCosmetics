@@ -1,0 +1,138 @@
+<div class="clearfix"></div>
+<div class="product-coupon__wrapper my-3">
+	<strong class="d-block mb-2">Các mã giảm giá có thể áp dụng: </strong>
+	<div class="product-coupons coupon-toggle-btn">
+		{%- for i in (1..6) -%}
+		{%- capture enable_slide -%}promo_coupon_{{i}}_enable{%- endcapture -%}
+		{%- capture code -%}promo_coupon_{{i}}_code{%- endcapture -%}
+		{%if settings[enable_slide]%}
+		<div class="coupon_item lite">
+			<div class="coupon_content">
+				{{settings[code]}}
+			</div>
+		</div>
+		{%- endif -%}
+		{%- endfor -%}
+		<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" class="svg-inline--fa fa-chevron-right fa-w-10"><path fill="currentColor" d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z" class=""></path></svg>
+	</div>
+</div>
+<div id="modal-coupon-product" class="modalcoupon-product" style="display:none;">
+	<div class="modalcoupon-overlay fancybox-overlay fancybox-overlay-fixed"></div>
+	<div class="modal-coupon-product">
+		<div class="row">
+			<div class="col-md-12 col-12">
+				<div class="chosee_size">
+					<p class="title-size">MÃ KHUYẾN MÃI</p>
+				</div>
+				{%- for i in (1..6) -%}
+				{%- capture enable_slide -%}promo_coupon_{{i}}_enable{%- endcapture -%}
+				{%- capture image -%}promo_coupon_{{i}}_image{%- endcapture -%}
+				{%- capture price -%}promo_coupon_{{i}}_min_order{%- endcapture -%}
+				{%- capture code -%}promo_coupon_{{i}}_code{%- endcapture -%}
+				{%- capture time -%}promo_coupon_{{i}}_expires{%- endcapture -%}
+				{%- capture giatri -%}promo_coupon_{{i}}_value{%- endcapture -%}
+				{%- capture dieukien -%}promo_coupon_{{i}}_condition{%- endcapture -%}
+				{%if settings[enable_slide]%}
+				<div class="box-cpou-dk {% if forloop.last == true %}last-cpou{% endif %}">
+					<div class="item_list_coupon">
+						<div class="money_coupon">
+							{%- if settings[image] != blank -%}
+							<img class="money_coupon__img lazyload" width="110" height="85"
+								src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII="
+								data-src="{{ settings[image] | img_url: 'compact' }}"
+								alt="{{ settings[code] }}"
+								onerror="this.onerror=null;this.remove();">
+							{%- endif -%}
+							{{settings[price]}}
+						</div>
+						<div class="content_coupon">
+							<div class="boz-left">
+								<div class="zip_coupon">
+									Mã giảm giá <b>{{settings[code]}}</b>
+								</div>
+								<div class="noidung_coupon">
+									{{settings[giatri]}}
+								</div>
+							</div>
+							<div class="boz-right">
+								<button class="btn dis_copy" data-copy="{{settings[code]}}">
+									<span>Sao chép</span>
+								</button>
+								<div class="dk_btn dk_btn_{{forloop.index}}">
+									<span>Điều kiện</span>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="contet_dk contet_dk_{{forloop.index}}">
+						{{settings[dieukien]}}
+					</div>
+				</div>
+				{%- endif -%}
+				{%- endfor -%}
+
+			</div>
+		</div>
+		<a title="Close" class="modalcoupon-close close-window" href="javascript:;">
+			<svg aria-hidden="true" focusable="false" data-prefix="far" data-icon="times" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" class="svg-inline--fa fa-times fa-w-10"><path fill="currentColor" d="M207.6 256l107.72-107.72c6.23-6.23 6.23-16.34 0-22.58l-25.03-25.03c-6.23-6.23-16.34-6.23-22.58 0L160 208.4 52.28 100.68c-6.23-6.23-16.34-6.23-22.58 0L4.68 125.7c-6.23 6.23-6.23 16.34 0 22.58L112.4 256 4.68 363.72c-6.23 6.23-6.23 16.34 0 22.58l25.03 25.03c6.23 6.23 16.34 6.23 22.58 0L160 303.6l107.72 107.72c6.23 6.23 16.34 6.23 22.58 0l25.03-25.03c6.23-6.23 6.23-16.34 0-22.58L207.6 256z" class=""></path></svg>
+		</a>
+	</div>
+</div>
+<script>
+	$(document).on('click', '.modalcoupon-close, #modal-coupon-product .modalcoupon-overlay, .fancybox-overlay', function(e){
+		$("#modal-coupon-product").fadeOut(0);
+		awe_hidePopup();
+	});
+	$(document).ready(function ($){
+		var modal = $('.modalcoupon-product');
+		var btn = $('.coupon-toggle-btn');
+		var span = $('.modalcoupon-close');
+		btn.click(function () {
+			modal.show();
+		});
+		span.click(function () {
+			modal.hide();
+		});
+		$(window).on('click', function (e) {
+			if ($(e.target).is('.modal')) {
+				modal.hide();
+			}
+		});
+	});
+	$('.dk_btn_1').click(function () {
+		$('.contet_dk_1').slideToggle();
+		return false;
+	});
+	$('.dk_btn_2').click(function () {
+		$('.contet_dk_2').slideToggle();
+		return false;
+	});
+	$('.dk_btn_3').click(function () {
+		$('.contet_dk_3').slideToggle();
+		return false;
+	});
+	$('.dk_btn_4').click(function () {
+		$('.contet_dk_4').slideToggle();
+		return false;
+	});
+	$(document).on('click', '.dis_copy',function(e){
+		e.preventDefault();
+		var copyText = $(this).attr('data-copy');
+		var copyTextarea = document.createElement("textarea");
+		copyTextarea.textContent = copyText;
+		document.body.appendChild(copyTextarea);
+		copyTextarea.select();
+		document.execCommand("copy"); 
+		document.body.removeChild(copyTextarea);
+		var cur_text = $(this).text();
+		var $cur_btn = $(this);
+		$(this).addClass("disabled");
+		$(this).text("Đã lưu");
+		$(this).parent().addClass('active');
+		setTimeout(function(){
+			$cur_btn.removeClass("disabled");
+			$cur_btn.parent().removeClass('active');
+			$cur_btn.text(cur_text);
+		},2500)
+	})
+</script>

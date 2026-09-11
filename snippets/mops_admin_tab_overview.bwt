@@ -1,0 +1,519 @@
+      
+      <div id="tab-overview" v-show="activeTab === 'overview'" class="ma-tab-pane">
+
+        <button type="button" @click="mobileFilterOpen = true"
+          class="ma-filter-trigger items-center gap-2 w-full justify-center mb-stack-md p-3 bg-surface-bright border border-outline-variant rounded-xl text-body-sm font-bold text-on-surface active:scale-95 transition-all">
+          <span class="material-symbols-outlined text-[18px]">tune</span><span>Bộ lọc</span>
+          <span v-if="(overview.from?1:0)+(overview.to?1:0)" class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-label-sm font-bold bg-primary text-white">[[ (overview.from?1:0)+(overview.to?1:0) ]]</span>
+        </button>
+        <div class="ma-toolbar ma-toolbar--sheet flex flex-wrap items-center gap-stack-md mb-stack-lg p-4 bg-surface-bright border border-outline-variant rounded-xl" :class="{ 'is-filter-open': mobileFilterOpen }">
+          <div class="ma-filter-sheet-head"><span class="text-title-sm font-bold text-on-surface">Bộ lọc báo cáo</span><button type="button" @click="mobileFilterOpen = false" class="w-8 h-8 inline-flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">close</span></button></div>
+          <label class="ma-text-sub">Từ</label>
+          <input type="date" v-model="overview.from" class="ma-input-inline">
+          <label class="ma-text-sub">đến</label>
+          <input type="date" v-model="overview.to" class="ma-input-inline">
+          <div class="flex items-center rounded-lg border border-outline-variant overflow-hidden">
+            <button @click="overview.groupBy = 'day'" type="button" class="px-3 py-2 text-body-sm font-bold transition-all" :class="overview.groupBy === 'day' ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low'">Theo ngày</button>
+            <button @click="overview.groupBy = 'month'" type="button" class="px-3 py-2 text-body-sm font-bold transition-all" :class="overview.groupBy === 'month' ? 'bg-primary text-on-primary' : 'bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low'">Theo tháng</button>
+          </div>
+          <button @click="refreshReportSubTab(); mobileFilterOpen = false" type="button" class="ma-btn-primary">Xem</button>
+        </div>
+        <div class="ma-filter-backdrop" v-if="mobileFilterOpen" @click="mobileFilterOpen = false"></div>
+
+        
+        <div v-show="overview.subTab === 'overview'">
+        <div v-if="overview.loading" class="ma-overview-skeleton" aria-label="Đang tải tổng quan" aria-busy="true">
+          <div class="ma-overview-skeleton__kpis"><div v-for="n in 4" :key="'main-' + n" class="ma-overview-skeleton__kpi"><i></i><b></b></div></div>
+          <div class="ma-overview-skeleton__profit"><i></i><b></b></div>
+          <div class="ma-overview-skeleton__kpis ma-overview-skeleton__kpis--secondary"><div v-for="n in 5" :key="'secondary-' + n" class="ma-overview-skeleton__kpi"><i></i><b></b></div></div>
+          <div class="ma-overview-skeleton__donuts"><div v-for="n in 2" :key="'donut-' + n" class="ma-overview-skeleton__panel"><i></i><div class="ma-overview-skeleton__donut"></div><b></b><b></b></div></div>
+          <div class="ma-overview-skeleton__panel ma-overview-skeleton__panel--wide"><i></i><div class="ma-overview-skeleton__bars"><b v-for="n in 8" :key="n" :style="{ height: (32 + n * 7) + '%' }"></b></div></div>
+          <div class="ma-overview-skeleton__tables"><div v-for="n in 3" :key="'table-' + n" class="ma-overview-skeleton__panel"><i></i><b></b><b></b><b></b></div></div>
+        </div>
+        <div v-else-if="overview.error" class="ma-empty-state">
+          <span class="material-symbols-outlined text-on-surface-variant text-[56px] opacity-[.35]">error_outline</span>
+          <p class="ma-empty-hint">[[ overview.error ]]</p>
+          <button @click="loadOverview" type="button" class="ma-btn-outline">Thử lại</button>
+        </div>
+        <div v-else-if="overview.metrics">
+          
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-stack-md mb-stack-md">
+            <div v-for="card in overviewCards" :key="card.label" class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
+              <div class="text-label-md text-on-surface-variant uppercase tracking-wider">[[ card.label ]]</div>
+              <div class="text-headline-lg font-bold mt-2" :class="card.accent">[[ card.value ]]</div>
+            </div>
+          </div>
+
+
+          <div class="flex items-center justify-between gap-3 bg-surface-container-lowest border border-outline-variant rounded-xl p-4 mb-stack-md">
+            <div class="flex items-center gap-2 text-label-md text-on-surface-variant uppercase tracking-wider">
+              <span class="material-symbols-outlined text-[18px]">shopping_cart</span>Đơn hàng trực tiếp
+            </div>
+            <button @click="setActiveTab('orders')" type="button" class="text-label-md font-bold text-primary hover:underline">Xem danh sách đơn hàng →</button>
+          </div>
+
+          <div v-if="overviewNetProfitCard" class="flex items-center justify-between gap-3 bg-surface-container-lowest border border-outline-variant rounded-xl p-4 mb-stack-md">
+            <div class="flex items-center gap-2 text-label-md text-on-surface-variant uppercase tracking-wider">
+              <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>[[ overviewNetProfitCard.label ]]
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-headline-lg font-bold" :class="overviewNetProfitCard.accent">[[ overviewNetProfitCard.value ]]</span>
+              <button @click="setActiveTab('finance')" type="button" class="text-label-md font-bold text-primary hover:underline">Xem chi tiết →</button>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-stack-md mb-stack-lg">
+            <div v-for="card in overviewCardsSecondary" :key="card.label" class="bg-surface-bright border border-outline-variant rounded-xl p-3 text-center">
+              <div class="text-label-md text-on-surface-variant uppercase tracking-wider">[[ card.label ]]</div>
+              <div class="text-body-lg font-bold mt-1" :class="card.accent">[[ card.value ]]</div>
+            </div>
+          </div>
+
+          
+          <div v-if="overviewOrderRatio" class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 mb-stack-lg">
+            <h3 class="text-label-md font-bold text-on-surface-variant uppercase tracking-wider mb-stack-md">Tỉ lệ đơn</h3>
+            <div class="ma-overview-donut-layout">
+              <div class="h-[210px]"><canvas id="overviewOrderRatioChart"></canvas></div>
+              <div class="grid grid-cols-3 gap-3 text-center flex-1">
+                <div><div class="text-label-md text-on-surface-variant uppercase tracking-wider">Tổng đơn</div><div class="text-body-lg font-bold mt-1">[[ overviewOrderRatio.total ]]</div></div>
+                <div><div class="text-label-md text-on-surface-variant uppercase tracking-wider">Đã thanh toán</div><div class="text-body-lg font-bold mt-1 text-emerald-700">[[ overviewOrderRatio.paid ]]</div><div class="text-label-md text-emerald-700">[[ overviewOrderRatio.paidPct ]]%</div></div>
+                <div><div class="text-label-md text-on-surface-variant uppercase tracking-wider">Chờ xác nhận</div><div class="text-body-lg font-bold mt-1 text-amber-700">[[ overviewOrderRatio.pending ]]</div><div class="text-label-md text-amber-700">[[ 100 - overviewOrderRatio.paidPct ]]%</div></div>
+              </div>
+            </div>
+          </div>
+
+          
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm mb-stack-lg">
+            <div class="ma-td-border"><span class="ma-section-label">Doanh thu bán hàng</span></div>
+            <div v-if="overviewRevenueBuckets.length" class="p-4 border-b border-outline-variant h-[260px]">
+              <canvas id="overviewRevenueChart"></canvas>
+            </div>
+            <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+              <thead><tr class="ma-thead-row">
+                <th class="ma-th">Kỳ</th>
+                <th class="ma-th-right">Doanh thu</th>
+                <th class="ma-th-right">Số đơn</th>
+              </tr></thead>
+              <tbody class="ma-rows-divide">
+                <tr v-for="b in overviewRevenueBuckets" :key="b.key">
+                  <td class="ma-td-cell">[[ b.key ]]</td>
+                  <td class="ma-td-amount">[[ formatMoney(b.revenue) ]]</td>
+                  <td class="px-6 py-2 text-right font-body-sm text-on-surface-variant">[[ b.order_count ]]</td>
+                </tr>
+                <tr v-if="!overviewRevenueBuckets.length"><td colspan="3" class="ma-td-empty">Chưa có dữ liệu trong khoảng lọc.</td></tr>
+              </tbody>
+            </table></div>
+          </div>
+
+          
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm mb-stack-lg">
+            <div class="ma-td-border"><span class="ma-section-label">Doanh thu theo chi nhánh</span></div>
+            <div v-if="overviewRevenueByStore.length" class="p-4 border-b border-outline-variant h-[300px]">
+              <canvas id="overviewRevenueByStoreChart"></canvas>
+            </div>
+            <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+              <thead><tr class="ma-thead-row">
+                <th class="ma-th">Chi nhánh</th>
+                <th class="ma-th-right">Doanh thu</th>
+                <th class="ma-th-right">Số đơn</th>
+              </tr></thead>
+              <tbody class="ma-rows-divide">
+                <tr v-for="s in overviewRevenueByStore" :key="s.store">
+                  <td class="ma-td-cell">[[ s.store ]]</td>
+                  <td class="ma-td-amount">[[ formatMoney(s.revenue) ]]</td>
+                  <td class="px-6 py-2 text-right font-body-sm text-on-surface-variant">[[ s.order_count ]]</td>
+                </tr>
+                <tr v-if="!overviewRevenueByStore.length"><td colspan="3" class="ma-td-empty">Chưa có dữ liệu trong khoảng lọc.</td></tr>
+              </tbody>
+            </table></div>
+          </div>
+
+          
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-stack-md mb-stack-lg">
+            <div class="ma-card">
+              <div class="ma-td-border"><span class="ma-section-label">Top dịch vụ</span></div>
+              <table class="ma-table ma-data-table">
+                <tbody class="ma-rows-divide">
+                  <tr v-for="s in overviewTopServices" :key="s.handle">
+                    <td class="ma-td-cell">[[ s.name ]] <span class="text-on-surface-variant">×[[ s.order_count ]]</span></td>
+                    <td class="ma-td-amount">[[ formatMoney(s.revenue) ]]</td>
+                  </tr>
+                  <tr v-if="!overviewTopServices.length"><td class="ma-td-empty">Chưa có dữ liệu.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="ma-card">
+              <div class="ma-td-border"><span class="ma-section-label">Top khách hàng</span></div>
+              <table class="ma-table ma-data-table">
+                <tbody class="ma-rows-divide">
+                  <tr v-for="c in overviewTopCustomers" :key="c.customer_id">
+                    <td class="ma-td-cell">[[ c.name || c.phone || c.customer_id ]] <span class="text-on-surface-variant">×[[ c.paid_count ]]</span></td>
+                    <td class="ma-td-amount">[[ formatMoney(c.total_paid) ]]</td>
+                  </tr>
+                  <tr v-if="!overviewTopCustomers.length"><td class="ma-td-empty">Chưa có dữ liệu.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          
+          <div class="ma-card">
+            <div class="ma-td-border"><span class="ma-section-label">Hiệu suất nhân viên</span></div>
+            <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+              <thead><tr class="ma-thead-row">
+                <th class="ma-th">Nhân viên</th>
+                <th class="ma-th-right">Đã xác nhận PAID</th>
+                <th class="ma-th-right">Đã huỷ</th>
+                <th class="ma-th-right">Đã hoàn tiền</th>
+              </tr></thead>
+              <tbody class="ma-rows-divide">
+                <tr v-for="s in overviewStaffPerformance" :key="s.staff">
+                  <td class="px-6 py-2 font-body-md font-bold">[[ s.staff ]]</td>
+                  <td class="px-6 py-2 text-right font-body-sm">[[ s.paid_confirmed_count ]]</td>
+                  <td class="px-6 py-2 text-right font-body-sm">[[ s.cancelled_count ]]</td>
+                  <td class="px-6 py-2 text-right font-body-sm">[[ s.refunded_count ]]</td>
+                </tr>
+                <tr v-if="!overviewStaffPerformance.length"><td colspan="4" class="ma-td-empty">Chưa có dữ liệu (chỉ tính từ khi bản vá gán nhân viên được triển khai).</td></tr>
+              </tbody>
+            </table></div>
+          </div>
+        </div>
+        </div>
+
+        
+        <div v-show="overview.subTab === 'sales'">
+          <div v-if="salesReport.loading" class="ma-table-skeleton" aria-label="Đang tải báo cáo bán hàng"><span></span><span></span><span></span><span></span></div>
+          <div v-else-if="salesReport.error" class="ma-empty-state">
+            <span class="material-symbols-outlined text-on-surface-variant text-[56px] opacity-[.35]">error_outline</span>
+            <p class="ma-empty-hint">[[ salesReport.error ]]</p>
+            <button @click="loadSalesReport" type="button" class="ma-btn-outline">Thử lại</button>
+          </div>
+          <div v-else-if="salesReport.data">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-stack-md mb-stack-lg">
+              <div class="ma-card">
+                <div class="ma-td-border"><span class="ma-section-label">Theo loại đơn</span></div>
+                <table class="ma-table ma-data-table">
+                  <tbody class="ma-rows-divide">
+                    <tr v-for="o in salesByOrderType" :key="o.order_type">
+                      <td class="ma-td-cell">[[ o.order_type ]] <span class="text-on-surface-variant">×[[ o.count ]]</span></td>
+                      <td class="ma-td-amount">[[ formatMoney(o.revenue) ]]</td>
+                    </tr>
+                    <tr v-if="!salesByOrderType.length"><td colspan="2" class="ma-td-empty">Chưa có dữ liệu.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="ma-card">
+                <div class="ma-td-border"><span class="ma-section-label">Theo nguồn tạo đơn</span></div>
+                <table class="ma-table ma-data-table">
+                  <tbody class="ma-rows-divide">
+                    <tr v-for="s in salesBySource" :key="s.source">
+                      <td class="ma-td-cell">[[ s.source ]] <span class="text-on-surface-variant">×[[ s.count ]]</span></td>
+                      <td class="ma-td-amount">[[ formatMoney(s.revenue) ]]</td>
+                    </tr>
+                    <tr v-if="!salesBySource.length"><td colspan="2" class="ma-td-empty">Chưa có dữ liệu.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm mb-stack-lg">
+              <div class="ma-td-border"><span class="ma-section-label">Hiệu quả mã giảm giá</span></div>
+              <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+                <thead><tr class="ma-thead-row">
+                  <th class="ma-th">Mã</th>
+                  <th class="ma-th-right">Lượt dùng</th>
+                  <th class="ma-th-right">Tổng tiền giảm</th>
+                </tr></thead>
+                <tbody class="ma-rows-divide">
+                  <tr v-for="c in salesCouponStats" :key="c.code">
+                    <td class="px-6 py-2 font-body-md font-bold text-primary">[[ c.code ]]</td>
+                    <td class="px-6 py-2 text-right font-body-sm">[[ c.used_count ]]</td>
+                    <td class="ma-td-amount">[[ formatMoney(c.total_discount_amount) ]]</td>
+                  </tr>
+                  <tr v-if="!salesCouponStats.length"><td colspan="3" class="ma-td-empty">Chưa có dữ liệu.</td></tr>
+                </tbody>
+              </table></div>
+            </div>
+
+            
+            <div v-if="canViewFinance" class="ma-card">
+              <div class="ma-td-border"><span class="ma-section-label">Chiết khấu tại quầy — theo nhân viên (chống thất thoát)</span></div>
+              <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+                <thead><tr class="ma-thead-row">
+                  <th class="ma-th">Nhân viên</th>
+                  <th class="ma-th-right">Số đơn giảm giá</th>
+                  <th class="ma-th-right">Tổng tiền giảm</th>
+                  <th class="ma-th-right">% giảm TB</th>
+                  <th class="ma-th-right">Hạn mức Role</th>
+                  <th class="ma-th-right">Số lần chạm hạn mức</th>
+                </tr></thead>
+                <tbody class="ma-rows-divide">
+                  <tr v-for="s in salesDiscountByStaff" :key="s.staff">
+                    <td class="px-6 py-2 font-body-md font-bold">[[ s.staff ]]</td>
+                    <td class="px-6 py-2 text-right font-body-sm">[[ s.discount_order_count ]]</td>
+                    <td class="ma-td-amount">[[ formatMoney(s.total_discount_amount) ]]</td>
+                    <td class="px-6 py-2 text-right font-body-sm">[[ s.avg_discount_percent ]]%</td>
+                    <td class="px-6 py-2 text-right font-body-sm text-on-surface-variant">[[ s.max_discount_percent === null ? 'Không giới hạn' : s.max_discount_percent + '%' ]]</td>
+                    <td class="px-6 py-2 text-right">
+                      <span v-if="s.at_limit_count > 0" class="ma-badge ma-badge--danger">[[ s.at_limit_count ]]</span>
+                      <span v-else class="text-on-surface-variant">0</span>
+                    </td>
+                  </tr>
+                  <tr v-if="!salesDiscountByStaff.length"><td colspan="6" class="ma-td-empty">Chưa có dữ liệu.</td></tr>
+                </tbody>
+              </table></div>
+            </div>
+          </div>
+        </div>
+
+        
+        <div v-show="overview.subTab === 'customer'">
+          <div v-if="customerReport.loading" class="ma-table-skeleton" aria-label="Đang tải báo cáo khách hàng"><span></span><span></span><span></span><span></span></div>
+          <div v-else-if="customerReport.error" class="ma-empty-state">
+            <span class="material-symbols-outlined text-on-surface-variant text-[56px] opacity-[.35]">error_outline</span>
+            <p class="ma-empty-hint">[[ customerReport.error ]]</p>
+            <button @click="loadCustomerReport" type="button" class="ma-btn-outline">Thử lại</button>
+          </div>
+          <div v-else-if="customerReport.data">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-stack-md mb-stack-lg">
+              <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 text-center">
+                <div class="text-headline-lg font-bold text-primary">[[ customerNewInRange ]]</div>
+                <div class="text-label-md text-on-surface-variant uppercase tracking-wider mt-1">Khách mới trong kỳ</div>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-stack-md">
+              <div class="ma-card">
+                <div class="ma-td-border"><span class="ma-section-label">Theo nhóm khách (Lẻ/Sỉ)</span></div>
+                <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+                  <thead><tr class="ma-thead-row">
+                    <th class="ma-th">Nhóm</th>
+                    <th class="ma-th-right">Số khách</th>
+                    <th class="ma-th-right">Doanh thu (kỳ)</th>
+                    <th class="ma-th-right">Giá trị đơn TB</th>
+                  </tr></thead>
+                  <tbody class="ma-rows-divide">
+                    <tr v-for="g in customerByGroup" :key="g.group">
+                      <td class="px-6 py-2 font-body-md font-bold">[[ g.group ]]</td>
+                      <td class="px-6 py-2 text-right font-body-sm">[[ g.customer_count ]]</td>
+                      <td class="ma-td-amount">[[ formatMoney(g.revenue_in_range) ]]</td>
+                      <td class="px-6 py-2 text-right font-body-sm text-on-surface-variant">[[ formatMoney(g.avg_order_value) ]]</td>
+                    </tr>
+                    <tr v-if="!customerByGroup.length"><td colspan="4" class="ma-td-empty">Chưa có dữ liệu.</td></tr>
+                  </tbody>
+                </table></div>
+              </div>
+              <div class="ma-card">
+                <div class="ma-td-border"><span class="ma-section-label">Theo nguồn tạo</span></div>
+                <table class="ma-table ma-data-table">
+                  <tbody class="ma-rows-divide">
+                    <tr v-for="s in customerBySource" :key="s.source">
+                      <td class="ma-td-cell">[[ s.source ]]</td>
+                      <td class="ma-td-amount">[[ s.customer_count ]]</td>
+                    </tr>
+                    <tr v-if="!customerBySource.length"><td colspan="2" class="ma-td-empty">Chưa có dữ liệu.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        
+        <div v-show="overview.subTab === 'purchase'">
+          <div v-if="purchaseReport.loading" class="ma-table-skeleton" aria-label="Đang tải báo cáo nhập hàng"><span></span><span></span><span></span><span></span></div>
+          <div v-else-if="purchaseReport.error" class="ma-empty-state">
+            <span class="material-symbols-outlined text-on-surface-variant text-[56px] opacity-[.35]">error_outline</span>
+            <p class="ma-empty-hint">[[ purchaseReport.error ]]</p>
+            <button @click="loadPurchaseReport" type="button" class="ma-btn-outline">Thử lại</button>
+          </div>
+          <div v-else-if="purchaseReport.data">
+            <div class="grid grid-cols-2 gap-stack-md mb-stack-lg">
+              <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
+                <div class="text-label-md text-on-surface-variant uppercase tracking-wider">Tổng giá trị nhập (kỳ)</div>
+                <div class="text-headline-lg font-bold mt-2 text-primary">[[ formatMoney(purchaseKpi.total_purchase_amount_in_range) ]]</div>
+              </div>
+              <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
+                <div class="text-label-md text-on-surface-variant uppercase tracking-wider">Số phiếu đã nhập (kỳ)</div>
+                <div class="text-headline-lg font-bold mt-2">[[ purchaseKpi.po_count_in_range || 0 ]]</div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-stack-md mb-stack-lg">
+              <div class="ma-card">
+                <div class="ma-td-border"><span class="ma-section-label">Top nhà cung cấp</span></div>
+                <table class="ma-table ma-data-table">
+                  <tbody class="ma-rows-divide">
+                    <tr v-for="s in purchaseBySupplier" :key="s.supplier">
+                      <td class="ma-td-cell">[[ s.supplier ]] <span class="text-on-surface-variant">×[[ s.po_count ]]</span></td>
+                      <td class="ma-td-amount">[[ formatMoney(s.total_amount) ]]</td>
+                    </tr>
+                    <tr v-if="!purchaseBySupplier.length"><td colspan="2" class="ma-td-empty">Chưa có dữ liệu.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="ma-card">
+                <div class="ma-td-border"><span class="ma-section-label">Top sản phẩm nhập nhiều nhất</span></div>
+                <table class="ma-table ma-data-table">
+                  <tbody class="ma-rows-divide">
+                    <tr v-for="p in purchaseTopProducts" :key="p.product_name">
+                      <td class="ma-td-cell">[[ p.product_name ]] <span class="text-on-surface-variant">×[[ p.total_qty ]]</span></td>
+                      <td class="ma-td-amount">[[ formatMoney(p.total_cost) ]]</td>
+                    </tr>
+                    <tr v-if="!purchaseTopProducts.length"><td colspan="2" class="ma-td-empty">Chưa có dữ liệu.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="ma-card">
+              <div class="ma-td-border"><span class="ma-section-label">Phiếu nhập theo trạng thái (trong kỳ)</span></div>
+              <table class="ma-table ma-data-table">
+                <tbody class="ma-rows-divide">
+                  <tr v-for="s in purchaseByStatus" :key="s.status">
+                    <td class="ma-td-cell">[[ s.status ]]</td>
+                    <td class="ma-td-amount">[[ s.count ]]</td>
+                  </tr>
+                  <tr v-if="!purchaseByStatus.length"><td colspan="2" class="ma-td-empty">Chưa có dữ liệu.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        
+        <div v-show="overview.subTab === 'inventory'">
+          <div v-if="inventoryReport.loading" class="ma-table-skeleton" aria-label="Đang tải báo cáo kho"><span></span><span></span><span></span><span></span></div>
+          <div v-else-if="inventoryReport.error" class="ma-empty-state">
+            <span class="material-symbols-outlined text-on-surface-variant text-[56px] opacity-[.35]">error_outline</span>
+            <p class="ma-empty-hint">[[ inventoryReport.error ]]</p>
+            <button @click="loadInventoryReport" type="button" class="ma-btn-outline">Thử lại</button>
+          </div>
+          <div v-else-if="inventoryReport.data">
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm mb-stack-lg">
+              <div class="px-6 py-3 border-b border-outline-variant flex items-center justify-between">
+                <span class="ma-section-label">Sản phẩm sắp hết hàng</span>
+                <span v-if="inventoryLowStock.length" class="ma-badge ma-badge--warning">[[ inventoryLowStock.length ]] sản phẩm</span>
+              </div>
+              <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+                <thead><tr class="ma-thead-row">
+                  <th class="ma-th">Sản phẩm</th>
+                  <th class="ma-th-right">Tồn hiện tại</th>
+                  <th class="ma-th-right">Ngưỡng tối thiểu</th>
+                </tr></thead>
+                <tbody class="ma-rows-divide">
+                  <tr v-for="p in inventoryLowStock" :key="p.product_name">
+                    <td class="ma-td-cell">[[ p.product_name ]]</td>
+                    <td class="px-6 py-2 text-right font-body-md font-bold text-red-600">[[ p.inventory_qty ]]</td>
+                    <td class="px-6 py-2 text-right font-body-sm text-on-surface-variant">[[ p.safety_stock_min ]]</td>
+                  </tr>
+                  <tr v-if="!inventoryLowStock.length"><td colspan="3" class="ma-td-empty">Không có sản phẩm nào sắp hết hàng.</td></tr>
+                </tbody>
+              </table></div>
+            </div>
+
+            <div class="ma-card">
+              <div class="ma-td-border"><span class="ma-section-label">Nhập/Xuất trong kỳ theo sản phẩm</span></div>
+              <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+                <thead><tr class="ma-thead-row">
+                  <th class="ma-th">Sản phẩm</th>
+                  <th class="ma-th-right">Nhập</th>
+                  <th class="ma-th-right">Xuất</th>
+                </tr></thead>
+                <tbody class="ma-rows-divide">
+                  <tr v-for="m in inventoryMovements" :key="m.product_name">
+                    <td class="ma-td-cell">[[ m.product_name ]]</td>
+                    <td class="px-6 py-2 text-right font-body-md text-emerald-700">+[[ m.in_qty ]]</td>
+                    <td class="px-6 py-2 text-right font-body-md text-red-600">-[[ m.out_qty ]]</td>
+                  </tr>
+                  <tr v-if="!inventoryMovements.length"><td colspan="3" class="ma-td-empty">Chưa có dữ liệu.</td></tr>
+                </tbody>
+              </table></div>
+            </div>
+          </div>
+        </div>
+
+        
+        <div v-show="overview.subTab === 'finance'">
+          <div v-if="financeReport.loading" class="ma-table-skeleton" aria-label="Đang tải báo cáo tài chính"><span></span><span></span><span></span><span></span></div>
+          <div v-else-if="financeReport.error" class="ma-empty-state">
+            <span class="material-symbols-outlined text-on-surface-variant text-[56px] opacity-[.35]">error_outline</span>
+            <p class="ma-empty-hint">[[ financeReport.error ]]</p>
+            <button @click="loadFinanceReport" type="button" class="ma-btn-outline">Thử lại</button>
+          </div>
+          <div v-else-if="financeReport.analytics">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-stack-md mb-stack-lg">
+              <div v-for="card in financeReportCards" :key="card.label" class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
+                <div class="text-label-md text-on-surface-variant uppercase tracking-wider">[[ card.label ]]</div>
+                <div class="text-headline-lg font-bold mt-2" :class="card.accent">[[ card.value ]]</div>
+              </div>
+            </div>
+
+            
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm mb-stack-lg">
+              <div class="px-6 py-3 border-b border-outline-variant flex items-center justify-between">
+                <span class="ma-section-label">Đơn thiếu Phiếu Thu (cần đối soát)</span>
+                <span v-if="financeReport.missingReceipts.length" class="ma-badge ma-badge--danger">[[ financeReport.missingReceipts.length ]] đơn</span>
+              </div>
+              <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+                <thead><tr class="ma-thead-row">
+                  <th class="ma-th">Đơn hàng</th>
+                  <th class="ma-th-right">Số tiền</th>
+                  <th class="ma-th">Thanh toán lúc</th>
+                  <th class="ma-th">Vấn đề</th>
+                </tr></thead>
+                <tbody class="ma-rows-divide">
+                  <tr v-for="m in financeReport.missingReceipts" :key="m.payment_id">
+                    <td class="px-6 py-2 font-body-md font-bold text-primary">[[ m.order_id ]]</td>
+                    <td class="ma-td-amount">[[ formatMoney(m.amount) ]]</td>
+                    <td class="ma-td-cell-muted">[[ formatDate(m.paid_at) ]]</td>
+                    <td class="px-6 py-2"><span class="ma-badge ma-badge--warning">[[ m.issue ]]</span></td>
+                  </tr>
+                  <tr v-if="!financeReport.missingReceipts.length"><td colspan="4" class="ma-td-empty">Không có đơn nào thiếu Phiếu Thu.</td></tr>
+                </tbody>
+              </table></div>
+            </div>
+
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm mb-stack-lg">
+              <div class="ma-td-border"><span class="ma-section-label">Số dư tài khoản</span></div>
+              <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+                <thead><tr class="ma-thead-row">
+                  <th class="ma-th">Tài khoản</th>
+                  <th class="ma-th">Loại</th>
+                  <th class="ma-th-right">Số dư hiện tại</th>
+                </tr></thead>
+                <tbody class="ma-rows-divide">
+                  <tr v-for="a in financeReport.accounts" :key="a.account_id">
+                    <td class="px-6 py-2 font-body-md font-bold">[[ a.name ]] <span class="text-on-surface-variant font-body-sm">([[ a.branch || 'Chưa gắn chi nhánh' ]])</span></td>
+                    <td class="ma-td-cell-muted">[[ a.type ]]</td>
+                    <td class="ma-td-amount">[[ formatMoney(a.balance) ]]</td>
+                  </tr>
+                  <tr v-if="!financeReport.accounts.length"><td colspan="3" class="ma-td-empty">Chưa có dữ liệu.</td></tr>
+                </tbody>
+              </table></div>
+            </div>
+
+            <div class="ma-card">
+              <div class="ma-td-border"><span class="ma-section-label">Công nợ phải trả nhà cung cấp</span></div>
+              <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+                <thead><tr class="ma-thead-row">
+                  <th class="ma-th">Mã Bill</th>
+                  <th class="ma-th-right">Tổng nợ</th>
+                  <th class="ma-th-right">Đã trả</th>
+                  <th class="ma-th-right">Còn nợ</th>
+                  <th class="ma-th">Trạng thái</th>
+                </tr></thead>
+                <tbody class="ma-rows-divide">
+                  <tr v-for="b in financeReportOpenBills" :key="b.bill_id">
+                    <td class="px-6 py-2 font-body-md font-bold text-primary">[[ b.bill_id ]]</td>
+                    <td class="px-6 py-2 text-right font-body-md">[[ formatMoney(b.amount) ]]</td>
+                    <td class="px-6 py-2 text-right font-body-md text-emerald-700">[[ formatMoney(b.paid_amount) ]]</td>
+                    <td class="px-6 py-2 text-right font-body-md font-bold text-red-600">[[ formatMoney(b.remaining_amount) ]]</td>
+                    <td class="px-6 py-2"><span :class="billStatusClass(b.status)">[[ b.status ]]</span></td>
+                  </tr>
+                  <tr v-if="!financeReportOpenBills.length"><td colspan="5" class="ma-td-empty">Không còn công nợ nào chưa thanh toán.</td></tr>
+                </tbody>
+              </table></div>
+            </div>
+          </div>
+        </div>
+      </div>

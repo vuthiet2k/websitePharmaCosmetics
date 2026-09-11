@@ -1,0 +1,101 @@
+{% comment %} mops-admin-audit.js.bwt — Mixin domain "Nhật ký" (tab Audit) cho MOPS Admin.
+  Tách khỏi Assets/mops-admin.js.bwt (2026-07-16) — domain nhỏ nhất, dùng làm bản mẫu cho các
+  lần tách domain tiếp theo. Đây là script TOP-LEVEL (không bọc DOMContentLoaded) — chạy ngay
+  khi parse, đẩy mixin vào window.MopsAdminMixins TRƯỚC khi Assets/mops-admin.js.bwt (chạy trong
+  DOMContentLoaded, luôn sau) đọc mảng này để truyền vào Vue.createApp({ mixins: [...] }).
+  Không tự chứa gasGet/showToast/downloadCsv/csvCell — các hàm dùng chung này gọi qua
+  window.MopsAdminCore (khởi tạo trong Assets/mops-admin.js.bwt), vì file domain không nằm
+  trong IIFE chứa các hàm đó.
+  Load TRƯỚC Assets/mops-admin.js.bwt trong Layouts/mops-admin.bwt.
+  Quy ước: memory project_mops_vue_typeerror_bug (bài học computed-vs-methods dẫn tới bug
+  "reading 'length'" — domain tách ra vẫn phải giữ đúng: data() trong `data`, giá trị tính toán
+  trong `computed`, hành động trong `methods`). {% endcomment %}
+(function() {
+  'use strict';
+
+  var AUDIT_CAT_ENTITIES = {
+    security: ['SECURITY'], business: ['ORDER', 'PAYMENT', 'CUSTOMER', 'FINANCE'], system: ['PRODUCT', 'SYNC']
+  };
+  var AUDIT_ACTION_COLOR = {
+    LOGIN_FAILED: 'text-red-600 font-bold', PERMISSION_DENIED: 'text-red-600 font-bold',
+    TOKEN_EXPIRED: 'text-amber-600 font-bold', LOGIN_SUCCESS: 'text-emerald-600 font-bold',
+    LOGOUT: 'text-on-surface-variant font-medium', STAFF_CREATED: 'text-blue-600 font-medium',
+    STAFF_ACTIVATED: 'text-emerald-600 font-medium', STAFF_DEACTIVATED: 'text-red-600 font-medium',
+    PASSWORD_RESET: 'text-violet-600 font-medium', ORDER_CREATED: 'text-blue-600 font-medium',
+    ORDER_UPDATED: 'text-violet-600 font-medium', ORDER_CANCELLED: 'text-red-600 font-medium',
+    PAYMENT_REPORTED: 'text-blue-600 font-medium', PAYMENT_CONFIRMED: 'text-emerald-600 font-bold',
+    PAYMENT_REFUNDED: 'text-amber-600 font-bold', PRODUCT_SYNC: 'text-on-surface-variant font-medium',
+    PRODUCT_SYNC_FAILED: 'text-red-600 font-bold', CRON_EXPIRE_ORDER: 'text-amber-600 font-medium',
+    CASH_INCOME_CREATED: 'text-emerald-600 font-medium', CASH_EXPENSE_CREATED: 'text-red-600 font-medium',
+    CASH_TX_VOIDED: 'text-amber-600 font-bold'
+  };
+
+  // Đánh dấu đã nạp thành công — Assets/mops-admin.js.bwt kiểm tra mảng này để phát hiện domain
+  // nào bị thiếu (404/quên tạo asset/sai thứ tự script) và tự chèn fallback rỗng thay vì crash.
+  window.MopsAdminRegisteredDomains = window.MopsAdminRegisteredDomains || [];
+  window.MopsAdminRegisteredDomains.push('audit');
+
+  window.MopsAdminMixins = window.MopsAdminMixins || [];
+  window.MopsAdminMixins.push({
+    data: function() {
+      return {
+        audit: { activeCat: '', entity: '', logAction: '', entityId: '', loading: false, error: '', list: [] },
+        auditCats: [
+          { key: '',         label: 'Tất cả' },
+          { key: 'security', label: '🔒 Bảo mật' },
+          { key: 'business', label: '📦 Nghiệp vụ' },
+          { key: 'system',   label: '⚙ Hệ thống' }
+        ]
+      };
+    },
+    computed: {
+      /* ── Nhật ký: server-filtered (loadAuditLogs), chỉ cần message rỗng/lỗi ── */
+      auditEmptyMessage: function() {
+        if (this.audit.error) return this.audit.error;
+        if (!this.audit.list.length) return 'Không có nhật ký phù hợp với bộ lọc.';
+        return '';
+      }
+    },
+    methods: {
+      setAuditCat: function(key) {
+        this.audit.activeCat = key;
+        if (key && AUDIT_CAT_ENTITIES[key]) this.audit.entity = '';
+        this.loadAuditLogs();
+      },
+      loadAuditLogs: function() {
+        var self = this;
+        this.audit.loading = true;
+        this.audit.error = '';
+        var params = { action: 'list_activity_logs', limit: 300 };
+        var logAction = (this.audit.logAction || '').trim().toUpperCase();
+        var entityId  = (this.audit.entityId || '').trim();
+        if (this.audit.entity) {
+          params.entity_type = this.audit.entity;
+        } else if (this.audit.activeCat && AUDIT_CAT_ENTITIES[this.audit.activeCat]) {
+          params.entity_type = AUDIT_CAT_ENTITIES[this.audit.activeCat].join(',');
+        }
+        if (logAction) params.log_action = logAction;
+        if (entityId)  params.entity_id  = entityId;
+        window.MopsAdminCore.gasGet(params)
+          .then(function(d) {
+            self.audit.loading = false;
+            if (!d || !d.success) { self.audit.error = 'Không tải được nhật ký.'; return; }
+            self.audit.list = d.logs || [];
+            if (!self.audit.list.length) self.audit.error = 'Không có sự kiện nào.';
+          })
+          .catch(function() { self.audit.loading = false; self.audit.error = 'Lỗi kết nối.'; });
+      },
+      auditActionClass: function(action) { return AUDIT_ACTION_COLOR[action] || 'text-on-surface'; },
+      exportAuditCsv: function() {
+        var core = window.MopsAdminCore;
+        var rows = this.audit.list;
+        if (!rows || !rows.length) { core.showToast('Chưa có dữ liệu để xuất. Nhấn Xem trước.', 'info'); return; }
+        var csvLines = ['LogID,EntityType,EntityID,Action,User,CreatedAt'];
+        rows.forEach(function(log) {
+          csvLines.push([core.csvCell(log.log_id), core.csvCell(log.entity_type), core.csvCell(log.entity_id), core.csvCell(log.action), core.csvCell(log.user), core.csvCell(log.created_at)].join(','));
+        });
+        core.downloadCsv('audit-log-' + new Date().toISOString().slice(0,10) + '.csv', csvLines);
+      }
+    }
+  });
+})();

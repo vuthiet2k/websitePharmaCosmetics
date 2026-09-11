@@ -1,0 +1,516 @@
+{% comment %} mops-admin-settings.js.bwt — Mixin domain "Cấu hình" (tab Settings, chỉ OWNER) cho
+  MOPS Admin. Tách khỏi Assets/mops-admin.js.bwt (2026-07-16, theo mẫu mops-admin-audit.js.bwt).
+  Script TOP-LEVEL — đẩy mixin vào window.MopsAdminMixins TRƯỚC khi Assets/mops-admin.js.bwt đọc
+  mảng này. Gọi helper dùng chung qua window.MopsAdminCore. Load TRƯỚC Assets/mops-admin.js.bwt.
+  KHÔNG gồm myProfile/openMyProfile/saveMyProfile ("Hồ sơ của tôi") — đó là tính năng mọi staff
+  dùng được (nút trong sidebar, không riêng OWNER), vẫn ở core, không thuộc domain Cấu hình.
+  _syncSubToUrl()/_syncTabToUrl() (URL routing dùng chung với domain Tổng quan) cũng vẫn ở core. {% endcomment %}
+(function() {
+  'use strict';
+
+  /* ── Validate settings client-side — gương với _validateSettingValue() trong code.gs ── */
+  function validateSettingClient(key, value) {
+    if (!value) return null;
+    if (key === 'TELEGRAM_TOKEN' && !/^\d+:[A-Za-z0-9_-]{30,}$/.test(value)) {
+      return 'Telegram Bot Token sai định dạng (dạng "123456789:AAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")';
+    }
+    if ((key === 'SAPO_API_KEY' || key === 'SAPO_SECRET') && (value.length < 16 || /\s/.test(value))) {
+      return (key === 'SAPO_API_KEY' ? 'API Key' : 'API Secret') + ' quá ngắn hoặc chứa khoảng trắng — kiểm tra lại giá trị copy từ Sapo Admin';
+    }
+    if (key === 'ACCOUNT_NO' && !/^\d{6,19}$/.test(value)) {
+      return 'Số tài khoản phải là 6-19 chữ số';
+    }
+    if (key === 'BANK_CODE' && !/^[A-Z0-9]{2,10}$/.test(value)) {
+      return 'Mã ngân hàng không hợp lệ (chỉ chữ hoa/số, 2-10 ký tự)';
+    }
+    return null;
+  }
+
+  window.MopsAdminRegisteredDomains = window.MopsAdminRegisteredDomains || [];
+  window.MopsAdminRegisteredDomains.push('settings');
+
+  window.MopsAdminMixins = window.MopsAdminMixins || [];
+  window.MopsAdminMixins.push({
+    data: function() {
+      return {
+        cfgTabs: [
+          { key: 'status',   icon: 'monitoring',        label: 'Trạng thái hệ thống' },
+          { key: 'bank',     icon: 'account_balance',   label: 'Tài khoản ngân hàng' },
+          { key: 'sapo',     icon: 'api',               label: 'SAPO API' },
+          // Goship xếp trên các hãng lẻ: là cổng đa hãng, cấu hình 1 lần dùng được nhiều hãng.
+          { key: 'goship',   icon: 'hub',               label: 'Vận chuyển Goship' },
+          { key: 'ghn',      icon: 'local_shipping',    label: 'Vận chuyển GHN' },
+          { key: 'ahamove',  icon: 'two_wheeler',       label: 'Vận chuyển Ahamove' },
+          { key: 'ghtk',     icon: 'inventory_2',       label: 'Vận chuyển GHTK' },
+          { key: 'vtp',      icon: 'local_post_office', label: 'Vận chuyển Viettel Post' },
+          { key: 'telegram', icon: 'send',              label: 'Telegram' },
+          { key: 'security', icon: 'security',          label: 'Bảo mật hệ thống' }
+        ],
+        settings: {
+          panel: 'status',
+          appVersion: '', env: '', maintenance: false,
+          bankCode: '', accountNo: '', accountName: '',
+          telegramChatId: '', sapoStore: '',
+          telegramToken: '', sapoKey: '', sapoSecret: '',
+          telegramTokenSet: false, sapoKeySet: false, sapoSecretSet: false,
+          lastSaved: '', bankEditing: false, saving: false, loading: false,
+          sapoKeyVisible: false, sapoSecretVisible: false, telegramTokenVisible: false,
+          // GHN vận chuyển (phase 2026-07-17). Token là secret (write-only, chỉ *_set). ENV dev/prod.
+          ghnEnv: 'dev', ghnShopId: '', ghnFromDistrictId: '', ghnFromWardCode: '',
+          ghnDefaultLength: '', ghnDefaultWidth: '', ghnDefaultHeight: '', ghnCodAccountId: '',
+          ghnToken: '', ghnTokenSet: false, ghnTokenVisible: false,
+          // Ahamove vận chuyển (đa đối tác 2026-07-20). API Key là secret (write-only, chỉ *_set). ENV stg/prod.
+          ahamoveEnv: 'stg', ahamoveMobile: '', ahamoveServiceId: '', ahamoveFromAddress: '',
+          ahamoveFromLat: '', ahamoveFromLng: '', ahamovePickupName: '', ahamovePickupMobile: '',
+          ahamoveApiKey: '', ahamoveApiKeySet: false, ahamoveApiKeyVisible: false,
+          // GHTK (đa đối tác 2026-07-20). Token secret. Địa chỉ kho theo tên tỉnh/quận/xã.
+          ghtkEnv: 'stg', ghtkPickAddressId: '', ghtkPickName: '', ghtkPickTel: '', ghtkPickAddress: '',
+          ghtkPickProvince: '', ghtkPickDistrict: '', ghtkPickWard: '', ghtkTransport: 'road',
+          ghtkToken: '', ghtkTokenSet: false, ghtkConfigured: false, ghtkTokenVisible: false,
+          // Kết nối GHTK bằng Email/Password (2026-07-30) — mặc định thay cho luồng nhập Token thủ công.
+          // Email/Password KHÔNG bao giờ gửi đi cùng update_settings (không lưu Sheet/Properties) — chỉ
+          // dùng cho action `ghtk_connect_by_login` để backend đổi thành Token rồi vứt.
+          ghtkConnectTab: 'login', ghtkConnectEmail: '', ghtkConnectPassword: '',
+          ghtkConnectPasswordVisible: false, ghtkConnecting: false,
+          ghtkPickAddresses: [], ghtkPickAddressesLoading: false, ghtkManualSettingsOpen: false,
+          // GHTK nhận TÊN hành chính, không có ID riêng. Danh mục này chỉ để chọn đúng tên.
+          ghtkAddressData: [], ghtkAddressLoading: false,
+          // Viettel Post (đa đối tác 2026-07-20). Token+Password secret. Sender province/district = ID VTP.
+          vtpEnv: 'stg', vtpUsername: '', vtpServiceCode: 'VCN', vtpSenderName: '', vtpSenderPhone: '',
+          vtpSenderAddress: '', vtpSenderProvince: '', vtpSenderDistrict: '', vtpSenderWard: '',
+          vtpToken: '', vtpTokenSet: false, vtpTokenVisible: false,
+          vtpPassword: '', vtpPasswordSet: false, vtpPasswordVisible: false,
+          // Goship aggregator (2026-07-27). Token/Password/ClientSecret secret (write-only, chỉ *_set).
+          // FromCity/District/Ward nhận MÃ Goship hoặc TÊN (backend tự dò).
+          goshipEnv: 'stg', goshipUsername: '', goshipClientId: '',
+          goshipFromName: '', goshipFromPhone: '', goshipFromStreet: '',
+          goshipFromCity: '', goshipFromDistrict: '', goshipFromWard: '',
+          goshipAutoPick: 'cheapest', goshipPayer: '1',
+          goshipToken: '', goshipTokenSet: false, goshipTokenVisible: false,
+          goshipPassword: '', goshipPasswordSet: false, goshipPasswordVisible: false,
+          goshipClientSecret: '', goshipClientSecretSet: false, goshipClientSecretVisible: false,
+          // Khoá webhook: GAS không đọc được header nên không kiểm HMAC — khoá trong URL là lớp thay thế.
+          goshipWebhookKey: '', goshipWebhookKeySet: false, goshipWebhookKeyVisible: false,
+          // V6.3 2026-08-05: cascade dropdown Tỉnh/Quận/Xã Goship — user không phải gõ code
+          // (Goship dùng code riêng, không phải GSO). Fetch qua action ship_provinces/districts/wards
+          // với carrier=GOSHIP (mops-gas/mops_01.js:3138).
+          goshipCityOptions: [], goshipCityLoading: false,
+          goshipDistrictOptions: [], goshipDistrictLoading: false,
+          goshipWardOptions: [], goshipWardLoading: false
+        },
+        settingsSnapshot: null
+      };
+    },
+    computed: {
+      maskedAccountNo: function() {
+        var no = String(this.settings.accountNo || '');
+        if (!no) return '—';
+        if (no.length <= 4) return no;
+        return '•••• ' + no.slice(-4);
+      },
+      ghtkProvinces: function() {
+        return this.settings.ghtkAddressData || [];
+      },
+      ghtkDistricts: function() {
+        var province = this.ghtkProvinces.filter(function(p) { return p.name === this.settings.ghtkPickProvince; }, this)[0];
+        return (province && province.districts) || [];
+      },
+      ghtkWards: function() {
+        var district = this.ghtkDistricts.filter(function(d) { return d.name === this.settings.ghtkPickDistrict; }, this)[0];
+        return (district && district.wards) || [];
+      }
+    },
+    methods: {
+      /* ── Cấu hình ── */
+      cancelBankEdit: function() {
+        if (this.settingsSnapshot) {
+          this.settings.bankCode    = this.settingsSnapshot.bank_code || '';
+          this.settings.accountNo   = this.settingsSnapshot.account_no || '';
+          this.settings.accountName = this.settingsSnapshot.account_name || '';
+        }
+        this.settings.bankEditing = false;
+      },
+      setSettingsPanel: function(key) {
+        this.settings.panel = key;
+        if (key === 'ghtk') this.loadGhtkAddressData();
+        this._syncSubToUrl(key); // helper dùng chung — vẫn ở core
+      },
+      loadGhtkAddressData: function() {
+        var self = this, core = window.MopsAdminCore;
+        if (this.settings.ghtkAddressData.length || this.settings.ghtkAddressLoading) return;
+        this.settings.ghtkAddressLoading = true;
+        fetch('https://provinces.open-api.vn/api/?depth=3')
+          .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+          .then(function(list) { self.settings.ghtkAddressData = list || []; })
+          .catch(function() { core.showToast('Không tải được danh mục địa chỉ cho GHTK.', 'error'); })
+          .finally(function() { self.settings.ghtkAddressLoading = false; });
+      },
+      onGhtkPickProvinceChange: function() {
+        this.settings.ghtkPickDistrict = '';
+        this.settings.ghtkPickWard = '';
+      },
+      onGhtkPickDistrictChange: function() {
+        this.settings.ghtkPickWard = '';
+      },
+      // V6.3 2026-08-05 Goship cascade dropdown (tab Cấu hình > Vận chuyển Goship > kho gửi).
+      // Trước đó text input → user phải gõ mã Goship (100000/100300…) — nhầm mã → gọi API fail
+      // giữa quy trình tạo vận đơn. Sau cải: 3 select cascade fetch qua BE proxy goshipCities/
+      // Districts/Wards (mops-gas/mops_01.js:2463-2465), cache CacheService 6h server-side.
+      loadGoshipCities: function() {
+        var self = this, core = window.MopsAdminCore, s = this.settings;
+        if (s.goshipCityLoading || s.goshipCityOptions.length) return;
+        s.goshipCityLoading = true;
+        core.gasGet({ action: 'ship_provinces', carrier: 'GOSHIP' })
+          .then(function(d) {
+            s.goshipCityLoading = false;
+            if (d && d.success) s.goshipCityOptions = d.provinces || [];
+            // Nếu đang có goshipFromCity đã lưu → tự load districts của nó
+            if (s.goshipFromCity) self.loadGoshipDistricts(s.goshipFromCity);
+          })
+          .catch(function() { s.goshipCityLoading = false; });
+      },
+      loadGoshipDistricts: function(cityCode) {
+        var self = this, core = window.MopsAdminCore, s = this.settings;
+        if (!cityCode) { s.goshipDistrictOptions = []; s.goshipWardOptions = []; return; }
+        s.goshipDistrictLoading = true; s.goshipDistrictOptions = []; s.goshipWardOptions = [];
+        core.gasGet({ action: 'ship_districts', carrier: 'GOSHIP', province_id: cityCode })
+          .then(function(d) {
+            s.goshipDistrictLoading = false;
+            if (d && d.success) s.goshipDistrictOptions = d.districts || [];
+            if (s.goshipFromDistrict) self.loadGoshipWards(s.goshipFromDistrict);
+          })
+          .catch(function() { s.goshipDistrictLoading = false; });
+      },
+      loadGoshipWards: function(districtCode) {
+        var core = window.MopsAdminCore, s = this.settings;
+        if (!districtCode) { s.goshipWardOptions = []; return; }
+        s.goshipWardLoading = true; s.goshipWardOptions = [];
+        core.gasGet({ action: 'ship_wards', carrier: 'GOSHIP', district_id: districtCode })
+          .then(function(d) {
+            s.goshipWardLoading = false;
+            if (d && d.success) s.goshipWardOptions = d.wards || [];
+          })
+          .catch(function() { s.goshipWardLoading = false; });
+      },
+      onGoshipCityChange: function() {
+        this.settings.goshipFromDistrict = '';
+        this.settings.goshipFromWard = '';
+        this.settings.goshipDistrictOptions = [];
+        this.settings.goshipWardOptions = [];
+        if (this.settings.goshipFromCity) this.loadGoshipDistricts(this.settings.goshipFromCity);
+      },
+      onGoshipDistrictChange: function() {
+        this.settings.goshipFromWard = '';
+        this.settings.goshipWardOptions = [];
+        if (this.settings.goshipFromDistrict) this.loadGoshipWards(this.settings.goshipFromDistrict);
+      },
+      loadSettingsData: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        if (this.settings.loading) return;
+        this.settings.loading = true;
+        core.gasGet({ action: 'get_settings_status' })
+          .then(function(d) {
+            if (!d || !d.success) { core.showToast(d && d.error || 'Không tải được cấu hình.', 'error'); return; }
+            self.settingsSnapshot = d;
+            // Nguồn sự thật mới nhất từ server — cập nhật ngay banner/nút "Tạo đơn thủ công"
+            // sau khi OWNER lưu Cấu hình, không cần đăng xuất/đăng nhập lại mới thấy hết cảnh báo.
+            self.paymentConfigured = !!(d.bank_code && d.account_no);
+            self.settings.appVersion       = d.app_version || '';
+            self.settings.env              = d.env || '';
+            self.settings.maintenance      = !!d.maintenance;
+            self.settings.bankCode         = d.bank_code || '';
+            self.settings.accountNo        = d.account_no || '';
+            self.settings.accountName      = d.account_name || '';
+            self.settings.telegramChatId   = d.telegram_chat_id || '';
+            self.settings.sapoStore        = d.sapo_store || '';
+            self.settings.telegramTokenSet = !!d.telegram_token_set;
+            self.settings.sapoKeySet       = !!d.sapo_api_key_set;
+            self.settings.sapoSecretSet    = !!d.sapo_secret_set;
+            self.settings.bankEditing      = false;
+            self.settings.telegramToken    = '';
+            self.settings.sapoKey          = '';
+            self.settings.sapoSecret       = '';
+            // GHN vận chuyển (phase 2026-07-17)
+            self.settings.ghnEnv           = d.ghn_env || 'dev';
+            self.settings.ghnShopId        = d.ghn_shop_id || '';
+            self.settings.ghnFromDistrictId = d.ghn_from_district_id || '';
+            self.settings.ghnFromWardCode  = d.ghn_from_ward_code || '';
+            self.settings.ghnDefaultLength = d.ghn_default_length || '';
+            self.settings.ghnDefaultWidth  = d.ghn_default_width || '';
+            self.settings.ghnDefaultHeight = d.ghn_default_height || '';
+            self.settings.ghnCodAccountId  = d.ghn_cod_account_id || '';
+            self.settings.ghnTokenSet      = !!d.ghn_token_set;
+            self.settings.ghnToken         = '';
+            // Ahamove vận chuyển (đa đối tác 2026-07-20)
+            self.settings.ahamoveEnv          = d.ahamove_env || 'stg';
+            self.settings.ahamoveMobile       = d.ahamove_mobile || '';
+            self.settings.ahamoveServiceId    = d.ahamove_service_id || '';
+            self.settings.ahamoveFromAddress  = d.ahamove_from_address || '';
+            self.settings.ahamoveFromLat      = d.ahamove_from_lat || '';
+            self.settings.ahamoveFromLng      = d.ahamove_from_lng || '';
+            self.settings.ahamovePickupName   = d.ahamove_pickup_name || '';
+            self.settings.ahamovePickupMobile = d.ahamove_pickup_mobile || '';
+            self.settings.ahamoveApiKeySet    = !!d.ahamove_api_key_set;
+            self.settings.ahamoveApiKey       = '';
+            // GHTK (đa đối tác 2026-07-20)
+            self.settings.ghtkEnv          = d.ghtk_env || 'stg';
+            self.settings.ghtkPickAddressId = d.ghtk_pick_address_id || '';
+            self.settings.ghtkPickName     = d.ghtk_pick_name || '';
+            self.settings.ghtkPickTel      = d.ghtk_pick_tel || '';
+            self.settings.ghtkPickAddress  = d.ghtk_pick_address || '';
+            self.settings.ghtkPickProvince = d.ghtk_pick_province || '';
+            self.settings.ghtkPickDistrict = d.ghtk_pick_district || '';
+            self.settings.ghtkPickWard     = d.ghtk_pick_ward || '';
+            self.settings.ghtkTransport    = d.ghtk_transport || 'road';
+            self.settings.ghtkTokenSet     = !!d.ghtk_token_set;
+            // Tương thích Web App GAS chưa deploy trường ghtk_configured: tự suy ra
+            // từ chính các giá trị status vừa nhận để không báo sai trạng thái.
+            self.settings.ghtkConfigured   = typeof d.ghtk_configured === 'boolean'
+              ? d.ghtk_configured
+              : !!(d.ghtk_token_set && (d.ghtk_pick_address_id || (d.ghtk_pick_address && d.ghtk_pick_province && d.ghtk_pick_district)));
+            self.settings.ghtkToken        = '';
+            if (self.settings.ghtkTokenSet) self.loadGhtkPickAddresses();
+            // Viettel Post (đa đối tác 2026-07-20)
+            self.settings.vtpEnv            = d.vtp_env || 'stg';
+            self.settings.vtpUsername       = d.vtp_username || '';
+            self.settings.vtpServiceCode    = d.vtp_service_code || 'VCN';
+            self.settings.vtpSenderName     = d.vtp_sender_name || '';
+            self.settings.vtpSenderPhone    = d.vtp_sender_phone || '';
+            self.settings.vtpSenderAddress  = d.vtp_sender_address || '';
+            self.settings.vtpSenderProvince = d.vtp_sender_province || '';
+            self.settings.vtpSenderDistrict = d.vtp_sender_district || '';
+            self.settings.vtpSenderWard     = d.vtp_sender_ward || '';
+            self.settings.vtpTokenSet       = !!d.vtp_token_set;
+            self.settings.vtpToken          = '';
+            self.settings.vtpPasswordSet    = !!d.vtp_password_set;
+            self.settings.vtpPassword       = '';
+            // Goship aggregator (2026-07-27)
+            self.settings.goshipEnv              = d.goship_env || 'stg';
+            self.settings.goshipUsername         = d.goship_username || '';
+            self.settings.goshipClientId         = d.goship_client_id || '';
+            self.settings.goshipFromName         = d.goship_from_name || '';
+            self.settings.goshipFromPhone        = d.goship_from_phone || '';
+            self.settings.goshipFromStreet       = d.goship_from_street || '';
+            self.settings.goshipFromCity         = d.goship_from_city || '';
+            self.settings.goshipFromDistrict     = d.goship_from_district || '';
+            self.settings.goshipFromWard         = d.goship_from_ward || '';
+            self.settings.goshipAutoPick         = d.goship_auto_pick || 'cheapest';
+            self.settings.goshipPayer            = d.goship_payer || '1';
+            self.settings.goshipTokenSet         = !!d.goship_token_set;
+            self.settings.goshipToken            = '';
+            self.settings.goshipPasswordSet      = !!d.goship_password_set;
+            self.settings.goshipPassword         = '';
+            self.settings.goshipClientSecretSet  = !!d.goship_client_secret_set;
+            self.settings.goshipClientSecret     = '';
+            self.settings.goshipWebhookKeySet    = !!d.goship_webhook_key_set;
+            self.settings.goshipWebhookKey       = '';
+            self.settings.lastSaved = d.settings_updated_at
+              ? 'Thay đổi lần cuối lúc ' + core.formatDate(d.settings_updated_at) + (d.settings_updated_by ? ' - bởi ' + d.settings_updated_by : '')
+              : '';
+            // V6.3 auto-load Goship city dropdown khi user có token (tránh gọi API vô ích khi
+            // chưa cấu hình). loadGoshipCities tự chain districts/wards nếu goshipFromCity đã set.
+            if (self.settings.goshipTokenSet || (self.settings.goshipUsername && self.settings.goshipPasswordSet)) {
+              self.loadGoshipCities();
+            }
+          })
+          .catch(function() { core.showToast('Lỗi kết nối khi tải cấu hình.', 'error'); })
+          .finally(function() { self.settings.loading = false; });
+      },
+      // Sinh khoá webhook 32 ký tự tại trình duyệt (crypto nếu có, else Math.random — khoá này không phải
+      // bí mật mật mã, chỉ để chặn người lạ gọi endpoint webhook đang mở).
+      genGoshipWebhookKey: function() {
+        var chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        var out = '';
+        if (window.crypto && window.crypto.getRandomValues) {
+          var buf = new Uint8Array(32);
+          window.crypto.getRandomValues(buf);
+          for (var i = 0; i < 32; i++) out += chars[buf[i] % chars.length];
+        } else {
+          for (var j = 0; j < 32; j++) out += chars[Math.floor(Math.random() * chars.length)];
+        }
+        this.settings.goshipWebhookKey = out;
+        this.settings.goshipWebhookKeyVisible = true; // hiện ra để admin copy vào URL webhook bên Goship
+        window.MopsAdminCore.showToast('Đã tạo khoá — copy vào URL webhook bên Goship rồi bấm Lưu.', 'info');
+      },
+      cancelSettings: function() {
+        this.settings.telegramToken = '';
+        this.settings.sapoKey = '';
+        this.settings.sapoSecret = '';
+        this.settings.goshipToken = '';
+        this.settings.goshipPassword = '';
+        this.settings.goshipClientSecret = '';
+        this.settings.goshipWebhookKey = '';
+        this.loadSettingsData();
+        window.MopsAdminCore.showToast('Đã huỷ các thay đổi chưa lưu.', 'info');
+      },
+      // Kết nối GHTK bằng Email/Password (2026-07-30) — gọi action `ghtk_connect_by_login`. Không dùng
+      // saveSettings vì Email/Password KHÔNG được ghi vào Sheet/Properties; chỉ Token cuối được lưu.
+      // Sau khi thành công: xoá Email/Password khỏi state (không giữ trên clipboard/DOM), reload trạng
+      // thái để badge "🔒 Đã cấu hình" cập nhật, hiện toast "Đã lấy Token thành công".
+      ghtkConnectByLogin: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var email = (this.settings.ghtkConnectEmail || '').trim();
+        var password = this.settings.ghtkConnectPassword || '';
+        if (!email)    { core.showToast('Vui lòng nhập Email tài khoản GHTK.', 'error'); return; }
+        if (!password) { core.showToast('Vui lòng nhập Mật khẩu tài khoản GHTK.', 'error'); return; }
+
+        this.settings.ghtkConnecting = true;
+        core.gasPost({
+          action: 'ghtk_connect_by_login',
+          email: email, password: password,
+          env: this.settings.ghtkEnv || 'stg'
+        })
+          .then(function(d) {
+            if (!d || !d.success) throw new Error(d && d.error || 'Không lấy được Token GHTK.');
+            core.showToast('Đã lấy Token thành công — GHTK đã kết nối (' + (d.env || '') + ').', 'success');
+            // Xoá thông tin nhạy cảm khỏi state ngay lập tức — Email/Password không cần giữ lại.
+            self.settings.ghtkConnectEmail = '';
+            self.settings.ghtkConnectPassword = '';
+            self.settings.ghtkConnectPasswordVisible = false;
+            // Reload trạng thái để badge ghtkTokenSet cập nhật thành "🔒 Đã cấu hình".
+            self.loadSettingsData();
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối GHTK.', 'error'); })
+          .finally(function() { self.settings.ghtkConnecting = false; });
+      },
+      loadGhtkPickAddresses: function() {
+        var self = this, core = window.MopsAdminCore;
+        if (this.settings.ghtkPickAddressesLoading) return;
+        this.settings.ghtkPickAddressesLoading = true;
+        core.gasPost({ action: 'ghtk_sync_pick_addresses' })
+          .then(function(d) {
+            if (!d || !d.success) throw new Error(d && d.error || 'Không tải được kho GHTK.');
+            self.settings.ghtkPickAddresses = d.addresses || [];
+            self.settings.ghtkPickAddressId = d.selected_pick_address_id || self.settings.ghtkPickAddressId;
+            if (d.selected_missing) {
+              self.settings.ghtkPickAddressId = '';
+              core.showToast(d.message || 'Kho mặc định cũ không còn. Hãy chọn kho mới rồi bấm Lưu cấu hình.', 'warning');
+            }
+            var selected = self.settings.ghtkPickAddresses.filter(function(item) { return item.pick_address_id === self.settings.ghtkPickAddressId; })[0];
+            if (selected) {
+              self.settings.ghtkPickName = selected.pick_name || '';
+              self.settings.ghtkPickTel = selected.pick_tel || '';
+            }
+            self.settings.ghtkConfigured = !!self.settings.ghtkPickAddressId;
+          })
+          .catch(function(e) { core.showToast(e.message || 'Không tải được kho GHTK.', 'error'); })
+          .finally(function() { self.settings.ghtkPickAddressesLoading = false; });
+      },
+      onGhtkPickAddressChange: function() {
+        var selected = this.settings.ghtkPickAddresses.filter(function(item) { return item.pick_address_id === this.settings.ghtkPickAddressId; }, this)[0];
+        if (selected) {
+          this.settings.ghtkPickName = selected.pick_name || '';
+          this.settings.ghtkPickTel = selected.pick_tel || '';
+        }
+      },
+      saveSettings: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var updates = {
+          MAINTENANCE:      this.settings.maintenance,
+          BANK_CODE:        (this.settings.bankCode || '').trim(),
+          ACCOUNT_NO:       (this.settings.accountNo || '').trim(),
+          ACCOUNT_NAME:     (this.settings.accountName || '').trim(),
+          TELEGRAM_CHAT_ID: (this.settings.telegramChatId || '').trim(),
+          SAPO_STORE:       (this.settings.sapoStore || '').trim(),
+          TELEGRAM_TOKEN:   (this.settings.telegramToken || '').trim(),
+          SAPO_API_KEY:     (this.settings.sapoKey || '').trim(),
+          SAPO_SECRET:      (this.settings.sapoSecret || '').trim(),
+          // GHN vận chuyển (phase 2026-07-17) — GHN_TOKEN secret (blank = giữ nguyên). ENV mặc định dev.
+          GHN_ENV:              this.settings.ghnEnv || 'dev',
+          GHN_SHOP_ID:          (this.settings.ghnShopId || '').trim(),
+          GHN_FROM_DISTRICT_ID: (this.settings.ghnFromDistrictId || '').trim(),
+          GHN_FROM_WARD_CODE:   (this.settings.ghnFromWardCode || '').trim(),
+          GHN_DEFAULT_LENGTH:   (this.settings.ghnDefaultLength || '').trim(),
+          GHN_DEFAULT_WIDTH:    (this.settings.ghnDefaultWidth || '').trim(),
+          GHN_DEFAULT_HEIGHT:   (this.settings.ghnDefaultHeight || '').trim(),
+          GHN_COD_ACCOUNT_ID:   (this.settings.ghnCodAccountId || '').trim(),
+          GHN_TOKEN:            (this.settings.ghnToken || '').trim(),
+          // Ahamove vận chuyển (đa đối tác 2026-07-20) — AHAMOVE_API_KEY secret (blank = giữ nguyên). ENV mặc định stg.
+          AHAMOVE_ENV:           this.settings.ahamoveEnv || 'stg',
+          AHAMOVE_MOBILE:        (this.settings.ahamoveMobile || '').trim(),
+          AHAMOVE_SERVICE_ID:    (this.settings.ahamoveServiceId || '').trim(),
+          AHAMOVE_FROM_ADDRESS:  (this.settings.ahamoveFromAddress || '').trim(),
+          AHAMOVE_FROM_LAT:      (this.settings.ahamoveFromLat || '').trim(),
+          AHAMOVE_FROM_LNG:      (this.settings.ahamoveFromLng || '').trim(),
+          AHAMOVE_PICKUP_NAME:   (this.settings.ahamovePickupName || '').trim(),
+          AHAMOVE_PICKUP_MOBILE: (this.settings.ahamovePickupMobile || '').trim(),
+          AHAMOVE_API_KEY:       (this.settings.ahamoveApiKey || '').trim(),
+          // GHTK (đa đối tác 2026-07-20) — GHTK_TOKEN secret (blank = giữ nguyên).
+          GHTK_ENV:           this.settings.ghtkEnv || 'stg',
+          GHTK_PICK_ADDRESS_ID: (this.settings.ghtkPickAddressId || '').trim(),
+          GHTK_PICK_NAME:     (this.settings.ghtkPickName || '').trim(),
+          GHTK_PICK_TEL:      (this.settings.ghtkPickTel || '').trim(),
+          GHTK_PICK_ADDRESS:  (this.settings.ghtkPickAddress || '').trim(),
+          GHTK_PICK_PROVINCE: (this.settings.ghtkPickProvince || '').trim(),
+          GHTK_PICK_DISTRICT: (this.settings.ghtkPickDistrict || '').trim(),
+          GHTK_PICK_WARD:     (this.settings.ghtkPickWard || '').trim(),
+          GHTK_TRANSPORT:     this.settings.ghtkTransport || 'road',
+          GHTK_TOKEN:         (this.settings.ghtkToken || '').trim(),
+          // Viettel Post (đa đối tác 2026-07-20) — VTP_TOKEN + VTP_PASSWORD secret (blank = giữ nguyên).
+          VTP_ENV:             this.settings.vtpEnv || 'stg',
+          VTP_USERNAME:        (this.settings.vtpUsername || '').trim(),
+          VTP_SERVICE_CODE:    (this.settings.vtpServiceCode || 'VCN').trim(),
+          VTP_SENDER_NAME:     (this.settings.vtpSenderName || '').trim(),
+          VTP_SENDER_PHONE:    (this.settings.vtpSenderPhone || '').trim(),
+          VTP_SENDER_ADDRESS:  (this.settings.vtpSenderAddress || '').trim(),
+          VTP_SENDER_PROVINCE: (this.settings.vtpSenderProvince || '').trim(),
+          VTP_SENDER_DISTRICT: (this.settings.vtpSenderDistrict || '').trim(),
+          VTP_SENDER_WARD:     (this.settings.vtpSenderWard || '').trim(),
+          VTP_TOKEN:           (this.settings.vtpToken || '').trim(),
+          VTP_PASSWORD:        (this.settings.vtpPassword || '').trim(),
+          // Goship aggregator (2026-07-27) — TOKEN/PASSWORD/CLIENT_SECRET secret (blank = giữ nguyên).
+          GOSHIP_ENV:           this.settings.goshipEnv || 'stg',
+          GOSHIP_USERNAME:      (this.settings.goshipUsername || '').trim(),
+          GOSHIP_CLIENT_ID:     (this.settings.goshipClientId || '').trim(),
+          GOSHIP_FROM_NAME:     (this.settings.goshipFromName || '').trim(),
+          GOSHIP_FROM_PHONE:    (this.settings.goshipFromPhone || '').trim(),
+          GOSHIP_FROM_STREET:   (this.settings.goshipFromStreet || '').trim(),
+          GOSHIP_FROM_CITY:     (this.settings.goshipFromCity || '').trim(),
+          GOSHIP_FROM_DISTRICT: (this.settings.goshipFromDistrict || '').trim(),
+          GOSHIP_FROM_WARD:     (this.settings.goshipFromWard || '').trim(),
+          GOSHIP_AUTO_PICK:     this.settings.goshipAutoPick || 'cheapest',
+          GOSHIP_PAYER:         String(this.settings.goshipPayer || '1'),
+          GOSHIP_TOKEN:         (this.settings.goshipToken || '').trim(),
+          GOSHIP_PASSWORD:      (this.settings.goshipPassword || '').trim(),
+          GOSHIP_CLIENT_SECRET: (this.settings.goshipClientSecret || '').trim(),
+          GOSHIP_WEBHOOK_KEY:   (this.settings.goshipWebhookKey || '').trim()
+        };
+
+        for (var key in updates) {
+          if (typeof updates[key] !== 'string') continue;
+          var fieldErr = validateSettingClient(key, updates[key]);
+          if (fieldErr) { core.showToast(fieldErr, 'error'); return; }
+        }
+
+        var secretLabels = [];
+        if (updates.SAPO_API_KEY)   secretLabels.push('SAPO API Key');
+        if (updates.SAPO_SECRET)    secretLabels.push('SAPO API Secret');
+        if (updates.TELEGRAM_TOKEN) secretLabels.push('Telegram Bot Token');
+
+        var proceed = secretLabels.length
+          ? core.showConfirm('Xác nhận thay đổi bảo mật',
+              'Bạn sắp thay đổi: ' + secretLabels.join(', ') + '. Nếu gõ sai, các tính năng liên quan (đồng bộ SAPO / gửi thông báo Telegram) sẽ ngừng hoạt động ngay lập tức. Tiếp tục lưu?')
+          : Promise.resolve(true);
+
+        proceed.then(function(ok) {
+          if (!ok) return;
+          self.settings.saving = true;
+          core.gasPost({ action: 'update_settings', updates: updates })
+            .then(function(d) {
+              if (!d.success) throw new Error(d.error || 'Lưu thất bại');
+              core.showToast('Đã lưu cấu hình: ' + (d.updated || []).join(', '), 'success');
+              self.settings.telegramToken = '';
+              self.settings.sapoKey = '';
+              self.settings.sapoSecret = '';
+              self.loadSettingsData();
+            })
+            .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); })
+            .finally(function() { self.settings.saving = false; });
+        });
+      }
+    }
+  });
+})();

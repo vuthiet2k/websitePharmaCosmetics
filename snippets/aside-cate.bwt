@@ -1,0 +1,176 @@
+{% assign col_menu = settings.aside_category_menu %}
+{% for link in linklists[settings.aside_category_menu].links %}
+{% if link.object %}
+{% if link.active %}
+{% assign col_menu_title = link.title %}
+{% assign col_menu = link.alias %}
+{%endif%}
+{% for childlink in linklists[link.alias].links %}
+{% if childlink.active %}
+{% assign check_active_menu = true %}
+{% endif %}
+{% for childlink2 in linklists[childlink.alias].links %}
+{% if childlink2.active %}
+{% assign check_active_menu = true %}
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% if link.active or check_active_menu %}
+{% if linklists[link.alias] != null %}
+{% for childlink in linklists[link.alias].links %}
+{% if childlink.active %}
+{% assign col_menu_title = childlink.title %}
+{% assign col_menu = childlink.alias %}
+{%endif%}
+{% for childlink2 in linklists[childlink.alias].links %}
+{% if childlink2.active %}
+{% assign col_menu_title = childlink.title %}
+{% assign col_menu = childlink.alias %}
+{%endif%}
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% endif %}
+{% endif %}
+{% assign check_active_menu = false %}
+{% endfor %}
+{% assign check_active_menu2 = false %}
+{% if linklists[col_menu].links.size > 0 %}
+{% assign check_active_menu2 = true %}
+{% endif %}
+{% if check_active_menu2 == false %}
+{% assign col_menu = settings.aside_category_menu %}
+{% assign col_menu_title = settings.aside_category_title %}
+{%endif%}
+{%if linklists[col_menu].links.size > 0%}
+{% assign co_menu = settings.aside_category_menu %}
+{% else %}
+{% assign co_menu = 'main-menu' %}
+{% endif %}
+
+<aside class="aside-item collection-category aside-cate">
+	<div class="aside-title">
+		{{ settings.aside_category_title }}
+	</div>
+	{%unless collection.name == 'Tất cả sản phẩm' %}
+	{% if col_menu != settings.aside_category_menu %}
+	<div class="show-all-col">
+		<a href="javascript:;" title="Xem tất cả danh mục" class="view-all-col">Xem tất cả danh mục</a>
+		<div class="aside-content aside-content-all clearfix" style="display: none;">
+			<ul class="navbar-pills nav-category">
+				{% for link in linklists[co_menu].links %}
+				{% if linklists[link.alias] %}
+				<li class="nav-item {% if link.active %}active{% endif %}">
+					<a href="{{ link.url }}" class="nav-link" title="{{ link.title }}">{{ link.title }}</a>
+					<span class="Collapsible__Plus"></span>
+					<ul class="dropdown-menu">
+						{% for childlink in linklists[link.alias].links %}
+						{% if linklists[childlink.alias] %}
+						<li class="dropdown-submenu nav-item {% if childlink.active %}active{% endif %}">
+							<a class="nav-link" href="{{ childlink.url }}" title="{{ childlink.title }}">{{ childlink.title }} </a>
+							<span class="Collapsible__Plus"></span>
+							<ul class="dropdown-menu">
+								{% for childlink2 in linklists[childlink.alias].links %}
+								{% if linklists[childlink2.alias] %}
+								<li class="dropdown-submenu nav-item {% if childlink2.active %}active{% endif %}">
+									<a class="nav-link" href="{{ childlink2.url }}" title="{{ childlink2.title }}">{{ childlink2.title }} </a>
+									<span class="Collapsible__Plus"></span>
+									<ul class="dropdown-menu">
+										{% for childlink3 in linklists[childlink2.alias].links %}
+										<li class="dropdown-submenu nav-item {% if childlink3.active %}active{% endif %}">
+											<a class="nav-link" href="{{ childlink3.url }}" title="{{ childlink3.title }}">{{ childlink3.title }} </a>
+										</li>
+										{% endfor %}
+									</ul>
+								</li>
+								{% else %}
+								<li class="nav-item {% if childlink2.active %}active{% endif %}">
+									<a class="nav-link" href="{{ childlink2.url }}" title="{{ childlink2.title }}">{{ childlink2.title }} </a>
+								</li>
+								{% endif %}
+								{% endfor %}
+							</ul>                      
+						</li>
+						{% else %}
+						<li class="nav-item {% if childlink.active %}active{% endif %}">
+							<a class="nav-link" href="{{ childlink.url }}" title="{{ childlink.title }}">{{ childlink.title }} </a>
+						</li>
+						{% endif %}
+						{% endfor %}
+					</ul>
+				</li>
+				{% else %}
+				<li class="nav-item {% if link.active %}active{% endif %}">
+					<a class="nav-link" href="{{ link.url }}" title="{{ link.title }}">{{ link.title }} </a>
+				</li>
+				{% endif %}
+				{% endfor %}
+			</ul>
+		</div>
+		<a href="javascript:;" title="Ẩn tất cả danh mục" class="less-all-col d-none">Ẩn tất cả danh mục</a>
+	</div>
+	{%endif%}
+	{% endunless %}
+	<div class="aside-content aside-content-sub clearfix">
+		{% if linklists[co_menu].links.size > 0 %}
+		<ul class="navbar-pills nav-category">
+			{% for link in linklists[col_menu].links %}
+			{% if linklists[link.alias] %}
+			<li class="nav-item {% if link.active %}active{% endif %}">
+				<a href="{{ link.url }}" class="nav-link" title="{{ link.title }}">{{ link.title }} </a>
+				<span class="Collapsible__Plus"></span>
+				<ul class="dropdown-menu">
+					{% for childlink in linklists[link.alias].links %}
+					{% if linklists[childlink.alias] %}
+					<li class="dropdown-submenu nav-item {% if childlink.active %}active{% endif %}">
+						<a class="nav-link" href="{{ childlink.url }}" title="{{ childlink.title }}">{{ childlink.title }}</a>
+						<span class="Collapsible__Plus"></span>
+						<ul class="dropdown-menu">
+							{% for childlink2 in linklists[childlink.alias].links %}
+							{% if linklists[childlink2.alias] %}
+							<li class="dropdown-submenu nav-item {% if childlink2.active %}active{% endif %}">
+								<a class="nav-link" href="{{ childlink2.url }}" title="{{ childlink2.title }}">{{ childlink2.title }} </a>
+								<span class="Collapsible__Plus"></span>
+								<ul class="dropdown-menu">
+									{% for childlink3 in linklists[childlink2.alias].links %}
+									<li class="dropdown-submenu nav-item {% if childlink3.active %}active{% endif %}">
+										<a class="nav-link" href="{{ childlink3.url }}" title="{{ childlink3.title }}">{{ childlink3.title }} </a>
+									</li>
+									{% endfor %}
+								</ul>
+							</li>
+							{% else %}
+							<li class="nav-item {% if childlink2.active %}active{% endif %}">
+								<a class="nav-link" href="{{ childlink2.url }}" title="{{ childlink2.title }}">{{ childlink2.title }}</a>
+							</li>
+							{% endif %}
+							{% endfor %}
+						</ul>                      
+					</li>
+					{% else %}
+					<li class="nav-item {% if childlink.active %}active{% endif %}">
+						<a class="nav-link" href="{{ childlink.url }}" title="{{ childlink.title }}">{{ childlink.title }} </a>
+					</li>
+					{% endif %}
+					{% endfor %}
+				</ul>
+			</li>
+			{% else %}
+			<li class="nav-item {% if link.active %}active{% endif %}">
+				<a class="nav-link" href="{{ link.url }}" title="{{ link.title }}">{{ link.title }} </a>
+			</li>
+			{% endif %}
+			{% endfor %}
+		</ul>
+		{% else %}
+		<div class="alert alert-warning alert-dismissible show margin-bottom-0" role="alert">
+			<strong>{{ settings.aside_category_title }}!</strong> Chưa được thiết lập.
+		</div>
+		{% endif %}
+	</div>
+</aside>
+<script>
+	$('.nav-category .Collapsible__Plus').click(function(e){
+		$(this).parent().toggleClass('active');
+	});
+</script>

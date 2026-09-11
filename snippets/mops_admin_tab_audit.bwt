@@ -1,0 +1,63 @@
+      
+      <div id="tab-audit" v-show="activeTab === 'audit'" class="ma-tab-pane">
+        <div class="ma-chip-scroll flex gap-2 mb-stack-md">
+          <button v-for="cat in auditCats" :key="cat.key" @click="setAuditCat(cat.key)" type="button"
+            class="px-3 py-1.5 rounded-full text-label-md border transition-all" :class="['ma-audit-cat', { 'is-active': audit.activeCat === cat.key }]">[[ cat.label ]]</button>
+        </div>
+        <button type="button" @click="mobileFilterOpen = true"
+          class="ma-filter-trigger items-center gap-2 w-full justify-center mb-stack-md p-3 bg-surface-bright border border-outline-variant rounded-xl text-body-sm font-bold text-on-surface active:scale-95 transition-all">
+          <span class="material-symbols-outlined text-[18px]">tune</span><span>Bộ lọc</span>
+          <span v-if="(audit.entity?1:0)+(audit.logAction?1:0)+(audit.entityId?1:0)" class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-label-sm font-bold bg-primary text-white">[[ (audit.entity?1:0)+(audit.logAction?1:0)+(audit.entityId?1:0) ]]</span>
+        </button>
+        <div class="ma-toolbar ma-toolbar--sheet flex flex-wrap items-center gap-stack-md mb-stack-lg p-4 bg-surface-bright border border-outline-variant rounded-xl" :class="{ 'is-filter-open': mobileFilterOpen }">
+          <div class="ma-filter-sheet-head"><span class="text-title-sm font-bold text-on-surface">Bộ lọc nhật ký</span><button type="button" @click="mobileFilterOpen = false" class="w-8 h-8 inline-flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">close</span></button></div>
+          <select v-model="audit.entity" class="ma-input-inline">
+            <option value="">Loại thực thể</option>
+            <option value="ORDER">Đơn hàng</option>
+            <option value="PAYMENT">Thanh toán</option>
+            <option value="PRODUCT">Sản phẩm</option>
+            <option value="CUSTOMER">Khách hàng</option>
+            <option value="SECURITY">Bảo mật</option>
+            <option value="SYNC">Đồng bộ</option>
+          </select>
+          <input type="text" v-model="audit.logAction" @keydown.enter="loadAuditLogs" placeholder="Hành động (vd: LOGIN_FAILED)"
+            class="w-[220px] bg-surface-container-lowest border border-outline-variant text-body-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+          <input type="text" v-model="audit.entityId" @keydown.enter="loadAuditLogs" placeholder="Entity ID (tuỳ chọn)"
+            class="w-[180px] bg-surface-container-lowest border border-outline-variant text-body-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+          <button @click="loadAuditLogs(); mobileFilterOpen = false" type="button" class="ma-btn-primary">Xem</button>
+          <button @click="exportAuditCsv" type="button" class="ma-btn-outline">
+            <span class="material-symbols-outlined text-[18px]">download</span> CSV
+          </button>
+        </div>
+        <div class="ma-filter-backdrop" v-if="mobileFilterOpen" @click="mobileFilterOpen = false"></div>
+
+        <div v-if="audit.loading" class="ma-table-skeleton" aria-label="Đang tải nhật ký"><span></span><span></span><span></span><span></span></div>
+        <div v-else-if="auditEmptyMessage" class="ma-empty-state">
+          <span class="material-symbols-outlined text-on-surface-variant text-[56px] opacity-[.35]">history</span>
+          <p class="ma-empty-hint">[[ auditEmptyMessage ]]</p>
+          <button @click="loadAuditLogs" type="button" class="ma-btn-outline">Thử lại</button>
+        </div>
+        <div v-else>
+          <div class="ma-card"><div class="overflow-x-auto"><table class="ma-table ma-data-table">
+            <thead><tr class="ma-thead-row">
+              <th class="ma-th-lg w-16">STT</th>
+              <th class="ma-th-lg">Loại</th>
+              <th class="ma-th-lg">Entity ID</th>
+              <th class="ma-th-lg">Hành động</th>
+              <th class="ma-th-lg">Thực hiện bởi</th>
+              <th class="ma-th-lg">Thời gian</th>
+            </tr></thead>
+            <tbody class="ma-rows-divide">
+              <tr v-for="(log, index) in audit.list" :key="log.log_id" :class="log.entity_type === 'SECURITY' ? 'bg-red-50/30' : ''">
+                <td class="px-6 py-3 text-on-surface-variant">[[ index + 1 ]]</td>
+                <td class="px-6 py-3"><small class="font-body-sm">[[ log.entity_type ]]</small></td>
+                <td class="px-6 py-3"><small class="font-body-sm">[[ log.entity_id || '—' ]]</small></td>
+                <td class="px-6 py-3"><span class="text-body-sm" :class="auditActionClass(log.action)">[[ log.action ]]</span></td>
+                <td class="px-6 py-3 font-body-sm">[[ log.user || '—' ]]</td>
+                <td class="px-6 py-3"><small class="font-body-sm text-on-surface-variant">[[ formatDate(log.created_at) ]]</small></td>
+              </tr>
+            </tbody>
+          </table></div></div>
+          <p class="text-body-sm text-on-surface-variant mt-3">[[ audit.list.length ]] bản ghi</p>
+        </div>
+      </div>

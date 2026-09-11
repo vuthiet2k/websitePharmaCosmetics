@@ -1,0 +1,109 @@
+{{ 'page_ai_skin_quiz.scss.css' | asset_url | stylesheet_tag }}
+
+<section class="pc-quiz-wrap" id="pcQuiz">
+	<div class="container pc-quiz-container">
+
+		<div class="pc-quiz-intro" data-quiz-view="intro">
+			<span class="pc-testi-treatment-tag">🤖 AI SKIN DIAGNOSTIC</span>
+			<h1 class="pc-section-title">Tìm Loại Da Của Bạn Trong 1 Phút</h1>
+			<p class="pc-quiz-intro-desc">Trả lời {{ quiz_questions.size }} câu hỏi ngắn để nhận gợi ý hoạt chất phù hợp nhất với làn da của bạn.</p>
+			<button type="button" class="pc-quiz-start-btn" data-quiz-action="start">Bắt Đầu ➔</button>
+		</div>
+
+		<div class="pc-quiz-question" data-quiz-view="question" hidden>
+			<div class="pc-quiz-progress"><div class="pc-quiz-progress-bar" data-quiz-progress></div></div>
+			<div class="pc-quiz-question-list">
+				{% for q in quiz_questions %}
+				<div class="pc-quiz-question-item" data-quiz-question="{{ forloop.index0 }}" {% unless forloop.first %}hidden{% endunless %}>
+					<h2 class="pc-quiz-question-text">{{ q.question }}</h2>
+					<div class="pc-quiz-options">
+						{% for opt in q.options %}
+						<button type="button" class="pc-quiz-option-btn" data-quiz-skin-type="{{ opt.skin_type }}">{{ opt.text }}</button>
+						{% endfor %}
+					</div>
+				</div>
+				{% endfor %}
+			</div>
+		</div>
+
+		<div class="pc-quiz-result" data-quiz-view="result" hidden>
+			<span class="pc-testi-treatment-tag">✨ KẾT QUẢ CỦA BẠN</span>
+			<h2 class="pc-section-title" data-quiz-result-title>—</h2>
+			<div class="pc-quiz-recommend" data-quiz-result-recommend></div>
+			<a href="/pages/ai-skin-quiz-results" class="pc-cg-cta-btn" data-quiz-result-link>Xem Phác Đồ Chi Tiết ➔</a>
+			<a href="/collections/all" class="pc-kit-btn-secondary" style="margin-top:10px;">Xem Sản Phẩm Phù Hợp</a>
+			<button type="button" class="pc-quiz-retry-btn" data-quiz-action="retry">Làm lại bài test</button>
+		</div>
+
+	</div>
+</section>
+
+<script>
+(function () {
+	var quizData = {{ quiz_questions | json }};
+	var resultsData = {{ quiz_results | json }};
+	var scores = {};
+	var currentIndex = 0;
+	var root = document.getElementById('pcQuiz');
+	if (!root) return;
+
+	function showView(name) {
+		root.querySelectorAll('[data-quiz-view]').forEach(function (el) {
+			el.hidden = el.getAttribute('data-quiz-view') !== name;
+		});
+	}
+
+	function updateProgress() {
+		var bar = root.querySelector('[data-quiz-progress]');
+		if (bar) bar.style.width = Math.round((currentIndex / quizData.length) * 100) + '%';
+	}
+
+	function showQuestion(i) {
+		root.querySelectorAll('[data-quiz-question]').forEach(function (el, idx) {
+			el.hidden = idx !== i;
+		});
+		updateProgress();
+	}
+
+	function finish() {
+		var best = null, bestScore = -1;
+		Object.keys(scores).forEach(function (k) {
+			if (scores[k] > bestScore) { bestScore = scores[k]; best = k; }
+		});
+		var result = resultsData[best] || resultsData[Object.keys(resultsData)[0]];
+		root.querySelector('[data-quiz-result-title]').textContent = result.skin_type;
+		var rec = root.querySelector('[data-quiz-result-recommend]');
+		rec.innerHTML = '';
+		(result.recommend || []).forEach(function (r) {
+			var span = document.createElement('span');
+			span.className = 'pc-quiz-recommend-tag';
+			span.textContent = r;
+			rec.appendChild(span);
+		});
+		// Bàn giao kết quả cho templates/page.ai-skin-quiz-results.bwt (T-32) — không có backend
+		// lưu trạng thái quiz, nên dùng localStorage làm cầu nối phía client giữa 2 trang.
+		try {
+			localStorage.setItem('pc_quiz_skin_type', best || '');
+			localStorage.setItem('pc_quiz_scores', JSON.stringify(scores));
+		} catch (e) { /* localStorage có thể bị chặn (private mode) — trang kết quả có fallback demo */ }
+		showView('result');
+	}
+
+	root.addEventListener('click', function (e) {
+		var startBtn = e.target.closest('[data-quiz-action="start"]');
+		if (startBtn) { currentIndex = 0; scores = {}; showView('question'); showQuestion(0); return; }
+
+		var retryBtn = e.target.closest('[data-quiz-action="retry"]');
+		if (retryBtn) { currentIndex = 0; scores = {}; showView('intro'); return; }
+
+		var optBtn = e.target.closest('[data-quiz-skin-type]');
+		if (optBtn) {
+			var t = optBtn.dataset.quizSkinType;
+			scores[t] = (scores[t] || 0) + 1;
+			currentIndex++;
+			if (currentIndex >= quizData.length) { finish(); }
+			else { showQuestion(currentIndex); }
+		}
+	});
+})();
+</script>

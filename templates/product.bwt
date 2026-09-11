@@ -1,0 +1,1367 @@
+{% assign variantCount = product.variants | size %}{% assign on_var = false %}{% if variantCount > 1 %}{% assign on_var = true %}{% endif %}{%assign contacts = false%}{%if product.price == 0 %}{%assign contacts = true%}{%endif%}
+{%assign price = product.variants[0].price  -%}
+{%assign compare_at_price = product.variants[0].compare_at_price  -%}
+{%if on_var and product.selected_or_first_available_variant.available -%}
+{% assign price = product.selected_or_first_available_variant.price -%}
+{% assign compare_at_price = product.selected_or_first_available_variant.compare_at_price  -%}
+{%endif-%}
+{%if price == 0 -%}
+{%assign contact = true -%}
+{%endif -%}
+{% if compare_at_price > price and compare_at_price > 0 %}
+{% assign pt = compare_at_price | minus: price | times: 100 | divided_by: compare_at_price | round %}
+{% if pt > 99 %}{% assign pt = 99 %}{% endif %}
+{% if pt < 1 %}{% assign pt = 1 %}{% endif %}
+{% capture discount %}{{ pt }}%{% endcapture %}
+{% assign on_sale = true %}
+{% endif %}
+{% assign variantCount = product.variants | size %}
+{% assign on_var = false %}
+{% if variantCount > 1 %}
+{% assign on_var = true %}
+{% endif %}
+{%- assign tag_qt_1 = settings.tag_qt_1 -%}
+{%- assign tag_qt = false -%}
+{%- assign tag_combo = false -%}
+{%- assign video = false -%}
+{%- assign quycach = false -%}
+{%- assign duocsi = false -%}
+{%- assign preorder = false -%}
+{%- for tag in product.tags -%} 
+{%- assign tags = tag -%} 
+{%- if tags contains tag_qt_1 -%}
+{%- assign tag_qttitle_1 = tags | remove: tag_qt_1 -%}
+{%- assign tag_qt = true -%}			
+{%- endif -%}
+{%- if tags contains 'combo_' -%}
+{%- assign tag_combo = true -%}
+{%- endif -%}
+{% if tags contains 'video:' %} 
+{% assign itemvideo = tags | remove: 'video:' %}
+{% assign video = true %} 
+{% endif %}
+{%- if tags contains 'quycach_'-%} 
+{%- assign quycach = true -%} 
+{% assign itemquycach = tags | remove: 'quycach_' %}
+{%- endif -%}
+{%- if tags contains 'duocsi_'-%} 
+{%- assign duocsi = true -%} 
+{% assign itemduocsi = tags | remove: 'duocsi_' %}
+{%- endif -%}
+{%- if tags contains 'Pre-order' or tags contains 'pre-order' -%} 
+{%- assign preorder = true -%} 
+{%- endif -%}
+{%- endfor -%}
+{% include 'breadcrumb' %}   
+<section class="product layout-product" itemscope itemtype="https://schema.org/Product">	
+	{%- include 'product_schema' -%}
+	<div class="container">
+		<div class="details-product">
+			<div class="margin-bottom-30">
+				<div class="row">
+					<div class="col-xl-4 col-lg-4 col-md-12 col-12 product-detail-left product-images">
+						<div class="sticky">
+							<div class="product-image-block relative">
+								{%if product.images.size > 0 %}
+								<div class="swiper-container gallery-top">
+									<div class="swiper-wrapper" id="lightgallery">
+										{% for image in product.images %}
+										<a class="swiper-slide" data-hash="{{ forloop.index0 }}" href="{{ image.src | img_url:'1024x1024' }}" title="Click để xem">
+											{%- if forloop.first -%}
+											<img height="480" width="720"
+												src="{{ image.src | img_url: 'grande' }}"
+												alt="{{ product.name | escape }}"
+												loading="eager"
+												class="img-responsive mx-auto d-block" />
+											{%- else -%}
+											<img height="480" width="720"
+												src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII="
+												data-src="{{ image.src | img_url: 'grande' }}"
+												alt="{{ product.name | escape }}"
+												class="img-responsive mx-auto d-block lazyload swiper-lazy" />
+											{%- endif -%}
+										</a>
+										{% endfor %}
+									</div>
+									{%- if settings.metafield_show -%}
+									{%- assign metafields_video = product.metafields.custom.Video -%}
+									{%- assign cleaned_video = metafields_video | remove: "[" | remove: "]" -%}
+									{%- assign video_id = cleaned_video | remove: '"' -%}
+									{%- endif -%}
+									{%- if video_id != null and video_id != '' and video_id !="" -%}
+									<a class="play-video playVideo" href="javascript:void(0)" data-video="{{video_id}}" title="{{settings.product_video_title}}">
+										<span>{{settings.product_video_title}}</span>
+										<img width="64" height="64" src="{{'icon_youtube.png' | asset_url}}" title="video">
+									</a>
+									{%- else -%}
+									{%- if video -%}
+									<a class="play-video playVideo" href="javascript:void(0)" data-video="{{itemvideo}}" title="{{settings.product_video_title}}">
+										<span>{{settings.product_video_title}}</span>
+										<img width="64" height="64" src="{{'icon_youtube.png' | asset_url}}" title="video">
+									</a>
+									{%- endif -%}
+									{%- endif -%}
+								</div>
+								{%if product.images.size > 0 %}
+								<div class="swiper-container gallery-thumbs {% if product.images.size == 1%} d-none{%endif%}">
+									<div class="swiper-wrapper">
+										{% for image in product.images %}
+										<div class="swiper-slide" data-hash="{{ forloop.index0 }}">
+											<div class="p-100">
+												<img height="160" width="240" src="{{ image.src | img_url:'medium' }}" alt="{{ product.name | escape}}" data-image="{{ image.src | img_url:'medium'}}" class="swiper-lazy" />
+											</div>	
+										</div>
+										{% endfor %}
+									</div>
+									<div class="swiper-button-next">
+									</div>
+									<div class="swiper-button-prev">
+									</div>
+								</div>
+								{%endif%}
+								{% else %}
+								<img src="{{ 'no-image.jpg' | asset_url }}" alt="{{ product.name | escape}}" data-src="{{ 'no-image.jpg' | asset_url }}" data-image="{{ 'no-image.jpg' | asset_url }}" class="img-responsive center-block">
+								{% endif %}
+							</div>
+						</div>
+
+					</div>
+					<div class="col-xl-5 col-lg-5 col-md-12 col-12 details-pro">
+						{%- if settings.metafield_show -%}
+						{%- assign metafields_quycach = product.metafields.custom.Quycach -%}
+						{%- assign cleaned_quycach = metafields_quycach | remove: "[" | remove: "]" -%}
+						{%- assign quycach_id = cleaned_quycach | remove: '"' -%}
+						{%- if quycach_id != null and quycach_id != '' and quycach_id !="" -%}
+						<div class="badge_product">
+							<span class="new">{{quycach_id}}</span>	
+						</div>
+						{% endif %}
+						{%else%}
+						{%if quycach%}
+						<div class="badge_product">
+							<span class="new">{{itemquycach}}</span>	
+						</div>
+						{% endif %}
+						{% endif %}
+						<h1 class="title-product">{{ product.name | escape}}</h1>
+						<div class="product-top clearfix">
+							{{product.variants[0].barcode}}
+							{% assign current_variant = product.selected_or_first_available_variant %}
+							<div class="sku-product clearfix">
+								<span class="d-none">Thương hiệu: <strong>{% if product.vendor.size > 0 %}{{ product.vendor }}{% else %}{{ store.name }}{% endif %}</strong></span>
+								<span class="variant-sku"  content="{% if product.variants[0].sku != "" and product.variants[0].sku != null %}{{product.variants[0].sku}}{% else %}Đang cập nhật{% endif %}">Mã: <span class="a-sku">{%if product.variants[0].sku != "" and product.variants[0].sku != null %}{{product.variants[0].sku}}{% else %}Đang cập nhật{% endif %}</span></span>
+								<br>
+								<span class="d-none" >Chất liệu: <strong>{% if product.type.size > 0 %}{{ product.type }}{% else %}Đang cập nhật{% endif %}</strong></span>
+							</div>
+							{%if settings.product_tab3_enable%}
+							<div class="product-review">
+								<div class="sapo-product-reviews-badge " data-id="{{ product.id }}" ></div> 
+								{% if product.metafields.bpr.votes > 0 %}
+								<span>({{ product.metafields.bpr.votes }} đánh giá)</span>
+								{%endif%}
+							</div>
+							{%endif%}
+						</div>
+
+						<div class="inventory_quantity">
+
+							<span class="mb-break">
+								<span class="stock-brand-title">Tình trạng:</span>
+								{% if on_var %} 
+								{%if product.selected_or_first_available_variant.available%}
+								<span class="a-stock">
+									Còn hàng
+								</span>
+								{%elsif product.selected_or_first_available_variant.inventory_quantity == 0 and product.selected_or_first_available_variant.inventory_policy == 'continue'%}
+								<span class="a-stock">
+									Còn hàng
+								</span>
+								{%else%}
+								<span class="a-stock">
+									Hết hàng
+								</span>
+								{%endif%}
+								{%else%}
+								{%if product.available%}
+								<span class="a-stock">
+									Còn hàng
+								</span>
+								{%elsif product.inventory_quantity == 0 and product.inventory_policy == 'continue'%}
+								<span class="a-stock">
+									Còn hàng
+								</span>
+								{%else%}
+								<span class="a-stock">
+									Hết hàng
+								</span>
+								{%endif%}
+								{%endif%}
+							</span>
+						</div>
+						{%- if settings.product_flashsale_enable and settings.home_flashsale_countdown_enable and product.available -%}
+						{%- for collection in product.collections -%}
+						{%- assign url_text = collection.url | remove: "/" -%}
+						{%- if url_text == settings.home_flashsale_collection -%}
+						{% include 'flashsale_gift' %}
+						{%- endif -%}
+						{%- endfor -%}
+						{%- endif -%}
+
+						<form enctype="multipart/form-data" data-cart-form id="add-to-cart-form" action="/cart/add" method="post" class="form-inline">
+							<div class="price-box clearfix">
+								{%if on_var%}
+								<span class="special-price">
+									<span class="price product-price">{{ product.variants[0].price | money }}</span>
+
+								</span>
+								<span class="old-price">
+									<del class="price product-price-old">
+										{% if product.variants[0].compare_at_price > 0 %}{{ product.variants[0].compare_at_price | money }}{% endif %}
+									</del>
+
+								</span>
+
+								{%elseif contacts%}
+								<div class="special-price">
+									<span class="price product-price"><a style="color: #d31100;" target="_blank" href="https://zalo.me/{{ settings.contact_zalo | remove: ' '}}">Liên hệ </a></span>
+
+							</div>
+
+								{%elseif product.variants[0].compare_at_price > product.variants[0].price%}
+								<span class="special-price">
+									<span class="price product-price">{{ product.variants[0].price | money }}</span>
+
+								</span>
+								<span class="old-price">
+									<del class="price product-price-old">
+										{{ product.variants[0].compare_at_price | money }}
+									</del>
+
+								</span>
+
+								{% else %}
+								<div class="special-price">
+									<span class="price product-price">{{ product.variants[0].price | money }}</span>
+
+							</div>
+								{% endif %}
+								{%if discount.size > 0%}
+								<span class="sale-off">- {{ discount }}</span>
+								{%endif%}
+							</div>
+							{% assign variant = product.variants[0] %}
+							<div class="form-product">
+								{% if settings.product_swatch_enable and product.variants.size > 1 %}
+								{% unless product.tags contains "liệu trình" %}
+								<div class="select-swatch">
+									{% for option in product.options %}
+									{% include 'swatch' with option %}
+									{% endfor %}
+								</div>
+								{% endunless %}
+								{% endif %}
+								<div class="box-variant clearfix {% if settings.product_swatch_enable%} d-none {%endif%}">
+									{% if variantCount > 1 %} 
+									<select id="product-selectors" class="form-control form-control-lg" name="variantId" style="display:none">
+										{% for variant in product.variants %}
+										<option {% if variant == product.selected_or_first_available_variant %} selected="selected" {% endif %} value="{{ variant.id }}">{{ variant.title | escape}} - {{ variant.price | money }}</option>
+										{% endfor %}
+									</select>
+									{% else %}
+									<input type="hidden" id="one_variant" name="variantId" value="{{ product.variants[0].id }}" />
+									{% endif %}
+								</div>
+
+								<div class="boz-form {%if contacts%}d-none{%endif%}">
+									{%- if tag_qt-%}
+									{%- for i in (1..10) -%}
+									{%- capture imga -%}icon_fra_{{i}}.jpg{%- endcapture -%}
+									{%- capture namefr -%}tag_fra_{{i}}{%- endcapture -%}
+									{%- if settings[namefr] == tag_qttitle_1 -%}
+									<input type="hidden" id="quatang" name="properties[Quà tặng]" value="{{settings[namefr]}}"/>
+									{%- endif -%}
+									{%- endfor -%}
+									{%- endif -%}
+									<div class="flex-quantity">
+										<div class="custom custom-btn-number {% if product.available %}show{%else%}d-none{%endif%}">
+											<span>Số lượng: </span>
+											<div class="input_number_product">									
+												<button class="btn_num num_1 button button_qty" onClick="var result = document.getElementById('qtym'); var qtypro = result.value; if( !isNaN( qtypro ) &amp;&amp; qtypro &gt; 1 ) result.value--;return false;" type="button">-</button>
+												<input type="number" id="qtym" name="quantity" value="1" min="1" max="999" class="form-control prd_quantity" onchange="if(!this.value||this.value<1)this.value=1;">
+												<button class="btn_num num_2 button button_qty" onClick="var result = document.getElementById('qtym'); var qtypro = result.value; if( !isNaN( qtypro )) result.value++;return false;" type="button"><span>+</span></button>
+											</div>
+										</div>
+										{%if preorder%}
+										<div class="btn-mua button_actions clearfix">
+											<a id="buyButton" onclick="sapo_calc('{{ product.variants[0].price }}')" class="btn btn-installment tragop-button" href="javascript:;" title="">
+												{{settings.product_installment_title}}
+											</a>
+										</div>
+										{%else%}
+										<div class="btn-mua button_actions clearfix">
+											{% if product.available %}	
+											<div class="box_btn_acc">
+												<a href="javascript:void(0)" class="buynow btn-buyNow" title="">
+													<i class="fas fa-bolt" aria-hidden="true"></i>
+													<div class="buynow-text">{{settings.product_buynow_title}}</div>
+												</a>
+												<button type="submit" class="btn btn_base normal_button btn_add_cart add_to_cart btn-cart">
+													<i class="fas fa-cart-shopping" aria-hidden="true"></i>
+													<span class="txt-main text_1">Thêm vào giỏ hàng</span>
+												</button>
+											</div>
+
+											{% assign suffix = '' %}
+											{% for tag in product.tags %}
+											{% if tag contains 'shopee_'%}
+											{% assign suffix = tag | split: '_' | last %}
+											{% endif %}
+											{% endfor %}
+											{% if suffix != '' %}
+											<div class="mua_shop">
+												<a href="{{suffix}}" target="_blank">
+													<img src="{{ 'shopee.png' | asset_url }}" alt="shopee" style="width: 40px;margin-right: 5px;" />
+													Mua hàng tại shopee
+												</a>
+											</div>
+
+											{% endif %}
+
+
+											{% else %}
+											<button class="btn btn-lg btn-style btn-style-active btn-cart btn-soldout btn_base btn_dis" disabled="disabled" >
+												<span class="txt-main">Hết hàng</span>
+											</button>
+											{% endif %}
+										</div>
+
+
+										{%endif%}
+									</div>
+									{%comment%}
+									{%if settings.product_store_enable%}
+									<a class="btn-hethong" href="javascript:" title="Gợi ý tìm size">
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-geo-alt" viewBox="0 0 16 16">
+											<path d="M12.166 8.94c-.524 1.062-1.234 2.12-1.96 3.07A31.493 31.493 0 0 1 8 14.58a31.481 31.481 0 0 1-2.206-2.57c-.726-.95-1.436-2.008-1.96-3.07C3.304 7.867 3 6.862 3 6a5 5 0 0 1 10 0c0 .862-.305 1.867-.834 2.94zM8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10z"></path>
+											<path d="M8 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path>
+										</svg> <span>{{settings.product_store_title}}</span>                              
+									</a>
+									{% endif %}
+									{%endcomment%}
+									{% include 'buyxgety-module-detail' %}
+									<div class="bottom-product">
+										{%if settings.product_sharing_enable%}
+										<ul class="social-media" role="list">
+											<li class="title">
+												<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-share" viewBox="0 0 16 16">
+													<path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5m-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3"/>
+												</svg>
+												Chia sẻ
+											</li>
+											<li class="social-media__item social-media__item--facebook">
+												<a title="Chia sẻ lên Facebook" href="https://www.facebook.com/sharer.php?u=https://{{store.domain}}{{product.url}}" target="_blank" rel="noopener" aria-label="Chia sẻ lên Facebook" >
+													<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+														 viewBox="0 0 155.139 155.139" style="enable-background:new 0 0 155.139 155.139;" xml:space="preserve">
+														<g>
+															<path id="f_1_" style="fill:#010002;" d="M89.584,155.139V84.378h23.742l3.562-27.585H89.584V39.184
+																									 c0-7.984,2.208-13.425,13.67-13.425l14.595-0.006V1.08C115.325,0.752,106.661,0,96.577,0C75.52,0,61.104,12.853,61.104,36.452
+																									 v20.341H37.29v27.585h23.814v70.761H89.584z"/>
+														</g>
+													</svg>
+												</a>
+											</li>
+											<li class="social-media__item social-media__item--pinterest">
+												<a title="Chia sẻ lên Pinterest" href="https://pinterest.com/pin/create/button/?url=https://{{store.domain}}{{product.url}}&amp;" target="_blank" rel="noopener" aria-label="Pinterest" >
+													<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+														 viewBox="0 0 511.977 511.977" style="enable-background:new 0 0 511.977 511.977;" xml:space="preserve">
+														<g>
+															<g>
+																<path d="M262.948,0C122.628,0,48.004,89.92,48.004,187.968c0,45.472,25.408,102.176,66.08,120.16
+																		 c6.176,2.784,9.536,1.6,10.912-4.128c1.216-4.352,6.56-25.312,9.152-35.2c0.8-3.168,0.384-5.92-2.176-8.896
+																		 c-13.504-15.616-24.224-44.064-24.224-70.752c0-68.384,54.368-134.784,146.88-134.784c80,0,135.968,51.968,135.968,126.304
+																		 c0,84-44.448,142.112-102.208,142.112c-31.968,0-55.776-25.088-48.224-56.128c9.12-36.96,27.008-76.704,27.008-103.36
+																		 c0-23.904-13.504-43.68-41.088-43.68c-32.544,0-58.944,32.224-58.944,75.488c0,27.488,9.728,46.048,9.728,46.048
+																		 S144.676,371.2,138.692,395.488c-10.112,41.12,1.376,107.712,2.368,113.44c0.608,3.168,4.16,4.16,6.144,1.568
+																		 c3.168-4.16,42.08-59.68,52.992-99.808c3.968-14.624,20.256-73.92,20.256-73.92c10.72,19.36,41.664,35.584,74.624,35.584
+																		 c98.048,0,168.896-86.176,168.896-193.12C463.62,76.704,375.876,0,262.948,0z"/>
+															</g>
+														</g>
+													</svg>
+												</a>
+											</li>
+											<li class="social-media__item social-media__item--twitter">
+												<a title="Chia sẻ lên Twitter" href="https://twitter.com/share?url=https://{{store.domain}}{{product.url}}" target="_blank" rel="noopener" aria-label="Tweet on Twitter" >
+													<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+														 viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve">
+														<g>
+															<g>
+																<path d="M512,97.248c-19.04,8.352-39.328,13.888-60.48,16.576c21.76-12.992,38.368-33.408,46.176-58.016
+																		 c-20.288,12.096-42.688,20.64-66.56,25.408C411.872,60.704,384.416,48,354.464,48c-58.112,0-104.896,47.168-104.896,104.992
+																		 c0,8.32,0.704,16.32,2.432,23.936c-87.264-4.256-164.48-46.08-216.352-109.792c-9.056,15.712-14.368,33.696-14.368,53.056
+																		 c0,36.352,18.72,68.576,46.624,87.232c-16.864-0.32-33.408-5.216-47.424-12.928c0,0.32,0,0.736,0,1.152
+																		 c0,51.008,36.384,93.376,84.096,103.136c-8.544,2.336-17.856,3.456-27.52,3.456c-6.72,0-13.504-0.384-19.872-1.792
+																		 c13.6,41.568,52.192,72.128,98.08,73.12c-35.712,27.936-81.056,44.768-130.144,44.768c-8.608,0-16.864-0.384-25.12-1.44
+																		 C46.496,446.88,101.6,464,161.024,464c193.152,0,298.752-160,298.752-298.688c0-4.64-0.16-9.12-0.384-13.568
+																		 C480.224,136.96,497.728,118.496,512,97.248z"/>
+															</g>
+														</g>
+													</svg>
+												</a>
+											</li>
+										</ul>
+										{%endif%}
+
+										{% if settings.iwish_enable %}
+										<div class="product-wish">
+											<a href="javascript:void(0)" class="setWishlist btn-views" data-wish="{{product.alias}}" tabindex="0" title="Thêm vào yêu thích">
+												<img width="25" height="25" src="{{'heart.png' |asset_url}}" alt="Thêm vào yêu thích"/> 
+												Thêm vào yêu thích
+											</a>
+										</div>
+										{% endif %}
+									</div>
+								</div>
+
+								<div class="boz-form-1 d-none">
+
+									<div class="flex-quantity">
+
+										<div class="btn-mua button_actions clearfix">
+
+											{% unless product.tags contains "liệu trình" %}
+											<div class="mua_shop">
+												{% assign suffix = '' %}
+												{% for tag in product.tags %}
+												{% if tag contains 'shopee_'%}
+												{% assign suffix = tag | split: '_' | last %}
+												{% endif %}
+												{% endfor %}														
+												<a href="{% if suffix != '' %}{{suffix}}{% else %}#{% endif %}" target="_blank">
+													ĐẶT HÀNG TẠI SHOPEE MALL
+												</a>
+											</div>
+											{% endunless %}
+										</div>
+
+
+
+									</div>
+
+								</div>
+
+							</div>
+							<div class="abps-productdetail ab-hide" ab-data-productid="{{product.id}}"></div></form>
+
+						{%if product.summary != null and product.summary != '' and product.summary !=""%}
+						<div class="product-summary">
+							<div class="rte">
+								{{product.summary}}
+							</div>
+						</div>
+						{%endif%}
+
+
+						{% if settings.product_promo_enable %}
+						{% unless product.tags contains "liệu trình" %}
+						<div class="khuyen-mai">
+							<h3 class="product-promotion__heading">
+								<img src="{{'gift_new_pro.png' | asset_url}}" alt="icon" width="64" height="64" class="mr-2">
+								{{settings.product_promo_text}}
+							</h3>
+							<div class="content">
+								{%- if settings.metafield_show -%}
+								{%- assign metafields_promotion = product.metafields.custom.Promotion -%}
+								{%- assign promotion_video = metafields_promotion | remove: "[" | remove: "]" -%}
+								{%- assign promotion = promotion_video | remove: '"' -%}
+								{%- endif -%}
+								{%- if promotion.size > 0-%}
+								{{promotion}}
+								{%- else -%}
+								<ul>
+									{%- for i in (1..2) -%}
+									{%- capture naviimage -%}km_product_{{i}}.png{%- endcapture -%}
+									{%- capture text -%}km_product{{i}}_text{%- endcapture -%}
+									{%- if settings[text] != null and settings[text] != '' -%}
+									<li><span class="nb_dis"><img width="24" height="24" src="{{naviimage | asset_url}}" alt="{{settings[text]}}"></span>
+										<span class="content_dis">{{settings[text]}}</span>
+									</li>
+									{%- endif -%}
+									{%- endfor -%}
+								</ul>
+								{%- endif -%}
+							</div>
+						</div>
+						{% endunless %}
+						{% endif %}
+						{%if settings.product_coupon_enable%}
+						{% unless product.tags contains "liệu trình" %}
+						{% include 'coupon_products' %}
+						{% endunless %}
+						{%endif%}
+
+						{%if settings.product_policy_enable%}
+						{% unless product.tags contains "liệu trình" %}
+						<div class="clearfix"></div>
+						<div class="product-policises-wrapper">
+							<ul class="product-policises">
+								{% for i in (1..4) %}
+								{% capture policy_product_use %}product_policy_{{i}}_enable{% endcapture %} {% capture policy_product_title %}product_policy_{{i}}_title{% endcapture %} {% capture policy_product_image %}policy_image_{{i}}.png{% endcapture %}
+								{% if settings[policy_product_use] %}
+								<li class="item_poli">
+									<div class="img_poly">
+										<img width="32" height="32" class="lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABJIAAACWBAMAAAB3Hb8pAAAAG1BMVEXMzMyWlpacnJyqqqrFxcWxsbGjo6O3t7e+vr6He3KoAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAGCElEQVR4nO3dy2/bNgDHcerhx9F0l3RHK03XHONtHXaUF7fbMc6Aoke7LZAe7axId4w7oPu3x5celunEQ2bEC78foJIcWoIK/EBSpCQLAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAkEbSt1l59e7wx+0PUUrfZO/z+5wX/m8WsrHZkoVe8el0u0NM7G5Pi+0nuzlj7KehbGyuJmmmNw63O8SwSlLbbE13c8rYR6mUjc2VJLkP51sdYlYlyVZPBzs8ceyZpEpS4knSUvY//ZrJb7c6RJWkrpQvxldS3uzwzLFX0mGZpGIz/WxNdPdopluo9q3NW3WI7MDs+KnYY0bzForu77oaaW46w76pW3LTfOVbHELIb4q/Ls3mqPoDHrfEtEbNTaurm7TEXn8NN3eUavulposu7A6npoyOUiBuS1KswxDbHtJSDrY4RLf6VmZ6SF3Z/89PGXvptiRNdIs2suGIy2YqM5VNrbmr7dcpx51SF6Fsc6uIRyUdj8dF01Rt2s+mZVrYcCR2tNH8QWeqXTVbtf1aZRvYcYOSQznf6fljn9TiU09SYmqjiQ1Hq0xObDKylMeeQyRlborvT24fiMKjsiFJSxMLV6l0yomPrhkjmq3WNW6/try5zr7TJUUdtrhrngWPyIYkDU1PZ2bHFrvVgJIeI+o0etJuv1h+UV2m/lxnyg5lLhlQCog/SamtVbIiSWV0RiokcWPM2+0XyWKKJC6TNNjRWWP/+JNku0nFxVdaJSlR1dOiUdW4/UZukmVeXuuNSFJA/Eka2b6yLJJUn+adZ435NFe6lPJt+lWqFEVlknoCofAnaWIjVM6D1EueN288cqULeWKWT1SSbIIikhQQf5KyJyt/qZXEUjan01zpxFRVLVWPkaQQeZPUcZfx662bKlq7XcmV/vanWWVyTusWIm+S2i4C6z1uPQ7QnE1bvYdgIk/pcYfIm6SRuzpbHwXQHevmDP9qktSlP6MAIfImaeEGsddHJvW4d/O+t9UkqYqIkckQeZM0c5P4a7MlZr6kOS+7miTVzWa2JES+JKVFtbM2g2ufGhlsPIQwSWIGN0S+JBWXbkWl0i7vKtEt1rtmR2mtdSvqsBl3lQTEl6R2MWK0dqeb7oT/Lfu55xCtoxPzaSGn3OkWIl+Syqv39btvO6rhyxqNlt2vqMj0Td/cfRsgX5LKa67yiYCy56yztWwMcrunm1znSt/BVDwRwPPcAfElqewprz+lNFEhazcS4vazFVGiKyKeUgqQL0mzcrK/+eRkqmucbuPh2nLe7dgsD3hyMki+JFV1UPNp7sQXker+pLfjr2aMgKe5A+RJUm2arfmGiaUJ1ag2KlDtV7xQ4EbwhokQeZJUnxxpvPVm5rrSKxdlq2+YMPUXb70JjydJ9SHtZOVNXLYHbm6c9BzCfPcwN9tD3sSFVWezO98OWHr1rv/+xm6mP0neDggAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAO4tcv+A+yFJ+Ddkf9M7WRtJ6qlPkZRS9IWIe8L+VvBZdinEa/lBRAMhst2eKfZbL/1hQ4knSWZ5eCOuXZLS5/lfajG+yKOPojPb/dlif/XEL+L7ZyLOO2qjdXQqooueXiVHE1UaXTwT7bkqqSXp6VRcuiQl53bROo2uRXvxkP8PPDSVpNaH1+fJfCT+EG/GL0X0wazejHUVE6mi7kC8FLUk9U66A5ekOLeLdBDFN1/oVAVNtW5xng66pxfzn8Wxqn2i3KyOxUiVRqpIXKp/+scQ9M8h6CRdt+cuSVGx6EWd6SVJCprqcZuqZnAyHei06GDoVa/oJ/XEl0T/vEZVJ8VXYr1OEi8GJCloPR0FXfFMP06F/o06lQe9qtVJ8YX7oktS60Cs95PE5JwkBU0lQveTxMX86lxc52c6LnpV9ZNE56n7okuS+WCWtWs3weBT4HQi1LWbWOajXHSyE50Hvaqu3URn4L5YT5JtAc9kMZ4kSBLu0p7f/R3gblcPfQJ4HKKThz4DAAAAAACwn/4ByLvPrpIItisAAAAASUVORK5CYII="  
+											 data-src="{{ policy_product_image | asset_url}}" alt="{{settings[policy_product_title]}}"/>
+									</div>
+									<div class="content_poli"> 
+										{{settings[policy_product_title]}}
+									</div>
+								</li>
+								{% endif %}
+								{% endfor %}
+							</ul>
+						</div>	
+						{% endunless %}
+						{% endif %}
+
+						{% if product.tags contains "liệu trình" %}
+						<div class="form-inline-1">
+							{% if settings.product_swatch_enable and product.variants.size > 0 %}
+							<div class="select-swatch">
+
+								{% for option in product.options %}
+								{% include 'swatch' with option %}
+								{% endfor %}
+							</div>
+							{% endif %}
+						</div>	
+						{% endif %}
+
+					</div> 
+					<div class="col-xl-3 col-lg-3 col-md-12 col-12 details-pro">
+						<div class="box_info_right"> 
+							{%if settings.product_info_enable%}
+							<div class="store-folow">
+								<div class="item_store">
+									<div class="item_image_store">
+										<div class="image">
+											<img width="100" height="100" class="lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC"  data-src="{{'img_info_icon.jpg' | asset_url }}" alt="{{settings.product_info_title_2}}"/>
+										</div>
+									</div>
+									<div class="info_store">
+										<p class="text m-0">{{settings.product_info_title}}</p>
+										<p class="name_title">{{settings.product_info_title_2}}</p>
+										<div class="title">
+											<div class="button-group">
+												{%if settings.product_link_1_title.size > 0%}
+												<a class="style-button" href="{{settings.product_link_1_url}}" title="{{settings.product_link_1_title}}">
+													{{settings.product_link_1_title}}
+												</a>
+												{%endif%}
+												{%if settings.product_link_2_title.size > 0%}
+												<a class="style-button" href="{{settings.product_link_2_url}}" title="{{settings.product_link_2_title}}">
+													<svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 512 512" height="512" viewBox="0 0 512 512" width="512"><g><g><path d="m474.426 189.681h-436.852c-18.649 0-33.768-15.118-33.768-33.768v-122.145c0-18.65 15.118-33.768 33.768-33.768h436.853c18.649 0 33.768 15.118 33.768 33.768v122.146c-.001 18.649-15.119 33.767-33.769 33.767z" fill="#b3dafe"/><path d="m474.426 0h-30.446c18.649 0 33.768 15.118 33.768 33.768v122.146c0 18.649-15.118 33.768-33.768 33.768h30.446c18.649 0 33.768-15.118 33.768-33.768v-122.146c0-18.65-15.118-33.768-33.768-33.768z" fill="#8ac9fe"/><g fill="#fff"><path d="m448.994 70.173c-3.967-1.377-8.308.72-9.689 4.691l-16.149 46.461-15.869-46.912c-1.818-6.032-11.641-7.542-14.387-.097l-16.701 47.26-15.876-46.589c-1.356-3.978-5.68-6.104-9.66-4.75-3.979 1.357-6.106 5.681-4.75 9.66l22.949 67.348c1.046 3.068 3.92 5.138 7.162 5.157h.044c3.224 0 6.101-2.033 7.176-5.075l16.675-47.185 15.929 47.088c1.042 3.08 3.926 5.159 7.178 5.172h.032c3.239 0 6.125-2.051 7.189-5.113l23.436-67.427c1.382-3.971-.718-8.309-4.689-9.689z"/><path d="m142.441 70.184c-22.513 0-40.828 18.441-40.828 41.108 0 22.668 18.315 41.109 40.828 41.109s40.828-18.441 40.828-41.109c0-22.667-18.316-41.108-40.828-41.108zm0 66.994c-14.119 0-25.605-11.612-25.605-25.886s11.486-25.885 25.605-25.885 25.605 11.611 25.605 25.885-11.487 25.886-25.605 25.886z"/><path d="m300.747 70.184c-22.513 0-40.828 18.441-40.828 41.108 0 22.668 18.315 41.109 40.828 41.109s40.828-18.441 40.828-41.109c0-22.667-18.315-41.108-40.828-41.108zm0 66.994c-14.119 0-25.605-11.612-25.605-25.886s11.486-25.885 25.605-25.885 25.605 11.611 25.605 25.885-11.486 25.886-25.605 25.886z"/><path d="m205.268 37.28c-4.204 0-7.611 3.407-7.611 7.611v99.898c0 4.204 3.408 7.611 7.611 7.611 4.204 0 7.611-3.407 7.611-7.611v-99.897c0-4.204-3.408-7.612-7.611-7.612z"/><path d="m240.234 37.28c-4.204 0-7.611 3.407-7.611 7.611v99.898c0 4.204 3.408 7.611 7.611 7.611s7.611-3.407 7.611-7.611v-99.897c.001-4.204-3.407-7.612-7.611-7.612z"/><path d="m94.456 37.89c-1.144-.268-11.39-2.422-18.781 3.451-2.995 2.38-6.563 6.931-6.563 15.103v15.275h-3.607c-4.204 0-7.611 3.407-7.611 7.611s3.408 7.611 7.611 7.611h3.607v57.848c0 4.204 3.408 7.611 7.611 7.611s7.611-3.407 7.611-7.611v-57.847h7.204c4.204 0 7.611-3.407 7.611-7.611s-3.408-7.611-7.611-7.611h-7.204v-15.276c0-.76.078-2.592.802-3.177 1.132-.917 4.224-.897 5.934-.535 4.077.916 8.136-1.63 9.081-5.708.95-4.095-1.599-8.185-5.695-9.134z"/></g></g><g><path d="m346.189 313.133.004-41.01c.001-9.944 8.062-18.004 18.005-18.004 9.944 0 18.006 8.054 18.006 17.998.002 31.488.002 94.645.002 109.465 0 2.108-.222 4.203-.663 6.265l-17.432 81.551-116.052-9.534-85.088-148.683c-4.586-8.834-3.321-19.571 3.193-27.096 5.548-6.411 15.411-6.651 21.265-.518l42.449 44.475c2.984 3.127 8.257 1.014 8.257-3.308v-134.547c0-9.946 8.063-18.009 18.009-18.009 9.946 0 18.009 8.063 18.009 18.009v122.946z" fill="#ffcebf"/><g fill="#ffb09e"><path d="m166.389 283.851 39.621 41.512c6.257 6.556 16.314 7.685 23.869 2.679l-42.449-44.475c-5.778-6.055-15.455-5.887-21.041.284z"/><path d="m252.841 190.187v112.29c0 5.885 4.771 10.656 10.656 10.656 5.885 0 10.656-4.771 10.656-10.656v-111.853c0-9.4-7.027-17.547-16.39-18.374-4.616-.408-8.889.95-12.275 3.443 4.452 3.279 7.353 8.541 7.353 14.494z"/><path d="m382.205 272.117c-.001-9.944-8.062-17.997-18.006-17.997-3.992 0-7.669 1.315-10.654 3.514 4.449 3.276 7.348 8.533 7.348 14.484.002 35.823.002 112.63.002 112.63l-17.727 82.931 20.944 1.721 17.432-81.551c.441-2.061.663-4.161.663-6.268 0-14.83 0-77.979-.002-109.464z"/></g><path d="m274.154 313.133v-41.005c0-9.946 8.063-18.009 18.009-18.009 9.946 0 18.009 8.063 18.009 18.009v41.005z" fill="#ffcebf"/><path d="m221.946 512c-2.242 0-4.059-1.817-4.059-4.059l-.001-32.549c-.001-13.231 10.727-23.959 23.958-23.96h116.284c13.231-.001 23.95 10.722 23.952 23.953l.001 32.556c0 2.242-1.817 4.06-4.059 4.06h-156.076z" fill="#aee49e"/><path d="m382.079 475.385c-.001-13.231-10.72-23.955-23.952-23.953h-116.284c-.001 0-.003 0-.004 0h85.842c13.231-.001 23.95 10.722 23.952 23.953l.001 32.556c0 2.242-1.817 4.059-4.059 4.059h30.446c2.242 0 4.059-1.818 4.059-4.059z" fill="#8bd8a5"/><path d="m310.171 272.128c0-9.946 8.063-18.009 18.009-18.009 9.946 0 18.009 8.063 18.009 18.009v41.005h-36.018z" fill="#ffcebf"/><g fill="#ffb09e"><path d="m328.18 254.119c-4.021 0-7.722 1.334-10.719 3.561 4.416 3.282 7.29 8.523 7.29 14.447v30.286c0 5.92 4.799 10.719 10.719 10.719s10.719-4.799 10.719-10.719v-30.286c0-9.945-8.063-18.008-18.009-18.008z"/><path d="m292.162 254.119c-4.021 0-7.721 1.334-10.719 3.561 4.416 3.282 7.29 8.523 7.29 14.447v30.286c0 5.92 4.799 10.719 10.719 10.719s10.719-4.799 10.719-10.719v-30.286c0-9.945-8.063-18.008-18.009-18.008z"/></g></g></g></svg>
+													{{settings.product_link_2_title}}
+												</a>{%endif%}
+											</div> 
+										</div>
+									</div>
+								</div>
+
+							</div>
+							{% endif %}
+
+
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+					{%- if settings.metafield_show -%}
+					{%- assign metafields_combo = product.metafields.custom.Combo -%}
+					{%- assign cleaned_ids_combo = metafields_combo | remove: "[" | remove: "]" -%}
+					{%- assign cleaned_comma_combo = cleaned_ids_combo | remove: '"' -%}
+					{%- assign product_ids_array_combo = cleaned_comma_combo | split: "," -%}
+					{%- endif -%}
+					{%- if cleaned_comma_combo != null and cleaned_comma_combo != '' and cleaned_comma_combo !="" -%}
+					{%- include 'combo_pro_metafield' -%}
+					{%- else -%}
+					{%- if tag_combo -%}
+					{% capture tag_str_prefix_val %}combo{% endcapture %}
+					{%- include 'combo_pro' -%}
+					{%- endif -%}
+					{%- endif -%}
+
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-12">
+					<div class="row">
+						<div class="col-12 product-review-details {%if product.content contains '<h6>' or settings.product_combo_compat_enable%} col-lg-12 col-xl-8{%else%} col-lg-12 col-xl-12{%endif%}">
+							{%include 'tab_product'%}
+						</div>
+						{%if product.content contains '<h6>' or settings.product_combo_compat_enable %} 
+						<div class="col-lg-12 col-xl-4 col-12 product-sidebar">
+							<div class="sticky-box">
+								{%if product.content contains '<h6>'%} 
+								{% include "specifications" %}
+								{%endif%}
+								{%if settings.product_combo_compat_enable %} 
+								<div class="product-favorite">
+
+									<div class="section-title a-left txt-uppercese">
+										<h2>
+											<a href="/{{ settings.product_related_collection }}" title="{{settings.product_related_title | strip_html}}">{{settings.product_related_title}}</a>
+										</h2>
+									</div>
+
+									<div class="row">
+										{%- if collections[settings.product_related_collection].products.size > 0 -%}
+										{%- for product in collections[settings.product_related_collection].products limit: settings.product_related_limit -%}
+										<div class="col-xl-6 col-lg-3 col-md-4 col-xs-6 col-6">
+											<div class="item_product_main">
+												{%include 'product_grid_office'%}
+											</div>
+										</div>
+										{% endfor %}
+										{%else%}
+										<div class="alert alert-warning alert-warning2 alert-dismissible margin-top-15 section" role="alert">
+											Sản phẩm đang được cập nhật.
+										</div>
+										{%endif%}
+									</div>
+								</div>
+								{%endif%}
+							</div>
+						</div>
+						{%endif%}
+					</div>
+				</div>
+				{%- comment -%}
+				  T-23/T-24 (product-detail + product-vella, ADR-004: nội dung khác cùng template,
+				  không tách riêng) — 2 khối tĩnh minh hoạ theo Pharma_Cosmetics_Figma_Project/
+				  product-detail.html (dòng ~200-286): Active Ingredients Matrix + Doctor Clinical
+				  Endorsement. Không có field thành phần hoạt chất theo cấu trúc trên product thật
+				  -> dùng nội dung minh hoạ tĩnh (đúng mock_policy#frontend_theme). Endorsement bind
+				  vào doctors[0] (data/doctors.js, quy ước đã dùng ở templates/page.chuyen-gia.bwt)
+				  thay vì bịa tên/trích dẫn lâm sàng không kiểm chứng được.
+				  LƯU Ý: dùng Tailwind utility thuần (không dùng .btn-primary/.btn-secondary của
+				  snippets/pharma_ui_kit.bwt) vì các class đó đã tồn tại từ trước cho nút Bootstrap
+				  (.btn.btn-primary) ở assets/global_core.scss.bwt, assets/page_account.scss.bwt,
+				  assets/page_collection.scss.bwt — include global pharma_ui_kit ở layouts/theme.bwt
+				  có nguy cơ đè style các nút .btn-primary hiện có toàn site (cần rà soát riêng,
+				  ngoài phạm vi task này).
+				{%- endcomment -%}
+				<div class="col-12">
+					<div class="bg-gray-50 rounded-3xl p-6 sm:p-8 mb-8 border border-gray-200">
+						<h2 class="text-lg sm:text-xl font-bold text-forest-900 font-heading mb-6 text-center">
+							Thành Phần Hoạt Chất &amp; Cơ Chế Tác Động Y Khoa
+						</h2>
+						<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+							<div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+								<div class="w-10 h-10 rounded-lg bg-emerald-100 text-clinical-700 flex items-center justify-center font-bold text-sm mb-3">B5</div>
+								<h3 class="text-sm font-bold text-gray-900 mb-1">Panthenol (B5) 10%</h3>
+								<p class="text-xs text-gray-600 leading-relaxed">Cấp ẩm sâu, kích thích tăng sinh nguyên bào sợi và đẩy nhanh tốc độ phục hồi biểu bì.</p>
+							</div>
+							<div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+								<div class="w-10 h-10 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm mb-3">CER</div>
+								<h3 class="text-sm font-bold text-gray-900 mb-1">Ceramide NP Đa Tầng</h3>
+								<p class="text-xs text-gray-600 leading-relaxed">Hàn gắn các đứt gãy trong lớp màng lipid, ngăn chặn hiện tượng mất nước qua biểu bì (TEWL).</p>
+							</div>
+							<div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+								<div class="w-10 h-10 rounded-lg bg-cyan-100 text-cyan-700 flex items-center justify-center font-bold text-sm mb-3">MAD</div>
+								<h3 class="text-sm font-bold text-gray-900 mb-1">Madecassoside (Rau Má)</h3>
+								<p class="text-xs text-gray-600 leading-relaxed">Ức chế phản ứng viêm dưới da, làm mát tức thì và làm mờ các nốt mao mạch nông nổi li ti.</p>
+							</div>
+							<div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+								<div class="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm mb-3">HA</div>
+								<h3 class="text-sm font-bold text-gray-900 mb-1">Multi-Molecular HA</h3>
+								<p class="text-xs text-gray-600 leading-relaxed">3 tầng phân tử ngậm nước giúp căng bóng đa tầng, củng cố liên kết gian bào của da thiếu ẩm.</p>
+							</div>
+						</div>
+					</div>
+
+					{%- assign endorse_doc = doctors[0] -%}
+					{%- if endorse_doc -%}
+					<div class="bg-forest-900 text-white rounded-3xl p-6 sm:p-10 mb-8 shadow-lg">
+						<div class="flex flex-col md:flex-row items-center gap-6 sm:gap-8">
+							{%- if endorse_doc.photo.src -%}
+							<img src="{{ endorse_doc.photo.src }}" alt="{{ endorse_doc.photo.alt | default: endorse_doc.name }}" class="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl object-cover border-4 border-white/20 flex-shrink-0" loading="lazy">
+							{%- endif -%}
+							<div class="space-y-3 text-center md:text-left">
+								<span class="text-xs font-bold text-clinical-600 uppercase tracking-widest">
+									Ý kiến chuyên gia &bull; {{ endorse_doc.name }} &bull; {{ endorse_doc.title }} ({{ endorse_doc.years_experience }} năm kinh nghiệm)
+								</span>
+								<p class="text-sm sm:text-base italic text-emerald-100 leading-relaxed">{{ endorse_doc.quote }}</p>
+								<div class="pt-2">
+									<a href="/dat-lich-tu-van" class="inline-flex items-center gap-2 bg-white text-forest-900 hover:bg-emerald-100 font-bold text-xs py-2.5 px-5 rounded-lg transition">
+										Đặt lịch tư vấn cùng {{ endorse_doc.name }} <i class="fas fa-arrow-right" aria-hidden="true"></i>
+									</a>
+								</div>
+							</div>
+						</div>
+					</div>
+					{%- endif -%}
+				</div>
+
+				{%- if settings.product_recent_enable -%}
+				{%- assign check11 = product.url -%}
+				{%- assign productRelate = product.collections.first.alias -%}
+				{%- assign productRelateCheck = product.collections.size -%}
+				{%- assign productRelateCheck2 = product.collections.first.products_count -%}					
+				{%- if productRelateCheck > 0 and settings.product_upsell_enable and productRelateCheck2 > 1 -%}
+				<div class="col-12">
+					<div class="product-related product-swipers">
+						<div class="section-title a-left txt-uppercese">
+							<h2>
+								<a href="/{{ productRelate | handleize }}" title="{{settings.product_same_cate_title | strip_html}}">{{settings.product_same_cate_title}}</a>
+							</h2>
+						</div>
+
+						<div class="swiper_product_related swiper-container">
+							<div class="swiper-wrapper">
+								{% for product in collections[productRelate].products limit: settings.product_same_cate_limit %}
+								<div class="swiper-slide">
+									<div class="item_product_main">
+										{%include 'product_grid_office'%}
+									</div>
+								</div>
+								{% endfor %}
+							</div>
+							<div class="swiper-button-prev">
+								<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+									<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+								</svg>
+							</div>
+							<div class="swiper-button-next">
+								<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+									<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+								</svg>
+							</div>
+						</div>
+						<div class="show-more-same">
+							<a class='show-more btn btn-primary frame flexbtn' href='/{{ productRelate | handleize }}' title='Xem thêm'>
+								Xem thêm <svg height="64" viewBox="0 0 24 24" width="64" xmlns="http://www.w3.org/2000/svg" data-name="Layer 2"><path d="m22.707 11.293-7-7a1 1 0 0 0 -1.414 1.414l5.293 5.293h-17.586a1 1 0 0 0 0 2h17.586l-5.293 5.293a1 1 0 1 0 1.414 1.414l7-7a1 1 0 0 0 0-1.414z"></path></svg>
+							</a>
+						</div>
+					</div>
+				</div>
+				<script>
+					var swiper_related = new Swiper('.swiper_product_related', {
+						slidesPerView: 4,
+						spaceBetween: 20,
+						slidesPerGroup: 1,
+						navigation: {
+							nextEl: '.swiper_product_related .swiper-button-next',
+							prevEl: '.swiper_product_related .swiper-button-prev',
+						},
+						breakpoints: {
+							280: {
+								slidesPerView: 2,
+								spaceBetween: 15
+							},
+							640: {
+								slidesPerView: 2,
+								spaceBetween: 15
+							},
+							768: {
+								slidesPerView: 3,
+								spaceBetween: 15
+							},
+							992: {
+								slidesPerView: 4,
+								spaceBetween: 15
+							},
+							1025: {
+								slidesPerView: 5,
+								spaceBetween: 20
+							}
+						}
+					});
+				</script>
+				{%- endif -%}
+				{%- endif -%}
+				{%if settings.product_same_enable%}
+				<div class="col-12">
+					{% include 'section_same_price' %}
+				</div>
+				{%endif%}
+			</div>
+		</div>
+	</div>
+
+</section>
+{% if settings.product_viewed_enable %}
+{% include 'section_product_viewed' %}
+{% endif %}
+{%- if product.content contains '<h6>' -%}
+{%- assign description_parts = product.content | split: "<h6>" -%}
+{%- for part in description_parts -%}
+{%- assign fp = part | append: " " | split: "</h6>" | last -%}
+{%- assign p = part | append: " " | split: "</h6>" | last | strip_html | replace: "&nbsp;", "" | replace: " ", "" | strip_newlines -%}
+{%- if p != "" or fp contains "<img" or fp contains "<iframe" -%}
+{%- if forloop.index0 == '1' -%}
+<div id="specificationsModal" class="modal-specifications" style="display:none;">
+	<div class="modalsize-overlay fancybox-overlay fancybox-overlay-fixed"></div>
+	<div class="modal-specificationsModal-product">
+		<div class="chosee_size">
+			<p class="title-popup">
+				{{settings.product_specifications_title}}
+			</p>
+			<a title="Close" class="specifications-close close-window" href="javascript:;">
+				<svg aria-hidden="true" focusable="false" data-prefix="far" data-icon="times" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" class="svg-inline--fa fa-times fa-w-10"><path fill="currentColor" d="M207.6 256l107.72-107.72c6.23-6.23 6.23-16.34 0-22.58l-25.03-25.03c-6.23-6.23-16.34-6.23-22.58 0L160 208.4 52.28 100.68c-6.23-6.23-16.34-6.23-22.58 0L4.68 125.7c-6.23 6.23-6.23 16.34 0 22.58L112.4 256 4.68 363.72c-6.23 6.23-6.23 16.34 0 22.58l25.03 25.03c6.23 6.23 16.34 6.23 22.58 0L160 303.6l107.72 107.72c6.23 6.23 16.34 6.23 22.58 0l25.03-25.03c6.23-6.23 6.23-16.34 0-22.58L207.6 256z" class=""></path></svg>
+			</a>
+		</div>
+		<div class="modal-body">
+			{{ part | split: "</h6>" | last | replace: "<div", "<span" | replace: "</div", "</span"}}
+		</div>
+	</div>
+</div>
+{%- endif -%}
+{%- endif -%}
+{%- endfor -%}
+{%- endif -%}
+{%include 'popup_tragop'%} 
+{%if settings.product_store_enable%}
+<div id="modal-store-product" class="modalstore-product" style="display:none;">
+	<div class="modalstore-overlay fancybox-overlay fancybox-overlay-fixed"></div>
+	<div class="modal-store-product">
+		{% include 'product-hethong' %}
+		<a title="Close" class="modalstore-close close-window" href="javascript:;">
+			<svg aria-hidden="true" focusable="false" data-prefix="far" data-icon="times" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" class="svg-inline--fa fa-times fa-w-10"><path fill="currentColor" d="M207.6 256l107.72-107.72c6.23-6.23 6.23-16.34 0-22.58l-25.03-25.03c-6.23-6.23-16.34-6.23-22.58 0L160 208.4 52.28 100.68c-6.23-6.23-16.34-6.23-22.58 0L4.68 125.7c-6.23 6.23-6.23 16.34 0 22.58L112.4 256 4.68 363.72c-6.23 6.23-6.23 16.34 0 22.58l25.03 25.03c6.23 6.23 16.34 6.23 22.58 0L160 303.6l107.72 107.72c6.23 6.23 16.34 6.23 22.58 0l25.03-25.03c6.23-6.23 6.23-16.34 0-22.58L207.6 256z" class=""></path></svg>
+		</a>
+	</div>
+</div>
+{%- if video -%}
+<div class="popup-video">
+	<div class="body-popup">
+	</div>
+	<div class="close-popup-video">
+		<i class="fa fa-close"></i>
+		Đóng
+	</div>
+</div>
+{%- endif -%}
+<script>
+	$(document).on('click', '.modalstore-close, #modal-store-product .modalstore-overlay, .fancybox-overlay', function(e){
+		$("#modal-store-product").fadeOut(0);
+		awe_hidePopup();
+	});
+	$(document).ready(function ($){
+		var modal = $('.modalstore-product');
+		var btn = $('.btn-hethong');
+		var span = $('.modalstore-close');
+		btn.click(function () {
+			modal.show();
+		});
+		span.click(function () {
+			modal.hide();
+		});
+		$(window).on('click', function (e) {
+			if ($(e.target).is('.modal')) {
+				modal.hide();
+			}
+		});
+	});
+</script>
+{%endif%}
+<script> 
+	var variantsize = false;
+	var ww = $(window).width();
+	function validate(evt) {
+		var theEvent = evt || window.event;
+		var key = theEvent.keyCode || theEvent.which;
+		key = String.fromCharCode( key );
+		var regex = /[0-9]|\./;
+		if( !regex.test(key) ) {
+			theEvent.returnValue = false;
+			if(theEvent.preventDefault) theEvent.preventDefault();
+		}
+	}
+	var selectCallback = function(variant, selector) {
+		if (variant) {
+			var form = jQuery('#' + selector.domIdPrefix).closest('form');
+			for (var i=0,length=variant.options.length; i<length; i++) {
+				var radioButton = form.find('.swatch[data-option-index="' + i + '"] :radio[value="' + variant.options[i] +'"]');
+				if (radioButton.size()) {
+					radioButton.get(0).checked = true;
+				}
+			}
+		}
+		var addToCart = jQuery('.form-product .btn-cart.normal_button'),
+			FastAddToCart = jQuery('.form-product .btn-buyNow'),
+			form = jQuery('.form-product .boz-form'),
+			form1 = jQuery('.form-product .boz-form-1'),
+			productPrice = jQuery('.details-pro .special-price .product-price'),
+			qty = jQuery('.inventory_quantity .a-stock'),
+			comparePrice = jQuery('.details-pro .old-price .product-price-old'),
+			comparePriceText = jQuery('.details-pro .old-price'),
+			savePrice = jQuery('.details-pro .save-price .product-price-save'),
+			savePriceText = jQuery('.details-pro .save-price'),
+			qtyBtn = jQuery('.form-product .custom-btn-number'),
+			BtnSold = jQuery('.form-product .form-group .btn-mua'),
+			product_sku = jQuery('.details-product .sku-product .variant-sku');
+		if (variant && variant.sku != "" && variant.sku != null){
+			product_sku.html("Mã: <span class='a-sku'>" + variant.sku + "</span>");
+		} else {
+			product_sku.html('Mã: <span class="a-sku">Đang cập nhật</span>');
+		}
+		FastAddToCart.addClass('d-none');
+		if (variant && variant.available) {
+			if(variant.inventory_management == "bizweb"){
+				if (variant.inventory_quantity != 0) {
+					qty.html('<span class="a-stock">Còn hàng</span>');
+				} else if (variant.inventory_quantity == ''){
+					if (variant.inventory_policy == "continue"){
+						qty.html('<span class="a-stock">Còn hàng</span>');
+					} else {
+						qty.html('<span class="a-stock a-stock-out">Hết hàng</span>');
+					}
+				}
+			}else{
+				qty.html('<span class="a-stock">Còn hàng</span>');
+			}
+			FastAddToCart.removeClass('d-none');
+			addToCart.html('<span class="txt-main">Thêm vào giỏ hàng</span>').removeAttr('disabled');	
+			BtnSold.removeClass('btnsold');
+			qtyBtn.removeClass('d-none');
+			if(variant.price == 0){
+				console.log("vafo owr day")
+				productPrice.html('Liên hệ');
+				comparePrice.hide();
+				savePrice.hide();
+				comparePriceText.hide();
+				jQuery('.sale-off').hide();
+				savePriceText.hide();
+				form.addClass('d-none');
+				form1.removeClass('d-none');
+			}else{
+				form.removeClass('d-none');
+				productPrice.html(Bizweb.formatMoney(variant.price, "{{ store.money_format }}"));
+
+													 if ( variant.compare_at_price > variant.price ) {
+								  comparePrice.html(Bizweb.formatMoney(variant.compare_at_price, "{{ store.money_format }}")).show();
+								  savePrice.html(Bizweb.formatMoney(variant.compare_at_price - variant.price, "{{ store.money_format }}")).show();
+								  comparePriceText.show();
+				jQuery('.sale-off').html("-" + (Math.round(((variant.compare_at_price - variant.price) / variant.compare_at_price) * 100)) + "%").show();
+				savePriceText.show();
+			} else {
+				comparePrice.hide();   
+				savePrice.hide();
+				comparePriceText.hide();
+				savePriceText.hide();
+				jQuery('.sale-off').hide();
+			}       										
+		}
+	} else {	
+		qty.html('<span class="a-stock a-stock-out">Hết hàng</span>');
+		FastAddToCart.addClass('d-none');
+		addToCart.html('<span class="txt-main">Hết hàng</span>').attr('disabled', 'disabled');
+		BtnSold.addClass('btnsold');
+		qtyBtn.addClass('d-none');
+		if(variant){
+			if(variant.price != 0){
+				form.removeClass('d-none');
+				productPrice.html(Bizweb.formatMoney(variant.price, "{{ store.money_format }}"));
+													 if ( variant.compare_at_price > variant.price ) {
+								  FastAddToCart.addClass('d-none');
+				addToCart.html('<span class="txt-main">Hết hàng</span>').attr('disabled', 'disabled');
+				comparePrice.html(Bizweb.formatMoney(variant.compare_at_price, "{{ store.money_format }}")).show();
+													 savePrice.html(Bizweb.formatMoney(variant.compare_at_price - variant.price, "{{ store.money_format }}")).show();
+													 comparePriceText.show();
+								  jQuery('.sale-off').html("-" + (Math.round(((variant.compare_at_price - variant.price) / variant.compare_at_price) * 100)) + "%").show();
+				savePriceText.show();
+			} else {
+				comparePrice.hide();  
+				savePrice.hide();
+				comparePriceText.hide();
+				savePriceText.hide();
+				FastAddToCart.addClass('d-none');
+				addToCart.html('<span class="txt-main">Hết hàng</span>').attr('disabled', 'disabled');
+			}     
+		}else{
+			console.log("vafo owr day 1")
+			productPrice.html('Liên hệ');
+			comparePrice.hide();
+			savePrice.hide();
+			comparePriceText.hide();
+			jQuery('.sale-off').hide();
+			savePriceText.hide();
+			form.addClass('d-none');
+			form1.removeClass('d-none');
+		}
+	}else{
+		console.log("vafo owr day 2")
+		productPrice.html('Liên hệ');
+		comparePrice.hide();
+		savePrice.hide();
+		comparePriceText.hide();
+		jQuery('.sale-off').hide();
+		savePriceText.hide();
+		form.addClass('d-none');
+		form1.removeClass('d-none');
+	}
+	}
+	/*begin variant image*/
+	if (variant && variant.image) {  
+		var originalImage = jQuery(".gallery-thumbs img");
+		var stickoriginalImage = jQuery(".nd-product-news img");
+		var newImage = variant.image;
+		var element = originalImage[0];
+		Bizweb.Image.switchImage(newImage, element, function (newImageSizedSrc, newImage, element) {
+			$('.gallery-thumbs .swiper-slide').each(function(){
+				var $this = $(this);
+				var imgThis = $this.find('img').attr('data-image');
+				if(newImageSizedSrc.split("?")[0] == imgThis.split("?")[0]){
+					var pst = $this.attr('data-hash');
+					galleryTop.slideTo(pst, 1000,false);
+				}
+				jQuery(stickoriginalImage).attr('src', newImageSizedSrc);
+			});
+		});
+	}
+	/*end of variant image*/
+	};
+	jQuery(function($) {
+		{% if  product.variants.size > 1 %}
+		new Bizweb.OptionSelectors('product-selectors', {
+			product: {{ product | json }},
+			onVariantSelected: selectCallback, 
+			enableHistoryState: true
+		});      
+		{% endif %}
+		// Add label if only one product option and it isn't 'Title'. Could be 'Size'.
+		{% if product.options.size == 1 and product.options.first != 'Title' %}
+		$('.selector-wrapper:eq(0)').prepend('<label>{{ product.options.first }}</label>');
+											 {% endif %}
+											 // Hide selectors if we only have 1 variant and its title contains 'Default'.
+											 {% if product.variants.size == 1 and product.variants.first.title contains 'Default' %}
+											 $('.selector-wrapper').hide();
+		{% endif %} 
+		$('.selector-wrapper').css({
+			'text-align':'left',
+			'margin-bottom':'15px'
+		});
+	});
+
+	jQuery('.swatch :radio').change(function() {
+		var optionIndex = jQuery(this).closest('.swatch').attr('data-option-index');
+		var optionValue = jQuery(this).val();
+		jQuery(this)
+			.closest('form')
+			.find('.single-option-selector')
+			.eq(optionIndex)
+			.val(optionValue)
+			.trigger('change');
+		$(this).closest('.swatch').find('.header .value-roperties').html(optionValue);
+	});
+	setTimeout(function(){
+		$('.swatch .swatch-element').each(function(){
+			$(this).closest('.swatch').find('.header .value-roperties').html($(this).closest('.swatch').find('input:checked').val());
+		});
+	}, 500);
+	$(document).on('click', '.btn-buy-now', function(){
+		var _variantID = $('#product-selectors').val();
+		var _Qty = parseInt($('#qtym').val()) || 1;
+		if(_variantID == null){
+			_variantID = $('#one_variant').val();
+		}
+		jQuery.ajax({
+			type: "POST",
+			url: "/cart/add.js",
+			data: "quantity=" + _Qty + "&variantId=" + _variantID,
+			dataType: "json",
+			success: function(e) {
+				window.location = '/checkout';
+			},
+			error: function(e, t) {
+				Bizweb.onError(e, t);
+			}
+		});
+	});
+
+	$('.slider-big-video .slider-for a').each(function() {
+		$(this).attr('rel','lightbox-demo'); 
+	});
+
+</script>
+<script>
+	{%if settings.product_recent_enable%}
+	var getLimit = {{ settings.product_recent_limit | default: 6 }};
+	var alias = '{{product.alias}}';
+	{%endif%}
+	function activeTab(obj){
+		$('.product-tab ul .tab-link').removeClass('active');
+		$(obj).addClass('active');
+		var id = $(obj).attr('data-tab');
+		$('.tab-content').removeClass('active');
+		$(id).addClass('active');
+	}
+
+
+	$('.product-tab ul .tab-link').click(function(){
+		activeTab(this);
+		return false;
+	});
+	var galleryThumbs = new Swiper('.gallery-thumbs', {
+		spaceBetween: 5,
+		slidesPerView: 10,
+		freeMode: true,
+		lazy: true,
+		watchSlidesVisibility: true,
+		watchSlidesProgress: true,
+		hashNavigation: true,
+		slideToClickedSlide: true,
+		breakpoints: {
+			260: {
+				slidesPerView: 3,
+				spaceBetween: 10,
+			},
+			300: {
+				slidesPerView: 4,
+				spaceBetween: 10,
+			},
+			500: {
+				slidesPerView: 4,
+				spaceBetween: 10,
+			},
+			640: {
+				slidesPerView: 4,
+				spaceBetween: 10,
+			},
+			768: {
+				slidesPerView: 5,
+				spaceBetween: 10
+			},
+			992: {
+				slidesPerView: 4,
+				spaceBetween: 10,
+			},
+			1024: {
+				slidesPerView: 4,
+				spaceBetween: 10
+			},
+			1199: {
+				slidesPerView: 4,
+				spaceBetween: 10
+			}
+		},
+		navigation: {
+			nextEl: '.gallery-thumbs .swiper-button-next',
+			prevEl: '.gallery-thumbs .swiper-button-prev',
+		},
+	});
+	var galleryTop = new Swiper('.gallery-top', {
+		spaceBetween: 10,
+		lazy: true,
+		hashNavigation: true,
+		thumbs: {
+			swiper: galleryThumbs
+		}
+	});
+	var swiper = new Swiper('.product-relate-swiper', {
+		slidesPerView: 4,
+		loop: false,
+		grabCursor: true,
+		spaceBetween: 30,
+		roundLengths: true,
+		slideToClickedSlide: false,
+		navigation: {
+			nextEl: '.product-relate-swiper .swiper-button-next',
+			prevEl: '.product-relate-swiper .swiper-button-prev',
+		},
+		autoplay: false,
+		breakpoints: {
+			260: {
+				slidesPerView: 'auto',
+				spaceBetween: 15
+			},
+			500: {
+				slidesPerView: 2,
+				spaceBetween: 15
+			},
+			640: {
+				slidesPerView: 3,
+				spaceBetween: 15
+			},
+			768: {
+				slidesPerView: 3,
+				spaceBetween: 30
+			},
+			991: {
+				slidesPerView: 4,
+				spaceBetween: 30
+			},
+			1200: {
+				slidesPerView: 4,
+				spaceBetween: 30
+			}
+		}
+	});
+	$(document).ready(function() {
+		$("#lightgallery").lightGallery({
+			thumbnail: false
+		}); 
+		$("#videolary").lightGallery({
+			thumbnail: false
+		}); 
+	});
+	$('.btn-buyNow').on('click', function(event) {
+		$.ajax({
+			url:'/cart/add.js',
+			type: "post",
+			data: $("#add-to-cart-form").serialize(),
+			datatype: "json",
+			success: function(data){
+				window.location.href = "/checkout";
+			},
+			error: function(){
+			}
+		});
+		event.preventDefault();
+	});
+	$('.btn--view-more').on('click', function(e){
+		e.preventDefault();
+		var $this = $(this);
+		if( $('.product-review-details .product-review-content').hasClass('expanded')) {
+			$('html, body').animate({ scrollTop: $('.product-review-details').offset().top - 110 }, 'slow');
+		}
+		$this.parents('.product-review-details').find('.product-review-content').toggleClass('expanded');
+		$(this).toggleClass('active');
+		return false;
+	});
+	{% if settings.product_viewed_enable %}
+	$(document).ready(function ($){
+		var product = {{ product | json }};
+		var alias_pro = '{{ product.alias }}';
+		var array_list = [product];
+		var list_viewed_pro_old = localStorage.getItem('last_viewed_products');
+		var last_viewed_pro_new = "";
+		if(list_viewed_pro_old == null || list_viewed_pro_old == '')
+			last_viewed_pro_new = array_list;
+		else{
+			var list_viewed_pro_old = JSON.parse(localStorage.last_viewed_products);
+			list_viewed_pro_old.splice(5, 1);
+			for (i = 0; i < list_viewed_pro_old.length; i++) {
+				if ( list_viewed_pro_old[i].alias == alias_pro ) {
+					list_viewed_pro_old.splice(i,1);
+					break;
+				}
+			}
+			list_viewed_pro_old.unshift(array_list[0]);
+			last_viewed_pro_new = list_viewed_pro_old;
+		}
+		localStorage.setItem('last_viewed_products',JSON.stringify(last_viewed_pro_new));
+	});
+	{% endif %}
+
+	$('.playVideo').on('click', function(e){
+		var idVideo = $(this).attr('data-video');
+		$('.popup-video').addClass('active');
+		$('.popup-video .body-popup').html(`<iframe width="560" height="315" src="https://www.youtube.com/embed/` + idVideo + `" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`)
+	});
+	$('.close-popup-video').on('click', function(e){
+		$('.popup-video').removeClass('active');
+		$('.popup-video .body-popup').html(' ');
+	});
+	$(document).ready(function () {
+		$('.lc-option-box-size .cursor-pointer').click(function () {
+			$('.lc-option-box-size .cursor-pointer').removeClass('active');
+			$(this).addClass('active');
+			const selectedText = $(this).text().trim();
+			if (selectedText === 'Lớn hơn') {
+				$('.ba-text-fpt').addClass('font-large');
+			} else {
+				$('.ba-text-fpt').removeClass('font-large');
+			}
+		});
+	});
+</script>
+{% include 'product-recommend' %}
+
+<section class="pc-pdp-ingredients-section">
+  <div class="container">
+    <h2 class="pc-section-title pc-pdp-ingredients-title">Thành Phần Hoạt Chất &amp; Cơ Chế Tác Động Y Khoa</h2>
+    <div class="pc-pdp-ingredients-grid">
+      <div class="pc-pdp-ing-card">
+        <span class="pc-pdp-ing-icon">✎</span>
+        <h3>Panthenol (Vitamin B5) 10%</h3>
+        <p>Cấp ẩm sâu, kích thích tăng sinh nguyên bào sợi và đẩy nhanh phục hồi hàng rào bảo vệ da.</p>
+      </div>
+      <div class="pc-pdp-ing-card">
+        <span class="pc-pdp-ing-icon">💧</span>
+        <h3>Ceramide NP Đa Tầng</h3>
+        <p>Hàn gắn các đứt gãy trong lớp màng lipid, ngăn chặn hiện tượng mất nước xuyên biểu bì.</p>
+      </div>
+      <div class="pc-pdp-ing-card">
+        <span class="pc-pdp-ing-icon">🌿</span>
+        <h3>Madecassoside (Rau Má Vi Điểm)</h3>
+        <p>Ức chế phản ứng viêm dưới da, làm mát tức thì và làm mờ dấu hiệu đỏ rát.</p>
+      </div>
+      <div class="pc-pdp-ing-card">
+        <span class="pc-pdp-ing-icon">💦</span>
+        <h3>Multi-Molecular Hyaluronic Acid</h3>
+        <p>3 tầng phân tử ngậm nước giúp căng bóng đa tầng, củng cố độ đàn hồi tự nhiên của da.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pc-pdp-expert-section">
+  <div class="container">
+    <div class="pc-pdp-expert-card">
+      <div class="pc-testi-avatar pc-pdp-expert-avatar">
+        <span class="pc-testi-avatar-initials">MA</span>
+      </div>
+      <div class="pc-pdp-expert-content">
+        <span class="pc-pdp-expert-label">Ý KIẾN CHUYÊN GIA • BS. CKII NGUYỄN MINH ANH (18 NĂM KINH NGHIỆM BV DA LIỄU TW)</span>
+        <p class="pc-pdp-expert-quote">"Sản phẩm này là nền tảng trong phác đồ phục hồi da tổn thương sau treatment và laser tại phòng khám của chúng tôi. Nồng độ hoạt chất kết hợp mang lại hiệu quả làm dịu mao mạch nhanh hơn đáng kể so với sản phẩm thông thường."</p>
+        <a href="/pages/dat-lich-tu-van" class="pc-cg-cta-btn pc-pdp-expert-btn">Đặt Lịch Tư Vấn Phác Đồ Cùng Bác Sĩ ➔</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pc-pdp-reviews-section">
+  <div class="container">
+    <h2 class="pc-section-title pc-pdp-reviews-title">Đánh Giá Từ Bệnh Nhân Đã Điều Trị Thực Tế</h2>
+    <div class="pc-pdp-reviews-grid">
+      {% for t in patient_testimonials limit: 3 %}
+      <div class="pc-testi-card pc-pdp-review-card">
+        <div class="pc-testi-card-inner">
+          <div class="pc-testi-author-row">
+            <div class="pc-testi-avatar{% if t.avatar.src != blank %} pc-testi-avatar--img{% endif %}">
+              <img src="{{ t.avatar.src }}" alt="{{ t.avatar.alt }}" loading="lazy"
+                onerror="this.onerror=null;this.closest('.pc-testi-avatar').classList.remove('pc-testi-avatar--img');this.remove();">
+              <span class="pc-testi-avatar-initials">{{ t.name | slice: 0, 2 | upcase }}</span>
+            </div>
+            <div>
+              <div class="pc-testi-author-name">{{ t.name }}</div>
+              <div class="pc-cg-testi-result">{{ t.result_title }}</div>
+            </div>
+          </div>
+          <p class="pc-testi-result-desc pc-pdp-review-quote">"{{ t.quote }}"</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="pc-booking-faq-section pc-pdp-faq-section">
+  <div class="container">
+    <h2 class="pc-section-title pc-booking-faq-title">Câu Hỏi Thường Gặp</h2>
+    <div class="pc-booking-faq-list">
+      {% for item in faqs.product %}
+      <details class="pc-faq-item">
+        <summary class="pc-faq-q">{{ item.q }}</summary>
+        <div class="pc-faq-a">{{ item.a }}</div>
+      </details>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<div class="ab-most-view-product-module ab-hide"></div>

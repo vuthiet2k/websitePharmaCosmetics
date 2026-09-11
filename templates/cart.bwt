@@ -1,0 +1,470 @@
+{% include 'breadcrumb' %}
+<div class="pc-cart-steps max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center gap-2 text-xs sm:text-sm font-semibold text-gray-400 mt-4">
+	<span class="pc-cart-step pc-cart-step--active inline-flex items-center gap-1.5 text-clinical-700 bg-mint-50 border border-emerald-200 rounded-full px-3 py-1">
+		<i class="fas fa-shopping-bag text-[11px]"></i> 1. Giỏ Hàng
+	</span>
+	<span class="pc-cart-step-arrow text-gray-300">→</span>
+	<span class="pc-cart-step rounded-full px-3 py-1">2. Thông Tin Giao Hàng</span>
+	<span class="pc-cart-step-arrow text-gray-300">→</span>
+	<span class="pc-cart-step rounded-full px-3 py-1">3. Thanh Toán Y Khoa</span>
+</div>
+<div class="pc-cart-note max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-3">
+	<div class="pc-kit-badge-clinical text-xs sm:text-sm !inline-flex w-auto">🩺 Bác sĩ sẽ gọi điện xác nhận tình trạng da trước khi gửi hàng.</div>
+</div>
+<div class="pc-cart-gift max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-2">
+	<div class="pc-kit-badge-gold text-xs sm:text-sm !inline-flex w-auto">🎁 Tặng 01 Tuýp Mini Kem Chống Nắng 10ml (Đã chọn ✓)</div>
+</div>
+{% assign invoice = 'Xuất hóa đơn' %}
+{% assign company_name = 'Tên công ty' %}
+{% assign company_address = 'Địa chỉ công ty' %}
+{% assign tax_code = 'Mã số thuế' %}
+{% assign invoice_email = 'Email nhận hóa đơn' %}
+<section class="main-cart-page main-container col1-layout">
+	<div class="main container cartpcstyle">
+		<div class="wrap_background_aside margin-bottom-40">
+			<div class="row">
+				<div class="col-xl-8 col-lg-7 col-12 col-cart-left">
+					<div class="bg-shadow margin-bottom-20">
+						<div class="header-cart border-b border-gray-100 pb-3 mb-2">
+							<div class="title-block-page">
+								<h1 class="title_cart font-heading text-forest-900 text-xl sm:text-2xl font-extrabold flex items-center gap-2">
+									<i class="fas fa-shopping-bag text-clinical-700 text-lg"></i>
+									<span>Giỏ hàng của bạn</span>
+								</h1>
+							</div>
+						</div>
+						<div class="cart-page d-xl-block d-none">
+							<div class="drawer__inner">
+								<div class="CartPageContainer">
+									{%- comment -%} SSR fallback — JS sẽ overwrite ngay khi /cart.js về {%- endcomment -%}
+									{%- include 'cart_initial_ssr', target: 'desktop' -%}
+								</div>
+							</div>
+						</div>
+						<div class="cart-mobile-page d-block d-xl-none">
+							<div class="CartMobileContainer">
+								{%- include 'cart_initial_ssr', target: 'mobile' -%}
+							</div>
+						</div>
+					</div>
+					{%if settings.cart_suggest_product_enable%}
+					{% if collections[settings.cart_suggest_product_col].products_count > 0 %}
+					{% assign sudes_product_suggest = settings.cart_suggest_product_col %}
+					{% else %}
+					{% assign sudes_product_suggest = 'all' %}
+					{% endif %}
+					<div class="bg-shadow margin-bottom-20">
+						<div class="product-suggest product-swipers">
+							<div class="section-title a-left txt-uppercese">
+								<h2>
+									<a href="/collections/{{ settings.cart_suggest_product_col }}" title="{{settings.cart_suggest_product_title | strip_html}}">{{settings.cart_suggest_product_title}}</a>
+								</h2>
+							</div>
+							{% assign count = collections[settings.cart_suggest_product_col].products_count %}
+							{% if count > 0 %}
+							<div class="swiper_suggest swiper-container">
+								<div class="swiper-wrapper">
+									{% for product in collections[settings.cart_suggest_product_col].products limit: settings.cart_suggest_product_limit %}
+									<div class="swiper-slide">
+										<div class="item_product_main">
+											{%include 'product_grid_office'%}
+										</div>
+									</div>
+									{% endfor %}
+								</div>
+								<div class="swiper-button-prev">
+									<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+										<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+										<path d="M29 18.5L18.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+									</svg>
+								</div>
+								<div class="swiper-button-next">
+									<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+										<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+										<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+									</svg>
+								</div>
+							</div>
+							{%else%}
+							<div class="alert alert-warning alert-dismissible show margin-bottom-0" role="alert">
+								<span>Danh mục đang cập nhật sản phẩm.</span>
+							</div>
+							{%endif%}
+						</div>
+					</div>
+					{% include 'buyxgety-module-cart' %}
+<script>
+(function($) {
+
+	/* ── Calculator: cập nhật tổng theo sản phẩm được chọn (KHÔNG ảnh hưởng checkout) ── */
+	var _cartMoneyFmt = '{{store.money_format}}';
+	function _fmt(n) {
+		return (typeof Bizweb !== 'undefined' && Bizweb.formatMoney && _cartMoneyFmt)
+			? Bizweb.formatMoney(n, _cartMoneyFmt)
+			: n.toLocaleString('vi-VN') + 'đ';
+	}
+
+	function updateSelectionTotal() {
+		var subtotal = 0, count = 0, allCount = $('.cart-item-select').length;
+		$('.cart-item-select:checked').each(function() {
+			subtotal += parseInt($(this).attr('data-raw-price'), 10) || 0;
+			count++;
+		});
+		if (count > 0) {
+			var label = count + (allCount > count ? '/' + allCount : '') + ' sản phẩm được chọn';
+			$('.summary-total .js-cart-count').html(label);
+			$('.summary-total .js-subtotal').html(_fmt(subtotal));
+		} else {
+			$('.summary-total .js-cart-count').html('Chưa chọn sản phẩm');
+			$('.summary-total .js-subtotal').html('—');
+		}
+		/* .total-price (Tổng đặt hàng) KHÔNG được ghi đè — luôn = toàn bộ giỏ hàng */
+	}
+
+	/* Select-all */
+	$(document).on('click', '#cart-select-all', function() {
+		var isChecked = this.checked;
+		$('.cart-item-select').each(function() { this.checked = isChecked; });
+		updateSelectionTotal();
+	});
+
+	/* Per-item */
+	$(document).on('change', '.cart-item-select', function() {
+		var total = $('.cart-item-select').length;
+		var selected = $('.cart-item-select:checked').length;
+		$('#cart-select-all').each(function() { this.checked = (total > 0 && total === selected); });
+		updateSelectionTotal();
+	});
+
+	/* Re-sync sau mỗi lần Handlebars rebuild */
+	$('body').on('ajaxCart', function() {
+		var $items = $('.cart-item-select');
+		var total = $items.length, selected = $items.filter(':checked').length;
+		$('#cart-select-all').each(function() { this.checked = (total > 0 && total === selected); });
+		updateSelectionTotal();
+	});
+
+	/* ── Checkout toàn bộ giỏ hàng ── */
+	window.cartGoToCheckout = function(e) {
+		if (e) e.preventDefault();
+		{%- if settings.delivery_show or settings.use_cart_vat -%}
+		if (typeof goToCheckout === 'function') goToCheckout(e || { preventDefault: function(){} });
+		else window.location.href = '/checkout';
+		{%- else -%}
+		window.location.href = '/checkout';
+		{%- endif -%}
+	};
+
+	/* Coupon apply */
+	$(document).on('click', '.js-apply-coupon', function() {
+		var code = $('#coupon-code-input').val().trim();
+		var $feedback = $('.coupon-feedback');
+		if (!code) {
+			$feedback.removeClass('coupon-feedback--success').addClass('coupon-feedback--error').text('Vui lòng nhập mã giảm giá.');
+			return;
+		}
+		$feedback.removeClass('coupon-feedback--error coupon-feedback--success').text('');
+		$(this).prop('disabled', true).text('Đang xử lý...');
+		window.location.href = '/checkout?discount=' + encodeURIComponent(code);
+	});
+
+})(jQuery);
+</script>
+					<script>
+						var swiper_suggest = null;
+						function initSwiperSuggest() {
+							swiper_suggest = new Swiper('.swiper_suggest', {
+								slidesPerView: 4,
+								spaceBetween: 20,
+								slidesPerGroup: 1,
+								navigation: {
+									nextEl: '.swiper_suggest .swiper-button-next',
+									prevEl: '.swiper_suggest .swiper-button-prev',
+								},
+								breakpoints: {
+									768: {
+										slidesPerView: 3,
+										spaceBetween: 20
+									},
+									992: {
+										slidesPerView: 3,
+										spaceBetween: 20
+									},
+									1024: {
+										slidesPerView: 2.5,
+										spaceBetween: 20
+									},
+									1200: {
+										slidesPerView: 3,
+										spaceBetween: 20
+									}
+								}
+							});
+						}
+						function destroySwiperSuggest() {
+							if (swiper_suggest) {
+								swiper_suggest.destroy(true, true);
+								swiper_suggest = null;
+							}
+						}
+						function toggleSwiperSuggest() {
+							if ($(window).width() <= 767 && swiper_suggest) {
+								destroySwiperSuggest();
+							} else if ($(window).width() > 767 && !swiper_suggest) {
+								initSwiperSuggest();
+							}
+						}
+						toggleSwiperSuggest();
+						$(window).resize(toggleSwiperSuggest);
+					</script>
+					{%endif%}
+				</div>
+				<div class="col-xl-4 col-lg-5 col-12 col-cart-right">
+					<div class="sticky">
+						<div class="bg-shadow margin-bottom-20">
+							<div class="ajaxcart__footer">
+								<div class="checkout-header font-heading text-forest-900 font-bold text-base sm:text-lg border-b border-gray-100 pb-3">
+									<i class="fas fa-receipt text-clinical-700"></i> Thông tin đơn hàng
+								</div>
+								<div class="checkout-body">
+									<div class="summary-total">
+										{%- include 'cart_initial_ssr', target: 'footer' -%}
+									</div>
+									{% include 'free-shipping' %}
+									{%if settings.delivery_show or settings.use_cart_vat%}
+									<div class="summary-vat">
+
+										<form method="post" action="/cart" novalidate="" class="formVAT">
+											{%if settings.delivery_show %}
+											<h4>
+												{{settings.delivery_heading}}
+											</h4>
+											<div class="timedeli-modal">
+												<fieldset class="input_group date_pick">
+													<input type="text" placeholder="Chọn ngày" readonly id="date" name="attributes[shipdate]" class="date_picker" required>
+												</fieldset>
+												<fieldset class="input_group date_time">
+													<select name="time" class="timeer timedeli-cta" >
+														<option selected>{{settings.delivery_time_default}}</option>
+														{%assign options = settings.delivery_time | split: ';'%}
+														{%for opt in options%}
+														<option value="{{opt}}">{{opt}}</option>
+														{%endfor%}
+													</select>
+												</fieldset>
+											</div>
+											{% endif %}
+											{% if settings.use_cart_vat %}
+											<div class="r-bill d-none">
+												<div class="checkbox">
+													<input type="hidden" name="attributes[invoice]" id="re-checkbox-bill"
+														   value='không'>
+													<input type="checkbox" id="checkbox-bill" name="attributes[invoice]" value="có"  {% if cart.attributes["invoice"] == "có" %} checked{% endif %}
+														   class="regular-checkbox" />
+													<label for="checkbox-bill" class="box"></label>
+													<label for="checkbox-bill" class="title">Xuất hóa đơn công ty</label>
+												</div>
+												<p class="text-[11px] text-gray-500 mt-1.5 mb-2 leading-relaxed">
+													Thông tin công ty/mã số thuế chỉ dùng để xuất hoá đơn VAT theo quy định, không dùng cho mục đích khác.
+													Xem <a href="/pages/chinh-sach-bao-mat" class="text-clinical-700 underline hover:text-clinical-600">Chính sách bảo mật</a>.
+												</p>
+												<div class="bill-field">
+													<div class="form-group">
+														<label>Tên công ty</label>
+														<input type="text" class="form-control val-f" 
+															   name="attributes[company_name]" 
+															   value="{{ cart.attributes["company_name"] }}"
+															   placeholder="Tên công ty" >
+													</div>	
+													<div class="form-group">
+														<label>Mã số thuế</label>
+														<input type="text" pattern=".{10,}" onkeypress="if ( isNaN(this.value + String.fromCharCode(event.keyCode) )) return false;" class="form-control val-f val-n" name="attributes[tax_code]"   value="{{ cart.attributes["tax_code"] }}"  placeholder="Mã số thuế">
+													</div>
+													<div class="form-group">
+														<label>Địa chỉ công ty</label>
+														<textarea class="form-control val-f" 
+																  name="attributes[company_address]"
+																  placeholder="Nhập địa chỉ công ty (bao gồm Phường/Xã, Quận/Huyện, Tỉnh/Thành phố nếu có)">{{ cart.attributes["company_address"] }}</textarea>
+													</div>
+													<div class="form-group">
+														<label>Email nhận hoá đơn</label>
+														<input type="email" class="form-control val-f val-email" 
+															   name="attributes[invoice_email]" 
+															   value="{{ cart.attributes["invoice_email"] }}" 
+															   placeholder="Email nhận hoá đơn">
+													</div>
+												</div>
+											</div>
+											{% endif %}
+										</form>
+									</div>
+									{%endif%}
+									{%- if settings.use_cart_coupons -%}
+									<div class="summary-coupon">
+										<label class="coupon-label">Mã giảm giá</label>
+										<div class="coupon-input-wrap">
+											<input type="text" class="coupon-code-input" id="coupon-code-input" placeholder="Nhập mã giảm giá..." autocomplete="off">
+											<button type="button" class="coupon-apply-btn js-apply-coupon">Áp dụng</button>
+										</div>
+										<p class="coupon-feedback"></p>
+									</div>
+									{%- endif -%}
+									<div class="summary-button">
+										<div class="cart__btn-proceed-checkout-dt">
+											<button onclick="cartGoToCheckout(event)" type="button" class="button btn btn-default cart__btn-proceed-checkout btn-primary duration-300" id="btn-proceed-checkout" title="Đặt hàng ngay">Đặt hàng ngay</button>
+										</div>
+										<a class="cart-continue-link text-clinical-700 hover:text-clinical-600 text-sm font-semibold" title="Tiếp tục mua hàng" href="/collections/all">← Tiếp tục mua hàng</a>
+									<div class="grid grid-cols-3 gap-2 text-center text-[11px] text-gray-600 pt-4 mt-3 border-t border-gray-100">
+										<div class="p-2 rounded-lg bg-gray-50 border border-gray-100">
+											<i class="fas fa-shield-alt text-clinical-600 text-base mb-1 block"></i>
+											<span>100% Chính ngạch</span>
+										</div>
+										<div class="p-2 rounded-lg bg-gray-50 border border-gray-100">
+											<i class="fas fa-sync text-clinical-600 text-base mb-1 block"></i>
+											<span>Đổi trả 7 ngày</span>
+										</div>
+										<div class="p-2 rounded-lg bg-gray-50 border border-gray-100">
+											<i class="fas fa-user-md text-clinical-600 text-base mb-1 block"></i>
+											<span>Bác sĩ 1:1</span>
+										</div>
+									</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						{%if settings.use_cart_coupons %}
+						{% include 'coupon_products' %}
+						{%endif%}
+					</div>
+					{%if settings.cart_suggest_product_enable%}
+					{% if collections[settings.cart_suggest_product_col].products_count > 0 %}
+					{% assign sudes_product_suggest = settings.cart_suggest_product_col %}
+					{% else %}
+					{% assign sudes_product_suggest = 'all' %}
+					{% endif %}
+					<div class="bg-shadow margin-bottom-20">
+						<div class="product-suggest-mob product-swipers">
+							<div class="section-title a-left txt-uppercese">
+								<h2>
+									<a href="/collections/{{ settings.cart_suggest_product_col }}" title="{{settings.cart_suggest_product_title | strip_html}}">{{settings.cart_suggest_product_title}}</a>
+								</h2>
+							</div>
+							{% assign count = collections[sudes_product_suggest].products_count %}
+							{% if count > 0 %}
+							<div class="swiper_suggest_mob swiper-container">
+								<div class="swiper-wrapper">
+									{% for product in collections[sudes_product_suggest].products limit: settings.cart_suggest_product_limit %}
+									<div class="swiper-slide">
+										<div class="item_product_main">
+											{%include 'product_grid_office'%}
+										</div>
+									</div>
+									{% endfor %}
+								</div>
+								<div class="swiper-button-prev">
+									<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+										<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+										<path d="M29 18.5L18.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+									</svg>
+								</div>
+								<div class="swiper-button-next">
+									<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+										<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+										<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+									</svg>
+								</div>
+							</div>
+							{%else%}
+							<div class="alert alert-warning alert-dismissible show margin-bottom-0" role="alert">
+								<span>Danh mục đang cập nhật sản phẩm.</span>
+							</div>
+							{%endif%}
+						</div>
+					</div>
+					<script>
+						var swiper_suggest_mob = null;
+						var _mobSwiperTimer = null;
+						function initSwiperSuggestmob() {
+							if (swiper_suggest_mob) return;
+							swiper_suggest_mob = new Swiper('.swiper_suggest_mob', {
+								slidesPerView: 1.5,
+								spaceBetween: 12,
+								slidesPerGroup: 1,
+								navigation: {
+									nextEl: '.swiper_suggest_mob .swiper-button-next',
+									prevEl: '.swiper_suggest_mob .swiper-button-prev',
+								},
+								breakpoints: {
+									480: { slidesPerView: 2,   spaceBetween: 12 },
+									768: { slidesPerView: 3,   spaceBetween: 14 },
+									992: { slidesPerView: 2,   spaceBetween: 14 },
+									1200:{ slidesPerView: 1.5, spaceBetween: 12 }
+								}
+							});
+						}
+						function destroySwiperSuggestmob() {
+							if (swiper_suggest_mob) {
+								swiper_suggest_mob.destroy(true, true);
+								swiper_suggest_mob = null;
+							}
+						}
+						initSwiperSuggestmob();
+						$(window).on('resize.mobSuggest', function() {
+							clearTimeout(_mobSwiperTimer);
+							_mobSwiperTimer = setTimeout(function() {
+								destroySwiperSuggestmob();
+								initSwiperSuggestmob();
+							}, 200);
+						});
+					</script>
+					{%endif%}
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+{% if settings.use_cart_vat or settings.delivery_show%}
+<script src='{{"sweetalert-min.js" | asset_url}}'></script>
+<link rel="preload" as="script" href="{{ 'bootstrap-datepicker.js' | asset_url}}" />
+{{ 'bootstrap-datepicker.js' | asset_url | script_tag }}
+<script>
+	$(document).ready(function(){
+		var today    = new Date();
+		var tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+		$('.input_group #date').datepicker({
+			format: "dd/mm/yyyy",
+			orientation: "top right",
+			todayHighlight: true,
+			startDate: tomorrow
+		});
+
+		{%- if settings.delivery_show -%}
+		/* Validate delivery date ≥ tomorrow before proceeding to checkout */
+		var _baseCheckout = window.cartGoToCheckout;
+		window.cartGoToCheckout = function(e) {
+			if (e) e.preventDefault();
+			var dateVal = $('#date').val().trim();
+			if (!dateVal) {
+				swal('Vui lòng chọn ngày giao hàng', '', 'warning');
+				return;
+			}
+			var parts = dateVal.split('/');
+			if (parts.length === 3) {
+				var sel = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+				if (sel < tomorrow) {
+					swal('Ngày giao hàng phải từ ngày mai trở đi', '', 'warning');
+					return;
+				}
+			}
+			if (typeof _baseCheckout === 'function') _baseCheckout(e);
+		};
+		{%- endif -%}
+
+		setTimeout(function(){$('.colrightvat').removeClass('d-none')}, 300);
+	})
+</script>
+{%include 'vat-cart'%}
+{%endif%}
+{% if cart.item_count > 0 %}{% for item in cart.items %}<div class="product-id-in-cart hidden">{{item.product.id}}</div>{% endfor %}{% endif %}{% include 'product-recommend' %}
+{% include 'buyxgety-module-cart' %}

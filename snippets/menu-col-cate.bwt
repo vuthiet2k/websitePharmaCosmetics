@@ -1,0 +1,127 @@
+{% assign col_menu_cus = settings.aside_category_menu_bot %}
+{% for link in linklists[settings.aside_category_menu_bot].links %}
+
+{% if link.object %}
+{% if link.active %}
+{% assign col_menu_cus = link.alias | default: settings.aside_category_menu_bot %}
+{%endif%}
+
+{% for childlink in linklists[link.alias].links %}
+{% if childlink.active %}
+{% assign check_active_menu = true %}
+{% endif %}
+{% for childlink2 in linklists[childlink.alias].links %}
+{% if childlink2.active %}
+{% assign check_active_menu = true %}
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+
+{% if link.active or check_active_menu %}
+{% if linklists[link.alias] != null %}
+{% for childlink in linklists[link.alias].links %}
+
+{% if childlink.active %}
+{%if linklists[childlink.alias] %}
+{% assign col_menu_cus = childlink.alias | default: settings.aside_category_menu_bot %}
+{%else%}
+{% assign col_menu_cus = link.alias | default: settings.aside_category_menu_bot %}
+{%endif%}
+{%endif%}
+
+
+{% for childlink2 in linklists[childlink.alias].links %}
+{% if childlink2.active %}
+{% assign col_menu_cus = childlink.alias %}
+{%endif%}
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% endif %}
+{% endif %}
+{% assign check_active_menu = false %}
+{% endfor %}
+<div class="menu-list">
+	{%- for link in linklists[col_menu_cus].links -%}
+	<div class="box-cate">
+		<a class="cate-item {% if link.active %}active{% endif %}" href="{{ link.url }}" title="{{ link.title }}">
+			<picture>
+				<source media="(max-width: 480px)" srcset="{{ link.object.image.src | img_url: 'large'}}"/>
+				<img width="56" height="56" loading="lazy" class="lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC" data-src="{{ link.object.image.src | img_url: 'large'}}" alt="{{ link.title }}"/>
+
+			</picture>
+			<div class="nam_count_cate">
+				<h3 class="line-clamp line-clamp-2">
+					{{ link.title }}
+				</h3>
+				{%- if link.object and link.object.all_products_count > 0 -%}
+				<span>({{ link.object.all_products_count }} sản phẩm)</span>
+				{%- else -%}
+				<span>(0 sản phẩm)</span>
+				{%- endif -%}
+			</div>
+		</a>
+
+	</div>
+	{%- endfor -%}
+</div>
+
+<div class="box_btn_showmore">
+	<button id="loadMoreBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.9516 10.4793C19.2944 10.8392 19.2806 11.4088 18.9207 11.7517L12.6201 17.7533C12.2725 18.0844 11.7262 18.0844 11.3786 17.7533L5.07808 11.7517C4.71818 11.4088 4.70433 10.8392 5.04716 10.4793C5.38999 10.1193 5.95967 10.1055 6.31958 10.4483L11.9994 15.8586L17.6792 10.4483C18.0391 10.1055 18.6088 10.1193 18.9516 10.4793ZM18.9516 5.67926C19.2944 6.03916 19.2806 6.60884 18.9207 6.95167L12.6201 12.9533C12.2725 13.2844 11.7262 13.2844 11.3786 12.9533L5.07808 6.95167C4.71818 6.60884 4.70433 6.03916 5.04716 5.67926C5.38999 5.31935 5.95967 5.3055 6.31958 5.64833L11.9994 11.0586L17.6792 5.64833C18.0391 5.30551 18.6088 5.31935 18.9516 5.67926Z" fill="currentColor"></path></svg> Xem thêm danh mục</button>
+</div>
+<script>
+	const items = document.querySelectorAll('.menu-list .box-cate');
+	const btn = document.getElementById('loadMoreBtn');
+
+	let currentVisible = 0;
+
+	function getBatchSize() {
+		return window.innerWidth < 1025 ? 6 : 8;
+	}
+
+	function updateButtonLabel() {
+		const remaining = items.length - currentVisible;
+		if (remaining > 0) {
+			btn.innerHTML = `
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18.9516 10.4793C19.2944 10.8392 19.2806 11.4088 18.9207 11.7517L12.6201 17.7533C12.2725 18.0844 11.7262 18.0844 11.3786 17.7533L5.07808 11.7517C4.71818 11.4088 4.70433 10.8392 5.04716 10.4793C5.38999 10.1193 5.95967 10.1055 6.31958 10.4483L11.9994 15.8586L17.6792 10.4483C18.0391 10.1055 18.6088 10.1193 18.9516 10.4793ZM18.9516 5.67926C19.2944 6.03916 19.2806 6.60884 18.9207 6.95167L12.6201 12.9533C12.2725 13.2844 11.7262 13.2844 11.3786 12.9533L5.07808 6.95167C4.71818 6.60884 4.70433 6.03916 5.04716 5.67926C5.38999 5.31935 5.95967 5.3055 6.31958 5.64833L11.9994 11.0586L17.6792 5.64833C18.0391 5.30551 18.6088 5.31935 18.9516 5.67926Z" fill="currentColor"></path></svg>
+Xem thêm ${remaining} danh mục
+`;
+			btn.style.display = 'inline-flex';
+		} else {
+			btn.style.display = 'none';
+		}
+	}
+
+	function showNextBatch() {
+		const batchSize = getBatchSize();
+		const nextVisible = currentVisible + batchSize;
+
+		for (let i = currentVisible; i < nextVisible && i < items.length; i++) {
+			items[i].style.display = 'block';
+		}
+
+		currentVisible = nextVisible;
+		updateButtonLabel();
+	}
+
+	function resetDisplay() {
+		items.forEach(item => (item.style.display = 'none'));
+		currentVisible = 0;
+		showNextBatch();
+	}
+
+	// Debounce resize to avoid multiple triggers
+	let resizeTimeout;
+	window.addEventListener('resize', () => {
+		clearTimeout(resizeTimeout);
+		resizeTimeout = setTimeout(() => {
+			resetDisplay();
+		}, 200);
+	});
+
+	document.addEventListener('DOMContentLoaded', () => {
+		resetDisplay();
+		btn.addEventListener('click', showNextBatch);
+	});
+</script>

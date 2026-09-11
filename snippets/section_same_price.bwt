@@ -1,0 +1,30 @@
+<div class="section_same_price">
+</div>
+
+<script>
+	$(document).ready(function($){
+
+		var dfprice = '{{product.variants[0].price | money }}';
+		var pricefirst = '{{product.variants[0].price | minus: settings.price_same | money | replace: '.', '' | replace: '₫', ''}}';
+		var totalmax = '{{product.variants[0].price | plus: settings.price_same | money | replace: '.', '' | replace: '₫', ''}}';
+		var researchurl = '/search?query=price_min:(>'+pricefirst+')%20AND%20price_max:(<='+totalmax+')&view=productsame';
+
+		$.ajax({
+			type: 'GET',
+			url: researchurl,
+			success: function(data){
+				if(data && data.trim() === ''){} else {
+					setTimeout(function () {
+						$('.section_same_price').html(data);
+						$('.product_sameprice_title_detail span').html(dfprice);
+						$('.title-name-same').attr('href', '/search?query=price_min:(>'+pricefirst+')%20AND%20price_max:(<='+totalmax+')');
+						$('.same-product-btn').attr('href', '/search?query=price_min:(>'+pricefirst+')%20AND%20price_max:(<='+totalmax+')');
+					}, 500);
+					$('.section_same_price').removeClass('d-none');
+				}
+			}
+		});
+
+	});
+
+</script>

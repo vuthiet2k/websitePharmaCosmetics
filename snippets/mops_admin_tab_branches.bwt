@@ -1,0 +1,112 @@
+      
+      <div id="tab-branches" v-show="activeTab === 'branches'" class="ma-tab-pane">
+
+        
+        <div class="ma-card mb-stack-lg">
+          <div class="flex items-center justify-between gap-2 p-4 border-b border-outline-variant">
+            <div>
+              <h3 class="text-title-sm font-bold text-on-surface">Tài khoản ngân hàng nhận tiền</h3>
+              <p class="text-body-sm text-on-surface-variant mt-0.5">QR chuyển khoản của đơn hàng dùng các tài khoản này. Mỗi chi nhánh có thể chọn tài khoản mặc định riêng ở bảng bên dưới.</p>
+            </div>
+            <button type="button" @click="openAddBankAccount()"
+              class="shrink-0 inline-flex items-center gap-1.5 bg-primary text-white px-3 py-2 rounded-lg text-label-md font-bold hover:opacity-90 transition-all active:scale-95">
+              <span class="material-symbols-outlined text-[18px]">add</span><span class="hidden sm:inline">Thêm tài khoản</span>
+            </button>
+          </div>
+          <div v-if="bankAccounts.loading" class="ma-table-skeleton" aria-label="Đang tải tài khoản ngân hàng"><span></span><span></span><span></span><span></span></div>
+          <div v-else-if="bankAccounts.error" class="p-4 text-body-sm text-error">[[ bankAccounts.error ]]</div>
+          <div v-else-if="!bankAccounts.all.length" class="p-6 text-center text-body-sm text-on-surface-variant">Chưa có tài khoản ngân hàng nào. Bấm "Thêm tài khoản" để cấu hình.</div>
+          <div v-else class="overflow-x-auto"><table class="ma-table ma-data-table">
+            <thead><tr class="ma-thead-row">
+              <th class="ma-th">Ngân hàng</th>
+              <th class="ma-th">Số tài khoản</th>
+              <th class="ma-th">Chủ tài khoản</th>
+              <th class="ma-th">Mặc định</th>
+              <th class="ma-th">Trạng thái</th>
+              <th class="ma-th">Thao tác</th>
+            </tr></thead>
+            <tbody class="ma-rows-divide">
+              <tr v-for="a in bankAccounts.all" :key="a.bank_account_id">
+                <td data-label="Ngân hàng" class="ma-td-cell">[[ a.bank_code ]]</td>
+                <td data-label="Số tài khoản" class="ma-td-cell-muted">[[ a.account_no ]]</td>
+                <td data-label="Chủ tài khoản" class="ma-td-cell-muted">[[ a.account_name ]]</td>
+                <td data-label="Mặc định" class="px-6 py-2">
+                  <span v-if="a.is_default" class="ma-badge ma-badge--success">Mặc định</span>
+                  <button v-else-if="a.active" @click="setDefaultBankAccount(a)" type="button" class="text-label-md text-primary hover:underline">Đặt mặc định</button>
+                  <span v-else class="text-on-surface-variant">—</span>
+                </td>
+                <td data-label="Trạng thái" class="px-6 py-2">
+                  <span v-if="a.active" class="ma-badge ma-badge--success">Đang dùng</span>
+                  <span v-else class="ma-badge ma-badge--danger">Đã tắt</span>
+                </td>
+                <td data-label="Thao tác" class="px-6 py-2 whitespace-nowrap">
+                  <button @click="openEditBankAccount(a)" type="button" class="px-2.5 py-1 rounded-lg text-label-md text-white bg-primary hover:opacity-90 transition-all">Sửa</button>
+                  <button @click="toggleBankAccount(a)" type="button" class="ml-1.5 px-2.5 py-1 rounded-lg text-label-md border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-all">[[ a.active ? 'Tắt' : 'Bật' ]]</button>
+                </td>
+              </tr>
+            </tbody>
+          </table></div>
+        </div>
+
+        <button type="button" @click="mobileFilterOpen = true"
+          class="ma-filter-trigger items-center gap-2 w-full justify-center mb-stack-md p-3 bg-surface-bright border border-outline-variant rounded-xl text-body-sm font-bold text-on-surface active:scale-95 transition-all">
+          <span class="material-symbols-outlined text-[18px]">tune</span><span>Bộ lọc</span>
+          <span v-if="(branches.search?1:0)+(branches.filterActive?1:0)" class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-label-sm font-bold bg-primary text-white">[[ (branches.search?1:0)+(branches.filterActive?1:0) ]]</span>
+        </button>
+        <div class="ma-toolbar ma-toolbar--sheet flex flex-wrap items-center gap-stack-md mb-stack-md p-4 bg-surface-bright border border-outline-variant rounded-xl" :class="{ 'is-filter-open': mobileFilterOpen }">
+          <div class="ma-filter-sheet-head"><span class="text-title-sm font-bold text-on-surface">Bộ lọc chi nhánh</span><button type="button" @click="mobileFilterOpen = false" class="w-8 h-8 inline-flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">close</span></button></div>
+          <input type="text" v-model="branches.search" placeholder="Tìm tên / SĐT / địa chỉ..."
+            class="w-[240px] bg-surface-container-lowest border border-outline-variant text-body-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+          <select v-model="branches.filterActive" class="ma-input-inline">
+            <option value="">Tất cả trạng thái</option>
+            <option value="1">Đang hoạt động</option>
+            <option value="0">Ngừng hoạt động</option>
+          </select>
+        </div>
+        <div class="ma-filter-backdrop" v-if="mobileFilterOpen" @click="mobileFilterOpen = false"></div>
+
+        <div v-if="branches.loading" class="ma-table-skeleton" aria-label="Đang tải chi nhánh"><span></span><span></span><span></span><span></span></div>
+        <div v-else-if="branchesEmptyMessage" class="ma-empty-state">
+          <span class="material-symbols-outlined text-on-surface-variant text-[56px] opacity-[.35]">storefront</span>
+          <p class="ma-empty-hint">[[ branchesEmptyMessage ]]</p>
+          <button @click="loadBranches" type="button" class="ma-btn-outline">Thử lại</button>
+        </div>
+        <div v-else class="ma-card">
+          <div class="overflow-x-auto"><table class="ma-table ma-data-table">
+            <thead><tr class="ma-thead-row">
+              <th class="ma-th w-16">STT</th>
+              <th class="ma-th">Tên chi nhánh</th>
+              <th class="ma-th">Điện thoại</th>
+              <th class="ma-th">Địa chỉ</th>
+              <th class="ma-th">TK nhận tiền</th>
+              <th class="ma-th">Mặc định</th>
+              <th class="ma-th">Trạng thái</th>
+              <th class="ma-th">Thao tác</th>
+            </tr></thead>
+            <tbody class="ma-rows-divide">
+              <tr v-for="(b, index) in branchesFiltered" :key="b.branch_id">
+                <td class="px-6 py-2 text-on-surface-variant">[[ index + 1 ]]</td>
+                <td class="ma-td-cell">[[ b.name_vi ]]</td>
+                <td class="ma-td-cell-muted">[[ formatPhone(b.phone) ]]</td>
+                <td class="ma-td-cell-muted">[[ formatAddress(b.address, b.ward, b.province) ]]</td>
+                <td data-label="TK nhận tiền" class="ma-td-cell-muted">
+                  <span v-if="bankAccountLabel(b.default_bank_account_id)">[[ bankAccountLabel(b.default_bank_account_id) ]]</span>
+                  <span v-else class="italic opacity-70">Theo chi nhánh chính</span>
+                </td>
+                <td class="px-6 py-2">
+                  <span v-if="b.is_default" class="ma-badge ma-badge--success">Mặc định</span>
+                  <span v-else class="text-on-surface-variant">—</span>
+                </td>
+                <td class="px-6 py-2">
+                  <span v-if="b.active" class="ma-badge ma-badge--success">Đang hoạt động</span>
+                  <span v-else class="ma-badge ma-badge--danger">Ngừng hoạt động</span>
+                </td>
+                <td class="px-6 py-2">
+                  <button @click="openEditBranch(b)" type="button" class="px-2.5 py-1 rounded-lg text-label-md text-white bg-primary hover:opacity-90 transition-all">Sửa</button>
+                </td>
+              </tr>
+            </tbody>
+          </table></div>
+          <p class="text-body-sm text-on-surface-variant mt-3 px-4 pb-4">[[ branchesFiltered.length ]] / [[ branches.all.length ]] chi nhánh</p>
+        </div>
+      </div>

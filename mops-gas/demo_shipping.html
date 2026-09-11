@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full bg-[#F4F6F8]">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GHTK • Quản Lý & Vận Hành Đơn Hàng — Pharma Cosmetics</title>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            ghtk: {
+              50: '#E6F4EA',
+              100: '#C3E6CD',
+              500: '#007B53',
+              600: '#006342',
+              700: '#004C33',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #F1F5F9; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+    @media print {
+      body * { visibility: hidden; }
+      #print-label-area, #print-label-area * { visibility: visible; }
+      #print-label-area { position: absolute; left: 0; top: 0; width: 100%; }
+    }
+  </style>
+</head>
+<body class="h-full font-sans text-[#1C252E] antialiased flex flex-col bg-[#F4F6F8]">
+
+  <!-- ========================================================================= -->
+  <!-- 1. TOPBAR HEADER (DESKTOP & MOBILE) -->
+  <!-- ========================================================================= -->
+  <header class="sticky top-0 z-30 bg-white border-b border-[#E5E8EC] shadow-sm">
+    <!-- Desktop Topbar -->
+    <div class="hidden md:flex items-center justify-between h-16 px-6 max-w-[1600px] mx-auto">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-[#007B53] flex items-center justify-center text-white font-extrabold text-sm shadow-sm">GHTK</div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-xs tracking-wider text-[#007B53] uppercase">Giao Hàng Tiết Kiệm</span>
+            <span class="text-[10px] bg-emerald-100 text-[#007B53] font-semibold px-1.5 py-0.5 rounded">Đối Tác VIP</span>
+          </div>
+          <p class="text-xs text-[#454F5B] font-medium">Pharma Cosmetics (#S228194) • Kho 44 Giải Phóng, HN</p>
+        </div>
+      </div>
+
+      <!-- Omni Search -->
+      <div class="flex-1 max-w-md mx-8">
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 text-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </span>
+          <input type="text" id="global-search" onkeyup="filterOrders()" placeholder="Tìm theo mã vận đơn GHTK / mã shop / SĐT / người nhận..." 
+            class="w-full pl-9 pr-4 py-2 text-xs bg-[#F4F6F8] border border-transparent focus:border-[#007B53] focus:bg-white rounded-lg outline-none transition-all">
+        </div>
+      </div>
+
+      <!-- COD Balance & Profile -->
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 bg-[#E6F4EA] border border-[#C3E6CD] px-3 py-1.5 rounded-lg text-xs">
+          <span class="text-gray-600 font-medium">COD:</span>
+          <span class="font-bold text-[#007B53] font-mono">14.850.000 ₫</span>
+        </div>
+        <button onclick="alert('Đã gửi yêu cầu rút 14.850.000 đ về tài khoản MB Bank.')" class="bg-[#007B53] hover:bg-[#006342] text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-colors">
+          Rút tiền 24/7
+        </button>
+        <div class="h-5 w-[1px] bg-gray-200 mx-1"></div>
+        <div class="flex items-center gap-2 pl-2">
+          <div class="w-8 h-8 rounded-full bg-[#007B53] text-white flex items-center justify-center font-bold text-xs">TT</div>
+          <div class="text-left">
+            <p class="text-xs font-bold leading-tight">Thanh Trúc</p>
+            <p class="text-[10px] text-gray-500">Shop Admin</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Topbar -->
+    <div class="md:hidden flex items-center justify-between h-14 px-4 bg-[#007B53] text-white">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded bg-white/20 flex items-center justify-center font-black text-xs">G</div>
+        <div>
+          <h1 class="text-xs font-bold leading-tight">Pharma Cosmetics (#S228194)</h1>
+          <p class="text-[10px] text-emerald-200">Kho: 44 Giải Phóng</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-[11px] font-mono font-bold bg-white/20 px-2 py-1 rounded text-white">💰 14.850k</span>
+      </div>
+    </div>
+    <div class="md:hidden p-2.5 bg-white border-b border-gray-200">
+      <input type="text" id="mobile-search" onkeyup="filterOrdersMobile()" placeholder="Tìm mã đơn, SĐT, người nhận..." 
+        class="w-full px-3 py-1.5 text-xs bg-[#F4F6F8] rounded-lg border border-transparent focus:border-[#007B53] outline-none">
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- 2. STATUS TABS CAROUSEL (9 TABS) -->
+  <!-- ========================================================================= -->
+  <section class="bg-white border-b border-[#E5E8EC] sticky top-16 z-20 overflow-x-auto">
+    <div class="flex items-center gap-2 px-4 md:px-6 max-w-[1600px] mx-auto text-xs py-2 whitespace-nowrap">
+      <button onclick="filterByTab('all')" class="tab-btn active px-3 py-1.5 rounded-md font-bold text-[#007B53] bg-[#E6F4EA] flex items-center gap-1.5">
+        <span>Tất Cả</span>
+        <span class="bg-[#007B53] text-white text-[10px] px-1.5 py-0.2 rounded-full font-mono">148</span>
+      </button>
+      <button onclick="filterByTab('cho_lay')" class="tab-btn px-3 py-1.5 rounded-md font-medium text-gray-600 hover:bg-gray-100 flex items-center gap-1.5">
+        <span>Chờ Lấy</span>
+        <span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.2 rounded-full font-mono">12</span>
+      </button>
+      <button onclick="filterByTab('dang_lay')" class="tab-btn px-3 py-1.5 rounded-md font-medium text-gray-600 hover:bg-gray-100 flex items-center gap-1.5">
+        <span>Đang Lấy</span>
+        <span class="bg-blue-100 text-blue-800 text-[10px] px-1.5 py-0.2 rounded-full font-mono">6</span>
+      </button>
+      <button onclick="filterByTab('nhap_kho')" class="tab-btn px-3 py-1.5 rounded-md font-medium text-gray-600 hover:bg-gray-100 flex items-center gap-1.5">
+        <span>Đã Nhập Kho</span>
+        <span class="bg-purple-100 text-purple-800 text-[10px] px-1.5 py-0.2 rounded-full font-mono">18</span>
+      </button>
+      <button onclick="filterByTab('dang_giao')" class="tab-btn px-3 py-1.5 rounded-md font-medium text-gray-600 hover:bg-gray-100 flex items-center gap-1.5">
+        <span>🚚 Đang Giao</span>
+        <span class="bg-emerald-100 text-[#007B53] text-[10px] px-1.5 py-0.2 rounded-full font-mono">42</span>
+      </button>
+      <button onclick="filterByTab('da_giao')" class="tab-btn px-3 py-1.5 rounded-md font-medium text-gray-600 hover:bg-gray-100 flex items-center gap-1.5">
+        <span>✓ Đã Giao</span>
+        <span class="bg-green-100 text-green-800 text-[10px] px-1.5 py-0.2 rounded-full font-mono">56</span>
+      </button>
+      <button onclick="filterByTab('doi_soat')" class="tab-btn px-3 py-1.5 rounded-md font-medium text-gray-600 hover:bg-gray-100 flex items-center gap-1.5">
+        <span>Đã Đối Soát</span>
+        <span class="bg-gray-200 text-gray-700 text-[10px] px-1.5 py-0.2 rounded-full font-mono">114</span>
+      </button>
+      <button onclick="filterByTab('hen_lai')" class="tab-btn px-3 py-1.5 rounded-md font-medium text-gray-600 hover:bg-gray-100 flex items-center gap-1.5">
+        <span>Hẹn Lại</span>
+        <span class="bg-orange-100 text-orange-800 text-[10px] px-1.5 py-0.2 rounded-full font-mono">4</span>
+      </button>
+      <button onclick="filterByTab('chuyen_hoan')" class="tab-btn px-3 py-1.5 rounded-md font-medium text-gray-600 hover:bg-gray-100 flex items-center gap-1.5">
+        <span>Chuyển Hoàn</span>
+        <span class="bg-red-100 text-red-800 text-[10px] px-1.5 py-0.2 rounded-full font-mono">2</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ========================================================================= -->
+  <!-- 3. MAIN TABLE & CARDS SECTION -->
+  <!-- ========================================================================= -->
+  <main class="flex-1 max-w-[1600px] w-full mx-auto p-4 md:p-6 space-y-4">
+    <!-- Desktop Toolbar -->
+    <div class="hidden md:flex items-center justify-between bg-white p-3.5 rounded-xl border border-[#E5E8EC] shadow-sm">
+      <div class="flex items-center gap-2.5">
+        <button onclick="alert('Mở form tạo đơn mới')" class="bg-[#007B53] hover:bg-[#006342] text-white px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm">
+          <span>+ Đăng Đơn (F1)</span>
+        </button>
+        <button onclick="openThermalModal('S228194.MB20.884102', 'Nguyễn Thị Thanh Trúc', '1.220.000 VNĐ')" class="bg-[#E6F4EA] hover:bg-[#C3E6CD] text-[#007B53] px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 border border-[#C3E6CD]">
+          <span>In Hàng Loạt A6 🖨️</span>
+        </button>
+        <button onclick="alert('⚡ ĐÃ KÍCH HOẠT SOS: Thông báo giục bưu tá ưu tiên giao ngay!')" class="bg-[#FFF7E6] hover:bg-[#FFE8B3] text-[#B76E00] px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 border border-[#FFE8B3]">
+          <span>SOS Giục Giao ⚡</span>
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2 text-xs text-[#454F5B]">
+        <select class="bg-[#F8F9FA] border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs outline-none">
+          <option>Kho: 44 Giải Phóng</option>
+          <option>Kho: Cầu Giấy</option>
+        </select>
+        <select class="bg-[#F8F9FA] border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs outline-none">
+          <option>Cổng: Tất cả</option>
+          <option>Thu hộ COD</option>
+        </select>
+        <select class="bg-[#F8F9FA] border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs outline-none">
+          <option>Hôm nay (21/08)</option>
+          <option>7 ngày qua</option>
+        </select>
+        <button onclick="alert('Đang xuất file Excel...')" class="border border-gray-300 hover:bg-gray-100 rounded-lg px-3 py-1.5 font-medium">
+          Xuất Excel 📥
+        </button>
+      </div>
+    </div>
+
+    <!-- Desktop Tabler Table -->
+    <div class="hidden md:block bg-white rounded-xl border border-[#E5E8EC] shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead class="bg-[#F8F9FA] border-b border-[#E5E8EC] text-[#475569] font-bold uppercase tracking-wider text-[11px]">
+            <tr>
+              <th class="p-3.5 w-10 text-center"><input type="checkbox" checked class="w-4 h-4 rounded text-[#007B53]"></th>
+              <th class="p-3.5 w-44">Mã Vận Đơn & Mã Shop</th>
+              <th class="p-3.5 w-60">Người Nhận & Địa Chỉ</th>
+              <th class="p-3.5 w-64">Hàng Hóa & Trọng Lượng</th>
+              <th class="p-3.5 w-32 text-right">Tiền COD</th>
+              <th class="p-3.5 w-24 text-center">Cước Phí</th>
+              <th class="p-3.5 w-44">Trạng Thái & Bưu Tá</th>
+              <th class="p-3.5 w-36 text-center">Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody id="orders-tbody" class="divide-y divide-gray-100">
+            <!-- Row 1 -->
+            <tr class="hover:bg-slate-50 transition-colors order-row" data-status="dang_giao">
+              <td class="p-3.5 text-center"><input type="checkbox" checked class="w-4 h-4 rounded text-[#007B53]"></td>
+              <td class="p-3.5">
+                <div class="font-bold text-[#007B53] font-mono text-xs">S228194.MB20.884102</div>
+                <div class="text-[10px] text-gray-500">#PC-ORD-9921 • 14:25 21/08</div>
+              </td>
+              <td class="p-3.5">
+                <div class="font-bold text-[#111827]">Nguyễn Thị Thanh Trúc <span class="text-[9px] font-bold text-[#007B53] bg-emerald-50 px-1 py-0.2 rounded">👑 VÀNG</span></div>
+                <div class="text-[#2563EB] font-mono text-[11px]">+84 988 123 456</div>
+                <div class="text-[10px] text-gray-500 truncate max-w-[220px]">44 Ngõ 897 Giải Phóng, Giáp Nhị, Hoàng Mai, HN</div>
+              </td>
+              <td class="p-3.5">
+                <div class="font-medium text-gray-800">Derma B5 30ml x1, Ceramide NP x1</div>
+                <div class="text-[10px] text-gray-500">Trọng lượng: 0.35 kg • Cho xem hàng không cho thử</div>
+              </td>
+              <td class="p-3.5 text-right font-mono">
+                <div class="font-bold text-[#007B53] text-xs">1.220.000 ₫</div>
+                <div class="text-[10px] text-gray-400">Khai giá: 1.270k</div>
+              </td>
+              <td class="p-3.5 text-center">
+                <span class="font-bold text-gray-700">22.000 ₫</span>
+                <span class="block text-[9px] text-[#007B53] font-medium">(Shop trả)</span>
+              </td>
+              <td class="p-3.5">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#E6F4EA] text-[#007B53] border border-[#C3E6CD]">
+                  🚚 Đang giao hàng (Lần 1)
+                </span>
+                <p class="text-[10px] text-gray-500 mt-1">Bưu tá: Nam (0981 234 567)</p>
+              </td>
+              <td class="p-3.5 text-center">
+                <div class="flex items-center justify-center gap-1.5">
+                  <button onclick="openThermalModal('S228194.MB20.884102', 'Nguyễn Thị Thanh Trúc', '1.220.000 VNĐ')" class="p-1.5 bg-[#E6F4EA] text-[#007B53] rounded hover:bg-[#C3E6CD]" title="In A6">🖨️</button>
+                  <button onclick="openTrackingDrawer('S228194.MB20.884102', 'Nguyễn Thị Thanh Trúc', '1.220.000 ₫')" class="p-1.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200" title="Hành Trình">👁️</button>
+                  <button class="p-1.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200">⋮</button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Row 2 -->
+            <tr class="hover:bg-slate-50 transition-colors order-row" data-status="da_giao">
+              <td class="p-3.5 text-center"><input type="checkbox" class="w-4 h-4 rounded text-[#007B53]"></td>
+              <td class="p-3.5">
+                <div class="font-bold text-[#007B53] font-mono text-xs">S228194.MB20.884101</div>
+                <div class="text-[10px] text-gray-500">#PC-ORD-9920 • 13:10 21/08</div>
+              </td>
+              <td class="p-3.5">
+                <div class="font-bold text-[#111827]">Trần Văn Hùng <span class="text-[9px] font-bold text-gray-600 bg-gray-100 px-1 py-0.2 rounded">BẠC</span></div>
+                <div class="text-[#2563EB] font-mono text-[11px]">+84 912 888 999</div>
+                <div class="text-[10px] text-gray-500 truncate max-w-[220px]">12 Tràng Tiền, Hoàn Kiếm, HN</div>
+              </td>
+              <td class="p-3.5">
+                <div class="font-medium text-gray-800">Kem Trẻ Hóa Vella Age Killer 50ml x1</div>
+                <div class="text-[10px] text-gray-500">Trọng lượng: 0.25 kg • Hàng dễ vỡ</div>
+              </td>
+              <td class="p-3.5 text-right font-mono">
+                <div class="font-bold text-[#007B53] text-xs">850.000 ₫</div>
+                <div class="text-[10px] text-gray-400">Khai giá: 850k</div>
+              </td>
+              <td class="p-3.5 text-center">
+                <span class="font-bold text-gray-700">22.000 ₫</span>
+                <span class="block text-[9px] text-orange-600 font-medium">(Khách trả)</span>
+              </td>
+              <td class="p-3.5">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#D9F7BE] text-[#237804] border border-[#B7EB8F]">
+                  ✓ Đã giao / Chưa đối soát
+                </span>
+                <p class="text-[10px] text-gray-500 mt-1">Bưu tá: Tuấn (0915 678 999)</p>
+              </td>
+              <td class="p-3.5 text-center">
+                <div class="flex items-center justify-center gap-1.5">
+                  <button onclick="openThermalModal('S228194.MB20.884101', 'Trần Văn Hùng', '850.000 VNĐ')" class="p-1.5 bg-[#E6F4EA] text-[#007B53] rounded hover:bg-[#C3E6CD]">🖨️</button>
+                  <button onclick="openTrackingDrawer('S228194.MB20.884101', 'Trần Văn Hùng', '850.000 ₫')" class="p-1.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200">👁️</button>
+                  <button class="p-1.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200">⋮</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="p-3.5 bg-[#F8F9FA] border-t border-[#E5E8EC] flex items-center justify-between text-xs text-[#454F5B]">
+        <div class="flex items-center gap-2">
+          <span>Đã chọn <strong class="text-[#007B53]">1</strong> đơn hàng</span>
+          <span>•</span>
+          <button onclick="openThermalModal('S228194.MB20.884102', 'Nguyễn Thị Thanh Trúc', '1.220.000 VNĐ')" class="text-[#007B53] hover:underline font-semibold">[ In Hàng Loạt A6 🖨️ ]</button>
+        </div>
+        <div class="flex items-center gap-2 font-mono">
+          <span>Hiển thị 1 - 2 của 42 đơn</span>
+          <div class="flex items-center gap-1 ml-2">
+            <button class="w-6 h-6 rounded bg-[#007B53] text-white font-bold flex items-center justify-center">1</button>
+            <button class="w-6 h-6 rounded bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50">2</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Order Stream -->
+    <div class="md:hidden space-y-3" id="mobile-orders-container">
+      <div class="bg-white p-3.5 rounded-xl border border-[#E5E8EC] shadow-sm space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-[#007B53] font-mono text-xs">S228194.MB20.884102</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E6F4EA] text-[#007B53]">🚚 Đang giao 2H</span>
+        </div>
+        <div>
+          <div class="text-xs font-bold text-gray-900">Nguyễn Thị Thanh Trúc <span class="text-[9px] text-[#007B53] bg-emerald-50 px-1 py-0.2 rounded font-semibold">👑 VÀNG</span></div>
+          <p class="text-[11px] text-[#2563EB] font-mono">+84 988 123 456</p>
+          <p class="text-[10px] text-gray-500">44 Ngõ 897 Giải Phóng, Giáp Nhị, HN</p>
+          <p class="text-[11px] text-gray-800 mt-1 font-medium">Derma B5 x1, Ceramide NP x1 (0.35kg)</p>
+        </div>
+        <div class="pt-2 border-t border-gray-100 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] text-gray-500">COD:</span>
+            <span class="text-xs font-bold text-[#007B53] font-mono ml-1">1.220.000 ₫</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button onclick="openThermalModal('S228194.MB20.884102', 'Nguyễn Thị Thanh Trúc', '1.220.000 VNĐ')" class="px-2.5 py-1 bg-[#E6F4EA] text-[#007B53] rounded text-[11px] font-bold">In A6 🖨️</button>
+            <button onclick="openTrackingDrawer('S228194.MB20.884102', 'Nguyễn Thị Thanh Trúc', '1.220.000 ₫')" class="px-2.5 py-1 bg-gray-100 text-gray-700 rounded text-[11px] font-bold">Hành Trình ➔</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Mobile Bottom Bar -->
+  <nav class="md:hidden sticky bottom-0 z-30 bg-white border-t border-[#E5E8EC] px-4 py-2 flex items-center justify-between text-center">
+    <a href="#" class="flex flex-col items-center gap-0.5 text-[#007B53]">
+      <span class="text-base">📦</span>
+      <span class="text-[10px] font-bold">Đơn Hàng</span>
+    </a>
+    <a href="#" onclick="alert('Đăng đơn mới')" class="flex flex-col items-center gap-0.5 text-gray-500">
+      <span class="text-base">➕</span>
+      <span class="text-[10px] font-medium">Đăng Đơn</span>
+    </a>
+    <a href="#" class="flex flex-col items-center gap-0.5 text-gray-500">
+      <span class="text-base">🔍</span>
+      <span class="text-[10px] font-medium">Tra Cứu</span>
+    </a>
+    <a href="#" class="flex flex-col items-center gap-0.5 text-gray-500">
+      <span class="text-base">👤</span>
+      <span class="text-[10px] font-medium">Shop Admin</span>
+    </a>
+  </nav>
+
+  <!-- Offcanvas Timeline Tracking Drawer -->
+  <div id="tracking-drawer" class="fixed inset-0 z-50 overflow-hidden hidden">
+    <div class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm" onclick="closeTrackingDrawer()"></div>
+    <div class="fixed inset-y-0 right-0 max-w-full flex pl-10">
+      <div class="w-screen max-w-md bg-white shadow-2xl flex flex-col justify-between">
+        <div class="p-5 border-b border-gray-100 flex items-center justify-between bg-[#F8FAFC]">
+          <div>
+            <h2 id="drawer-code" class="text-sm font-bold text-[#007B53] font-mono">S228194.MB20.884102</h2>
+            <p id="drawer-customer" class="text-xs text-gray-600 font-medium">Nguyễn Thị Thanh Trúc</p>
+          </div>
+          <button onclick="closeTrackingDrawer()" class="p-2 text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+        <div class="p-5 overflow-y-auto space-y-4 text-xs">
+          <div class="bg-[#F8FAFC] p-3.5 rounded-xl border border-gray-200 space-y-1">
+            <p class="font-bold text-gray-900">Thông tin giao nhận & COD</p>
+            <p class="text-gray-600">• Người nhận: <strong class="text-gray-900">Nguyễn Thị Thanh Trúc (+84 988 123 456)</strong></p>
+            <p class="text-gray-600">• Địa chỉ: 44 Ngõ 897 Giải Phóng, Giáp Nhị, Hoàng Mai, HN</p>
+            <p class="text-gray-600">• Tiền thu hộ: <strong class="text-[#007B53] font-mono">1.220.000 ₫</strong></p>
+          </div>
+          <div>
+            <h3 class="font-bold text-gray-900 mb-3 uppercase tracking-wider text-emerald-800">Nhật Ký Hành Trình Vận Đơn</h3>
+            <ol class="relative border-l border-emerald-500 ml-2.5 space-y-4 text-xs">
+              <li class="ml-4">
+                <span class="absolute flex items-center justify-center w-5 h-5 bg-[#007B53] rounded-full -left-2.5 text-white text-[10px]">🚚</span>
+                <time class="text-[10px] font-semibold text-[#007B53]">21/08 14:10</time>
+                <h4 class="font-bold text-gray-900">Đang giao hàng đến người nhận (Lần 1)</h4>
+                <p class="text-gray-500 text-[11px]">Bưu tá phát: Lê Hoàng Nam (0977 333 444)</p>
+              </li>
+              <li class="ml-4">
+                <span class="absolute flex items-center justify-center w-5 h-5 bg-gray-200 rounded-full -left-2.5 text-gray-600 text-[10px]">✓</span>
+                <time class="text-[10px] text-gray-500">21/08 13:20</time>
+                <h4 class="font-semibold text-gray-800">Xuất kho trung chuyển Hub Hoàng Mai đến Cầu Giấy</h4>
+              </li>
+              <li class="ml-4">
+                <span class="absolute flex items-center justify-center w-5 h-5 bg-gray-200 rounded-full -left-2.5 text-gray-600 text-[10px]">✓</span>
+                <time class="text-[10px] text-gray-500">21/08 10:15</time>
+                <h4 class="font-semibold text-gray-800">Bưu tá đã lấy hàng thành công tại Shop</h4>
+              </li>
+            </ol>
+          </div>
+        </div>
+        <div class="p-4 border-t border-gray-100 bg-gray-50 flex gap-2">
+          <button onclick="alert('Đã giục bưu tá!')" class="flex-1 bg-[#FFF7E6] text-[#B76E00] py-2.5 rounded-xl font-bold text-xs border border-amber-300">SOS Giục Giao ⚡</button>
+          <button onclick="openThermalModal('S228194.MB20.884102', 'Nguyễn Thị Thanh Trúc', '1.220.000 VNĐ')" class="flex-1 bg-[#007B53] text-white py-2.5 rounded-xl font-bold text-xs shadow-md">In Phiếu Gửi A6 🖨️</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Thermal Print Label A6 Modal (100x150mm) -->
+  <div id="thermal-modal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <div class="flex items-center justify-center min-h-screen p-4 bg-gray-900/60 backdrop-blur-sm">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-200">
+        <div class="p-4 bg-gray-800 text-white flex items-center justify-between">
+          <span class="font-bold text-sm">Xem Trước Bản In Nhiệt A6 (100x150mm)</span>
+          <button onclick="closeThermalModal()" class="text-gray-400 hover:text-white text-lg">✕</button>
+        </div>
+        <div class="p-6 flex justify-center bg-gray-100">
+          <div id="print-label-area" class="w-[360px] bg-white border-2 border-black p-4 font-sans text-black shadow-md space-y-2.5 leading-tight">
+            <div class="border-b-2 border-black pb-2 flex items-center justify-between">
+              <div>
+                <span class="font-extrabold text-sm tracking-wider">SPX Express</span>
+                <p class="font-mono text-[10px] font-bold">|||||||||||||||||||||||||||||||||||</p>
+              </div>
+              <div class="bg-black text-white px-2 py-1 font-mono font-black text-base rounded">CT-74-01-CM10</div>
+            </div>
+            <div class="border-b border-black pb-2 text-[11px] space-y-1">
+              <p><strong>GỬI:</strong> Pharma Cosmetics (0967 194 063) - 44 Ngõ 897 Giải Phóng, Giáp Nhị, HN</p>
+              <p><strong>NHẬN:</strong> <span id="label-receiver" class="font-bold text-sm">Nguyễn Thị Thanh Trúc</span> (0988 123 456)</p>
+              <p class="font-medium text-xs">Đ/C: 44 Ngõ 897 Giải Phóng, Giáp Nhị, Hoàng Mai, Hà Nội</p>
+            </div>
+            <div class="border-b border-black pb-2 flex items-center justify-between text-[11px]">
+              <div class="flex-1 pr-2 space-y-0.5">
+                <p class="font-bold">NỘI DUNG HÀNG HÓA (0.35 kg):</p>
+                <p>1. Derma B5 30ml x1</p>
+                <p>2. Ceramide NP 50ml x1</p>
+              </div>
+              <div class="w-16 h-16 border-2 border-black flex items-center justify-center p-1 font-mono text-[8px] text-center font-bold">
+                [ 2D QR ]<br>SPX-882910
+              </div>
+            </div>
+            <div class="border-b border-black pb-2 text-[10px] bg-gray-50 p-1.5 font-bold">
+              CHỈ DẪN: CHO XEM HÀNG, KHÔNG CHO THỬ; ĐỒNG KIỂM; Chuyển hoàn sau 3 lần phát; Lưu kho 24h dù KH từ chối nhận; Gọi người gửi nếu giao không được.
+            </div>
+            <div class="border-2 border-black p-2 text-center bg-gray-50">
+              <span class="text-[10px] font-bold uppercase block">Tiền Thu Hộ COD:</span>
+              <span id="label-cod" class="text-xl font-black font-mono tracking-tight">1.220.000 VNĐ</span>
+              <span class="text-[10px] block text-gray-700">Cước phí: 22.000 đ (Shop trả)</span>
+            </div>
+            <div class="text-[9px] text-center text-gray-600 font-medium">Hotline SPX: 1900 1221 • Hỗ trợ: 0967 194 063</div>
+          </div>
+        </div>
+        <div class="p-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
+          <button onclick="closeThermalModal()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-xl text-xs font-semibold">Đóng</button>
+          <button onclick="window.print()" class="px-5 py-2 bg-[#007B53] hover:bg-[#006342] text-white rounded-xl text-xs font-bold shadow-md">In Phiếu A6 Ngay 🖨️</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Interaction Logic -->
+  <script>
+    function filterByTab(status) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active', 'bg-[#E6F4EA]', 'text-[#007B53]', 'font-bold');
+        btn.classList.add('text-gray-600', 'font-medium');
+      });
+      event.currentTarget.classList.add('active', 'bg-[#E6F4EA]', 'text-[#007B53]', 'font-bold');
+
+      const rows = document.querySelectorAll('.order-row');
+      rows.forEach(row => {
+        if (status === 'all' || row.dataset.status === status) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    function filterOrders() {
+      const q = document.getElementById('global-search').value.toLowerCase();
+      document.querySelectorAll('.order-row').forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(q) ? '' : 'none';
+      });
+    }
+
+    function filterOrdersMobile() {
+      const q = document.getElementById('mobile-search').value.toLowerCase();
+      document.querySelectorAll('#mobile-orders-container > div').forEach(card => {
+        const text = card.innerText.toLowerCase();
+        card.style.display = text.includes(q) ? '' : 'none';
+      });
+    }
+
+    function openTrackingDrawer(code, customer, cod) {
+      document.getElementById('drawer-code').innerText = code;
+      document.getElementById('drawer-customer').innerText = customer;
+      document.getElementById('tracking-drawer').classList.remove('hidden');
+    }
+
+    function closeTrackingDrawer() {
+      document.getElementById('tracking-drawer').classList.add('hidden');
+    }
+
+    function openThermalModal(code, receiver, cod) {
+      document.getElementById('label-receiver').innerText = receiver;
+      document.getElementById('label-cod').innerText = cod;
+      document.getElementById('thermal-modal').classList.remove('hidden');
+    }
+
+    function closeThermalModal() {
+      document.getElementById('thermal-modal').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

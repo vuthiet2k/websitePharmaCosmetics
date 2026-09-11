@@ -1,0 +1,153 @@
+{%- comment -%}
+  pc_clinical_components.bwt (REOPEN 2026-09-10, ADR-007/T-74) — Thư viện 8 component y khoa
+  mới CMP-01..08 theo "Pharma Cosmetics-20260910T092731Z-1-001/Pharma Cosmetics/*.xlsx"
+  (sheet 00_Quy_Chuan_Design_System). CMP-09 (Google Translate switcher) ĐÃ tồn tại sẵn trong
+  snippets/header.bwt — không lặp lại ở đây.
+
+  Quy ước tiền tố: "pc-cmp-" (theo đúng REUSE_BEFORE_CREATE + tránh trùng class đã có — xem sự
+  cố lịch sử ghi trong snippets/pharma_ui_kit.bwt, đã grep xác nhận "pc-cmp-" chưa dùng ở đâu
+  trước khi tạo file này). Dùng token màu/font từ T-70/T-71 (brand-primary/brand-green/
+  border-clinical/text-*/Playfair Display) qua Tailwind utility class — tự động đổi dark mode.
+
+  Include file này 1 lần trong layouts/theme.bwt (cạnh pharma_ui_kit) để dùng chung mọi trang.
+{%- endcomment -%}
+<style id="pc-clinical-components">
+  /* ── CMP-01: Reading Progress Bar ───────────────────────────────────── */
+  .pc-cmp-progress-bar {
+    position: fixed; top: 0; left: 0; width: 100%; height: 3px;
+    background: transparent; z-index: 9999; pointer-events: none;
+  }
+  .pc-cmp-progress-bar__fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--color-brand-green, #267348), var(--color-gold-sand, #DFBA73));
+    transition: width 80ms linear;
+  }
+
+  /* ── CMP-02: Sticky Table of Contents ───────────────────────────────── */
+  .pc-cmp-sticky-toc {
+    position: sticky; top: 96px; width: 240px; align-self: flex-start;
+    border: 1px solid var(--color-border-clinical, #E2E8F0); border-radius: 10px;
+    padding: 16px; background: #fff; max-height: calc(100vh - 120px); overflow-y: auto;
+  }
+  .pc-cmp-sticky-toc__title {
+    font-family: 'Inter', sans-serif; font-weight: 800; font-size: 11px;
+    text-transform: uppercase; letter-spacing: .05em;
+    color: var(--color-text-muted, #64748B); margin-bottom: 10px;
+  }
+  .pc-cmp-sticky-toc .toc-list { list-style: none; margin: 0; padding: 0; }
+  .pc-cmp-sticky-toc .toc-link {
+    display: block; padding: 6px 0; font-size: 13px; color: var(--color-text-body, #334155);
+    text-decoration: none; border-left: 2px solid transparent; padding-left: 10px;
+  }
+  .pc-cmp-sticky-toc .toc-link.is-active-link,
+  .pc-cmp-sticky-toc .toc-link:hover {
+    color: var(--color-brand-green, #267348); border-left-color: var(--color-brand-primary, #3CB371);
+    font-weight: 600;
+  }
+  @media (max-width: 1199px) { .pc-cmp-sticky-toc { display: none; } }
+
+  /* ── CMP-03: Expert Clinical Callout Note ───────────────────────────── */
+  .pc-cmp-expert-callout {
+    background: var(--color-bg-page, #F8FAF7);
+    border-left: 4px solid var(--color-brand-green, #267348);
+    border-radius: 0 10px 10px 0; padding: 18px 22px;
+    font-size: 14px; font-style: italic; color: var(--color-text-body, #334155);
+  }
+  .pc-cmp-expert-callout__signature {
+    display: block; margin-top: 10px; font-style: normal; font-weight: 700;
+    color: var(--color-brand-dark, #166B55); font-size: 13px;
+  }
+
+  /* ── CMP-04: VISIA Clinical Comparison Box ──────────────────────────── */
+  .pc-cmp-visia { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .pc-cmp-visia__frame {
+    position: relative; aspect-ratio: 4 / 3; border-radius: 16px; overflow: hidden;
+    border: 1px solid var(--color-border-clinical, #E2E8F0);
+  }
+  .pc-cmp-visia__frame img { width: 100%; height: 100%; object-fit: cover; }
+  .pc-cmp-visia__badge {
+    position: absolute; top: 10px; left: 10px; font-size: 10px; font-weight: 800;
+    color: #fff; padding: 3px 10px; border-radius: 6px; text-transform: uppercase;
+  }
+  .pc-cmp-visia__badge--before { background: var(--accent-flash-red, #DC2626); }
+  .pc-cmp-visia__badge--after { background: var(--color-brand-green, #267348); }
+  @media (max-width: 640px) { .pc-cmp-visia { grid-template-columns: 1fr; } }
+
+  /* ── CMP-05: Sticky Prescription Widget ─────────────────────────────── */
+  .pc-cmp-prescription-widget {
+    position: sticky; top: 86px; width: 100%; max-width: 280px;
+    padding: 20px; border-radius: 10px; border: 1px solid var(--color-border-clinical, #E2E8F0);
+    background: #fff;
+  }
+  .pc-cmp-prescription-widget__title {
+    font-family: 'Inter', sans-serif; font-weight: 700; font-size: 13px;
+    color: var(--color-text-main, #13241F); margin-bottom: 12px;
+  }
+  .pc-cmp-prescription-widget__item {
+    display: flex; gap: 10px; align-items: center; padding: 8px 0;
+    border-top: 1px solid var(--color-border-clinical, #E2E8F0);
+  }
+  .pc-cmp-prescription-widget__item:first-of-type { border-top: none; }
+  .pc-cmp-prescription-widget__item img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+  .pc-cmp-prescription-widget__item-name { font-size: 12px; font-weight: 600; color: var(--color-text-main, #13241F); }
+  .pc-cmp-prescription-widget__item-price { font-size: 11px; color: var(--color-brand-green, #267348); font-weight: 700; }
+
+  /* ── CMP-06: Multimedia Hub (Video 2x2 & Audio) ─────────────────────── */
+  .pc-cmp-multimedia-hub { display: grid; grid-template-columns: 1.25fr .85fr; gap: 24px; }
+  .pc-cmp-multimedia-hub__videos { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .pc-cmp-multimedia-hub__video-card {
+    border-radius: 12px; overflow: hidden; border: 1px solid var(--color-border-clinical, #E2E8F0);
+    background: var(--color-brand-deep, #0F2318);
+  }
+  .pc-cmp-multimedia-hub__video-card video { width: 100%; display: block; aspect-ratio: 16/9; background: #000; }
+  .pc-cmp-multimedia-hub__video-card figcaption {
+    padding: 8px 10px; font-size: 11px; color: #fff; font-weight: 600;
+  }
+  .pc-cmp-multimedia-hub__audio { border: 1px solid var(--color-border-clinical, #E2E8F0); border-radius: 12px; padding: 16px; }
+  .pc-cmp-multimedia-hub__audio-track { padding: 10px 0; border-top: 1px solid var(--color-border-clinical, #E2E8F0); }
+  .pc-cmp-multimedia-hub__audio-track:first-of-type { border-top: none; padding-top: 0; }
+  .pc-cmp-multimedia-hub__audio-track audio { width: 100%; margin-top: 6px; }
+  @media (max-width: 900px) { .pc-cmp-multimedia-hub { grid-template-columns: 1fr; } }
+  @media (max-width: 640px) { .pc-cmp-multimedia-hub__videos { grid-template-columns: 1fr; } }
+
+  /* ── CMP-07: Clinical Taxonomy & Metadata (filter bar) ──────────────── */
+  .pc-cmp-taxonomy-filter { border: 1px solid var(--color-border-clinical, #E2E8F0); border-radius: 10px; padding: 16px; }
+  .pc-cmp-taxonomy-filter__title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted, #64748B); margin-bottom: 10px; }
+  .pc-cmp-taxonomy-filter__list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .pc-cmp-taxonomy-filter__list label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-text-body, #334155); }
+  .pc-cmp-taxonomy-filter__tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pc-cmp-taxonomy-filter__tag {
+    font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 9999px;
+    background: var(--color-mint-subtle, #E8F8EE); color: var(--color-brand-green, #267348);
+    text-decoration: none;
+  }
+
+  /* ── CMP-08: Clinical Comments & Reviews (verified) ─────────────────── */
+  .pc-cmp-verified-badge {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700;
+    color: var(--color-brand-green, #267348); background: var(--color-badge-green-bg, #E8F5E9);
+    border-radius: 9999px; padding: 2px 8px; margin-left: 6px;
+  }
+</style>
+
+{%- comment -%}
+  CMP-01 JS: đo % cuộn thực tế trên phần tử có class .article-content-main (article.bwt) và
+  cập nhật width thanh .pc-cmp-progress-bar__fill. Chỉ chạy khi có mặt cả 2 phần tử trên trang
+  (không lỗi ở trang không dùng progress bar).
+{%- endcomment -%}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var fill = document.querySelector('.pc-cmp-progress-bar__fill');
+    var content = document.querySelector('.article-content-main');
+    if (!fill || !content) return;
+    function updateProgress() {
+      var rect = content.getBoundingClientRect();
+      var total = rect.height - window.innerHeight;
+      var scrolled = -rect.top;
+      var pct = total > 0 ? Math.min(100, Math.max(0, (scrolled / total) * 100)) : 0;
+      fill.style.width = pct + '%';
+    }
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    updateProgress();
+  });
+</script>

@@ -1,0 +1,34 @@
+T-101-header-cohesion-fix — 2026-09-11
+Nguoi dung bao cao (verbatim): "header đang sai giao diện hiểu không, có topheader và header thôi - có
+cả màn pc và mobile làm cho kĩ"
+
+ROOT CAUSE (xac nhan qua Playwright):
+- Doi chieu file mau Pharma_Cosmetics_Desktop_Homepage_Figma_260-84.html dong 1215-1268: cau truc mau
+  CHI co 2 phan tu — <header class="topbar"> (thanh xanh) + <nav class="main-header"> (1 hang trang duy
+  nhat gom logo+nav-links+search/chat/cart).
+- Site that (snippets/header.bwt) co 3 khoi: .top-main-header (xanh) + .box-hearder (trang: logo/search/
+  wishlist/cart) + .header-menu (trang: dropdown Danh muc + site-nav). header-menu co border-top +
+  box-shadow RIENG (assets/global_core.scss.bwt) => tao cam giac "3 header tach roi" thay vi 2 phan.
+
+QUYET DINH: KHONG gop lam 1 hang literal (se mat search-bar/mega-menu/account-dropdown that dang dung
+that trong luong mua hang — da xac nhan trong phien truoc la khong duoc pha vo). Thay vao do: bo
+border-top/box-shadow cua .header-menu O TRANG THAI NGHI (khong cuon) de 2 khoi trang (.box-hearder +
+.header-menu) nhin lien mach thanh 1 "header" block duy nhat duoi thanh "topbar" xanh — dung 2 phan
+mau/section nhu file mau, giu nguyen chuc nang that.
+GIU NGUYEN (khong phai bug): hanh vi .hSticky khi cuon (header-menu chuyen thanh thanh dinh rieng co
+shadow) — day la mega-nav sticky pattern co chu dich (assets/global_core.scss.bwt ~dong 3101).
+
+FILE SUA: snippets/pharma_ui_kit.bwt (them rule CSS cuoi file, xem comment REOPEN 2026-09-11 trong file).
+
+VERIFY (E2 — Playwright thuc, khong doan):
+1. Desktop 1280px, ?tpl=index, trang thai nghi (chua cuon): screenshot xac nhan .box-hearder va
+   .header-menu khong con duong vien/shadow phan tach — nhin nhu 1 khoi trang lien tuc duoi topbar xanh.
+2. Mobile 390px, cung trang: header con lai 1 hang xanh duy nhat (hamburger + logo + cart), header-menu
+   an trong drawer — da dat cau truc "topheader + header" don gian tren mobile tu truoc.
+3. npm run build: "Done in 783ms", dist (275 entries) — PASS.
+4. npx playwright test --update-snapshots: 39/39 PASSED, snapshot regenerated cho toan bo trang (thay
+   doi CSS anh huong global qua layouts/theme.bwt include pharma_ui_kit.bwt) — day la thay doi CHU DICH,
+   khong phai regression, nen cap nhat baseline la dung quy trinh (khong phai "noi long threshold").
+5. compliance-lint: 0 vi pham cung, 18 canh bao danh xung (khong doi, nhu cu).
+
+EVIDENCE_GRADE: E2 (Playwright + build log that, chua co xac nhan mat nguoi dung tren thiet bi that).

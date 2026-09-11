@@ -1,0 +1,813 @@
+      
+      <div id="tab-shipping" v-show="activeTab === 'shipping'" class="ma-tab-pane">
+
+
+        {% comment %} ─── SUBTAB: VẬN ĐƠN (2026-08-13) ─── Danh sách mọi vận đơn + detail Sapo-style
+             có sidebar. List đơn giản: bảng + bộ lọc. Detail: main (info block + items + timeline) +
+             sidebar (status + info + notes + activity). Timeline được ghi từ webhook Goship + refresh
+             tracking status (xem _shipmentHistoryLog trong mops_01.js). {% endcomment %}
+        <div v-show="shipping.subtab === 'shipments'">
+          <div v-if="!shipping.shipmentDetail">
+            <button type="button" @click="mobileFilterOpen = true"
+              class="ma-filter-trigger items-center gap-2 w-full justify-center mb-stack-md p-3 bg-surface-bright border border-outline-variant rounded-xl text-body-sm font-bold text-on-surface active:scale-95 transition-all">
+              <span class="material-symbols-outlined text-[18px]">tune</span><span>Bộ lọc</span>
+              <span v-if="shipmentActiveFilterCount" class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-label-sm font-bold bg-primary text-white">[[ shipmentActiveFilterCount ]]</span>
+            </button>
+            <div class="ma-toolbar ma-toolbar--sheet flex flex-wrap items-center gap-stack-md p-4 bg-surface-bright border border-outline-variant rounded-xl" :class="{ 'is-filter-open': mobileFilterOpen }">
+              <div class="ma-filter-sheet-head"><span class="text-title-sm font-bold text-on-surface">Bộ lọc vận đơn</span><button type="button" @click="mobileFilterOpen = false" class="w-8 h-8 inline-flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">close</span></button></div>
+              <input v-model="shipping.shipmentFilters.search" @keyup.enter="loadShipments(); mobileFilterOpen = false" type="text" placeholder="Mã VĐ / mã đơn / SĐT / tên" class="min-w-[200px] flex-1 bg-surface-container-lowest border border-outline-variant text-body-sm rounded-lg px-3 py-2">
+              <select v-model="shipping.shipmentFilters.carrier_code" @change="loadShipments" class="min-w-[140px] bg-surface-container-lowest border border-outline-variant text-body-sm rounded-lg px-3 py-2">
+                <option value="">Tất cả đối tác</option>
+                <option value="GOSHIP">Goship</option>
+                <option value="GHN">GHN</option>
+                <option value="GHTK">GHTK</option>
+                <option value="VIETTELPOST">Viettel Post</option>
+                <option value="AHAMOVE">Ahamove</option>
+                <option value="SELF">Tự giao</option>
+              </select>
+              <select v-model="shipping.shipmentFilters.status" @change="loadShipments" class="min-w-[160px] bg-surface-container-lowest border border-outline-variant text-body-sm rounded-lg px-3 py-2">
+                <option value="">Tất cả trạng thái</option>
+                <option value="ready_to_pick">Sẵn sàng lấy hàng</option>
+                <option value="delivering">Đang giao hàng</option>
+                <option value="redelivery">Chờ giao lại</option>
+                <option value="delivered">Đã giao hàng</option>
+                <option value="delivery_cancelled">Huỷ giao hàng</option>
+                <option value="returned">Đã hoàn hàng</option>
+              </select>
+              <input v-model="shipping.shipmentFilters.from" @change="loadShipments" type="date" class="bg-surface-container-lowest border border-outline-variant text-body-sm rounded-lg px-3 py-2" title="Từ ngày">
+              <input v-model="shipping.shipmentFilters.to" @change="loadShipments" type="date" class="bg-surface-container-lowest border border-outline-variant text-body-sm rounded-lg px-3 py-2" title="Đến ngày">
+              <button @click="loadShipments(); mobileFilterOpen = false" type="button" class="ma-btn-primary">Tải lại</button>
+            </div>
+            
+        {% comment %} 2026-08-23 — STATUS TABS. 2026-08-30: đổi visual từ chip nền-tròn sang tab-gạch-chân
+             khớp UI mẫu Sapo (border-bottom 2px khi active, chữ phẳng không nền) — GIỮ NGUYÊN đủ 8 mục/
+             code/hành vi cũ, chỉ đổi style. Hiện chỉ ở subtab='shipments' + không đang xem detail. 8 tab
+             filter theo fulfillment_status: '' Tất cả, ready_to_pick Chờ lấy, delivering Đang giao,
+             redelivery Giao lại, delivered Đã giao, returned Chuyển hoàn, delivery_cancelled Huỷ giao,
+             cancelled Đã huỷ. Click tab → set filter + reload list_shipments (backend đã support param
+             status). Không phá select dropdown cũ trong bộ lọc chi tiết — cả 2 UI cùng bind
+             shipping.shipmentFilters.status. {% endcomment %}
+        <div v-if="shipping.subtab === 'shipments' && !shipping.shipmentDetail"
+             class="ma-chip-scroll flex gap-4 overflow-x-auto border-b border-outline-variant">
+          <template v-for="chip in [
+              { code: '',                  label: 'Tất cả vận đơn' },
+              { code: 'ready_to_pick',     label: 'Chờ lấy hàng' },
+              { code: 'delivering',        label: 'Đang giao hàng' },
+              { code: 'redelivery',        label: 'Chờ giao lại' },
+              { code: 'delivered',         label: 'Đã giao hàng' },
+              { code: 'returned',          label: 'Chuyển hoàn' },
+              { code: 'delivery_cancelled',label: 'Huỷ giao hàng' },
+              { code: 'cancelled',         label: 'Đã huỷ' }
+            ]" :key="chip.code || 'all'">
+            <button type="button" @click="setShipmentStatusFilter(chip.code)"
+                    class="inline-flex items-center gap-1 px-1 py-2 text-label-md whitespace-nowrap border-b-2 -mb-px transition-colors"
+                    :class="(shipping.shipmentFilters.status || '') === chip.code
+                              ? 'border-primary text-primary font-bold'
+                              : 'border-transparent text-on-surface-variant font-semibold hover:text-on-surface'">
+              <span>[[ chip.label ]]</span>
+              <span v-if="(shipping.shipmentFilters.status || '') === chip.code && shipping.shipmentsTotal"
+                    class="ml-1 inline-flex items-center justify-center min-w-[20px] h-[18px] px-1 rounded-full text-[10px] font-bold bg-primary text-white font-mono">[[ shipping.shipmentsTotal ]]</span>
+            </button>
+          </template>
+        </div>
+            <div class="ma-filter-backdrop" v-if="mobileFilterOpen" @click="mobileFilterOpen = false"></div>
+            <div v-if="shipping.shipmentsLoading" class="ma-table-skeleton" aria-label="Đang tải vận đơn"><span></span><span></span><span></span><span></span></div>
+            <div v-else-if="!shipping.shipmentsList.length" class="ma-empty-state">
+              <span class="material-symbols-outlined text-on-surface-variant text-[56px] opacity-[.35]">local_shipping</span>
+              <p class="ma-empty-hint">Chưa có vận đơn nào khớp bộ lọc.</p>
+            </div>
+            <div v-else class="ma-card"><div class="overflow-x-auto"><table class="ma-table ma-data-table">
+              <thead>
+                <!-- 2026-08-30 — khi có vận đơn được chọn, thay cả hàng tiêu đề bằng thanh
+                     "Đã chọn N · Chọn thao tác" (khớp bố cục Sapo mẫu), thay cho floating bar cũ ở
+                     đáy trang. Menu chỉ gồm action thật đã có sẵn (in tem Goship/MOPS, in phiếu giao
+                     hàng) — không thêm "Cập nhật trạng thái"/"In hướng dẫn đóng gói" vì MOPS chưa có
+                     hàm bulk tương ứng. -->
+                <tr v-if="labelPrint.selectedIds.length > 0" class="ma-thead-row">
+                  <th class="px-3 py-2" colspan="10">
+                    <div class="flex items-center gap-3 flex-wrap">
+                      <input type="checkbox" aria-label="Chọn tất cả vận đơn"
+                             :checked="shipmentsSelectionState === 'all'"
+                             :class="{ 'ma-check-indeterminate': shipmentsSelectionState === 'some' }"
+                             @change="toggleAllShipmentsSelected"
+                             class="rounded border-outline-variant">
+                      <span class="text-body-sm text-on-surface-variant">Đã chọn <b class="text-on-surface">[[ labelPrint.selectedIds.length ]]</b> vận đơn</span>
+                      <div class="relative">
+                        <button type="button" @click="shipping.bulkMenuOpen = !shipping.bulkMenuOpen"
+                                class="inline-flex items-center gap-1.5 border border-outline-variant rounded-lg px-3 py-1.5 text-label-md font-bold hover:bg-surface-container-low transition-colors bg-surface-container-lowest">
+                          Chọn thao tác
+                          <span class="material-symbols-outlined text-[16px]">[[ shipping.bulkMenuOpen ? 'expand_less' : 'expand_more' ]]</span>
+                        </button>
+                        <div v-if="shipping.bulkMenuOpen" class="fixed inset-0 z-40" @click="shipping.bulkMenuOpen = false"></div>
+                        <div v-if="shipping.bulkMenuOpen" class="absolute z-50 mt-1 w-72 border border-outline-variant rounded-lg bg-surface-container-lowest shadow-lg overflow-hidden">
+                          <button type="button" @click="shipping.bulkMenuOpen = false; bulkPrintGoshipLabels()" :disabled="labelPrint.bulkBusy"
+                                  class="w-full flex items-center gap-2 px-3 py-2 text-left text-body-sm hover:bg-surface-container-low transition-colors border-b border-outline-variant disabled:opacity-50">
+                            <span class="material-symbols-outlined text-[18px]" :class="{ 'ma-spin': labelPrint.bulkBusy }">[[ labelPrint.bulkBusy ? 'progress_activity' : 'print' ]]</span>In tem Goship
+                          </button>
+                          <button type="button" @click="shipping.bulkMenuOpen = false; bulkPrintMopsLabels()" :disabled="labelPrint.bulkBusy"
+                                  class="w-full flex items-center gap-2 px-3 py-2 text-left text-body-sm hover:bg-surface-container-low transition-colors border-b border-outline-variant disabled:opacity-50"
+                                  title="Dùng khi Goship chưa trả PDF hoặc muốn kiểm soát layout MOPS">
+                            <span class="material-symbols-outlined text-[18px]">receipt_long</span>In tem MOPS
+                          </button>
+                          <label class="flex items-center gap-2 px-3 py-2 text-body-sm border-b border-outline-variant cursor-pointer hover:bg-surface-container-low" title="Ẩn tên sản phẩm khi in tem MOPS hàng loạt (không áp dụng cho In tem Goship)">
+                            <input type="checkbox" v-model="labelPrint.hideProductDetails" class="w-3.5 h-3.5" @click.stop>
+                            Ẩn tên hàng khi in tem MOPS
+                          </label>
+                          <button type="button" @click="shipping.bulkMenuOpen = false; bulkPrintShipmentSlips()" :disabled="labelPrint.slipBulkBusy"
+                                  class="w-full flex items-center gap-2 px-3 py-2 text-left text-body-sm hover:bg-surface-container-low transition-colors border-b border-outline-variant disabled:opacity-50"
+                                  title="Phiếu giao hàng A5/A4: người nhận + địa chỉ + bảng hàng + số COD cần thu">
+                            <span class="material-symbols-outlined text-[18px]" :class="{ 'ma-spin': labelPrint.slipBulkBusy }">[[ labelPrint.slipBulkBusy ? 'progress_activity' : 'description' ]]</span>In phiếu giao hàng
+                          </button>
+                          <div class="flex items-center gap-2 px-3 py-2 text-label-sm text-on-surface-variant" @click.stop>
+                            <span class="flex-shrink-0">Khổ giấy:</span>
+                            <select v-model="labelPrint.slipPaperSize" class="flex-1 border border-outline-variant rounded-md px-2 py-1 text-label-sm">
+                              <option value="A5">A5 (mặc định)</option>
+                              <option value="A4">A4</option>
+                              <option value="K80">K80 (nhiệt 80mm)</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                      <button type="button" @click="clearShipmentsSelection" class="ml-auto inline-flex items-center gap-1 text-label-sm text-on-surface-variant hover:text-error">
+                        <span class="material-symbols-outlined text-[16px]">close</span>Bỏ chọn
+                      </button>
+                    </div>
+                  </th>
+                </tr>
+                <tr v-else class="ma-thead-row">
+                  <!-- 2026-08-23 master checkbox bulk print vận đơn (Mục 4 plan OMS). STRICT BOUNDARY:
+                       nút bulk chỉ in TEM A6 (Goship PDF hoặc MOPS fallback), KHÔNG in đơn hàng. -->
+                  <th class="w-10 px-3 py-3">
+                    <input type="checkbox" aria-label="Chọn tất cả vận đơn"
+                           :checked="shipmentsSelectionState === 'all'"
+                           :class="{ 'ma-check-indeterminate': shipmentsSelectionState === 'some' }"
+                           @change="toggleAllShipmentsSelected"
+                           class="rounded border-outline-variant">
+                  </th>
+                  <th class="ma-th-lg">Mã vận đơn</th>
+                  <th class="ma-th-lg">Đơn hàng</th>
+                  <th class="ma-th-lg">Người nhận</th>
+                  <th class="ma-th-lg">Đối tác</th>
+                  <th class="ma-th-lg">Trạng thái</th>
+                  <th class="px-6 py-3 text-right">COD</th>
+                  <th class="px-6 py-3 text-right">Phí</th>
+                  <th class="ma-th-lg">Ngày đóng gói</th>
+                  <th class="w-44 px-3 py-3 text-right font-label-md uppercase tracking-wider text-on-surface-variant">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody class="ma-rows-divide">
+                <tr v-for="s in shipping.shipmentsList" :key="s.tracking_code + '|' + s.order_id" class="hover:bg-surface-container-low/50 cursor-pointer" @click="openShipmentDetail(s.order_id)">
+                  <td class="px-3 py-3" @click.stop>
+                    <input type="checkbox" :aria-label="'Chọn vận đơn ' + s.tracking_code"
+                           :checked="isShipmentSelected(s.order_id)"
+                           @change="toggleShipmentSelected(s.order_id, $event)"
+                           class="rounded border-outline-variant">
+                  </td>
+                  <td class="px-6 py-4 font-bold text-primary">[[ s.tracking_code ]]</td>
+                  <td data-label="Đơn hàng" class="px-6 py-4 text-body-sm">[[ s.order_id ]]</td>
+                  <td data-label="Người nhận" class="px-6 py-4">
+                    <div class="font-semibold">[[ s.receiver_name || '—' ]]</div>
+                    <div class="text-label-sm text-on-surface-variant">[[ s.receiver_phone ]]</div>
+                  </td>
+                  <td data-label="Đối tác" class="px-6 py-4 text-body-sm">[[ s.carrier || s.carrier_code ]]</td>
+                  <td data-label="Trạng thái" class="px-6 py-4"><span class="ma-badge" :class="'ma-badge--' + (s.status_badge || 'neutral')">[[ s.status_text ]]</span></td>
+                  <td data-label="COD" class="px-6 py-4 text-right">[[ formatMoney(s.cod_amount) ]]</td>
+                  <td data-label="Phí" class="px-6 py-4 text-right">[[ formatMoney(s.shipping_fee) ]]</td>
+                  <td data-label="Ngày đóng gói" class="px-6 py-4 text-body-sm text-on-surface-variant">[[ s.packed_at ? formatDate(s.packed_at) : '—' ]]</td>
+                  <!-- 2026-08-27 cột Thao tác — mẫu ma-icon-btn giống tab Đơn hàng. In tem A6 luôn
+                       hoạt động (fallback template MOPS nếu Goship không trả PDF). Giục giao chỉ hiện
+                       khi đơn còn "sống" (đang lấy/đang giao); Xử lý hoàn chỉ hiện khi đơn đã hoàn/huỷ
+                       giao/chờ giao lại — cả 2 dùng chung ý nghĩa "cần chú ý", không phải action hãng thật. -->
+                  <td class="px-3 py-3" @click.stop>
+                    <div class="flex items-center gap-1 justify-end">
+                      <button @click="openPrintModal(s.order_id)" type="button"
+                              class="ma-icon-btn" aria-label="In vận đơn" title="Tuỳ chỉnh &amp; in vận đơn">
+                        <span class="material-symbols-outlined text-[18px]">print</span>
+                      </button>
+                      <button v-if="['ready_to_pick','delivering'].indexOf(s.fulfillment_status) !== -1"
+                              @click="urgeShipment(s.order_id)" :disabled="labelPrint.urgeBusy === s.order_id" type="button"
+                              class="ma-icon-btn text-amber-600 hover:bg-amber-50" aria-label="Giục giao" title="Giục giao — ghi vào lịch sử vận đơn, không gọi được API đối tác">
+                        <span class="material-symbols-outlined text-[18px]" :class="{ 'ma-spin': labelPrint.urgeBusy === s.order_id }">[[ labelPrint.urgeBusy === s.order_id ? 'progress_activity' : 'bolt' ]]</span>
+                      </button>
+                      <button v-if="['redelivery','delivery_cancelled','returned'].indexOf(s.fulfillment_status) !== -1"
+                              @click="openShipmentDetail(s.order_id)" type="button"
+                              class="ma-icon-btn text-primary" aria-label="Xử lý hoàn/giao lại" title="Xử lý hoàn/giao lại">
+                        <span class="material-symbols-outlined text-[18px]">undo</span>
+                      </button>
+                      <button @click="openShipmentDetail(s.order_id)" type="button"
+                              class="ma-icon-btn" aria-label="Xem chi tiết" title="Xem chi tiết">
+                        <span class="material-symbols-outlined text-[18px]">visibility</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table></div>
+            <p class="text-body-sm text-on-surface-variant px-6 pb-4">[[ shipping.shipmentsList.length ]] / [[ shipping.shipmentsTotal ]] vận đơn</p></div>
+          </div>
+
+          {%- comment -%} ─── DETAIL v2 (2026-08-16) — layout đồng bộ Order/Product/Customer:
+               sticky header + grid 7fr/3fr + card pattern chuẩn. Cột trái: Giao nhận / Sản phẩm /
+               Lịch sử thao tác + timeline. Cột phải sticky top: Tình trạng / Cước & Phí / Ghi chú.
+               Skeleton dựa vào __snapshot cờ do openShipmentDetail seed từ row list để UI không đơ. {%- endcomment -%}
+          <section v-else class="ma-workspace-detail text-on-surface font-body-sm">
+
+            {%- comment -%} STICKY HEADER: back + tracking + status badge + action buttons {%- endcomment -%}
+            <div class="sticky top-0 z-10 flex flex-none items-center gap-3 border-b border-outline-variant bg-surface-container-lowest px-4 py-3 md:px-6">
+              <button @click="closeShipmentDetail" type="button"
+                class="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-label-md font-bold text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span><span class="hidden sm:inline">Danh sách vận đơn</span>
+              </button>
+              <div class="flex min-w-0 flex-1 items-center gap-2 truncate text-body-sm text-on-surface-variant">
+                <span>Vận đơn</span><span class="text-outline">/</span>
+                <span class="truncate font-semibold font-mono text-primary">[[ shipping.shipmentDetail.tracking_code || '—' ]]</span>
+                <span v-if="shipping.shipmentDetail.status_text" class="ma-badge shrink-0" :class="'ma-badge--' + (shipping.shipmentDetail.status_badge || 'neutral')">[[ shipping.shipmentDetail.status_text ]]</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button @click="refreshShipmentStatus" :disabled="shipping.detailActing" type="button"
+                  class="inline-flex items-center gap-1.5 border border-outline-variant px-3 py-1.5 rounded-lg text-label-md font-bold hover:bg-surface-container-high transition-colors disabled:opacity-50" title="Nạp lại trạng thái từ đối tác vận chuyển">
+                  <span class="material-symbols-outlined text-[16px]" :class="{ 'ma-spin': shipping.detailActing }">refresh</span>
+                  <span class="hidden sm:inline">[[ shipping.detailActing ? 'Đang nạp…' : 'Nạp lại' ]]</span>
+                </button>
+                <button @click="openPrintModal(shipping.shipmentDetail.order_id)" type="button"
+                  class="inline-flex items-center gap-1.5 border border-primary/40 bg-primary/5 text-primary px-3 py-1.5 rounded-lg text-label-md font-bold hover:bg-primary/10 transition-colors disabled:opacity-50">
+                  <span class="material-symbols-outlined text-[16px]">print</span>
+                  <span class="hidden sm:inline">In vận đơn</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="p-4 md:p-6">
+              <div v-if="shipping.detailLoading && shipping.shipmentDetail.__snapshot" class="mb-4 flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-low px-3 py-2 text-label-sm text-on-surface-variant" role="status">
+                <span class="material-symbols-outlined ma-spin text-[16px]">progress_activity</span>Đang tải chi tiết vận đơn…
+              </div>
+
+              {%- comment -%} GRID 7fr/3fr — stack trên mobile, sticky cột phụ trên xl. {%- endcomment -%}
+              <div class="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]">
+
+                {%- comment -%} ═══════════ CỘT CHÍNH (7fr) ═══════════ {%- endcomment -%}
+                <div class="flex min-w-0 flex-col gap-4">
+
+                  {%- comment -%} CARD 1: THÔNG TIN GIAO NHẬN {%- endcomment -%}
+                  <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+                    <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+                      <span class="material-symbols-outlined text-[18px] text-on-surface-variant">local_shipping</span>
+                      <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Thông tin giao nhận</div>
+                      <span v-if="shipping.shipmentDetail.order_id" class="ml-auto text-label-sm font-mono text-on-surface-variant">Đơn [[ shipping.shipmentDetail.order_id ]]</span>
+                    </div>
+                    <div v-if="shipping.detailLoading && shipping.shipmentDetail.__snapshot && !shipping.shipmentDetail.shipping_address" class="ma-component-skeleton" aria-label="Đang tải thông tin giao nhận"><span class="ma-component-skeleton__line"></span><span class="ma-component-skeleton__line"></span><span class="ma-component-skeleton__line"></span></div>
+                    <div v-else class="px-3 py-1">
+                      <div class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[160px_minmax(0,1fr)] sm:gap-3">
+                        <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Người nhận</div>
+                        <div class="min-w-0 text-body-sm font-semibold text-on-surface">[[ (shipping.shipmentDetail.shipping_address && shipping.shipmentDetail.shipping_address.receiver_name) || (shipping.shipmentDetail.order && shipping.shipmentDetail.order.customer_name) || shipping.shipmentDetail.receiver_name || '—' ]]</div>
+                      </div>
+                      <div class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[160px_minmax(0,1fr)] sm:gap-3">
+                        <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Số điện thoại</div>
+                        <div class="min-w-0 text-body-sm font-mono text-on-surface">[[ (shipping.shipmentDetail.shipping_address && shipping.shipmentDetail.shipping_address.phone) || (shipping.shipmentDetail.order && shipping.shipmentDetail.order.customer_phone) || shipping.shipmentDetail.receiver_phone || '—' ]]</div>
+                      </div>
+                      <div v-if="shipping.shipmentDetail.shipping_address" class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[160px_minmax(0,1fr)] sm:gap-3">
+                        <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Địa chỉ giao</div>
+                        <div class="min-w-0 text-body-sm text-on-surface">[[ [shipping.shipmentDetail.shipping_address.address, shipping.shipmentDetail.shipping_address.ward, shipping.shipmentDetail.shipping_address.district, shipping.shipmentDetail.shipping_address.province].filter(function(v){return v;}).join(', ') ]]</div>
+                      </div>
+                      <div class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[160px_minmax(0,1fr)] sm:gap-3">
+                        <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Hình thức giao</div>
+                        <div class="min-w-0 text-body-sm text-on-surface">[[ shipping.shipmentDetail.carrier || shipping.shipmentDetail.carrier_code || '—' ]]<template v-if="shipping.shipmentDetail.shipping_service_id"> · <span class="font-mono text-on-surface-variant">[[ shipping.shipmentDetail.shipping_service_id ]]</span></template></div>
+                      </div>
+                      <div class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[160px_minmax(0,1fr)] sm:gap-3">
+                        <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Ngày đóng gói</div>
+                        <div class="min-w-0 text-body-sm font-mono text-on-surface">[[ shipping.shipmentDetail.packed_at ? formatDate(shipping.shipmentDetail.packed_at) : '—' ]]</div>
+                      </div>
+                      <div v-if="shipping.shipmentDetail.last_tracked_at" class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[160px_minmax(0,1fr)] sm:gap-3">
+                        <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Cập nhật gần nhất</div>
+                        <div class="min-w-0 text-body-sm font-mono text-on-surface-variant">[[ formatDate(new Date(shipping.shipmentDetail.last_tracked_at * 1000)) ]]</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {%- comment -%} CARD 2: PHIẾU ĐÓNG GÓI — items table + totals {%- endcomment -%}
+                  <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+                    <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+                      <span class="material-symbols-outlined text-[18px] text-on-surface-variant">inventory_2</span>
+                      <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Phiếu đóng gói</div>
+                      <span v-if="shipping.shipmentDetail.order && shipping.shipmentDetail.order.items" class="ml-auto text-label-sm text-on-surface-variant">[[ shipping.shipmentDetail.order.items.length ]] mặt hàng</span>
+                    </div>
+                    <div v-if="shipping.detailLoading && shipping.shipmentDetail.__snapshot && !(shipping.shipmentDetail.order && shipping.shipmentDetail.order.items && shipping.shipmentDetail.order.items.length)" class="ma-component-skeleton ma-component-skeleton--table" aria-label="Đang tải phiếu đóng gói"></div>
+                    <template v-else>
+                      <div class="overflow-x-auto p-2.5">
+                        <table class="min-w-[520px] w-full text-left text-body-sm">
+                          <thead>
+                            <tr>
+                              <th class="w-[46%]">Sản phẩm</th>
+                              <th class="font-mono">SKU</th>
+                              <th class="text-right tabular-nums">Đơn giá</th>
+                              <th class="text-right tabular-nums">SL</th>
+                              <th class="text-right tabular-nums">Thành tiền</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr v-for="it in (shipping.shipmentDetail.order && shipping.shipmentDetail.order.items || [])" :key="it.id || it.sku">
+                              <td>
+                                <div class="font-semibold text-on-surface">[[ it.name ]]</div>
+                                <div v-if="it.variant_title" class="mt-0.5 text-label-sm text-on-surface-variant">[[ it.variant_title ]]</div>
+                              </td>
+                              <td class="font-mono text-label-sm text-on-surface-variant">[[ it.sku || '—' ]]</td>
+                              <td class="text-right font-mono tabular-nums">[[ formatMoney(it.price) ]]</td>
+                              <td class="text-right tabular-nums">[[ it.qty ]]</td>
+                              <td class="text-right font-bold font-mono tabular-nums">[[ formatMoney(it.lineTotal || (it.price * (it.qty || 1))) ]]</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div class="border-t border-outline-variant px-3 py-3 space-y-1">
+                        <div v-if="shipping.shipmentDetail.order && shipping.shipmentDetail.order.merchandise_amount != null" class="flex items-center justify-between gap-3 text-body-sm text-on-surface-variant">
+                          <span>Tạm tính</span>
+                          <span class="font-mono">[[ formatMoney(shipping.shipmentDetail.order.merchandise_amount + (shipping.shipmentDetail.order.discount_amount || 0)) ]]</span>
+                        </div>
+                        <div v-if="shipping.shipmentDetail.order && shipping.shipmentDetail.order.discount_amount" class="flex items-center justify-between gap-3 text-body-sm text-error">
+                          <span>Chiết khấu</span>
+                          <span class="font-mono">−[[ formatMoney(shipping.shipmentDetail.order.discount_amount) ]]</span>
+                        </div>
+                        <div v-if="shipping.shipmentDetail.order && shipping.shipmentDetail.order.customer_shipping_fee != null" class="flex items-center justify-between gap-3 text-body-sm text-on-surface-variant">
+                          <span>Phí vận chuyển</span>
+                          <span class="font-mono">[[ formatMoney(shipping.shipmentDetail.order.customer_shipping_fee) ]]</span>
+                        </div>
+                        <div class="mt-2 flex items-center justify-between gap-3 border-t border-outline-variant pt-2 text-body-md font-bold text-on-surface">
+                          <span>Khách phải trả</span>
+                          <span class="font-mono">[[ formatMoney(shipping.shipmentDetail.order && shipping.shipmentDetail.order.total_amount) ]]</span>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+
+                  {%- comment -%} CARD 3: LỊCH SỬ THAO TÁC & TRẠNG THÁI — merge timeline (webhook ĐVVC)
+                       + activity_logs (thao tác nội bộ) trong 1 khối, phân bằng badge type. {%- endcomment -%}
+                  <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+                    <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+                      <span class="material-symbols-outlined text-[18px] text-on-surface-variant">schedule</span>
+                      <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Lịch sử &amp; trạng thái</div>
+                      <span class="ml-auto text-label-sm text-on-surface-variant">[[ (shipping.shipmentDetail.timeline || []).length ]] cập nhật · [[ (shipping.shipmentDetail.activity_logs || []).length ]] thao tác</span>
+                    </div>
+                    <div v-if="shipping.detailLoading && shipping.shipmentDetail.__snapshot && !((shipping.shipmentDetail.timeline || []).length || (shipping.shipmentDetail.activity_logs || []).length)" class="ma-component-skeleton" aria-label="Đang tải lịch sử"><span class="ma-component-skeleton__line"></span><span class="ma-component-skeleton__line"></span><span class="ma-component-skeleton__line"></span></div>
+                    <div v-else class="px-3 py-3">
+                      <div v-if="!(shipping.shipmentDetail.timeline || []).length && !(shipping.shipmentDetail.activity_logs || []).length" class="ma-component-empty">
+                        <span class="material-symbols-outlined">schedule</span>
+                        <span>Chưa có cập nhật nào từ đối tác hoặc nội bộ.</span>
+                      </div>
+                      <template v-else>
+                        {%- comment -%} 2026-08-29: grid 2 cột (Trạng thái từ đối tác | Thao tác nội bộ)
+                             thay vì xếp chồng dọc — staff dễ đối chiếu mốc thời gian ĐVVC báo với hành
+                             động nội bộ tương ứng. Mobile giữ 1 cột xếp dọc. {%- endcomment -%}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div v-if="(shipping.shipmentDetail.timeline || []).length">
+                            <div class="mb-2 text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Trạng thái từ đối tác</div>
+                            <ol class="space-y-3 border-l-2 border-outline-variant pl-4">
+                              <li v-for="(t, idx) in shipping.shipmentDetail.timeline" :key="(t.history_id || '') + '|' + idx" class="relative">
+                                <div class="absolute -left-[25px] top-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full border border-primary/30 bg-primary-container text-on-primary-container"><span class="material-symbols-outlined text-[10px]">local_shipping</span></div>
+                                <div class="min-w-0">
+                                  <div class="text-body-sm font-semibold text-on-surface">[[ t.status_text || t.status_raw ]]</div>
+                                  <div class="mt-0.5 text-label-sm text-on-surface-variant font-mono">[[ formatDate(t.update_time ? new Date(t.update_time * 1000) : t.created_at) ]]<template v-if="t.source"> · <span>[[ t.source ]]</span></template></div>
+                                  <div v-if="t.note" class="mt-1 text-label-sm text-on-surface-variant">[[ t.note ]]</div>
+                                </div>
+                              </li>
+                            </ol>
+                          </div>
+                          <div v-if="(shipping.shipmentDetail.activity_logs || []).length">
+                            <div class="mb-2 text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Thao tác nội bộ</div>
+                            <ol class="space-y-3 border-l-2 border-outline-variant pl-4">
+                              <li v-for="a in shipping.shipmentDetail.activity_logs" :key="a.log_id" class="relative">
+                                <div class="absolute -left-[25px] top-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full border border-outline-variant bg-surface-container-low text-on-surface-variant"><span class="material-symbols-outlined text-[10px]">person</span></div>
+                                <div class="min-w-0">
+                                  <div class="text-body-sm font-semibold text-on-surface">[[ a.label ]]</div>
+                                  <div class="mt-0.5 text-label-sm text-on-surface-variant font-mono">[[ formatDate(a.created_at) ]] · [[ a.user || 'Hệ thống' ]]</div>
+                                </div>
+                              </li>
+                            </ol>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+
+                </div>
+
+                {%- comment -%} ═══════════ CỘT PHỤ (3fr, sticky top xl) ═══════════ {%- endcomment -%}
+                <div class="flex min-w-0 flex-col gap-4 xl:sticky xl:top-16 xl:self-start">
+
+                  {%- comment -%} CARD A: TÌNH TRẠNG ĐƠN (status badge + Nạp lại hint) {%- endcomment -%}
+                  <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+                    <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+                      <span class="material-symbols-outlined text-[18px] text-on-surface-variant">flag</span>
+                      <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Tình trạng đơn</div>
+                    </div>
+                    <div class="p-3">
+                      <div class="rounded-lg border border-outline-variant bg-surface-container-low px-3 py-3 flex items-center gap-2">
+                        <span class="ma-badge" :class="'ma-badge--' + (shipping.shipmentDetail.status_badge || 'neutral')">[[ shipping.shipmentDetail.status_text || 'Chưa xác định' ]]</span>
+                      </div>
+                      <p class="mt-2 text-label-sm text-on-surface-variant">Trạng thái tự cập nhật khi đối tác gửi webhook. Bấm <b>Nạp lại</b> ở header để hỏi ngay.</p>
+                    </div>
+                  </div>
+
+                  {%- comment -%} CARD B: CƯỚC & PHÍ — KV rows chuẩn + link tracking url {%- endcomment -%}
+                  <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+                    <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+                      <span class="material-symbols-outlined text-[18px] text-on-surface-variant">payments</span>
+                      <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Cước &amp; Phí</div>
+                    </div>
+                    <div class="px-3 py-1">
+                      <div class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[130px_minmax(0,1fr)] sm:gap-3">
+                        <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Tiền thu hộ COD</div>
+                        <div class="min-w-0 text-body-sm font-bold font-mono text-on-surface">[[ formatMoney(shipping.shipmentDetail.cod_amount) ]]</div>
+                      </div>
+                      <div class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[130px_minmax(0,1fr)] sm:gap-3">
+                        <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Phí trả ĐTVC</div>
+                        <div class="min-w-0 text-body-sm font-mono text-on-surface">[[ formatMoney(shipping.shipmentDetail.shipping_fee) ]]</div>
+                      </div>
+                      <div class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[130px_minmax(0,1fr)] sm:gap-3">
+                        <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Đóng gói</div>
+                        <div class="min-w-0 text-body-sm text-on-surface"><span class="font-mono">[[ shipping.shipmentDetail.package_weight ? shipping.shipmentDetail.package_weight + 'g' : '—' ]]</span><template v-if="shipping.shipmentDetail.package_dims"> · <span class="font-mono">[[ shipping.shipmentDetail.package_dims ]] cm</span></template></div>
+                      </div>
+                      <div class="grid grid-cols-1 gap-1 border-b border-outline-variant/60 py-2 last:border-b-0 sm:grid-cols-[130px_minmax(0,1fr)] sm:gap-3">
+                        <div class="text-label-sm font-bold uppercase tracking-wider text-on-surface-variant">Đối soát</div>
+                        <div class="min-w-0 text-body-sm">
+                          <template v-if="shipping.shipmentDetail.reconciliation">
+                            <button @click="openReconDetail(shipping.shipmentDetail.reconciliation.recon_id); shipping.subtab = 'recon'" type="button" class="font-mono font-bold text-primary hover:underline">[[ shipping.shipmentDetail.reconciliation.recon_id ]]</button>
+                            <div class="text-label-sm text-on-surface-variant mt-0.5">[[ shipping.shipmentDetail.reconciliation.status ]]</div>
+                          </template>
+                          <span v-else class="ma-badge ma-badge--neutral">Chưa đối soát</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div v-if="shipping.shipmentDetail.tracking_url" class="border-t border-outline-variant p-3">
+                      <a :href="shipping.shipmentDetail.tracking_url" target="_blank" rel="noopener"
+                        class="inline-flex items-center gap-1.5 text-primary font-bold text-label-md hover:underline">
+                        <span class="material-symbols-outlined text-[16px]">open_in_new</span>Xem hành trình đầy đủ ở ĐTVC
+                      </a>
+                    </div>
+                  </div>
+
+                  {%- comment -%} CARD C: GHI CHÚ ĐƠN (từ khách khi đặt) {%- endcomment -%}
+                  <div class="overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
+                    <div class="flex items-center gap-2 border-b border-outline-variant bg-surface-container-low px-3 py-2.5">
+                      <span class="material-symbols-outlined text-[18px] text-on-surface-variant">sticky_note_2</span>
+                      <div class="text-label-md font-bold uppercase tracking-wider text-on-surface">Ghi chú đơn</div>
+                    </div>
+                    <div class="p-3">
+                      <p v-if="shipping.shipmentDetail.order && shipping.shipmentDetail.order.customer_note" class="text-body-sm text-on-surface whitespace-pre-line">[[ shipping.shipmentDetail.order.customer_note ]]</p>
+                      <p v-else class="text-body-sm text-on-surface-variant opacity-70">Không có ghi chú từ khách.</p>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+            </div>
+          </section>
+        </div>
+
+        
+        <div v-show="shipping.subtab === 'recon'">
+          
+          <div v-if="shipping.detailLoading" class="ma-loading-center"><span class="material-symbols-outlined text-primary ma-spin text-[32px]">progress_activity</span></div>
+          
+          <div v-else-if="!shipping.detail">
+            <button type="button" @click="mobileFilterOpen = true"
+              class="ma-filter-trigger items-center gap-2 w-full justify-center mb-stack-md p-3 bg-surface-bright border border-outline-variant rounded-xl text-body-sm font-bold text-on-surface active:scale-95 transition-all">
+              <span class="material-symbols-outlined text-[18px]">tune</span><span>Bộ lọc</span>
+              <span v-if="shipping.filterStatus" class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-label-sm font-bold bg-primary text-white">1</span>
+            </button>
+            <div class="ma-toolbar ma-toolbar--sheet flex flex-wrap items-center gap-stack-md mb-stack-lg p-4 bg-surface-bright border border-outline-variant rounded-xl" :class="{ 'is-filter-open': mobileFilterOpen }">
+              <div class="ma-filter-sheet-head"><span class="text-title-sm font-bold text-on-surface">Bộ lọc đối soát</span><button type="button" @click="mobileFilterOpen = false" class="w-8 h-8 inline-flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">close</span></button></div>
+              <select v-model="shipping.filterStatus" @change="loadReconciliations" class="min-w-[160px] bg-surface-container-lowest border border-outline-variant text-body-sm rounded-lg px-3 py-2">
+                <option value="">Tất cả trạng thái</option>
+                <option value="Chờ đối soát">Chờ đối soát</option>
+                <option value="Đã đối soát">Đã đối soát</option>
+              </select>
+              <button @click="loadReconciliations(); mobileFilterOpen = false" type="button" class="ma-btn-primary">Tải lại</button>
+              <button @click="openReconCreate" type="button" class="inline-flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-bold text-label-md hover:opacity-90 transition-all active:scale-95 ml-auto">
+                <span class="material-symbols-outlined text-[18px]">add</span>Tạo phiếu đối soát
+              </button>
+            </div>
+            <div class="ma-filter-backdrop" v-if="mobileFilterOpen" @click="mobileFilterOpen = false"></div>
+            <div v-if="shipping.reconLoading" class="ma-table-skeleton" aria-label="Đang tải đối soát vận chuyển"><span></span><span></span><span></span><span></span></div>
+            <div v-else-if="shippingReconEmpty" class="ma-empty-state">
+              <span class="material-symbols-outlined text-on-surface-variant text-[56px] opacity-[.35]">receipt_long</span>
+              <p class="ma-empty-hint">[[ shippingReconEmpty ]]</p>
+            </div>
+            <div v-else class="ma-card"><div class="overflow-x-auto"><table class="ma-table ma-data-table">
+              <thead><tr class="ma-thead-row">
+                <th class="ma-th-lg">Mã phiếu</th><th class="ma-th-lg">Đối tác</th><th class="ma-th-lg">Trạng thái</th>
+                <th class="ma-th-lg">Thanh toán</th><th class="px-6 py-3 text-right">Thực nhận/trả</th><th class="ma-th-lg">Ngày tạo</th><th class="px-6 py-3"></th>
+              </tr></thead>
+              <tbody class="ma-rows-divide">
+                <tr v-for="r in shipping.reconList" :key="r.recon_id" class="hover:bg-surface-container-low/50 cursor-pointer" @click="openReconDetail(r.recon_id)">
+                  <td class="px-6 py-4 font-bold text-primary">[[ r.recon_id ]]</td>
+                  <td data-label="Đối tác" class="px-6 py-4">[[ r.carrier_code ]]</td>
+                  <td data-label="Trạng thái" class="px-6 py-4"><span class="inline-block px-2 py-0.5 rounded-full text-label-sm font-semibold" :class="shipStatusBadge(r.status)">[[ r.status ]]</span></td>
+                  <td data-label="Thanh toán" class="px-6 py-4 text-body-sm">[[ r.payment_status ]]</td>
+                  <td data-label="Thực nhận/trả" class="px-6 py-4 text-right font-bold" :class="r.net_total < 0 ? 'text-error' : ''">[[ formatMoney(r.net_total) ]]</td>
+                  <td data-label="Ngày tạo" class="px-6 py-4 text-body-sm text-on-surface-variant">[[ formatDate(r.created_at) ]]</td>
+                  <td class="px-6 py-4 text-right"><span class="material-symbols-outlined text-on-surface-variant">chevron_right</span></td>
+                </tr>
+              </tbody>
+            </table></div>
+            <p class="text-body-sm text-on-surface-variant px-6 pb-4">[[ shipping.reconList.length ]] phiếu đối soát</p></div>
+          </div>
+
+          
+          <div v-else class="ma-card p-stack-lg">
+            <button @click="shipping.detail = null" type="button" class="inline-flex items-center gap-1 text-primary font-bold text-label-md mb-3 hover:underline"><span class="material-symbols-outlined text-[18px]">arrow_back</span>Về danh sách</button>
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div>
+                <h3 class="text-heading-sm font-bold">Phiếu [[ shipping.detail.recon_id ]] · [[ shipping.detail.carrier_code ]]</h3>
+                <span class="inline-block mt-1 px-2 py-0.5 rounded-full text-label-sm font-semibold" :class="shipStatusBadge(shipping.detail.status)">[[ shipping.detail.status ]]</span>
+                <span class="ml-2 text-body-sm text-on-surface-variant">[[ shipping.detail.payment_status ]]</span>
+              </div>
+              <div class="flex gap-2">
+                <button v-if="shipping.detail.status === 'Chờ đối soát'" @click="confirmRecon" :disabled="shipping.acting || shipping.detail.has_discrepancy" type="button" class="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold text-label-md hover:bg-emerald-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                  <span class="material-symbols-outlined text-[18px]">fact_check</span>Xác nhận đối soát
+                </button>
+                <button v-if="shipping.detail.status === 'Đã đối soát' && shipping.detail.payment_status !== 'Đã thanh toán'" @click="payRecon" :disabled="shipping.acting" type="button" class="inline-flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg font-bold text-label-md hover:opacity-90 transition-all disabled:opacity-40">
+                  <span class="material-symbols-outlined text-[18px]">payments</span>Thanh toán công nợ
+                </button>
+              </div>
+            </div>
+            <div v-if="shipping.detail.has_discrepancy" class="mb-3 px-3 py-2 rounded-lg bg-error-container text-on-error-container text-body-sm font-semibold">⚠️ Còn chênh lệch COD/Phí — sửa giá trị đối tác cho khớp (chênh lệch = 0) trước khi xác nhận.</div>
+
+            
+            <div v-if="shipping.detail.carrier_code === 'GOSHIP' && shipping.detail.status === 'Chờ đối soát'"
+              class="mb-4 p-3 rounded-lg bg-surface-container-lowest border border-outline-variant">
+              <div class="flex flex-wrap items-end gap-2">
+                <div class="min-w-0 flex-1">
+                  <label class="text-label-md font-bold">Nạp số liệu thực từ Goship</label>
+                  <select v-model="shipping.goshipInvoiceCode" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm">
+                    <option value="">— Chọn kỳ đối soát Goship —</option>
+                    <option v-for="inv in shipping.goshipInvoices" :key="inv.id" :value="inv.id">[[ inv.id ]] · [[ formatMoney(inv.amount) ]] · [[ inv.count ]] vận đơn</option>
+                  </select>
+                </div>
+                <button @click="loadGoshipInvoices" :disabled="shipping.goshipLoading" type="button" class="h-9 px-3 rounded-lg border border-outline-variant font-bold text-label-md hover:bg-surface-container-high transition-colors disabled:opacity-40">
+                  <span class="material-symbols-outlined text-[18px] align-middle" :class="shipping.goshipLoading ? 'ma-spin' : ''">refresh</span> Tải kỳ
+                </button>
+                <button @click="importGoshipInvoice" :disabled="!shipping.goshipInvoiceCode || shipping.goshipImporting" type="button" class="h-9 px-4 rounded-lg bg-primary text-on-primary font-bold text-label-md hover:opacity-90 transition-all disabled:opacity-40">
+                  <span class="material-symbols-outlined text-[18px] align-middle">download</span> [[ shipping.goshipImporting ? 'Đang nạp…' : 'Nạp số liệu' ]]
+                </button>
+              </div>
+              <p class="text-label-sm ma-text-sub mt-2">Nạp xong vẫn phải kiểm lại: dòng nào Goship không có sẽ giữ nguyên và hiện chênh lệch đỏ.</p>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              <div class="p-3 rounded-lg bg-surface-container-lowest border border-outline-variant"><div class="ma-text-sub">COD đối tác</div><div class="font-bold">[[ formatMoney(shipping.detail.total_cod_partner) ]]</div></div>
+              <div class="p-3 rounded-lg bg-surface-container-lowest border border-outline-variant"><div class="ma-text-sub">Phí đối tác</div><div class="font-bold">[[ formatMoney(shipping.detail.total_fee_partner) ]]</div></div>
+              <div class="p-3 rounded-lg bg-surface-container-lowest border border-outline-variant"><div class="ma-text-sub">Phí khác</div><div class="font-bold">[[ formatMoney(shipping.detail.total_other) ]]</div></div>
+              <div class="p-3 rounded-lg bg-primary/5 border border-primary/30"><div class="ma-text-sub">Thực nhận/trả</div><div class="font-bold text-lg" :class="shipping.detail.net_total < 0 ? 'text-error' : 'text-primary'">[[ formatMoney(shipping.detail.net_total) ]]</div></div>
+            </div>
+            
+            <div class="overflow-x-auto"><table class="ma-table ma-data-table text-body-sm">
+              <thead><tr class="ma-thead-row">
+                <th class="px-3 py-2">Mã vận đơn</th>
+                <th class="px-3 py-2 text-right">COD hệ thống</th><th class="px-3 py-2 text-right">COD đối tác</th>
+                <th class="px-3 py-2 text-right">Phí hệ thống</th><th class="px-3 py-2 text-right">Phí đối tác</th>
+                <th class="px-3 py-2 text-right">Phí khác</th><th class="px-3 py-2 text-right">Chênh lệch</th><th class="px-3 py-2"></th>
+              </tr></thead>
+              <tbody class="ma-rows-divide">
+                <tr v-for="it in shipping.detail.items" :key="it.item_id">
+                  <td class="px-3 py-2 font-semibold">[[ it.tracking_code ]]<div class="ma-text-sub">[[ it.order_id ]]</div></td>
+                  <td class="px-3 py-2 text-right">[[ formatMoney(it.cod_system) ]]</td>
+                  <td class="px-3 py-2 text-right">
+                    <input v-if="shipping.detail.status === 'Chờ đối soát'" type="number" v-model.number="it.cod_partner" class="w-24 px-2 py-1 text-right border border-outline-variant rounded bg-surface">
+                    <span v-else>[[ formatMoney(it.cod_partner) ]]</span>
+                  </td>
+                  <td class="px-3 py-2 text-right">[[ formatMoney(it.fee_system) ]]</td>
+                  <td class="px-3 py-2 text-right">
+                    <input v-if="shipping.detail.status === 'Chờ đối soát'" type="number" v-model.number="it.fee_partner" class="w-24 px-2 py-1 text-right border border-outline-variant rounded bg-surface">
+                    <span v-else>[[ formatMoney(it.fee_partner) ]]</span>
+                  </td>
+                  <td class="px-3 py-2 text-right">
+                    <input v-if="shipping.detail.status === 'Chờ đối soát'" type="number" v-model.number="it.other_fee" class="w-20 px-2 py-1 text-right border border-outline-variant rounded bg-surface">
+                    <span v-else>[[ formatMoney(it.other_fee) ]]</span>
+                  </td>
+                  <td class="px-3 py-2 text-right font-bold" :class="(it.cod_diff !== 0 || it.fee_diff !== 0) ? 'text-error' : 'text-emerald-600'">
+                    <span v-if="it.cod_diff !== 0">COD [[ formatMoney(it.cod_diff) ]]<br></span>
+                    <span v-if="it.fee_diff !== 0">Phí [[ formatMoney(it.fee_diff) ]]</span>
+                    <span v-if="it.cod_diff === 0 && it.fee_diff === 0">Khớp</span>
+                  </td>
+                  <td class="px-3 py-2 text-right">
+                    <button v-if="shipping.detail.status === 'Chờ đối soát'" @click="saveReconItem(it)" :disabled="shipping.acting" type="button" class="px-2 py-1 rounded bg-primary/10 text-primary font-bold text-label-sm hover:bg-primary/20 transition-colors">Lưu</button>
+                    <!-- In vận đơn — chỉ cần item có order_id, không còn giới hạn theo carrier vì modal tự dựng cả 3 layout. -->
+                    <button v-if="it.order_id" @click="openPrintModal(it.order_id)" type="button" class="ml-1 px-2 py-1 rounded border border-outline-variant text-label-sm text-on-surface hover:bg-surface-container-low disabled:opacity-50" title="Tuỳ chỉnh &amp; in vận đơn">
+                      <span class="material-symbols-outlined text-[14px] align-middle">print</span>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table></div>
+          </div>
+
+          
+          <div v-if="shipping.createForm.show" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" @click.self="shipping.createForm.show = false">
+            <div class="bg-surface-bright rounded-2xl shadow-xl max-w-md w-full p-stack-lg">
+              <h3 class="text-heading-sm font-bold mb-4">Tạo phiếu đối soát</h3>
+              <p class="text-body-sm text-on-surface-variant mb-3">Kéo mọi vận đơn Đã giao/Đã hoàn của đối tác trong khoảng thời gian, chưa nằm trong phiếu nào.</p>
+              <div class="space-y-3">
+                <div>
+                  <label class="text-label-md font-bold">Đối tác vận chuyển</label>
+                  <select v-model="shipping.createForm.carrier_code" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm">
+                    <option v-for="c in shipping.carriers" :key="c.carrier_code" :value="c.carrier_code">[[ c.name ]]</option>
+                    <option v-if="!shipping.carriers.length" value="GHN">GHN</option>
+                  </select>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div><label class="text-label-md font-bold">Từ ngày</label><input type="date" v-model="shipping.createForm.from" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm"></div>
+                  <div><label class="text-label-md font-bold">Đến ngày</label><input type="date" v-model="shipping.createForm.to" class="w-full h-9 mt-1 px-3 rounded-lg border border-outline-variant bg-surface text-body-sm"></div>
+                </div>
+              </div>
+              <div class="flex gap-2 mt-5">
+                <button @click="submitReconCreate" :disabled="shipping.createForm.creating" type="button" class="flex-1 bg-primary text-on-primary py-2.5 rounded-lg font-bold text-label-md hover:opacity-90 disabled:opacity-40">[[ shipping.createForm.creating ? 'Đang tạo...' : 'Tạo phiếu' ]]</button>
+                <button @click="shipping.createForm.show = false" type="button" class="px-4 py-2.5 rounded-lg bg-surface-container-lowest border border-outline-variant font-bold text-label-md">Huỷ</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        
+        <div v-show="shipping.subtab === 'report'">
+          <button type="button" @click="mobileFilterOpen = true"
+            class="ma-filter-trigger items-center gap-2 w-full justify-center mb-stack-md p-3 bg-surface-bright border border-outline-variant rounded-xl text-body-sm font-bold text-on-surface active:scale-95 transition-all">
+            <span class="material-symbols-outlined text-[18px]">tune</span><span>Bộ lọc</span>
+            <span v-if="(shipping.reportFrom?1:0)+(shipping.reportTo?1:0)" class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-label-sm font-bold bg-primary text-white">[[ (shipping.reportFrom?1:0)+(shipping.reportTo?1:0) ]]</span>
+          </button>
+          <div class="ma-toolbar ma-toolbar--sheet flex flex-wrap items-center gap-stack-md mb-stack-lg p-4 bg-surface-bright border border-outline-variant rounded-xl" :class="{ 'is-filter-open': mobileFilterOpen }">
+            <div class="ma-filter-sheet-head"><span class="text-title-sm font-bold text-on-surface">Bộ lọc báo cáo</span><button type="button" @click="mobileFilterOpen = false" class="w-8 h-8 inline-flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant"><span class="material-symbols-outlined text-[20px]">close</span></button></div>
+            <label class="ma-text-sub">Từ</label><input type="date" v-model="shipping.reportFrom" class="ma-input-inline">
+            <label class="ma-text-sub">đến</label><input type="date" v-model="shipping.reportTo" class="ma-input-inline">
+            <button @click="loadShippingReport(); mobileFilterOpen = false" type="button" class="ma-btn-primary">Xem báo cáo</button>
+          </div>
+          <div class="ma-filter-backdrop" v-if="mobileFilterOpen" @click="mobileFilterOpen = false"></div>
+          <div v-if="shipping.reportLoading" class="ma-table-skeleton" aria-label="Đang tải báo cáo vận chuyển"><span></span><span></span><span></span><span></span></div>
+          <div v-else-if="shipping.report && !shipping.report.total_waybills" class="ma-empty-state">
+            <span class="material-symbols-outlined text-on-surface-variant text-[56px] opacity-[.35]">local_shipping</span>
+            <p class="ma-empty-hint">Chưa có vận đơn nào trong khoảng thời gian này.</p>
+          </div>
+          <div v-else-if="shipping.report">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+              <div class="p-3 rounded-lg bg-surface-container-lowest border border-outline-variant"><div class="ma-text-sub">Tổng vận đơn</div><div class="font-bold text-lg">[[ shipping.report.total_waybills ]]</div></div>
+              <div class="p-3 rounded-lg bg-surface-container-lowest border border-outline-variant"><div class="ma-text-sub">Tổng phí ship</div><div class="font-bold text-lg">[[ formatMoney(shipping.report.total_fee) ]]</div></div>
+              <div class="p-3 rounded-lg bg-surface-container-lowest border border-outline-variant"><div class="ma-text-sub">Tổng COD</div><div class="font-bold text-lg">[[ formatMoney(shipping.report.total_cod) ]]</div></div>
+              <div class="p-3 rounded-lg bg-surface-container-lowest border border-outline-variant"><div class="ma-text-sub">Phí TB/đơn</div><div class="font-bold text-lg">[[ formatMoney(shipping.report.avg_fee) ]]</div></div>
+              <div class="p-3 rounded-lg bg-primary/5 border border-primary/30"><div class="ma-text-sub">% giao thành công</div><div class="font-bold text-lg text-primary">[[ shipping.report.success_rate ]]%</div></div>
+            </div>
+            <div class="ma-card"><div class="overflow-x-auto"><table class="ma-table ma-data-table">
+              <thead><tr class="ma-thead-row">
+                <th class="ma-th-lg">Đối tác</th><th class="px-6 py-3 text-right">Vận đơn</th><th class="px-6 py-3 text-right">Tỉ trọng VĐ</th>
+                <th class="px-6 py-3 text-right">Tổng phí</th><th class="px-6 py-3 text-right">Tỉ trọng phí</th>
+                <th class="px-6 py-3 text-right">Phí TB</th><th class="px-6 py-3 text-right">Phí/COD</th><th class="px-6 py-3 text-right">% giao TC</th>
+              </tr></thead>
+              <tbody class="ma-rows-divide">
+                <tr v-for="c in shipping.report.by_carrier" :key="c.carrier">
+                  <td class="px-6 py-4 font-bold">[[ c.carrier ]]</td>
+                  <td data-label="Vận đơn" class="px-6 py-4 text-right">[[ c.waybills ]]</td>
+                  <td data-label="Tỉ trọng VĐ" class="px-6 py-4 text-right">[[ c.waybill_share ]]%</td>
+                  <td data-label="Tổng phí" class="px-6 py-4 text-right">[[ formatMoney(c.fee) ]]</td>
+                  <td data-label="Tỉ trọng phí" class="px-6 py-4 text-right">[[ c.fee_share ]]%</td>
+                  <td data-label="Phí TB" class="px-6 py-4 text-right">[[ formatMoney(c.avg_fee) ]]</td>
+                  <td data-label="Phí/COD" class="px-6 py-4 text-right">[[ c.fee_cod_ratio ]]</td>
+                  <td data-label="% giao TC" class="px-6 py-4 text-right font-semibold">[[ c.success_rate ]]%</td>
+                </tr>
+              </tbody>
+            </table></div></div>
+          </div>
+          <div v-else class="ma-empty-state"><p class="ma-empty-hint">Chọn khoảng thời gian rồi bấm "Xem báo cáo".</p></div>
+        </div>
+
+        
+        <div v-show="shipping.subtab === 'carriers'">
+          <p class="text-body-sm text-on-surface-variant mb-3">Mỗi đối tác có cấu hình riêng tại tab <strong>Cấu hình</strong>. Chỉ bật kết nối sau khi token/credential và địa chỉ gửi hàng đã hợp lệ.</p>
+          <div v-if="shipping.carriersLoading" class="ma-table-skeleton" aria-label="Đang tải đơn vị vận chuyển"><span></span><span></span><span></span><span></span></div>
+          <div v-else class="ma-card"><div class="overflow-x-auto"><table class="ma-table ma-data-table">
+            <thead><tr class="ma-thead-row"><th class="ma-th-lg">Mã</th><th class="ma-th-lg">Tên</th><th class="ma-th-lg">Phân loại</th><th class="ma-th-lg">Cấu hình</th><th class="ma-th-lg">Kết nối</th></tr></thead>
+            <tbody class="ma-rows-divide">
+              <tr v-for="c in shipping.carriers" :key="c.carrier_code">
+                <td class="px-6 py-4 font-bold">[[ c.carrier_code ]]</td>
+                <td class="px-6 py-4">[[ c.name ]]</td>
+                <td class="px-6 py-4 text-body-sm">[[ c.category ]]</td>
+                <td class="px-6 py-4"><span :class="c.registry_pending ? 'text-amber-600' : (c.has_config ? 'text-emerald-600' : 'text-amber-600')" class="text-label-sm font-semibold">[[ c.registry_pending ? 'Cần deploy backend' : (c.has_config ? '✓ Đã cấu hình' : 'Chưa cấu hình') ]]</span></td>
+                <td class="px-6 py-4">
+                  <button @click="toggleCarrier(c)" type="button" :disabled="shipping.carrierBusy === c.carrier_code || c.registry_pending" class="ma-badge transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer" :class="c.connected ? 'ma-badge--success' : 'ma-badge--neutral'">[[ c.registry_pending ? 'Chờ deploy' : (c.connected ? 'Đã kết nối' : 'Ngưng') ]]</button>
+                </td>
+              </tr>
+            </tbody>
+          </table></div></div>
+        </div>
+
+        {%- comment -%}
+          2026-08-28 — Modal "Tuỳ chỉnh in" (openPrintModal, Assets/mops-admin-shipping.js.bwt). Đặt
+          top-level trong #tab-shipping (không lồng trong 1 subtab cụ thể) vì có thể mở từ list vận
+          đơn, shipment detail, và item đối soát — cả 3 subtab khác nhau. Theo đúng hợp đồng modal
+          dùng chung: .ma-modal-backdrop + .ma-modal + .ma-modal-head/body/foot (xem shipModal ở
+          mops_admin_tab_orders.bwt), KHÔNG tự chế class riêng.
+          2026-08-29: bọc <teleport to="body"> — #tab-shipping nằm sâu trong nhiều lớp div cha (bảng
+          overflow-x-auto, subtab wrapper...); nếu ancestor nào có transform/overflow thì position:fixed
+          của modal bị "nhốt" lại trong ancestor đó thay vì bung ra toàn viewport (modal vẫn tồn tại
+          trong DOM — querySelector tìm thấy — nhưng vô hình/kẹt, bấm nút không thấy gì). Cùng convention
+          teleport đã dùng cho menu ở mops_admin_tab_finance.bwt/mops_admin_tab_inventory.bwt.
+        {%- endcomment -%}
+        <teleport to="body">
+        <div v-if="printModal.show" class="ma-modal-backdrop" @click.self="closePrintModal">
+        <div class="ma-modal ma-modal-print" role="dialog" aria-modal="true" aria-label="In vận đơn">
+          <div class="ma-modal-head">
+            <span class="material-symbols-outlined ma-modal-icon">print</span>
+            <div class="ma-modal-title">In vận đơn<template v-if="printModal.order"> · <span class="font-mono ma-fr__val--muted">[[ printModal.order.order_id ]]</span></template></div>
+            <button @click="closePrintModal" type="button" class="ma-modal-close" aria-label="Đóng">
+              <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+          </div>
+
+          <div class="ma-modal-body">
+            <!-- 2026-08-29: skeleton dựng theo hình bố cục thật (nút chuyển layout + field bên trái,
+                 khối preview bên phải) thay vì loader trơn — dùng lại nguyên primitive
+                 .ma-component-skeleton* đã có (không tự chế class riêng). -->
+            <div v-if="printModal.loading" class="grid grid-cols-1 lg:grid-cols-2 gap-4" aria-label="Đang tải dữ liệu in">
+              <div class="space-y-3">
+                <div class="ma-component-skeleton ma-component-skeleton--actions"><span></span><span></span><span></span></div>
+                <div class="ma-component-skeleton"><span class="ma-component-skeleton__line"></span><span class="ma-component-skeleton__line"></span><span class="ma-component-skeleton__line"></span></div>
+              </div>
+              <div class="ma-component-skeleton ma-component-skeleton--table"></div>
+            </div>
+
+            <template v-else-if="printModal.order">
+              <div class="flex gap-2">
+                <button type="button" @click="setPrintLayout('goship')" class="ma-btn ma-btn--sm" :class="printModal.layout === 'goship' ? 'ma-btn--primary' : 'ma-btn--outline'">Goship</button>
+                <button type="button" @click="setPrintLayout('mops')" class="ma-btn ma-btn--sm" :class="printModal.layout === 'mops' ? 'ma-btn--primary' : 'ma-btn--outline'">MOPS</button>
+                <button type="button" @click="setPrintLayout('sale')" class="ma-btn ma-btn--sm" :class="printModal.layout === 'sale' ? 'ma-btn--primary' : 'ma-btn--outline'">Bán hàng</button>
+              </div>
+
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3">
+                <div class="space-y-3">
+                  <div>
+                    <!-- 2026-08-29: tách khỏi "Ghi chú giao hàng" — đây là CHÍNH SÁCH KIỂM HÀNG của
+                         shop, in trên MỌI đơn (VD "Cho xem hàng, không cho thử"), khác bản chất với
+                         ghi chú riêng theo từng đơn ở dưới. -->
+                    <label class="text-label-sm font-bold text-on-surface-variant block mb-1">Chính sách kiểm hàng (in trên mọi đơn)</label>
+                    <input type="text" v-model="printModal.inspectionTag" @input="refreshPrintPreview" class="ma-input" placeholder="VD: Cho xem hàng, không cho thử">
+                  </div>
+                  <div>
+                    <label class="text-label-sm font-bold text-on-surface-variant block mb-1">Ghi chú giao hàng (riêng đơn này)</label>
+                    <textarea v-model="printModal.note" @input="refreshPrintPreview" rows="2" class="ma-input" placeholder="VD: Gọi trước khi giao"></textarea>
+                  </div>
+                  <div>
+                    <label class="text-label-sm font-bold text-on-surface-variant block mb-1">Tên cửa hàng (người gửi)</label>
+                    <input type="text" v-model="printModal.senderName" @input="refreshPrintPreview" class="ma-input">
+                  </div>
+                  <div>
+                    <label class="text-label-sm font-bold text-on-surface-variant block mb-1">Địa chỉ gửi</label>
+                    <input type="text" v-model="printModal.senderAddress" @input="refreshPrintPreview" class="ma-input">
+                  </div>
+                  <div>
+                    <label class="text-label-sm font-bold text-on-surface-variant block mb-1">SĐT gửi</label>
+                    <input type="text" v-model="printModal.senderPhone" @input="refreshPrintPreview" class="ma-input">
+                  </div>
+
+                  <div v-if="printModal.layout === 'sale'">
+                    <label class="text-label-sm font-bold text-on-surface-variant block mb-1">Khổ giấy</label>
+                    <select v-model="printModal.saleSize" @change="refreshPrintPreview" class="ma-input">
+                      <option value="A5">A5</option>
+                      <option value="A4">A4</option>
+                      <option value="K80">K80 (nhiệt 80mm)</option>
+                    </select>
+                  </div>
+                  <template v-else>
+                    <!-- 2026-08-29: nhập tay tự do thay vì checkbox "Ẩn tên sản phẩm" + input riêng —
+                         staff tự xoá/sửa trực tiếp tên sản phẩm ngay tại đây khi cần ẩn (VD ghi "Mỹ
+                         phẩm chăm sóc da" thay vì tên SKU thật). Tổng SL trên tem vẫn tính từ đơn thật. -->
+                    <div>
+                      <label class="text-label-sm font-bold text-on-surface-variant block mb-1">Nội dung hàng (nhập tay tự do)</label>
+                      <textarea v-model="printModal.itemsText" @input="refreshPrintPreview" rows="3" class="ma-input" placeholder="VD: Mỹ phẩm chăm sóc da, SL: 2"></textarea>
+                    </div>
+                  </template>
+                </div>
+
+                <div>
+                  <div class="text-label-sm font-bold text-on-surface-variant mb-1">Xem trước</div>
+                  <div class="ma-print-preview-wrap">
+                    <iframe :srcdoc="printModal.previewHtml"
+                            class="ma-print-preview-frame"
+                            :style="printModal.layout === 'sale' ? 'width:794px;height:1123px;transform:scale(.42)' : 'width:378px;height:567px;transform:scale(.85)'"
+                            title="Xem trước bản in"></iframe>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <div class="ma-modal-foot">
+            <button @click="closePrintModal" type="button" class="ma-btn ma-btn--outline">Huỷ</button>
+            <div class="ma-modal-foot-right">
+              <button @click="printFromModal" :disabled="printModal.busy || printModal.loading || !printModal.order" type="button" class="ma-btn ma-btn--primary">
+                <span class="material-symbols-outlined text-[16px]" :class="{ 'ma-spin': printModal.busy }">[[ printModal.busy ? 'progress_activity' : 'print' ]]</span>
+                [[ printModal.busy ? 'Đang gửi lệnh in…' : 'In ngay' ]]
+              </button>
+            </div>
+          </div>
+        </div>
+        </div>
+        </teleport>
+      </div>

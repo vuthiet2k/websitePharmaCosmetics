@@ -1,0 +1,67 @@
+<div class="aside-content aside-content-blog">
+	<h2 class="title-head">
+		<span>{{ settings.aside_category_blog_title }}</span>
+	</h2>
+	<nav class="nav-category">
+		<ul class="nav navbar-pills">
+			{%if settings.aside_category_blog_menu.size > 1%}
+			{%- for link in linklists[settings.aside_category_blog_menu].links -%}
+			{%- if linklists[link.alias] -%}
+			<li class="nav-item {% if link.active %}active{% endif %} relative">
+				<a title="{{ link.title }}" href="{{ link.url }}" class="nav-link pr-5">{{ link.title }}</a>
+				<i class="open_mnu down_icon"></i>
+				<ul class="menu_down" style="display:none;">
+					{%- for childlink in linklists[link.alias].links -%}
+					{%- if linklists[childlink.alias] -%}
+					<li class="dropdown-submenu nav-item {% if childlink.active %}active{% endif %} relative">
+						<a title="{{ childlink.title }}" class="nav-link pr-5" href="{{ childlink.url }}">{{ childlink.title }}</a>
+						<i class="open_mnu down_icon"></i>
+						<ul class="menu_down" style="display:none;">
+							{%- for childlink2 in linklists[childlink.alias].links -%}
+							{%- if linklists[childlink2.alias] -%}
+							<li class="dropdown-submenu nav-item {% if childlink2.active %}active{% endif %} relative">
+								<a title="{{ childlink2.title }}" class="nav-link pr-5" href="{{ childlink2.url }}">{{ childlink2.title }}</a>
+								<i class="open_mnu down_icon"></i>
+								<ul class="menu_down" style="display:none;">
+									{%- for childlink3 in linklists[childlink2.alias].links -%}
+									<li class="dropdown-submenu nav-item {% if childlink3.active %}active{% endif %}">
+										<a title="{{ childlink3.title }}" class="nav-link pl-5" href="{{ childlink3.url }}">{{ childlink3.title }}</a>
+									</li>
+									{%- endfor -%}
+								</ul>
+							</li>
+							{%- else -%}
+							<li class="nav-item">
+								<a title="{{ childlink2.title }}" class="nav-link pl-4" href="{{ childlink2.url }}">{{ childlink2.title }} </a>
+							</li>
+							{%- endif -%}
+							{%- endfor -%}
+						</ul>                      
+					</li>
+					{%- else -%}
+					<li class="nav-item">
+						<a  title="{{ childlink.title }}" class="nav-link" href="{{ childlink.url }}">{{ childlink.title }}</a>
+					</li>
+					{%- endif -%}
+					{%- endfor -%}
+				</ul>
+			</li>
+			{%- else -%}
+			<li class="nav-item {% if link.active %}active{% endif %} relative">
+				<a title="{{ link.title }}" class="nav-link" href="{{ link.url }}">{{ link.title }}</a>
+			</li>
+			{%- endif -%}
+			{%- endfor -%}
+			{%- else -%}
+			<li class="nav-item relative">
+				<span style="color: #000; cursor: auto;">Chưa cập nhật</span>
+			</li>
+				{%- endif -%}
+		</ul>
+	</nav>
+</div>
+<script>
+	$(".aside-content-blog .nav-category .open_mnu").click(function(){
+		$(this).toggleClass('cls_mn').next().slideToggle();
+	});
+</script>

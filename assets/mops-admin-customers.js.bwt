@@ -1,0 +1,994 @@
+{% comment %} mops-admin-customers.js.bwt — Mixin domain "Khách hàng" (tab Customers) cho MOPS Admin.
+  Tách khỏi Assets/mops-admin.js.bwt (2026-07-16, theo mẫu mops-admin-audit.js.bwt). Script
+  TOP-LEVEL (không bọc DOMContentLoaded) — đẩy mixin vào window.MopsAdminMixins TRƯỚC khi
+  Assets/mops-admin.js.bwt đọc mảng này. Gọi helper dùng chung qua window.MopsAdminCore.
+  Load TRƯỚC Assets/mops-admin.js.bwt trong Templates/page.mops-admin.bwt.
+  Cross-domain: viewOrderFromCustomer() ở đây gọi sang this.orders.*/this.loadOrders()/
+  this.toggleOrderDetail() (còn ở core cho tới khi domain Đơn hàng được tách) — Vue mixins share
+  chung `this` nên không vấn đề gì dù 2 domain nằm ở 2 file khác nhau. Ngược lại,
+  viewCustomerFromOrder() (từ tab Đơn hàng gọi sang openCustomerDrawer() ở đây) vẫn ở core. {% endcomment %}
+(function() {
+  'use strict';
+
+  window.MopsAdminRegisteredDomains = window.MopsAdminRegisteredDomains || [];
+  window.MopsAdminRegisteredDomains.push('customers');
+
+  window.MopsAdminMixins = window.MopsAdminMixins || [];
+  window.MopsAdminMixins.push({
+    data: function() {
+      return {
+        customers: {
+          all: [], search: '', loading: false, error: '', expandedId: null, detail: null, detailLoading: false,
+          orderSearch: '',
+          notesSaving: false,
+          exporting: false,
+          // Nhập từ Excel/CSV: dán TSV (copy từ Excel) hoặc chọn file .csv/.txt → parse ở TRÌNH DUYỆT →
+          // xem trước (dry_run trên GAS để đối chiếu trùng) → ghi theo lô. Không upload file lên GAS
+          // (Web App không nhận multipart), chỉ gửi text đã parse thành mảng object.
+          imp: {
+            show: false, step: 'paste', // paste | preview | done
+            text: '', fileName: '',
+            rows: [], parseError: '', unknownCols: [],
+            checking: false, committing: false, progress: 0,
+            results: [], stat: null, dryStat: null
+          },
+          createForm: {
+            name: '', phone: '', email: '', customerGroup: 'LẺ', defaultDiscountPercent: 0,
+            addressStreet: '', addressWard: '', addressDistrict: '', addressCity: '', notes: ''
+          },
+          createSaving: false,
+          showEditForm: false, editTarget: null,
+          editForm: {
+            name: '', email: '', customerGroup: 'LẺ', defaultDiscountPercent: '',
+            addressStreet: '', addressWard: '', addressDistrict: '', addressCity: '',
+            birthday: '', acquisitionChannel: '', loyaltyPoints: '', membershipTier: ''
+          },
+          editSaving: false
+          ,deleteBusy: false, addressBusy: ''
+          ,showAddressForm: false, addressSaving: false,
+          addressForm: {
+            addressId: '', receiverName: '', phone: '',
+            address: '', ward: '', district: '', province: '',
+            provinceId: '', districtId: '', wardCode: '',
+            // 2026-08-12: payload picker cho <mops-address-picker mode="new"> — dùng chung schema
+            // với manualOrder.addr. saveCustomerAddress sẽ merge vào các field name (address/ward/
+            // district/province) + adapter (province_id/district_id/ward_code) trước khi gửi GAS.
+            addr: {
+              provinceCode: '', provinceName: '',
+              districtCode: '', districtName: '',
+              wardCode: '', wardName: '',
+              newProvinceCode: '', newProvinceName: '',
+              newWardCode: '', newWardName: '',
+              fullShippingAddress: '',
+              adapters: {}
+            }
+          }
+        }
+      };
+    },
+    computed: {
+      customersFiltered: function() {
+        var search = (this.customers.search || '').trim().toLowerCase();
+        if (!search) return this.customers.all;
+        return this.customers.all.filter(function(c) {
+          return (c.phone || '').toLowerCase().indexOf(search) !== -1
+              || (c.name  || '').toLowerCase().indexOf(search) !== -1;
+        });
+      },
+      customersEmptyMessage: function() {
+        // 2026-08-22: đang loading → KHÔNG trả empty text, để template dồn về nhánh
+        // v-if="customers.loading" (skeleton). Phòng khi có state transition ngắn ngủi
+        // customers.all=[] + loading vừa reset false trước khi data arrive → sẽ thấy
+        // "Chưa có khách hàng nào" nhấp nháy → user hiểu nhầm chưa có KH.
+        if (this.customers.loading) return '';
+        if (this.customers.error) return this.customers.error;
+        if (!this.customersFiltered.length) {
+          return this.customers.all.length ? 'Không có khách hàng nào phù hợp tìm kiếm.' : 'Chưa có khách hàng nào.';
+        }
+        return '';
+      },
+      customersPaidOrders: function() {
+        if (!this.customers.detail) return [];
+        return (this.customers.detail.orders || []).filter(function(o) { return o.status === 'PAID' || o.status === 'COMPLETED'; });
+      },
+      customersTotalPaid: function() {
+        return this.customersPaidOrders.reduce(function(sum, o) { return sum + (Number(o.amount) || 0); }, 0);
+      },
+      // Ô tìm nhanh trong Drawer — lọc client-side theo mã đơn/loại/trạng thái, danh sách đơn
+      // của 1 khách hàng luôn nhỏ (vài chục đơn), không cần gọi API riêng.
+      customerOrdersFiltered: function() {
+        if (!this.customers.detail) return [];
+        var q = (this.customers.orderSearch || '').trim().toLowerCase();
+        var orders = this.customers.detail.orders || [];
+        if (!q) return orders;
+        return orders.filter(function(o) {
+          return String(o.order_id || '').toLowerCase().indexOf(q) !== -1
+              || String(o.order_type || '').toLowerCase().indexOf(q) !== -1
+              || String(o.status || '').toLowerCase().indexOf(q) !== -1;
+        });
+      }
+    },
+    methods: {
+      /* ── Khách hàng: danh sách đầy đủ, giống tab Nhân viên ── */
+      loadCustomers: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.customers.loading = true;
+        this.customers.error = '';
+        this.customers.expandedId = null;
+        return core.gasGet({ action: 'list_customers', limit: 500 })
+          .then(function(d) {
+            self.customers.loading = false;
+            if (!d || !d.success) { self.customers.error = 'Không tải được danh sách khách hàng.'; return; }
+            self.customers.all = d.customers || [];
+          })
+          .catch(function() { self.customers.loading = false; self.customers.error = 'Lỗi kết nối. Kiểm tra GAS_URL.'; });
+      },
+      // Customer là entity lớn: detail dùng workspace stack để Back giữ nguyên list/search context.
+      openCustomerDrawer: function(customer) {
+        var self = this;
+        var core = window.MopsAdminCore;
+        if (this.customers.expandedId === customer.customer_id) return; // đã mở đúng khách này — không load lại
+        if (this.workspaceView !== 'customers.detail' && typeof this.openWorkspaceView === 'function') {
+          this.openWorkspaceView('customers.detail', { customerId: customer.customer_id });
+        } else {
+          this.workspaceView = 'customers.detail';
+        }
+        this.customers.expandedId = customer.customer_id;
+        this._updateUrlParam('action', 'view');
+        this._updateUrlParam('customer_id', customer.customer_id);
+        // Dựng workspace ngay bằng dữ liệu đã có ở hàng danh sách. get_customer chỉ enrich
+        // những trường chưa có (địa chỉ, điểm, lịch sử đơn...), không được biến cả màn hình thành loading.
+        this.customers.detail = Object.assign({}, customer, { __snapshot: true });
+        this.customers.orderSearch = '';
+        this.customers.detailLoading = true;
+        // 2026-08-13: get_customer có thể trả found:false trong 2 case: (1) Repository.findById
+        // cache miss cho customer vừa tạo, (2) khách chưa có order + customer_id không tra được
+        // theo TextFinder (rowIdx stale). Retry lần 2 chỉ với phone → force phone lookup path
+        // (getOrdersByContact + fallback Customers.findByPhone). Nếu vẫn found:false → toast rõ
+        // để user không tưởng đang loading.
+        var cid = customer.customer_id;
+        var cphone = customer.phone || '';
+        var loadDetail = function(payload, isRetry) {
+          return core.gasGet(payload).then(function(d) {
+            if (self.customers.expandedId !== cid) return null; // navigated away
+            if (d && d.success && d.found) {
+              self.customers.detail = Object.assign({}, self.customers.detail || {}, d, { __snapshot: false });
+              self.customers.detailLoading = false;
+              return d;
+            }
+            // Retry logic: nếu lần đầu found:false + có phone → thử lookup chỉ phone (bỏ customer_id).
+            if (!isRetry && cphone && !payload.__retryPhoneOnly) {
+              return loadDetail({ action: 'get_customer', phone: cphone, __retryPhoneOnly: true }, true);
+            }
+            // Cả 2 attempt fail → hiển thị lỗi minh bạch.
+            self.customers.detailLoading = false;
+            core.showToast('Không tải được chi tiết khách hàng — thử tải lại trang. (get_customer trả found=false cho ' + cid + ')', 'error', { duration: 6000 });
+            return null;
+          });
+        };
+        loadDetail({ action: 'get_customer', customer_id: cid, phone: cphone }, false)
+          .catch(function(err) {
+            if (self.customers.expandedId !== cid) return;
+            self.customers.detailLoading = false;
+            core.showToast((err && err.message) || 'Lỗi kết nối khi tải chi tiết khách hàng', 'error');
+          });
+      },
+      closeCustomerDrawer: function() {
+        this.customers.expandedId = null;
+        this.customers.detail = null;
+        this.customers.orderSearch = '';
+        if (typeof this.restoreWorkspaceView === 'function') this.restoreWorkspaceView('customers.list');
+        else this.workspaceView = 'customers.list';
+        // Deep-link detail không tải danh sách ở nền. Chỉ tải danh sách khi người dùng quay lại list.
+        if (!this.customers.all.length && !this.customers.loading) this.loadCustomers();
+        this._updateUrlParam('action', '');
+        this._updateUrlParam('customer_id', '');
+      },
+      // 2026-08-16: Soft delete khách hàng. Chỉ ẩn khỏi list (Status='deleted' trong Sheet), đơn cũ
+      // vẫn giữ nguyên customer_id. Confirm dialog nhấn mạnh: (1) không xoá đơn, (2) đơn cũ vẫn hiển
+      // thị tên/SĐT khách, (3) tạo đơn mới với SĐT này sẽ auto-restore. Sau khi xoá → close drawer + reload list.
+      confirmDeleteCustomer: function(c) {
+        if (!c || !c.customer_id) return;
+        var self = this, core = window.MopsAdminCore;
+        var name = c.name || c.customer_id;
+        core.showConfirm(
+          'Ẩn khách hàng ' + name + '?',
+          'Khách sẽ biến mất khỏi danh sách nhưng KHÔNG bị xoá trong Google Sheet. Các đơn cũ vẫn giữ nguyên (tên/SĐT hiện tại). ' +
+          'Nếu về sau khách quay lại đặt với cùng SĐT, hệ thống tự khôi phục hồ sơ.'
+        ).then(function(ok) {
+          if (!ok) return;
+          self.customers.deleteBusy = true;
+          core.gasPost({ action: 'delete_customer', customer_id: c.customer_id })
+            .then(function(d) {
+              self.customers.deleteBusy = false;
+              if (d && d.success) {
+                core.showToast('Đã ẩn khách ' + name, 'success');
+                self.closeCustomerDrawer();
+                // Optimistic remove khỏi list; loadCustomers ở nền refresh chuẩn từ GAS.
+                self.customers.all = (self.customers.all || []).filter(function(x) { return x.customer_id !== c.customer_id; });
+                setTimeout(function() { self.loadCustomers && self.loadCustomers(); }, 400);
+              } else {
+                core.showToast('Không ẩn được: ' + ((d && d.error) || 'lỗi không xác định'), 'error');
+              }
+            })
+            .catch(function(err) {
+              self.customers.deleteBusy = false;
+              core.showToast((err && err.message) || 'Lỗi kết nối khi ẩn khách hàng', 'error');
+            });
+        });
+      },
+      openCustomerCreate: function() {
+        this.customers.createForm = {
+          name: '', phone: '', email: '', customerGroup: 'LẺ', defaultDiscountPercent: 0,
+          addressStreet: '', addressWard: '', addressDistrict: '', addressCity: '', notes: '',
+          // 2026-08-09 — mở rộng field theo layout mới: Giới tính · Ngày sinh · Mã khách ngoài
+          gender: '', birthday: '', externalCode: '',
+          // Realtime dupe check state — cập nhật bởi onCustomerPhoneInput()/onCustomerPhoneBlur()
+          //   status: 'idle' (chưa gõ đủ) | 'checking' | 'notfound' (hợp lệ, chưa có) | 'found' (trùng)
+          //   existingCustomer: {customer_id, phone, name} nếu found → mở drawer từ banner
+          dupeCheck: { status: 'idle', existingCustomer: null },
+          // Nội bộ: track button nào đang trigger save (để header hiện đúng "Đang lưu…" trên nút đó)
+          _thenCreateOrder: false
+        };
+        this._dupeCheckTimer = null;
+        // Preload danh sách Tỉnh cho datalist address (dùng chung addressBook helper ở core)
+        if (typeof this.ensureProvincesLoaded === 'function') this.ensureProvincesLoaded();
+        if (this.workspaceView !== 'customers.create' && typeof this.openWorkspaceView === 'function') this.openWorkspaceView('customers.create');
+        else this.workspaceView = 'customers.create';
+        this._updateUrlParam('action', 'create');
+        this._updateUrlParam('customer_id', '');
+        this._attachCustomerCreateHotkey();
+      },
+      closeCustomerCreate: function() {
+        this.customers.createSaving = false;
+        this._detachCustomerCreateHotkey();
+        if (this._dupeCheckTimer) { clearTimeout(this._dupeCheckTimer); this._dupeCheckTimer = null; }
+        if (typeof this.restoreWorkspaceView === 'function') this.restoreWorkspaceView('customers.list');
+        else this.workspaceView = 'customers.list';
+        this._updateUrlParam('action', '');
+      },
+      // 2026-08-09 — F9 hotkey (đồng bộ Sapo POS convention): Lưu & Tạo đơn ngay.
+      _attachCustomerCreateHotkey: function() {
+        var self = this;
+        this._custCreateHotkey = function(e) {
+          if (self.workspaceView !== 'customers.create') return;
+          if (e.key === 'F9') {
+            e.preventDefault();
+            if (self.customers.createSaving) return;
+            if (self.customers.createForm.dupeCheck.status === 'found') return;
+            self.saveCustomerCreate({ thenCreateOrder: true });
+          }
+        };
+        window.addEventListener('keydown', this._custCreateHotkey);
+      },
+      _detachCustomerCreateHotkey: function() {
+        if (this._custCreateHotkey) {
+          window.removeEventListener('keydown', this._custCreateHotkey);
+          this._custCreateHotkey = null;
+        }
+      },
+      // 2026-08-09 — Auto-format SĐT khi gõ: strip non-digit; bù 0 đầu nếu nhập 9 số (SĐT VN có 10 số,
+      // bắt đầu 0 hoặc 84). Không dùng regex xoá 84 tự động — user có thể cố tình nhập +84… cho khách
+      // quốc tế/roaming; chỉ chuẩn hoá bù 0 và giới hạn 11 số (0 + 10 = 11 tối đa với đầu 0 + 10 số).
+      onCustomerPhoneInput: function() {
+        var f = this.customers.createForm;
+        var raw = String(f.phone || '').replace(/[^\d]/g, '');
+        if (raw.length === 9 && raw.charAt(0) !== '0') raw = '0' + raw;
+        if (raw.length > 11) raw = raw.slice(0, 11);
+        f.phone = raw;
+        // Trigger dupe check debounced khi đủ 10 số
+        if (this._dupeCheckTimer) clearTimeout(this._dupeCheckTimer);
+        if (raw.length < 10) {
+          f.dupeCheck = { status: 'idle', existingCustomer: null };
+          return;
+        }
+        f.dupeCheck.status = 'checking';
+        var self = this;
+        this._dupeCheckTimer = setTimeout(function() { self._runCustomerDupeCheck(raw); }, 400);
+      },
+      // Format lại lúc blur cho đẹp (giữ raw digit trong model — server không cần space).
+      onCustomerPhoneBlur: function() {
+        this.onCustomerPhoneInput();
+      },
+      // 2026-08-09 — Check trùng SĐT khi staff gõ trong modal Tạo khách mới.
+      // 2026-08-23: chuyển sang endpoint check_customer_phone (payload nhẹ hơn get_customer, không trả
+      // email/orders/PII đầy đủ). Vẫn perm=customers.view. Không block nếu API fail: giữ status='idle',
+      // user vẫn Lưu được — server-side create_customer sẽ throw nếu trùng (defense-in-depth).
+      // Shape response mới: { exists, customer_id, code, name, phone, default_address:{address,ward,district,province} }
+      _runCustomerDupeCheck: function(phone) {
+        var self = this, core = window.MopsAdminCore, f = this.customers.createForm;
+        core.gasPost({ action: 'check_customer_phone', phone: phone })
+          .then(function(d) {
+            if (self.customers.createForm.phone.replace(/[^\d]/g, '') !== phone) return; // user đã đổi SĐT
+            if (d && d.success && d.exists && d.customer_id) {
+              // Đóng gói giữ tương thích shape cũ existingCustomer={customer_id, name, phone} cho pickExistingCustomerFromDupe.
+              f.dupeCheck = { status: 'found', existingCustomer: {
+                customer_id: d.customer_id, name: d.name, phone: d.phone,
+                address_street: (d.default_address || {}).address || '',
+                address_ward: (d.default_address || {}).ward || '',
+                address_district: (d.default_address || {}).district || '',
+                address_city: (d.default_address || {}).province || ''
+              }};
+            } else {
+              f.dupeCheck = { status: 'notfound', existingCustomer: null };
+            }
+          })
+          .catch(function() {
+            if (self.customers.createForm.phone.replace(/[^\d]/g, '') !== phone) return;
+            f.dupeCheck = { status: 'idle', existingCustomer: null };
+          });
+      },
+      // 2026-08-09 — saveCustomerCreate nhận options: {thenCreateOrder: bool}. Sau khi tạo KH thành
+      // công + lưu default address (best-effort), rẽ luồng: thenCreateOrder=true → prefill form Tạo đơn
+      // + jump tab orders; false → mở drawer chi tiết KH.
+      saveCustomerCreate: function(opts) {
+        opts = opts || {};
+        var self = this, core = window.MopsAdminCore, f = this.customers.createForm;
+        var name = (f.name || '').trim();
+        var phone = String(f.phone || '').replace(/[^\d]/g, '');
+        if (!name) { core.showToast('Tên khách hàng không được để trống', 'error'); return; }
+        if (!phone) { core.showToast('Số điện thoại không được để trống', 'error'); return; }
+        if (phone.length < 9) { core.showToast('Số điện thoại chưa đủ số', 'error'); return; }
+        if (f.dupeCheck.status === 'found') {
+          core.showToast('SĐT đã tồn tại — không thể tạo trùng. Bấm "Xem hồ sơ" để mở khách sẵn có.', 'error');
+          return;
+        }
+        // 2026-08-21 · Chặn Save khi dupe check đang chạy (400ms debounce chưa xong) — trước đây
+        // user click nhanh có thể bypass FE check hoàn toàn (chỉ còn dựa vào backend). Giờ auto retry.
+        if (f.dupeCheck.status === 'checking') {
+          core.showToast('Đang kiểm tra SĐT trùng — chờ chút…', 'info');
+          setTimeout(function() { if (!self.customers.createSaving) self.saveCustomerCreate(opts); }, 500);
+          return;
+        }
+        // Nếu status='idle' + phone đủ dài → dupe check chưa từng chạy (VD user paste nhanh) → force run.
+        if (f.dupeCheck.status === 'idle' && phone.length >= 10) {
+          f.dupeCheck.status = 'checking';
+          this._runCustomerDupeCheck(phone);
+          setTimeout(function() { if (!self.customers.createSaving) self.saveCustomerCreate(opts); }, 600);
+          return;
+        }
+        if (this.customers.createSaving) return;
+        this.customers.createSaving = true;
+        f._thenCreateOrder = !!opts.thenCreateOrder;
+        core.gasPost({
+          action: 'create_customer', name: name, phone: phone, email: (f.email || '').trim(),
+          customer_group: f.customerGroup, default_discount_percent: Number(f.defaultDiscountPercent) || 0,
+          address_street: (f.addressStreet || '').trim(), address_ward: (f.addressWard || '').trim(),
+          address_district: (f.addressDistrict || '').trim(), address_city: (f.addressCity || '').trim(),
+          notes: (f.notes || '').trim(),
+          // Field mở rộng 2026-08-09 — backend chưa chắc handle, gửi kèm để migration sau; không bị lỗi
+          // nếu server ignore (thường _sanitizeText chỉ đọc field có trong schema).
+          gender: (f.gender || '').trim(), birthday: (f.birthday || '').trim(), external_code: (f.externalCode || '').trim()
+        }).then(function(d) {
+          if (!d || !d.success || !d.customer_id) throw new Error((d && d.error) || 'Tạo khách hàng thất bại');
+          var customerId = d.customer_id;
+          var customerObj = { customer_id: customerId, name: d.name || name, phone: d.phone || phone,
+            customer_group: f.customerGroup, default_discount_percent: Number(f.defaultDiscountPercent) || 0,
+            address_street: (f.addressStreet || '').trim(), address_ward: (f.addressWard || '').trim(),
+            address_district: (f.addressDistrict || '').trim(), address_city: (f.addressCity || '').trim() };
+          self.customers.all.push(customerObj);
+          // Đề xuất user: cụm địa chỉ vừa nhập TỰ lưu vào Sổ địa chỉ (ShippingAddresses) làm default.
+          // Best-effort: nếu save_customer_address fail, KH vẫn tạo xong, chỉ toast warning.
+          var hasAddr = f.addressStreet || f.addressCity || f.addressWard;
+          var saveAddrPromise = hasAddr
+            ? core.gasPost({ action: 'save_customer_address', customer_id: customerId,
+                receiver_name: name, phone: phone,
+                address: (f.addressStreet || '').trim(), ward: (f.addressWard || '').trim(),
+                district: (f.addressDistrict || '').trim(), province: (f.addressCity || '').trim(),
+                is_default: true }).catch(function(e) {
+                  core.showToast('Đã lưu khách hàng nhưng không lưu được địa chỉ mặc định: ' + (e.message || 'lỗi') + '. Vào chi tiết KH bấm "Thêm địa chỉ" để thử lại.', 'info', { duration: 8000 });
+                  return null;
+                })
+            : Promise.resolve(null);
+          return saveAddrPromise.then(function() { return customerObj; });
+        }).then(function(customerObj) {
+          self.customers.createSaving = false;
+          f._thenCreateOrder = false;
+          core.showToast('Đã thêm "' + customerObj.name + '"', 'success');
+          // 2026-08-12 — inline mode: modal Tạo khách trong form Manual Order gọi với
+          // { inline:true, onSuccess: cb }. KHÔNG navigate, KHÔNG mở drawer — chỉ callback
+          // để caller (submitManualOrderQuickCreate) đóng modal + tự pickManualOrderCustomer.
+          if (opts.inline && typeof opts.onSuccess === 'function') {
+            try { opts.onSuccess(customerObj); } catch (e) { console.error('[MOPS] inline onSuccess error:', e); }
+            return;
+          }
+          if (opts.thenCreateOrder) {
+            // Rẽ luồng POS: prefill form Tạo đơn với KH vừa tạo → jump tab orders → workspaceView='orders.create'.
+            // openManualOrderForm() sẽ pickManualOrderCustomer sau khi form mounted (nếu API có), hoặc set
+            // trực tiếp customerName/phone/selectedCustomer. Không đợi loadCustomers vì customer vừa push
+            // vào self.customers.all rồi.
+            if (typeof self.openManualOrderForm === 'function') {
+              self.openManualOrderForm();
+              // Prefill sau nextTick (setTimeout 0) để form đã render + _blankManualOrder reset xong.
+              setTimeout(function() {
+                if (self.manualOrder && customerObj) {
+                  self.manualOrder.customerName = customerObj.name;
+                  self.manualOrder.phone = customerObj.phone;
+                  self.manualOrder.selectedCustomer = customerObj;
+                  // Nếu có địa chỉ, tự bật wantsShipping + prefill để staff không phải điền lại
+                  var hasAddr2 = customerObj.address_street || customerObj.address_city;
+                  if (hasAddr2) {
+                    self.manualOrder.wantsShipping = true;
+                    self.manualOrder.shipAddress = customerObj.address_street || '';
+                    self.manualOrder.shipProvinceName = customerObj.address_city || '';
+                    self.manualOrder.shipDistrictName = customerObj.address_district || '';
+                    self.manualOrder.shipWardName = customerObj.address_ward || '';
+                  }
+                  core.showToast('Đã điền sẵn thông tin khách — chọn sản phẩm để tạo đơn.', 'info');
+                }
+              }, 0);
+            } else {
+              // Fallback: openManualOrderForm chưa mount → chỉ đổi tab, staff tự chọn khách
+              self.setActiveTab('orders');
+            }
+            return;
+          }
+          // Mặc định: mở drawer chi tiết khách hàng vừa tạo
+          self.customers.expandedId = null;
+          self.workspaceViewStack = [];
+          self.workspaceView = 'customers.list';
+          self.openCustomerDrawer({ customer_id: customerObj.customer_id, phone: customerObj.phone });
+        }).catch(function(e) {
+          self.customers.createSaving = false;
+          f._thenCreateOrder = false;
+          core.showToast(e.message || 'Lỗi kết nối', 'error');
+        });
+      },
+      openCustomerFromUrl: function() {
+        var query = new URLSearchParams(window.location.search);
+        if (query.get('tab') !== 'customers') return;
+        if (query.get('action') === 'create') { this.openCustomerCreate(); return; }
+        var id = (query.get('customer_id') || '').trim();
+        if (query.get('action') !== 'view' || !id) return;
+        this.setActiveTab('customers');
+        // setActiveTab() có thể bắt đầu tải danh sách lần đầu, nhưng workspace detail được mở
+        // ngay và chỉ panel detail hiển thị loading. Không gọi list_customers lần thứ hai.
+        this.openCustomerDrawer({ customer_id: id, phone: '' });
+      },
+      // Deep link — click mã đơn trong Drawer → đóng Drawer, chuyển tab Đơn hàng, tự điền mã đơn
+      // vào ô lọc rồi tải + tự mở rộng đúng đơn đó. this.orders.*/loadOrders()/toggleOrderDetail()
+      // vẫn ở core (domain Đơn hàng chưa tách) — Vue mixins share `this` nên gọi bình thường.
+      viewOrderFromCustomer: function(orderId) {
+        var self = this;
+        this.closeCustomerDrawer();
+        this.orders.orderId = orderId;
+        this.orders.status  = '';
+        this.setActiveTab('orders');
+        this.loadOrders().then(function() {
+          if (self.orders.list.length === 1) self.toggleOrderDetail(self.orders.list[0].order_id);
+        });
+      },
+      // Sửa hồ sơ khách hàng — quyền customers.edit. Chỉ gọi từ workspace detail với customers.detail
+      // (đủ toàn bộ field từ get_customer). 2026-08-22 refactor: chuyển từ modal
+      // (customers.showEditForm) sang workspaceView='customers.edit' (page riêng) — nhất quán với
+      // orders.edit + product edit-in-place. openWorkspaceView push detail lên stack → khi Lưu/Huỷ
+      // restoreWorkspaceView về đúng customers.detail đang xem.
+      startEditCustomer: function(c) {
+        this.customers.editTarget = c;
+        this.customers.editForm = {
+          name: c.name || '', email: c.email || '',
+          customerGroup: c.customer_group || 'LẺ',
+          defaultDiscountPercent: c.default_discount_percent || 0,
+          addressStreet: c.address_street || '', addressWard: c.address_ward || '',
+          addressDistrict: c.address_district || '', addressCity: c.address_city || '',
+          birthday: c.birthday || '', acquisitionChannel: c.acquisition_channel || '',
+          loyaltyPoints: c.loyalty_points || 0, membershipTier: c.membership_tier || ''
+        };
+        if (typeof this.openWorkspaceView === 'function') {
+          this.openWorkspaceView('customers.edit', { customerId: c.customer_id });
+        } else {
+          this.workspaceView = 'customers.edit';
+        }
+        this.preloadWardsFor(this.customers.editForm.addressCity); // helper dùng chung — vẫn ở core
+      },
+      // Huỷ chỉnh — restore về customers.detail (workspace stack pop). Không clear editTarget/editForm
+      // để nếu user bấm Sửa lại luôn thì thấy các giá trị vừa gõ (tuỳ chọn — có thể clear nếu cần).
+      cancelEditCustomer: function() {
+        if (typeof this.restoreWorkspaceView === 'function') this.restoreWorkspaceView('customers.detail');
+        else this.workspaceView = 'customers.detail';
+      },
+      // "Xem tất cả" cho sổ địa chỉ + lịch sử đơn khi list dài vượt max-h card (2026-08-22).
+      // Cả 2 dùng cùng openWorkspaceView để giữ workspace stack — bấm × / Back sẽ về đúng detail.
+      openCustomerAddressesAll: function() {
+        if (typeof this.openWorkspaceView === 'function') {
+          this.openWorkspaceView('customers.addresses', { customerId: this.customers.expandedId });
+        } else {
+          this.workspaceView = 'customers.addresses';
+        }
+      },
+      openCustomerOrdersAll: function() {
+        if (typeof this.openWorkspaceView === 'function') {
+          this.openWorkspaceView('customers.orders', { customerId: this.customers.expandedId });
+        } else {
+          this.workspaceView = 'customers.orders';
+        }
+      },
+      closeCustomerSubView: function() {
+        if (typeof this.restoreWorkspaceView === 'function') this.restoreWorkspaceView('customers.detail');
+        else this.workspaceView = 'customers.detail';
+      },
+      saveCustomerEdit: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var c = this.customers.editTarget;
+        var f = this.customers.editForm;
+        if (!c) return;
+        var name = (f.name || '').trim();
+        if (!name) { core.showToast('Tên khách hàng không được để trống', 'error'); return; }
+        this.customers.editSaving = true;
+        core.gasPost({
+          action: 'update_customer', customer_id: c.customer_id, name: name,
+          email: (f.email || '').trim(), customer_group: f.customerGroup,
+          default_discount_percent: Number(f.defaultDiscountPercent) || 0,
+          address_street: (f.addressStreet || '').trim(), address_ward: (f.addressWard || '').trim(),
+          address_district: (f.addressDistrict || '').trim(), address_city: (f.addressCity || '').trim(),
+          birthday: f.birthday || '', acquisition_channel: f.acquisitionChannel || '',
+          loyalty_points: Number(f.loyaltyPoints) || 0, membership_tier: f.membershipTier || ''
+        })
+          .then(function(d) {
+            self.customers.editSaving = false;
+            if (!d.success) throw new Error(d.error || 'Lưu thất bại');
+            core.showToast('Đã lưu "' + name + '"', 'success');
+            // c (editTarget) là customers.detail — cập nhật tại chỗ để Drawer phản ánh ngay. Dòng
+            // trong bảng danh sách chính (customers.all) là OBJECT KHÁC, không tự đồng bộ theo —
+            // phải patch riêng, nếu không bảng chính hiện dữ liệu cũ tới khi loadCustomers() lại.
+            var patch = {
+              name: name, email: (f.email || '').trim(),
+              customer_group: f.customerGroup, default_discount_percent: Number(f.defaultDiscountPercent) || 0,
+              address_street: (f.addressStreet || '').trim(), address_ward: (f.addressWard || '').trim(),
+              address_district: (f.addressDistrict || '').trim(), address_city: (f.addressCity || '').trim(),
+              birthday: f.birthday || '', acquisition_channel: f.acquisitionChannel || '',
+              loyalty_points: Number(f.loyaltyPoints) || 0, membership_tier: f.membershipTier || ''
+            };
+            Object.assign(c, patch);
+            var listRow = self.customers.all.filter(function(x) { return x.customer_id === c.customer_id; })[0];
+            if (listRow && listRow !== c) Object.assign(listRow, patch);
+            // 2026-08-22: modal cũ đóng bằng showEditForm=false; workspace page mới restore về detail.
+            if (typeof self.restoreWorkspaceView === 'function') self.restoreWorkspaceView('customers.detail');
+            else self.workspaceView = 'customers.detail';
+          })
+          .catch(function(e) { self.customers.editSaving = false; core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      // Lưu nhanh riêng ô Ghi chú trong Drawer — tách khỏi modal Sửa.
+      saveCustomerNotes: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var d = this.customers.detail;
+        if (!d) return;
+        this.customers.notesSaving = true;
+        core.gasPost({ action: 'update_customer', customer_id: d.customer_id, notes: d.notes || '' })
+          .then(function(res) {
+            self.customers.notesSaving = false;
+            if (!res.success) { core.showToast(res.error || 'Lưu ghi chú thất bại', 'error'); return; }
+            core.showToast('Đã lưu ghi chú', 'success');
+          })
+          .catch(function() { self.customers.notesSaving = false; core.showToast('Lỗi kết nối', 'error'); });
+      },
+      openCustomerAddressForm: function(address) {
+        var d = this.customers.detail;
+        if (!d) return;
+        address = address || d.default_address || {};
+        // 2026-08-12: populate addr payload cho <mops-address-picker>. Nếu record có names,
+        // dùng _buildAddrPayloadFromAddress (orders mixin, merge chung root) để resolve
+        // names → GSO codes + adapters. Nếu record trống → addr rỗng, user nhập tay.
+        var addrPayload;
+        if (typeof this._buildAddrPayloadFromAddress === 'function' && (address.province || address.ward)) {
+          addrPayload = this._buildAddrPayloadFromAddress(address);
+        } else {
+          addrPayload = {
+            provinceCode: '', provinceName: address.province || '',
+            districtCode: '', districtName: address.district || '',
+            wardCode: '',     wardName: address.ward || '',
+            newProvinceCode: '', newProvinceName: '',
+            newWardCode: '', newWardName: '',
+            fullShippingAddress: '',
+            adapters: (address.province_id || address.district_id || address.ward_code) ? {
+              ghn: { province: address.province_id || '', district: address.district_id || '', ward: address.ward_code || '' }
+            } : {}
+          };
+        }
+        this.customers.addressForm = {
+          addressId: address.address_id || '', receiverName: address.receiver_name || d.name || '', phone: address.phone || d.phone || '',
+          address: address.address || d.address_street || '', ward: address.ward || d.address_ward || '',
+          district: address.district || d.address_district || '', province: address.province || d.address_city || '',
+          provinceId: address.province_id || '', districtId: address.district_id || '', wardCode: address.ward_code || '',
+          addr: addrPayload,
+          // 2026-08-16: mode phân biệt Sửa (edit in-place) vs Sao chép/Thêm (tạo mới).
+          // openCustomerAddressForm giữ semantic cũ = tạo mới (mode='new'/'copy'). editCustomerAddress
+          // gọi hàm này rồi override mode='edit' để save rẽ nhánh sang update_customer_address.
+          mode: 'new'
+        };
+        this.customers.showAddressForm = true;
+      },
+      // 2026-08-16: Sửa trực tiếp 1 địa chỉ đã có. Reuse form của openCustomerAddressForm với
+      // mode='edit'. saveCustomerAddress detect mode → dùng endpoint update_customer_address với
+      // address_id thay vì tạo dòng mới. Đơn cũ ref address_id này sẽ hiển thị nội dung mới.
+      editCustomerAddress: function(address) {
+        if (!address || !address.address_id) return;
+        this.openCustomerAddressForm(address);
+        this.customers.addressForm.mode = 'edit';
+      },
+      // 2026-08-16: Xoá địa chỉ (soft delete). Backend set Status='deleted', đơn cũ vẫn tra được.
+      // Nếu địa chỉ đang là default → backend tự chọn địa chỉ khác làm default.
+      confirmDeleteCustomerAddress: function(address) {
+        if (!address || !address.address_id) return;
+        var self = this, core = window.MopsAdminCore, d = this.customers.detail;
+        if (!d) return;
+        var addrLine = [address.address, address.ward, address.district, address.province].filter(Boolean).join(', ') || address.receiver_name || address.address_id;
+        core.showConfirm(
+          'Xoá địa chỉ này?',
+          'Địa chỉ "' + addrLine + '" sẽ ẩn khỏi sổ. Đơn CŨ đã dùng địa chỉ này vẫn giữ nguyên (tem in / chi tiết đơn tra được). ' +
+          (address.is_default ? 'Đây là địa chỉ mặc định — hệ thống sẽ tự chọn địa chỉ khác thay thế.' : '')
+        ).then(function(ok) {
+          if (!ok) return;
+          self.customers.addressBusy = address.address_id;
+          core.gasPost({ action: 'delete_customer_address', customer_id: d.customer_id, address_id: address.address_id })
+            .then(function(res) {
+              self.customers.addressBusy = '';
+              if (!res || !res.success) throw new Error((res && res.error) || 'Xoá địa chỉ thất bại');
+              d.addresses = res.addresses || [];
+              // Nếu default vừa xoá → default_address có thể đổi. Refresh best-effort từ addresses[0].
+              d.default_address = (d.addresses || []).filter(function(a) { return a.is_default; })[0] || null;
+              core.showToast('Đã xoá địa chỉ', 'success');
+            })
+            .catch(function(e) { self.customers.addressBusy = ''; core.showToast(e.message || 'Lỗi kết nối khi xoá địa chỉ', 'error'); });
+        });
+      },
+      saveCustomerAddress: function() {
+        var self = this, core = window.MopsAdminCore, d = this.customers.detail, f = this.customers.addressForm;
+        if (!d || this.customers.addressSaving) return;
+        // 2026-08-12: merge payload picker vào các field cũ trước khi gửi GAS. Contract không đổi
+        // (address/ward/district/province + province_id/district_id/ward_code cho GHN adapter).
+        var a   = f.addr || {};
+        var ghn = (a.adapters && a.adapters.ghn) || {};
+        var wardText = a.wardName || f.ward || '';
+        var distText = a.districtName || f.district || '';
+        var provText = a.provinceName || f.province || '';
+        if (!(f.address || '').trim() && !provText.trim()) { core.showToast('Nhập ít nhất số nhà/đường hoặc tỉnh/thành phố.', 'error'); return; }
+        this.customers.addressSaving = true;
+        // 2026-08-16: rẽ nhánh mode=edit → update_customer_address (sửa in-place, giữ address_id).
+        // Ngược lại (mode='new'/'copy' hoặc rỗng — legacy) → save_customer_address (tạo mới, dedupe).
+        var isEdit = f.mode === 'edit' && !!f.addressId;
+        var payload = {
+          action: isEdit ? 'update_customer_address' : 'save_customer_address',
+          customer_id: d.customer_id,
+          receiver_name: (f.receiverName || '').trim(), phone: (f.phone || '').trim(),
+          address: (f.address || '').trim(),
+          ward: wardText.trim(), district: distText.trim(), province: provText.trim(),
+          province_id: ghn.province || f.provinceId || '',
+          district_id: ghn.district || f.districtId || '',
+          ward_code:   ghn.ward     || f.wardCode   || ''
+        };
+        if (isEdit) payload.address_id = f.addressId;
+        else payload.is_default = true; // Tạo mới: set default. Sửa: KHÔNG đụng cờ default.
+        core.gasPost(payload).then(function(res) {
+          self.customers.addressSaving = false;
+          if (!res || !res.success) throw new Error((res && res.error) || (isEdit ? 'Sửa địa chỉ thất bại' : 'Lưu địa chỉ thất bại'));
+          d.addresses = res.addresses || [];
+          d.default_address = (d.addresses || []).filter(function(a) { return a.is_default; })[0] || res.address || null;
+          if (res.address) Object.assign(d, { address_street: res.address.address, address_ward: res.address.ward, address_district: res.address.district, address_city: res.address.province });
+          self.customers.showAddressForm = false;
+          core.showToast(isEdit
+            ? (res.merged_from ? 'Đã sửa & gộp vào địa chỉ trùng.' : 'Đã sửa địa chỉ.')
+            : 'Đã lưu địa chỉ và đặt làm mặc định.', 'success');
+        }).catch(function(e) { self.customers.addressSaving = false; core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      setCustomerDefaultAddress: function(address) {
+        var self = this, core = window.MopsAdminCore, d = this.customers.detail;
+        if (!d || !address || address.is_default) return;
+        core.gasPost({ action: 'set_customer_default_address', customer_id: d.customer_id, address_id: address.address_id })
+          .then(function(res) {
+            if (!res || !res.success) throw new Error((res && res.error) || 'Không đặt được địa chỉ mặc định');
+            d.addresses = res.addresses || []; d.default_address = res.address || null;
+            if (res.address) Object.assign(d, { address_street: res.address.address, address_ward: res.address.ward, address_district: res.address.district, address_city: res.address.province });
+            core.showToast('Đã đặt địa chỉ mặc định.', 'success');
+          }).catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      useCustomerAddressForOrder: function(address) {
+        var d = this.customers.detail;
+        if (!d || !address) return;
+        this.closeCustomerDrawer();
+        this.openManualOrderForm();
+        this.pickManualOrderCustomer(Object.assign({}, d, { addresses: d.addresses || [] }));
+        this.$nextTick(function() {
+          if (this.manualOrder && typeof this.applyManualOrderCustomerAddress === 'function') this.applyManualOrderCustomerAddress(address.address_id);
+        }.bind(this));
+      },
+      // Copy địa chỉ giao hàng mặc định vào clipboard.
+      copyCustomerAddress: function() {
+        var core = window.MopsAdminCore;
+        var d = this.customers.detail;
+        if (!d) return;
+        var a = d.default_address || d;
+        var parts = [a.address || a.address_street, a.ward || a.address_ward, a.district || a.address_district, a.province || a.address_city].filter(Boolean);
+        if (!parts.length) { core.showToast('Khách hàng chưa có địa chỉ.', 'error'); return; }
+        var text = parts.join(', ');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function() { core.showToast('Đã copy địa chỉ.', 'success'); })
+            .catch(function() { core.showToast('Không copy được — trình duyệt chặn clipboard.', 'error'); });
+        } else {
+          core.showToast('Trình duyệt không hỗ trợ copy tự động: ' + text, 'error');
+        }
+      },
+      /* ══ XUẤT CSV ═══════════════════════════════════════════════════════════════════════════
+         Gọi export_customers (đủ field, không giới hạn 500 như danh sách) → tải file CSV. Cột đầu đúng
+         thứ tự mẫu nhập nên sửa ngoài Excel rồi nhập lại được luôn. BOM UTF-8 ở đầu file để Excel bản
+         Việt hoá không hiện tiếng Việt thành ký tự lạ. */
+      exportCustomersCsv: function() {
+        var self = this, core = window.MopsAdminCore;
+        if (this.customers.exporting) return;
+        this.customers.exporting = true;
+        core.gasPost({ action: 'export_customers' })
+          .then(function(d) {
+            self.customers.exporting = false;
+            if (!d || !d.success) { core.showToast('Không xuất được: ' + ((d && d.error) || ''), 'error'); return; }
+            var list = d.customers || [];
+            if (!list.length) { core.showToast('Chưa có khách hàng nào để xuất.', 'info'); return; }
+            var cols = [
+              ['external_code', 'Mã khách hàng'], ['name', 'Tên khách hàng *'],
+              ['address_phone', 'Địa chỉ - SĐT'], ['order_count', 'SL đơn hàng'], ['total_spend', 'Tổng chi tiêu'],
+              ['customer_id', 'Mã MOPS'], ['phone', 'SĐT'], ['email', 'Email'],
+              ['address_street', 'Địa chỉ'], ['address_ward', 'Phường/Xã'],
+              ['address_district', 'Quận/Huyện'], ['address_city', 'Tỉnh/TP'],
+              ['customer_group', 'Nhóm khách'], ['default_discount_percent', '% chiết khấu'],
+              ['status', 'Trạng thái'], ['source', 'Nguồn'], ['membership_tier', 'Hạng'],
+              ['loyalty_points', 'Điểm'], ['birthday', 'Ngày sinh'], ['notes', 'Ghi chú']
+            ];
+            function esc(v) {
+              var s = (v == null ? '' : String(v));
+              // SĐT/mã bắt đầu bằng 0: thêm tab trước để Excel giữ nguyên số 0 đầu thay vì đọc thành số.
+              if (/^0\d+$/.test(s)) s = '\t' + s;
+              return /[",\n\t]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+            }
+            var lines = [cols.map(function(c) { return esc(c[1]); }).join(',')];
+            list.forEach(function(r) { lines.push(cols.map(function(c) { return esc(r[c[0]]); }).join(',')); });
+            // '\uFEFF' = BOM UTF-8, viết bằng escape (KHÔNG dán ký tự BOM thật vào source — đó là thứ
+            // từng làm hỏng file trước đây, hiện ra thành &#xFEFF; trong HTML).
+            var blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'khach-hang-mops-' + new Date().toISOString().slice(0, 10) + '.csv';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            setTimeout(function() { URL.revokeObjectURL(a.href); }, 1000);
+            core.showToast('Đã xuất ' + list.length + ' khách hàng.', 'success');
+          })
+          .catch(function() { self.customers.exporting = false; core.showToast('Lỗi kết nối khi xuất.', 'error'); });
+      },
+
+      /* ══ NHẬP ═══════════════════════════════════════════════════════════════════════════════ */
+      openCustomerImport: function() {
+        this.customers.imp = {
+          show: true, step: 'paste', text: '', matrix: null, fileName: '', rows: [], parseError: '', unknownCols: [],
+          checking: false, committing: false, progress: 0, completedBatches: 0, totalBatches: 0, results: [], parseError: '', dryStat: null
+        };
+      },
+      downloadCustomerImportTemplate: function() {
+        var headers = ['Mã khách hàng', 'Tên khách hàng *', 'Địa chỉ - SĐT', 'SĐT', 'Địa chỉ', 'Phường/Xã', 'Quận/Huyện', 'Tỉnh/TP', 'Email', 'Nhóm khách', '% chiết khấu', 'SL đơn hàng', 'Tổng chi tiêu', 'Ghi chú'];
+        var sample = ['KH-MAU-001', 'Nguyễn Thị Minh', 'Số 1 Nguyễn Trãi, Phường Thượng Đình, Quận Thanh Xuân, Hà Nội - 0901234567', '0901234567', 'Số 1 Nguyễn Trãi', 'Phường Thượng Đình', 'Quận Thanh Xuân', 'Hà Nội', 'minh@example.com', 'LẺ', '0', '12', '3500000', 'Dòng ví dụ — có thể xóa trước khi nhập'];
+        var filename = 'mau-nhap-khach-hang-mops.xlsx';
+        // Zero-Wait 2026-08-10: xlsx lazy-load. Nếu chưa có → chờ tải (~200ms mạng thường), rồi
+        // build workbook. Fallback CSV chỉ khi load fail hẳn.
+        var loader = (window.MopsAssets && window.MopsAssets.loadXlsx) ? window.MopsAssets.loadXlsx() : Promise.reject();
+        loader.then(function() {
+          var sheet = window.XLSX.utils.aoa_to_sheet([headers, sample]);
+          sheet['!cols'] = headers.map(function(h) { return { wch: Math.max(14, h.length + 3) }; });
+          var book = window.XLSX.utils.book_new();
+          window.XLSX.utils.book_append_sheet(book, sheet, 'Khach hang');
+          window.XLSX.writeFile(book, filename);
+        }).catch(function() {
+          window.MopsAdminCore.downloadCsv(filename.replace(/\.xlsx$/, '.csv'), [headers.join(','), sample.join(',')]);
+        });
+      },
+      closeCustomerImport: function() {
+        var reload = this.customers.imp.step === 'done' && this.customers.imp.stat
+          && (this.customers.imp.stat.create || this.customers.imp.stat.update);
+        this.customers.imp.show = false;
+        if (reload) this.loadCustomers();
+      },
+      onCustomerImportFile: function(ev) {
+        var self = this;
+        var f = ev.target.files && ev.target.files[0];
+        if (!f) return;
+        var ext = (f.name.split('.').pop() || '').toLowerCase();
+        if (['xlsx', 'xls', 'csv', 'txt'].indexOf(ext) === -1) {
+          window.MopsAdminCore.showToast('Chỉ hỗ trợ tệp Excel (.xlsx, .xls) hoặc CSV.', 'error');
+          ev.target.value = '';
+          return;
+        }
+        // Zero-Wait 2026-08-10: đảm bảo xlsx đã tải TRƯỚC khi đọc file. Nếu ext CSV thì bỏ qua.
+        var needsXlsx = (ext === 'xlsx' || ext === 'xls');
+        var preload = needsXlsx && window.MopsAssets && window.MopsAssets.loadXlsx
+          ? window.MopsAssets.loadXlsx()
+          : Promise.resolve();
+        preload.catch(function() { /* nuốt — error sẽ hiện ở throw dưới */ }).then(function() {
+        var reader = new FileReader();
+        reader.onload = function() {
+          try {
+            self.customers.imp.fileName = f.name;
+            if (ext === 'xlsx' || ext === 'xls') {
+              if (!window.XLSX) throw new Error('Không tải được bộ đọc Excel. Hãy tải lại trang rồi thử lại.');
+              var book = window.XLSX.read(reader.result, { type: 'array' });
+              if (!book.SheetNames.length) throw new Error('File Excel không có sheet nào.');
+              self.customers.imp.matrix = window.XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]], { header: 1, defval: '', raw: false });
+              self.customers.imp.text = '';
+            } else {
+              self.customers.imp.matrix = null;
+              self.customers.imp.text = String(reader.result || '');
+            }
+            self.parseCustomerImport();
+          } catch (err) {
+            self.customers.imp.parseError = err.message || 'Không thể đọc tệp đã chọn.';
+            window.MopsAdminCore.showToast(self.customers.imp.parseError, 'error');
+          }
+        };
+        reader.onerror = function() { window.MopsAdminCore.showToast('Không đọc được file.', 'error'); };
+        if (ext === 'xlsx' || ext === 'xls') reader.readAsArrayBuffer(f);
+        else reader.readAsText(f, 'UTF-8');
+        }); // đóng preload.then wrapper (lazy xlsx)
+      },
+      // Tách 1 dòng CSV/TSV — có xử lý dấu ngoặc kép (ô chứa dấu phẩy) vì địa chỉ hay có ",".
+      splitImportLine: function(line, sep) {
+        var out = [], cur = '', inQ = false;
+        for (var i = 0; i < line.length; i++) {
+          var ch = line[i];
+          if (inQ) {
+            if (ch === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else inQ = false; }
+            else cur += ch;
+          } else if (ch === '"') inQ = true;
+          else if (ch === sep) { out.push(cur); cur = ''; }
+          else cur += ch;
+        }
+        out.push(cur);
+        return out.map(function(s) { return s.replace(/^\t/, '').trim(); }); // bỏ tab chống-rụng-0 khi xuất
+      },
+      parseCustomerImport: function() {
+        var imp = this.customers.imp;
+        imp.rows = []; imp.parseError = ''; imp.unknownCols = []; imp.results = []; imp.dryStat = null; imp.completedBatches = 0; imp.totalBatches = 0;
+        var matrix = imp.matrix;
+        if (!matrix) {
+          var text = String(imp.text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+          if (!text) { imp.parseError = 'Chưa có dữ liệu — dán từ Excel hoặc chọn file Excel/CSV.'; return; }
+          var lines = text.split('\n').filter(function(l) { return l.trim() !== ''; });
+          if (lines.length < 2) { imp.parseError = 'Cần ít nhất 1 dòng tiêu đề + 1 dòng dữ liệu.'; return; }
+          // Dán từ Excel → TSV (tab). File .csv → phẩy. Đoán theo dòng tiêu đề.
+          var sep = (lines[0].indexOf('\t') !== -1) ? '\t' : ',';
+          matrix = lines.map(function(line) { return this.splitImportLine(line, sep); }, this);
+        }
+        matrix = matrix.filter(function(row) { return row.some(function(cell) { return String(cell || '').trim() !== ''; }); });
+        if (matrix.length < 2) { imp.parseError = 'Cần ít nhất 1 dòng tiêu đề + 1 dòng dữ liệu.'; return; }
+        var header = matrix[0].map(function(cell) { return String(cell || '').trim(); });
+
+        // Map tiêu đề → field. Chấp nhận đúng mẫu khách gửi + các biến thể + file MOPS tự xuất.
+        var alias = {
+          'ma khach hang': 'external_code', 'ma kh': 'external_code', 'ma khach': 'external_code',
+          'ten khach hang': 'name', 'ten khach hang *': 'name', 'ten kh': 'name', 'ten': 'name', 'ho ten': 'name',
+          'dia chi - sdt': 'address_phone', 'dia chi-sdt': 'address_phone', 'dia chi sdt': 'address_phone',
+          'sdt': 'phone', 'so dien thoai': 'phone', 'dien thoai': 'phone', 'phone': 'phone',
+          'dia chi': 'address_street', 'duong': 'address_street',
+          'phuong/xa': 'address_ward', 'phuong xa': 'address_ward',
+          'quan/huyen': 'address_district', 'quan huyen': 'address_district',
+          'tinh/tp': 'address_city', 'tinh tp': 'address_city', 'tinh': 'address_city',
+          'email': 'email', 'nhom khach': 'customer_group', 'nhom': 'customer_group',
+          '% chiet khau': 'default_discount_percent', 'chiet khau': 'default_discount_percent',
+          'sl don hang': 'order_count', 'so don hang': 'order_count', 'tong don': 'order_count',
+          'tong chi tieu': 'total_spend', 'tong tien da chi': 'total_spend', 'total spend': 'total_spend', 'total_spend': 'total_spend',
+          'ghi chu': 'notes',
+          'ma mops': '_ignore', 'trang thai': '_ignore', 'nguon': '_ignore', 'hang': '_ignore',
+          'diem': '_ignore', 'ngay sinh': '_ignore'
+        };
+        function norm(s) {
+          // Bỏ dấu tiếng Việt để "Tên khách hàng" / "Ten khach hang" / "TÊN KHÁCH HÀNG" đều khớp.
+          // Dải - = dấu thanh/dấu mũ sau khi tách NFD (viết escape, không dán ký tự dấu).
+          return String(s || '').toLowerCase().trim()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/đ/g, 'd') // đ
+            .replace(/\s+/g, ' ').replace(/\*$/, '').trim();
+        }
+        var fields = header.map(function(h) {
+          var key = norm(h);
+          var f = alias[key];
+          if (!f) { imp.unknownCols.push(h || '(cột không tên)'); return null; }
+          return f;
+        });
+        if (fields.indexOf('name') === -1) {
+          imp.parseError = 'Không tìm thấy cột "Tên khách hàng" trong dòng tiêu đề. Tiêu đề đang đọc được: '
+            + header.join(' | ');
+          return;
+        }
+        var rows = [];
+        for (var i = 1; i < matrix.length; i++) {
+          var cells = matrix[i].map(function(cell) { return String(cell == null ? '' : cell).trim(); });
+          var obj = { _line: i + 1 };
+          fields.forEach(function(f, ci) {
+            if (!f || f.indexOf('_ignore') === 0) return;
+            obj[f] = cells[ci] != null ? cells[ci] : '';
+          });
+          if (Object.keys(obj).length > 1) rows.push(obj);
+        }
+        if (!rows.length) { imp.parseError = 'Không đọc được dòng dữ liệu nào.'; return; }
+        imp.rows = rows;
+        this.checkCustomerImport();
+      },
+      // Xem trước: gửi dry_run theo lô để GAS đối chiếu trùng SĐT/mã, KHÔNG ghi gì.
+      checkCustomerImport: function() {
+        var self = this, core = window.MopsAdminCore, imp = this.customers.imp;
+        imp.checking = true; imp.results = []; imp.progress = 0; imp.completedBatches = 0;
+        this.runCustomerImportBatches(true)
+          .then(function(agg) {
+            imp.checking = false;
+            imp.dryStat = agg.stat; imp.results = agg.results; imp.step = 'preview';
+          })
+          .catch(function(e) {
+            imp.checking = false;
+            imp.parseError = e.message || 'Lỗi kết nối khi kiểm tra dữ liệu.';
+            core.showToast(imp.parseError, 'error');
+          });
+      },
+      commitCustomerImport: function() {
+        var self = this, core = window.MopsAdminCore, imp = this.customers.imp;
+        if (imp.committing) return;
+        imp.committing = true; imp.progress = 0; imp.completedBatches = 0;
+        this.runCustomerImportBatches(false)
+          .then(function(agg) {
+            imp.committing = false;
+            imp.stat = agg.stat; imp.results = agg.results; imp.step = 'done';
+            core.showToast('Đã nhập: ' + agg.stat.create + ' mới, ' + agg.stat.update + ' cập nhật.', 'success');
+          })
+          .catch(function(e) {
+            imp.committing = false;
+            core.showToast(e.message || 'Lỗi khi ghi dữ liệu — kiểm tra lại rồi thử phần còn lại.', 'error');
+          });
+      },
+      // Chia lô 100 dòng (giới hạn backend + tránh timeout Apps Script) và chạy TUẦN TỰ:
+      // mỗi lô cần thấy khách vừa ghi ở lô trước để không tạo trùng, nên không gửi song song.
+      runCustomerImportBatches: function(dryRun) {
+        var self = this, core = window.MopsAdminCore, imp = this.customers.imp;
+        // Apps Script có giới hạn thời gian; 100 dòng/lô giảm rủi ro lô sau bị timeout.
+        // Import là upsert nên chạy lại an toàn: các dòng đã ghi sẽ được nhận diện và bỏ qua.
+        var BATCH = 100;
+        var rows = imp.rows.slice();
+        var agg = { stat: { create: 0, update: 0, skip: 0, error: 0 }, results: [] };
+        var chain = Promise.resolve();
+        var totalBatches = Math.ceil(rows.length / BATCH) || 1;
+        imp.totalBatches = totalBatches;
+        for (var b = 0; b < totalBatches; b++) {
+          (function(batchIdx) {
+            chain = chain.then(function() {
+              var slice = rows.slice(batchIdx * BATCH, (batchIdx + 1) * BATCH);
+              return core.gasPost({ action: 'import_customers', rows: slice, dry_run: !!dryRun })
+                .then(function(d) {
+                  if (!d || !d.success) throw new Error((d && d.error) || 'Lô ' + (batchIdx + 1) + ' thất bại');
+                  ['create', 'update', 'skip', 'error'].forEach(function(k) { agg.stat[k] += (d.stat && d.stat[k]) || 0; });
+                  agg.results = agg.results.concat(d.results || []);
+                  imp.completedBatches = batchIdx + 1;
+                  imp.progress = Math.round(((batchIdx + 1) / totalBatches) * 100);
+                });
+            }).catch(function(error) {
+              throw new Error('Lô ' + (batchIdx + 1) + '/' + totalBatches + ' thất bại sau khi đã xử lý ' + batchIdx + ' lô. ' + (error.message || error));
+            });
+          })(b);
+        }
+        return chain.then(function() { return agg; });
+      },
+      customerImportRowClass: function(action) {
+        if (action === 'create') return 'text-emerald-700';
+        if (action === 'update') return 'text-primary';
+        if (action === 'error')  return 'text-error font-semibold';
+        return 'text-on-surface-variant';
+      },
+      customerImportActionLabel: function(action) {
+        return { create: 'Thêm mới', update: 'Cập nhật', skip: 'Bỏ qua', error: 'Lỗi' }[action] || action;
+      },
+      // Badge hạng thành viên — set tay qua modal Sửa.
+      membershipTierMeta: function(tier) {
+        var map = {
+          Silver:  { label: 'Silver',  cls: 'bg-surface-container-high text-on-surface-variant' },
+          Gold:    { label: 'Gold',    cls: 'ma-badge ma-badge--gold' },
+          Diamond: { label: 'Diamond', cls: 'ma-badge ma-badge--accent' }
+        };
+        return map[tier] || null;
+      }
+    }
+  });
+})();

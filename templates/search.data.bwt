@@ -1,0 +1,38 @@
+{% layout none %}
+<div class="category-products products-view products-view-grid list_hover_pro">
+	<div class="filter-containers">
+		{% if search.results.size > 0 %}
+		{% paginate search.results by settings.collection_number_product %}
+		{%include 'collection-sortby'%}
+		<div class="products-view products-view-grid list_hover_pro">
+			<div class="row">
+				{% for product in search.results %}
+				<div class="col-6 col-md-3">
+					<div class="item_product_main">
+						{%include 'product_grid_office'%}
+					</div>
+				</div>
+				{% endfor %}
+			</div>
+		</div>
+		<div class="pagenav">
+			{% if paginate.pages > 1 %}
+			{% include 'collection-paginate-pages' %}
+			{% endif %}
+		</div>
+		{% endpaginate %}
+		{% else %}
+		<div class="afw-empty-state">
+			<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" style="color:#aaa;">
+				<path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z" />
+			</svg>
+			<p class="afw-empty-state__title">Không tìm thấy sản phẩm phù hợp</p>
+			<p class="afw-empty-state__hint">Thử bỏ bớt một số bộ lọc để xem thêm kết quả</p>
+			<div class="afw-empty-state__actions">
+				<a href="javascript:void(0)" onclick="clearAllFiltered()" class="btn btn-outline">Bỏ tất cả bộ lọc</a>
+				<a href="/collections/all" class="btn btn-primary">Xem tất cả sản phẩm</a>
+			</div>
+		</div>
+		{% endif %}
+	</div>
+</div>

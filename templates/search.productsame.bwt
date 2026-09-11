@@ -1,0 +1,119 @@
+{%layout none%}
+{{search.results}}
+{% for product in search.results %}
+{%assign countProductSamePrice = forloop.index%}
+{%endfor%}
+
+{% if search.results_count > 1 %} 
+<div class="block-product">
+	<div class="section-title a-left txt-uppercese">
+		<h2>
+			<a class="title-name-same" href="" title="{{settings.product_same_price_title | strip_html}}">{{settings.product_same_price_title}}</a>
+		</h2>
+	</div>
+	<div class="product-same-swiper swiper-container">
+		<div class="swiper-wrapper">
+			{% for product in search.results limit: settings.product_same_price_limit%}
+			<div class="swiper-slide">
+				<div class="item_product_main">
+					{%include 'product_grid_office'%}
+				</div>
+			</div>
+			{% endfor %}
+		</div>
+		<div class="swiper-button-prev">
+			<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+				<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+				<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+			</svg>
+		</div>
+		<div class="swiper-button-next">
+			<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+				<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+				<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+			</svg>
+		</div>
+	</div>
+	<div class="show-more-same">
+		<a class='show-more btn btn-primary frame flexbtn same-product-btn' href='' title='Xem thêm'>
+			Xem thêm <svg height="64" viewBox="0 0 24 24" width="64" xmlns="http://www.w3.org/2000/svg" data-name="Layer 2"><path d="m22.707 11.293-7-7a1 1 0 0 0 -1.414 1.414l5.293 5.293h-17.586a1 1 0 0 0 0 2h17.586l-5.293 5.293a1 1 0 1 0 1.414 1.414l7-7a1 1 0 0 0 0-1.414z"></path></svg>
+		</a>
+	</div>
+</div>
+{%endif%}
+<script>
+	awe_lazyloadImage();
+	{%if settings.iwish_enable%}
+	favoriBean.Wishlist.wishlistProduct();
+	{%endif%}
+	$(document).ready(function () {
+		var modal = $('.quickview-product');
+		var btn = $('.quick-view');
+		var span = $('.quickview-close');
+
+		btn.click(function () {
+			modal.show();
+		});
+
+		span.click(function () {
+			modal.hide();
+		});
+
+		$(window).on('click', function (e) {
+			if ($(e.target).is('.modal')) {
+				modal.hide();
+			}
+		});
+	});
+	$('.add_to_cart').click(function(e){	
+		e.preventDefault();		
+		var $this = $(this);
+		var form = $this.parents('form');	
+		$.ajax({
+			type: 'POST',
+			url: '/cart/add.js',
+			async: false,
+			data: form.serialize(),
+			dataType: 'json',
+			beforeSend: function() { },
+			success: function(line_item) {
+				ajaxCart.load();
+				$('.popup-cart-mobile, .backdrop__body-backdrop___1rvky').addClass('active');
+				AddCartMobile(line_item);
+			},
+			cache: false
+		});
+	});
+	var swiper = new Swiper('.product-same-swiper', {
+		slidesPerView: 4,
+		spaceBetween: 20,
+		slidesPerGroup: 1,
+		slidesPerColumn: 1,
+		navigation: {
+			nextEl: '.product-same-swiper .swiper-button-next',
+			prevEl: '.product-same-swiper .swiper-button-prev',
+		},
+		breakpoints: {
+			280: {
+				slidesPerView: 2,
+				spaceBetween: 15
+			},
+			640: {
+				slidesPerView: 2,
+				spaceBetween: 15
+			},
+			768: {
+				slidesPerView: 3,
+				spaceBetween: 15
+			},
+			992: {
+				slidesPerView: 4,
+				spaceBetween: 15
+			},
+			1025: {
+				slidesPerView: 5,
+				spaceBetween: 20
+			}
+		}
+	});
+</script>

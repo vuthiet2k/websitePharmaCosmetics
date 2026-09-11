@@ -1,0 +1,229 @@
+{%- assign sold_out = true -%}
+{%- if product.available  -%}
+{%- assign sold_out = false -%}
+{%- assign awe-price = product.selected_or_first_available_variant.price -%}
+{%- assign awe-variant = product.selected_or_first_available_variant.title -%}
+{%- assign awe-compare-price = product.selected_or_first_available_variant.compare_at_price -%}
+{%- else -%}
+{%- assign awe-price = product.variants[0].price -%}
+{%- assign awe-variant = product.variants[0].title -%}
+{%- assign awe-compare-price = product.variants[0].compare_at_price -%}
+{%- endif -%} 
+{%- assign contact = false -%}
+{%- if awe-price == 0 -%}
+{%- assign contact = true -%}
+{%- endif-%}
+{%- assign on_sale = false -%}
+{%- if awe-compare-price > awe-price -%}
+{%- assign on_sale = true -%}
+{%- endif -%}
+{%- assign variantCount = product.variants | size -%}
+{%- assign on_var = false -%}
+{%- if variantCount > 1 -%}
+{%- assign on_var = true -%}
+{%- endif -%}
+{%- if awe-compare-price > awe-price -%}
+{%- capture discount -%} 
+{{awe-compare-price | minus:awe-price | times:100 | divided_by:awe-compare-price | round }}% 
+{%- endcapture -%}
+{%- assign pt = awe-compare-price | minus:awe-price | times:100 | divided_by:awe-compare-price -%}
+{%- if pt > 99 -%}
+{%- capture discount -%}
+99%
+{%- endcapture -%}
+{%- endif -%}
+{%- if pt < 1 -%}
+{%- capture discount -%}
+1%
+{%- endcapture -%}
+{%- endif -%}
+{%- assign on_sale = true -%}
+{%- endif -%}
+{%- assign variantCount = product.variants | size -%}
+{%- assign on_var = false -%}
+{%- if variantCount > 1 -%}
+{%- assign on_var = true -%}
+{%- endif -%}
+{%- if awe-compare-price > awe-price -%}
+{%- capture discount -%} 
+{{awe-compare-price | minus:awe-price | times:100 | divided_by:awe-compare-price | round }}% 
+{%- endcapture -%}
+{%- assign pt = awe-compare-price | minus:awe-price | times:100 | divided_by:awe-compare-price -%}
+{%- if pt > 99 -%}
+{%- capture discount -%}
+99%
+{%- endcapture -%}
+{%- endif -%}
+{%- if pt < 1 -%}
+{%- capture discount -%}
+1%
+{%- endcapture -%}
+{%- endif -%}
+{%- assign on_sale = true -%}
+{%- endif -%}
+{%- assign variantCount = product.variants | size -%}
+{%- assign on_var = false -%}
+{%- if variantCount > 1 -%}
+{%- assign on_var = true -%}
+{%- endif -%}
+{%- assign featured_image_alt = product.featured_image.alt | default: product.name -%}
+{%- assign quycach = false -%}
+{%- assign preorder = false -%}
+{%- assign tag_check_video = false -%}
+{%- for tag in product.tags -%}
+{%- assign tags = tag -%}
+{%- if tags contains 'quycach_'-%} 
+{%- assign quycach = true -%} 
+{% assign itemquycach = tags | remove: 'quycach_' %}
+{%- endif -%}
+{%- if tags contains 'Pre-order' or tags contains 'pre-order' -%} 
+{%- assign preorder = true -%} 
+{%- endif -%}
+{%- if tags contains 'video:' -%}
+{%- assign tag_check_video = true -%}	
+{%- endif -%}
+{%- endfor -%}
+{%- if settings.metafield_show -%}
+{%- assign metafields_video = product.metafields.custom.Video -%}
+{%- assign cleaned_video = metafields_video | remove: "[" | remove: "]" -%}
+{%- assign video_id = cleaned_video | remove: '"' -%}
+{%- if video_id != null and video_id != '' and video_id !="" -%}
+{%- assign tag_check_video = true -%}	
+{%- endif -%}
+{%- assign metafields_quycach = product.metafields.custom.Quycach -%}
+{%- assign cleaned_quycach = metafields_quycach | remove: "[" | remove: "]" -%}
+{%- assign quycach_id = cleaned_quycach | remove: '"' -%}
+{%- endif -%}
+<form action="/cart/add" method="post" class="variants product-action item-product-main duration-300" data-cart-form data-id="product-actions-{{ product.id }}" enctype="multipart/form-data">
+	<div class="product-thumbnail">
+		<div class="sapo-buyxgety-badge" data-id="{{ product.id }}"></div>
+		<a class="image_thumb scale_hover" href="{{ product.url }}" title="{{ product.name }}">
+			<img class="lazyload duration-300 image1" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC"  data-src="{{ product.featured_image.src | img_url:'large' }}" alt="{{ product.name }}">
+			{% if product.images.size >= 2  %}
+			<img class="lazyload duration-300 image2" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC"  data-src="{{ product.images[1].src | img_url:'large' }}" alt="{{ product.name }}">
+			{%else%}
+			<img class="lazyload duration-300 image2" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC"  data-src="{{ product.images[1].src | img_url:'large' }}" alt="{{ product.name }}">
+			{% endif %}
+		</a>
+		{%- unless preorder -%}
+		{%- if tag_check_video-%}
+		<div class="video_tem">
+			<img width="64" height="64" class="lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC" data-src="{{'icon_youtube.png' | asset_url}}" alt="Video"/>
+		</div>
+		{%- endif -%}
+		{%- endunless -%}
+		{%- if quycach_id != null and quycach_id != '' and quycach_id !="" -%}
+		<div class="badge">
+			<span class="new">{{quycach_id}}</span>
+		</div>
+		{%else%}
+		{%if quycach %}<div class="badge">
+		<span class="new">{{itemquycach}}</span>
+		</div>{% endif %}
+		{% endif %}
+		{%if preorder%}<div class="pre-order">
+		<img class="lazyload duration-300" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC"  data-src="{{ 'icon_pre_order.png' | asset_url }}" alt="Pre-order">
+		</div>{% endif %}
+		{%- if settings.quickview_enable or settings.iwish_enable -%}
+		<div class="product-button">
+			{%- if settings.quickview_enable -%}
+			{%- if preorder -%}
+			<button class="btn-cart btn-views btn btn-primary" title="Xem chi tiết" type="button" onclick="window.location.href='{{product.url}}'" >
+				<svg fill="#000000" height="20" width="20" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 224.549 224.549" xml:space="preserve">
+					<g>
+						<path d="M223.476,108.41c-1.779-2.96-44.35-72.503-111.202-72.503S2.851,105.45,1.072,108.41c-1.43,2.378-1.43,5.351,0,7.729
+								 c1.779,2.96,44.35,72.503,111.202,72.503s109.423-69.543,111.202-72.503C224.906,113.761,224.906,110.788,223.476,108.41z
+								 M112.274,173.642c-49.925,0-86.176-47.359-95.808-61.374c9.614-14.032,45.761-61.36,95.808-61.36
+								 c49.925,0,86.176,47.359,95.808,61.374C198.468,126.313,162.321,173.642,112.274,173.642z"></path>
+						<path d="M112.274,61.731c-27.869,0-50.542,22.674-50.542,50.543c0,27.868,22.673,50.54,50.542,50.54
+								 c27.868,0,50.541-22.672,50.541-50.54C162.815,84.405,140.143,61.731,112.274,61.731z M112.274,147.814
+								 c-19.598,0-35.542-15.943-35.542-35.54c0-19.599,15.944-35.543,35.542-35.543s35.541,15.944,35.541,35.543
+								 C147.815,131.871,131.872,147.814,112.274,147.814z"></path>
+						<path d="M112.274,92.91c-10.702,0-19.372,8.669-19.372,19.364c0,10.694,8.67,19.363,19.372,19.363
+								 c10.703,0,19.373-8.669,19.373-19.363C131.647,101.579,122.977,92.91,112.274,92.91z"></path>
+					</g>
+				</svg>
+			</button>
+			{%- else -%}
+			<button class="btn-cart btn-views quick-view-option btn btn-primary quick-view" title="Xem nhanh" type="button" data-handle="{{ product.alias }}">
+				<svg fill="currentColor" height="22" width="22" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 224.549 224.549" xml:space="preserve">
+					<g>
+						<path d="M223.476,108.41c-1.779-2.96-44.35-72.503-111.202-72.503S2.851,105.45,1.072,108.41c-1.43,2.378-1.43,5.351,0,7.729
+								 c1.779,2.96,44.35,72.503,111.202,72.503s109.423-69.543,111.202-72.503C224.906,113.761,224.906,110.788,223.476,108.41z
+								 M112.274,173.642c-49.925,0-86.176-47.359-95.808-61.374c9.614-14.032,45.761-61.36,95.808-61.36
+								 c49.925,0,86.176,47.359,95.808,61.374C198.468,126.313,162.321,173.642,112.274,173.642z"></path>
+						<path d="M112.274,61.731c-27.869,0-50.542,22.674-50.542,50.543c0,27.868,22.673,50.54,50.542,50.54
+								 c27.868,0,50.541-22.672,50.541-50.54C162.815,84.405,140.143,61.731,112.274,61.731z M112.274,147.814
+								 c-19.598,0-35.542-15.943-35.542-35.54c0-19.599,15.944-35.543,35.542-35.543s35.541,15.944,35.541,35.543
+								 C147.815,131.871,131.872,147.814,112.274,147.814z"></path>
+						<path d="M112.274,92.91c-10.702,0-19.372,8.669-19.372,19.364c0,10.694,8.67,19.363,19.372,19.363
+								 c10.703,0,19.373-8.669,19.373-19.363C131.647,101.579,122.977,92.91,112.274,92.91z"></path>
+					</g>
+				</svg>
+			</button>
+			{%- endif -%}
+			{%- endif -%}
+			{%- if settings.iwish_enable -%}
+			<a href="javascript:void(0)" class="setWishlist btn-views btn-circle" data-wish="{{product.alias}}" tabindex="0" title="Thêm vào yêu thích">
+				<img width="25" height="25" src="{{'heart.png' |asset_url}}" alt="Thêm vào yêu thích"/> 
+			</a>
+			{%- endif -%}
+		</div>
+		{%- endif -%}
+		{%- if on_sale == true and contact == 'false' and sold_out == "false" -%}
+		<span class="flash-sale">-{{discount}}</span>
+		{%- endif -%}
+	</div>
+	<div class="product-info">
+		<h3 class="product-name line-clamp-2-new">
+			<a href="{{ product.url }}" title="{{ product.name }}">{{ product.name }}</a>
+		</h3>
+		<div class="product-price-cart">
+			{%- if contact -%}
+			<span class="price">Liên hệ</span>
+			{%- else -%}
+			{%- if on_sale -%}
+			<span class="price">{{  awe-price | money }}</span>
+			{%- if awe-compare-price > awe-price -%}
+			<span class="compare-price">{{ awe-compare-price | money }}</span>
+			{%- endif -%}		
+
+			{%- else -%}
+			<span class="price">{{- awe-price | money -}}</span>
+			{%- endif -%}
+			{%- endif -%}
+		</div>
+		{%- if preorder -%}
+		<button class="btn-cart btn-views" title="Đặt hàng trước" type="button" onclick="window.location.href='{{product.url}}'" >
+			Đặt hàng trước
+		</button>
+		{%- else -%}
+		{%- if variantCount > 1 -%}
+		{%- if sold_out -%}
+		<button disabled class="btn-cart btn-views disabled" title="Hết hàng" type="button" >
+			Hết hàng
+		</button>
+		{%- else -%}
+		<input class="hidden" type="hidden" name="variantId" value="{{ product.variants[0].id }}" />
+		<button class="btn-cart btn-views" title="Xem chi tiết" type="button" onclick="window.location.href='{{product.url}}'" >
+			Xem chi tiết
+		</button>
+		{%- endif -%}
+		{%- elsif contact -%}
+		<input class="hidden" type="hidden" name="variantId" value="{{ product.variants[0].id }}" />
+		<button class="btn-cart btn-views" title="Xem chi tiết" type="button" onclick="window.location.href='{{product.url}}'" >
+			Xem chi tiết
+		</button>
+		{%- elsif sold_out -%}
+		<button disabled class="btn-cart btn-views disabled" title="Hết hàng" type="button" >
+			Hết hàng
+		</button>
+		{%- else -%}
+		<input type="hidden" name="variantId" value="{{ product.variants[0].id }}" />
+		<button class="btn-cart btn-views add_to_cart {%if contact and variantCount == 1%} hidden{%endif%}" title="Thêm vào giỏ">
+			Thêm vào giỏ
+		</button>
+		{%- endif -%}
+		{%- endif -%}
+	</div>
+</form>

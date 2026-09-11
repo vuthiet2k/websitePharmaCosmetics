@@ -1,0 +1,21 @@
+<h1 class="visually-hidden">{{store.name}} - {{store.description}}</h1>
+{%- comment -%}
+  Whitelist các section hợp lệ — PHẢI khớp với options nhóm "Trang chủ" trong settings_schema.json.
+  Guard này tránh lỗi "file section_xxx.bwt không tìm thấy" khi settings (data trên store) còn sót
+  giá trị module cũ đã bị xóa snippet. Thêm section mới: cập nhật cả đây và schema.
+{%- endcomment -%}
+{%- comment -%}
+  REOPEN 2026-09-11: thêm 4 section mới (clinical_banner/trust_strip/protocol/zalo_consult) —
+  phát hiện thiếu khi đối chiếu với Pharma_Cosmetics_Desktop_Homepage_Figma_260-84.html (mockup
+  gốc trong "Pharma Cosmetics-20260910T092731Z-1-001/Pharma Cosmetics/"), theo yêu cầu người
+  dùng test giao diện sau REOPEN ADR-007.
+{%- endcomment -%}
+{% assign valid_sections = 'section_hero,section_flash_sale,section_solutions,section_brand_marquee,section_spa,section_why_us,section_testimonials,section_feedback,section_ingredients,section_featured_products,section_collection_bestseller,section_collection_cta,section_stats,section_expert_team,section_clinical_banner,section_trust_strip,section_protocol,section_zalo_consult' | split: ',' %}
+{% for i in (1..18) %}
+{% capture enable %}home_section_{{i}}{% endcapture %}
+{% assign sec = settings[enable] %}
+{% if sec and sec != 'none' and valid_sections contains sec %}
+{% include sec %}
+{% endif %}
+{% endfor %}
+<div class="ab-most-view-product-module ab-hide"></div>

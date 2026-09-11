@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="vi">
+	<head>
+		{% include 'router' %}
+		<meta charset="UTF-8" />
+		{%- if settings.ga_id != blank -%}
+		<script async src="https://www.googletagmanager.com/gtag/js?id={{ settings.ga_id }}"></script>
+		<script>
+		  window.dataLayer = window.dataLayer || [];
+		  function gtag(){dataLayer.push(arguments);}
+		  gtag('js', new Date());
+		  gtag('config', '{{ settings.ga_id }}');
+		</script>
+		{%- endif -%}
+		<meta name="google-site-verification" content="hQIumWld_-_PQCp9rfFO617FC5Z_MRszJ95bfzgWxzE" />
+		<meta name="theme-color" content="{{ settings.theme_main_color }}" />
+		<link rel="canonical" href="{{ canonical_url }}"/>
+		<meta name='revisit-after' content='2 days' />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">	
+		{% if template contains 'mops-admin' %}<meta name="robots" content="noindex,nofollow" />{% else %}<meta name="robots" content="noodp,index,follow" />{% endif %}
+		{% if current_page != 1 %}<meta name="description" content="{{ page_description }} | Trang {{ current_page }}">{% else %}<meta name="description" content="{{ page_description }}">{% endif %}
+		<title>{%if page_title == 'All'%}Tất cả sản phẩm{%else%}{{ page_title }}{%endif%}{% if current_tags %} tagged "{{ current_tags | join: ', ' }}"{% endif %}{% if current_page != 1 %} - Trang {{ current_page }}{% endif %}		</title>
+		{%if template contains 'index'%}{%if settings.home_page_keywords != '' and settings.home_page_keywords != null%}<meta name="keywords" content="{{settings.home_page_keywords}}"/>{%else%}<meta name="keywords" content="{{store.name}}, {{store.domain}}"/>{%endif%}{%elsif template contains 'product'%}<meta name="keywords" content="{{product.name}}, {%for collection in product.collections%}{{collection.name}}, {%endfor%}{%if product.tags.size > 0%}{% for tag in product.tags %}{{tag}}, {%endfor%}{%endif%}{{store.name}}, {{store.domain}}"/>{%elsif template contains 'collection'%}<meta name="keywords" content="{{collection.name }}, {{store.name}}, {{store.domain}}"/>{%elsif template contains 'blog'%}<meta name="keywords" content="{{blog.name }}, {{store.name}}, {{store.domain}}"/>{%elsif template contains 'article'%}<meta name="keywords" content="{{article.title}}, {{blog.name}}, {%if article.tags.size > 0%}{% for tag in article.tags %}{{tag}}, {%endfor%}{%endif%} {{store.name}}, {{store.domain}}"/>{%else%}<meta name="keywords" content="{{page_title}}, {{store.name}}, {{store.domain}}"/>{%endif%}		
+		{% include 'fb-open-graph-tags' %}	
+		{%if settings.theme_favicon_enable%}<link rel="icon" href="{{ 'favicon.png' | asset_url }}" type="image/x-icon" />{%endif%}
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		{%- comment -%}
+		  REOPEN 2026-09-10 (ADR-007/T-70): Fraunces → Playfair Display, đồng bộ với
+		  --font-display trong snippets/header_style.bwt và layouts/skinhealthy.bwt.
+		  REOPEN 2026-09-11: gộp về 1 request duy nhất (trước đây có 2 <link> Google
+		  Fonts riêng — dòng này + dòng Inter bên dưới — cả 2 đều xin lại
+		  "Playfair+Display:wght@700;800;900", tải trùng font 2 lần mỗi lượt xem trang).
+		{%- endcomment -%}
+		<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+		{%- comment -%}
+		  REOPEN 2026-09-10 (ADR-007/T-70): palette xlsx mới thay T-10 — Tailwind CDN (JIT,
+		  không build step), theo đúng quy ước đã dùng ở layouts/skinhealthy.bwt (xem comment
+		  tương ứng ở đó). preflight tắt vì layout này đã có CSS/theme cũ riêng
+		  (vendor_appbulk.css + assets/*.scss.bwt) — bật preflight sẽ đè margin/font mặc định
+		  của các thẻ đang dùng chung.
+		  Nguồn token: "Pharma Cosmetics-20260910T092731Z-1-001/Pharma Cosmetics/*.xlsx"
+		  (sheet 00_Quy_Chuan_Design_System) — THAY THẾ
+		  Pharma_Cosmetics_Figma_Project/ui-design-system.html (không còn tồn tại). GIỮ NGUYÊN
+		  tên token forest/clinical/mint/brandGold/brandOrange/luxurySand (chỉ đổi giá trị hex)
+		  để không phải sửa ~35 file template/snippet đang dùng utility class cũ — xem mapping
+		  đầy đủ trong tailwind.config.js (bản tài liệu 1 nguồn sự thật, doc-mirror). Token mới
+		  (brand-primary/brand-green/... tên đúng theo xlsx) dùng cho markup M7+.
+		  REOPEN 2026-09-11: Inter + Playfair Display đã gộp vào <link> Google Fonts
+		  phía trên (cùng Montserrat/IBM Plex Mono) — xoá request trùng ở đây.
+		{%- endcomment -%}
+		<script src="https://cdn.tailwindcss.com"></script>
+		<script id="pharma-tailwind-config">
+		  tailwind.config = {
+		    corePlugins: { preflight: false },
+		    theme: {
+		      extend: {
+		        colors: {
+		          forest: { 800: '#166B55', 900: '#0F2318' },
+		          clinical: { 600: '#3CB371', 700: '#267348' },
+		          mint: { 50: '#E8F8EE', 100: '#D7F3E3' },
+		          brandGold: '#B8860B',
+		          brandOrange: '#D79A7D',
+		          flashRed: '#DC2626',
+		          luxurySand: '#F6E3D8',
+		          'brand-primary': 'var(--color-brand-primary)',
+		          'brand-green': 'var(--color-brand-green)',
+		          'brand-dark': 'var(--color-brand-dark)',
+		          'brand-deep': 'var(--color-brand-deep)',
+		          'mint-light': 'var(--color-mint-light)',
+		          'mint-subtle': 'var(--color-mint-subtle)',
+		          'badge-green': 'var(--color-badge-green-bg)',
+		          'gold-sand': 'var(--color-gold-sand)',
+		          'gold-dark': 'var(--color-gold-dark)',
+		          peach: 'var(--color-peach)',
+		          'peach-light': 'var(--color-peach-light)',
+		          'text-main': 'var(--color-text-main)',
+		          'text-body': 'var(--color-text-body)',
+		          'text-muted': 'var(--color-text-muted)',
+		          'border-clinical': 'var(--color-border-clinical)',
+		          'bg-page': 'var(--color-bg-page)',
+		          'semantic-success': 'var(--color-semantic-success)'
+		        },
+		        fontFamily: {
+		          heading: ['Playfair Display', 'Inter', 'serif']
+		        }
+		      }
+		    }
+		  };
+		</script>
+		{% include 'pharma_ui_kit' %}
+		{% include 'pc_clinical_components' %}
+		<link rel="preload" as="script" href="{{ 'jquery.js' | asset_url }}" />
+		{{ 'jquery.js'  | asset_url | script_tag }}
+		<link rel="preload" as="script" href="{{ 'swiper.js' | asset_url }}" />
+		{{ 'swiper.js'  | asset_url | script_tag }}
+		<link rel="preload" as="script" href="{{ 'lazy.js' | asset_url }}" />
+		{{ 'lazy.js'  | asset_url | script_tag }}
+		{%include 'header_style'%}
+		{{ content_for_header }}
+		{% if template contains 'customer' %}{{ 'bizweb-api.js'  | bizweb_asset_url | script_tag }}{{ 'common.js' | bizweb_asset_url | script_tag }}{{ 'customer.js'  | bizweb_asset_url | script_tag }}{% endif %}
+		{% if template contains 'product' %}<script>var ProductReviewsAppUtil=ProductReviewsAppUtil || {};{% if customer %}ProductReviewsAppUtil.customer={id: '{{customer.id}}',name: '{{customer.name}}',email: '{{customer.email}}', phone: '{{customer.phone}}'};{% endif %}ProductReviewsAppUtil.store={name: '{{store.name}}'};</script>{%endif%}
+		{% include 'schema' %}
+		<script>
+			{%if settings.header_search_smart%}
+			{%- comment -%}
+			  T-107 (2026-09-11) — BUG THẬT phát hiện qua Playwright thật (gõ chữ vào ô tìm kiếm
+			  vừa khôi phục hiển thị): .catch() nuốt lỗi fetch nhưng KHÔNG trả về giá trị an toàn
+			  (undefined), khiến "Object.keys(data)" ở dưới ném lỗi "Cannot convert undefined or
+			  null to object" bất cứ khi nào request lỗi/timeout (dev-server local hiện chưa mock
+			  endpoint này nên luôn lỗi — nhưng lỗ hổng này CŨNG áp dụng cho production thật nếu
+			  API chậm/lỗi mạng). Trả về {} khi lỗi để Object.keys() luôn an toàn.
+			{%- endcomment -%}
+			window.getItemSearch = function(name, smartjson) {
+				return fetch('https://' + window.location.hostname + '/search?q=' + encodeURIComponent(name) + '&view=' + smartjson + '&type=product')
+					.then(function(res) { return res.json(); })
+					.then(function(json) { return json || {}; })
+					.catch(function(err) { console.error(err); return {}; });
+			};
+			window.getItemSearch2 = function(title, smartjsonarticle) {
+				return fetch('https://' + window.location.hostname + '/search?q=' + encodeURIComponent(title) + '&view=' + smartjsonarticle + '&type=article')
+					.then(function(res) { return res.json(); })
+					.then(function(json) { return json || {}; })
+					.catch(function(err) { console.error(err); return {}; });
+			};
+			{%endif%}
+			document.addEventListener('DOMContentLoaded', function () {
+				awe_lazyloadImage();
+				{%if settings.header_search_smart%}
+				var searchCoupon = document.querySelector('.search-suggest .coupon_search');
+				var searchSuggest = document.querySelector('.search-suggest .item-suggest');
+				var searchRecent = document.querySelector('.search-suggest .search-recent');
+				var searchRecentList = localStorage.getItem('search_recent_list');
+				var recentList = searchRecentList ? JSON.parse(searchRecentList) : [];
+
+				if (recentList.length > 0) {
+					searchRecent.classList.remove('d-none');
+					var searchList = searchRecent.querySelector('.search-list');
+					// Chỉ hiển thị vài mục gần đây nhất (mới nhất lên đầu) cho gọn
+					var RECENT_SHOW = 5;
+					recentList.slice(-RECENT_SHOW).reverse().forEach(function (item) {
+						var link = document.createElement('a');
+						link.href = `/search?query=${encodeURIComponent(item)}&type=product`;
+						// Strip tags:(...) wrapper for clean display
+						var displayText = item.replace(/^tags:\((.+)\)$/, '$1');
+						link.title = `Tìm kiếm ${displayText}`;
+						link.classList.add('search-item');
+
+						var iconEl = document.createElement('span');
+						iconEl.classList.add('search-item-icon');
+						iconEl.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>';
+
+						var textEl = document.createElement('span');
+						textEl.classList.add('search-item-text');
+						textEl.textContent = displayText;
+
+						link.appendChild(iconEl);
+						link.appendChild(textEl);
+
+						var closeSpan = document.createElement('span');
+						closeSpan.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+						closeSpan.title = 'Xóa';
+						closeSpan.classList.add('close');
+
+						closeSpan.addEventListener('click', function (e) {
+							e.preventDefault();
+							e.stopPropagation();
+							var index = recentList.indexOf(item);
+							if (index !== -1) {
+								recentList.splice(index, 1);
+								localStorage.setItem('search_recent_list', JSON.stringify(recentList));
+								searchList.removeChild(link);
+								if (recentList.length == 0) {
+									searchRecent.classList.toggle('d-none');
+								}
+							}
+						});
+
+						link.appendChild(closeSpan);
+						searchList.appendChild(link);
+					});
+				}
+
+				var searchInput = document.querySelectorAll('.header_tim_kiem input[type="text"], .search-mobile input[type="text"]');
+				searchInput.forEach(function (input) {
+					input.addEventListener('keyup', function (e) {
+						let term = this.value.trim();
+						let data = '';
+						var resultbox = '';
+						let data2 = '';
+						var resultbox2 = '';
+						if (term.length > 1) {
+							searchRecent.classList.add('d-none');
+							searchCoupon.classList.add('d-none');
+							searchSuggest.classList.add('d-none');
+							async function goawaySearch() {
+								data = await getItemSearch(term, 'smartjson');
+								data2 = await getItemSearch2(term, 'smartjsonar');
+								setTimeout(function () {
+									var sizeData = Object.keys(data).length;
+									var sizeData2 = Object.keys(data2).length;
+									if (sizeData > 0) {
+										resultbox +=`<div class="title-search"><span>Sản phẩm</span> <a href="/search?query=${term}&type=product" class="see-all-search" title="Xem tất cả">Xem tất cả »</a></div>`
+										Object.keys(data).forEach(function (key) {
+											if (data[key].compare_price != 0) {
+												resultbox += `<a class="product-smart" href="${data[key].url}" title="${data[key].name}"><div class="image_thumb"><img width="58" height="58" class="lazyload loaded" src="${data[key].image}" data-src="${data[key].image}" alt="${data[key].name}" data-was-processed="true"></div><div class="product-info"><h3 class="product-name"><span>${data[key].name}</span></h3><div class="price-box"><span class="price">${data[key].price}</span><span class="compare-price">${data[key].compare_price}</span></div></div></a>`;
+											} else {
+												resultbox += `<a class="product-smart" href="${data[key].url}" title="${data[key].name}"><div class="image_thumb"><img width="58" height="58" class="lazyload loaded" src="${data[key].image}" data-src="${data[key].image}" alt="${data[key].name}" data-was-processed="true"></div><div class="product-info"><h3 class="product-name"><span>${data[key].name}</span></h3><div class="price-box"><span class="price">${data[key].price}</span></div></div></a>`;
+											}
+										});
+										document.querySelector('.list-search').innerHTML = resultbox;
+									} else {
+										document.querySelector('.list-search').innerHTML = '<div class="title-search"><span>Sản phẩm</span></div><div class="not-pro">Không có thấy kết quả tìm kiếm</div>';
+									}
+									if(sizeData2 > 0 ) {
+										resultbox2 +=`<div class="title-search"><span>Tin tức</span> <a href="/search?query=${term}&type=article" class="see-all-search" title="Xem tất cả">Xem tất cả »</a></div></div>`
+										Object.keys(data2).forEach(function(key) {
+											if (data2[key].url == undefined){
+
+											}else{
+												resultbox2 += `<div class="art-smart"><a class="image_thumb" href="${data2[key].url}" title="${data2[key].name}"><img width="370" height="480" class="lazyload loaded" src="${data2[key].image}" data-src="${data2[key].image}" alt="${data2[key].name}" data-was-processed="true"></a><div class="product-info"><h3 class="product-name"><a href="${data2[key].url}" title="${data2[key].name}">${data2[key].name}</a></h3></div></div>`
+											}
+										});
+										document.querySelector('.list-search2').innerHTML = resultbox2;
+									} else {
+										document.querySelector('.list-search2').innerHTML = '<div class="title-search"><span>Tin tức</span></div><div class="not-pro">Không có thấy kết quả tìm kiếm</div>';
+									}
+								}, 200);
+							}
+
+							goawaySearch();
+						} else {
+							searchCoupon.classList.remove('d-none');
+							searchSuggest.classList.remove('d-none');
+							if (recentList.length > 0) {
+								searchRecent.classList.remove('d-none');
+							}
+							document.querySelector('.list-search').innerHTML = '';
+							document.querySelector('.list-search2').innerHTML = '';
+						}
+					});
+				});
+				{%endif%}
+			});
+			function awe_lazyloadImage() {
+				if (typeof LazyLoad === 'undefined') return;
+				var ll = new LazyLoad({
+					elements_selector: ".lazyload",
+					load_delay: 100,
+					threshold: 0
+				});
+			} window.awe_lazyloadImage=awe_lazyloadImage;
+
+
+		</script>
+	{{ 'vendor_appbulk.css' | asset_url | stylesheet_tag }}
+</head>
+	<body>
+		<div class="opacity_menu"></div>
+		{% include 'header' %}
+		<div class="bodywrap">
+			{{ content_for_layout }}
+			<div id="js-global-alert" class="alert alert-success" role="alert">
+				<button type="button" class="close"><span aria-hidden="true"><span aria-hidden="true">&times;</span></span></button>
+				<h5 class="alert-heading"></h5>
+				<p class="alert-content"></p>
+			</div>
+			{% if template contains 'product' %}
+			{% include 'bpr-products-module' %}
+			{% endif %}
+			{% include 'section_footer_brands' %}
+			{% include 'footer' %}
+		</div>
+
+		{% include 'mobile_search_popup' %}
+		{% include 'mobile_bottom_nav' %}
+		{% include 'footer_script' %}
+		{% if settings.iwish_enable %}
+		{% include 'favorite_js' %}
+		{% endif %}
+		{%- if settings.sale_pop -%}{%- include 'popup_sale' -%}{%- endif -%}
+		{% if settings.contact_us_enable %}{% include 'support' %}{%endif%}
+		<div id="popupCartModal" class="modal fade" role="dialog">
+		</div>
+		{% include 'popup_sapo' %}
+		{%if settings.header_live_enable%}
+		{% include 'popup_live' %}
+		{% endif %}
+	{{ 'appbulk-product-statistics.js' | asset_url | script_tag }}
+{% include 'appbulk-loyalty-widgets' %}</body>
+</html>

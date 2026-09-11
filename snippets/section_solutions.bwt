@@ -1,0 +1,104 @@
+{%- comment -%}
+  Pharma clinical redesign (T-20) — theo Pharma_Cosmetics_Figma_Project/homepage.html
+  "SOLUTIONS BY SKIN CONDITION": card rounded-2xl, icon tròn màu theo từng nhóm vấn đề da,
+  hover border emerald + shadow. Giữ nguyên logic linklist/settings + route /search hiện có.
+{%- endcomment -%}
+<style>
+.pc-solutions-section .pc-section-title { color: var(--primary-forest-900, #0F2318); }
+.pc-solutions-section .pc-section-subtitle { color: #4b5563; }
+.pc-solutions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+@media (min-width: 1024px) { .pc-solutions-grid { grid-template-columns: repeat(4, 1fr); } }
+.pc-solution-card {
+  display: block;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+  text-decoration: none;
+}
+.pc-solution-card:hover {
+  border-color: var(--primary-emerald-600, #3CB371);
+  box-shadow: 0 10px 25px -5px rgba(38,115,72,0.15);
+  transform: translateY(-2px);
+}
+.pc-solution-card .pc-solution-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: var(--primary-mint-50, #E8F8EE); color: var(--primary-emerald-700, #267348);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px; overflow: hidden;
+}
+.pc-solution-card .pc-solution-icon img { width: 100%; height: 100%; object-fit: cover; }
+.pc-solution-card .pc-solution-icon i { font-size: 22px; }
+.pc-solution-card span.pc-solution-label {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700; font-size: 1rem; color: #111827;
+}
+.pc-solution-card:hover span.pc-solution-label { color: var(--primary-emerald-700, #267348); }
+</style>
+{%- assign sol_ll = linklists[settings.home_solutions_menu] -%}
+<section class="pc-section section--subtle pc-solutions-section">
+  <div class="container">
+    <div class="pc-section-header">
+      <h2 class="pc-section-title font-heading">{{ settings.home_solutions_title | default: 'Lựa Chọn Phác Đồ Theo Tình Trạng Da' }}</h2>
+      <p class="pc-section-subtitle">{{ settings.home_solutions_subtitle | default: 'Mỗi nền da có cơ chế sinh học khác biệt. Chọn vấn đề của bạn để nhận lộ trình điều trị từ Hội đồng Chuyên môn.' }}</p>
+    </div>
+    <div class="pc-solutions-grid">
+      {%- comment -%}
+        T-106 (2026-09-11) — BUG THẬT phát hiện qua đánh giá UI người dùng: các thẻ giải pháp
+        hiện dạng khối trơn không icon/hover ("gray box đơn điệu"). Root cause: settings thật
+        (configs/settings_data.json) chỉ có home_solutions_N_icon (class Font Awesome, vd
+        "fas fa-leaf"), KHÔNG hề có home_solutions_N_image — nhưng code cũ chỉ đọc *_image (luôn
+        blank) nên khối .pc-solution-icon không bao giờ render. Đổi sang đọc đúng *_icon (FA
+        class) làm nguồn chính, giữ *_image làm override tuỳ chọn (ảnh thật đẹp hơn icon font khi
+        có) cho cả 2 nhánh (linklist thật + fallback settings).
+      {%- endcomment -%}
+      {%- if settings.home_solutions_menu != blank and sol_ll and sol_ll.links.size > 0 -%}
+        {%- for link in sol_ll.links -%}
+          {%- capture image_key -%}home_solutions_{{forloop.index}}_image{%- endcapture -%}
+          {%- capture icon_key -%}home_solutions_{{forloop.index}}_icon{%- endcapture -%}
+          <a href="{{ link.url }}" class="pc-solution-card" title="{{ link.title }}">
+            {%- if settings[image_key] != blank -%}
+            <div class="pc-solution-icon">
+              <img src="{{ settings[image_key] }}" alt="{{ link.title }}" loading="lazy">
+            </div>
+            {%- elsif settings[icon_key] != blank -%}
+            <div class="pc-solution-icon"><i class="{{ settings[icon_key] }}" aria-hidden="true"></i></div>
+            {%- else -%}
+            <div class="pc-solution-icon"><i class="fas fa-spa" aria-hidden="true"></i></div>
+            {%- endif -%}
+            <span class="pc-solution-label">{{ link.title }}</span>
+          </a>
+        {%- endfor -%}
+      {%- else -%}
+        {%- for i in (1..6) -%}
+          {%- capture enable_key -%}home_solutions_{{i}}_enable{%- endcapture -%}
+          {%- capture image_key -%}home_solutions_{{i}}_image{%- endcapture -%}
+          {%- capture icon_key -%}home_solutions_{{i}}_icon{%- endcapture -%}
+          {%- capture label_key -%}home_solutions_{{i}}_label{%- endcapture -%}
+          {%- capture url_key -%}home_solutions_{{i}}_url{%- endcapture -%}
+          {%- unless settings[enable_key] == false or settings[enable_key] == 'false' -%}
+          <a href="/search?query={{ settings[url_key] | url_encode }}&type=product" class="pc-solution-card">
+            {%- if settings[image_key] != blank -%}
+            <div class="pc-solution-icon">
+              <img src="{{ settings[image_key] }}" alt="{{ settings[label_key] }}" loading="lazy">
+            </div>
+            {%- elsif settings[icon_key] != blank -%}
+            <div class="pc-solution-icon"><i class="{{ settings[icon_key] }}" aria-hidden="true"></i></div>
+            {%- else -%}
+            <div class="pc-solution-icon"><i class="fas fa-spa" aria-hidden="true"></i></div>
+            {%- endif -%}
+            <span class="pc-solution-label">{{ settings[label_key] }}</span>
+          </a>
+          {%- endunless -%}
+        {%- endfor -%}
+      {%- endif -%}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,335 @@
+/* ==========================================================================
+   comp_mobile_search — Search Overlay toàn màn hình (mobile)
+   BEM: .search-overlay · __header · __back · __form · __input · __submit
+        __cancel · __body · __promo · __section · __recent-* · __tags · __tag
+   Trigger: #mb-search-open (header) → thêm .is-active → fade-in
+   Body lock: body.search-overlay-active { overflow: hidden }
+   ========================================================================== */
+
+/* ── Overlay container ────────────────────────────────────────────────────── */
+.search-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 9999;
+  background: #{"var(--white, #ffffff)"};
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.22s ease, visibility 0.22s ease;
+}
+
+.search-overlay.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* ── Header row ───────────────────────────────────────────────────────────── */
+.search-overlay__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  background: #{"var(--white, #ffffff)"};
+  border-bottom: 1px solid #{"var(--lineColor, #DFE6E9)"};
+  flex-shrink: 0;
+}
+
+/* Nút mũi tên quay lại */
+.search-overlay__back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 40px;
+  flex-shrink: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #{"var(--textBody, #2D3436)"};
+}
+
+/* Ô form tìm kiếm */
+.search-overlay__form {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 8px 0 12px;
+  background: #{"var(--bg-subtle, #F8F9FA)"};
+  border-radius: 8px;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+/* Input — specificity cao hơn rule reset global */
+.search-overlay__form .search-overlay__input {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: #{"var(--font-secondary, 'Inter', sans-serif)"};
+  font-size: #{"var(--fs-base, 1rem)"};
+  color: #{"var(--textBody, #2D3436)"};
+  line-height: 1.4;
+}
+
+.search-overlay__input::placeholder {
+  color: #{"var(--textSub, #636E72)"};
+}
+
+/* Nút xóa text (X) — ẩn khi input trống, hiện khi có text */
+.search-overlay__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  margin-left: 4px;
+  background: #{"var(--textSub, #636E72)"};
+  border: none;
+  border-radius: 50%;
+  color: #{"var(--white, #ffffff)"};
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.search-overlay__clear:active {
+  background: #{"var(--textBody, #2D3436)"};
+}
+
+.search-overlay__clear[hidden] {
+  display: none;
+}
+
+/* Nút submit kính lúp màu xanh rêu đậm */
+.search-overlay__submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 30px;
+  background: #{"var(--mainColorDark, #267348)"};
+  border: none;
+  border-radius: 6px;
+  color: #{"var(--white, #ffffff)"};
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.search-overlay__submit:active {
+  background: #{"var(--subColor, #3A6247)"};
+}
+
+/* ── Body (scrollable) ────────────────────────────────────────────────────── */
+.search-overlay__body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* ── Promo banner ─────────────────────────────────────────────────────────── */
+.search-overlay__promo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 14px;
+  padding: 12px 14px;
+  background-color: #faf8f2;
+  border: 1px solid #e8dfc0;
+  border-radius: 8px;
+}
+
+.search-overlay__promo-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  background: #{"var(--mainColorLight, #eaf7ee)"};
+  border-radius: 50%;
+  color: #{"var(--mainColor, #3cb371)"};
+  margin-top: 1px;
+}
+
+.search-overlay__promo-text {
+  font-family: #{"var(--font-secondary, 'Inter', sans-serif)"};
+  font-size: #{"var(--fs-sm, 0.875rem)"};
+  color: #4a3f2a;
+  line-height: 1.55;
+  margin: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* ── Section wrapper ──────────────────────────────────────────────────────── */
+.search-overlay__section {
+  padding: 16px 14px 4px;
+}
+
+.search-overlay__section-label {
+  margin: 0 0 10px;
+  font-family: #{"var(--font-secondary, 'Inter', sans-serif)"};
+  font-size: #{"var(--fs-xs, 0.75rem)"};
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #{"var(--textSub, #636E72)"};
+}
+
+/* ── Recent searches — vertical list ─────────────────────────────────────── */
+.search-overlay__recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.search-overlay__recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  border-bottom: 1px solid #{"var(--lineColor, #DFE6E9)"};
+}
+
+.search-overlay__recent-item:last-child {
+  border-bottom: none;
+}
+
+.search-overlay__recent-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 8px 8px 8px 0;
+  color: #{"var(--textBody, #2D3436)"};
+  text-decoration: none;
+  font-family: #{"var(--font-secondary, 'Inter', sans-serif)"};
+  font-size: #{"var(--fs-base, 1rem)"};
+}
+
+.search-overlay__recent-link svg {
+  flex-shrink: 0;
+  color: #{"var(--textSub, #636E72)"};
+}
+
+.search-overlay__recent-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Nút x xóa từng item */
+.search-overlay__recent-del {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 44px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #bbb;
+}
+
+.search-overlay__recent-del:active {
+  color: #{"var(--accentColor, #E35D5D)"};
+}
+
+/* ── Popular tags — horizontal scroll ────────────────────────────────────── */
+.search-overlay__tags {
+  display: flex;
+  flex-wrap: wrap;
+  overflow-x: auto;
+  gap: 8px;
+  padding-bottom: 16px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.search-overlay__tags::-webkit-scrollbar {
+  display: none;
+}
+
+.search-overlay__tag {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 8px 16px;
+  background: #{"var(--bg-subtle, #F8F9FA)"};
+  border: 1px solid #{"var(--lineColor, #DFE6E9)"};
+  border-radius: 999px;
+  font-family: #{"var(--font-secondary, 'Inter', sans-serif)"};
+  font-size: #{"var(--fs-sm, 0.875rem)"};
+  color: #{"var(--textBody, #2D3436)"};
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.search-overlay__tag:active,
+.search-overlay__tag:hover {
+  background: #{"var(--mainColorLight, #eaf7ee)"};
+  border-color: #{"var(--mainColorLight, #eaf7ee)"};
+  color: #{"var(--mainColorDark, #267348)"};
+}
+
+/* ── Body scroll lock ─────────────────────────────────────────────────────── */
+body.search-overlay-active {
+  overflow: hidden;
+}
+
+/* ── Smart search results (mobile overlay) ───────────────────────────────── */
+.search-overlay__smart {
+  padding: 0;
+}
+
+/* 1-line clamp — mobile không gian hẹp */
+#mb-list-search .product-info h3,
+#mb-list-search2 .product-info h3 {
+  -webkit-line-clamp: 1;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Article: thumbnail vuông như product, nhất quán trên mobile */
+#mb-list-search2 .art-smart .image_thumb {
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  border: 1px solid #{"var(--lineColor, #DFE6E9)"};
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#mb-list-search2 .art-smart .image_thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

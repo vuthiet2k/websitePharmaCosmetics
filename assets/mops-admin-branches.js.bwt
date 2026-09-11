@@ -1,0 +1,426 @@
+{% comment %} mops-admin-branches.js.bwt — Mixin domain "Chi nhánh" (tab Branches) cho MOPS Admin.
+  Tách khỏi Assets/mops-admin.js.bwt (2026-07-16, theo mẫu mops-admin-audit.js.bwt). Script
+  TOP-LEVEL — đẩy mixin vào window.MopsAdminMixins TRƯỚC khi Assets/mops-admin.js.bwt đọc mảng
+  này. Gọi helper dùng chung qua window.MopsAdminCore. Load TRƯỚC Assets/mops-admin.js.bwt.
+  Cross-domain: activeBranches (computed) + ensureBranchesLoaded()/branches.all được 2 nơi khác
+  dùng — dropdown chi nhánh ở form "Tạo đơn thủ công" (domain Đơn hàng) và "Thêm tài khoản quỹ"
+  (domain Tài chính) — cả 2 vẫn ở core cho tới khi tách domain đó, tham chiếu qua this.* bình
+  thường vì Vue mixins share chung 1 instance. loadBranches() cũng NGƯỢC LẠI ghi vào
+  this.manualOrder.branchId (pre-fill chi nhánh mặc định cho form Đơn hàng) — giữ nguyên hành vi
+  cũ, không tách sâu hơn. {% endcomment %}
+(function() {
+  'use strict';
+
+  window.MopsAdminRegisteredDomains = window.MopsAdminRegisteredDomains || [];
+  window.MopsAdminRegisteredDomains.push('branches');
+
+  window.MopsAdminMixins = window.MopsAdminMixins || [];
+  window.MopsAdminMixins.push({
+    data: function() {
+      return {
+        // Chi nhánh (đóng gap §19/§20 mops.md, review 31) — reference data dùng chung cho dropdown
+        // Tạo đơn thủ công + Thêm tài khoản quỹ, lazy-load qua ensureBranchesLoaded().
+        branches: {
+          all: [], loading: false, error: '', search: '', filterActive: '',
+          showAddForm: false, submitting: false,
+          // V6.2 2026-08-04: 15 field pick_* cho multi-warehouse. Docs schema:
+          // docs/backend-multiwarehouse-stub.md §1 (Branches cột F-T).
+          newBranch: {
+            name_vi: '', name_en: '', phone: '', email: '', address: '', tax_code: '',
+            province: '', ward: '', default_bank_account_id: '',
+            pick_receiver_name: '', pick_phone: '', pick_address: '',
+            pick_province_code: '', pick_district_code: '', pick_ward_code: '',
+            pick_province: '', pick_district: '', pick_ward: '',
+            ghn_shop_id: '', ghtk_pick_address_id: '', goship_shop_id: '',
+            vnpost_customer_code: '', viettelpost_source_id: '',
+            pick_notes: '',
+            // V6.5 Goship dynamic origin — code Goship (khác GSO)
+            goship_from_city: '', goship_from_district: '', goship_from_ward: ''
+          },
+          showEditForm: false, editTarget: null,
+          editForm: { name_vi: '', name_en: '', phone: '', email: '', address: '', tax_code: '', active: true, is_default: false, province: '', ward: '', default_bank_account_id: '' },
+          editSaving: false
+        },
+        // Tài khoản ngân hàng nhận VietQR (2026-07-21) — quản lý nhiều TK + 1 mặc định toàn cục; mỗi chi
+        // nhánh trỏ tới 1 TK qua branches.*.default_bank_account_id. Cùng tab Chi nhánh.
+        bankAccounts: {
+          all: [], loading: false, error: '', submitting: false,
+          showForm: false, editing: false,
+          form: { bank_account_id: '', bank_code: '', account_no: '', account_name: '', is_default: false, active: true }
+        }
+      };
+    },
+    computed: {
+      // Dùng cho 2 dropdown (Tạo đơn thủ công, Thêm tài khoản quỹ); bảng quản lý ở tab Chi nhánh
+      // hiển thị branches.all đầy đủ (kể cả inactive, để bật lại được).
+      activeBranches: function() {
+        return this.branches.all.filter(function(b) { return b.active; });
+      },
+      /* ── Chi nhánh: filter client-side, giống staffFiltered ── */
+      branchesFiltered: function() {
+        var search = (this.branches.search || '').trim().toLowerCase();
+        var filterActive = this.branches.filterActive;
+        return this.branches.all.filter(function(b) {
+          if (search
+            && (b.name_vi || '').toLowerCase().indexOf(search) === -1
+            && (b.phone || '').toLowerCase().indexOf(search) === -1
+            && (b.address || '').toLowerCase().indexOf(search) === -1) return false;
+          if (filterActive === '1' && !b.active) return false;
+          if (filterActive === '0' && b.active)  return false;
+          return true;
+        });
+      },
+      branchesEmptyMessage: function() {
+        if (this.branches.error) return this.branches.error;
+        if (!this.branchesFiltered.length) {
+          return this.branches.all.length ? 'Không có kết quả phù hợp.' : 'Chưa có chi nhánh nào.';
+        }
+        return '';
+      },
+      // TK ngân hàng còn Active — dùng cho dropdown gán TK mặc định cho chi nhánh.
+      activeBankAccounts: function() {
+        return this.bankAccounts.all.filter(function(a) { return a.active; });
+      }
+    },
+    methods: {
+      /* ── Chi nhánh (đóng gap §19/§20 mops.md, review 31) ──
+         Lazy-load dùng chung cho 3 nơi: tab Chi nhánh, form Tạo đơn thủ công, form Thêm tài khoản quỹ. */
+      ensureBranchesLoaded: function() {
+        if (this.branches.all.length || this.branches.loading) return;
+        this.loadBranches();
+      },
+      loadBranches: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        this.branches.loading = true;
+        this.branches.error = '';
+        core.gasGet({ action: 'list_branches' })
+          .then(function(d) {
+            self.branches.loading = false;
+            if (!d || !d.success) { self.branches.error = (d && d.error) || 'Không tải được danh sách chi nhánh.'; return; }
+            self.branches.all = d.branches || [];
+            self.ensureBankAccountsLoaded(); // tab Chi nhánh cần danh sách TK cho dropdown + bảng quản lý
+            // Pre-fill mặc định cho form Tạo đơn thủ công nếu đang mở mà chưa chọn chi nhánh nào
+            // (§20 — "IsDefault làm giá trị mặc định khi mở form tạo đơn"). manualOrder vẫn ở core.
+            if (!self.manualOrder.branchId) {
+              var def = self.branches.all.filter(function(b) { return b.active && b.is_default; })[0];
+              if (def) self.manualOrder.branchId = def.branch_id;
+            }
+          })
+          .catch(function() { self.branches.loading = false; self.branches.error = 'Lỗi kết nối.'; });
+      },
+      submitBranch: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var nb = this.branches.newBranch;
+        if (!(nb.name_vi || '').trim()) { core.showToast('Vui lòng nhập tên chi nhánh.', 'error'); return; }
+
+        this.branches.submitting = true;
+        core.gasPost({
+          action: 'create_branch', name_vi: nb.name_vi.trim(), name_en: (nb.name_en || '').trim(),
+          phone: (nb.phone || '').trim(), email: (nb.email || '').trim(),
+          address: (nb.address || '').trim(), tax_code: (nb.tax_code || '').trim(),
+          province: nb.province || '', ward: nb.ward || '',
+          default_bank_account_id: nb.default_bank_account_id || '',
+          // V6.2 multi-warehouse (pick address + adapter IDs) — backend docs §2.1
+          pick_receiver_name: (nb.pick_receiver_name || '').trim(),
+          pick_phone: (nb.pick_phone || '').trim(),
+          pick_address: (nb.pick_address || '').trim(),
+          pick_province_code: nb.pick_province_code || '', pick_province: nb.pick_province || '',
+          pick_district_code: nb.pick_district_code || '', pick_district: nb.pick_district || '',
+          pick_ward_code: nb.pick_ward_code || '',         pick_ward: nb.pick_ward || '',
+          ghn_shop_id: nb.ghn_shop_id || '', ghtk_pick_address_id: (nb.ghtk_pick_address_id || '').trim(),
+          goship_shop_id: (nb.goship_shop_id || '').trim(),
+          vnpost_customer_code: (nb.vnpost_customer_code || '').trim(),
+          viettelpost_source_id: (nb.viettelpost_source_id || '').trim(),
+          pick_notes: (nb.pick_notes || '').trim(),
+          // V6.5 Goship code
+          goship_from_city: (nb.goship_from_city || '').trim(),
+          goship_from_district: (nb.goship_from_district || '').trim(),
+          goship_from_ward: (nb.goship_from_ward || '').trim()
+        })
+          .then(function(d) {
+            self.branches.submitting = false;
+            if (!d.success) throw new Error(d.error || 'Tạo chi nhánh thất bại');
+            core.showToast('Đã tạo chi nhánh "' + nb.name_vi.trim() + '"', 'success');
+            self.branches.showAddForm = false;
+            self.branches.newBranch = {
+              name_vi: '', name_en: '', phone: '', email: '', address: '', tax_code: '',
+              province: '', ward: '', default_bank_account_id: '',
+              pick_receiver_name: '', pick_phone: '', pick_address: '',
+              pick_province_code: '', pick_district_code: '', pick_ward_code: '',
+              pick_province: '', pick_district: '', pick_ward: '',
+              ghn_shop_id: '', ghtk_pick_address_id: '', goship_shop_id: '',
+              vnpost_customer_code: '', viettelpost_source_id: '', pick_notes: ''
+            };
+            self.branches.all = []; // buộc load lại — chi nhánh mới có thể vừa đổi cờ IsDefault
+            self.loadBranches();
+          })
+          .catch(function(e) { self.branches.submitting = false; core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      openEditBranch: function(b) {
+        this.branches.editTarget = b;
+        this.branches.editForm = {
+          name_vi: b.name_vi || '', name_en: b.name_en || '', phone: b.phone || '',
+          email: b.email || '', address: b.address || '', tax_code: b.tax_code || '',
+          active: !!b.active, is_default: !!b.is_default,
+          province: b.province || '', ward: b.ward || '',
+          default_bank_account_id: b.default_bank_account_id || '',
+          // V6.2 pick address + adapter IDs (fallback '' cho branch cũ chưa có 15 cột mới)
+          pick_receiver_name: b.pick_receiver_name || '',
+          pick_phone: String(b.pick_phone || ''),
+          pick_address: b.pick_address || '',
+          pick_province_code: String(b.pick_province_code || ''),
+          pick_district_code: String(b.pick_district_code || ''),
+          pick_ward_code: String(b.pick_ward_code || ''),
+          pick_province: b.pick_province || '', pick_district: b.pick_district || '', pick_ward: b.pick_ward || '',
+          ghn_shop_id: b.ghn_shop_id || '',
+          ghtk_pick_address_id: b.ghtk_pick_address_id || '',
+          goship_shop_id: b.goship_shop_id || '',
+          vnpost_customer_code: b.vnpost_customer_code || '',
+          viettelpost_source_id: b.viettelpost_source_id || '',
+          pick_notes: b.pick_notes || '',
+          // V6.5 Goship dynamic origin
+          goship_from_city: String(b.goship_from_city || ''),
+          goship_from_district: String(b.goship_from_district || ''),
+          goship_from_ward: String(b.goship_from_ward || '')
+        };
+        this.branches.showEditForm = true;
+        this.preloadWardsFor(this.branches.editForm.province); // helper dùng chung — vẫn ở core
+        // V6.5: preload Goship cascade — cities + districts theo city đã lưu.
+        this.loadBranchGoshipCities();
+        if (this.branches.editForm.goship_from_city) this.loadBranchGoshipDistricts(this.branches.editForm.goship_from_city);
+        if (this.branches.editForm.goship_from_district) this.loadBranchGoshipWards(this.branches.editForm.goship_from_district);
+      },
+      // V6.2 cascade helpers cho form Chi nhánh (dùng chung window.MopsAddressMaster) —
+      // gọi khi user đổi Tỉnh → reset district/ward name/code; đổi Quận → reset ward.
+      onBranchPickProvinceChange: function(form) {
+        var m = window.MopsAddressMaster || {};
+        var p = (m.provinces || []).filter(function(x) { return x.c === form.pick_province_code; })[0];
+        form.pick_province = (p && p.f) || '';
+        form.pick_district_code = ''; form.pick_district = '';
+        form.pick_ward_code = ''; form.pick_ward = '';
+      },
+      onBranchPickDistrictChange: function(form) {
+        var m = window.MopsAddressMaster || {};
+        var d = (m.districts || []).filter(function(x) { return x.c === form.pick_district_code; })[0];
+        form.pick_district = (d && d.f) || '';
+        form.pick_ward_code = ''; form.pick_ward = '';
+      },
+      onBranchPickWardChange: function(form) {
+        var m = window.MopsAddressMaster || {};
+        var w = (m.wards || []).filter(function(x) { return x.c === form.pick_ward_code; })[0];
+        form.pick_ward = (w && w.f) || '';
+      },
+      branchPickProvinces: function() {
+        return (window.MopsAddressMaster && window.MopsAddressMaster.provinces) || [];
+      },
+      // V6.5 2026-08-05 — Cascade Goship code cho form Chi nhánh (Goship dynamic origin).
+      // Reuse endpoint ship_provinces?carrier=GOSHIP (đã có ở BE mops_00.js:364, mops_01.js:3138).
+      // State cache tạm trong form (không cần store toàn cục — form open/close ngắn).
+      _ensureBranchGoshipCityCache: function() {
+        if (!this.branches._goshipCities) this.branches._goshipCities = { loading: false, list: [] };
+        if (!this.branches._goshipDistrictsByCity) this.branches._goshipDistrictsByCity = {};
+        if (!this.branches._goshipWardsByDistrict) this.branches._goshipWardsByDistrict = {};
+      },
+      loadBranchGoshipCities: function() {
+        var self = this, core = window.MopsAdminCore;
+        this._ensureBranchGoshipCityCache();
+        var c = this.branches._goshipCities;
+        if (c.loading || c.list.length) return;
+        c.loading = true;
+        core.gasGet({ action: 'ship_provinces', carrier: 'GOSHIP' })
+          .then(function(d) { c.loading = false; if (d && d.success) c.list = d.provinces || []; })
+          .catch(function() { c.loading = false; });
+      },
+      loadBranchGoshipDistricts: function(cityCode) {
+        var core = window.MopsAdminCore, self = this;
+        this._ensureBranchGoshipCityCache();
+        if (!cityCode) return;
+        if (this.branches._goshipDistrictsByCity[cityCode]) return;
+        this.branches._goshipDistrictsByCity[cityCode] = { loading: true, list: [] };
+        core.gasGet({ action: 'ship_districts', carrier: 'GOSHIP', province_id: cityCode })
+          .then(function(d) {
+            var slot = self.branches._goshipDistrictsByCity[cityCode];
+            slot.loading = false;
+            if (d && d.success) slot.list = d.districts || [];
+          })
+          .catch(function() { self.branches._goshipDistrictsByCity[cityCode].loading = false; });
+      },
+      loadBranchGoshipWards: function(districtCode) {
+        var core = window.MopsAdminCore, self = this;
+        this._ensureBranchGoshipCityCache();
+        if (!districtCode) return;
+        if (this.branches._goshipWardsByDistrict[districtCode]) return;
+        this.branches._goshipWardsByDistrict[districtCode] = { loading: true, list: [] };
+        core.gasGet({ action: 'ship_wards', carrier: 'GOSHIP', district_id: districtCode })
+          .then(function(d) {
+            var slot = self.branches._goshipWardsByDistrict[districtCode];
+            slot.loading = false;
+            if (d && d.success) slot.list = d.wards || [];
+          })
+          .catch(function() { self.branches._goshipWardsByDistrict[districtCode].loading = false; });
+      },
+      branchGoshipCities: function() {
+        this._ensureBranchGoshipCityCache();
+        return this.branches._goshipCities.list || [];
+      },
+      branchGoshipDistricts: function(cityCode) {
+        this._ensureBranchGoshipCityCache();
+        var slot = this.branches._goshipDistrictsByCity[cityCode];
+        return slot ? slot.list : [];
+      },
+      branchGoshipWards: function(districtCode) {
+        this._ensureBranchGoshipCityCache();
+        var slot = this.branches._goshipWardsByDistrict[districtCode];
+        return slot ? slot.list : [];
+      },
+      onBranchGoshipCityChange: function(form) {
+        form.goship_from_district = ''; form.goship_from_ward = '';
+        if (form.goship_from_city) this.loadBranchGoshipDistricts(form.goship_from_city);
+      },
+      onBranchGoshipDistrictChange: function(form) {
+        form.goship_from_ward = '';
+        if (form.goship_from_district) this.loadBranchGoshipWards(form.goship_from_district);
+      },
+      branchPickDistrictsFor: function(provinceCode) {
+        if (!provinceCode) return [];
+        return ((window.MopsAddressMaster || {}).districts || []).filter(function(d) { return d.p === provinceCode; });
+      },
+      branchPickWardsFor: function(districtCode) {
+        if (!districtCode) return [];
+        return ((window.MopsAddressMaster || {}).wards || []).filter(function(w) { return w.p === districtCode; });
+      },
+      saveBranchEdit: function() {
+        var self = this;
+        var core = window.MopsAdminCore;
+        var b = this.branches.editTarget;
+        var f = this.branches.editForm;
+        if (!b) return;
+        if (!(f.name_vi || '').trim()) { core.showToast('Tên chi nhánh không được để trống', 'error'); return; }
+
+        this.branches.editSaving = true;
+        core.gasPost({
+          action: 'update_branch', branch_id: b.branch_id,
+          name_vi: f.name_vi.trim(), name_en: (f.name_en || '').trim(),
+          phone: (f.phone || '').trim(), email: (f.email || '').trim(),
+          address: (f.address || '').trim(), tax_code: (f.tax_code || '').trim(),
+          active: !!f.active, is_default: !!f.is_default,
+          province: f.province || '', ward: f.ward || '',
+          default_bank_account_id: f.default_bank_account_id || '',
+          // V6.2 pick address + adapter IDs
+          pick_receiver_name: (f.pick_receiver_name || '').trim(),
+          pick_phone: (f.pick_phone || '').trim(),
+          pick_address: (f.pick_address || '').trim(),
+          pick_province_code: f.pick_province_code || '', pick_province: f.pick_province || '',
+          pick_district_code: f.pick_district_code || '', pick_district: f.pick_district || '',
+          pick_ward_code: f.pick_ward_code || '',         pick_ward: f.pick_ward || '',
+          ghn_shop_id: f.ghn_shop_id || '',
+          ghtk_pick_address_id: (f.ghtk_pick_address_id || '').trim(),
+          goship_shop_id: (f.goship_shop_id || '').trim(),
+          vnpost_customer_code: (f.vnpost_customer_code || '').trim(),
+          viettelpost_source_id: (f.viettelpost_source_id || '').trim(),
+          pick_notes: (f.pick_notes || '').trim(),
+          // V6.5 Goship code
+          goship_from_city: (f.goship_from_city || '').trim(),
+          goship_from_district: (f.goship_from_district || '').trim(),
+          goship_from_ward: (f.goship_from_ward || '').trim()
+        })
+          .then(function(d) {
+            self.branches.editSaving = false;
+            if (!d.success) throw new Error(d.error || 'Lưu thất bại');
+            core.showToast('Đã lưu chi nhánh "' + f.name_vi.trim() + '"', 'success');
+            self.branches.showEditForm = false;
+            self.branches.all = []; // đổi IsDefault có thể ảnh hưởng chi nhánh khác — load lại cho chắc
+            self.loadBranches();
+          })
+          .catch(function(e) { self.branches.editSaving = false; core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+
+      /* ── Tài khoản ngân hàng nhận VietQR (2026-07-21) ── */
+      ensureBankAccountsLoaded: function() {
+        if (this.bankAccounts.all.length || this.bankAccounts.loading) return;
+        this.loadBankAccounts();
+      },
+      loadBankAccounts: function() {
+        var self = this, core = window.MopsAdminCore;
+        this.bankAccounts.loading = true;
+        this.bankAccounts.error = '';
+        core.gasGet({ action: 'list_bank_accounts' })
+          .then(function(d) {
+            self.bankAccounts.loading = false;
+            if (!d || !d.success) { self.bankAccounts.error = (d && d.error) || 'Không tải được danh sách tài khoản ngân hàng.'; return; }
+            self.bankAccounts.all = d.bank_accounts || [];
+          })
+          .catch(function() { self.bankAccounts.loading = false; self.bankAccounts.error = 'Lỗi kết nối.'; });
+      },
+      // Nhãn hiển thị TK cho cột "TK nhận tiền" ở bảng chi nhánh (rỗng = kế thừa chi nhánh chính).
+      bankAccountLabel: function(id) {
+        if (!id) return '';
+        var a = this.bankAccounts.all.filter(function(x) { return x.bank_account_id === id; })[0];
+        return a ? (a.bank_code + ' · ' + a.account_no) : '';
+      },
+      openAddBankAccount: function() {
+        this.bankAccounts.editing = false;
+        this.bankAccounts.form = { bank_account_id: '', bank_code: '', account_no: '', account_name: '', is_default: false, active: true };
+        this.bankAccounts.showForm = true;
+      },
+      openEditBankAccount: function(a) {
+        this.bankAccounts.editing = true;
+        this.bankAccounts.form = {
+          bank_account_id: a.bank_account_id, bank_code: a.bank_code, account_no: a.account_no,
+          account_name: a.account_name, is_default: !!a.is_default, active: !!a.active
+        };
+        this.bankAccounts.showForm = true;
+      },
+      submitBankAccount: function() {
+        var self = this, core = window.MopsAdminCore, f = this.bankAccounts.form;
+        if (!(f.bank_code || '').trim())  { core.showToast('Vui lòng nhập mã ngân hàng.', 'error'); return; }
+        if (!(f.account_no || '').trim()) { core.showToast('Vui lòng nhập số tài khoản.', 'error'); return; }
+        if (!(f.account_name || '').trim()) { core.showToast('Vui lòng nhập tên chủ tài khoản.', 'error'); return; }
+        var editing = this.bankAccounts.editing;
+        var body = {
+          action: editing ? 'update_bank_account' : 'create_bank_account',
+          bank_account_id: f.bank_account_id,
+          bank_code: f.bank_code.trim().toUpperCase(), account_no: (f.account_no || '').trim(),
+          account_name: f.account_name.trim(), is_default: !!f.is_default
+        };
+        if (editing) body.active = !!f.active;
+        this.bankAccounts.submitting = true;
+        core.gasPost(body)
+          .then(function(d) {
+            self.bankAccounts.submitting = false;
+            if (!d.success) throw new Error(d.error || 'Lưu tài khoản thất bại');
+            core.showToast(editing ? 'Đã lưu tài khoản ngân hàng' : 'Đã thêm tài khoản ngân hàng', 'success');
+            self.bankAccounts.showForm = false;
+            self.bankAccounts.all = [];
+            self.loadBankAccounts();
+          })
+          .catch(function(e) { self.bankAccounts.submitting = false; core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      setDefaultBankAccount: function(a) {
+        var self = this, core = window.MopsAdminCore;
+        if (a.is_default) return;
+        core.gasPost({ action: 'set_default_bank_account', bank_account_id: a.bank_account_id })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Không đặt được mặc định');
+            core.showToast('Đã đặt "' + a.bank_code + ' · ' + a.account_no + '" làm mặc định', 'success');
+            self.bankAccounts.all = [];
+            self.loadBankAccounts();
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      },
+      toggleBankAccount: function(a) {
+        var self = this, core = window.MopsAdminCore;
+        core.gasPost({ action: 'update_bank_account', bank_account_id: a.bank_account_id, active: !a.active })
+          .then(function(d) {
+            if (!d.success) throw new Error(d.error || 'Không đổi được trạng thái');
+            core.showToast(a.active ? 'Đã tắt tài khoản' : 'Đã bật lại tài khoản', 'success');
+            self.bankAccounts.all = [];
+            self.loadBankAccounts();
+          })
+          .catch(function(e) { core.showToast(e.message || 'Lỗi kết nối', 'error'); });
+      }
+    }
+  });
+})();

@@ -1,0 +1,48 @@
+{% layout 'theme' %}
+{%- comment -%}
+  REOPEN 2026-09-11 — thêm layout tag tường minh (đã đúng mặc định 'theme' từ trước, nhưng khai
+  báo rõ để nhất quán với các template khác + tránh nhầm lẫn khi rà soát layout skinhealthy).
+{%- endcomment -%}
+{{ 'page_blog_feed.scss.css' | asset_url | stylesheet_tag }}
+
+<div class="pc-feed-wrap">
+	<div class="pc-feed-stories">
+		{% assign story_labels = 'Phục Hồi B5,Trị Nám Sâu,Vella Cổ,Bác Sĩ Q&A,Chống Nắng' | split: ',' %}
+		{% assign story_colors = 'DBDFD5,3cb371,F3DFD1,DE9E7D,eaf7ee' | split: ',' %}
+		{% for label in story_labels %}
+		<div class="pc-feed-story">
+			<div class="pc-feed-story-ring" style="border-color: #{{ story_colors[forloop.index0] }}"><span></span></div>
+			<span class="pc-feed-story-label">{{ label }}</span>
+		</div>
+		{% endfor %}
+	</div>
+
+	<div class="pc-feed-posts">
+		{% for a in articles limit: 6 %}
+		<article class="pc-feed-post">
+			<div class="pc-feed-post-head">
+				<div class="pc-testi-avatar pc-feed-post-avatar"><span class="pc-testi-avatar-initials">👩‍⚕️</span></div>
+				<span class="pc-feed-post-author">{{ a.author }} <svg width="13" height="13" viewBox="0 0 24 24" fill="#3cb371"><path d="M12 2l2.4 2.4 3.3-.7.7 3.3L21 9l-2.4 2.4.7 3.3-3.3.7L14 18l-2-2-2 2-2.4-2.4-3.3-.7.7-3.3L3 9l2.4-2.4-.7-3.3 3.3-.7L10.6 2 12 2z"/></svg></span>
+				<span class="pc-feed-post-badge">Tư Vấn 1:1</span>
+			</div>
+			<a href="{{ a.url }}" class="pc-feed-post-media" style="background: linear-gradient(135deg, #eaf7ee, #F6E3D8);">
+				<img class="lazyload" data-src="{{ a.image.src }}" alt="{{ a.image.alt }}" loading="lazy">
+			</a>
+			<div class="pc-feed-post-actions">
+				<span>♡</span><span>💬</span><span>↗</span><span class="pc-feed-post-save">🔖</span>
+			</div>
+			<div class="pc-feed-post-likes">{{ a.comments_count | times: 17 | plus: 900 }} lượt quan tâm • {{ a.comments_count }} bình luận Bác sĩ</div>
+			<div class="pc-feed-post-caption"><strong>bs.minhanh.dalieu:</strong> {{ a.excerpt | truncate: 110 }}</div>
+			<a href="/pages/dat-lich-tu-van" class="pc-cg-cta-btn pc-feed-post-cta">Đặt Mua Theo Đơn Bác Sĩ ➔</a>
+		</article>
+		{% endfor %}
+	</div>
+</div>
+
+<div class="pc-feed-bottomnav">
+	<a href="/" class="pc-feed-bottomnav-item pc-feed-bottomnav-item--active">🏠<span>Trang Chủ</span></a>
+	<a href="/collections/all" class="pc-feed-bottomnav-item">🛍<span>Sản Phẩm</span></a>
+	<a href="/pages/dat-lich-tu-van" class="pc-feed-bottomnav-item">🩺<span>Phác Đồ</span></a>
+	<a href="/pages/chuyen-gia" class="pc-feed-bottomnav-item">👨‍⚕️<span>Bác Sĩ</span></a>
+	<a href="/account" class="pc-feed-bottomnav-item">👤<span>Tài Khoản</span></a>
+</div>
