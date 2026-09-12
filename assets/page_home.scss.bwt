@@ -4070,3 +4070,96 @@ a.pc-treatment-item:hover .pc-treatment-number { border-color: var(--mainColor);
     &:hover { text-decoration: underline; }
   }
 }
+
+/* ══ T-139 (2026-09-12): phân cấp CTA ở Hero ═══════════════════════════════
+   Người dùng báo "3 nút liền nhau gây phân vân (Paradox of Choice)". Đo thật
+   computed style thì vấn đề CỤ THỂ hơn thế — phân cấp đang BỊ NGƯỢC:
+     ĐẶT LỊCH PHÂN TÍCH DA        (nút chính)  → rộng 212px, nền đặc
+     KHÁM PHÁ HÀNH TRÌNH CÁ NHÂN…  (nút phụ)   → rộng 322px  ← rộng hơn 52%!
+     Khám da AI 17 câu             (nút phụ 2) → rộng 151px, nền trắng
+   Nút phụ to hơn nút chính nên mắt rơi vào nó trước.
+   KHÔNG xoá nút nào (bỏ bớt CTA là quyết định kinh doanh, không phải của tôi)
+   — chỉ hạ trọng số thị giác: nút chính thêm bóng để nổi hẳn, nút phụ 1 bỏ
+   viền thành dạng text-link, nút phụ 2 thu nhỏ thành nhãn phụ. Cả 3 vẫn bấm
+   được như cũ, nhưng chỉ còn MỘT điểm nhìn chính. */
+.pc-hero-section {
+  .pc-btn-primary {
+    box-shadow: 0 8px 20px rgba(60, 179, 113, .32);
+    &:hover { box-shadow: 0 10px 26px rgba(31, 90, 59, .4); }
+  }
+
+  .pc-btn-secondary {
+    border-color: transparent !important;
+    background: transparent !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1px;
+    opacity: 1;
+
+    &:hover {
+      background: transparent !important;
+      color: var(--mainColorDark, #1F5A3B) !important;
+      transform: none;
+    }
+  }
+
+  .pc-hero-cta-ai {
+    padding: 6px 12px !important;
+    font-size: var(--fs-xs) !important;
+    background: var(--color-mint-subtle, #E8F8EE) !important;
+    border-color: transparent !important;
+    color: var(--color-brand-green, #267348) !important;
+    box-shadow: none !important;
+
+    &:hover {
+      background: var(--color-mint-light, #D7F3E3) !important;
+      color: var(--mainColorDark, #1F5A3B) !important;
+    }
+  }
+}
+
+/* ══ T-140 (2026-09-12): nhịp nền xen kẽ giữa các section trang chủ ═════════
+   Người dùng báo các khối "dùng chung một tone trắng/xám nhờ nhạt liền mạch,
+   không có Section Breaks". ĐO THẬT thứ tự nền hiện tại (Playwright):
+     1 hero              #F3DFD1  ← màu be/hồng lạc hẳn khỏi bảng màu y khoa
+     2 flash sale        pine dark (đã sửa ở T-137)
+     3 clinical banner   #0F2318
+     4 trust strip       #EEF5F7  ← xám-xanh lạnh, không thuộc 16 token
+     5 solutions         #FFFFFF
+     6 featured products #FFFFFF  ← TRÙNG nền với khối ngay trên nó
+     7 protocol          #0F2318
+   Sửa đúng 3 điểm gãy nhịp, KHÔNG áp !important đè toàn bộ hệ thống
+   .section--light/--subtle/--brand sẵn có của theme (hệ đó còn điều khiển cả
+   màu chữ tiêu đề theo từng nhóm — đè cứng là hỏng luôn phần đó).
+   Nguyên tắc: không để 2 section liền kề cùng nền, và mọi màu đều lấy từ bộ
+   16 Color Token đã khai báo. */
+
+/* 1. Hero: thay nền be #F3DFD1 bằng gradient mint rất nhạt → trắng, tôn màu
+      thương hiệu và nối liền mạch xuống khối kế tiếp. */
+.pc-hero-section {
+  background: linear-gradient(180deg, var(--color-mint-subtle, #E8F8EE) 0%, #FFFFFF 100%) !important;
+}
+
+/* 2. Trust strip: #EEF5F7 xám-xanh lạnh → mint nhạt trong bộ token, giữ vai trò
+      dải đệm giữa 2 khối nền tối/sáng. */
+.pc-trust-strip {
+  background: var(--color-mint-subtle, #E8F8EE) !important;
+  border-top: 1px solid var(--color-mint-light, #D7F3E3);
+  border-bottom: 1px solid var(--color-mint-light, #D7F3E3);
+}
+
+/* 3. Sản phẩm nổi bật: đang trắng y hệt khối "Giải pháp" ngay trên → chuyển
+      sang nền trung tính lạnh nhẹ để tách khối, kèm bóng mềm cho thẻ sản phẩm
+      (nền không còn trắng nên thẻ trắng tự nổi lên). */
+.pc-featured-products,
+.pc-section.pc-featured-products {
+  background-color: var(--color-bg-page, #F8FAF7) !important;
+
+  .item_product_main {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(15, 35, 24, .05);
+  }
+}

@@ -147,7 +147,7 @@ const linklists = {
         link('Priori',    '/priori',    'priori'),
         link('Solgar',    '/solgar',    'solgar'),
       ]),
-      link('Chăm sóc da mặt', '/da-mun-dau', 'da-mun-dau', [
+      link('Chăm sóc da mặt', '/duong-am', 'duong-am', [
         link('Sữa rửa mặt', '/sua-rua-mat-amino-acid', ''),
         link('Tẩy trang',   '/top-san-pham-tay-trang-noi-bat', ''),
         link('Toner',       '/top-san-pham-toner-noi-bat', ''),
@@ -157,7 +157,7 @@ const linklists = {
         link('Chống nắng',  '/top-kem-chong-nang-noi-bat', ''),
         link('Kem mắt',     '/cham-soc-da-vung-mat-ban-chay', ''),
       ]),
-      link('Theo công dụng', '/dieu-tri-chuyen-nghiep', 'dieu-tri-chuyen-nghiep', [
+      link('Theo công dụng', '/lam-sang', 'lam-sang', [
         link('Trị mụn',       '/tri-mun',              'tri-mun'),
         link('Làm sáng da',   '/lam-sang',             'lam-sang'),
         link('Chống lão hoá', '/chong-lao-hoa',        'chong-lao-hoa'),
@@ -165,7 +165,7 @@ const linklists = {
         link('Phục hồi da',   '/phuc-hoi-sau-xam-lan', 'phuc-hoi-sau-xam-lan'),
         link('Kiềm dầu',      '/da-mun-dau',           'da-mun-dau'),
       ]),
-      link('Theo vấn đề da', '/da-mun-dau', 'da-mun-dau', [
+      link('Theo vấn đề da', '/tri-nam', 'tri-nam', [
         link('Da dầu mụn',      '/da-mun-dau',     'da-mun-dau'),
         link('Nám & tàn nhang', '/tri-nam',        'tri-nam'),
         link('Lão hoá da',      '/chong-lao-hoa',  'chong-lao-hoa'),
@@ -182,7 +182,7 @@ const linklists = {
         link('Azelaic Acid',    '/da-mun-dau',                    ''),
         link('Tranexamic Acid', '/serum-tranexamic-acid-3',       ''),
       ]),
-      link('Đặc trị (kê đơn)', '/dieu-tri-chuyen-nghiep', '', [
+      link('Đặc trị (kê đơn)', '/retinol', 'retinol', [
         link('Tretinoin',     '/adapalene',      ''),
         link('Adapalene',     '/adapalene',      'adapalene'),
         link('Isotretinoin',  '/isotretinoin',   'isotretinoin'),
