@@ -3860,8 +3860,8 @@ a.pc-treatment-item:hover .pc-treatment-number { border-color: var(--mainColor);
   }
 
   /* Link "Xem tất cả": viền pill, tách khỏi mép phải để không bị nút Zalo nổi che */
-  .pc-flashsale__viewall,
-  .pc-flashsale__header a[href*="flash"] {
+  .pc-flashsale__header a[href*="flash"],
+  .pc-flashsale__viewall > a {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -3914,8 +3914,8 @@ a.pc-treatment-item:hover .pc-treatment-number { border-color: var(--mainColor);
     background: transparent !important;
   }
   /* Link "Xem tất cả": bỏ gạch chân kiểu link thường, giữ dạng pill viền */
-  .pc-flashsale__viewall,
-  .pc-flashsale__header a[href*="flash"] {
+  .pc-flashsale__header a[href*="flash"],
+  .pc-flashsale__viewall > a {
     text-decoration: none !important;
   }
 }
@@ -3929,8 +3929,8 @@ a.pc-treatment-item:hover .pc-treatment-number { border-color: var(--mainColor);
   .pc-flashsale__header > a:first-of-type {
     color: var(--color-gold-sand, #DFBA73) !important;
   }
-  .pc-flashsale__viewall,
-  .pc-flashsale__header a[href*="flash"] {
+  .pc-flashsale__header a[href*="flash"],
+  .pc-flashsale__viewall > a {
     color: #34D399 !important;
     i, svg { color: currentColor; }
   }
@@ -4162,4 +4162,18 @@ a.pc-treatment-item:hover .pc-treatment-number { border-color: var(--mainColor);
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(15, 35, 24, .05);
   }
+}
+
+/* T-141 — SỬA LỖI DO CHÍNH T-137 GÂY RA: .pc-flashsale__viewall là DIV BỌC NGOÀI
+   (rộng 708px, flex:1 1 auto) chứ không phải cái link. T-137 gán viền pill +
+   padding lên nó nên tạo ra một KHUNG RỖNG chạy gần hết chiều ngang, bao quanh
+   nút "Xem tất cả" bé xíu — đúng cái người dùng báo "icon xem tất cả chưa được".
+   Trả wrapper về trong suốt, chỉ giữ kiểu pill trên đúng thẻ <a> bên trong. */
+.pc-flashsale .pc-flashsale__viewall {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  flex: 0 0 auto !important;
+  justify-content: flex-end;
 }

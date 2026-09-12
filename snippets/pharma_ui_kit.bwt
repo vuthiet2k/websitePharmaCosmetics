@@ -705,4 +705,62 @@
     line-height: 1.7;
     margin-bottom: 14px;
   }
+
+  {%- comment -%}
+    T-141 (2026-09-12) — người dùng báo header "chua align-items-center, khong co container".
+    Lan truoc toi chi do .box-hearder > .container nen ket luan nham la da xong. Do lai DUNG CHO
+    (topbar) thi ra 2 loi that:
+      1) LECH TRUC NGANG 15px: .top-main-header > .row VAN giu margin am -15px mac dinh cua
+         Bootstrap, trong khi hang chinh (.pc-header-row) da duoc reset margin:0 tu truoc. Ket qua
+         do that o 1440px: cum tien ich topbar keo den x=1420, con cum icon hang chinh dung o
+         x=1405 -> lech 15px moi ben, nhin ra ngay la "bo cuc khong deu".
+      2) LECH TRUC DOC: .top-main-header dang display:block / align-items:normal; thanh cao 30px
+         nhung cum ben phai cao 38px (tran ra ngoai) va slider ben trai co centerY=19 trong khi
+         tam thanh la 15 -> chu bi day xuong thap.
+    Sua: reset gutter cho dung 1 luoi voi hang chinh + ep flex can giua truc doc, chieu cao thanh
+    len 40px cho du cho cum ben phai (38px) khong con tran.
+  {%- endcomment -%}
+  @media (min-width: 992px) {
+    header.header .main-header > .container > .top-main-header {
+      display: flex;
+      align-items: center;
+      min-height: 40px;
+      height: auto;
+    }
+    header.header .top-main-header > .row {
+      width: 100%;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      display: flex;
+      align-items: center;
+      flex-wrap: nowrap;
+    }
+    header.header .top-main-header > .row > [class*="col-"] {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      display: flex;
+      align-items: center;
+    }
+    header.header .top-main-header .text-hea-right {
+      justify-content: flex-end;
+      height: auto;
+      gap: 20px;
+    }
+    {%- comment -%}
+      CẢNH BÁO cho lần sau: bản đầu của rule này ép display:flex lên .topbar-slider và
+      .swiper-slide — ĐÃ LÀM HỎNG slider (Swiper tự tính chiều rộng slide; ép flex khiến slide
+      mất chiều rộng, chữ thụt vào 149px và xuống 2 dòng). Chỉ được cấp chiều rộng và căn dọc ở
+      cấp CỘT, TUYỆT ĐỐI không đụng vào layout bên trong Swiper.
+    {%- endcomment -%}
+    header.header .top-main-header .topbar-slider {
+      width: 100%;
+      min-width: 0;
+    }
+    header.header .top-main-header .box_top_hea {
+      display: inline-flex;
+      align-items: center;
+      height: auto;
+    }
+  }
+
 </style>

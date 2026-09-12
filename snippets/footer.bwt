@@ -180,6 +180,14 @@
 								{%endif%}
 							</ul>
 						</div>
+						{%- comment -%}
+						  T-141 — cot thu 4 chi con moi CAI TIEU DE tro troi: noi dung ben trong phu
+						  thuoc footer_support_N_enable ma ca 4 co nay deu chua bat (do that: heading
+						  hien, ben duoi 0 phan tu). Chi render cot nay khi that su co noi dung — cung
+						  nguyen tac da ap cho khoi dang nhap mang xa hoi o T-134: khong bao gio de lai
+						  mot cai nhan khong co gi ben duoi.
+						{%- endcomment -%}
+						{%- if settings.footer_support_1_enable or settings.footer_support_2_enable or settings.footer_support_3_enable or settings.footer_support_4_enable -%}
 						<div class="col-xs-12 col-md-3 col-lg-3">
 							<h4 class="title-menu">
 								<span>{{settings.footer_search_title}}</span>
@@ -220,6 +228,7 @@
 							</div>
 							{%- endif -%}
 						</div>
+						{%- endif -%}
 												<a href="http://online.gov.vn/Home/WebDetails/103817" target="_blank"><img src="{{'logo_bct.png' | asset_url }}" style="max-width:175px;    margin-top: 25px;" alt="bct"></a>
 					</div>
 				</div>
@@ -256,12 +265,17 @@
 						&bull; Địa chỉ: {{ _legal_addr | strip_newlines | remove: 'Phòng trị liệu da chuyên nghiệp 1:1 (Skin Health Beauty)' | remove: 'Địa chỉ:' | strip }}
 						{%- endif %}
 					</p>
-					{%- if settings.footer_legal_phone != blank or settings.footer_legal_email != blank %}
-					<p class="footer-legal__line">
-						{%- if settings.footer_legal_phone != blank %}Điện thoại: <a href="tel:{{ settings.footer_legal_phone | remove: ' ' | remove: '.' }}">{{ settings.footer_legal_phone }}</a>{%- endif %}
-						{%- if settings.footer_legal_email != blank %} &bull; Email: <a href="mailto:{{ settings.footer_legal_email }}">{{ settings.footer_legal_email }}</a>{%- endif %}
-					</p>
-					{%- endif %}
+					{%- comment -%}
+					  T-141 (2026-09-12) — người dùng báo "footer thừa quá nhiều thông tin trùng lặp".
+					  Nhìn thật trên trang: cột liên hệ bên trái đã có điện thoại + email + địa chỉ, rồi
+					  dải pháp lý bên dưới lặp lại đủ 3 thứ đó (với giá trị khác) → đọc như thông tin
+					  mâu thuẫn. Bỏ dòng điện thoại/email khỏi dải pháp lý: NĐ 52/2013 yêu cầu công bố
+					  thông tin liên hệ TRÊN TRANG, mà cột liên hệ ngay phía trên đã đáp ứng; dải pháp
+					  lý chỉ giữ đúng phần định danh pháp nhân (tên, địa chỉ ĐKKD, MST, ngày cấp, nơi
+					  cấp) — không trùng với cột liên hệ nữa.
+					  Điện thoại/email đăng ký kinh doanh vẫn còn nguyên trong structured data
+					  (snippets/schema.bwt) và trang /gioi-thieu để phục vụ SEO và tra cứu.
+					{%- endcomment -%}
 					<p class="footer-legal__line">
 						Mã số thuế / Mã số doanh nghiệp:
 						<b>{{ settings.footer_legal_tax_code | default: '(chưa cập nhật — nhập tại Sapo Admin › Cấu hình giao diện)' }}</b>

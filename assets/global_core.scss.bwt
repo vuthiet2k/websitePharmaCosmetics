@@ -6121,3 +6121,42 @@ $support-color: {{ settings.contact_us_color }};
   font-size: var(--fs-sm);
   margin-bottom: 16px;
 }
+
+/* ══ T-141 (2026-09-12) ═══════════════════════════════════════════════════
+   1) Dải pháp lý ở chân trang đang có nền xanh NHẠT hơn hẳn thân footer nên
+      nhìn như một mảng dán thêm vào, chọi với nền xanh đậm phía trên. Cho về
+      cùng tông đậm, tách bằng 1 đường kẻ mảnh thay vì đổi hẳn màu nền. */
+footer.footer .copyright {
+  background: var(--primary-forest-900, #0F2318) !important;
+  border-top: 1px solid rgba(255, 255, 255, .12);
+}
+
+/* 2) Chuyển tiếp giữa các section: người dùng báo "không có sự chuyển tiếp và
+      không làm nổi bật được nội dung". Các khối nền sáng đang dính liền nhau
+      thành một dải trắng/xám dài, mắt không nhận ra ranh giới chủ đề.
+      Thêm đường kẻ mảnh ở ranh giới + nới nhịp dọc cho khối nền sáng, để mỗi
+      section đọc thành một "trang" riêng thay vì cuộn vô tận.
+      CHỈ áp cho nhóm nền sáng — các khối nền tối (clinical banner, protocol,
+      zalo, flash sale) tự nó đã tương phản đủ mạnh, thêm kẻ là thừa. */
+.pc-section.section--light,
+.pc-section.section--subtle,
+.pc-solutions-section,
+.pc-featured-products {
+  padding-top: 56px;
+  padding-bottom: 56px;
+  border-top: 1px solid var(--color-border-clinical, #E2E8F0);
+
+  @media (max-width: 767px) {
+    padding-top: 36px;
+    padding-bottom: 36px;
+  }
+}
+
+/* Khối nền sáng đứng NGAY SAU khối nền tối thì bỏ kẻ — ranh giới đã quá rõ */
+.pc-clinical-banner + .pc-section,
+.pc-protocol-section + .pc-section,
+.pc-zalo-section + .pc-section,
+.pc-flashsale + .pc-section,
+.pc-hero-section {
+  border-top: 0;
+}
