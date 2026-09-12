@@ -1,72 +1,87 @@
-<div class="bg-gray">
-	{% include 'breadcrumb' %} 
-	<section class="section">
-		<div class="container ">
-			<div class="wrap_background_aside  page_login">
-				<div class="wrap_background_aside">
-					<div class="row">
-						<div class="col-lg-4 col-md-6 col-sm-12 col-12 col-xl-4 offset-xl-4 offset-lg-4 offset-md-3 offset-xl-3">
-							<div class="row">
-								<div class="page-login pagecustome clearfix">
-									<div class="wpx">
-										<h1 class="title_heads a-center"><span>Đăng ký</span></h1>
-										<span class="block a-center dkm margin-top-10">Đã có tài khoản, đăng nhập <a href="/account/login" class="btn-link-style btn-register">tại đây</a></span>
-										<div id="login" class="section">
-											{% form "customer_register" %}
-											<div class="form-signup " style="color:red;" >
-												{{ form.errors | default_errors }}
-											</div>
-											<div class="form-signup clearfix">
-												<div class="row">
-													<div class="col-md-12 col-lg-12 col-sm-12 col-xs-12">
-														<fieldset class="form-group">
-															<input type="text" class="form-control form-control-lg" value="" name="lastName" id="lastName"  placeholder="Họ" required >
-														</fieldset>
-													</div>
-													<div class="col-md-12 col-lg-12 col-sm-12 col-xs-12">
-														<fieldset class="form-group">
-															<input type="text" class="form-control form-control-lg" value="" name="firstName" id="firstName"  placeholder="Tên" required >
-														</fieldset>
-													</div>
-												</div>
-												<div class="row">
-													<div class="col-md-12 col-lg-12 col-sm-12 col-xs-12">
-														<fieldset class="form-group">
-															<input type="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$" class="form-control form-control-lg" value="" name="email" id="email"  placeholder="Email" required="">
-														</fieldset>
-													</div>
-													<div class="col-md-12 col-lg-12 col-sm-12 col-xs-12">
-														<fieldset class="form-group">	
-															<input placeholder="Số điện thoại" type="text" pattern="\d+" class="form-control form-control-comment form-control-lg" name="PhoneNumber" Required>
-														</fieldset>
-													</div>
-													<div class="col-md-12 col-lg-12 col-sm-12 col-xs-12">
-														<fieldset class="form-group">
-															<input type="password" class="form-control form-control-lg" value="" name="password" id="password" placeholder="Mật khẩu" required >
-														</fieldset>
-													</div>
-												</div>
-												<div class="section">
-													<button type="submit" value="Đăng ký" class="btn btn-primary">Đăng ký</button>
-												</div>
-											</div>
-											{% endform %}
-											<div class="block social-login--facebooks margin-top-15">
-												<p class="a-center">
-													Hoặc đăng nhập bằng
-												</p>
-												{{ social_login.script }}
-												{{ social_login.facebook_button }}
-												{{ social_login.google_button }}
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
+{% comment %} templates/customers/register.bwt — T-112 (2026-09-12): tách khỏi layout chung, dùng
+  layouts/auth.bwt (split-screen). Form/field 'customer_register' GIỮ NGUYÊN tên field
+  (firstName/lastName/email/PhoneNumber/password — Sapo native form, đổi tên có thể vỡ xử lý
+  backend), chỉ đổi khung bọc + thêm ẩn/hiện mật khẩu + checkbox đồng ý chính sách (liên kết
+  /chinh-sach-bao-mat có sẵn trong data/navigation.js, KHÔNG tự trích dẫn số hiệu luật cụ thể vì
+  không xác minh được từ nguồn nào trong repo — xem T-110 lý do không tin nguyên văn báo cáo). Họ
+  và Tên giữ 2 field riêng (không gộp) vì đây là 2 tham số Sapo form thật, gộp sẽ vỡ submit. {% endcomment %}
+{% layout 'auth' %}
+
+<div class="pc-auth-card">
+	<div class="pc-auth-card__head">
+		<h1 class="pc-auth-card__title">Tạo tài khoản mới</h1>
+		<p class="pc-auth-card__sub">
+			Đã có tài khoản? <a href="/account/login" class="pc-auth-link">Đăng nhập tại đây</a>
+		</p>
+	</div>
+
+	<div class="pc-auth-card__body">
+		{% form "customer_register" %}
+		{% if form.errors %}
+		<div class="pc-auth-alert pc-auth-alert--error">{{ form.errors | default_errors }}</div>
+		{% endif %}
+
+		<div class="pc-auth-field-row">
+			<div class="pc-auth-field">
+				<label for="lastName" class="pc-auth-label">Họ</label>
+				<input type="text" class="pc-auth-input" value="" name="lastName" id="lastName" placeholder="Nguyễn" required>
+			</div>
+			<div class="pc-auth-field">
+				<label for="firstName" class="pc-auth-label">Tên</label>
+				<input type="text" class="pc-auth-input" value="" name="firstName" id="firstName" placeholder="Văn A" required>
 			</div>
 		</div>
-	</section>
+
+		<div class="pc-auth-field">
+			<label for="email" class="pc-auth-label">Email</label>
+			<input type="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$" class="pc-auth-input" value="" name="email" id="email" placeholder="ban@email.com" required>
+		</div>
+		<div class="pc-auth-field">
+			<label for="PhoneNumber" class="pc-auth-label">Số điện thoại</label>
+			<input placeholder="09xxxxxxxx" type="text" pattern="\d+" class="pc-auth-input" name="PhoneNumber" id="PhoneNumber" required>
+		</div>
+		<div class="pc-auth-field pc-auth-field--password">
+			<label for="password" class="pc-auth-label">Mật khẩu</label>
+			<div class="pc-auth-password-wrap">
+				<input type="password" class="pc-auth-input" value="" name="password" id="password" placeholder="Tối thiểu 6 ký tự" required>
+				<button type="button" class="pc-auth-password-toggle" aria-label="Hiện/ẩn mật khẩu" onclick="pcAuthTogglePassword('password', this)">
+					<i class="fa-regular fa-eye"></i>
+				</button>
+			</div>
+		</div>
+
+		<label class="pc-auth-checkbox">
+			<input type="checkbox" id="pc-auth-terms" required>
+			<span>Tôi đã đọc và đồng ý với <a href="/chinh-sach-bao-mat" target="_blank" rel="noopener">Chính sách bảo mật</a> của {{ store.name }}.</span>
+		</label>
+
+		<button type="submit" value="Đăng ký" class="pc-auth-btn-primary">Tạo tài khoản</button>
+		{% endform %}
+
+		<div class="pc-auth-social">
+			<div class="pc-auth-social__divider"><span>hoặc đăng ký qua</span></div>
+			{{ social_login.script }}
+			<div class="pc-auth-social__buttons">
+				{{ social_login.facebook_button }}
+				{{ social_login.google_button }}
+			</div>
+		</div>
+	</div>
 </div>
+
+<script>
+	function pcAuthTogglePassword(fieldId, btn) {
+		var input = document.getElementById(fieldId);
+		if (!input) return;
+		var icon = btn.querySelector('i');
+		if (input.type === 'password') {
+			input.type = 'text';
+			icon.classList.remove('fa-eye');
+			icon.classList.add('fa-eye-slash');
+		} else {
+			input.type = 'password';
+			icon.classList.remove('fa-eye-slash');
+			icon.classList.add('fa-eye');
+		}
+	}
+</script>

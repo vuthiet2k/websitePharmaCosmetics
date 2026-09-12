@@ -1,109 +1,182 @@
+{% comment %} templates/page.ai-skin-quiz.bwt — T-113 (2026-09-12, Phần V báo cáo audit): chuyển
+  từ dạng trắc nghiệm dàn hàng ngang (quiz-grid) sang khung hội thoại (chat). GIỮ NGUYÊN 100%
+  data/quiz-questions.js (17 câu, quizData/quizResults) + logic chấm điểm (best skin_type theo
+  điểm cao nhất) + hợp đồng localStorage với page.ai-skin-quiz-results.bwt (key
+  'pc_quiz_skin_type'/'pc_quiz_scores') — chỉ đổi tầng trình bày, không viết lại câu hỏi/thang
+  điểm. Route /kham-da-ai đã thêm alias trong dev-server.js#PAGE_HANDLE_MAP (T-113, sửa gap 404
+  nêu trong báo cáo). {% endcomment %}
+{% layout 'chat' %}
 {{ 'page_ai_skin_quiz.scss.css' | asset_url | stylesheet_tag }}
 
-<section class="pc-quiz-wrap" id="pcQuiz">
-	<div class="container pc-quiz-container">
-
-		<div class="pc-quiz-intro" data-quiz-view="intro">
-			<span class="pc-testi-treatment-tag">🤖 AI SKIN DIAGNOSTIC</span>
-			<h1 class="pc-section-title">Tìm Loại Da Của Bạn Trong 1 Phút</h1>
-			<p class="pc-quiz-intro-desc">Trả lời {{ quiz_questions.size }} câu hỏi ngắn để nhận gợi ý hoạt chất phù hợp nhất với làn da của bạn.</p>
-			<button type="button" class="pc-quiz-start-btn" data-quiz-action="start">Bắt Đầu ➔</button>
-		</div>
-
-		<div class="pc-quiz-question" data-quiz-view="question" hidden>
-			<div class="pc-quiz-progress"><div class="pc-quiz-progress-bar" data-quiz-progress></div></div>
-			<div class="pc-quiz-question-list">
-				{% for q in quiz_questions %}
-				<div class="pc-quiz-question-item" data-quiz-question="{{ forloop.index0 }}" {% unless forloop.first %}hidden{% endunless %}>
-					<h2 class="pc-quiz-question-text">{{ q.question }}</h2>
-					<div class="pc-quiz-options">
-						{% for opt in q.options %}
-						<button type="button" class="pc-quiz-option-btn" data-quiz-skin-type="{{ opt.skin_type }}">{{ opt.text }}</button>
-						{% endfor %}
-					</div>
-				</div>
-				{% endfor %}
-			</div>
-		</div>
-
-		<div class="pc-quiz-result" data-quiz-view="result" hidden>
-			<span class="pc-testi-treatment-tag">✨ KẾT QUẢ CỦA BẠN</span>
-			<h2 class="pc-section-title" data-quiz-result-title>—</h2>
-			<div class="pc-quiz-recommend" data-quiz-result-recommend></div>
-			<a href="/pages/ai-skin-quiz-results" class="pc-cg-cta-btn" data-quiz-result-link>Xem Phác Đồ Chi Tiết ➔</a>
-			<a href="/collections/all" class="pc-kit-btn-secondary" style="margin-top:10px;">Xem Sản Phẩm Phù Hợp</a>
-			<button type="button" class="pc-quiz-retry-btn" data-quiz-action="retry">Làm lại bài test</button>
-		</div>
-
-	</div>
-</section>
+<div class="pc-chat-thread" id="pcChatThread" aria-live="polite"></div>
+<div class="pc-chat-dock" id="pcChatDock"></div>
 
 <script>
 (function () {
 	var quizData = {{ quiz_questions | json }};
 	var resultsData = {{ quiz_results | json }};
-	var scores = {};
-	var currentIndex = 0;
-	var root = document.getElementById('pcQuiz');
-	if (!root) return;
+	var zaloNumber = {{ settings.contact_zalo | default: settings.store_phone | json }};
 
-	function showView(name) {
-		root.querySelectorAll('[data-quiz-view]').forEach(function (el) {
-			el.hidden = el.getAttribute('data-quiz-view') !== name;
-		});
+	var thread = document.getElementById('pcChatThread');
+	var dock = document.getElementById('pcChatDock');
+	var progressBar = document.querySelector('[data-quiz-progress]');
+	if (!thread || !dock) return;
+
+	var state = { index: 0, scores: {}, started: false, finished: false };
+
+	function scrollToBottom() {
+		requestAnimationFrame(function () { thread.scrollTop = thread.scrollHeight; });
 	}
 
 	function updateProgress() {
-		var bar = root.querySelector('[data-quiz-progress]');
-		if (bar) bar.style.width = Math.round((currentIndex / quizData.length) * 100) + '%';
+		if (!progressBar) return;
+		var pct = state.finished ? 100 : Math.round((state.index / quizData.length) * 100);
+		progressBar.style.width = pct + '%';
 	}
 
-	function showQuestion(i) {
-		root.querySelectorAll('[data-quiz-question]').forEach(function (el, idx) {
-			el.hidden = idx !== i;
+	function addBotBubble(html) {
+		var wrap = document.createElement('div');
+		wrap.className = 'pc-chat-msg pc-chat-msg--bot';
+		wrap.innerHTML = '<span class="pc-chat-msg-avatar"><i class="fa-solid fa-microscope"></i></span><div class="pc-chat-msg-bubble">' + html + '</div>';
+		thread.appendChild(wrap);
+		scrollToBottom();
+		return wrap;
+	}
+
+	function addUserBubble(text) {
+		var wrap = document.createElement('div');
+		wrap.className = 'pc-chat-msg pc-chat-msg--user';
+		wrap.innerHTML = '<div class="pc-chat-msg-bubble">' + text + '</div>';
+		thread.appendChild(wrap);
+		scrollToBottom();
+	}
+
+	function showTyping(callback, delay) {
+		var wrap = document.createElement('div');
+		wrap.className = 'pc-chat-msg pc-chat-msg--bot pc-chat-msg--typing';
+		wrap.innerHTML = '<span class="pc-chat-msg-avatar"><i class="fa-solid fa-microscope"></i></span><div class="pc-chat-msg-bubble pc-chat-typing"><span></span><span></span><span></span></div>';
+		thread.appendChild(wrap);
+		scrollToBottom();
+		setTimeout(function () {
+			wrap.remove();
+			callback();
+		}, delay || 650);
+	}
+
+	function clearDock() { dock.innerHTML = ''; }
+
+	function renderIntro() {
+		clearDock();
+		addBotBubble(
+			'Chào bạn! Mình là <strong>Trợ Lý AI Chăm Sóc Da</strong> 👋<br>' +
+			'Trả lời ' + quizData.length + ' câu hỏi ngắn (khoảng 1 phút), mình sẽ gợi ý loại da và các hoạt chất phù hợp cho bạn.'
+		);
+		addBotBubble(
+			'<span class="pc-chat-disclaimer"><i class="fa-solid fa-circle-info"></i> Đây là công cụ AI hỗ trợ dựa trên câu trả lời tự đánh giá của bạn, ' +
+			'<strong>không phải chẩn đoán y khoa chính thức</strong> và không thay thế việc thăm khám trực tiếp với chuyên gia da liễu.</span>'
+		);
+		var startBtn = document.createElement('button');
+		startBtn.type = 'button';
+		startBtn.className = 'pc-chat-start-btn';
+		startBtn.textContent = 'Bắt đầu ngay ➔';
+		startBtn.addEventListener('click', function () {
+			addUserBubble('Bắt đầu');
+			state.started = true;
+			showTyping(function () { askQuestion(0); });
 		});
+		dock.appendChild(startBtn);
+	}
+
+	function askQuestion(i) {
+		state.index = i;
 		updateProgress();
+		var q = quizData[i];
+		addBotBubble('<span class="pc-chat-q-index">Câu ' + (i + 1) + '/' + quizData.length + '</span>' + q.question);
+		renderOptions(q.options);
+	}
+
+	function renderOptions(options) {
+		clearDock();
+		var wrap = document.createElement('div');
+		wrap.className = 'pc-chat-options';
+		options.forEach(function (opt) {
+			var btn = document.createElement('button');
+			btn.type = 'button';
+			btn.className = 'pc-chat-option-chip';
+			btn.textContent = opt.text;
+			btn.addEventListener('click', function () { selectOption(opt); });
+			wrap.appendChild(btn);
+		});
+		dock.appendChild(wrap);
+	}
+
+	function selectOption(opt) {
+		addUserBubble(opt.text);
+		state.scores[opt.skin_type] = (state.scores[opt.skin_type] || 0) + 1;
+		clearDock();
+		var next = state.index + 1;
+		if (next >= quizData.length) {
+			showTyping(function () { finish(); }, 900);
+		} else {
+			showTyping(function () { askQuestion(next); });
+		}
 	}
 
 	function finish() {
+		state.finished = true;
+		updateProgress();
 		var best = null, bestScore = -1;
-		Object.keys(scores).forEach(function (k) {
-			if (scores[k] > bestScore) { bestScore = scores[k]; best = k; }
+		Object.keys(state.scores).forEach(function (k) {
+			if (state.scores[k] > bestScore) { bestScore = state.scores[k]; best = k; }
 		});
 		var result = resultsData[best] || resultsData[Object.keys(resultsData)[0]];
-		root.querySelector('[data-quiz-result-title]').textContent = result.skin_type;
-		var rec = root.querySelector('[data-quiz-result-recommend]');
-		rec.innerHTML = '';
-		(result.recommend || []).forEach(function (r) {
-			var span = document.createElement('span');
-			span.className = 'pc-quiz-recommend-tag';
-			span.textContent = r;
-			rec.appendChild(span);
-		});
-		// Bàn giao kết quả cho templates/page.ai-skin-quiz-results.bwt (T-32) — không có backend
-		// lưu trạng thái quiz, nên dùng localStorage làm cầu nối phía client giữa 2 trang.
+
 		try {
 			localStorage.setItem('pc_quiz_skin_type', best || '');
-			localStorage.setItem('pc_quiz_scores', JSON.stringify(scores));
+			localStorage.setItem('pc_quiz_scores', JSON.stringify(state.scores));
 		} catch (e) { /* localStorage có thể bị chặn (private mode) — trang kết quả có fallback demo */ }
-		showView('result');
+
+		addBotBubble('Cảm ơn bạn đã trả lời hết ' + quizData.length + ' câu hỏi! Đây là kết quả sơ bộ của bạn:');
+
+		var tagsHtml = (result.recommend || []).map(function (r) {
+			return '<span class="pc-chat-result-tag">' + r + '</span>';
+		}).join('');
+		var cardWrap = document.createElement('div');
+		cardWrap.className = 'pc-chat-msg pc-chat-msg--bot';
+		cardWrap.innerHTML =
+			'<span class="pc-chat-msg-avatar"><i class="fa-solid fa-microscope"></i></span>' +
+			'<div class="pc-chat-msg-bubble pc-chat-result-card">' +
+				'<span class="pc-chat-result-label">✨ Kết quả của bạn</span>' +
+				'<h2 class="pc-chat-result-title">' + result.skin_type + '</h2>' +
+				'<div class="pc-chat-result-tags">' + tagsHtml + '</div>' +
+			'</div>';
+		thread.appendChild(cardWrap);
+		scrollToBottom();
+
+		clearDock();
+		var actions = document.createElement('div');
+		actions.className = 'pc-chat-result-actions';
+		actions.innerHTML =
+			'<a href="/pages/ai-skin-quiz-results" class="pc-chat-cta-btn pc-chat-cta-btn--primary">Xem phác đồ chi tiết ➔</a>' +
+			(zaloNumber ? '<a href="https://zalo.me/' + String(zaloNumber).replace(/[\s+]/g, '') + '" target="_blank" rel="noopener" class="pc-chat-cta-btn pc-chat-cta-btn--zalo"><i class="fa-solid fa-comment-dots"></i> Kết nối chuyên gia qua Zalo</a>' : '') +
+			'<a href="/collections/all" class="pc-chat-cta-btn pc-chat-cta-btn--ghost">Xem sản phẩm phù hợp</a>' +
+			'<button type="button" class="pc-chat-retry-btn" data-quiz-action="restart">Làm lại phiên chẩn đoán</button>';
+		dock.appendChild(actions);
 	}
 
-	root.addEventListener('click', function (e) {
-		var startBtn = e.target.closest('[data-quiz-action="start"]');
-		if (startBtn) { currentIndex = 0; scores = {}; showView('question'); showQuestion(0); return; }
+	function restart() {
+		thread.innerHTML = '';
+		dock.innerHTML = '';
+		state = { index: 0, scores: {}, started: false, finished: false };
+		updateProgress();
+		renderIntro();
+	}
 
-		var retryBtn = e.target.closest('[data-quiz-action="retry"]');
-		if (retryBtn) { currentIndex = 0; scores = {}; showView('intro'); return; }
-
-		var optBtn = e.target.closest('[data-quiz-skin-type]');
-		if (optBtn) {
-			var t = optBtn.dataset.quizSkinType;
-			scores[t] = (scores[t] || 0) + 1;
-			currentIndex++;
-			if (currentIndex >= quizData.length) { finish(); }
-			else { showQuestion(currentIndex); }
-		}
+	dock.addEventListener('click', function (e) {
+		if (e.target.closest('[data-quiz-action="restart"]')) restart();
 	});
+	document.addEventListener('pc-chat-restart', restart);
+
+	renderIntro();
 })();
 </script>

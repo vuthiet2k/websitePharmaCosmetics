@@ -248,15 +248,124 @@
       toàn). Nếu 1 số độ rộng hẹp không đủ chỗ hiển thị hết nav: cơ chế cuộn ngang có sẵn
       (.navigation-horizontal.overflow + #prev/#next, đã sửa lỗi off-by-one T-103) tự xử lý.
     {%- endcomment -%}
-    header.header .box-hearder { background: #fff; }
+    {%- comment -%}
+      T-121 (2026-09-12) — GHI ĐÈ quyết định T-119/T-120: người dùng chốt lại rõ ràng hướng cuối
+      cùng — "top head màu main [topbar giữ xanh], header main màu trắng [box-hearder +
+      header-menu VỀ LẠI trắng], logo lấy từ design/Pharma Cosmetics/test_full_logo.html để màu
+      main". Đây là hướng ĐÚNG theo comment gốc đã có sẵn từ trước ở snippets/header.bwt#L108
+      ("PHẦN 2 — HEADER MAIN ... nền trắng") — T-119/T-120 đã đi lệch hướng này khi hiểu nhầm
+      "bỏ nền trắng" là chuyển toàn bộ sang xanh, thay vì hiểu đúng là: chỉ có object cụ thể nào
+      đó (logo cũ chỉ có icon trắng vô hình + không dùng var(--mainColor)) mới là vấn đề, còn nền
+      trắng của header-main tự nó là ĐÚNG THIẾT KẾ. Sửa lại: .box-hearder + .header-menu = trắng
+      (không ghi đè gì thêm, dùng đúng nền trắng gốc của assets/global_core.scss.bwt); logo dùng
+      SVG Master thật (snippets/logo-master-svg.bwt, fill=currentColor) đặt màu var(--mainColor)
+      qua .pc-logo-master; nav-link/icon GIỮ màu tối gốc của assets/global_core.scss.bwt (đúng cho
+      nền trắng, không cần ghi đè) — CHỈ bổ sung border-bottom cho .active để hiệu ứng active rõ
+      hơn (khớp tinh thần design/*.html: "border-bottom: 2px solid var(--brand-primary)").
+    {%- endcomment -%}
+    {%- comment -%}
+      T-122 (2026-09-12) — người dùng yêu cầu tách rõ 2 khối "top-header" và "main-header" thay
+      vì để chung 1 mảng lẫn xanh/trắng, giống đúng design/*.html (2 phần tử <header class="topbar">
+      và <nav class="main-header"> HOÀN TOÀN riêng biệt, mỗi phần tự có nền/border của mình).
+      Root cause đo được thật (Playwright boundingClientRect): DOM hiện tại lồng cả
+      .top-main-header LẪN .box-hearder vào chung 1 <div class="main-header"> cha — cha này có
+      "padding: 0 0 5px 0" + chính .top-main-header có "margin-bottom: 5px"
+      (assets/global_core.scss.bwt) → lộ ra 1 dải nền xanh 5px của CHA giữa đáy topbar (y=30) và
+      đỉnh box-hearder trắng (y=35), same lặp lại 5px nữa dưới đáy box-hearder trước khi khối cha
+      kết thúc — tạo cảm giác "1 mảng" lem nhem giữa 2 phần thay vì ranh giới rõ ràng như mẫu.
+      KHÔNG đổi tên/di chuyển DOM (rủi ro JS/sticky/mobile-drawer phụ thuộc cấu trúc hiện có, xem
+      cảnh báo "KHÔNG đổi tên class" ở đầu header.bwt) — chỉ triệt tiêu 2 khoảng đệm gây lộ màu
+      cha trong phạm vi >=992px này, cho .top-main-header (xanh) và .box-hearder (trắng) tiếp giáp
+      trực tiếp, mỗi khối tự có nền riêng, giống 2 <header>/<nav> độc lập của design/*.html.
+    {%- endcomment -%}
+    {%- comment -%}
+      !important bắt buộc: assets/global_core.scss.bwt#.main-header (không nằm trong media query,
+      áp mọi độ rộng) và rule ở đây có ĐÚNG CÙNG ĐỘ ĐẶC HIỆU "header.header .main-header" — quyết
+      định bằng thứ tự nạp file, mà global_core.scss.css nạp SAU <style id="pharma-ui-kit"> trong
+      <head> (xác nhận qua document.styleSheets thật) nên luôn thắng nếu không có !important.
+    {%- endcomment -%}
+    header.header .main-header {
+      padding-bottom: 0 !important;
+    }
+    header.header .main-header .top-main-header {
+      margin-bottom: 0 !important;
+      background: var(--bgHeader);
+    }
+    header.header .box-hearder {
+      background: #fff;
+      border-bottom: 1px solid #E5E7EB;
+    }
     header.header .box-hearder .header-menu {
       flex: 1 1 auto;
       min-width: 0;
+      background: #fff;
     }
     header.header .box-hearder .header-menu .container {
       max-width: none;
       padding: 0;
       margin: 0;
+    }
+    header.header .box-hearder .header-menu .sudes-main-header .col-menu #nav .nav-item.active > a {
+      border-bottom: 2px solid var(--mainColor, #3CB371);
+    }
+    header.header .box-hearder .pc-logo-master {
+      display: inline-flex;
+      align-items: center;
+      height: 42px;
+      width: auto;
+      color: var(--mainColor, #3CB371);
+    }
+    header.header .box-hearder .pc-logo-master .pc-logo-master-svg {
+      height: 100%;
+      width: auto;
+      display: block;
+    }
+    {%- comment -%}
+      T-123 (2026-09-12) — BUG THẬT (Playwright đo computed color thật, không đoán): icon
+      cart/wishlist/stores ở .header-right đang render "rgb(255,255,255)" = TRẮNG trên nền
+      .box-hearder TRẮNG (từ T-121) → biến mất hoàn toàn kể cả KHÔNG hover, đúng như người dùng
+      báo "chú ý màu sắc tránh hover trùng màu nền". Root cause: rule dưới đây trước đó KHÔNG có
+      !important và thiếu ".main-header" trong chuỗi selector so với gốc
+      (assets/global_core.scss.bwt: "header.header .main-header .box-hearder .header-right
+      .sudes-header-cart > a { color: var(--txtHeader) }") — selector gốc có specificity CAO HƠN
+      (đủ 1 class ".main-header") nên luôn thắng bất kể thứ tự nạp file. Thêm !important để đảm
+      bảo thắng chắc chắn (đúng quy ước đã dùng xuyên suốt file này khi selector chỉ hoà/thấp hơn
+      gốc).
+    {%- endcomment -%}
+    header.header .box-hearder .header-right .sudes-header-stores > a,
+    header.header .box-hearder .header-right .sudes-header-iwish > a,
+    header.header .box-hearder .header-right .sudes-header-cart > a,
+    header.header .box-hearder .header-right .menu-icon {
+      color: var(--color-text-main, #13241F) !important;
+    }
+    header.header .box-hearder .header-right .sudes-header-stores svg path,
+    header.header .box-hearder .header-right .sudes-header-iwish svg path,
+    header.header .box-hearder .header-right .sudes-header-cart svg path {
+      fill: var(--color-text-main, #13241F) !important;
+    }
+    {%- comment -%}
+      T-123 (2026-09-12) — cùng gốc bệnh như trên nhưng ở trạng thái :hover:
+      assets/global_core.scss.bwt#.sudes-header-stores > a:hover và #.sudes-header-iwish > a:hover
+      đặt "color: rgba(255,255,255,0.7)" (+ svg path fill cùng màu cho stores) — đúng cho thiết kế
+      GỐC (nền .header-right tối, chữ trắng mờ khi hover), nhưng nền .box-hearder giờ TRẮNG nên
+      hover cũng gần như trắng trên trắng = biến mất. .sudes-header-cart > a:hover đã dùng
+      var(--subColor) (xanh đậm, tự nó KHÔNG bị lỗi) — NHƯNG !important ở rule rest-state phía
+      trên (bắt buộc để thắng specificity gốc) vô tình đè LUÔN cả :hover của cart (rest-state rule
+      không có ":hover" trong selector nhưng !important thắng cả rule :hover không !important của
+      gốc) → đo lại bằng Playwright thấy cart hover = rest, mất hẳn hiệu ứng hover gốc. Bổ sung lại
+      1 rule :hover riêng cho cart để khôi phục đúng hành vi gốc (subColor xanh đậm), !important để
+      thắng rule rest-state !important ở trên (cả 2 cùng !important thì rule sau trong cùng file
+      thắng — thứ tự khai báo, không phải specificity).
+    {%- endcomment -%}
+    header.header .box-hearder .header-right .sudes-header-stores > a:hover,
+    header.header .box-hearder .header-right .sudes-header-iwish > a:hover {
+      color: var(--mainColorDark, #1F5A3B) !important;
+    }
+    header.header .box-hearder .header-right .sudes-header-stores > a:hover svg path {
+      fill: var(--mainColorDark, #1F5A3B) !important;
+    }
+    header.header .box-hearder .header-right .sudes-header-cart > a:hover {
+      color: var(--subColor, #1F5A3B) !important;
     }
     {%- comment -%}
       .sudes-cate-header/.sudes-main-header là Bootstrap col-lg-2/col-lg-10 (16.67%/83.33% CỐ
@@ -292,27 +401,6 @@
     {%- endcomment -%}
     header.header .box-hearder .header-menu .navigation-horizontal > .row {
       flex-wrap: nowrap;
-    }
-    header.header .box-hearder .header-logo .logo-wrapper .logo-icon {
-      background: var(--primary-emerald-700, #267348);
-      border-radius: 10px;
-      padding: 8px;
-      box-sizing: border-box;
-    }
-    header.header .box-hearder .header-logo .logo-store-name,
-    header.header .box-hearder .header-logo .logo-store-sub {
-      color: var(--color-text-main, #13241F) !important;
-    }
-    header.header .box-hearder .header-right .sudes-header-stores > a,
-    header.header .box-hearder .header-right .sudes-header-iwish > a,
-    header.header .box-hearder .header-right .sudes-header-cart > a,
-    header.header .box-hearder .header-right .menu-icon {
-      color: var(--color-text-main, #13241F) !important;
-    }
-    header.header .box-hearder .header-right .sudes-header-stores svg path,
-    header.header .box-hearder .header-right .sudes-header-iwish svg path,
-    header.header .box-hearder .header-right .sudes-header-cart svg path {
-      fill: var(--color-text-main, #13241F) !important;
     }
   }
 

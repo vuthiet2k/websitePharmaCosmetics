@@ -166,7 +166,7 @@ const quizQuestions = [
   },
   {
     id: 16,
-    question: 'Bạn có đang mang thai hoặc cho con bú không? (một số hoạt chất như Retinoid cần bác sĩ chỉ định riêng)',
+    question: 'Bạn có đang mang thai hoặc cho con bú không? (một số hoạt chất như Retinoid cần chuyên gia chỉ định riêng)',
     options: [
       { text: 'Có — cần phác đồ an toàn thai kỳ, tránh Retinoid/hoạt chất mạnh', skin_type: 'sensitive' },
       { text: 'Không', skin_type: 'normal' },
@@ -179,7 +179,7 @@ const quizQuestions = [
     question: 'Bạn muốn nhận phác đồ chi tiết và tư vấn tiếp theo qua kênh nào?',
     options: [
       { text: 'Zalo (gửi phác đồ + hình ảnh minh hoạ)', skin_type: 'normal' },
-      { text: 'Gọi điện tư vấn trực tiếp với bác sĩ/dược sĩ', skin_type: 'sensitive' },
+      { text: 'Gọi điện tư vấn trực tiếp với chuyên gia', skin_type: 'sensitive' },
       { text: 'Đặt lịch khám trực tiếp tại phòng khám', skin_type: 'aging' },
       { text: 'Chỉ cần xem online, chưa cần tư vấn thêm', skin_type: 'oily' },
     ],

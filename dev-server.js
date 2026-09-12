@@ -750,6 +750,7 @@ const PAGE_HANDLE_MAP = {
   'about-us':                   'page.about-us',
   'ai-skin-quiz':                'page.ai-skin-quiz',
   'ai-skin-quiz-results':        'page.ai-skin-quiz-results',
+  'kham-da-ai':                  'page.ai-skin-quiz', // alias tiếng Việt (T-113) — cùng 1 template, tránh 404 khi vào thẳng /kham-da-ai
   'chuyen-gia':                  'page.chuyen-gia',
   'chuyen-gia-detail':           'page.chuyen-gia-detail',
   'clinical-proof':              'page.clinical-proof',

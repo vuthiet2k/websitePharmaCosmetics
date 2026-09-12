@@ -6,7 +6,7 @@ const faqs = {
 
   booking: [
     { q: 'Đặt lịch khám có mất phí không?', a: 'Buổi tư vấn da đầu tiên hoàn toàn miễn phí. Chỉ tính phí khi bạn quyết định điều trị theo phác đồ cụ thể.' },
-    { q: 'Tôi cần chuẩn bị gì trước buổi khám?', a: 'Không trang điểm, mang theo sản phẩm đang dùng (nếu có) để bác sĩ đánh giá chính xác tình trạng da hiện tại.' },
+    { q: 'Tôi cần chuẩn bị gì trước buổi khám?', a: 'Không trang điểm, mang theo sản phẩm đang dùng (nếu có) để chuyên gia đánh giá chính xác tình trạng da hiện tại.' },
     { q: 'Có thể đổi lịch hẹn không?', a: 'Có, vui lòng báo trước ít nhất 4 giờ để đổi sang khung giờ khác qua hotline hoặc Zalo.' },
     { q: 'Buổi tư vấn diễn ra trong bao lâu?', a: 'Buổi tư vấn + soi da đầu tiên thường kéo dài 30-45 phút, đủ để đánh giá tình trạng da và tư vấn phác đồ phù hợp.' },
     { q: 'Tôi có thể đặt lịch cho người thân không?', a: 'Có, vui lòng cung cấp đúng họ tên và số điện thoại của người sẽ đến khám khi đặt lịch để nhân viên xác nhận chính xác.' },

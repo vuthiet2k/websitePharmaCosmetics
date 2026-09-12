@@ -230,11 +230,28 @@ const collectionsData = {
 };
 
 // ── Factory fallback ──────────────────────────────────────────────────────
+// T-115 (2026-09-12): trang tĩnh/pháp lý (chính sách bảo mật, điều khoản, liên hệ...) trong
+// Sapo THẬT là "Trang nội dung" quản lý qua Sapo Admin — theme chỉ link tới URL, KHÔNG tự viết
+// nội dung pháp lý (quyết định người dùng: "sapo có sẵn, giữ nguyên — tạo data demo thôi"). Repo
+// này không có backend Sapo thật nên các slug đó rơi vào fallback collection (dev-server.js#
+// resolvePrettyPath, cố ý giữ nguyên cơ chế — không có template `page.bwt` generic). Trước đây
+// name mặc định = raw slug (vd "chinh-sach-bao-mat" hiện thẳng làm H1) — chỉ thêm DEMO NAME/
+// DESCRIPTION thân thiện cho các slug tĩnh đã biết (data/navigation.js), không đổi kiến trúc.
+const STATIC_PAGE_DEMO_META = {
+  'chinh-sach-bao-mat':    { name: 'Chính sách bảo mật', description: 'Nội dung chính sách bảo mật được quản lý qua Sapo Admin › Trang nội dung. Đây là bản xem trước cục bộ (dev-server), không phải nội dung pháp lý thật.' },
+  'chinh-sach':            { name: 'Chính sách đổi trả', description: 'Nội dung chính sách đổi trả được quản lý qua Sapo Admin › Trang nội dung. Đây là bản xem trước cục bộ (dev-server), không phải nội dung pháp lý thật.' },
+  'dieu-khoan':            { name: 'Điều khoản sử dụng', description: 'Nội dung điều khoản sử dụng được quản lý qua Sapo Admin › Trang nội dung. Đây là bản xem trước cục bộ (dev-server), không phải nội dung pháp lý thật.' },
+  'chinh-sach-giao-hang':  { name: 'Chính sách giao hàng', description: 'Nội dung chính sách giao hàng được quản lý qua Sapo Admin › Trang nội dung. Đây là bản xem trước cục bộ (dev-server).' },
+  'chinh-sach-doi-tra':    { name: 'Chính sách đổi trả 30 ngày', description: 'Nội dung chính sách đổi trả được quản lý qua Sapo Admin › Trang nội dung. Đây là bản xem trước cục bộ (dev-server).' },
+  'huong-dan-mua-hang':    { name: 'Hướng dẫn mua hàng', description: 'Nội dung hướng dẫn mua hàng được quản lý qua Sapo Admin › Trang nội dung. Đây là bản xem trước cục bộ (dev-server).' },
+  'lien-he':               { name: 'Liên hệ', description: 'Thông tin liên hệ được quản lý qua Sapo Admin › Trang nội dung. Đây là bản xem trước cục bộ (dev-server).' },
+};
 
 function makeFallbackCollection(handle) {
+  const demoMeta = STATIC_PAGE_DEMO_META[handle];
   return {
-    id: 0, name: handle, alias: handle, url: `/${handle}`,
-    description: '', products_count: products.length,
+    id: 0, name: demoMeta ? demoMeta.name : handle, alias: handle, url: `/${handle}`,
+    description: demoMeta ? demoMeta.description : '', products_count: products.length,
     products: products.slice(0, 8),
     image: null, all_vendors: [], all_types: [],
     current_vendor: null, current_type: null,

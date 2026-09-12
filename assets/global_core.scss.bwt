@@ -5550,15 +5550,25 @@ $support-color: {{ settings.contact_us_color }};
   /* Khoảng thở luxury */
   header.header .main-header { padding-top: 8px; padding-bottom: 8px; }
 
+  {%- comment -%}
+    T-124 (2026-09-12) — BUG THẬT (Playwright đo rect + matchMedia thật, không đoán): 4 selector
+    logo mobile bên dưới dùng combinator "> .row" (con TRỰC TIẾP của .box-hearder), nhưng DOM hiện
+    tại (sau khi người dùng tự chỉnh header.bwt) là ".box-hearder > .container > .row" — có thêm 1
+    lớp .container xen giữa, nên "> .row" KHÔNG match được nữa (0 rule nào trong 4 rule này thật sự
+    áp dụng, matchMedia vẫn đúng false→true bình thường nhưng selector sai target). Hậu quả: hàng
+    không có position:relative làm bệ đỡ, logo không position:absolute để canh giữa — logo rơi về
+    layout Bootstrap col-6 mặc định, LỆCH TRÁI thay vì canh giữa. Đổi "> .row" thành " .row"
+    (descendant, xuyên qua .container) để khớp đúng DOM thật, không cần sửa header.bwt.
+  {%- endcomment -%}
   /* ── Row: position relative để logo absolute hoạt động ── */
-  header.header .main-header .box-hearder > .row {
+  header.header .main-header .box-hearder .row {
     position: relative;
     flex-wrap: nowrap;
     column-gap: 0 !important;
   }
 
   /* ── Logo: absolute center, pointer-events passthrough ── */
-  header.header .main-header .box-hearder > .row .header-logo {
+  header.header .main-header .box-hearder .row .header-logo {
     position: absolute !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
@@ -5571,14 +5581,43 @@ $support-color: {{ settings.contact_us_color }};
     z-index: 1;
   }
 
-  header.header .main-header .box-hearder > .row .header-logo .logo-wrapper {
+  header.header .main-header .box-hearder .row .header-logo .logo-wrapper {
     pointer-events: all;
     display: inline-flex;
   }
 
-  /* Ẩn text logo — chỉ giữ icon mark trên mobile */
-  header.header .main-header .box-hearder > .row .header-logo .logo-text-block {
+  /* Ẩn text logo — chỉ giữ icon mark trên mobile (logo cũ img.logo-icon + .logo-text-block) */
+  header.header .main-header .box-hearder .row .header-logo .logo-text-block {
     display: none;
+  }
+
+  {%- comment -%}
+    T-124 (2026-09-12) — BUG THẬT thứ 2, cũng đo bằng Playwright: từ T-121, logo đổi sang SVG
+    Master hợp nhất (snippets/logo-master-svg.bwt, class .pc-logo-master-svg, KHÔNG có thuộc tính
+    width/height, chỉ có viewBox) — chỉ có 1 rule set kích thước rõ ràng cho nó
+    (snippets/pharma_ui_kit.bwt, trong "@media (min-width: 992px)"). Dưới 992px KHÔNG có rule nào
+    khác cấp kích thước → 1 thẻ <svg> nội tuyến không có width/height/CSS-size sẽ co về 0×0 (khác
+    hành vi <img>, SVG không tự có "kích thước mặc định" khi dùng trực tiếp trong HTML) → logo
+    biến mất hoàn toàn trên mobile (đã xác nhận: getBoundingClientRect = 0×0 trước khi có rule
+    dưới đây). Bổ sung kích thước rõ ràng riêng cho mobile, nhỏ hơn bản desktop (42px) cho vừa
+    hàng header nhỏ hơn. Màu: dùng var(--txtHeader) (trắng) THAY VÌ var(--mainColor) như bản
+    desktop — nền .main-header trên mobile vẫn là var(--bgHeader) xanh đậm (không có nền trắng
+    .box-hearder riêng như >=992px), đo thử contrast xanh-lá-trên-xanh-đậm (--mainColor #3CB371
+    trên --bgHeader #1F5A3B) chỉ ~3:1 (dưới ngưỡng AA 4.5:1, cùng dạng lỗi "màu trùng nền" người
+    dùng đã báo) — trắng khớp đúng tông với hamburger/search/cart icon đang dùng cùng
+    var(--txtHeader) trên cùng nền xanh này.
+  {%- endcomment -%}
+  header.header .main-header .box-hearder .row .header-logo .pc-logo-master {
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+    width: auto;
+    color: var(--txtHeader, #fff);
+  }
+  header.header .main-header .box-hearder .row .header-logo .pc-logo-master .pc-logo-master-svg {
+    height: 100%;
+    width: auto;
+    display: block;
   }
 
   /* Header-mid (search inline) ẩn trên mobile */

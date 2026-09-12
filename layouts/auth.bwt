@@ -1,0 +1,147 @@
+{% comment %} layouts/auth.bwt — Layout riêng cho Đăng nhập/Đăng ký (T-112, REOPEN 2026-09-12).
+  Tách khỏi layouts/theme.bwt (không kế thừa header/footer đầy đủ) để tập trung 100% vào chuyển
+  đổi + tối ưu above-the-fold mobile, theo yêu cầu người dùng (Phần III/IV báo cáo audit
+  2026-09-12) — quyết định phương án: split-screen (panel thương hiệu bên trái desktop / banner
+  trên cùng mobile), dùng ĐÚNG design tokens v2 thật (T-70, xem snippets/header_style.bwt) thay vì
+  hex tự chế trong báo cáo. Dùng {% include 'header_style' %} để tái sử dụng :root token +
+  global_core.scss.css + page_account.scss.css có sẵn (không viết lại CSS nền tảng), chỉ thêm
+  phần khung split-screen mới (.pc-auth-*) vào cuối assets/page_account.scss.bwt.
+  RULE-P0-01 (đa ngữ bắt buộc mọi phân hệ): giữ lại google_translate_element + script gốc từ
+  snippets/header.bwt (KHÔNG rút gọn bỏ đa ngữ dù layout này tối giản). {% endcomment %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="robots" content="noindex,nofollow">
+	<title>{{ page_title | default: 'Tài khoản' }} — {{ store.name }}</title>
+	{%- if settings.theme_favicon_enable -%}
+	<link rel="icon" href="{{ 'favicon.png' | asset_url }}" type="image/x-icon">
+	{%- endif -%}
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+	{%- comment -%} Tái sử dụng :root tokens + global_core.scss.css + page_account.scss.css (đã
+	  điều kiện theo `template contains 'customers'`) — không định nghĩa lại token ở đây.
+	  pharma_ui_kit cho --color-brand-* (T-70/71, kể cả dark-mode auto-swap). {%- endcomment -%}
+	{% include 'header_style' %}
+	{% include 'pharma_ui_kit' %}
+
+	{{ content_for_header }}
+</head>
+<body class="pc-auth-body">
+
+	<div class="pc-auth-topbar">
+		<a href="/" class="pc-auth-back" rel="nofollow">
+			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+			<span>Về trang chủ</span>
+		</a>
+
+		{%- comment -%} RULE-P0-01 — widget đa ngữ tối giản, tái sử dụng đúng ID/script gốc từ
+		  snippets/header.bwt (googleTranslateElementInit, .goog-te-combo) để không lệch hành vi
+		  với phần còn lại của site. {%- endcomment -%}
+		<div class="box_top_hea lang-switcher notranslate pc-auth-lang" id="langSwitcher" translate="no">
+			<button class="lang-btn" id="langBtn" type="button">
+				<img id="langFlag" src="{{ 'flag-vn.svg' | asset_url }}" width="18" height="13" alt="" class="lang-flag-img">
+				<span id="langLabel">Tiếng Việt</span>
+				<svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+			</button>
+			<ul class="lang-list" id="langList">
+				<li data-lang="vi"    data-flag="{{ 'flag-vn.svg' | asset_url }}" data-label="Tiếng Việt"><img src="{{ 'flag-vn.svg' | asset_url }}" width="18" height="13" alt="" class="lang-flag-img"> Tiếng Việt</li>
+				<li data-lang="en"    data-flag="{{ 'flag-us.svg' | asset_url }}" data-label="English"><img src="{{ 'flag-us.svg' | asset_url }}" width="18" height="13" alt="" class="lang-flag-img"> English</li>
+				<li data-lang="zh-CN" data-flag="{{ 'flag-cn.svg' | asset_url }}" data-label="中文"><img src="{{ 'flag-cn.svg' | asset_url }}" width="18" height="13" alt="" class="lang-flag-img"> 中文</li>
+				<li data-lang="ja"    data-flag="{{ 'flag-jp.svg' | asset_url }}" data-label="日本語"><img src="{{ 'flag-jp.svg' | asset_url }}" width="18" height="13" alt="" class="lang-flag-img"> 日本語</li>
+				<li data-lang="ko"    data-flag="{{ 'flag-kr.svg' | asset_url }}" data-label="한국어"><img src="{{ 'flag-kr.svg' | asset_url }}" width="18" height="13" alt="" class="lang-flag-img"> 한국어</li>
+			</ul>
+		</div>
+		<div id="google_translate_element" style="display:none;visibility:hidden;"></div>
+	</div>
+
+	<div class="pc-auth-shell">
+		<aside class="pc-auth-panel" {% if settings.auth_panel_image != blank %}style="background-image:linear-gradient(180deg, rgba(15,35,24,0.55) 0%, rgba(15,35,24,0.86) 100%), url('{{ settings.auth_panel_image }}');"{% endif %}>
+			<div class="pc-auth-panel__mark">
+				<img src="{{ 'logoPC.svg' | asset_url }}" alt="{{ store.name }}" onerror="this.style.display='none'">
+			</div>
+			<div class="pc-auth-panel__body">
+				<h1 class="pc-auth-panel__headline">{{ settings.auth_panel_headline | default: 'Chăm sóc da chuẩn y khoa, cá nhân hoá cho riêng bạn' }}</h1>
+				<p class="pc-auth-panel__tagline">{{ settings.auth_panel_tagline }}</p>
+				<ul class="pc-auth-panel__badges">
+					{% if settings.auth_trust_badge_1 != blank %}<li><i class="fa-solid fa-shield-heart"></i>{{ settings.auth_trust_badge_1 }}</li>{% endif %}
+					{% if settings.auth_trust_badge_2 != blank %}<li><i class="fa-solid fa-circle-check"></i>{{ settings.auth_trust_badge_2 }}</li>{% endif %}
+					{% if settings.auth_trust_badge_3 != blank %}<li><i class="fa-solid fa-user-doctor"></i>{{ settings.auth_trust_badge_3 }}</li>{% endif %}
+				</ul>
+			</div>
+		</aside>
+
+		<main class="pc-auth-formzone">
+			{{ content_for_layout }}
+		</main>
+	</div>
+
+	<script>
+	function googleTranslateElementInit() {
+		new google.translate.TranslateElement({
+			pageLanguage: 'vi',
+			includedLanguages: 'vi,en,zh-CN,ja,ko',
+			autoDisplay: false
+		}, 'google_translate_element');
+	}
+	</script>
+	<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
+	<script>
+	(function () {
+		var btn = document.getElementById('langBtn');
+		var list = document.getElementById('langList');
+		var labelEl = document.getElementById('langLabel');
+		var savedLang = localStorage.getItem('preferred_lang') || 'vi';
+		var translateTimer = null;
+
+		function setUI(lang) {
+			var activeLi = list.querySelector('li[data-lang="' + lang + '"]');
+			if (activeLi) {
+				labelEl.textContent = activeLi.dataset.label;
+				var flagImg = document.getElementById('langFlag');
+				if (flagImg && activeLi.dataset.flag) flagImg.src = activeLi.dataset.flag;
+			}
+			list.querySelectorAll('li').forEach(function (li) { li.classList.toggle('active', li.dataset.lang === lang); });
+		}
+		function applyTranslate(lang) {
+			if (translateTimer) { clearInterval(translateTimer); translateTimer = null; }
+			if (lang === 'vi') {
+				['', '.' + location.hostname].forEach(function (domain) {
+					document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/' + (domain ? '; domain=' + domain : '');
+				});
+				location.reload();
+				return;
+			}
+			var attempts = 0;
+			translateTimer = setInterval(function () {
+				var combo = document.querySelector('.goog-te-combo');
+				if (combo) {
+					clearInterval(translateTimer); translateTimer = null;
+					combo.value = lang;
+					combo.dispatchEvent(new Event('change'));
+				} else if (++attempts > 30) { clearInterval(translateTimer); translateTimer = null; }
+			}, 200);
+		}
+		setUI(savedLang);
+		if (savedLang !== 'vi') applyTranslate(savedLang);
+		if (btn) {
+			btn.addEventListener('click', function (e) { e.stopPropagation(); list.classList.toggle('open'); });
+			list.querySelectorAll('li').forEach(function (li) {
+				li.addEventListener('click', function () {
+					var lang = li.dataset.lang;
+					localStorage.setItem('preferred_lang', lang);
+					setUI(lang);
+					list.classList.remove('open');
+					applyTranslate(lang);
+				});
+			});
+			document.addEventListener('click', function () { list.classList.remove('open'); });
+		}
+	})();
+	</script>
+</body>
+</html>

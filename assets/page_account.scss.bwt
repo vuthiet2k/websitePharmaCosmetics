@@ -2203,3 +2203,240 @@ div#social_login {
 	.pc-hub-welcome { padding: 28px 16px; }
 	.pc-hub-welcome__btn { width: 100%; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   T-112 (2026-09-12) — Standalone Auth (login/register), layouts/auth.bwt.
+   Split-screen desktop (panel thương hiệu trái, form phải) / banner-trên mobile.
+   Dùng var(--color-brand-*) từ pharma_ui_kit.bwt (T-70/71) — không hardcode hex mới,
+   trừ trắng/trong suốt thuần tuý. Tiền tố pc-auth-* (không trùng .btn-primary/.nav-link
+   site-wide — xem cảnh báo đầu file pharma_ui_kit.bwt). ══════════════════════════════ */
+.pc-auth-body {
+	margin: 0;
+	min-height: 100dvh;
+	background: var(--color-bg-page, #F8FAF7);
+	font-family: var(--font-secondary, 'Inter', sans-serif);
+}
+.pc-auth-topbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 14px 20px;
+	position: relative;
+	z-index: 5;
+}
+.pc-auth-back {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	color: var(--color-text-body, #334155);
+	text-decoration: none;
+	font-size: var(--fs-sm, 0.875rem);
+	font-weight: 600;
+	min-height: 44px;
+}
+.pc-auth-back:hover { color: var(--color-brand-primary, #3CB371); }
+.pc-auth-lang.lang-switcher { position: relative; }
+/* global_core.scss.bwt chỉ ẩn .lang-list mặc định trong ngữ cảnh sâu
+   "header.header .top-main-header .text-hea-right .lang-switcher .lang-list"
+   (dùng ở header chính) — layout auth KHÔNG có các lớp cha đó nên phải khai báo
+   lại tường minh ở đây, nếu không dropdown sẽ hiện mở sẵn ngay khi tải trang. */
+.pc-auth-lang .lang-list { display: none; position: absolute; top: calc(100% + 8px); right: 0; z-index: 20; }
+.pc-auth-lang .lang-list.open { display: block; }
+
+.pc-auth-shell {
+	display: grid;
+	grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+	min-height: calc(100dvh - 64px);
+}
+@media (max-width: 991px) {
+	.pc-auth-shell { grid-template-columns: 1fr; min-height: auto; }
+}
+
+.pc-auth-panel {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	padding: 40px 36px;
+	background: var(--color-brand-deep, #0F2318);
+	background-size: cover;
+	background-position: center;
+	color: #fff;
+	min-height: 480px;
+}
+@media (max-width: 991px) {
+	.pc-auth-panel { min-height: 0; padding: 28px 20px 32px; border-radius: 0 0 24px 24px; }
+}
+.pc-auth-panel__mark img { height: 34px; width: auto; }
+.pc-auth-panel__body { max-width: 460px; }
+.pc-auth-panel__headline {
+	font-family: var(--font-display, 'Playfair Display', serif);
+	font-weight: 700;
+	font-size: clamp(1.5rem, 2.4vw + 1rem, 2.25rem);
+	line-height: 1.25;
+	margin: 24px 0 12px;
+	color: #fff;
+}
+.pc-auth-panel__tagline {
+	font-size: var(--fs-sm, 0.875rem);
+	line-height: 1.6;
+	color: rgba(255,255,255,0.78);
+	margin: 0 0 22px;
+}
+.pc-auth-panel__badges { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.pc-auth-panel__badges li {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: var(--fs-sm, 0.875rem);
+	color: rgba(255,255,255,0.92);
+}
+.pc-auth-panel__badges i {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	background: rgba(255,255,255,0.14);
+	color: var(--color-mint-light, #D7F3E3);
+	flex-shrink: 0;
+	font-size: 13px;
+}
+@media (max-width: 991px) {
+	.pc-auth-panel__headline { font-size: 1.375rem; margin-top: 16px; }
+	.pc-auth-panel__badges { display: none; }
+}
+
+.pc-auth-formzone {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 40px 24px;
+}
+@media (max-width: 480px) {
+	.pc-auth-formzone { padding: 28px 16px 40px; }
+}
+
+.pc-auth-card { width: 100%; max-width: 420px; }
+.pc-auth-card__head { margin-bottom: 22px; }
+.pc-auth-card__title {
+	font-family: var(--font-display, 'Playfair Display', serif);
+	font-size: 1.75rem;
+	font-weight: 700;
+	color: var(--color-text-main, #13241F);
+	margin: 0 0 8px;
+}
+.pc-auth-card__sub { font-size: var(--fs-sm, 0.875rem); color: var(--color-text-muted, #64748B); margin: 0; }
+.pc-auth-card__body { display: flex; flex-direction: column; gap: 16px; }
+
+.pc-auth-field-row { display: flex; gap: 12px; }
+.pc-auth-field-row .pc-auth-field { flex: 1 1 0; min-width: 0; }
+@media (max-width: 380px) { .pc-auth-field-row { flex-direction: column; gap: 16px; } }
+
+.pc-auth-field { display: flex; flex-direction: column; gap: 6px; }
+.pc-auth-label { font-size: 0.8125rem; font-weight: 600; color: var(--color-text-body, #334155); }
+.pc-auth-input {
+	width: 100%;
+	min-height: 46px;
+	padding: 10px 14px;
+	font-size: var(--fs-base, 1rem);
+	border: 1px solid var(--color-border-clinical, #E2E8F0);
+	border-radius: 10px;
+	background: #fff;
+	color: var(--color-text-main, #13241F);
+	transition: border-color 150ms ease, box-shadow 150ms ease;
+	box-sizing: border-box;
+}
+.pc-auth-input:focus {
+	outline: none;
+	border-color: var(--color-brand-primary, #3CB371);
+	box-shadow: 0 0 0 3px rgba(60,179,113,0.16);
+}
+.pc-auth-password-wrap { position: relative; }
+.pc-auth-password-wrap .pc-auth-input { padding-right: 44px; }
+.pc-auth-password-toggle {
+	position: absolute;
+	right: 4px;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 38px;
+	height: 38px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: none;
+	color: var(--color-text-muted, #64748B);
+	cursor: pointer;
+	border-radius: 8px;
+}
+.pc-auth-password-toggle:hover { color: var(--color-brand-primary, #3CB371); background: var(--color-mint-subtle, #E8F8EE); }
+
+.pc-auth-row-between { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.pc-auth-link {
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--color-brand-dark, #166B55);
+	text-decoration: none;
+	cursor: pointer;
+	min-height: 44px;
+	display: inline-flex;
+	align-items: center;
+}
+.pc-auth-link:hover { color: var(--color-brand-primary, #3CB371); text-decoration: underline; }
+.pc-auth-back-to-login { background: none; border: none; padding: 0; text-align: left; }
+
+.pc-auth-btn-primary {
+	width: 100%;
+	min-height: 48px;
+	border: none;
+	border-radius: 10px;
+	background: var(--color-brand-primary, #3CB371);
+	color: #fff;
+	font-size: var(--fs-md, 1.125rem);
+	font-weight: 700;
+	cursor: pointer;
+	transition: background 150ms ease, transform 100ms ease;
+}
+.pc-auth-btn-primary:hover { background: var(--color-brand-green, #267348); }
+.pc-auth-btn-primary:active { transform: translateY(1px); }
+
+.pc-auth-alert { border-radius: 10px; padding: 12px 14px; font-size: 0.8125rem; }
+.pc-auth-alert p { margin: 0 0 4px; }
+.pc-auth-alert p:last-child { margin-bottom: 0; }
+.pc-auth-alert--error { background: #FDECEC; color: #B42318; border: 1px solid #F7C4C4; }
+.pc-auth-alert--success { background: var(--color-mint-subtle, #E8F8EE); color: var(--color-brand-dark, #166B55); border: 1px solid var(--color-mint-light, #D7F3E3); margin-top: 16px; }
+
+.pc-auth-recover { margin-top: 4px; }
+.pc-auth-recover__hint { font-size: 0.8125rem; color: var(--color-text-muted, #64748B); margin: 0 0 4px; }
+
+.pc-auth-checkbox {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	font-size: 0.8125rem;
+	color: var(--color-text-body, #334155);
+	line-height: 1.5;
+	cursor: pointer;
+}
+.pc-auth-checkbox input { margin-top: 3px; width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--color-brand-primary, #3CB371); }
+.pc-auth-checkbox a { color: var(--color-brand-dark, #166B55); font-weight: 600; }
+
+.pc-auth-social { margin-top: 20px; }
+.pc-auth-social__divider { position: relative; text-align: center; margin: 0 0 16px; }
+.pc-auth-social__divider::before {
+	content: '';
+	position: absolute;
+	left: 0; right: 0; top: 50%;
+	border-top: 1px solid var(--color-border-clinical, #E2E8F0);
+}
+.pc-auth-social__divider span {
+	position: relative;
+	background: var(--color-bg-page, #F8FAF7);
+	padding: 0 12px;
+	font-size: 0.75rem;
+	color: var(--color-text-muted, #64748B);
+}
+.pc-auth-social__buttons { display: flex; flex-direction: column; gap: 10px; }
+.pc-auth-social__buttons > * { width: 100%; min-height: 44px; }

@@ -1,88 +1,249 @@
-.pc-quiz-wrap {
-  min-height: 100vh;
-  padding: 32px 0 48px;
-  background: var(--mainColorLight);
-}
-.pc-quiz-container { max-width: 480px; }
+/* page_ai_skin_quiz.scss.bwt — T-113 (2026-09-12): chuyển từ quiz-grid sang khung chat.
+   Dùng var(--color-brand-*)/--primary-forest-* (pharma_ui_kit.bwt, T-70/71) — không hardcode hex
+   mới ngoại trừ trắng/xám trung tính. Tiền tố pc-chat-* (không trùng site-wide, theo đúng quy ước
+   đã thiết lập từ sự cố pharma_ui_kit trước đây). */
 
-.pc-quiz-intro { text-align: center; padding-top: 24px; }
-.pc-quiz-intro .pc-section-title { margin: 16px 0 12px; font-size: var(--fs-xl); }
-.pc-quiz-intro-desc { color: var(--textSub); margin-bottom: 24px; }
-.pc-quiz-start-btn,
-.pc-cg-cta-btn {
-  display: inline-block;
-  padding: 14px 32px;
-  background: var(--mainColor);
-  color: #fff;
-  border: none;
-  border-radius: 50px;
-  font-weight: 700;
-  font-size: var(--fs-base);
-  cursor: pointer;
-  text-decoration: none;
+.pc-chat-body {
+	margin: 0;
+	height: 100dvh;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	background: var(--color-bg-page, #F8FAF7);
+	font-family: var(--font-secondary, 'Inter', sans-serif);
 }
 
-.pc-quiz-progress {
-  height: 6px;
-  background: var(--lineColor);
-  border-radius: 3px;
-  overflow: hidden;
-  margin-bottom: 24px;
+.pc-chat-topbar {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 16px;
+	background: #fff;
+	border-bottom: 1px solid var(--color-border-clinical, #E2E8F0);
 }
-.pc-quiz-progress-bar {
-  height: 100%;
-  width: 0%;
-  background: var(--mainColor);
-  transition: width .3s ease;
+.pc-chat-back {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	color: var(--color-text-body, #334155);
+	flex-shrink: 0;
 }
-.pc-quiz-question-text {
-  font-size: var(--fs-lg);
-  color: var(--textBody);
-  margin-bottom: 20px;
-  text-align: center;
+.pc-chat-back:hover { background: var(--color-mint-subtle, #E8F8EE); }
+.pc-chat-identity { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.pc-chat-avatar {
+	position: relative;
+	width: 38px;
+	height: 38px;
+	border-radius: 50%;
+	background: var(--color-brand-deep, #0F2318);
+	color: #fff;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	font-size: 16px;
 }
-.pc-quiz-options { display: flex; flex-direction: column; gap: 12px; }
-.pc-quiz-option-btn {
-  padding: 14px 18px;
-  background: #fff;
-  border: 1px solid var(--lineColor);
-  border-radius: 12px;
-  text-align: left;
-  font-size: var(--fs-sm);
-  color: var(--textBody);
-  cursor: pointer;
-  transition: border-color .2s ease, background .2s ease;
+.pc-chat-avatar-dot {
+	position: absolute;
+	bottom: -1px;
+	right: -1px;
+	width: 11px;
+	height: 11px;
+	border-radius: 50%;
+	background: var(--color-semantic-success, #10B981);
+	border: 2px solid #fff;
 }
-.pc-quiz-option-btn:hover,
-.pc-quiz-option-btn:active {
-  border-color: var(--mainColor);
-  background: var(--mainColorLight);
+.pc-chat-identity-text { display: flex; flex-direction: column; min-width: 0; }
+.pc-chat-identity-text strong { font-size: 0.9375rem; color: var(--color-text-main, #13241F); line-height: 1.3; }
+.pc-chat-identity-text small { font-size: 0.75rem; color: var(--color-text-muted, #64748B); }
+.pc-chat-restart {
+	flex-shrink: 0;
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	border: 1px solid var(--color-border-clinical, #E2E8F0);
+	background: #fff;
+	color: var(--color-text-body, #334155);
+	cursor: pointer;
+}
+.pc-chat-restart:hover { color: var(--color-brand-primary, #3CB371); border-color: var(--color-brand-primary, #3CB371); }
+
+.pc-chat-progress { flex-shrink: 0; height: 3px; background: var(--color-border-clinical, #E2E8F0); }
+.pc-chat-progress-bar { height: 100%; width: 0%; background: var(--color-brand-primary, #3CB371); transition: width .35s ease; }
+
+.pc-chat-shell {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
 }
 
-.pc-quiz-result { text-align: center; padding-top: 24px; }
-.pc-quiz-result .pc-section-title { margin: 12px 0 20px; }
-.pc-quiz-recommend {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 24px;
+.pc-chat-thread {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	padding: 16px 14px 8px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	max-width: 640px;
+	width: 100%;
+	margin: 0 auto;
+	box-sizing: border-box;
 }
-.pc-quiz-recommend-tag {
-  padding: 6px 14px;
-  border-radius: 50px;
-  background: rgba(60, 179, 113, 0.1);
-  color: var(--mainColorDark);
-  font-size: var(--fs-xs);
-  font-weight: 700;
+
+.pc-chat-msg { display: flex; align-items: flex-end; gap: 8px; max-width: 88%; }
+.pc-chat-msg--bot { align-self: flex-start; }
+.pc-chat-msg--user { align-self: flex-end; flex-direction: row-reverse; }
+.pc-chat-msg-avatar {
+	flex-shrink: 0;
+	width: 26px;
+	height: 26px;
+	border-radius: 50%;
+	background: var(--color-brand-deep, #0F2318);
+	color: #fff;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 11px;
 }
-.pc-quiz-retry-btn {
-  display: block;
-  margin: 16px auto 0;
-  background: none;
-  border: none;
-  color: var(--textSub);
-  text-decoration: underline;
-  cursor: pointer;
-  font-size: var(--fs-sm);
+.pc-chat-msg-bubble {
+	padding: 11px 14px;
+	border-radius: 16px;
+	font-size: 0.875rem;
+	line-height: 1.55;
+	word-break: break-word;
+}
+.pc-chat-msg--bot .pc-chat-msg-bubble { background: #fff; border: 1px solid var(--color-border-clinical, #E2E8F0); border-bottom-left-radius: 4px; color: var(--color-text-body, #334155); }
+.pc-chat-msg--user .pc-chat-msg-bubble { background: var(--color-brand-primary, #3CB371); color: #fff; border-bottom-right-radius: 4px; }
+.pc-chat-q-index { display: block; font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-brand-dark, #166B55); margin-bottom: 4px; }
+
+.pc-chat-disclaimer { display: flex; gap: 6px; align-items: flex-start; color: #8A5411; font-size: 0.8125rem; }
+.pc-chat-disclaimer i { margin-top: 2px; flex-shrink: 0; }
+
+.pc-chat-typing { display: flex; align-items: center; gap: 4px; padding: 14px; }
+.pc-chat-typing span {
+	width: 6px; height: 6px; border-radius: 50%;
+	background: var(--color-text-muted, #64748B);
+	animation: pc-chat-typing-bounce 1.2s infinite ease-in-out;
+}
+.pc-chat-typing span:nth-child(2) { animation-delay: .15s; }
+.pc-chat-typing span:nth-child(3) { animation-delay: .3s; }
+@keyframes pc-chat-typing-bounce {
+	0%, 60%, 100% { transform: translateY(0); opacity: .5; }
+	30% { transform: translateY(-4px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .pc-chat-typing span { animation: none; } }
+
+.pc-chat-dock {
+	flex-shrink: 0;
+	max-width: 640px;
+	width: 100%;
+	margin: 0 auto;
+	padding: 10px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+	box-sizing: border-box;
+	background: linear-gradient(180deg, rgba(248,250,247,0) 0%, var(--color-bg-page, #F8FAF7) 40%);
+}
+
+.pc-chat-start-btn,
+.pc-chat-cta-btn.pc-chat-cta-btn--primary,
+.pc-chat-cta-btn.pc-chat-cta-btn--primary:link,
+.pc-chat-cta-btn.pc-chat-cta-btn--primary:visited {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	min-height: 48px;
+	padding: 0 20px;
+	border: none;
+	border-radius: 999px;
+	background: var(--color-brand-primary, #3CB371);
+	color: #fff;
+	font-weight: 700;
+	font-size: 0.9375rem;
+	cursor: pointer;
+	text-decoration: none;
+}
+.pc-chat-start-btn:hover,
+.pc-chat-cta-btn.pc-chat-cta-btn--primary:hover,
+.pc-chat-cta-btn.pc-chat-cta-btn--primary:active { background: var(--color-brand-green, #267348); color: #fff; }
+
+.pc-chat-options { display: flex; flex-direction: column; gap: 8px; }
+.pc-chat-option-chip {
+	display: block;
+	width: 100%;
+	text-align: left;
+	padding: 12px 16px;
+	min-height: 44px;
+	border-radius: 14px;
+	border: 1px solid var(--color-border-clinical, #E2E8F0);
+	background: #fff;
+	color: var(--color-text-body, #334155);
+	font-size: 0.875rem;
+	cursor: pointer;
+	transition: border-color .15s ease, background .15s ease;
+}
+.pc-chat-option-chip:hover { border-color: var(--color-brand-primary, #3CB371); background: var(--color-mint-subtle, #E8F8EE); }
+
+.pc-chat-result-card { padding: 16px; min-width: 220px; }
+.pc-chat-result-label { display: block; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-brand-dark, #166B55); margin-bottom: 6px; }
+.pc-chat-result-title { font-family: var(--font-display, 'Playfair Display', serif); font-size: 1.375rem; margin: 0 0 10px; color: var(--color-text-main, #13241F); }
+.pc-chat-result-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.pc-chat-result-tag { padding: 5px 12px; border-radius: 999px; background: var(--color-mint-subtle, #E8F8EE); color: var(--color-brand-dark, #166B55); font-size: 0.75rem; font-weight: 700; }
+
+.pc-chat-result-actions { display: flex; flex-direction: column; gap: 8px; }
+/* .pc-chat-cta-btn* là thẻ <a> — vendor_bootstrap.css có "a:hover{color:#0056b3}" đặc hiệu
+   (0,1,1) CAO HƠN 1 class đơn (0,1,0), nên phải khai báo tường minh :link/:visited/:hover/:active
+   với đặc hiệu >= (0,2,0) để giữ đúng màu chữ thương hiệu khi rê chuột (phát hiện qua Playwright
+   getComputedStyle lúc :hover — không phải suy đoán, xem T-113 evidence). */
+.pc-chat-cta-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	width: 100%;
+	min-height: 46px;
+	border-radius: 999px;
+	font-size: 0.875rem;
+	font-weight: 700;
+	text-decoration: none;
+	cursor: pointer;
+	border: 1px solid transparent;
+}
+.pc-chat-cta-btn.pc-chat-cta-btn--zalo,
+.pc-chat-cta-btn.pc-chat-cta-btn--zalo:link,
+.pc-chat-cta-btn.pc-chat-cta-btn--zalo:visited { background: #2A9C68; color: #fff; }
+.pc-chat-cta-btn.pc-chat-cta-btn--zalo:hover,
+.pc-chat-cta-btn.pc-chat-cta-btn--zalo:active { background: #22824F; color: #fff; }
+.pc-chat-cta-btn.pc-chat-cta-btn--ghost,
+.pc-chat-cta-btn.pc-chat-cta-btn--ghost:link,
+.pc-chat-cta-btn.pc-chat-cta-btn--ghost:visited { background: #fff; border-color: var(--color-border-clinical, #E2E8F0); color: var(--color-brand-dark, #166B55); }
+.pc-chat-cta-btn.pc-chat-cta-btn--ghost:hover,
+.pc-chat-cta-btn.pc-chat-cta-btn--ghost:active { border-color: var(--color-brand-primary, #3CB371); color: var(--color-brand-dark, #166B55); }
+.pc-chat-retry-btn {
+	background: none;
+	border: none;
+	color: var(--color-text-muted, #64748B);
+	text-decoration: underline;
+	font-size: 0.8125rem;
+	cursor: pointer;
+	min-height: 44px;
+}
+
+/* Widget đa ngữ neo góc phải trên, tách khỏi luồng .pc-chat-shell — xem lý do đặt cuối
+   body trong layouts/chat.bwt (không chiếm chỗ header chat chật hẹp). */
+.pc-chat-lang-dock { position: fixed; top: 8px; right: 10px; z-index: 40; }
+.pc-chat-lang-dock .lang-switcher { position: relative; }
+/* Cùng gap đã sửa ở T-112 (page_account.scss.bwt): global_core.scss.bwt chỉ ẩn .lang-list mặc
+   định trong ngữ cảnh sâu của header chính — layout chat không có ancestor đó nên khai báo lại. */
+.pc-chat-lang-dock .lang-list { display: none; position: absolute; top: calc(100% + 8px); right: 0; z-index: 20; }
+.pc-chat-lang-dock .lang-list.open { display: block; }
+
+@media (max-width: 480px) {
+	.pc-chat-identity-text small { display: none; }
+	.pc-chat-lang-dock .lang-btn span { display: none; }
 }

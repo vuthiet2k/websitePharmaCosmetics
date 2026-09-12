@@ -1,0 +1,149 @@
+{% comment %} layouts/chat.bwt — Layout riêng cho trải nghiệm hội thoại (T-113, REOPEN 2026-09-12,
+  Phần V báo cáo audit 2026-09-12). Tách khỏi layouts/theme.bwt (không header/footer đầy đủ) để
+  toàn màn hình dành cho khung chat, 100dvh, không cần cuộn trang ngoài — chỉ khung tin nhắn bên
+  trong cuộn. Cấu trúc tương tự layouts/auth.bwt (T-112): tái dùng {% include 'header_style' %} +
+  {% include 'pharma_ui_kit' %} cho token/CSS nền tảng thật, không viết lại. KHÔNG dùng danh xưng
+  "Dr. <tên>" kèm huy hiệu xác thực như báo cáo đề xuất cho 1 công cụ AI/thuật toán (không phải
+  chuyên gia thật) — xem RULE-P0-06 trong scripts/compliance-lint.js để biết đúng nhóm ngôn từ
+  cần tránh. Dùng danh xưng trung tính "Trợ Lý AI Chăm Sóc Da" + badge "Công cụ AI hỗ trợ", giữ
+  RULE-P0-01 (Google
+  Translate) như auth.bwt. robots: index,follow (khác auth.bwt) vì đây là trang tính năng công
+  khai, không phải trang tài khoản. {% endcomment %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="robots" content="noodp,index,follow">
+	<link rel="canonical" href="{{ canonical_url }}"/>
+	<title>{{ page_title | default: 'Chẩn Đoán Da AI' }} — {{ store.name }}</title>
+	<meta name="description" content="Trò chuyện cùng Trợ Lý AI Chăm Sóc Da của {{ store.name }} — trả lời 17 câu hỏi để nhận gợi ý hoạt chất phù hợp với làn da của bạn.">
+	{%- if settings.theme_favicon_enable -%}
+	<link rel="icon" href="{{ 'favicon.png' | asset_url }}" type="image/x-icon">
+	{%- endif -%}
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+	{%- comment -%} Tái sử dụng token/CSS nền tảng thật (T-70/71) — không định nghĩa lại. {%- endcomment -%}
+	{% include 'header_style' %}
+	{% include 'pharma_ui_kit' %}
+
+	{{ content_for_header }}
+</head>
+<body class="pc-chat-body">
+
+	<header class="pc-chat-topbar">
+		<a href="/" class="pc-chat-back" rel="nofollow" aria-label="Về trang chủ">
+			<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+		</a>
+		<div class="pc-chat-identity">
+			<span class="pc-chat-avatar"><i class="fa-solid fa-microscope"></i><span class="pc-chat-avatar-dot"></span></span>
+			<span class="pc-chat-identity-text">
+				<strong>Trợ Lý AI Chăm Sóc Da</strong>
+				<small>Công cụ AI hỗ trợ · đang hoạt động</small>
+			</span>
+		</div>
+		<button type="button" class="pc-chat-restart" data-quiz-action="restart-header" title="Làm lại phiên chẩn đoán">
+			<i class="fa-solid fa-rotate-right"></i>
+		</button>
+	</header>
+	<div class="pc-chat-progress"><div class="pc-chat-progress-bar" data-quiz-progress></div></div>
+
+	<main class="pc-chat-shell">
+		{{ content_for_layout }}
+	</main>
+
+	{%- comment -%} RULE-P0-01 — widget đa ngữ, đặt cuối trang (không chiếm chỗ header chat chật hẹp),
+	  giữ đúng script/ID gốc từ snippets/header.bwt như layouts/auth.bwt. {%- endcomment -%}
+	<div class="pc-chat-lang-dock">
+		<div class="box_top_hea lang-switcher notranslate" id="langSwitcher" translate="no">
+			<button class="lang-btn" id="langBtn" type="button">
+				<img id="langFlag" src="{{ 'flag-vn.svg' | asset_url }}" width="18" height="13" alt="" class="lang-flag-img">
+				<span id="langLabel">Tiếng Việt</span>
+				<svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+			</button>
+			<ul class="lang-list" id="langList">
+				<li data-lang="vi"    data-flag="{{ 'flag-vn.svg' | asset_url }}" data-label="Tiếng Việt"><img src="{{ 'flag-vn.svg' | asset_url }}" width="18" height="13" alt="" class="lang-flag-img"> Tiếng Việt</li>
+				<li data-lang="en"    data-flag="{{ 'flag-us.svg' | asset_url }}" data-label="English"><img src="{{ 'flag-us.svg' | asset_url }}" width="18" height="13" alt="" class="lang-flag-img"> English</li>
+				<li data-lang="zh-CN" data-flag="{{ 'flag-cn.svg' | asset_url }}" data-label="中文"><img src="{{ 'flag-cn.svg' | asset_url }}" width="18" height="13" alt="" class="lang-flag-img"> 中文</li>
+				<li data-lang="ja"    data-flag="{{ 'flag-jp.svg' | asset_url }}" data-label="日本語"><img src="{{ 'flag-jp.svg' | asset_url }}" width="18" height="13" alt="" class="lang-flag-img"> 日本語</li>
+				<li data-lang="ko"    data-flag="{{ 'flag-kr.svg' | asset_url }}" data-label="한국어"><img src="{{ 'flag-kr.svg' | asset_url }}" width="18" height="13" alt="" class="lang-flag-img"> 한국어</li>
+			</ul>
+		</div>
+		<div id="google_translate_element" style="display:none;visibility:hidden;"></div>
+	</div>
+
+	<script>
+	function googleTranslateElementInit() {
+		new google.translate.TranslateElement({
+			pageLanguage: 'vi',
+			includedLanguages: 'vi,en,zh-CN,ja,ko',
+			autoDisplay: false
+		}, 'google_translate_element');
+	}
+	</script>
+	<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
+	<script>
+	(function () {
+		var btn = document.getElementById('langBtn');
+		var list = document.getElementById('langList');
+		var labelEl = document.getElementById('langLabel');
+		var savedLang = localStorage.getItem('preferred_lang') || 'vi';
+		var translateTimer = null;
+
+		function setUI(lang) {
+			var activeLi = list.querySelector('li[data-lang="' + lang + '"]');
+			if (activeLi) {
+				labelEl.textContent = activeLi.dataset.label;
+				var flagImg = document.getElementById('langFlag');
+				if (flagImg && activeLi.dataset.flag) flagImg.src = activeLi.dataset.flag;
+			}
+			list.querySelectorAll('li').forEach(function (li) { li.classList.toggle('active', li.dataset.lang === lang); });
+		}
+		function applyTranslate(lang) {
+			if (translateTimer) { clearInterval(translateTimer); translateTimer = null; }
+			if (lang === 'vi') {
+				['', '.' + location.hostname].forEach(function (domain) {
+					document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/' + (domain ? '; domain=' + domain : '');
+				});
+				location.reload();
+				return;
+			}
+			var attempts = 0;
+			translateTimer = setInterval(function () {
+				var combo = document.querySelector('.goog-te-combo');
+				if (combo) {
+					clearInterval(translateTimer); translateTimer = null;
+					combo.value = lang;
+					combo.dispatchEvent(new Event('change'));
+				} else if (++attempts > 30) { clearInterval(translateTimer); translateTimer = null; }
+			}, 200);
+		}
+		setUI(savedLang);
+		if (savedLang !== 'vi') applyTranslate(savedLang);
+		if (btn) {
+			btn.addEventListener('click', function (e) { e.stopPropagation(); list.classList.toggle('open'); });
+			list.querySelectorAll('li').forEach(function (li) {
+				li.addEventListener('click', function () {
+					var lang = li.dataset.lang;
+					localStorage.setItem('preferred_lang', lang);
+					setUI(lang);
+					list.classList.remove('open');
+					applyTranslate(lang);
+				});
+			});
+			document.addEventListener('click', function () { list.classList.remove('open'); });
+		}
+	})();
+	</script>
+	<script>
+	document.addEventListener('click', function (e) {
+		if (e.target.closest('[data-quiz-action="restart-header"]')) {
+			document.dispatchEvent(new CustomEvent('pc-chat-restart'));
+		}
+	});
+	</script>
+</body>
+</html>

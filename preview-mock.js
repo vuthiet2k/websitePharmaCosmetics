@@ -134,11 +134,23 @@ const collectionsObj = buildCollectionsObj();
 
 // ── 4.5 Mock customer (dùng cho preview customer/account, orders, addresses…)
 //        Sapo trả customer = null khi guest. Chỉ inject mock khi đang preview
-//        template trong nhóm CUSTOMER_TEMPLATES.
+//        template trong nhóm CUSTOMER_TEMPLATES. KHÔNG gồm 'login'/'register' — đây
+//        là trang tiền-đăng-nhập, mock 1 customer "đã đăng nhập" ở đó là sai ngữ cảnh
+//        (khác với sapoTemplate bên dưới, dùng set riêng CUSTOMER_ACCOUNT_TEMPLATES).
 const CUSTOMER_TEMPLATES = new Set([
   'account', 'addresses', 'orders', 'order', 'change_password', 'reset_password',
   'page.patient-portal',
 ]);
+
+// T-111 (2026-09-12) — bug ENV_FAILURE tìm thấy khi verify T-112 (standalone auth redesign):
+// tất cả 8 file thật trong templates/customers/ (account/addresses/change_password/login/
+// order/orders/register/reset_password) đều cần sapoTemplate = 'customers/<name>' để
+// header_style.bwt nạp đúng page_account.scss.css — nhưng CUSTOMER_TEMPLATES ở trên KHÔNG
+// gồm 'login'/'register' (đúng, vì lý do mock-customer ở comment trên). Trước T-112 không ai
+// phát hiện vì login/register cũ không phụ thuộc page_account.scss.css. Dùng set riêng cho
+// đúng mục đích "gắn tiền tố customers/", tách khỏi mục đích "có nên giả lập customer đã
+// đăng nhập" — 2 câu hỏi khác nhau, gộp chung set cũ là nguồn gốc bug.
+const CUSTOMER_ACCOUNT_TEMPLATES = new Set([...CUSTOMER_TEMPLATES, 'login', 'register']);
 
 function buildMockCustomer() {
   const addr1 = {
@@ -310,7 +322,9 @@ function getContext(templateName = 'index', routeParams = {}) {
   // Sapo đặt template = 'customers/<name>' cho trang tài khoản (khác tên tpl param).
   // header_style.bwt nạp page_account.scss qua {% if template contains 'customers' %}
   // → phải khớp giá trị này, nếu không CSS account sẽ KHÔNG load trong preview.
-  const sapoTemplate = CUSTOMER_TEMPLATES.has(templateName) ? ('customers/' + templateName) : templateName;
+  // Dùng CUSTOMER_ACCOUNT_TEMPLATES (không phải CUSTOMER_TEMPLATES) — gồm cả login/register
+  // vốn cũng là file thật trong templates/customers/ dù không mock customer đã đăng nhập.
+  const sapoTemplate = CUSTOMER_ACCOUNT_TEMPLATES.has(templateName) ? ('customers/' + templateName) : templateName;
 
   // Trang tĩnh (page.*) → inject page object (Sapo inject {{ page.name }}, {{ page.content }}, ...)
   const PAGE_NAMES = {

@@ -21,8 +21,8 @@
 {%- endcomment -%}
 <header class="header">
 	<div class="main-header">
-		<div class="container">
 			{%- comment -%} ============ PHẦN 1 — HEADER TOP (topbar xanh) ============ {%- endcomment -%}
+		<div class="container">
 			<div class="top-main-header">
 				<div class="row align-items-center">
 					<div class="col-lg-6 col-md-6 col-sm-12 col-xs-12 col-12">
@@ -105,17 +105,24 @@
 					</div>
 				</div>
 			</div>
+			</div>
 			{%- comment -%} ============ PHẦN 2 — HEADER MAIN (logo + danh mục + menu + tìm kiếm + giỏ hàng, nền trắng) ============ {%- endcomment -%}
 			<div class="box-hearder">
+		<div class="container">
 				<div class="row align-items-center">
 					<div class="col-6 col-xl-3 col-lg-3 col-md-4 header-logo">
-						<a href="/" class="logo-wrapper" title="{{settings.store_name | default: store.name}}">
-						<img width="44" height="44" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC" data-src="{{ 'logoPC.svg' | asset_url }}" alt="{{settings.store_name | default: store.name}}" class="lazyload logo-icon">
-						<span class="logo-text-block">
-							<span class="logo-store-name">{{settings.store_name | default: store.name}}</span>
-							{%if settings.store_subname != blank%}<span class="logo-store-sub">{{settings.store_subname}}</span>{%endif%}
-						</span>
-					</a>
+						<a href="/" class="logo-wrapper pc-logo-master" title="{{settings.store_name | default: store.name}}">
+							{%- comment -%}
+								T-121 (2026-09-12) — người dùng yêu cầu trực tiếp: "logo lấy từ
+								design/Pharma Cosmetics/test_full_logo.html để màu main". Logo Master Vector
+								đầy đủ (icon + tên + tagline dệt sẵn trong SVG, fill="currentColor") thay cho
+								icon nhỏ + text HTML rời trước đây. Màu do CSS `color` của .pc-logo-master quyết
+								định (xem snippets/pharma_ui_kit.bwt — đặt var(--mainColor) trên nền trắng của
+								.box-hearder). aria-label/title vẫn dùng settings.store_name để giữ SEO/tên
+								store thật có thể tuỳ biến qua schema-admin dù logo là ảnh vector cố định.
+							{%- endcomment -%}
+							{% include 'logo-master-svg' %}
+						</a>
 					</div>
 					{%- comment -%}
 					  T-104 (2026-09-11) — người dùng yêu cầu trực tiếp: "bỏ đi header-menu, tích hợp
@@ -220,7 +227,7 @@
 					<div class="col-12 col-md-12 col-xl-5 col-lg-4 header-mid">
 						<div class="list-top-item header_tim_kiem">
 							<form action="/search" method="get" class="header-search-form input-group search-bar" role="search">
-								<input name="query" required class="input-group-field auto-search search-auto form-control" placeholder="Tìm sản phẩm..." autocomplete="off" type="text">
+								<input name="query" class="input-group-field auto-search search-auto form-control" placeholder="Tìm sản phẩm..." autocomplete="off" type="text">
 								<input type="hidden" name="type" value="product">
 								<button type="submit" class="btn icon-fallback-text" aria-label="Tìm kiếm" title="Tìm kiếm">
 									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
