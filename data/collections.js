@@ -271,16 +271,28 @@ function getNavTitleBySlug(handle) {
   return _navTitleBySlug.get(handle) || null;
 }
 
+// T-130 (2026-09-12): báo cáo audit "Thiếu hoàn toàn bộ lọc Sidebar trên /dieu-tri-chuyen-nghiep".
+// Kiểm chứng thật: bộ lọc KHÔNG hề thiếu — /collections/all render đủ 6 nhóm (Loại sản phẩm /
+// Thành phần hoạt tính / Vấn đề về da / Thương hiệu / Khoảng giá / Sắp xếp). Trang
+// /dieu-tri-chuyen-nghiep mất sidebar vì nó là collection PLACEHOLDER dựng từ hàm này, mà hàm lại
+// trả all_vendors/all_types/tags = [] → template collection.bwt không có facet nào để dựng bộ lọc.
+// Sửa đúng gốc: suy ra facet từ chính danh sách sản phẩm của collection đó, thay vì viết mới 1 bộ
+// lọc thứ hai.
 function makeFallbackCollection(handle) {
   const demoMeta = STATIC_PAGE_DEMO_META[handle];
   const navTitle = demoMeta ? null : getNavTitleBySlug(handle);
+  const items = products.slice(0, 8);
+  const uniq = (arr) => [...new Set(arr.filter(Boolean))];
   return {
     id: 0, name: demoMeta ? demoMeta.name : (navTitle || handle), alias: handle, url: `/${handle}`,
     description: demoMeta ? demoMeta.description : '', products_count: products.length,
-    products: products.slice(0, 8),
-    image: null, all_vendors: [], all_types: [],
+    products: items,
+    image: null,
+    all_vendors: uniq(items.map((p) => p.vendor)),
+    all_types: uniq(items.map((p) => p.type)),
     current_vendor: null, current_type: null,
-    default_sort_by: 'created-desc', template_layout: 'collection', tags: [],
+    default_sort_by: 'created-desc', template_layout: 'collection',
+    tags: uniq(items.flatMap((p) => p.tags || [])),
   };
 }
 

@@ -15,10 +15,22 @@ function img(color, label, size = '400x400') {
   return `https://placehold.co/${size}/${color}?text=${encodeURIComponent(label)}`;
 }
 
+// T-131 (2026-09-12): lỗi JS THẬT trên mọi trang chi tiết sản phẩm (bắt được qua pageerror
+// Playwright, có sẵn từ trước đợt sửa này — đã đối chứng bằng cách stash toàn bộ thay đổi):
+//   TypeError: Cannot read properties of undefined (reading 'element')
+//     at a.selectVariant → selectVariantFromDropdown → initDropdown → new Bizweb.OptionSelectors
+// Thư viện chọn biến thể của Sapo (Bizweb.OptionSelectors) đọc product.options[] và
+// variant.options[]/option1 để dựng dropdown; dữ liệu mock trước đây chỉ có `title` nên thư viện
+// gặp undefined ngay lúc khởi tạo → toàn bộ script sau đó trên trang ngừng chạy.
+// Bổ sung đúng hình dạng dữ liệu Sapo thật trả về (option1 + options[]), không đụng template.
 function variant(id, title, price, comparePrice, sku, available = true, qty = 20) {
   return {
     id,
     title,
+    option1: title,
+    option2: null,
+    option3: null,
+    options: [title],
     price,
     compare_at_price: comparePrice || 0,
     available,
@@ -47,6 +59,8 @@ function makeProduct({
     compare_at_price: firstAvailable.compare_at_price,
     inventory_quantity: firstAvailable.inventory_quantity,
     inventory_policy: 'deny',
+    // T-131: xem ghi chú ở hàm variant() — product.options phải khớp số option của variant.
+    options: ['Dung tích'],
     featured_image: { src: images[0], alt: name },
     images: images.map((src, i) => ({ src, alt: `${name} — ảnh ${i + 1}` })),
     tags:    tags || [],

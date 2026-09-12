@@ -84,31 +84,26 @@ function convertDescriptionToJson(htmlString) {
 	return result;
 }
 	
-const rawHtml = `{{ collection.description }}`; 
-	
+// T-131 (2026-09-12): lỗi JS THẬT trên /dieu-tri-chuyen-nghiep (bắt qua pageerror Playwright):
+// "TypeError: Cannot read properties of undefined (reading 'title')". convertDescriptionToJson
+// trả MẢNG RỖNG khi mô tả danh mục không có cặp <h2>+<p> (hoặc rỗng hẳn — đúng trường hợp danh
+// mục placeholder hiện tại), nhưng code cũ truy cập thẳng data[0].title → ném lỗi và CHẶN TOÀN BỘ
+// script chạy sau đó trên trang. Mô tả danh mục là nội dung người quản trị tự nhập trong Sapo
+// Admin nên rỗng/không đúng cấu trúc là tình huống hợp lệ, phải chịu được.
+function applyBlock(data, idx) {
+	const item = (data || [])[0];
+	if (!item) return;              // giữ nguyên nội dung tĩnh sẵn có trong markup
+	$('.title-' + idx).text(item.title);
+	$('.des-' + idx).text(item.des);
+}
 
-const data = convertDescriptionToJson(rawHtml);
-	
-	
-$('.title-0').text(data[0].title)
-$('.des-0').text(data[0].des)
+const rawHtml = `{{ collection.description }}`;
+applyBlock(convertDescriptionToJson(rawHtml), 0);
 
-const rawHtml_1 = `{{ my_collection_1.description }}`; 
-	
+const rawHtml_1 = `{{ my_collection_1.description }}`;
+applyBlock(convertDescriptionToJson(rawHtml_1), 1);
 
-const data_1 = convertDescriptionToJson(rawHtml_1);
-	
-	
-$('.title-1').text(data_1[0].title)
-$('.des-1').text(data_1[0].des)
-	
-const rawHtml_2 = `{{ my_collection_2.description }}`; 
-	
-
-const data_2 = convertDescriptionToJson(rawHtml_2);
-	
-	
-$('.title-2').text(data_2[0].title)
-$('.des-2').text(data_2[0].des)
+const rawHtml_2 = `{{ my_collection_2.description }}`;
+applyBlock(convertDescriptionToJson(rawHtml_2), 2);
 
 </script>
