@@ -21,6 +21,21 @@
   font-size: 11px; font-weight: 700; color: #fff; line-height: 1.25;
   text-shadow: 0 1px 3px rgba(0,0,0,0.6);
 }
+.pc-spa-step-title {
+  /* T-142 (2026-09-12) — LOI THAT do nguoi dung phat hien: div nay chi co class
+     Tailwind "text-sm font-bold", KHONG co class mau, nen no an mau chu mac dinh
+     cua site rgb(35,31,32) (gan den) trong khi the nam tren nen rgb(15,35,24) xanh
+     rung dam -> do duoc ti le tuong phan 1.01:1, tuc chu GAN NHU VO HINH (WCAG AA
+     doi toi thieu 4.5:1). Ep mau trang de doc duoc tren nen toi. */
+  color: #fff !important;
+}
+.pc-spa-media { grid-template-columns: repeat(6, 1fr); }
+.pc-spa-media > *:first-child { grid-column: span 6; }
+.pc-spa-media > .pc-spa-thumb { grid-column: span 2; }
+@media (max-width: 575px) {
+  /* Man hinh hep: 3 anh buoc xep 1 hang van qua nho -> ve 2 cot cho de nhin */
+  .pc-spa-media > .pc-spa-thumb { grid-column: span 3; }
+}
 </style>
 <section class="bg-forest-900 text-white py-14 md:py-20">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -38,21 +53,21 @@
           <a href="{{ settings.home_spa_service_1_url | default: '/dieu-tri-chuyen-nghiep' }}" class="flex items-start gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition border border-white/10">
             <span class="flex-shrink-0 w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-sm font-bold font-heading">01</span>
             <div>
-              <div class="text-sm font-bold">{{ settings.home_spa_service_1_title | default: 'Chăm sóc Da Duy trì' }}</div>
+              <div class="text-sm font-bold pc-spa-step-title">{{ settings.home_spa_service_1_title | default: 'Chăm sóc Da Duy trì' }}</div>
               <p class="text-xs text-emerald-100/70 mt-1">{{ settings.home_spa_service_1_desc | default: 'Liệu pháp cơ bản, không xâm lấn — duy trì sức khỏe làn da, xử lý vấn đề nhẹ và phục hồi da hàng ngày.' }}</p>
             </div>
           </a>
           <a href="{{ settings.home_spa_service_2_url | default: '/dieu-tri-chuyen-nghiep' }}" class="flex items-start gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition border border-white/10">
             <span class="flex-shrink-0 w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-sm font-bold font-heading">02</span>
             <div>
-              <div class="text-sm font-bold">{{ settings.home_spa_service_2_title | default: 'Điều trị Nhắm mục tiêu' }}</div>
+              <div class="text-sm font-bold pc-spa-step-title">{{ settings.home_spa_service_2_title | default: 'Điều trị Nhắm mục tiêu' }}</div>
               <p class="text-xs text-emerald-100/70 mt-1">{{ settings.home_spa_service_2_desc | default: 'Công nghệ và sản phẩm đặc trị, xử lý chuyên sâu các vấn đề cụ thể như nám, mụn, lão hóa — ít hoặc không xâm lấn.' }}</p>
             </div>
           </a>
           <a href="{{ settings.home_spa_service_3_url | default: '/dieu-tri-chuyen-nghiep' }}" class="flex items-start gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition border border-white/10">
             <span class="flex-shrink-0 w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-sm font-bold font-heading">03</span>
             <div>
-              <div class="text-sm font-bold">{{ settings.home_spa_service_3_title | default: 'Điều trị Xâm lấn' }}</div>
+              <div class="text-sm font-bold pc-spa-step-title">{{ settings.home_spa_service_3_title | default: 'Điều trị Xâm lấn' }}</div>
               <p class="text-xs text-emerald-100/70 mt-1">{{ settings.home_spa_service_3_desc | default: 'Phương pháp xâm lấn tối thiểu, đưa dưỡng chất vào sâu trong da và kích thích tái tạo da từ bên trong.' }}</p>
             </div>
           </a>
@@ -63,7 +78,7 @@
         </a>
       </div>
 
-      <div class="lg:col-span-6 grid grid-cols-2 gap-4">
+      <div class="lg:col-span-6 grid grid-cols-2 gap-4 pc-spa-media">
         <div class="col-span-2">
           {% if settings.home_spa_img_1 != blank %}
             <img class="lazyload rounded-2xl w-full h-64 object-cover border border-white/10" width="600" height="338"

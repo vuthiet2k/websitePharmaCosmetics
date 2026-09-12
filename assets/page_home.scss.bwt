@@ -4177,3 +4177,57 @@ a.pc-treatment-item:hover .pc-treatment-number { border-color: var(--mainColor);
   flex: 0 0 auto !important;
   justify-content: flex-end;
 }
+
+/* ══ T-142 (2026-09-12): khối Skin Health Beauty ═══════════════════════════
+   Người dùng báo tỉ lệ khung ảnh không đồng nhất. Đo thật: ảnh lớn ar=2.30
+   còn 3 ảnh bước ar=2.55 (do bị ép chiều cao cứng h-28 = 112px thay vì khoá
+   tỉ lệ) → 4 ảnh trong cùng một cụm lệch tỉ lệ nhau, nhìn ra ngay là méo.
+   Khoá aspect-ratio cho ảnh bước về đúng 2.3 như ảnh lớn, bỏ chiều cao cứng
+   để 3 ảnh luôn co giãn đồng bộ theo bề ngang cột. */
+.pc-spa-thumb {
+  aspect-ratio: 2.3 / 1;
+  height: auto !important;
+}
+
+/* ══ T-143 (2026-09-12): hover card "Giải pháp cho từng vấn đề" ════════════
+   ĐO THẬT trạng thái hover: nền card đổi sang rgb(60,179,113) (rule
+   .pc-solution-card:hover có sẵn từ trước) NHƯNG chữ giữ nguyên màu cũ:
+     tiêu đề  rgb(38,115,72)   trên nền xanh => 2.17:1
+     mô tả    rgb(100,116,139) trên nền xanh => 1.79:1  ← gần như không đọc nổi
+     link     rgb(38,115,72)                 => 2.17:1
+   Cả 3 đều dưới xa ngưỡng WCAG AA 4.5:1 — đúng hiện tượng người dùng mô tả
+   "chữ và nền bão hoà vào nhau, mô tả thành vệt mờ".
+   Thêm nữa: transition của card chỉ có border-color/box-shadow/transform, KHÔNG
+   có background-color nên nền đổi giật cục.
+   Sửa: đưa background-color + color vào transition, và ép toàn bộ chữ sang
+   trắng khi hover (trắng trên #3CB371 = 2.98:1 vẫn thấp, nên đồng thời làm nền
+   hover ĐẬM hơn về var(--color-brand-green) #267348 → trắng trên nền đó đạt
+   6.5:1, vừa đúng chuẩn vừa hợp tông y khoa hơn màu xanh tươi). */
+.pc-solution-card--rich {
+  transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease, background-color .3s ease;
+
+  span.pc-solution-label,
+  .pc-solution-desc,
+  .pc-solution-action {
+    transition: color .3s ease;
+  }
+
+  &:hover {
+    background-color: var(--color-brand-green, #267348) !important;
+
+    span.pc-solution-label,
+    .pc-solution-desc,
+    .pc-solution-action {
+      color: #fff !important;
+    }
+
+    .pc-solution-action i { transform: translateX(4px); transition: transform .2s ease; }
+  }
+}
+
+/* T-143 (tiếp) — rule transition ở trên bị rule gốc .pc-solution-card (khai báo
+   trong snippets/section_solutions.bwt, nạp sau) ghi đè nên đo lại vẫn thiếu
+   background-color → nền vẫn đổi giật. Ép !important cho đúng thuộc tính này. */
+.pc-solution-card--rich {
+  transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease, background-color .3s ease !important;
+}
