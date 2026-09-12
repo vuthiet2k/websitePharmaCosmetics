@@ -615,6 +615,29 @@
     font-family: 'Playfair Display', 'Inter', Georgia, serif !important;
     letter-spacing: -0.01em;
   }
+  {%- comment -%}
+    T-132 (2026-09-12) — đối soát thang chữ với bảng quy chuẩn Google Sheet. ĐO THẬT ở 1440px
+    (Playwright, computed style) TRƯỚC khi sửa, để bác/nhận từng mục thay vì áp nguyên bộ token:
+      • H1 hero: 37.5px / Playfair / 700 — ĐẠT (báo cáo ghi 15.84px nhưng KHÔNG tái hiện được;
+        có thể đo nhầm phần tử hoặc đo ở viewport khác). Chỉ line-height 1.20 là hơi chật so với
+        quy chuẩn 1.25-1.35 → nâng lên 1.3.
+      • H2: tất cả đã là Playfair (báo cáo ghi "lẫn Inter" — đã tự hết sau T-129). Nhưng CỠ chữ
+        chênh nhau lớn: 18.75 / 22.5 / 28.1 / 30px. Mục 18.75px ("FLASH SALE") BẰNG ĐÚNG cỡ đoạn
+        mô tả (18.75px) → mất phân cấp thị giác thật. Đặt SÀN 22px, KHÔNG đặt trần 24px như đề
+        xuất: các section title 28-30px hiện tại là chủ đích thiết kế, ép xuống 24px là làm xấu đi.
+  {%- endcomment -%}
+  h1 { line-height: 1.3 !important; }
+  h2 { line-height: 1.35; }
+  {%- comment -%}
+    Chỉ nâng ĐÚNG 2 phần tử h2 đo được dưới 22px (quét thật trên 4 trang), KHÔNG dùng
+    "h2 { font-size: max(22px, 1em) }": trong font-size, 1em tính theo phần tử CHA chứ không phải
+    cỡ chữ của chính nó, nên rule đó sẽ KÉO TỤT các section title 28-30px xuống 22px — hỏng đúng
+    thứ đang đẹp. !important vì cùng lý do thứ tự nạp file đã ghi ở trên.
+  {%- endcomment -%}
+  h2.pc-flashsale__title,
+  h2.text-lg {
+    font-size: 22px !important;
+  }
   .item_product_main h1, .item_product_main h2,
   .product-name, .product-name h1, .product-name h2,
   .tabs-title h3, .sidebar h2, .widget h2 {
@@ -634,5 +657,28 @@
   .social-footer .social a:hover img,
   .social-footer .social a:focus-visible img {
     filter: none;
+  }
+
+  {%- comment -%}
+    T-132 — LỖI THẬT tìm được khi đo (khác với mô tả trong báo cáo): nội dung dài ở trang sản
+    phẩm/bài viết (.rte, .product-review-content) đang là 15px / line-height 1.50 và font-family
+    computed ra "-apple-system" — tức KHÔNG hề dùng Inter dù Inter đã nạp sẵn, và giãn dòng 1.5
+    quá chật với tiếng Việt có dấu (dấu hỏi/ngã/mũ chồng lên dòng trên ở các đoạn dài).
+    Sửa cho ĐÚNG PHẠM VI nội dung đọc dài, KHÔNG đổi font body toàn site: đổi font toàn cục sẽ
+    thay đổi bề rộng chữ ở thanh menu — mà thanh menu vừa được căn khít từng px ở T-127 để hết
+    tràn, đổi font là phải đo và cân lại toàn bộ. Giữ thay đổi ở đúng chỗ có vấn đề.
+  {%- endcomment -%}
+  .rte,
+  .product-review-content,
+  .article-content,
+  .pc-pdp-desc-fallback {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.7;
+  }
+  .rte p,
+  .product-review-content p,
+  .article-content p {
+    line-height: 1.7;
+    margin-bottom: 14px;
   }
 </style>
