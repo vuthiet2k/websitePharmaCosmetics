@@ -49,8 +49,38 @@
 				</div>
 				{% endif %}
 				{% else %}
-				<div class="alert alert-success alert-dismissible fade show" role="alert">
-					Nội dung sản phẩm đang cập nhật.	
+				{%- comment -%}
+				  T-128 (2026-09-12) — báo cáo audit: trang chi tiết chỉ hiện cụt lủn "Nội dung sản
+				  phẩm đang cập nhật.", làm đứt gãy niềm tin ở đúng bước quyết định mua.
+				  Nguyên nhân đo được: product.content rỗng (size = 0) NHƯNG product.description vẫn
+				  có nội dung — template cũ chỉ xét content nên bỏ qua mô tả đang có. Ưu tiên đổ
+				  description, kèm bảng thông tin cơ bản dựng từ dữ liệu THẬT của sản phẩm (thương
+				  hiệu / phân loại / quy cách / tình trạng kho). KHÔNG bịa nồng độ hoạt chất, pH hay
+				  chỉ định y khoa — đó là dữ liệu dược phải do người quản trị nhập trong Sapo Admin;
+				  chỉ khi không có cả description mới hiện dòng nhắc cập nhật (kèm lối thoát: nút
+				  hỏi chuyên gia) thay vì để khách hàng vào ngõ cụt.
+				{%- endcomment -%}
+				{% assign pc_desc_size = product.description | size %}
+				{% if pc_desc_size > 0 %}
+				<div class="pc-pdp-desc-fallback">
+					<p>{{ product.description }}</p>
+				</div>
+				{% endif %}
+				<div class="pc-pdp-spec">
+					<h4 class="pc-pdp-spec__title">Thông tin sản phẩm</h4>
+					<ul class="pc-pdp-spec__list">
+						{% if product.vendor != blank %}<li><span>Thương hiệu</span><b>{{ product.vendor }}</b></li>{% endif %}
+						{% if product.type != blank %}<li><span>Phân loại</span><b>{{ product.type }}</b></li>{% endif %}
+						{% if product.metafields.custom.Quycach != blank %}<li><span>Quy cách</span><b>{{ product.metafields.custom.Quycach }}</b></li>{% endif %}
+						<li><span>Tình trạng</span><b>{% if product.available %}Còn hàng{% else %}Tạm hết hàng{% endif %}</b></li>
+					</ul>
+					{% if pc_desc_size == 0 %}
+					<p class="pc-pdp-spec__note">
+						Mô tả lâm sàng chi tiết (thành phần INCI, nồng độ hoạt chất, hướng dẫn sử dụng) đang được
+						chuyên gia biên soạn.
+						<a href="/dat-lich-tu-van" title="Hỏi chuyên gia">Hỏi chuyên gia về sản phẩm này →</a>
+					</p>
+					{% endif %}
 				</div>
 				{% endif %}
 			</div>

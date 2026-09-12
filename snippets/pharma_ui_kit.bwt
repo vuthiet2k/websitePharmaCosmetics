@@ -406,6 +406,27 @@
     header.header .box-hearder .pc-header-row {
       min-height: 76px;
     }
+    {%- comment -%}
+      T-127 (2026-09-12) — báo cáo audit: "Menu Header bị tràn chữ, xuất hiện 2 nút mũi tên < >
+      đè lên menu trên Desktop". ĐO THẬT ở 1440px: #nav cần scrollWidth 987px nhưng chỉ có
+      clientWidth 659px → .navigation-horizontal tự bật class "overflow", hiện #prev/#next, và
+      .col-menu{overflow-x:hidden} CẮT NGANG GIỮA TỪ ("TPCN KHOẺ & ĐẸP" cụt thành "TPC") — đó
+      chính là cái người dùng thấy là "mũi tên đè lên chữ".
+      6 mục menu đều là nhãn tiếng Việt VIẾT HOA dài (2 mục dài nhất: 261px và 243px) — không
+      thể ép vừa 1 hàng chỉ bằng CSS nếu giữ nguyên cỡ chữ 16.875px + padding 10px. Giảm cỡ chữ
+      và padding để lấy lại phần lớn khoảng thiếu (KHÔNG đổi nhãn menu — đó là nội dung của người
+      dùng, và không đổi cấu trúc DOM/mega-menu vì rủi ro vỡ JS mega-menu đã cảnh báo ở T-104).
+      Phần dư còn lại vẫn dùng cơ chế cuộn ngang có sẵn, nhưng thêm padding-right cho .col-menu
+      để chữ không bị cắt sát mũi tên nữa.
+    {%- endcomment -%}
+    header.header .box-hearder .header-menu .sudes-main-header #nav > .nav-item > a {
+      font-size: 15px;
+      padding-left: 7px;
+      padding-right: 7px;
+    }
+    header.header .box-hearder .header-menu .sudes-main-header .col-menu {
+      padding-right: 4px;
+    }
     header.header .box-hearder .header-menu .navigation-horizontal > .row {
       margin: 0;
     }
@@ -486,7 +507,7 @@
       background: #fff;
     }
   }
-  @media (min-width: 992px) and (max-width: 1199px) {
+  @media (min-width: 992px) and (max-width: 1399px) {
     header.header .box-hearder .header-mid { display: none !important; }
     header.header .box-hearder .header-right .header-action-search {
       display: inline-flex; align-items: center; justify-content: center;
@@ -495,17 +516,25 @@
     }
     header.header .box-hearder .header-right .header-action-search i { font-size: 20px; line-height: 1; color: inherit; }
   }
-  @media (min-width: 1200px) {
+  @media (min-width: 1400px) {
     {%- comment -%}
       !important bắt buộc: assets/global_core.scss.bwt#.box-hearder>.row .header-mid (3 class,
       specificity cao hơn 2 class ở đây) đặt flex:1 1 0 khiến rule thường bị override, input co
       lại ~60px (gần như bị nút submit 38px che kín — verify qua Playwright đo width thật = 60px,
       không phải 220 như khai báo, xác nhận LÀ bug specificity thật trước khi thêm !important).
     {%- endcomment -%}
+    {%- comment -%}
+      T-127 (2026-09-12) — ĐO THẬT: ở 1440 / 1600 / 1920px, #nav LUÔN chỉ được cấp đúng 655px
+      (không hề rộng thêm theo màn hình) vì .container của header bị khoá max-width Bootstrap
+      1320px → dù màn 1920px vẫn tràn menu, hiện #prev/#next. Hai việc để menu vừa 1 hàng:
+        (1) thu ô search 220 → 180px ở 1200-1599px (lấy lại 40px cho menu, vẫn đủ rộng để gõ),
+        (2) nới trần .container của riêng header lên 1560px từ 1600px trở lên — chỉ header, KHÔNG
+            đụng container của phần thân trang (giữ nguyên nhịp đọc 1320px của nội dung).
+    {%- endcomment -%}
     header.header .box-hearder .header-mid {
       display: block !important;
-      flex: 0 0 220px !important;
-      width: 220px !important;
+      flex: 0 0 180px !important;
+      width: 180px !important;
       min-width: 0 !important;
     }
     header.header .box-hearder .header-mid .list-search-key { display: none; }
@@ -517,6 +546,34 @@
       padding-right: 40px;
     }
     header.header .box-hearder .header-right .header-action-search { display: none; }
+  }
+
+  {%- comment -%}
+    T-127 (2026-09-12) — nới trần container CHỈ CỦA HEADER ở màn rộng (xem lý do đo đạc ở block
+    1200px phía trên). Không đụng .container của thân trang.
+  {%- endcomment -%}
+  @media (min-width: 1400px) and (max-width: 1599px) {
+    {%- comment -%}
+      T-127 — dải 1200-1599px vẫn thiếu ~163px để menu vừa 1 hàng sau khi đã thu ô search.
+      KHÔNG ẩn ô search ở dải này (T-107 đã chốt: ẩn search là lỗi người dùng phàn nàn trực tiếp
+      "đang mất mục search") → thay vào đó cho riêng thanh header chạy gần sát mép màn hình và hạ
+      cỡ chữ menu xuống 14px. Thân trang vẫn giữ container 1280px như cũ.
+    {%- endcomment -%}
+    header.header .main-header > .container,
+    header.header .box-hearder > .container {
+      max-width: calc(100vw - 40px) !important;
+    }
+    header.header .box-hearder .header-menu .sudes-main-header #nav > .nav-item > a {
+      font-size: 14px;
+      padding-left: 6px;
+      padding-right: 6px;
+    }
+  }
+  @media (min-width: 1600px) {
+    header.header .main-header > .container,
+    header.header .box-hearder > .container {
+      max-width: 1560px !important;
+    }
   }
 
   {%- comment -%}
@@ -533,5 +590,49 @@
       left: auto;
       right: 0;
     }
+  }
+
+  {%- comment -%}
+    T-129 (2026-09-12) — báo cáo audit: "Thiếu font Playfair Display cho Headings H1, H2, Hero
+    Title". ĐO THẬT trên trang chủ: h1/h2/h3 đều đang là Montserrat, dù Playfair Display ĐÃ được
+    nạp sẵn trong layouts/theme.bwt (<link> Google Fonts) — tức là font có sẵn nhưng chưa hề được
+    gán cho heading nào. Design System quy định cặp font: Inter cho body/UI, Playfair Display cho
+    Display/H1/H2.
+    CỐ Ý chỉ áp cho h1/h2 (cấp Display/Section), KHÔNG áp cho h3: h3 đang là TÊN SẢN PHẨM trên
+    thẻ card — serif ở cỡ 15-18px làm giảm tốc độ quét mắt danh sách sản phẩm, ngược mục tiêu
+    thương mại. Loại trừ thêm các h2 nằm trong thẻ sản phẩm/widget để không đổi nhịp đọc đã có.
+  {%- endcomment -%}
+  {%- comment -%}
+    !important bắt buộc (đo thật: lần đầu đặt không có !important, h1/h2 VẪN ra Montserrat):
+    assets/global_core.scss.css nạp SAU <style id="pharma-ui-kit"> trong <head> nên rule cùng/cao
+    hơn độ đặc hiệu ở file đó luôn thắng — đúng cơ chế đã ghi ở T-122/T-123 phía trên.
+    Cặp rule loại trừ bên dưới cũng để !important, và vì độ đặc hiệu CAO HƠN (2 class / 1 class +
+    element) nên vẫn thắng rule h1/h2 trần ở trên — tên sản phẩm giữ nguyên sans-serif.
+  {%- endcomment -%}
+  h1,
+  h2,
+  .pc-kit-display-title {
+    font-family: 'Playfair Display', 'Inter', Georgia, serif !important;
+    letter-spacing: -0.01em;
+  }
+  .item_product_main h1, .item_product_main h2,
+  .product-name, .product-name h1, .product-name h2,
+  .tabs-title h3, .sidebar h2, .widget h2 {
+    font-family: 'Inter', 'Montserrat', system-ui, sans-serif !important;
+  }
+
+  {%- comment -%}
+    T-129 — báo cáo audit: "Icon mạng xã hội Chân trang dùng màu gốc sặc sỡ, cần chuyển về đơn
+    sắc". Các icon này là <img> SVG có màu thương hiệu gốc (facebook xanh, instagram gradient...)
+    nên không đổi màu được bằng `color`/`fill` — dùng filter để chuyển xám, và trả lại màu gốc khi
+    hover để người dùng vẫn nhận ra nền tảng trước khi bấm.
+  {%- endcomment -%}
+  .social-footer .social a img {
+    filter: grayscale(1) opacity(0.8);
+    transition: filter 0.2s ease;
+  }
+  .social-footer .social a:hover img,
+  .social-footer .social a:focus-visible img {
+    filter: none;
   }
 </style>

@@ -228,7 +228,46 @@
 	</div>
 	<div class="bg-footer-bottom copyright clearfix">
 		<div class="container">
+			{%- comment -%}
+			  T-126 (2026-09-12) — Nghị định 52/2013/NĐ-CP (điều 29) buộc website TMĐT phải công bố
+			  tên thương nhân, địa chỉ trụ sở, MST/mã số doanh nghiệp, ngày cấp + nơi cấp và người
+			  đại diện. Báo cáo audit ghi nhận footer đang thiếu toàn bộ khối này (đã đo thật: không
+			  có chuỗi MST/GPKD/Bộ Công Thương nào trong DOM footer).
+			  Toàn bộ giá trị lấy từ lớp schema-admin (configs/settings_*.json) — CỐ Ý không hardcode
+			  số MST/GPKD vào theme: đây là dữ liệu pháp lý thật của doanh nghiệp, phải do người quản
+			  trị nhập trong Sapo Admin. Field nào chưa nhập sẽ hiện rõ là ô cần điền, KHÔNG bịa số.
+			  Logo "Đã thông báo Bộ Công Thương" cũng để trống mặc định vì link đăng ký là duy nhất
+			  cho từng doanh nghiệp (online.gov.vn cấp) — chỉ render khi admin dán link thật vào.
+			{%- endcomment -%}
 			<div class="row tablet">
+				<div class="col-lg-12 col-md-12 col-xs-12 footer-legal">
+					<p class="footer-legal__line">
+						<b>{{ settings.footer_legal_company | default: settings.store_name | default: store.name }}</b>
+						{%- if settings.store_address != "" and settings.store_address != null %}
+						&bull; Địa chỉ: {{ settings.store_address | strip_newlines | remove: 'Phòng trị liệu da chuyên nghiệp 1:1 (Skin Health Beauty)' | remove: 'Địa chỉ:' | strip }}
+						{%- endif %}
+					</p>
+					<p class="footer-legal__line">
+						Mã số thuế / Mã số doanh nghiệp:
+						<b>{{ settings.footer_legal_tax_code | default: '(chưa cập nhật — nhập tại Sapo Admin › Cấu hình giao diện)' }}</b>
+						{%- if settings.footer_legal_license_date != "" and settings.footer_legal_license_date != null %}
+						&bull; Ngày cấp: {{ settings.footer_legal_license_date }}
+						{%- endif %}
+						{%- if settings.footer_legal_license_issuer != "" and settings.footer_legal_license_issuer != null %}
+						&bull; Nơi cấp: {{ settings.footer_legal_license_issuer }}
+						{%- endif %}
+					</p>
+					{%- if settings.footer_legal_representative != "" and settings.footer_legal_representative != null %}
+					<p class="footer-legal__line">Người đại diện pháp luật: {{ settings.footer_legal_representative }}</p>
+					{%- endif %}
+					{%- if settings.footer_bct_url != "" and settings.footer_bct_url != null %}
+					<p class="footer-legal__line">
+						<a href="{{ settings.footer_bct_url }}" target="_blank" rel="noopener nofollow" title="Đã thông báo Bộ Công Thương">
+							<img src="{{ 'logo-bo-cong-thuong.png' | asset_url }}" alt="Đã thông báo Bộ Công Thương" width="130" height="49" loading="lazy">
+						</a>
+					</p>
+					{%- endif %}
+				</div>
 				<div id="copyright" class="col-lg-12 col-md-12 col-xs-12 fot_copyright">
 					<span class="wsp">
 						{% if copyright != "" and copyright != null %}

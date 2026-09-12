@@ -55,7 +55,12 @@ function makeProduct({
     selected_or_first_available_variant: firstAvailable,
     metafields: {
       custom: { Video: '', Quycach: '', ...((metafields || {}).custom || {}) },
-      bpr:    { votes: votes ?? 50 },
+      // T-128 (2026-09-12): trước đây chỉ có `votes` → trang chi tiết hiện trơ trọi "(170 đánh
+      // giá)" KHÔNG có ngôi sao nào (widget .sapo-product-reviews-badge là chỗ app Sapo Product
+      // Reviews đổ vào trên store thật, ở bản preview này rỗng). Bổ sung điểm trung bình DEMO
+      // (tất định theo id để mỗi lần render ra cùng 1 giá trị, không nhảy số) cho widget sao có
+      // dữ liệu mà vẽ. Trên store Sapo thật, app reviews vẫn ghi đè badge như cũ.
+      bpr:    { votes: votes ?? 50, rating: Math.round((4.4 + ((id % 7) * 0.1)) * 10) / 10 },
     },
   };
 }

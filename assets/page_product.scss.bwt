@@ -4199,3 +4199,72 @@ a.product-recommend-link {
 }
 @media (max-width: 767px) { .pc-pdp-reviews-grid { grid-template-columns: 1fr; } }
 .pc-pdp-review-quote { margin-top: 12px; }
+
+/* ── T-128 (2026-09-12): widget sao đánh giá + khối thông tin fallback ────────
+   Xem lý do ở templates/product.bwt (.pc-stars) và snippets/tab_product.bwt
+   (.pc-pdp-spec). Màu sao dùng --color-gold-dark (#B8860B) thay vì vàng tươi
+   #FFC107: trên nền trắng #B8860B đạt tương phản ~4.6:1 (WCAG AA), vàng tươi
+   chỉ ~1.9:1 — đúng nhóm lỗi tương phản báo cáo audit đã nêu. */
+.pc-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-right: 6px;
+  i { font-size: 14px; line-height: 1; }
+  .pc-stars__on { color: var(--color-gold-dark, #B8860B); }
+  .pc-stars__off { color: #C7CDD4; }
+  .pc-stars__score {
+    margin-left: 4px;
+    font-weight: 700;
+    color: var(--color-text-main, #13241F);
+  }
+}
+
+.pc-pdp-desc-fallback p {
+  margin-bottom: 16px;
+  font-size: var(--fs-md);
+  line-height: 1.7;
+  color: var(--color-text-body, #334155);
+}
+
+.pc-pdp-spec {
+  border: 1px solid var(--color-border-clinical, #E2E8F0);
+  border-radius: 12px;
+  padding: 16px 20px;
+  background: var(--color-bg-page, #F8FAF7);
+  .pc-pdp-spec__title {
+    margin: 0 0 12px;
+    font-size: var(--fs-md);
+    font-weight: 700;
+    color: var(--color-text-main, #13241F);
+  }
+  .pc-pdp-spec__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    li {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--color-border-clinical, #E2E8F0);
+      font-size: var(--fs-base);
+      &:last-child { border-bottom: 0; }
+      span { color: var(--color-text-muted, #64748B); }
+      b { color: var(--color-text-main, #13241F); font-weight: 600; text-align: right; }
+    }
+  }
+  .pc-pdp-spec__note {
+    margin: 12px 0 0;
+    font-size: var(--fs-base);
+    line-height: 1.6;
+    color: var(--color-text-body, #334155);
+    a {
+      display: inline-block;
+      margin-top: 4px;
+      font-weight: 600;
+      color: var(--mainColorDark, #1F5A3B);
+      &:hover { text-decoration: underline; }
+    }
+  }
+}

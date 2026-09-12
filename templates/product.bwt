@@ -155,7 +155,30 @@
 							</div>
 							{%if settings.product_tab3_enable%}
 							<div class="product-review">
-								<div class="sapo-product-reviews-badge " data-id="{{ product.id }}" ></div> 
+								<div class="sapo-product-reviews-badge " data-id="{{ product.id }}" ></div>
+								{%- comment -%}
+								  T-128 (2026-09-12) — báo cáo audit: "Mất icon 5 ngôi sao bên cạnh số lượng
+								  review, chỉ còn chữ số trơ trọi". .sapo-product-reviews-badge ở trên là chỗ
+								  app Sapo Product Reviews render vào trên store thật; khi app chưa bật/chưa có
+								  dữ liệu thì khối đó RỖNG nên chỉ còn mỗi "(170 đánh giá)". Vẽ sẵn widget sao
+								  từ metafields.bpr.rating làm lớp nền — app Sapo (nếu có) vẫn ghi đè badge như
+								  cũ, không xung đột.
+								{%- endcomment -%}
+								{% if product.metafields.bpr.rating > 0 %}
+								{% assign pc_rating = product.metafields.bpr.rating %}
+								{% assign pc_r_floor = pc_rating | floor %}
+								{% assign pc_r_frac = pc_rating | minus: pc_r_floor %}
+								{% assign pc_r_half = 0 %}
+								{% if pc_r_frac >= 0.25 %}{% assign pc_r_half = pc_r_floor | plus: 1 %}{% endif %}
+								<span class="pc-stars" role="img" aria-label="Đánh giá {{ pc_rating }} trên 5 sao">
+									{% for i in (1..5) %}
+									{% if i <= pc_r_floor %}<i class="fa-solid fa-star pc-stars__on"></i>
+									{% elsif i == pc_r_half %}<i class="fa-solid fa-star-half-stroke pc-stars__on"></i>
+									{% else %}<i class="fa-regular fa-star pc-stars__off"></i>{% endif %}
+									{% endfor %}
+									<b class="pc-stars__score">{{ pc_rating }}</b>
+								</span>
+								{% endif %}
 								{% if product.metafields.bpr.votes > 0 %}
 								<span>({{ product.metafields.bpr.votes }} đánh giá)</span>
 								{%endif%}
@@ -615,9 +638,21 @@
 										</h2>
 									</div>
 
+									{%- comment -%}
+									  T-128 (2026-09-12) — báo cáo audit: khối "Có thể bạn thích" hiện cảnh báo
+									  vàng "Sản phẩm đang được cập nhật.", làm đứt luồng bán chéo ngay tại trang
+									  quyết định mua. Nguyên nhân đo thật: settings.product_related_collection trỏ
+									  vào 1 collection CÓ TỒN TẠI nhưng RỖNG (0 sản phẩm) — đã đổi sang collection
+									  có hàng ở configs/settings_data.json. Thêm lớp dự phòng ngay tại template để
+									  sự cố "trỏ vào collection rỗng" không bao giờ lại đẩy khách vào ngõ cụt:
+									  rơi về "san-pham-ban-chay-noi-bat", cuối cùng mới tới "all".
+									{%- endcomment -%}
+									{%- assign pc_rel = collections[settings.product_related_collection] -%}
+									{%- if pc_rel.products.size == 0 -%}{%- assign pc_rel = collections['san-pham-ban-chay-noi-bat'] -%}{%- endif -%}
+									{%- if pc_rel.products.size == 0 -%}{%- assign pc_rel = collections['all'] -%}{%- endif -%}
 									<div class="row">
-										{%- if collections[settings.product_related_collection].products.size > 0 -%}
-										{%- for product in collections[settings.product_related_collection].products limit: settings.product_related_limit -%}
+										{%- if pc_rel.products.size > 0 -%}
+										{%- for product in pc_rel.products limit: settings.product_related_limit -%}
 										<div class="col-xl-6 col-lg-3 col-md-4 col-xs-6 col-6">
 											<div class="item_product_main">
 												{%include 'product_grid_office'%}
