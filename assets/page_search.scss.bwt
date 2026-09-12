@@ -429,3 +429,229 @@
 		}
 	}
 }
+/* ══ T-133 (2026-09-12): trạng thái "không có kết quả" giữ chân khách ══════════
+   Lý do thiết kế + thứ tự ưu tiên nội dung: xem snippets/search_empty_state.bwt.
+   Nguyên tắc màu: KHÔNG dùng đỏ báo lỗi (không có kết quả không phải lỗi của
+   khách); mọi cặp màu chữ/nền dưới đây đều >= 4.5:1 theo WCAG AA. */
+.pc-search-empty {
+  max-width: 1160px;
+  margin: 0 auto;
+
+  &__head {
+    background: #fff;
+    border: 1px solid var(--color-border-clinical, #E2E8F0);
+    border-radius: 16px;
+    padding: 32px 24px;
+    text-align: center;
+    @media (max-width: 575px) { padding: 24px 16px; }
+  }
+
+  &__icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-mint-subtle, #E8F8EE);
+    color: var(--mainColorDark, #1F5A3B);
+    font-size: 24px;
+  }
+
+  &__title {
+    margin: 0 0 8px;
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--color-text-main, #13241F);
+  }
+
+  &__sub {
+    margin: 0 auto 20px;
+    max-width: 620px;
+    font-size: var(--fs-md);
+    line-height: 1.7;
+    color: var(--color-text-body, #334155);
+    b { color: var(--color-text-main, #13241F); font-weight: 600; }
+  }
+
+  &__form {
+    display: flex;
+    gap: 8px;
+    max-width: 520px;
+    margin: 0 auto;
+    @media (max-width: 479px) { flex-direction: column; }
+  }
+
+  &__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 46px;
+    padding: 0 16px;
+    font-size: var(--fs-md);
+    border: 1px solid var(--color-border-clinical, #E2E8F0);
+    border-radius: 10px;
+    outline: none;
+    &:focus { border-color: var(--mainColor, #3CB371); box-shadow: 0 0 0 3px rgba(60, 179, 113, 0.18); }
+  }
+
+  &__submit {
+    flex: 0 0 auto;
+    height: 46px;
+    padding: 0 24px;
+    border: none;
+    border-radius: 10px;
+    background: var(--mainColor, #3CB371);
+    color: #fff;
+    font-weight: 600;
+    font-size: var(--fs-md);
+    cursor: pointer;
+    transition: background 0.2s;
+    &:hover { background: var(--mainColorDark, #1F5A3B); }
+  }
+
+  &__block {
+    margin-top: 32px;
+  }
+
+  &__block-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  &__block-title {
+    margin: 0 0 14px;
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    color: var(--color-text-main, #13241F);
+  }
+
+  /* min-height 44px: ngưỡng vùng chạm tối thiểu trên thiết bị cảm ứng — đo thật
+     bằng Playwright ở 390px thấy 2 phần tử của khối này dưới ngưỡng (chip 38px,
+     link "Xem tất cả" 21px) nên nâng lên đúng 44px. */
+  &__more {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: var(--fs-base);
+    font-weight: 600;
+    color: var(--mainColorDark, #1F5A3B);
+    &:hover { text-decoration: underline; }
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 6px 18px;
+      border-radius: 9999px;
+      background: #fff;
+      border: 1px solid var(--color-border-clinical, #E2E8F0);
+      color: var(--color-text-body, #334155);
+      font-size: var(--fs-base);
+      transition: all 0.18s;
+      &:hover {
+        background: var(--color-mint-subtle, #E8F8EE);
+        border-color: var(--mainColor, #3CB371);
+        color: var(--mainColorDark, #1F5A3B);
+      }
+    }
+  }
+
+  &__concerns {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    @media (max-width: 991px) { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 575px) { grid-template-columns: repeat(2, 1fr); }
+    a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 96px;
+      padding: 14px 10px;
+      text-align: center;
+      background: #fff;
+      border: 1px solid var(--color-border-clinical, #E2E8F0);
+      border-radius: 12px;
+      color: var(--color-text-main, #13241F);
+      font-size: var(--fs-base);
+      font-weight: 600;
+      line-height: 1.4;
+      transition: all 0.18s;
+      i {
+        font-size: 20px;
+        color: var(--mainColor, #3CB371);
+      }
+      &:hover {
+        border-color: var(--mainColor, #3CB371);
+        box-shadow: 0 6px 18px rgba(31, 90, 59, 0.1);
+        transform: translateY(-2px);
+      }
+    }
+  }
+
+  &__cta {
+    margin-top: 36px;
+    padding: 28px 24px;
+    border-radius: 16px;
+    background: var(--bgHeader, #1F5A3B);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    h2 {
+      margin: 0 0 6px;
+      font-size: var(--fs-lg);
+      font-weight: 700;
+      color: #fff;
+    }
+    p {
+      margin: 0;
+      font-size: var(--fs-md);
+      line-height: 1.7;
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  &__cta-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    padding: 0 22px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: var(--fs-md);
+    transition: all 0.2s;
+    &--primary {
+      background: #fff;
+      color: var(--mainColorDark, #1F5A3B);
+      &:hover { background: var(--color-mint-light, #D7F3E3); color: var(--mainColorDark, #1F5A3B); }
+    }
+    &--ghost {
+      background: transparent;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      &:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
+    }
+  }
+}

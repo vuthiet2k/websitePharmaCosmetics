@@ -1,0 +1,109 @@
+{%- comment -%}
+  snippets/search_empty_state.bwt — T-133 (2026-09-12)
+
+  Người dùng yêu cầu: "việc tìm kiếm phải có giao diện trả về hợp lý,
+  /search?query=rtmb&type=product không có data vẫn cần có nhưng phần khác kích thích giữ chân
+  khách hàng".
+
+  Trạng thái trước đó (đo thật trên /search?query=rtmb&type=product): chỉ 1 thẻ trắng nhỏ giữa
+  trang với dòng chữ ĐỎ "Không tìm thấy bất kỳ kết quả nào" + 1 ô input. Không có bất kỳ đường
+  đi tiếp nào → khách chỉ còn cách bấm Back hoặc thoát. Đây là ngõ cụt đúng nghĩa.
+
+  Thiết kế lại theo thứ tự ưu tiên của khách đang bí:
+    1. Nói rõ chuyện gì xảy ra, KHÔNG dùng giọng báo lỗi màu đỏ (không có kết quả không phải lỗi
+       của khách) + gợi ý cách tìm lại cho đúng.
+    2. Cho gõ lại ngay tại chỗ (ô tìm kiếm giữ nguyên từ khoá cũ để sửa, không bắt gõ lại từ đầu).
+    3. Từ khoá gợi ý (lấy từ settings.footer_search_menu — lớp schema-admin, không hardcode).
+    4. Lối đi theo VẤN ĐỀ DA — đúng cách khách dược mỹ phẩm tự phân loại nhu cầu, thường hiệu quả
+       hơn là bắt họ đoán đúng tên sản phẩm.
+    5. Sản phẩm bán chạy thật (collection có hàng) — để khách còn thứ để xem thay vì trang trống.
+    6. CTA chuyên gia (khám da AI / đặt lịch 1:1) — khách không tự tìm được thì để chuyên gia tư
+       vấn, đây là đường chuyển đổi mạnh nhất của mô hình này.
+
+  Tham số: gọi kèm {% assign empty_type = 'product' %} hoặc 'article' trước khi include.
+{%- endcomment -%}
+
+{%- assign _es_type = empty_type | default: 'product' -%}
+{%- assign _es_kw = settings.footer_search_menu | default: 'Phục hồi da;Trị mụn;Trị nám;Trẻ hoá da;Kem chống nắng' | split: ';' -%}
+{%- assign _es_col = collections['san-pham-ban-chay-noi-bat'] -%}
+{%- if _es_col.products.size == 0 -%}{%- assign _es_col = collections['all'] -%}{%- endif -%}
+
+<div class="pc-search-empty">
+
+	<div class="pc-search-empty__head">
+		<div class="pc-search-empty__icon" aria-hidden="true">
+			<i class="fa-regular fa-face-frown-open"></i>
+		</div>
+		<h1 class="pc-search-empty__title">
+			Không tìm thấy kết quả nào cho “{{ search.terms | strip_html | escape }}”
+		</h1>
+		<p class="pc-search-empty__sub">
+			Từ khoá có thể bị sai chính tả, hoặc sản phẩm chưa có trên hệ thống. Bạn thử tìm bằng
+			<b>tên hoạt chất</b> (retinol, niacinamide, BHA…) hoặc <b>vấn đề da</b> (mụn, nám, lão hoá…) xem sao.
+		</p>
+
+		<form action="/search" method="get" class="pc-search-empty__form" role="search">
+			<input type="text" name="query" value="{{ search.terms | strip_html | escape }}" autocomplete="off"
+				placeholder="{% if _es_type == 'article' %}Nhập tên bài viết…{% else %}Nhập tên sản phẩm hoặc hoạt chất…{% endif %}"
+				aria-label="Tìm kiếm lại" class="pc-search-empty__input">
+			{%- if _es_type == 'article' -%}<input type="hidden" name="type" value="article">{%- endif -%}
+			<button type="submit" class="pc-search-empty__submit">Tìm lại</button>
+		</form>
+	</div>
+
+	{%- if _es_kw.size > 0 -%}
+	<div class="pc-search-empty__block">
+		<h2 class="pc-search-empty__block-title">Mọi người đang tìm gì</h2>
+		<div class="pc-search-empty__chips">
+			{%- for _k in _es_kw -%}
+			{%- assign _kw = _k | strip -%}
+			{%- if _kw != '' -%}
+			<a href="/search?query={{ _kw | url_encode }}&amp;type=product" title="Tìm {{ _kw | escape }}">{{ _kw }}</a>
+			{%- endif -%}
+			{%- endfor -%}
+		</div>
+	</div>
+	{%- endif -%}
+
+	<div class="pc-search-empty__block">
+		<h2 class="pc-search-empty__block-title">Tìm theo vấn đề da</h2>
+		<div class="pc-search-empty__concerns">
+			<a href="/tri-mun"><i class="fa-solid fa-circle-dot"></i><span>Da mụn &amp; dầu</span></a>
+			<a href="/tri-nam"><i class="fa-solid fa-sun"></i><span>Nám &amp; sắc tố</span></a>
+			<a href="/chong-lao-hoa"><i class="fa-solid fa-hourglass-half"></i><span>Lão hoá</span></a>
+			<a href="/duong-am"><i class="fa-solid fa-droplet"></i><span>Khô &amp; thiếu ẩm</span></a>
+			<a href="/lam-sang"><i class="fa-solid fa-wand-magic-sparkles"></i><span>Xỉn màu</span></a>
+			<a href="/dieu-tri-chuyen-nghiep"><i class="fa-solid fa-user-nurse"></i><span>Liệu trình chuyên sâu</span></a>
+		</div>
+	</div>
+
+	{%- if _es_col.products.size > 0 -%}
+	<div class="pc-search-empty__block">
+		<div class="pc-search-empty__block-head">
+			<h2 class="pc-search-empty__block-title">Sản phẩm được chọn mua nhiều</h2>
+			<a class="pc-search-empty__more" href="/collections/all" title="Xem tất cả sản phẩm">Xem tất cả →</a>
+		</div>
+		<div class="row">
+			{%- for product in _es_col.products limit: 4 -%}
+			<div class="col-6 col-md-3">
+				<div class="item_product_main">
+					{% include 'product_grid_office' %}
+				</div>
+			</div>
+			{%- endfor -%}
+		</div>
+	</div>
+	{%- endif -%}
+
+	<div class="pc-search-empty__cta">
+		<div class="pc-search-empty__cta-text">
+			<h2>Không chắc mình cần sản phẩm nào?</h2>
+			<p>Để chuyên gia da liễu đọc tình trạng da của bạn và gợi ý phác đồ phù hợp — miễn phí.</p>
+		</div>
+		<div class="pc-search-empty__cta-actions">
+			<a class="pc-search-empty__btn pc-search-empty__btn--primary" href="/kham-da-ai" title="Khám da cùng chuyên gia AI">Khám da AI miễn phí</a>
+			<a class="pc-search-empty__btn pc-search-empty__btn--ghost" href="/dat-lich-tu-van" title="Đặt lịch tư vấn 1:1">Đặt lịch tư vấn 1:1</a>
+		</div>
+	</div>
+
+</div>
