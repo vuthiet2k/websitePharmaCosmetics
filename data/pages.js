@@ -57,7 +57,7 @@ const pages = {
 
   'kham-da-ai': {
     id:      106,
-    title:   'Khám Da AI - Bác Sĩ Da Liễu AI Tư Vấn 1:1',
+    title:   'Khám Da AI - Chuyên Gia Da Liễu AI Tư Vấn 1:1',
     alias:   'kham-da-ai',
     handle:  'kham-da-ai',
     url:     '/kham-da-ai',
