@@ -69,6 +69,13 @@ const collectionsData = {
     { products_count: products.length, sort: 'created-desc' }
   ),
 
+  'dieu-tri-chuyen-nghiep': makeCollection(
+    'ĐIỀU TRỊ CHUYÊN NGHIỆP', 'dieu-tri-chuyen-nghiep', 4295300,
+    'Phác đồ dược mỹ phẩm điều trị chuyên sâu chuẩn y khoa dành cho mọi vấn đề da liễu.',
+    products,
+    { products_count: products.length, sort: 'created-desc' }
+  ),
+
   // ── Sections active — có demo products ────────────────────────────────
 
   'san-pham-ban-chay-noi-bat': makeCollection(
@@ -232,10 +239,15 @@ const collectionsData = {
 // ── Factory fallback ──────────────────────────────────────────────────────
 
 function makeFallbackCollection(handle) {
+  const formattedName = handle
+    .split('-')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
   return {
-    id: 0, name: handle, alias: handle, url: `/${handle}`,
-    description: '', products_count: products.length,
-    products: products.slice(0, 8),
+    id: 0, name: formattedName, alias: handle, url: `/${handle}`,
+    description: 'Danh mục sản phẩm dược mỹ phẩm điều trị da chuyên sâu.',
+    products_count: products.length,
+    products: products,
     image: null, all_vendors: [], all_types: [],
     current_vendor: null, current_type: null,
     default_sort_by: 'created-desc', template_layout: 'collection', tags: [],
