@@ -23,13 +23,15 @@
   --pc-section-mb: 0; /* margin handled bởi pc-hero-buttons */
 }
 
-/* ── Swiper: fullbleed background ── */
+/* ── Swiper: fullbleed background ──
+   REOPEN 2026-09-13: đổi ảnh sang bên TRÁI (chữ sang phải) theo
+   design/homepage-concepts/v2-clinical-dashboard.html người dùng chọn. */
 .pc-hero-bg-swiper {
   position: absolute;
   z-index: 0;
   top: 0;
   bottom: 0;
-  right: 0;
+  left: 0;
   width: 60%;
 }
 .pc-hero-bg-swiper .swiper-wrapper,
@@ -55,13 +57,13 @@
   100% { transform: scale(1.0);  object-position: center 30%; }
 }
 
-/* ── Harmony overlay: trắng trái → trong suốt phải ── */
+/* ── Harmony overlay: trắng phải → trong suốt trái (ảnh giờ ở trái) ── */
 .pc-hero-overlay {
   position: absolute;
   inset: 0;
   z-index: 1;
   background: linear-gradient(
-    to right,
+    to left,
     rgba(255,255,255,0.98) 0%,
     rgba(255,255,255,0.98) 44%,
     rgba(255,255,255,0.62) 58%,
@@ -70,7 +72,7 @@
   pointer-events: none;
 }
 
-/* ── Content layer ── */
+/* ── Content layer — chữ bên phải, spacer (vùng ảnh) bên trái ── */
 .pc-hero-grid {
   position: relative;
   z-index: 2;
@@ -80,10 +82,13 @@
   min-height: 560px;
 }
 .pc-hero-left {
-  padding: 64px 56px 64px 0;
+  padding: 64px 0 64px 56px;
+  order: 2;
 }
 .pc-hero-right-spacer {
   min-height: 560px;
+  order: 1;
+  position: relative;
 }
 
 /* Badge — dùng eyebrow-color của convention, không hardcode */
@@ -436,6 +441,39 @@
 @media (max-width: 767px) {
   .pc-hero-checklist, .pc-hero-stats { margin-top: 16px; }
 }
+
+/* ── Widget nổi trên ảnh (REOPEN 2026-09-13, theo v2-clinical-dashboard.html) ── */
+.pc-hero-widget {
+  position: absolute;
+  z-index: 3;
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
+  background: #fff;
+  border: 1px solid var(--color-border-clinical, #E2E8F0);
+  border-radius: 8px;
+  padding: 16px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 12px 30px -10px rgba(15,35,24,.18);
+}
+.pc-hero-widget > div + div { text-align: right; }
+.pc-hero-widget span {
+  display: block;
+  font-size: 0.7rem;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
+.pc-hero-widget b {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--primary-forest-900, #0F2318);
+}
+@media (max-width: 767px) {
+  .pc-hero-widget { display: none; }
+}
 </style>
 <section class="pc-section section--light pc-hero-section">
 
@@ -562,7 +600,18 @@
 
       </div>
 
-      <div class="pc-hero-right-spacer" aria-hidden="true"></div>
+      <div class="pc-hero-right-spacer" aria-hidden="true">
+        <div class="pc-hero-widget">
+          <div>
+            <span>{{ settings.home_hero_widget1_label | default: 'Độ chính xác chẩn đoán' }}</span>
+            <b>{{ settings.home_hero_widget1_value | default: '98.6%' }}</b>
+          </div>
+          <div>
+            <span>{{ settings.home_hero_widget2_label | default: 'Thời gian phân tích' }}</span>
+            <b>{{ settings.home_hero_widget2_value | default: '3 phút' }}</b>
+          </div>
+        </div>
+      </div>
 
     </div>
   </div>
