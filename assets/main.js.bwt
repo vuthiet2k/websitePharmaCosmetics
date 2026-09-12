@@ -62,14 +62,16 @@ if (wDWs < 767) {
 		$(this).next('ul').toggleClass("current");
 	});
 }
-if (wDWs >= 992) {
+{
 	$('.js-menu-toggle').click(function(e){
+		if (!window.matchMedia('(min-width: 992px)').matches) return;
 		var template_nav_cate = $('script[data-template="header_nav_cate"]').html();
 		if (template_nav_cate) {
 			$('div[data-section="header_nav_cate"]').html(template_nav_cate);
 		}
 		awe_lazyloadImage();
 		$(this).toggleClass("active");
+		$(this).attr('aria-expanded', $(this).hasClass('active') ? 'true' : 'false');
 		$('.sudes-list-cate').toggleClass('active');
 		$('.sudes-main-header').toggleClass('actimenucol');
 		$('.mobile-nav-overflow').toggleClass('open');
@@ -79,10 +81,11 @@ if (wDWs >= 992) {
 		});
 	}); 
 	$('.mobile-nav-overflow').on('click', function(){
-		$('.js-menu-toggle').removeClass('active');
+		if (!window.matchMedia('(min-width: 992px)').matches) return;
+		$('.js-menu-toggle').removeClass('active').attr('aria-expanded', 'false');
 		$('.sudes-list-cate').removeClass('active');
 		$('.sudes-main-header').removeClass('actimenucol');
-		$(this).toggleClass('open');
+		$(this).removeClass('open');
 	});
 	$('.header .header-menu').mouseover(function () {
 		$('script[data-template="header_nav"]').each(function () {
@@ -350,88 +353,47 @@ function callback_toggle() {
 		e.stopPropagation();
 	});
 }
-if (wDWs >= 992) {
-	/* T-103 (2026-09-11): mốc 992 phải khớp matchMedia('(min-width: 992px)') dùng ở dưới
-	   (đều bao gồm đúng 992) — trước đây dùng ">" khiến ở đúng 992px hàm horizontalNav()
-	   không được định nghĩa, nhưng $(document).ready vẫn gọi nó (matchMedia khớp 992px) ->
-	   "horizontalNav is not a function" (xác nhận qua Playwright pageerror thật), làm toàn bộ
-	   phần còn lại của handler (bind nút #prev/#next cuộn ngang) không chạy -> mục nav bị che
-	   khuất bởi overflow:hidden mà không có cách nào cuộn tới (TPCN/KHUYẾN MÃI/BLOG kẹt ở 992px). */
-	function horizontalNav() {
-		return {
-			wrapper: $('.navigation-horizontal'),
-			navigation: $('.navigation-horizontal .nav'),
-			item: $('.navigation-horizontal .nav .nav-item'),
-			totalStep: 0,
-			onCalcNavOverView: function(){
-				let itemHeight = this.item.eq(0).outerWidth(),
-					lilength = this.item.length,
-					total = 0;
-				for (var i = 0; i < lilength; i++) {
-					itemHeight = this.item.eq(i).outerWidth();
-					total += itemHeight;
-				}
-				return Math.ceil(total)
-			},
-			onCalcTotal: function(){
-				let  navHeight = this.navigation.width();
-				return Math.ceil(navHeight)
-			},
-			init:function(){
-				this.totalStep = this.onCalcNavOverView();
-				this.totalTo = this.onCalcTotal();
-				if(this.totalStep > this.totalTo){
-					this.wrapper.addClass('overflow')
-				} 
-			}
-		}	
-	}
-}
-$(document).ready(function ($) {
-	if(window.matchMedia('(min-width: 992px)').matches){
-		horizontalNav().init()
-		$(window).on('resize',()=>horizontalNav().init())
-		var margin_left = 0;
+// Recalculate navigation when it switches between the main header and fixed menu.
+$(document).ready(function () {
+	const nav = document.querySelector('.navigation-horizontal #nav');
+	if (!nav) return;
+	const wrapper = nav.closest('.navigation-horizontal');
+	const viewport = nav.parentElement;
+	const desktop = window.matchMedia('(min-width: 992px)');
+	let marginLeft = 0;
+	let maxOffset = 0;
 
-		const updateButtonState = () => {
-			const maxMargin = getMaxMargin();
-
-			if (margin_left >= 0) {
-				$('#prev').addClass('unactive');
-			} else {
-				$('#prev').removeClass('unactive');
-			}
-
-			if (margin_left <= maxMargin) {
-				$('#next').addClass('unactive');
-			} else {
-				$('#next').removeClass('unactive');
-			}
-		};
-
-		const animateMargin = (amount) => {
-			margin_left = Math.min(0, Math.max(getMaxMargin(), margin_left + amount));
-			$('ul#nav').animate({
-				'margin-left': margin_left
-			}, 300, updateButtonState); // Gọi sau animation hoàn tất
-		};
-
-		const getMaxMargin = () => {
-			return $('ul#nav').parent().width() - $('ul#nav')[0].scrollWidth;
-		};
-
-		$('#prev').on('click', function (e) {
-			e.preventDefault();
-			animateMargin(290);
-		});
-		$('#next').on('click', function (e) {
-			e.preventDefault();
-			animateMargin(-290);
-		});
-
-		// Gọi khi load trang
-		updateButtonState();
-	}
+	const updateButtons = () => {
+		$('#prev').toggleClass('unactive', marginLeft >= 0);
+		$('#next').toggleClass('unactive', marginLeft <= -maxOffset);
+	};
+	const updateNavigation = () => {
+		if (!desktop.matches) {
+			wrapper.classList.remove('overflow');
+			marginLeft = 0;
+			$(nav).stop(true).css('margin-left', 0);
+			return;
+		}
+		const contentWidth = Array.from(nav.children).reduce((width, item) => width + $(item).outerWidth(true), 0);
+		// Measure once without controls; then account for their width if needed.
+		wrapper.classList.remove('overflow');
+		wrapper.classList.toggle('overflow', contentWidth > viewport.clientWidth + 1);
+		maxOffset = Math.max(0, Math.ceil(contentWidth - viewport.clientWidth));
+		marginLeft = Math.max(-maxOffset, Math.min(0, marginLeft));
+		$(nav).stop(true).css('margin-left', marginLeft);
+		updateButtons();
+	};
+	$('#prev, #next').on('click', function (event) {
+		event.preventDefault();
+		marginLeft = Math.min(0, Math.max(-maxOffset, marginLeft + (this.id === 'prev' ? 290 : -290)));
+		$(nav).stop(true).animate({ 'margin-left': marginLeft }, 200, updateButtons);
+	});
+	const observer = new ResizeObserver(updateNavigation);
+	observer.observe(wrapper);
+	observer.observe(viewport);
+	$(window).on('resize', updateNavigation);
+	if (document.fonts) document.fonts.ready.then(updateNavigation);
+	updateNavigation();
 });
 {%if settings.header_search_suggest or settings.header_search_smart%}
 $(document).ready(function(){

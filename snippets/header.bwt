@@ -9,15 +9,10 @@
 </div>
 {%endif%}
 {%- comment -%}
-  T-107 (2026-09-11) — người dùng yêu cầu review lại header.bwt, chia rõ 2 phần TOP/MAIN cho dễ
-  đọc/bảo trì. KHÔNG đổi tên class hiện có (.top-main-header/.box-hearder/.header-menu — bị tham
-  chiếu ở hàng trăm chỗ trong assets/global_core.scss.bwt, đổi tên = rủi ro vỡ CSS toàn site).
-  Thêm ranh giới rõ ràng bằng comment để dễ định vị khi sửa sau này:
-    PHẦN 1 — HEADER TOP  (.top-main-header): thanh tiện ích xanh — slider khuyến mãi, ngôn ngữ,
-             hotline, tài khoản. Ẩn hoàn toàn trên mobile (≤991px).
-    PHẦN 2 — HEADER MAIN (.box-hearder, chứa cả .header-menu đã gộp từ T-104): logo, danh mục +
-             menu chính, tìm kiếm, wishlist/giỏ hàng — nền trắng, đây là phần "header" người dùng
-             nhìn thấy thường trực kể cả khi cuộn (dùng chung 1 hàng ở desktop >=992px).
+  Header top: khuyến mãi, ngôn ngữ, hotline và tài khoản.
+  Header main: logo, menu, tìm kiếm và giỏ hàng nằm cùng một hàng trên desktop.
+  Khi cuộn qua header, menu tách thành thanh cố định và mới hiện nút Danh mục.
+  Giữ một menu duy nhất để dùng chung điều hướng desktop và drawer mobile.
 {%- endcomment -%}
 <header class="header">
 	<div class="main-header">
@@ -106,10 +101,10 @@
 				</div>
 			</div>
 			</div>
-			{%- comment -%} ============ PHẦN 2 — HEADER MAIN (logo + danh mục + menu + tìm kiếm + giỏ hàng, nền trắng) ============ {%- endcomment -%}
+			{%- comment -%} ============ PHẦN 2 — HEADER MAIN (logo + menu + tìm kiếm + giỏ hàng, nền trắng) ============ {%- endcomment -%}
 			<div class="box-hearder">
 		<div class="container">
-				<div class="row align-items-center">
+				<div class="row d-flex align-items-center pc-header-row">
 					<div class="col-6 col-xl-3 col-lg-3 col-md-4 header-logo">
 						<a href="/" class="logo-wrapper pc-logo-master" title="{{settings.store_name | default: store.name}}">
 							{%- comment -%}
@@ -124,19 +119,7 @@
 							{% include 'logo-master-svg' %}
 						</a>
 					</div>
-					{%- comment -%}
-					  T-104 (2026-09-11) — người dùng yêu cầu trực tiếp: "bỏ đi header-menu, tích hợp
-					  vào header, top-header xanh, header trắng, chèn menu vào header luôn". Chuyển
-					  NGUYÊN VẸN (không duplicate) khối .header-menu (Danh mục + site-nav mega-menu +
-					  toàn bộ phần drawer mobile bên trong) từ hàng riêng thành 1 flex-item chung hàng
-					  với .box-hearder. Giữ nguyên mọi id/class bên trong (#nav, .sudes-list-cate...)
-					  nên KHÔNG cần đổi JS (mobile hamburger vẫn document.querySelector('.header-menu')
-					  đúng 1 instance, .current vẫn toggle đúng; position:fixed của drawer mobile tính
-					  theo viewport, không phụ thuộc độ sâu lồng DOM — xác nhận an toàn trước khi làm).
-					  Nếu nav không đủ chỗ ở 1 số độ rộng desktop hẹp: dùng cơ chế cuộn ngang có sẵn
-					  (.navigation-horizontal.overflow + #prev/#next, đã sửa lỗi off-by-one ở T-103) —
-					  không cần logic mới, không phá layout.
-					{%- endcomment -%}
+					{%- comment -%} Menu dùng chung: nằm trong header chính, tách ra khi cuộn trên desktop. {%- endcomment -%}
 					<div class="header-menu">
 						<div class="container">
 							<div class="navigation-horizontal">
@@ -157,10 +140,10 @@
 								</div>
 								<div class="row">
 									<div class="col-lg-2 col-sm-12 col-xs-12 col-12 sudes-cate-header">
-										<div class="title js-menu-toggle">
+										<button type="button" class="title js-menu-toggle" aria-expanded="false" aria-controls="header-category-menu">
 											<span class="line-clamp line-clamp-1">{{settings.header_nav_title}}</span>
 											<svg class="scg_drop" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.7138 16.7077L21.7048 7.71374C22.0984 7.31909 22.0984 6.6797 21.7048 6.28406C21.3111 5.88941 20.6717 5.88941 20.2781 6.28406L12.0005 14.5646L3.72293 6.28505C3.32928 5.89041 2.68989 5.89041 2.29524 6.28505C1.90159 6.6797 1.90159 7.32009 2.29524 7.71474L11.2861 16.7087C11.6757 17.0973 12.3251 17.0973 12.7138 16.7077Z" fill="currentColor"></path></svg>
-										</div>
+										</button>
 										{%include 'bean-menu-cate'%}
 									</div>
 									<div class="col-lg-10 col-sm-12 col-xs-12 col-12 sudes-main-header">
@@ -381,46 +364,55 @@
 </script>
 <script>
 	const header = document.querySelector('header.header');
-	let headerHeight = header.offsetHeight;
-	let resizeWindow = window.innerWidth;
-	let offsetStickyHeader = header.offsetHeight;
-	let offsetStickyDown = 0;
+	let offsetStickyHeader = 0;
 	let resizeTimer;
-
+	const desktopHeader = window.matchMedia('(min-width: 992px)');
 	const tabLinks = document.querySelectorAll('.tab-link');
 	const tabContents = document.querySelectorAll('.tab-content-mb');
 
-	const handleResize = () => {
-		if (resizeTimer) clearTimeout(resizeTimer);
-
-		resizeTimer = setTimeout(() => {
-			const newWidth = window.innerWidth;
-
-			if (resizeWindow !== newWidth) {
-				header.classList.remove('hSticky');
-				header.style.minHeight = '';
-
-				headerHeight = header.offsetHeight;
-				header.style.minHeight = `${headerHeight}px`;
-
-				resizeWindow = newWidth;
-			}
-		}, 200);
+	const closeHeaderCategories = () => {
+		const trigger = header.querySelector('.js-menu-toggle');
+		if (!trigger || !trigger.classList.contains('active')) return;
+		trigger.classList.remove('active');
+		trigger.setAttribute('aria-expanded', 'false');
+		header.querySelector('.sudes-list-cate')?.classList.remove('active');
+		header.querySelector('.sudes-main-header')?.classList.remove('actimenucol');
+		header.querySelector('.mobile-nav-overflow')?.classList.remove('open');
 	};
 
 	const handleScroll = () => {
-		const scrollTop = window.scrollY;
-
-		if (scrollTop > offsetStickyHeader && scrollTop > offsetStickyDown) {
-			header.classList.add('hSticky');
-		}
-
-		if (scrollTop <= offsetStickyDown && scrollTop <= offsetStickyHeader) {
-			header.classList.remove('hSticky');
-		}
-
-		offsetStickyDown = scrollTop;
+		const sticky = desktopHeader.matches && window.scrollY > offsetStickyHeader;
+		if (header.classList.contains('hSticky') === sticky) return;
+		closeHeaderCategories();
+		header.classList.toggle('hSticky', sticky);
 	};
+
+	const measureHeader = () => {
+		header.classList.remove('hSticky');
+		header.style.minHeight = '';
+		const headerHeight = header.offsetHeight;
+		offsetStickyHeader = header.getBoundingClientRect().top + window.scrollY + headerHeight;
+		if (desktopHeader.matches) header.style.minHeight = headerHeight + 'px';
+		else closeHeaderCategories();
+		handleScroll();
+	};
+
+	const handleResize = () => {
+		clearTimeout(resizeTimer);
+		resizeTimer = setTimeout(measureHeader, 150);
+	};
+
+	header.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape') {
+			const trigger = header.querySelector('.js-menu-toggle.active');
+			closeHeaderCategories();
+			if (trigger) trigger.focus();
+		}
+	});
+	window.addEventListener('load', measureHeader);
+	window.addEventListener('pageshow', measureHeader);
+	if (document.fonts) document.fonts.ready.then(measureHeader);
+	measureHeader();
 
 	const handleTabClick = (tabLink) => {
 		const tabId = tabLink.dataset.tab;
@@ -445,7 +437,7 @@
 	};
 
 	window.addEventListener('resize', handleResize);
-	window.addEventListener('scroll', handleScroll);
+	window.addEventListener('scroll', handleScroll, { passive: true });
 
 	tabLinks.forEach((tabLink) => {
 		tabLink.addEventListener('click', () => handleTabClick(tabLink));
