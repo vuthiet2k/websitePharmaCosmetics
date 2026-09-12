@@ -50,14 +50,26 @@
 			</div>
 		</div>
 
+		{%- comment -%}
+		  T-134 (2026-09-12) — nội dung đồng ý trước đây chỉ nhắc "Chính sách bảo mật". Luật Bảo vệ
+		  dữ liệu cá nhân 91/2025/QH15 yêu cầu sự đồng ý phải RÕ ràng về việc xử lý dữ liệu cá nhân,
+		  nên nêu đích danh cả Điều khoản sử dụng lẫn việc xử lý dữ liệu, kèm link tới đúng 2 trang.
+		{%- endcomment -%}
 		<label class="pc-auth-checkbox">
 			<input type="checkbox" id="pc-auth-terms" required>
-			<span>Tôi đã đọc và đồng ý với <a href="/chinh-sach-bao-mat" target="_blank" rel="noopener">Chính sách bảo mật</a> của {{ store.name }}.</span>
+			<span>Tôi đã đọc, đồng ý với <a href="/dieu-khoan" target="_blank" rel="noopener">Điều khoản sử dụng</a> và đồng ý cho {{ store.name }} xử lý dữ liệu cá nhân của tôi theo <a href="/chinh-sach-bao-mat" target="_blank" rel="noopener">Chính sách bảo mật</a> (Luật 91/2025/QH15).</span>
 		</label>
 
 		<button type="submit" value="Đăng ký" class="pc-auth-btn-primary">Tạo tài khoản</button>
 		{% endform %}
 
+		{%- comment -%}
+		  T-134 — BUG THẬT (đo thật: divider hiện, số nút social = 0): social_login.facebook_button /
+		  google_button là đối tượng do Sapo render, RỖNG khi cửa hàng chưa bật đăng nhập mạng xã hội.
+		  Trước đây khối này render vô điều kiện nên khách thấy đúng dòng chữ "hoặc đăng ký qua" rồi
+		  bên dưới TRỐNG TRƠN. Chỉ hiện khi thật sự có nút để hiện.
+		{%- endcomment -%}
+		{% if social_login.facebook_button != blank or social_login.google_button != blank %}
 		<div class="pc-auth-social">
 			<div class="pc-auth-social__divider"><span>hoặc đăng ký qua</span></div>
 			{{ social_login.script }}
@@ -66,6 +78,7 @@
 				{{ social_login.google_button }}
 			</div>
 		</div>
+		{% endif %}
 	</div>
 </div>
 

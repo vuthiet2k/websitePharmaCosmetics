@@ -4268,3 +4268,37 @@ a.product-recommend-link {
     }
   }
 }
+
+/* ══ T-134 (2026-09-12): phân cấp cặp nút mua đang bị NGƯỢC ═══════════════════
+   Đo thật computed style trên /kem-duong-retinol-0-3-peptide:
+     "MUA NGAY"          → nền rgb(60,179,113)  = --mainColor (xanh nhạt hơn)
+     "THÊM VÀO GIỎ HÀNG" → nền rgb(31,90,59)    = --subColor  (xanh ĐẬM hơn)
+   Nút PHỤ đang nặng hơn nút CHÍNH nên mắt bị hút vào nút phụ trước — đúng như
+   báo cáo audit nêu "2 sắc thái xanh không có phân cấp chính-phụ".
+   Sửa: nút phụ chuyển sang Secondary Outline (nền trắng, viền + chữ xanh), nút
+   chính giữ solid + thêm bóng nhẹ để nổi rõ là hành động chính.
+   Đặt ở cuối file vì rule gốc .btn_add_cart được khai báo ở HAI khối nested khác
+   nhau (2 breakpoint) — override 1 chỗ ở đây gọn hơn sửa rải rác 2 nơi. */
+.product-detail,
+.details-product {
+  .btn-mua .box_btn_acc {
+    .btn_add_cart {
+      border: 1.5px solid var(--mainColor, #3CB371) !important;
+      background-color: #fff !important;
+      color: var(--mainColorDark, #1F5A3B) !important;
+      box-shadow: none !important;
+      i { color: var(--mainColor, #3CB371); }
+      &:hover {
+        background-color: var(--color-mint-subtle, #E8F8EE) !important;
+        border-color: var(--mainColorDark, #1F5A3B) !important;
+        color: var(--mainColorDark, #1F5A3B) !important;
+        opacity: 1;
+      }
+    }
+    .buynow,
+    .btn-buyNow {
+      box-shadow: 0 6px 16px rgba(60, 179, 113, 0.32);
+      &:hover { box-shadow: 0 8px 20px rgba(31, 90, 59, 0.38); }
+    }
+  }
+}

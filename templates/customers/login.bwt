@@ -68,6 +68,12 @@
 		{% endform %}
 	</div>
 
+	{%- comment -%}
+	  T-134 (2026-09-12) — xem ghi chú cùng mã ở templates/customers/register.bwt: khối social chỉ
+	  render khi Sapo thật sự trả về nút, tránh cảnh dòng chữ "hoặc đăng nhập qua" đứng trơ trọi
+	  không có nút nào bên dưới.
+	{%- endcomment -%}
+	{% if social_login.facebook_button != blank or social_login.google_button != blank %}
 	<div class="pc-auth-social">
 		<div class="pc-auth-social__divider"><span>hoặc đăng nhập qua</span></div>
 		{{ social_login.script }}
@@ -76,6 +82,7 @@
 			{{ social_login.google_button }}
 		</div>
 	</div>
+	{% endif %}
 </div>
 
 <script>
