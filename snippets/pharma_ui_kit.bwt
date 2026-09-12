@@ -549,30 +549,25 @@
   }
 
   {%- comment -%}
-    T-127 (2026-09-12) — nới trần container CHỈ CỦA HEADER ở màn rộng (xem lý do đo đạc ở block
-    1200px phía trên). Không đụng .container của thân trang.
+    T-136 (2026-09-12) — người dùng báo: trên laptop thanh header chạy tràn sát mép màn hình,
+    KHÔNG thẳng hàng với lưới 1440px của thân trang. Đó chính là hệ quả của cách vá tạm ở T-127:
+    hồi đó phải nới container header (gần sát mép ở 1400-1599px, 1560px từ 1600px) để menu 6 mục
+    đủ chỗ, hết tràn + hết 2 nút mũi tên. Đo lại lần này: khoá container về ĐÚNG 1440px thì menu
+    VẪN vừa (nav cần 904 / có 904 ở cả 1440, 1600 và 1920px) — tức ràng buộc cũ không còn cần
+    nữa. Gộp 2 tầng media của T-127 thành 1 rule duy nhất: min(1440px, 100vw - 40px) — khoá đúng
+    lưới 1440 trên màn lớn và tự co sát mép trên màn hẹp, header thẳng hàng với thân trang.
   {%- endcomment -%}
-  @media (min-width: 1400px) and (max-width: 1599px) {
-    {%- comment -%}
-      T-127 — dải 1200-1599px vẫn thiếu ~163px để menu vừa 1 hàng sau khi đã thu ô search.
-      KHÔNG ẩn ô search ở dải này (T-107 đã chốt: ẩn search là lỗi người dùng phàn nàn trực tiếp
-      "đang mất mục search") → thay vào đó cho riêng thanh header chạy gần sát mép màn hình và hạ
-      cỡ chữ menu xuống 14px. Thân trang vẫn giữ container 1280px như cũ.
-    {%- endcomment -%}
+  @media (min-width: 1200px) {
     header.header .main-header > .container,
     header.header .box-hearder > .container {
-      max-width: calc(100vw - 40px) !important;
+      max-width: min(1440px, calc(100vw - 40px)) !important;
     }
+  }
+  @media (min-width: 1400px) and (max-width: 1599px) {
     header.header .box-hearder .header-menu .sudes-main-header #nav > .nav-item > a {
       font-size: 14px;
       padding-left: 6px;
       padding-right: 6px;
-    }
-  }
-  @media (min-width: 1600px) {
-    header.header .main-header > .container,
-    header.header .box-hearder > .container {
-      max-width: 1560px !important;
     }
   }
 

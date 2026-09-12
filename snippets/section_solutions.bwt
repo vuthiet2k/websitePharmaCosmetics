@@ -83,18 +83,43 @@
           {%- capture icon_key -%}home_solutions_{{i}}_icon{%- endcapture -%}
           {%- capture label_key -%}home_solutions_{{i}}_label{%- endcapture -%}
           {%- capture url_key -%}home_solutions_{{i}}_url{%- endcapture -%}
+          {%- comment -%}
+            T-137 (2026-09-12) — người dùng yêu cầu thẻ giải pháp kể chuyện đầy đủ thay vì chỉ
+            icon + nhãn: Ảnh → Tag hoạt chất → Tiêu đề vấn đề → Câu giải pháp → Nút xem chi tiết.
+            3 trường mới (_actives, _desc, _link) đọc từ lớp schema-admin như các trường cũ, để
+            người quản trị sửa nội dung trong Sapo Admin, KHÔNG hardcode vào template.
+            _link cho phép trỏ thẳng tới trang danh mục (vd /tri-mun) thay vì tìm kiếm theo chữ —
+            đi thẳng tới đúng trang bao giờ cũng tốt hơn ném khách vào ô tìm kiếm.
+          {%- endcomment -%}
+          {%- capture actives_key -%}home_solutions_{{i}}_actives{%- endcapture -%}
+          {%- capture desc_key -%}home_solutions_{{i}}_desc{%- endcapture -%}
+          {%- capture link_key -%}home_solutions_{{i}}_link{%- endcapture -%}
           {%- unless settings[enable_key] == false or settings[enable_key] == 'false' -%}
-          <a href="/search?query={{ settings[url_key] | url_encode }}&type=product" class="pc-solution-card">
+          {%- if settings[link_key] != blank -%}
+            {%- assign sol_href = settings[link_key] -%}
+          {%- else -%}
+            {%- capture sol_href -%}/search?query={{ settings[url_key] | url_encode }}&type=product{%- endcapture -%}
+          {%- endif -%}
+          <a href="{{ sol_href }}" class="pc-solution-card{% if settings[image_key] != blank %} pc-solution-card--rich{% endif %}" title="{{ settings[label_key] }}">
             {%- if settings[image_key] != blank -%}
-            <div class="pc-solution-icon">
+            <div class="pc-solution-thumb">
               <img src="{{ settings[image_key] }}" alt="{{ settings[label_key] }}" loading="lazy">
+              {%- if settings[actives_key] != blank -%}
+              <span class="pc-solution-actives notranslate" translate="no">{{ settings[actives_key] }}</span>
+              {%- endif -%}
             </div>
             {%- elsif settings[icon_key] != blank -%}
             <div class="pc-solution-icon"><i class="{{ settings[icon_key] }}" aria-hidden="true"></i></div>
             {%- else -%}
             <div class="pc-solution-icon"><i class="fas fa-spa" aria-hidden="true"></i></div>
             {%- endif -%}
-            <span class="pc-solution-label">{{ settings[label_key] }}</span>
+            <div class="pc-solution-body">
+              <span class="pc-solution-label">{{ settings[label_key] }}</span>
+              {%- if settings[desc_key] != blank -%}
+              <p class="pc-solution-desc">{{ settings[desc_key] }}</p>
+              <span class="pc-solution-action">Khám phá phác đồ <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+              {%- endif -%}
+            </div>
           </a>
           {%- endunless -%}
         {%- endfor -%}

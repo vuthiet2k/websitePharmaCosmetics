@@ -3779,3 +3779,254 @@ a.pc-treatment-item:hover .pc-treatment-number { border-color: var(--mainColor);
 }
 
 {%endif%}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   T-137 (2026-09-12) — Người dùng yêu cầu 4 việc trên màn laptop. Phần này xử
+   lý 2 việc thuộc thân trang (header xử lý ở snippets/pharma_ui_kit.bwt).
+
+   ĐO THẬT trước khi sửa (Playwright computed style, 1440px):
+     • .pc-flashsale        → background rgb(254,242,242)  = #FEF2F2 hồng kem
+     • .pc-flashsale__header→ background rgb(60,179,113)   = #3CB371 xanh chói
+       → đúng cặp màu "chọi nhau" mà người dùng mô tả.
+     • .pc-solutions-grid   → grid-template-columns 294.5px × 4 = 4 CỘT cho 6 thẻ
+       → hàng 1 bốn thẻ, hàng 2 hai thẻ, lệch hẳn như người dùng nói.
+
+   Bộ mã người dùng gửi dùng class .section-flash-sale-clinical /
+   .section-solutions-clinical — KHÔNG tồn tại trong theme này. Giữ nguyên tinh
+   thần thiết kế (pine dark + đếm ngược glassmorphism + số vàng ánh kim + lưới
+   3×2) nhưng ánh xạ vào ĐÚNG class thật, để không phải viết lại markup.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Flash Sale: bỏ hồng kem + xanh chói, chuyển Pine Dark y khoa ── */
+.pc-flashsale {
+  background: linear-gradient(180deg, #0F2318 0%, #163022 100%) !important;
+  border-top: 1px solid rgba(223, 186, 115, 0.2);
+  border-bottom: 1px solid rgba(223, 186, 115, 0.2);
+
+  /* Thanh header trong section: bỏ nền xanh chói, dùng đường kẻ vàng mảnh */
+  .pc-flashsale__header {
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 14px;
+  }
+
+  /* Tiêu đề + nhãn trên nền tối */
+  .pc-flashsale__title,
+  .pc-section-title,
+  h2 {
+    color: #fff !important;
+  }
+  .pc-section-subtitle,
+  .pc-flashsale__subtitle {
+    color: #A7F3D0 !important;
+  }
+
+  .pc-flashsale__countdown-label {
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: var(--fs-xs);
+  }
+
+  /* Hộp đếm ngược: glassmorphism, số vàng ánh kim (markup .block-timer > p > b + span
+     do plugin đếm ngược sinh ra — style theo descendant, không đổi JS) */
+  .pc-flashsale__countdown-timer .block-timer {
+    min-width: 48px;
+    padding: 6px 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    text-align: center;
+
+    p, p b {
+      color: var(--color-gold-sand, #DFBA73) !important;
+      font-weight: 800;
+      line-height: 1.1;
+      margin: 0;
+    }
+    span {
+      display: block;
+      margin-top: 2px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.65);
+    }
+  }
+
+  /* Link "Xem tất cả": viền pill, tách khỏi mép phải để không bị nút Zalo nổi che */
+  .pc-flashsale__viewall,
+  .pc-flashsale__header a[href*="flash"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    margin-right: 8px;
+    border: 1.5px solid var(--mainColor, #3CB371);
+    border-radius: 999px;
+    color: #34D399;
+    font-size: var(--fs-base);
+    font-weight: 600;
+    transition: all 0.25s;
+
+    &:hover {
+      background: var(--mainColor, #3CB371);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+  }
+}
+
+/* ── 2. Lưới "Giải pháp cho từng vấn đề": 4 cột (4+2 lệch) → 3×2 cân đối ── */
+@media (min-width: 1024px) {
+  .pc-solutions-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+@media (min-width: 577px) and (max-width: 1023px) {
+  .pc-solutions-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+@media (max-width: 576px) {
+  .pc-solutions-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* T-137 (tiếp) — sau khi đổi nền section sang pine dark, đo lại thấy còn 2 mảng
+   đỏ #DC2626 (--accent-flash-red) của thiết kế cũ lộ ra trên nền tối:
+     • .pc-flashsale__countdown-timer  → cả dải nền đỏ nằm SAU các hộp kính
+     • ảnh badge "FLASH SALE"          → khối nền đỏ quanh ảnh
+   Cho trong suốt để chỉ còn hộp kính + số vàng nổi trên nền pine. */
+.pc-flashsale {
+  .pc-flashsale__countdown-timer {
+    background: transparent !important;
+    padding: 0 !important;
+    gap: 6px;
+  }
+  .pc-flashsale__header img {
+    background: transparent !important;
+  }
+  /* Link "Xem tất cả": bỏ gạch chân kiểu link thường, giữ dạng pill viền */
+  .pc-flashsale__viewall,
+  .pc-flashsale__header a[href*="flash"] {
+    text-decoration: none !important;
+  }
+}
+
+/* T-137 (tiếp) — 2 nhãn còn thừa hưởng màu cam/đỏ sale của bản nền sáng cũ
+   ("FLASH SALE" và "Xem tất cả"): trên nền pine dark chúng lạc tông so với bảng
+   màu vàng-kim/mint đã dùng cho đếm ngược. Đưa về đúng cặp màu của section. */
+.pc-flashsale {
+  .pc-flashsale__title,
+  .pc-flashsale__header .pc-flashsale__label,
+  .pc-flashsale__header > a:first-of-type {
+    color: var(--color-gold-sand, #DFBA73) !important;
+  }
+  .pc-flashsale__viewall,
+  .pc-flashsale__header a[href*="flash"] {
+    color: #34D399 !important;
+    i, svg { color: currentColor; }
+  }
+}
+
+/* T-137 — thẻ giải pháp dạng "kể chuyện": Ảnh → tag hoạt chất → tiêu đề → câu
+   giải pháp → CTA (markup ở snippets/section_solutions.bwt). Chỉ áp cho thẻ có
+   ảnh (.pc-solution-card--rich); thẻ chỉ-icon giữ nguyên kiểu cũ để không vỡ
+   các nơi khác đang dùng chung class. */
+.pc-solution-card--rich {
+  display: flex;
+  flex-direction: column;
+  padding: 0 !important;
+  overflow: hidden;
+  text-align: left;
+  border: 1px solid var(--color-border-clinical, #E2E8F0);
+  border-radius: 16px;
+  background: #fff;
+  transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px -10px rgba(15, 35, 24, .12);
+    border-color: var(--mainColor, #3CB371);
+    .pc-solution-thumb img { transform: scale(1.05); }
+    .pc-solution-action { color: var(--color-brand-green, #267348); }
+  }
+
+  .pc-solution-thumb {
+    position: relative;
+    height: 160px;
+    overflow: hidden;
+    background: #F1F5F9;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform .5s ease;
+    }
+  }
+
+  .pc-solution-actives {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(15, 35, 24, .85);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: var(--color-gold-sand, #DFBA73);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .02em;
+  }
+
+  .pc-solution-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 18px 20px 20px;
+  }
+
+  span.pc-solution-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: var(--fs-md);
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--color-brand-deep, #0F2318);
+  }
+
+  .pc-solution-desc {
+    flex: 1;
+    margin: 0 0 14px;
+    font-size: var(--fs-base);
+    line-height: 1.6;
+    color: var(--color-text-muted, #64748B);
+  }
+
+  .pc-solution-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--fs-base);
+    font-weight: 700;
+    color: var(--mainColor, #3CB371);
+    transition: color .2s ease;
+  }
+}
+
+/* T-137 — .pc-solution-card gốc căn giữa (kiểu thẻ icon), thẻ dạng kể chuyện
+   cần căn trái để mắt đọc theo cột: ảnh → tag → tiêu đề → mô tả → CTA. */
+.pc-solution-card--rich,
+.pc-solution-card--rich span.pc-solution-label,
+.pc-solution-card--rich .pc-solution-desc {
+  text-align: left !important;
+}
