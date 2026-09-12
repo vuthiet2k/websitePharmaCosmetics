@@ -247,10 +247,35 @@ const STATIC_PAGE_DEMO_META = {
   'lien-he':               { name: 'Liên hệ', description: 'Thông tin liên hệ được quản lý qua Sapo Admin › Trang nội dung. Đây là bản xem trước cục bộ (dev-server).' },
 };
 
+// T-125 (2026-09-12): báo cáo audit "Breadcrumb lộ raw slug 'dieu-tri-chuyen-nghiep'" — xác nhận
+// có thật. Slug này KHÔNG nằm trong STATIC_PAGE_DEMO_META (nó là danh mục do menu điều hướng trỏ
+// tới, không phải trang tĩnh) nên rơi về nhánh "name = raw slug". Không hardcode thêm từng slug:
+// lấy thẳng nhãn tiếng Việt CÓ DẤU mà chính menu đang hiển thị (data/navigation.js) — nguồn sự
+// thật duy nhất, tự đúng cho mọi slug placeholder khác do menu sinh ra. Không thể suy tên có dấu
+// từ slug không dấu, nên đây là cách duy nhất đúng ngoài việc khai báo tay.
+let _navTitleBySlug = null;
+function getNavTitleBySlug(handle) {
+  if (!_navTitleBySlug) {
+    _navTitleBySlug = new Map();
+    let linklists;
+    try { ({ linklists } = require('./navigation')); } catch (e) { linklists = null; }
+    const visit = (link) => {
+      if (link && typeof link.url === 'string' && link.title) {
+        const seg = link.url.replace(/^\/+|\/+$/g, '');
+        if (seg && !seg.includes('/') && !_navTitleBySlug.has(seg)) _navTitleBySlug.set(seg, link.title);
+      }
+      (link && link.links ? link.links : []).forEach(visit);
+    };
+    Object.values(linklists || {}).forEach((ll) => (ll && ll.links ? ll.links : []).forEach(visit));
+  }
+  return _navTitleBySlug.get(handle) || null;
+}
+
 function makeFallbackCollection(handle) {
   const demoMeta = STATIC_PAGE_DEMO_META[handle];
+  const navTitle = demoMeta ? null : getNavTitleBySlug(handle);
   return {
-    id: 0, name: demoMeta ? demoMeta.name : handle, alias: handle, url: `/${handle}`,
+    id: 0, name: demoMeta ? demoMeta.name : (navTitle || handle), alias: handle, url: `/${handle}`,
     description: demoMeta ? demoMeta.description : '', products_count: products.length,
     products: products.slice(0, 8),
     image: null, all_vendors: [], all_types: [],
