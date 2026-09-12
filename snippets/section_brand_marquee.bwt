@@ -7,7 +7,13 @@
 {%- assign brand_ll = linklists[settings.home_brand_menu] -%}
 {%- if settings.home_brand_menu != blank and brand_ll and brand_ll.links.size > 0 -%}
   {%- assign marquee_duration = brand_ll.links.size | times: 3 -%}
+  {%- comment -%}
+    T-145 (2026-09-12) — nguoi dung bao dai thuong hieu "troi noi vo nghia": no nam kep giua 2
+    khoi noi dung lon ma khong co nhan dan nhap nen khong ai biet day la gi. Them 1 dong nhan
+    ngan phia tren dai chay (doc tu lop schema-admin de sua duoc trong Sapo Admin).
+  {%- endcomment -%}
   <section class="bg-white border-y border-gray-100 py-6 overflow-hidden">
+    <p class="pc-marquee-lead">{{ settings.home_brand_lead | default: 'Phân phối chính ngạch từ các thương hiệu dược mỹ phẩm quốc tế' }}</p>
     <div class="pc-marquee-track" style="--marquee-duration: {{ marquee_duration }}s">
       {%- for link in brand_ll.links -%}
         {%- capture image_key -%}home_brand_marquee_image_{{ forloop.index }}{%- endcapture -%}
@@ -29,6 +35,7 @@
   {%- assign vendor_count = store.vendors | size -%}
   {%- assign marquee_duration = vendor_count | times: 3 -%}
   <section class="bg-white border-y border-gray-100 py-6 overflow-hidden">
+    <p class="pc-marquee-lead">{{ settings.home_brand_lead | default: 'Phân phối chính ngạch từ các thương hiệu dược mỹ phẩm quốc tế' }}</p>
     <div class="pc-marquee-track" style="--marquee-duration: {{ marquee_duration }}s">
       {%- for vendor in store.vendors -%}
         <a href="/collections/all?q=vendor:({{ vendor | url_encode }})&page=1&view=grid" class="pc-marquee-brand px-6 text-sm font-semibold text-gray-400 hover:text-clinical-700 transition flex-shrink-0">{{ vendor | upcase }}</a>

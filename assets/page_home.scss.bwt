@@ -4288,3 +4288,50 @@ a.pc-treatment-item:hover .pc-treatment-number { border-color: var(--mainColor);
     overflow: hidden;
   }
 }
+
+/* ══ T-145 (2026-09-12): khối "Thấu hiểu làn da bằng khoa học" ═════════════
+   Người dùng báo card trông như "thẻ ghi chú văn bản" vì thiếu hình ảnh đại
+   diện. ĐO THẬT: cả 3 card đều KHÔNG có <img> (settings ing_1/2/3_icon đều
+   trống) nên rơi về icon SVG 32px nằm trong ô 60px ở góc trên trái — đúng là
+   quá nhỏ để làm điểm neo thị giác cho một card cao 311px.
+   Chưa có ảnh hoạt chất thật để dùng (và KHÔNG bịa ảnh sản phẩm không liên
+   quan), nên giải pháp là nâng chính ô biểu tượng thành DẢI ĐẦU CARD chạy hết
+   bề ngang, nền chuyển sắc theo tông hoạt chất, glyph phóng to — vẫn là đồ hoạ
+   thật của theme nhưng đủ sức nặng để dẫn mắt. Khi admin gắn ảnh vào
+   ing_N_icon, ảnh sẽ lấp đầy đúng dải này (object-fit: cover).
+
+   ĐÍNH CHÍNH 2 Ý TRONG BÁO CÁO (đo thật, không tái hiện):
+     • "Card giữa cao hơn 2 card bên": cả 3 đều CAO ĐÚNG 311px, cùng top 6139,
+       khoảng cách link→đáy đều 23px. Card giữa chỉ khác ở viền ring nhấn mạnh
+       (ring-1 ring-clinical-100) — là chủ đích thiết kế, không phải lỗi lưới.
+     • "Dead space đáy card quá lớn": badge→link 11px, link→đáy 23px — bình
+       thường, không phải khoảng trống bất thường. */
+.pc-ing-card-media {
+  width: calc(100% + 48px) !important;
+  height: auto !important;
+  margin: -24px -24px 4px !important;
+  aspect-ratio: 16 / 7;
+  border-radius: 16px 16px 0 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg { width: 56px; height: 56px; }
+  img {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 16px 16px 0 0 !important;
+    object-fit: cover;
+  }
+}
+
+/* T-145 — nhãn dẫn nhập cho dải thương hiệu (xem lý do ở section_brand_marquee.bwt) */
+.pc-marquee-lead {
+  margin: 0 0 14px;
+  text-align: center;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted, #64748B);
+}
