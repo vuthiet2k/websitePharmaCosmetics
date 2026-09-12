@@ -143,13 +143,19 @@
 						</div>
 						{% endif %}
 						{% endif %}
-						<h1 class="title-product">{{ product.name | escape}}</h1>
+						{%- comment -%}
+						  T-135 (2026-09-12) — RULE-P0-01: tên sản phẩm chứa nồng độ hoạt chất và tên
+						  thương hiệu quốc tế (Retinol 0.3%, SPF50+ PA++++, Azelaic 15%...). Gắn
+						  notranslate để Google Translate KHÔNG dịch/đổi các con số và thuật ngữ dược —
+						  dịch sai nồng độ là rủi ro an toàn, không chỉ là lỗi hiển thị.
+						{%- endcomment -%}
+						<h1 class="title-product notranslate" translate="no">{{ product.name | escape}}</h1>
 						<div class="product-top clearfix">
 							{{product.variants[0].barcode}}
 							{% assign current_variant = product.selected_or_first_available_variant %}
 							<div class="sku-product clearfix">
-								<span class="d-none">Thương hiệu: <strong>{% if product.vendor.size > 0 %}{{ product.vendor }}{% else %}{{ store.name }}{% endif %}</strong></span>
-								<span class="variant-sku"  content="{% if product.variants[0].sku != "" and product.variants[0].sku != null %}{{product.variants[0].sku}}{% else %}Đang cập nhật{% endif %}">Mã: <span class="a-sku">{%if product.variants[0].sku != "" and product.variants[0].sku != null %}{{product.variants[0].sku}}{% else %}Đang cập nhật{% endif %}</span></span>
+								<span class="d-none">Thương hiệu: <strong class="notranslate" translate="no">{% if product.vendor.size > 0 %}{{ product.vendor }}{% else %}{{ store.name }}{% endif %}</strong></span>
+								<span class="variant-sku"  content="{% if product.variants[0].sku != "" and product.variants[0].sku != null %}{{product.variants[0].sku}}{% else %}Đang cập nhật{% endif %}">Mã: <span class="a-sku notranslate" translate="no">{%if product.variants[0].sku != "" and product.variants[0].sku != null %}{{product.variants[0].sku}}{% else %}Đang cập nhật{% endif %}</span></span>
 								<br>
 								<span class="d-none" >Chất liệu: <strong>{% if product.type.size > 0 %}{{ product.type }}{% else %}Đang cập nhật{% endif %}</strong></span>
 							</div>
@@ -939,9 +945,9 @@
 			BtnSold = jQuery('.form-product .form-group .btn-mua'),
 			product_sku = jQuery('.details-product .sku-product .variant-sku');
 		if (variant && variant.sku != "" && variant.sku != null){
-			product_sku.html("Mã: <span class='a-sku'>" + variant.sku + "</span>");
+			product_sku.html("Mã: <span class='a-sku notranslate' translate='no'>" + variant.sku + "</span>");
 		} else {
-			product_sku.html('Mã: <span class="a-sku">Đang cập nhật</span>');
+			product_sku.html('Mã: <span class="a-sku notranslate" translate="no">Đang cập nhật</span>');
 		}
 		FastAddToCart.addClass('d-none');
 		if (variant && variant.available) {

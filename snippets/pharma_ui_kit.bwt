@@ -668,6 +668,35 @@
     thay đổi bề rộng chữ ở thanh menu — mà thanh menu vừa được căn khít từng px ở T-127 để hết
     tràn, đổi font là phải đo và cân lại toàn bộ. Giữ thay đổi ở đúng chỗ có vấn đề.
   {%- endcomment -%}
+  {%- comment -%}
+    T-135 (2026-09-12) — LỖI TƯƠNG PHẢN THẬT (đo trên /collections/all): nút "Hết hàng" đang là
+    chữ trắng trên nền var(--mainColor) #3CB371 → tỉ lệ chỉ 2.67:1, dưới xa ngưỡng WCAG AA 4.5:1.
+    Tệ hơn: nó dùng ĐÚNG màu xanh của nút mua được, nên người dùng thị lực kém dễ tưởng là nút
+    "Thêm vào giỏ" còn bấm được. Đổi sang xám trung tính var(--color-text-muted) #64748B — đo lại
+    với chữ trắng được 4.76:1 (ĐẠT AA) và đọc đúng nghĩa "không khả dụng" thay vì màu thương hiệu.
+  {%- endcomment -%}
+  .btn-cart.disabled,
+  .btn-cart[disabled],
+  button.btn-cart:disabled {
+    background-color: var(--color-text-muted, #64748B) !important;
+    border-color: var(--color-text-muted, #64748B) !important;
+    color: #fff !important;
+    cursor: not-allowed;
+    opacity: 1 !important;
+  }
+
+  {%- comment -%}
+    T-135 — thanh điều hướng khi cuộn là .header-menu{position:fixed; top:0; height:48px;
+    z-index:9999} (đo thật). Bản thân việc nội dung trôi BÊN DƯỚI thanh ghim là đúng thiết kế,
+    KHÔNG phải lỗi. Nhưng nó gây 1 hệ quả thật: mọi cú nhảy tới neo trong trang (#id) hoặc
+    scrollIntoView đều dừng đúng mép trên viewport → tiêu đề của mục vừa nhảy tới bị thanh ghim
+    che mất. scroll-padding-top bù đúng chiều cao thanh (48px + 12px thở) — cách chuẩn của CSS
+    cho đúng tình huống này, không cần JS và không đụng layout.
+  {%- endcomment -%}
+  html {
+    scroll-padding-top: 60px;
+  }
+
   .rte,
   .product-review-content,
   .article-content,
