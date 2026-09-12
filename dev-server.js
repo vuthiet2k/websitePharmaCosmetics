@@ -748,6 +748,11 @@ function resolveTemplatePath(tpl) {
 // {tpl, routeParams} để renderFullPage dùng lại nguyên logic hiện có.
 const PAGE_HANDLE_MAP = {
   'about-us':                   'page.about-us',
+  // T-138 (2026-09-12): /gioi-thieu là link "Giới thiệu" THẬT trên menu chân trang, nhưng trước
+  // đây không có trong bảng này nên rơi xuống nhánh collection placeholder → hiện ra lưới sản
+  // phẩm thay vì trang giới thiệu (đã đo: HTML trả về chứa "layout-collection"). Trỏ về đúng
+  // template page.about-us, cùng cách đã làm cho alias /kham-da-ai ở T-113.
+  'gioi-thieu':                 'page.about-us',
   'ai-skin-quiz':                'page.ai-skin-quiz',
   'ai-skin-quiz-results':        'page.ai-skin-quiz-results',
   'kham-da-ai':                  'page.ai-skin-quiz', // alias tiếng Việt (T-113) — cùng 1 template, tránh 404 khi vào thẳng /kham-da-ai

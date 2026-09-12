@@ -313,3 +313,71 @@
   </div>
 </section>
 {%- endif -%}
+
+{%- comment -%}
+  T-138 (2026-09-12) — Khối hồ sơ pháp lý + nội dung SEO cuối trang Giới thiệu.
+  Lý do đặt ở đây (ngoài chân trang): trang Giới thiệu là nơi người mua VÀ công cụ tìm kiếm tìm
+  thông tin định danh doanh nghiệp. Nghị định 52/2013/NĐ-CP yêu cầu công bố các thông tin này;
+  đồng thời Google đối chiếu chúng với structured data HealthAndBeautyBusiness (snippets/schema.bwt)
+  — số liệu khớp nhau giữa trang và schema là điều kiện để được tin cậy trong Local SEO.
+  Toàn bộ đọc từ lớp schema-admin, KHÔNG hardcode: sửa trong Sapo Admin là 3 nơi (chân trang,
+  schema, trang này) tự đổi theo, không sợ lệch số liệu.
+{%- endcomment -%}
+<section class="py-16 bg-white border-t border-gray-100" id="ho-so-phap-ly">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+
+      <div>
+        <span class="pc-kit-badge-clinical">Hồ sơ pháp lý</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 font-heading mt-3 mb-4">
+          Thông tin đăng ký kinh doanh
+        </h2>
+        <dl class="pc-about-legal">
+          <div><dt>Tên đăng ký</dt><dd><b>{{ settings.footer_legal_company | default: store.name }}</b></dd></div>
+          {%- assign _ab_addr = settings.footer_legal_address | default: settings.store_address -%}
+          {%- if _ab_addr != blank %}
+          <div><dt>Địa chỉ</dt><dd>{{ _ab_addr | strip_newlines | remove: 'Địa chỉ:' | strip }}</dd></div>
+          {%- endif %}
+          {%- if settings.footer_legal_tax_code != blank %}
+          <div><dt>Mã số thuế</dt><dd class="notranslate" translate="no">{{ settings.footer_legal_tax_code }}</dd></div>
+          {%- endif %}
+          {%- if settings.footer_legal_license_date != blank %}
+          <div><dt>Ngày cấp</dt><dd>{{ settings.footer_legal_license_date }}</dd></div>
+          {%- endif %}
+          {%- if settings.footer_legal_license_issuer != blank %}
+          <div><dt>Nơi cấp</dt><dd>{{ settings.footer_legal_license_issuer }}</dd></div>
+          {%- endif %}
+          {%- if settings.footer_legal_phone != blank %}
+          <div><dt>Điện thoại</dt><dd><a href="tel:{{ settings.footer_legal_phone | remove: ' ' }}">{{ settings.footer_legal_phone }}</a></dd></div>
+          {%- endif %}
+          {%- if settings.footer_legal_email != blank %}
+          <div><dt>Email</dt><dd><a href="mailto:{{ settings.footer_legal_email }}">{{ settings.footer_legal_email }}</a></dd></div>
+          {%- endif %}
+        </dl>
+      </div>
+
+      <div class="pc-about-seo">
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 font-heading mb-4">
+          {{ settings.store_name | default: store.name }} — Dược mỹ phẩm chuẩn y khoa tại Hà Nội
+        </h2>
+        <p>
+          {{ settings.store_name | default: store.name }} là hệ thống phân phối dược mỹ phẩm chính hãng đặt tại
+          Quận Hoàng Mai, Hà Nội, chuyên các dòng sản phẩm đặc trị được chuyên gia da liễu lựa chọn theo từng
+          tình trạng da: mụn viêm, nám &amp; sắc tố, lão hoá, khô thiếu ẩm và da nhạy cảm.
+        </p>
+        <p>
+          Mỗi sản phẩm đều công bố rõ <b class="notranslate" translate="no">thành phần hoạt chất và nồng độ</b>
+          (Retinol, Niacinamide, BHA, Azelaic Acid, Tranexamic Acid…) để bạn đối chiếu với phác đồ đang dùng,
+          thay vì chọn theo cảm tính. Đội ngũ chuyên gia hỗ trợ đọc tình trạng da 1:1 trước khi bạn quyết định mua.
+        </p>
+        <p>
+          Bạn có thể bắt đầu bằng
+          <a href="/kham-da-ai">khám da cùng chuyên gia AI</a> để nhận gợi ý hoạt chất phù hợp, xem
+          <a href="/dieu-tri-chuyen-nghiep">các liệu trình điều trị chuyên sâu</a>, hoặc
+          <a href="/dat-lich-tu-van">đặt lịch tư vấn trực tiếp</a> với chuyên gia da liễu.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>

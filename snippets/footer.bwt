@@ -241,12 +241,27 @@
 			{%- endcomment -%}
 			<div class="row tablet">
 				<div class="col-lg-12 col-md-12 col-xs-12 footer-legal">
+					{%- comment -%}
+					  T-138 (2026-09-12) — người dùng đã cung cấp số liệu pháp lý thật. Lưu ý: đây là
+					  HỘ KINH DOANH (không phải công ty TNHH như giá trị tạm trước đó) nên dùng đúng
+					  loại hình. Địa chỉ pháp lý dùng field riêng (footer_legal_address) chứ KHÔNG tái
+					  dùng settings.store_address: store_address đang là địa chỉ phòng trị liệu Skin
+					  Health Beauty (dùng cho phần liên hệ), hai thứ này có thể khác nhau và địa chỉ
+					  trên giấy phép phải hiển thị đúng nguyên văn.
+					{%- endcomment -%}
 					<p class="footer-legal__line">
 						<b>{{ settings.footer_legal_company | default: settings.store_name | default: store.name }}</b>
-						{%- if settings.store_address != "" and settings.store_address != null %}
-						&bull; Địa chỉ: {{ settings.store_address | strip_newlines | remove: 'Phòng trị liệu da chuyên nghiệp 1:1 (Skin Health Beauty)' | remove: 'Địa chỉ:' | strip }}
+						{%- assign _legal_addr = settings.footer_legal_address | default: settings.store_address -%}
+						{%- if _legal_addr != "" and _legal_addr != null %}
+						&bull; Địa chỉ: {{ _legal_addr | strip_newlines | remove: 'Phòng trị liệu da chuyên nghiệp 1:1 (Skin Health Beauty)' | remove: 'Địa chỉ:' | strip }}
 						{%- endif %}
 					</p>
+					{%- if settings.footer_legal_phone != blank or settings.footer_legal_email != blank %}
+					<p class="footer-legal__line">
+						{%- if settings.footer_legal_phone != blank %}Điện thoại: <a href="tel:{{ settings.footer_legal_phone | remove: ' ' | remove: '.' }}">{{ settings.footer_legal_phone }}</a>{%- endif %}
+						{%- if settings.footer_legal_email != blank %} &bull; Email: <a href="mailto:{{ settings.footer_legal_email }}">{{ settings.footer_legal_email }}</a>{%- endif %}
+					</p>
+					{%- endif %}
 					<p class="footer-legal__line">
 						Mã số thuế / Mã số doanh nghiệp:
 						<b>{{ settings.footer_legal_tax_code | default: '(chưa cập nhật — nhập tại Sapo Admin › Cấu hình giao diện)' }}</b>

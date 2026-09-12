@@ -163,16 +163,44 @@
         }
 </script>
 {%endunless%}
+{%- comment -%}
+  T-138 (2026-09-12) — SEO: nâng khối Organization lên HealthAndBeautyBusiness (phân nhóm
+  LocalBusiness của schema.org, đúng bản chất hộ kinh doanh dược mỹ phẩm có địa điểm thật) và đổ
+  đúng số liệu pháp lý người dùng cung cấp: tên hộ kinh doanh, MST, địa chỉ trên giấy phép, điện
+  thoại, email. Google dùng chính các trường này cho Knowledge Panel / Local Pack, nên khai báo
+  khớp với thông tin công bố ở chân trang là điều kiện để được tin cậy (số liệu lệch nhau giữa
+  trang và structured data là một lỗi SEO thường gặp).
+  Mọi giá trị đọc từ lớp schema-admin, KHÔNG hardcode — sửa trong Sapo Admin là schema tự đổi theo.
+{%- endcomment -%}
 <script type="application/ld+json">
 {
-	"@context" : "http://schema.org",
-  	"@type" : "Organization",
-  	"legalName" : "{{ store.name }}",
+	"@context" : "https://schema.org",
+  	"@type" : "HealthAndBeautyBusiness",
+  	"name" : "{{ settings.store_name | default: store.name }}",
+  	"legalName" : "{{ settings.footer_legal_company | default: store.name }}",
   	"url" : "https:{{ store.url }}",
+	{%- if settings.footer_legal_tax_code != blank %}
+  	"taxID" : "{{ settings.footer_legal_tax_code }}",
+	"vatID" : "{{ settings.footer_legal_tax_code }}",
+	{%- endif %}
+	{%- assign _seo_addr = settings.footer_legal_address | default: settings.store_address -%}
+	{%- if _seo_addr != blank %}
+	"address" : {
+		"@type" : "PostalAddress",
+		"streetAddress" : "{{ _seo_addr | strip_newlines | remove: 'Địa chỉ:' | strip | escape }}",
+		"addressLocality" : "Hà Nội",
+		"addressCountry" : "VN"
+	},
+	{%- endif %}
+	{%- if settings.footer_legal_email != blank %}
+	"email" : "{{ settings.footer_legal_email }}",
+	{%- endif %}
+  	"telephone" : "{{ settings.footer_legal_phone | default: settings.store_phone | default: store.phone_number }}",
   	"contactPoint":[{
     	"@type" : "ContactPoint",
-    	"telephone" : "+84 {{ store.phone_number}}",
-    	"contactType" : "customer service"
+    	"telephone" : "{{ settings.footer_legal_phone | default: settings.store_phone | default: store.phone_number }}",
+    	"contactType" : "customer service",
+		"availableLanguage" : ["vi", "en"]
   	}],
   	"logo":"{{ 'logo.png' | asset_url }}",
   	"sameAs":[
