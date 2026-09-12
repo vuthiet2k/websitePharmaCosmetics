@@ -2,7 +2,7 @@
 	{% assign i = 0 %}
 	{% for link in linklists[settings.main_menu].links %}
 	{% if settings.display_megamenu %}{% assign items_list = settings.megamenu_items | split:"," %}{% endif %}{% assign mega-title = link.title | downcase %}
-	{% if linklists[link.alias] %}
+	{% if linklists[link.alias] and linklists[link.alias].links.size > 0 %}
 	<li class="nav-item has-childs {% if link.active %}active{% endif %} {% if settings.display_megamenu and items_list contains mega-title %} has-mega has-mega-{{i | plus: 1}}{%endif%}{%if linklists[settings.main_menu].links.size >= 6 %} hover-left{% endif %}" data-section="header_nav">
 		<a href="{{ link.url }}" class="nav-link {%if link.title == settings.titel_cus_order%}acti-order{% endif %}" title="{{ link.title }}">{{ link.title }} {%if link.title == settings.titel_cus_order%}<img width="64" height="22" class="icon_order" src="{{'icon_menu_order.png' | asset_url}}" alt="{{ link.title }}">{% endif %}
 			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-right" viewBox="0 0 16 16">
