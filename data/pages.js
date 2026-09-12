@@ -55,6 +55,26 @@ const pages = {
     published: true,
   },
 
+  'kham-da-ai': {
+    id:      106,
+    title:   'Khám Da AI - Bác Sĩ Da Liễu AI Tư Vấn 1:1',
+    alias:   'kham-da-ai',
+    handle:  'kham-da-ai',
+    url:     '/kham-da-ai',
+    content: '<p>Trợ lý AI khám da lâm sàng trực tuyến 1:1</p>',
+    published: true,
+  },
+
+  'ai-skin-quiz': {
+    id:      107,
+    title:   'AI Skin Diagnostic Quiz',
+    alias:   'ai-skin-quiz',
+    handle:  'ai-skin-quiz',
+    url:     '/pages/ai-skin-quiz',
+    content: '<p>Trợ lý AI khám da lâm sàng trực tuyến 1:1</p>',
+    published: true,
+  },
+
 };
 
 module.exports = { pages };
