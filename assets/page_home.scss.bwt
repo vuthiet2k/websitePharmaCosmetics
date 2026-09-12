@@ -4231,3 +4231,60 @@ a.pc-treatment-item:hover .pc-treatment-number { border-color: var(--mainColor);
 .pc-solution-card--rich {
   transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease, background-color .3s ease !important;
 }
+
+/* ══ T-144 (2026-09-12): khối "Minh chứng cho làn da rạng rỡ" ══════════════
+   ĐO THẬT ở 1440x900: section cao 1298px = 1.44 lần chiều cao màn hình, riêng
+   1 card đã 682px → người dùng không thể bao quát danh sách kết quả, đúng như
+   báo cáo. Nguyên nhân chính: .pc-testi-image-wrap đặt aspect-ratio:1 nên ảnh
+   before/after luôn là hình VUÔNG 381x381 — chiếm hơn nửa chiều cao card.
+   Nút prev/next thì CÓ thật (48x48, visible) nhưng bị đẩy xuống y=5242, tức
+   nằm dưới đáy card khổng lồ nên không ai nhìn thấy → cảm giác "không có nút".
+   Sửa gốc là thu chiều cao card, nút tự vào tầm mắt.
+
+   Ghi chú tải file: CSS của section này nằm trong <style> nội tuyến ở
+   snippets/section_testimonials.bwt (đứng SAU stylesheet ngoài trong document)
+   nên cần !important để override. */
+.pc-testimonials-section {
+  .pc-testi-image-wrap {
+    aspect-ratio: 4 / 3 !important;   /* vuông 1:1 -> 4:3, cắt ~25% chiều cao ảnh */
+  }
+
+  /* Slide bên cạnh: mờ 0.4 + blur 2px làm chúng gần như biến mất, người dùng
+     không nhận ra đây là danh sách trượt. Nâng lên mức vẫn phân biệt được
+     chính/phụ nhưng đọc được nội dung. */
+  .pc-testimonials-swiper .swiper-slide {
+    transform: scale(0.92) !important;
+    opacity: 0.62 !important;
+    filter: blur(0.5px) !important;
+  }
+  .pc-testimonials-swiper .swiper-slide-active {
+    transform: scale(1) !important;
+    opacity: 1 !important;
+    filter: none !important;
+  }
+
+  /* Gom bề ngang về khung gọn hơn để card không bị kéo rộng quá mức */
+  .pc-testimonials-swiper .swiper-slide { width: 420px !important; }
+  .pc-testimonials-swiper { padding-bottom: 32px !important; }
+}
+
+/* T-144 (tiếp) — sau khi đổi ảnh sang 4:3, đo lại section còn 1159px (1.29 lần
+   màn hình). Bóc tách chiều cao card: ảnh 314 + mô tả 96 + tác giả 58 + tiêu đề
+   26 + tag 44 = 538, cộng đệm thành 666. Trim tiếp 3 chỗ đệm/thừa, KHÔNG cắt nội
+   dung: ảnh về 16:10, mô tả giới hạn 3 dòng (phần dài đã có nút xem chi tiết),
+   giảm đệm dọc của section và của swiper. */
+.pc-testimonials-section {
+  padding-top: 36px !important;
+  padding-bottom: 36px !important;
+
+  .pc-testi-image-wrap { aspect-ratio: 16 / 10 !important; }
+
+  .pc-testimonials-swiper { padding-top: 4px !important; }
+
+  .pc-testi-result-desc {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
