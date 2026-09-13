@@ -120,6 +120,51 @@
 			el.src = '{{ "no-image.jpg" | asset_url }}';
 		}, true);
 		</script>
+		{%- comment -%}
+		  T-146 (2026-09-13) — BUG-07 báo cáo E2E: 2 nút mũi tên .most-view-btn-pager-prev/-next
+		  tại "Sản phẩm xem nhiều nhất" không cuộn slide. Khối .ab-most-view-product-module do app
+		  ngoài chèn DOM động bằng script riêng của họ (giống ca ảnh vỡ T-134 ở trên) — không có
+		  script gốc của app trong repo này để sửa logic khởi tạo carousel của họ, và không được
+		  sửa markup của họ. Dùng MutationObserver đợi app chèn xong slide rồi tự khởi tạo Swiper
+		  (đã load sẵn toàn theme) trên ĐÚNG class nút bấm có sẵn trong markup của app
+		  (.most-view-module-body vốn đã mang class swiper-container/swiper-wrapper — rõ ràng
+		  được thiết kế để chạy Swiper). Rào bằng `body.swiper` để không khởi tạo đè nếu app tự
+		  chạy được trên production — an toàn cả 2 chiều vì không rõ hành vi thật của script app.
+		{%- endcomment -%}
+		<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			var holder = document.querySelector('.ab-most-view-product-module');
+			if (!holder) return;
+
+			function initMostViewPager() {
+				var body = holder.querySelector('.most-view-module-body');
+				if (!body || body.swiper) return;
+				if (!body.querySelector('.swiper-slide')) return;
+				if (typeof Swiper === 'undefined') return;
+				var perViewInput = holder.querySelector('.most-view-slides-per-view');
+				var perView = (perViewInput && parseInt(perViewInput.value, 10)) || 4;
+				new Swiper(body, {
+					slidesPerView: perView,
+					spaceBetween: 20,
+					navigation: {
+						prevEl: holder.querySelector('.most-view-btn-pager-prev'),
+						nextEl: holder.querySelector('.most-view-btn-pager-next')
+					},
+					breakpoints: {
+						280: { slidesPerView: 1.4, spaceBetween: 12 },
+						480: { slidesPerView: 2, spaceBetween: 12 },
+						768: { slidesPerView: 3, spaceBetween: 16 },
+						993: { slidesPerView: perView, spaceBetween: 20 }
+					}
+				});
+			}
+
+			initMostViewPager();
+			var mo = new MutationObserver(initMostViewPager);
+			mo.observe(holder, { childList: true, subtree: true });
+			setTimeout(function () { mo.disconnect(); }, 15000);
+		});
+		</script>
 		<script>
 			{%if settings.header_search_smart%}
 			{%- comment -%}

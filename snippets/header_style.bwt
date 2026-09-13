@@ -69,8 +69,16 @@
 		/* ══ D. Status / Functional ══════════════════════════════════ */
 		--price:             {{settings.color_price}};   /* legacy — dùng trong code cũ */
 		--price-color:       var(--mainColorDark);        /* dùng biến này cho code mới — đậm hơn, tạo tin cậy */
-		--sale-color:        #FF4D00;
-		--sale-color-dark:   #cc3d00;
+		{%- comment -%}
+		  DEF-A11Y-01 (Báo cáo UI Quality Audit 13/09/2026): chữ trắng trên --sale-color cũ (#FF4D00)
+		  đo thực tế chỉ đạt 3.33:1 (badge giảm giá & nút CTA Flash Sale) — dưới chuẩn WCAG 2.2 AA
+		  4.5:1. Đổi sang #cc3d00 (vốn đã dùng làm màu :hover cũ, đã kiểm chứng đạt 4.96:1) làm màu
+		  nền chính; :hover đổi sang tông đậm hơn nữa #a83200 (6.73:1) để vẫn phân biệt được 2 trạng
+		  thái. --section-eyebrow-color (dùng làm màu CHỮ, không phải nền) cũng ăn theo biến này nên
+		  càng đậm càng lợi cho tương phản, không có tác dụng phụ.
+		{%- endcomment -%}
+		--sale-color:        #cc3d00;
+		--sale-color-dark:   #a83200;
 		--sale-gradient:     linear-gradient(295deg, #CD1A0C 0%, #FF5246 98.45%);
 		--sale-bar-gradient: linear-gradient(90deg, var(--sale-color), #ffcc00);
 

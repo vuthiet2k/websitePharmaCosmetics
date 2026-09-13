@@ -219,7 +219,7 @@
 					<div class="pc-flashsale__progress-fill" style="width:{{downlength}};"></div>
 				</div>
 				<span class="pc-flashsale__progress-label">
-					{%- if is_urgent -%}🔥 Chỉ còn <b>{{remaining}}</b> sản phẩm!
+					{%- if is_urgent -%}<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="vertical-align:-2px;margin-right:2px;"><path d="M12 2c1 3-3 4-3 8a3 3 0 0 0 6 0c0-1-.5-2-1-2.5 2 1 3 3 3 5.5a5 5 0 0 1-10 0c0-4 2-5 3-9 .5 1 1.5 1.5 2 2z"/></svg> Chỉ còn <b>{{remaining}}</b> sản phẩm!
 					{%- else -%}Đã bán <b>{{ daban }}</b>/{{itemlength}}
 					{%- endif -%}
 				</span>
@@ -241,7 +241,14 @@
 		<button disabled class="pc-btn--action pc-btn--action--disabled" title="Hết hàng" type="button">Hết hàng</button>
 		{%- else -%}
 		<input class="hidden" type="hidden" name="variantId" value="{{ product.variants[0].id }}" />
-		<button class="pc-btn--action" title="Xem chi tiết" type="button" onclick="window.location.href='{{product.url}}'">Mua ngay</button>
+		{%- comment -%}
+		  UX-02 (Báo cáo E2E 13/09/2026): nút này chỉ điều hướng sang trang chi tiết để khách
+		  chọn phân loại (KHÔNG thêm vào giỏ ngay được vì sản phẩm có nhiều biến thể) — nhãn cũ
+		  "Mua ngay" sai với hành vi thật và không khớp với title="Xem chi tiết" ngay bên cạnh,
+		  lại trùng chữ với nút Mua ngay thật (add_to_cart) bên dưới. Đổi nhãn về "Xem chi tiết"
+		  cho khớp hành vi và đồng bộ với product_grid_office.bwt/_lieu_trinh.bwt.
+		{%- endcomment -%}
+		<button class="pc-btn--action" title="Xem chi tiết" type="button" onclick="window.location.href='{{product.url}}'">Xem chi tiết</button>
 		{%- endif -%}
 		{%- elsif contact -%}
 		<input class="hidden" type="hidden" name="variantId" value="{{ product.variants[0].id }}" />
@@ -261,7 +268,10 @@
 .pc-product__desc {
 	font-family: var(--font-secondary);
 	font-size: var(--fs-sm);
-	color: #888;
+	/* DEF-A11Y-01 (Báo cáo UI Quality Audit 13/09/2026): #888 trên nền trắng đo thực tế chỉ đạt
+	   3.54:1, dưới chuẩn WCAG 2.2 AA 4.5:1. Đổi #666 — cùng giá trị đã dùng cho .compare-price
+	   ngay bên dưới (đã đo đạt 5.74:1) để đồng bộ và chắc chắn đạt chuẩn. */
+	color: #666;
 	line-height: 1.4;
 	margin: 3px 0 8px;
 	overflow: hidden;

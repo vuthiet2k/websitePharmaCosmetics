@@ -39,6 +39,36 @@
   }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
   els.forEach(function(el) { io.observe(el); });
 })();
+
+/* UX-01 (Báo cáo E2E 13/09/2026): .main-widget (nút Zalo/hotline nổi) và .backtop (về đầu
+   trang) đều position:fixed theo "bottom" cố định nên khi cuộn tới cuối trang sẽ đè lên nội
+   dung footer (bản quyền, liên kết chân trang) phía dưới. Đẩy 2 widget lên đúng bằng phần
+   footer đã lộ ra trong viewport — chỉ chỉnh "bottom" (không đụng transform/opacity đang
+   dùng cho animation ẩn/hiện của 2 widget), trả về vị trí gốc khi footer chưa lộ ra. */
+(function() {
+  var footer = document.querySelector('footer.footer');
+  var widgets = [document.querySelector('.main-widget'), document.querySelector('.backtop')].filter(Boolean);
+  if (!footer || !widgets.length) return;
+  var GAP = 12;
+  var baseBottoms = widgets.map(function() { return 0; });
+  function captureBase() {
+    widgets.forEach(function(el, i) {
+      el.style.bottom = '';
+      baseBottoms[i] = parseFloat(getComputedStyle(el).bottom) || 0;
+    });
+  }
+  function update() {
+    var footerVisible = window.innerHeight - footer.getBoundingClientRect().top;
+    var shift = Math.max(0, footerVisible);
+    widgets.forEach(function(el, i) {
+      el.style.bottom = shift > 0 ? (baseBottoms[i] + shift + GAP) + 'px' : '';
+    });
+  }
+  captureBase();
+  update();
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', function() { captureBase(); update(); });
+})();
 </script>
 {%- if template contains 'index' -%}
 {%- comment -%} defer: script sync ở đây chặn parse cuối body → tap chết trên mobile lúc load {%- endcomment -%}
