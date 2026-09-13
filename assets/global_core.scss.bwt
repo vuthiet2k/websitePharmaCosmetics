@@ -286,7 +286,16 @@ $gutter: 30px;
 	border-color: #c3e6cb;
 }
 html, body {
-	overflow-x: hidden;
+	/* T-149 (2026-09-13) — BUG NẶNG TOÀN SITE phát hiện qua kiểm thử: overflow-x: hidden ở đây
+	   triệt tiêu MỌI position:sticky trên trang (header.main-header, .about-rail...) vì theo
+	   CSS Overflow spec, overflow-x khác "visible" ép overflow-y tính thành "auto" nếu bị bỏ
+	   trống — biến html/body thành một scrolling container cục bộ, cắt đứt neo sticky khỏi
+	   viewport thật. Đo thật: header.main-header/​.about-rail có computed position:"sticky"
+	   nhưng getBoundingClientRect().top vẫn trôi y hệt scrollY (không neo lại ở top:0/96px).
+	   overflow-x: clip đạt cùng mục đích (chặn tràn ngang mobile) nhưng KHÔNG kéo theo hệ quả
+	   trên — khai báo thêm overflow-y: visible tường minh để tránh bị ép sang "auto". */
+	overflow-x: clip;
+	overflow-y: visible;
 	padding: 0 !important;
 	margin: 0;
 }
