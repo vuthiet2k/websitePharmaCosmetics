@@ -759,6 +759,10 @@ const PAGE_HANDLE_MAP = {
   'chuyen-gia':                  'page.chuyen-gia',
   'chuyen-gia-detail':           'page.chuyen-gia-detail',
   'clinical-proof':              'page.clinical-proof',
+  // T-148 (2026-09-13): DEF-BK-02 — link "Chính sách bảo mật" ở form đặt lịch trỏ tới handle này
+  // nhưng trang chưa từng tồn tại (404 thật trên production). "/chinh-sach" hiện có là trang
+  // "Chính sách đổi trả" (khác nội dung), không dùng thay được.
+  'chinh-sach-bao-mat':          'page.chinh-sach-bao-mat',
   'dai-ly-b2b':                  'page.dai-ly-b2b',
   'dat-lich-tu-van':             'page.dat_lich_tu_van',
   'loyalty':                     'page.loyalty',

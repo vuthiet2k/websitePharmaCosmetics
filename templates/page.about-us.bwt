@@ -68,9 +68,37 @@
   </div>
 </section>
 
-{%- if settings.about_story_title != blank or settings.about_story_body_1 != blank -%}
-<section class="py-16 bg-white">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+{%- comment -%}
+  T-147 (2026-09-13) — Bố cục "Sidebar điều hướng bám dính" (phương án B đã chốt qua
+  /design-shotgun, xem thiết kế so sánh 3 phương án). Story/Mission/Method/Team/Lab/Ingredients
+  chuyển vào 1 cột nội dung dùng chung, có thanh mục lục bám dính bên trái (desktop) để nhảy
+  thẳng đến từng mục — hợp với người chỉ muốn xem Đội ngũ hoặc Hoạt chất mà không cuộn hết
+  trang. CTA/Form liên hệ/Pháp lý vẫn full-width bên dưới như cũ (không đưa vào layout 2 cột).
+  Giữ NGUYÊN 100% logic Liquid/nội dung từng khối — chỉ đổi khung bọc ngoài (section → div
+  trong 1 cột dùng chung, bỏ nền xen kẽ trắng/xám vì giờ chung 1 cột) và gom vào rail nav.
+{%- endcomment -%}
+{%- assign has_story = false -%}
+{%- if settings.about_story_title != blank or settings.about_story_body_1 != blank -%}{%- assign has_story = true -%}{%- endif -%}
+{%- assign has_mission = false -%}
+{%- if settings.about_mission_title != blank -%}{%- assign has_mission = true -%}{%- endif -%}
+{%- assign has_method = false -%}
+{%- if settings.about_method_title != blank -%}{%- assign has_method = true -%}{%- endif -%}
+{%- assign has_team = false -%}
+{%- if settings.about_team_title != blank -%}{%- assign has_team = true -%}{%- endif -%}
+{%- assign has_lab = false -%}
+{%- if settings.about_lab_title != blank -%}{%- assign has_lab = true -%}{%- endif -%}
+{%- assign has_ing = false -%}
+{%- if settings.about_ing_title != blank -%}{%- assign has_ing = true -%}{%- endif -%}
+
+{%- capture about_rail_csv -%}
+{%- if has_story -%}story,{%- endif -%}{%- if has_mission -%}mission,{%- endif -%}{%- if has_method -%}method,{%- endif -%}{%- if has_team -%}team,{%- endif -%}{%- if has_lab -%}lab,{%- endif -%}{%- if has_ing -%}ing,{%- endif -%}
+{%- endcapture -%}
+{%- assign about_rail_items = about_rail_csv | split: ',' -%}
+
+{%- capture about_middle_content -%}
+
+  {%- if has_story -%}
+  <div id="about-story" class="about-panel">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
       {%- if settings.about_story_img != blank -%}
       <div class="lg:col-span-5">
@@ -90,26 +118,24 @@
       </div>
     </div>
   </div>
-</section>
-{%- endif -%}
+  {%- endif -%}
 
-{%- if settings.about_mission_title != blank -%}
-<section class="py-16 bg-gray-50">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center max-w-3xl mx-auto mb-12">
+  {%- if has_mission -%}
+  <div id="about-mission" class="about-panel">
+    <div class="max-w-3xl mb-12">
       {%- if settings.about_mission_eyebrow != blank -%}<span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">{{ settings.about_mission_eyebrow }}</span>{%- endif -%}
       <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 mt-2 font-heading">{{ settings.about_mission_title }}</h2>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
       {%- if settings.about_mission_card1_title != blank -%}
-      <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+      <div class="bg-gray-50 rounded-2xl p-8 border border-gray-100">
         <h3 class="text-lg font-bold text-gray-900 mb-3">{{ settings.about_mission_card1_title }}</h3>
         <p class="text-sm text-gray-600 leading-relaxed">{{ settings.about_mission_card1_desc }}</p>
       </div>
       {%- endif -%}
       {%- if settings.about_mission_card2_title != blank -%}
-      <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+      <div class="bg-gray-50 rounded-2xl p-8 border border-gray-100">
         <h3 class="text-lg font-bold text-gray-900 mb-3">{{ settings.about_mission_card2_title }}</h3>
         <p class="text-sm text-gray-600 leading-relaxed">{{ settings.about_mission_card2_desc }}</p>
       </div>
@@ -125,7 +151,7 @@
       {%- assign v_title = settings[k_title] -%}
       {%- if v_title != blank -%}
       {%- assign idx0 = i | minus: 1 -%}
-      <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition">
+      <div class="bg-gray-50 rounded-2xl p-8 border border-gray-100 hover:shadow-md transition">
         <div class="w-14 h-14 rounded-xl bg-{{ pillar_colors[idx0] }}-100 text-{{ pillar_colors[idx0] }}-700 flex items-center justify-center text-2xl mb-6">
           <i class="fas {{ pillar_icons[idx0] }}" aria-hidden="true"></i>
         </div>
@@ -137,13 +163,11 @@
       {%- endfor -%}
     </div>
   </div>
-</section>
-{%- endif -%}
+  {%- endif -%}
 
-{%- if settings.about_method_title != blank -%}
-<section class="py-16 bg-white border-b border-gray-100">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center max-w-3xl mx-auto mb-12">
+  {%- if has_method -%}
+  <div id="about-method" class="about-panel">
+    <div class="max-w-3xl mb-12">
       {%- if settings.about_method_eyebrow != blank -%}<span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">{{ settings.about_method_eyebrow }}</span>{%- endif -%}
       <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 mt-2 font-heading">{{ settings.about_method_title }}</h2>
     </div>
@@ -171,16 +195,14 @@
     </div>
     {%- endif -%}
   </div>
-</section>
-{%- endif -%}
+  {%- endif -%}
 
-{%- if settings.about_team_title != blank -%}
-<section class="py-16 bg-gray-50">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center max-w-3xl mx-auto mb-12">
+  {%- if has_team -%}
+  <div id="about-team" class="about-panel">
+    <div class="max-w-3xl mb-12">
       {%- if settings.about_team_eyebrow != blank -%}<span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">{{ settings.about_team_eyebrow }}</span>{%- endif -%}
       <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 mt-2 font-heading">{{ settings.about_team_title }}</h2>
-      {%- if settings.about_team_subtitle != blank -%}<p class="text-sm text-gray-600 mt-2 max-w-2xl mx-auto">{{ settings.about_team_subtitle }}</p>{%- endif -%}
+      {%- if settings.about_team_subtitle != blank -%}<p class="text-sm text-gray-600 mt-2 max-w-2xl">{{ settings.about_team_subtitle }}</p>{%- endif -%}
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {%- for i in (1..4) -%}
@@ -204,46 +226,129 @@
       {%- endfor -%}
     </div>
   </div>
-</section>
-{%- endif -%}
-
-{%- if settings.about_lab_title != blank -%}
-<section class="relative overflow-hidden py-16 {% if settings.about_lab_bg_img != blank %}bg-forest-900{% else %}bg-forest-900{% endif %} text-white">
-  {%- if settings.about_lab_bg_img != blank -%}
-  <img src="{{ settings.about_lab_bg_img | img_url: 'grande' }}" alt="" class="absolute inset-0 w-full h-full object-cover opacity-25">
-  <div class="absolute inset-0 bg-forest-900/70"></div>
   {%- endif -%}
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-    <h2 class="text-2xl sm:text-3xl font-extrabold font-heading mb-4">{{ settings.about_lab_title }}</h2>
-    {%- if settings.about_lab_body != blank -%}<p class="text-sm sm:text-base text-emerald-100 leading-relaxed mb-6">{{ settings.about_lab_body }}</p>{%- endif -%}
-    <div class="flex flex-wrap justify-center gap-3">
-      {%- for i in (1..4) -%}
-      {%- capture k_badge -%}about_lab_badge_{{ i }}{%- endcapture -%}
-      {%- assign v_badge = settings[k_badge] -%}
-      {%- if v_badge != blank -%}<span class="pc-kit-badge-clinical text-xs">✓ {{ v_badge }}</span>{%- endif -%}
-      {%- endfor -%}
+
+  {%- if has_lab -%}
+  <div id="about-lab" class="about-panel">
+    <div class="relative overflow-hidden rounded-3xl bg-forest-900 text-white p-8 sm:p-12">
+      {%- if settings.about_lab_bg_img != blank -%}
+      <img src="{{ settings.about_lab_bg_img | img_url: 'grande' }}" alt="" class="absolute inset-0 w-full h-full object-cover opacity-25">
+      <div class="absolute inset-0 bg-forest-900/70"></div>
+      {%- endif -%}
+      <div class="relative z-10 max-w-2xl mx-auto text-center">
+        <h2 class="text-2xl sm:text-3xl font-extrabold font-heading mb-4">{{ settings.about_lab_title }}</h2>
+        {%- if settings.about_lab_body != blank -%}<p class="text-sm sm:text-base text-emerald-100 leading-relaxed mb-6">{{ settings.about_lab_body }}</p>{%- endif -%}
+        <div class="flex flex-wrap justify-center gap-3">
+          {%- for i in (1..4) -%}
+          {%- capture k_badge -%}about_lab_badge_{{ i }}{%- endcapture -%}
+          {%- assign v_badge = settings[k_badge] -%}
+          {%- if v_badge != blank -%}<span class="pc-kit-badge-clinical text-xs">✓ {{ v_badge }}</span>{%- endif -%}
+          {%- endfor -%}
+        </div>
+      </div>
     </div>
   </div>
-</section>
-{%- endif -%}
+  {%- endif -%}
 
-{%- if settings.about_ing_title != blank -%}
-<section class="py-16 bg-white border-b border-gray-100">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center max-w-3xl mx-auto mb-10">
+  {%- if has_ing -%}
+  <div id="about-ing" class="about-panel">
+    <div class="max-w-3xl mb-10">
       {%- if settings.about_ing_eyebrow != blank -%}<span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">{{ settings.about_ing_eyebrow }}</span>{%- endif -%}
       <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 mt-2 font-heading">{{ settings.about_ing_title }}</h2>
     </div>
     {%- if settings.about_ing_menu != blank and linklists[settings.about_ing_menu].links.size > 0 -%}
-    <div class="flex flex-wrap justify-center gap-3">
+    <div class="flex flex-wrap gap-3">
       {%- for link in linklists[settings.about_ing_menu].links -%}
       <a href="{{ link.url }}" class="px-4 py-2 rounded-full bg-emerald-50 text-emerald-800 text-sm font-semibold border border-emerald-200 hover:bg-emerald-100 transition">{{ link.title }}</a>
       {%- endfor -%}
     </div>
     {%- endif -%}
   </div>
+  {%- endif -%}
+
+{%- endcapture -%}
+
+<section class="py-16 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    {%- if about_rail_items.size > 1 -%}
+    <div class="about-rail-wrap grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-12 items-start">
+      <nav class="about-rail" id="aboutRail" aria-label="Điều hướng nội dung trang Về chúng tôi">
+        {%- capture rail_label_story -%}Câu chuyện{%- endcapture -%}
+        {%- capture rail_label_mission -%}Sứ mệnh{%- endcapture -%}
+        {%- capture rail_label_method -%}Quy trình{%- endcapture -%}
+        {%- capture rail_label_team -%}Đội ngũ{%- endcapture -%}
+        {%- capture rail_label_lab -%}Cơ sở vật chất{%- endcapture -%}
+        {%- capture rail_label_ing -%}Hoạt chất{%- endcapture -%}
+        {%- if has_story -%}<a href="#about-story"><span class="dot"></span>{{ rail_label_story }}</a>{%- endif -%}
+        {%- if has_mission -%}<a href="#about-mission"><span class="dot"></span>{{ rail_label_mission }}</a>{%- endif -%}
+        {%- if has_method -%}<a href="#about-method"><span class="dot"></span>{{ rail_label_method }}</a>{%- endif -%}
+        {%- if has_team -%}<a href="#about-team"><span class="dot"></span>{{ rail_label_team }}</a>{%- endif -%}
+        {%- if has_lab -%}<a href="#about-lab"><span class="dot"></span>{{ rail_label_lab }}</a>{%- endif -%}
+        {%- if has_ing -%}<a href="#about-ing"><span class="dot"></span>{{ rail_label_ing }}</a>{%- endif -%}
+      </nav>
+      <div class="about-rail-content min-w-0">
+        {{ about_middle_content }}
+      </div>
+    </div>
+    {%- else -%}
+    <div class="about-rail-content about-rail-content--solo">
+      {{ about_middle_content }}
+    </div>
+    {%- endif -%}
+  </div>
 </section>
-{%- endif -%}
+
+<style>
+/* T-147: KHÔNG dùng Tailwind "hidden lg:flex" ở đây — .hidden { display:none !important; }
+   đã bị theme này định nghĩa sẵn (assets/global_core.scss.bwt, dùng cho input ẩn v.v.) và
+   !important của nó đè luôn cả lg:flex responsive. Tự kiểm soát display bằng CSS riêng. */
+.about-rail{ display: none; }
+@media (min-width: 1024px) {
+  .about-rail{ display: flex; position: sticky; top: 96px; flex-direction: column; gap: 4px; }
+}
+.about-rail a{
+  display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px;
+  font-size: 13.5px; font-weight: 600; color: #4B5B54; text-decoration: none; transition: background .15s, color .15s;
+}
+.about-rail a .dot{ width: 7px; height: 7px; border-radius: 50%; background: #E2E8F0; flex-shrink: 0; transition: background .15s; }
+.about-rail a.is-active{ background: #E8F5E9; color: #267348; }
+.about-rail a.is-active .dot{ background: #3CB371; }
+.about-rail-content > .about-panel{ padding-block: 44px; border-bottom: 1px solid #EEF2F0; }
+.about-rail-content > .about-panel:first-child{ padding-top: 0; }
+.about-rail-content > .about-panel:last-child{ border-bottom: 0; padding-bottom: 0; }
+.about-rail-content--solo > .about-panel{ padding-block: 44px; }
+</style>
+<script>
+(function(){
+  var rail = document.getElementById('aboutRail');
+  if (!rail) return;
+  var links = Array.prototype.slice.call(rail.querySelectorAll('a'));
+  var panels = links.map(function(a){ return document.querySelector(a.getAttribute('href')); }).filter(Boolean);
+  if (!panels.length) return;
+  var scrollTimer = null;
+  function updateActive(){
+    var refY = window.innerHeight * 0.35;
+    var idx = 0;
+    for (var i = 0; i < panels.length; i++) {
+      if (panels[i].getBoundingClientRect().top <= refY) idx = i;
+    }
+    links.forEach(function(a){ a.classList.remove('is-active'); });
+    links[idx].classList.add('is-active');
+  }
+  links.forEach(function(a){
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      var el = document.querySelector(a.getAttribute('href'));
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+  window.addEventListener('scroll', function(){
+    if (scrollTimer) return;
+    scrollTimer = setTimeout(function(){ scrollTimer = null; updateActive(); }, 80);
+  }, { passive: true });
+  updateActive();
+})();
+</script>
 
 {%- if settings.about_cta_title != blank -%}
 <section class="py-16 bg-white">

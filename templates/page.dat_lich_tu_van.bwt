@@ -200,9 +200,9 @@ window.__mopsProducts = {
                 (dữ liệu cá nhân + sức khỏe theo Luật 91/2025/QH15) — bắt buộc có mục đích thu thập rõ
                 ràng + checkbox đồng ý + link chính sách bảo mật. Trước đây chỉ có 1 dòng disclaimer tĩnh
                 (xem templates/page.payment.bwt#mops-form__privacy) không đủ — bổ sung checkbox required.
-                Link privacy-policy: chưa có page.chinh-sach-bao-mat.bwt/handle thật trong repo tại thời
-                điểm này — dùng placeholder '/pages/chinh-sach-bao-mat', cần xác nhận/producer handle thật
-                khi Sapo store có trang chính sách chính thức.
+                T-148 (2026-09-13, DEF-BK-02): link '/pages/chinh-sach-bao-mat' từng 404 (trang chưa
+                tồn tại) — đã tạo templates/page.chinh-sach-bao-mat.bwt thật + đăng ký route trong
+                dev-server.js PAGE_HANDLE_MAP, link này giờ trỏ đúng.
               {%- endcomment -%}
               <div class="mops-form__group">
                 <p style="font-size:.8125em;color:#5a6b63;margin:0 0 8px">
@@ -635,14 +635,22 @@ window.__mopsProducts = {
     var _aiCtx   = wantsAiScan ? 'Có đăng ký Soi Da Vi Điểm AI miễn phí' : '';
     var fullNote = [note, _svcCtx, _aiCtx].filter(Boolean).join(' | ');
 
-    if (!name)  { showError('Vui lòng nhập họ tên.'); return; }
+    var consentEl   = document.getElementById('mops-consent-privacy');
+    var consentLbl  = consentEl ? document.querySelector('label[for="mops-consent-privacy"]') : null;
+    var nameEl      = document.getElementById('mops-customer-name');
+    var phoneEl     = document.getElementById('mops-customer-phone');
+    var dateEl      = document.getElementById('mops-date');
+    clearInvalid();
+
+    if (!name)  { markInvalid(nameEl); showError('Vui lòng nhập họ tên.'); return; }
     if (!phone || !/^0\d{8,9}$/.test(phone)) {
+      markInvalid(phoneEl);
       showError('Vui lòng nhập số điện thoại hợp lệ (9-10 số, bắt đầu bằng 0).');
       return;
     }
-    if (!date)    { showError('Vui lòng chọn ngày đến.'); return; }
-    var consentEl = document.getElementById('mops-consent-privacy');
+    if (!date)    { markInvalid(dateEl); showError('Vui lòng chọn ngày đến.'); return; }
     if (!consentEl || !consentEl.checked) {
+      markInvalid(consentLbl);
       showError('Vui lòng đồng ý với Chính sách bảo mật để tiếp tục đặt lịch.');
       return;
     }
@@ -861,6 +869,23 @@ window.__mopsProducts = {
   function hideError() {
     errBox.classList.remove('is-visible');
     if (formContactEl) formContactEl.style.display = 'none';
+  }
+  /* DEF-BK-03: đánh dấu viền đỏ trên đúng field đang lỗi validation */
+  function markInvalid(el) { if (el) el.classList.add('is-invalid'); }
+  function clearInvalid() {
+    document.querySelectorAll('.mops-form .is-invalid').forEach(function(el) {
+      el.classList.remove('is-invalid');
+    });
+  }
+  ['mops-customer-name', 'mops-customer-phone', 'mops-date'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('input', function() { el.classList.remove('is-invalid'); });
+  });
+  if (document.getElementById('mops-consent-privacy')) {
+    document.getElementById('mops-consent-privacy').addEventListener('change', function() {
+      var lbl = document.querySelector('label[for="mops-consent-privacy"]');
+      if (lbl) lbl.classList.remove('is-invalid');
+    });
   }
 
   /* ── Tab switching ───────────────────────────────────── */
