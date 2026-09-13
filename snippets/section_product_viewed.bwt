@@ -153,12 +153,16 @@ $(document).ready(function() {
   }
 
   Promise.all(recentview_promises).then(function(values) {
-    $.each(values, function(i, v) {
-      if (v !== '') {
-        $('.swiper_viewed .swiper-wrapper').append(v);
-      } else {
-        last_viewd_pro_array.splice(i, 1);
-      }
+    /* T-150 (2026-09-13): trước đây .splice(i, 1) ngay trong vòng lặp $.each — xoá 1 phần tử
+       làm co mảng last_viewd_pro_array và lệch index cho các lần splice kế tiếp trong CÙNG
+       vòng lặp (vd 2 sản phẩm liên tiếp lỗi thì lần splice thứ 2 xoá nhầm phần tử), khiến
+       localStorage bị ghi sai và có thể mất luôn sản phẩm còn hợp lệ. Lọc bằng filter() theo
+       đúng index tương ứng — không sửa mảng khi đang duyệt nó. */
+    values.forEach(function(v) {
+      if (v !== '') { $('.swiper_viewed .swiper-wrapper').append(v); }
+    });
+    last_viewd_pro_array = last_viewd_pro_array.filter(function(item, i) {
+      return values[i] !== '';
     });
 
     localStorage.setItem('last_viewed_products', JSON.stringify(last_viewd_pro_array));

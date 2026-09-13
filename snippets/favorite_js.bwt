@@ -81,6 +81,15 @@
 									},
 									error: function(err) {
 										if (err.status === 404) {
+											/* T-150 (2026-09-13, S0 crash): trước đây gọi thẳng removeWishlist() ở đây —
+											   removeWishlist() lại gọi wishlistProduct() để refresh UI, tức là fetch lại
+											   TOÀN BỘ danh sách wishlist (kể cả các handle 404 khác còn lại), lặp lại
+											   đúng luồng này và tiếp tục 404 → gọi removeWishlist() → wishlistProduct()
+											   → ... đệ quy không có đáy, tràn ngăn xếp (Uncaught RangeError: Maximum call
+											   stack size exceeded) khi wishlist có từ 2 handle lỗi trở lên. Chỉ dọn cookie
+											   tại đây (không re-render/refetch); wishlistProduct() gọi từ nơi khác (khi
+											   người dùng bấm nút) mới cần refresh UI đầy đủ. Cũng thu hẹp phạm vi: lỗi
+											   mạng/5xx tạm thời KHÔNG được coi là "sản phẩm không tồn tại" nữa. */
 											try {
 												var u = ((this.url.split('?'))[0]).replace('/products/', '');
 												resolve({
@@ -93,13 +102,13 @@
 													data: ''
 												})
 											}
+											favoriBean.Wishlist.removeFromWishlistCookie(last_wishlist_pro_array[i]);
 										} else {
 											resolve({
 												error: false,
 												data: ''
 											});
 										}
-										favoriBean.Wishlist.removeWishlist(last_wishlist_pro_array[i])
 									}
 								})
 							});
@@ -157,19 +166,27 @@
 				$('.setWishlist[data-wish="' + v + '"]').html('<img class="img-unlike" width="25" height="25" src="https://bizweb.dktcdn.net/100/566/174/themes/1008318/assets/heartadd-1.png?1746693650248" alt="Bỏ yêu thích">Bỏ yêu thích</div>').addClass('active').attr('title', 'Bỏ yêu thích');
 			})
 		},
+		/* T-150: tách phần dọn cookie ra riêng — KHÔNG gọi wishlistProduct() ở đây.
+		   Dùng cho nhánh dọn dẹp handle 404 bên trong chính wishlistProduct(); gọi
+		   wishlistProduct() lại ở đó sẽ đệ quy vô hạn (xem comment ở trên). */
+		removeFromWishlistCookie: function(handle) {
+			if (document.cookie.indexOf('sudes_wishlist_products') === -1) return;
+			var las = Cookies.getJSON('sudes_wishlist_products') || [];
+			var flagIndex = $.inArray(handle, las);
+			if (flagIndex === -1) return;
+			las.splice(flagIndex, 1);
+			Cookies.set('sudes_wishlist_products', las, {
+				expires: 15,
+				sameSite: 'None',
+				secure: true
+			});
+		},
 		removeWishlist: function(handle) {
 			var phand = [];
 
 			$('a[data-wish="' + handle + '"]').html('<img width="25" height="25" src="https://bizweb.dktcdn.net/100/451/884/themes/857425/assets/heart.png?1650269474235" alt="Thêm vào yêu thích">Thêm vào yêu thích</div>').removeClass('active').attr('title', 'Thêm vào yêu thích');
 			if (document.cookie.indexOf('sudes_wishlist_products') !== -1) {
-				var las = Cookies.getJSON('sudes_wishlist_products');
-				var flagIndex = $.inArray(handle, las);
-				las.splice(flagIndex, 1)
-				Cookies.set('sudes_wishlist_products', las, {
-					expires: 15,
-					sameSite: 'None',
-					secure: true
-				});
+				favoriBean.Wishlist.removeFromWishlistCookie(handle);
 			} else {
 				phand = [handle];
 				Cookies.set('sudes_wishlist_products', phand, {
