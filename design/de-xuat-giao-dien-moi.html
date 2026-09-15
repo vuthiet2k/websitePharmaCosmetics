@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHARMA COSMETICS — Đề xuất giao diện mới</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,450;9..144,560;9..144,650&family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F6F1;
+    --surface:#FFFFFF;
+    --ink:#13241F;
+    --ink-soft:#4B5B54;
+    --primary:#3cb371;
+    --primary-deep:#1F5A3B;
+    --clay:#DE9E7D;
+    --clay-soft:#F3DFD1;
+    --line:#DBDFD5;
+    --radius:2px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+  }
+  img,svg{display:block; max-width:100%;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 32px;}
+  h1,h2,h3,.display{font-family:'Fraunces',serif;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--primary);
+    display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{content:""; width:22px; height:1px; background:var(--primary);}
+  button, .btn{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    letter-spacing:.02em;
+    cursor:pointer;
+    border:none;
+    padding:15px 28px;
+    border-radius:var(--radius);
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .btn-primary{background:var(--primary); color:#fff;}
+  .btn-primary:hover{filter:brightness(.92); transform:translateY(-1px);}
+  .btn-ghost{background:transparent; color:var(--ink); border:1px solid var(--ink); }
+  .btn-ghost:hover{border-color:var(--primary); color:var(--primary);}
+
+  /* ===== Utility bar ===== */
+  .util-bar{
+    background:var(--primary-deep);
+    color:#EAF1EC;
+    font-size:12px;
+  }
+  .util-bar .wrap{
+    display:flex; justify-content:space-between; align-items:center;
+    height:34px;
+  }
+  .util-bar .links{display:flex; gap:22px; opacity:.85}
+
+  /* ===== Header ===== */
+  header{
+    background:var(--surface);
+    border-bottom:1px solid var(--line);
+    position:sticky; top:0; z-index:50;
+  }
+  .nav-row{
+    display:flex; align-items:center; justify-content:space-between;
+    height:78px;
+  }
+  .logo{
+    font-family:'Montserrat',sans-serif;
+    font-weight:700;
+    font-size:20px;
+    letter-spacing:.005em;
+    text-transform:uppercase;
+  }
+  .logo span{color:var(--primary);}
+  nav ul{display:flex; gap:34px; list-style:none;}
+  nav a{font-size:13.5px; font-weight:500; color:var(--ink-soft);}
+  nav a:hover{color:var(--primary);}
+  .nav-actions{display:flex; align-items:center; gap:18px;}
+  .icon-btn{
+    width:38px; height:38px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--line);
+  }
+
+  /* ===== Hero ===== */
+  .hero{padding:76px 0 90px; overflow:hidden;}
+  .hero .wrap{
+    display:grid; grid-template-columns:1.05fr .95fr; gap:56px; align-items:center;
+  }
+  .hero h1{
+    font-size:50px; font-weight:560; line-height:1.06; letter-spacing:-.01em;
+    margin:20px 0 22px;
+  }
+  .hero h1 em{font-style:italic; color:var(--primary);}
+  .hero p{font-size:16px; color:var(--ink-soft); max-width:440px; margin-bottom:32px;}
+  .hero .cta-row{display:flex; gap:14px; margin-bottom:36px;}
+  .hero .trust-line{
+    display:flex; gap:26px; font-size:12.5px; color:var(--ink-soft);
+    border-top:1px solid var(--line); padding-top:18px;
+  }
+  .hero .trust-line b{color:var(--ink); font-weight:600;}
+
+  /* signature: skin-layer diagnostic ring */
+  .ring-figure{position:relative; aspect-ratio:1/1;}
+  .ring-figure svg{width:100%; height:100%;}
+  .ring-tag{
+    position:absolute; font-family:'IBM Plex Mono',monospace; font-size:10.5px;
+    background:var(--surface); border:1px solid var(--line); padding:5px 9px;
+    border-radius:20px; display:flex; align-items:center; gap:6px; white-space:nowrap;
+  }
+  .ring-tag .dot{width:5px; height:5px; border-radius:50%; background:var(--clay);}
+  .ring-tag.t1{top:6%; left:0;}
+  .ring-tag.t2{top:42%; right:-4%;}
+  .ring-tag.t3{bottom:10%; left:8%;}
+
+  /* ===== Section shell ===== */
+  section{padding:78px 0;}
+  .section-head{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    margin-bottom:40px; gap:24px; flex-wrap:wrap;
+  }
+  .section-head h2{font-size:32px; font-weight:560; letter-spacing:-.01em; margin-top:12px;}
+  .section-head p{color:var(--ink-soft); font-size:14.5px; max-width:420px;}
+
+  /* ===== Concern grid (Giải pháp cho từng vấn đề) ===== */
+  .concern-grid{
+    display:grid; grid-template-columns:repeat(6,1fr); gap:1px;
+    background:var(--line); border:1px solid var(--line);
+  }
+  .concern-card{
+    background:var(--surface); padding:26px 18px; text-align:left;
+    display:flex; flex-direction:column; gap:14px; min-height:150px;
+    transition:background .15s ease;
+  }
+  .concern-card:hover{background:var(--clay-soft);}
+  .concern-card svg{width:26px; height:26px; stroke:var(--primary);}
+  .concern-card span{font-size:13.5px; font-weight:600;}
+
+  /* ===== Process (real sequence, numbering justified) ===== */
+  .process{background:var(--primary-deep); color:#fff;}
+  .process .section-head p, .process .eyebrow{color:#B9D3C6;}
+  .process .section-head h2{color:#fff;}
+  .process-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:0; border-top:1px solid rgba(255,255,255,.18);}
+  .process-item{padding:34px 30px 0; border-right:1px solid rgba(255,255,255,.18);}
+  .process-item:last-child{border-right:none;}
+  .process-num{font-family:'Fraunces',serif; font-size:15px; color:#8FB9A8; margin-bottom:16px;}
+  .process-item h3{font-size:19px; font-weight:560; margin-bottom:12px;}
+  .process-item p{font-size:13.5px; color:#CFE0D7; line-height:1.6; max-width:300px;}
+
+  /* ===== Khối giới thiệu Skin Health Beauty — đặt trong section .process (nền tối) ===== */
+  .eyebrow.on-dark{color:#9FDBB8;}
+  .eyebrow.on-dark::before{background:#9FDBB8;}
+  .shb-grid{display:grid; grid-template-columns:1.1fr .9fr; gap:56px; align-items:center;}
+  .shb-lockup{
+    display:inline-flex; align-items:center; gap:8px; font-family:'Montserrat',sans-serif; font-weight:700;
+    font-size:10px; letter-spacing:.02em; color:#B9D3C6; border:1px solid rgba(255,255,255,.25); border-radius:20px;
+    padding:6px 14px; margin-bottom:22px; text-transform:uppercase;
+  }
+  .shb-lockup b{color:#fff; font-weight:700;}
+  .process h2{font-size:32px; margin-bottom:18px; max-width:480px;}
+  .process .shb-copy p{font-size:14.5px; color:#CFE0D7; line-height:1.75; max-width:460px; margin-bottom:26px;}
+  .shb-chips{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:32px;}
+  .shb-chip{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:#EAF1EC;
+    border:1px solid rgba(255,255,255,.25); padding:8px 14px; border-radius:20px;
+    display:flex; align-items:center; gap:7px;
+  }
+  .shb-chip .dot{width:5px; height:5px; border-radius:50%; background:var(--primary);}
+  .process .btn-primary{background:var(--primary); color:var(--primary-deep); font-weight:700;}
+  .process .btn-primary:hover{filter:brightness(1.06);}
+  @media (max-width:960px){ .shb-grid{grid-template-columns:1fr;} }
+
+  /* ===== Brand strip — single clean row, not duplicated ===== */
+  .brand-strip{background:var(--surface); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  .brand-strip .wrap{padding-top:34px; padding-bottom:34px;}
+  .brand-grid{
+    display:grid; grid-template-columns:repeat(6,1fr); gap:28px; align-items:center;
+    margin-top:24px;
+  }
+  .brand-grid div{
+    text-align:center; font-family:'IBM Plex Mono',monospace; font-size:11px;
+    letter-spacing:.04em; color:var(--ink-soft); border:1px solid var(--line);
+    padding:16px 8px; border-radius:2px;
+  }
+  .brand-more{text-align:right; margin-top:18px; font-size:13px;}
+  .brand-more a{color:var(--primary); font-weight:600;}
+
+  /* ===== Clinical results (fixed rating) ===== */
+  .results-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:28px;}
+  .result-card{background:var(--surface); border:1px solid var(--line);}
+  .result-imgs{display:grid; grid-template-columns:1fr 1fr;}
+  .result-imgs div{aspect-ratio:1/1; background:var(--clay-soft); display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft);}
+  .result-imgs div:first-child{border-right:1px solid var(--line);}
+  .result-body{padding:22px;}
+  .result-body h3{font-size:16px; font-weight:600; margin:0 0 8px;}
+  .result-body p{font-size:13px; color:var(--ink-soft); margin-bottom:14px;}
+  .stars{display:flex; gap:3px; margin-bottom:10px;}
+  .stars svg{width:14px; height:14px; fill:var(--clay);}
+  .result-meta{font-size:12px; color:var(--ink-soft); display:flex; justify-content:space-between; border-top:1px solid var(--line); padding-top:12px;}
+
+  /* ===== Ingredient tags ===== */
+  .ingredient-wrap{display:flex; flex-wrap:wrap; gap:12px;}
+  .ingredient-pill{
+    border:1px solid var(--line); background:var(--surface);
+    padding:14px 20px; display:flex; align-items:baseline; gap:10px;
+    font-size:13.5px; font-weight:600;
+  }
+  .ingredient-pill small{font-family:'IBM Plex Mono',monospace; font-weight:500; color:var(--ink-soft); font-size:11px;}
+
+  /* ===== Footer ===== */
+  footer{background:var(--primary-deep); color:#CFE0D7; padding:64px 0 28px;}
+  .footer-grid{display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:40px; padding-bottom:40px; border-bottom:1px solid rgba(255,255,255,.15);}
+  footer h4{color:#fff; font-size:12.5px; letter-spacing:.06em; text-transform:uppercase; margin-bottom:16px; font-weight:600;}
+  footer ul{list-style:none; display:flex; flex-direction:column; gap:10px; font-size:13.5px;}
+  footer .bottom{display:flex; justify-content:space-between; padding-top:24px; font-size:12px; color:#8FB9A8;}
+
+  .note-banner{
+    background:var(--clay-soft); border:1px dashed var(--clay); color:var(--primary);
+    font-size:13px; padding:14px 18px; margin-bottom:36px; border-radius:2px;
+  }
+
+  /* ===== Product grid (dùng chung cho Flash Sale & Bán chạy) ===== */
+  .countdown{
+    font-family:'IBM Plex Mono',monospace; font-size:12.5px;
+    background:var(--primary); color:#fff; padding:8px 14px;
+    border-radius:2px; display:inline-flex; align-items:center; gap:8px;
+  }
+  .countdown b{font-size:14px; letter-spacing:.03em;}
+  .flash-sale{background:var(--clay-soft);}
+  .product-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:22px;}
+  .product-card{background:var(--surface); border:1px solid var(--line); position:relative;}
+  .product-img{
+    aspect-ratio:1/1; background:#EEF1EA; display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft);
+    position:relative; overflow:hidden;
+  }
+  .rank-tag{
+    position:absolute; top:10px; left:10px; font-family:'Fraunces',serif; font-weight:650;
+    font-size:13px; background:var(--primary); color:#fff; width:26px; height:26px;
+    display:flex; align-items:center; justify-content:center; border-radius:50%;
+  }
+  .discount-tag{
+    position:absolute; top:10px; left:10px; font-family:'IBM Plex Mono',monospace;
+    font-size:11px; color:#fff; background:#C9563A; padding:4px 8px; border-radius:2px;
+  }
+  .wish-btn{
+    position:absolute; top:10px; right:10px; width:28px; height:28px; border-radius:50%;
+    background:#fff; display:flex; align-items:center; justify-content:center; border:1px solid var(--line);
+  }
+  .wish-btn svg{width:13px; height:13px; stroke:var(--ink-soft);}
+  .product-body{padding:16px;}
+  .product-brand{
+    font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase;
+    letter-spacing:.06em; color:var(--ink-soft); margin-bottom:6px;
+  }
+  .product-name{font-size:13.5px; font-weight:600; line-height:1.4; margin-bottom:10px; min-height:38px;}
+  .price-row{display:flex; align-items:baseline; gap:8px; margin-bottom:12px;}
+  .price-new{font-weight:700; color:var(--primary); font-size:15.5px;}
+  .price-old{font-size:12px; color:var(--ink-soft); text-decoration:line-through;}
+  .stock-bar{height:4px; background:var(--line); border-radius:4px; overflow:hidden; margin-bottom:8px;}
+  .stock-bar span{display:block; height:100%; background:#C9563A;}
+  .stock-label{font-size:11px; color:var(--ink-soft);}
+  .cart-btn{
+    width:100%; border:1px solid var(--primary); background:transparent; color:var(--primary);
+    font-size:12.5px; font-weight:600; padding:10px; border-radius:2px; margin-top:12px;
+  }
+  .cart-btn:hover{background:var(--primary); color:#fff;}
+  @media (max-width:960px){ .product-grid{grid-template-columns:repeat(2,1fr);} }
+
+  @media (max-width:960px){
+    nav{display:none;}
+    .hero .wrap{grid-template-columns:1fr;}
+    .hero h1{font-size:36px;}
+    .concern-grid{grid-template-columns:repeat(2,1fr);}
+    .process-grid{grid-template-columns:1fr;}
+    .process-item{border-right:none; border-bottom:1px solid rgba(255,255,255,.18); padding-bottom:30px;}
+    .brand-grid{grid-template-columns:repeat(3,1fr);}
+    .results-grid{grid-template-columns:1fr;}
+    .footer-grid{grid-template-columns:1fr 1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="util-bar">
+  <div class="wrap">
+    <div>Phòng trị liệu da 1:1 — 44 Ngõ 897 Giải Phóng, Hoàng Mai, Hà Nội</div>
+    <div class="links">
+      <span>0967 194 063</span>
+      <span>Tiếng Việt</span>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="wrap nav-row">
+    <div class="logo">Pharma<span>·</span>Cosmetics</div>
+    <nav>
+      <ul>
+        <li><a href="#">Danh mục</a></li>
+        <li><a href="#">Theo thành phần</a></li>
+        <li><a href="#">Điều trị chuyên nghiệp</a></li>
+        <li><a href="#">TPCN khoẻ đẹp</a></li>
+        <li><a href="#">Về chúng tôi</a></li>
+      </ul>
+    </nav>
+    <div class="nav-actions">
+      <div class="icon-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#13241F" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      </div>
+      <div class="icon-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#13241F" stroke-width="1.6"><path d="M6 2l1.5 5h9L18 2"/><path d="M6 7L4 20h16L18 7"/></svg>
+      </div>
+      <button class="btn-primary">Đặt lịch phân tích da</button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">Nền tảng dược mỹ phẩm chuẩn y khoa</div>
+      <h1>Làn da của bạn<br>là một <em>hồ sơ khoa học</em><br>riêng biệt.</h1>
+      <p>Chúng tôi phân tích cấu trúc da, thiết lập phác đồ cá nhân hóa và đồng hành cùng bạn bằng dữ liệu lâm sàng — không phải phỏng đoán.</p>
+      <div class="cta-row">
+        <button class="btn-primary">Đặt lịch phân tích da →</button>
+        <button class="btn-ghost">Xem hành trình cá nhân hóa</button>
+      </div>
+      <div class="trust-line">
+        <div><b>10.000+</b> ca điều trị</div>
+        <div><b>250+</b> thương hiệu chính hãng</div>
+        <div><b>1:1</b> tư vấn cùng chuyên gia</div>
+      </div>
+    </div>
+
+    <div class="ring-figure">
+      <svg viewBox="0 0 400 400">
+        <circle cx="200" cy="200" r="150" fill="none" stroke="#DBDFD5" stroke-width="1"/>
+        <circle cx="200" cy="200" r="110" fill="none" stroke="#DBDFD5" stroke-width="1"/>
+        <circle cx="200" cy="200" r="70" fill="none" stroke="#3cb371" stroke-width="1.4" stroke-dasharray="2 5"/>
+        <circle cx="200" cy="200" r="34" fill="#F3DFD1" stroke="#DE9E7D" stroke-width="1.2"/>
+        <circle cx="284" cy="150" r="4" fill="#DE9E7D"/>
+        <circle cx="120" cy="255" r="4" fill="#3cb371"/>
+        <circle cx="215" cy="330" r="4" fill="#DE9E7D"/>
+        <line x1="284" y1="150" x2="330" y2="105" stroke="#DBDFD5" stroke-width="1"/>
+        <line x1="120" y1="255" x2="55" y2="270" stroke="#DBDFD5" stroke-width="1"/>
+        <line x1="215" y1="330" x2="240" y2="372" stroke="#DBDFD5" stroke-width="1"/>
+      </svg>
+      <div class="ring-tag t1"><span class="dot"></span>Vùng tăng sắc tố</div>
+      <div class="ring-tag t2" style="right:-8%; top:58%;"><span class="dot" style="background:#3cb371;"></span>Hàng rào bảo vệ</div>
+      <div class="ring-tag t3" style="bottom:2%; left:38%;"><span class="dot"></span>Vùng cần phục hồi</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="note-banner">📍 Ghi chú bố cục: gộp 3 chỉ số rỗng cũ ("0 khách hàng…") vào ngay dòng trust-line trong hero — luôn có nội dung thật, không còn ô số 0.</div>
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Phân loại theo tình trạng da</div>
+        <h2>Giải pháp cho từng vấn đề</h2>
+      </div>
+      <p>Chọn đúng vấn đề da của bạn — hệ thống lọc ra phác đồ và sản phẩm phù hợp, không cần đọc hết danh mục.</p>
+    </div>
+    <div class="concern-grid">
+      <a class="concern-card" href="#"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg><span>Mụn trứng cá</span></a>
+      <a class="concern-card" href="#"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M4 12c4-8 12-8 16 0"/><circle cx="12" cy="14" r="2"/></svg><span>Nám &amp; tàn nhang</span></a>
+      <a class="concern-card" href="#"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M12 3v4M12 17v4M4 12h4M16 12h4"/></svg><span>Da khô, thiếu ẩm</span></a>
+      <a class="concern-card" href="#"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M4 18c4-10 12-10 16 0" /></svg><span>Lão hoá da</span></a>
+      <a class="concern-card" href="#"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><path d="M9 12h6"/></svg><span>Kiểm soát dầu thừa</span></a>
+      <a class="concern-card" href="#"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M12 3l7 7-7 11-7-11 7-7z"/></svg><span>Da nhạy cảm</span></a>
+    </div>
+  </div>
+</section>
+
+<section class="flash-sale">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Ưu đãi có hạn</div>
+        <h2>Flash Sale</h2>
+      </div>
+      <div class="countdown">Kết thúc trong <b>04:12:36</b></div>
+    </div>
+    <div class="product-grid">
+      <div class="product-card">
+        <div class="product-img">
+          <span class="discount-tag">-30%</span>
+          <div class="wish-btn"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M12 21s-7-4.35-9.5-9C.5 8 3 4 7 4c2 0 4 1.5 5 3 1-1.5 3-3 5-3 4 0 6.5 4 4.5 8-2.5 4.65-9.5 9-9.5 9z"/></svg></div>
+          Ảnh sản phẩm
+        </div>
+        <div class="product-body">
+          <div class="product-brand">SkinCeuticals</div>
+          <div class="product-name">Serum C E Ferulic chống oxy hoá 30ml</div>
+          <div class="price-row"><span class="price-new">2.590.000₫</span><span class="price-old">3.700.000₫</span></div>
+          <div class="stock-bar"><span style="width:72%;"></span></div>
+          <div class="stock-label">Đã bán 72% số lượng</div>
+          <button class="cart-btn">Thêm vào giỏ</button>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img">
+          <span class="discount-tag">-25%</span>
+          <div class="wish-btn"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M12 21s-7-4.35-9.5-9C.5 8 3 4 7 4c2 0 4 1.5 5 3 1-1.5 3-3 5-3 4 0 6.5 4 4.5 8-2.5 4.65-9.5 9-9.5 9z"/></svg></div>
+          Ảnh sản phẩm
+        </div>
+        <div class="product-body">
+          <div class="product-brand">Obagi Medical</div>
+          <div class="product-name">Bộ Obagi Nu-Derm hệ chính quy 6 bước</div>
+          <div class="price-row"><span class="price-new">6.750.000₫</span><span class="price-old">9.000.000₫</span></div>
+          <div class="stock-bar"><span style="width:45%;"></span></div>
+          <div class="stock-label">Đã bán 45% số lượng</div>
+          <button class="cart-btn">Thêm vào giỏ</button>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img">
+          <span class="discount-tag">-20%</span>
+          <div class="wish-btn"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M12 21s-7-4.35-9.5-9C.5 8 3 4 7 4c2 0 4 1.5 5 3 1-1.5 3-3 5-3 4 0 6.5 4 4.5 8-2.5 4.65-9.5 9-9.5 9z"/></svg></div>
+          Ảnh sản phẩm
+        </div>
+        <div class="product-body">
+          <div class="product-brand">La Roche-Posay</div>
+          <div class="product-name">Kem chống nắng Anthelios UVMune 400 50ml</div>
+          <div class="price-row"><span class="price-new">395.000₫</span><span class="price-old">495.000₫</span></div>
+          <div class="stock-bar"><span style="width:88%;"></span></div>
+          <div class="stock-label">Đã bán 88% số lượng</div>
+          <button class="cart-btn">Thêm vào giỏ</button>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img">
+          <span class="discount-tag">-35%</span>
+          <div class="wish-btn"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M12 21s-7-4.35-9.5-9C.5 8 3 4 7 4c2 0 4 1.5 5 3 1-1.5 3-3 5-3 4 0 6.5 4 4.5 8-2.5 4.65-9.5 9-9.5 9z"/></svg></div>
+          Ảnh sản phẩm
+        </div>
+        <div class="product-body">
+          <div class="product-brand">Mesoestetic</div>
+          <div class="product-name">Serum Melan Recovery phục hồi sau peel</div>
+          <div class="price-row"><span class="price-new">1.430.000₫</span><span class="price-old">2.200.000₫</span></div>
+          <div class="stock-bar"><span style="width:61%;"></span></div>
+          <div class="stock-label">Đã bán 61% số lượng</div>
+          <button class="cart-btn">Thêm vào giỏ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="process">
+  <div class="wrap shb-grid">
+    <div class="shb-copy">
+      <div class="shb-lockup">PHARMA COSMETICS <span style="opacity:.5;">×</span> <b>Skin Health Beauty</b></div>
+      <div class="eyebrow on-dark">Khi routine tại nhà chưa đủ</div>
+      <h2>Skin Health Beauty — khoa học vì làn da của bạn</h2>
+      <p>Đội ngũ chuyên gia tiếp cận da bạn theo cách một chuyên gia da liễu tiếp cận bệnh nhân: phân tích cấp độ tế bào, thiết kế phác đồ cá nhân hóa 1:1 — không có công thức chung cho mọi làn da.</p>
+      <div class="shb-chips">
+        <div class="shb-chip"><span class="dot"></span>Skin Type — Baumann 16</div>
+        <div class="shb-chip"><span class="dot"></span>Hydration &amp; TEWL</div>
+        <div class="shb-chip"><span class="dot"></span>Lipid Barrier</div>
+      </div>
+      <a class="btn-primary" href="https://pharmacosmetics-vn.com/skin-health-beauty">Khám phá Skin Health Beauty →</a>
+    </div>
+
+    <div class="ring-figure">
+      <svg viewBox="0 0 400 400">
+        <circle cx="200" cy="200" r="150" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+        <circle cx="200" cy="200" r="110" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+        <circle cx="200" cy="200" r="70" fill="none" stroke="#3cb371" stroke-width="1.4" stroke-dasharray="2 5"/>
+        <circle cx="200" cy="200" r="34" fill="#F3DFD1" stroke="#DE9E7D" stroke-width="1.2"/>
+        <circle cx="284" cy="150" r="4" fill="#DE9E7D"/>
+        <circle cx="120" cy="255" r="4" fill="#3cb371"/>
+        <circle cx="215" cy="330" r="4" fill="#DE9E7D"/>
+        <line x1="284" y1="150" x2="330" y2="105" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
+        <line x1="120" y1="255" x2="55" y2="270" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
+        <line x1="215" y1="330" x2="240" y2="372" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
+      </svg>
+      <div class="ring-tag t1"><span class="dot"></span>Vùng tăng sắc tố</div>
+      <div class="ring-tag t2" style="right:-8%; top:58%;"><span class="dot" style="background:#3cb371;"></span>Hàng rào bảo vệ</div>
+      <div class="ring-tag t3" style="bottom:2%; left:38%;"><span class="dot"></span>Vùng cần phục hồi</div>
+    </div>
+  </div>
+</section>
+
+<section class="brand-strip">
+  <div class="wrap">
+    <div class="section-head" style="margin-bottom:0;">
+      <div>
+        <div class="eyebrow">Nhập khẩu chính hãng</div>
+        <h2 style="font-size:24px;">Thương hiệu tiêu biểu</h2>
+      </div>
+    </div>
+    <div class="brand-grid">
+      <div>ZO SKIN HEALTH</div><div>SKINCEUTICALS</div><div>OBAGI MEDICAL</div>
+      <div>MESOESTETIC</div><div>LA ROCHE-POSAY</div><div>BIODERMA</div>
+    </div>
+    <div class="brand-more"><a href="#">Xem toàn bộ 250+ thương hiệu →</a></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="note-banner">📍 Ghi chú bố cục: mỗi thẻ chỉ 1 khối rating dạng SVG sao thật — thay cho đoạn lỗi hệ thống đang hiển thị hiện tại.</div>
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Được kiểm chứng lâm sàng</div>
+        <h2>Minh chứng cho làn da rạng rỡ</h2>
+      </div>
+    </div>
+    <div class="results-grid">
+      <div class="result-card">
+        <div class="result-imgs"><div>Trước</div><div>Sau</div></div>
+        <div class="result-body">
+          <div class="stars">
+            <svg viewBox="0 0 20 20"><polygon points="10,1 12.6,7 19,7.5 14,12 15.5,18.5 10,15 4.5,18.5 6,12 1,7.5 7.4,7"/></svg>
+            <svg viewBox="0 0 20 20"><polygon points="10,1 12.6,7 19,7.5 14,12 15.5,18.5 10,15 4.5,18.5 6,12 1,7.5 7.4,7"/></svg>
+            <svg viewBox="0 0 20 20"><polygon points="10,1 12.6,7 19,7.5 14,12 15.5,18.5 10,15 4.5,18.5 6,12 1,7.5 7.4,7"/></svg>
+            <svg viewBox="0 0 20 20"><polygon points="10,1 12.6,7 19,7.5 14,12 15.5,18.5 10,15 4.5,18.5 6,12 1,7.5 7.4,7"/></svg>
+            <svg viewBox="0 0 20 20"><polygon points="10,1 12.6,7 19,7.5 14,12 15.5,18.5 10,15 4.5,18.5 6,12 1,7.5 7.4,7"/></svg>
+          </div>
+          <h3>Chăm sóc da mụn chuyên sâu</h3>
+          <p>Liệu trình HISTOLAB kết hợp làm sạch y khoa và tái tạo tế bào.</p>
+          <div class="result-meta"><span>Hương Ly, 21 tuổi</span><span>Hà Nội</span></div>
+        </div>
+      </div>
+      <div class="result-card">
+        <div class="result-imgs"><div>Trước</div><div>Sau</div></div>
+        <div class="result-body">
+          <div class="stars">
+            <svg viewBox="0 0 20 20"><polygon points="10,1 12.6,7 19,7.5 14,12 15.5,18.5 10,15 4.5,18.5 6,12 1,7.5 7.4,7"/></svg>
+            <svg viewBox="0 0 20 20"><polygon points="10,1 12.6,7 19,7.5 14,12 15.5,18.5 10,15 4.5,18.5 6,12 1,7.5 7.4,7"/></svg>
+            <svg viewBox="0 0 20 20"><polygon points="10,1 12.6,7 19,7.5 14,12 15.5,18.5 10,15 4.5,18.5 6,12 1,7.5 7.4,7"/></svg>
+            <svg viewBox="0 0 20 20"><polygon points="10,1 12.6,7 19,7.5 14,12 15.5,18.5 10,15 4.5,18.5 6,12 1,7.5 7.4,7"/></svg>
+            <svg viewBox="0 0 20 20"><polygon points="10,1 12.6,7 19,7.5 14,12 15.5,18.5 10,15 4.5,18.5 6,12 1,7.5 7.4,7"/></svg>
+          </div>
+          <h3>Tiêu viêm, ngăn sẹo mụn cấp tốc</h3>
+          <p>MESO DERMICA ACNEZON — huyết thanh trị mụn chuẩn y khoa Thụy Sĩ.</p>
+          <div class="result-meta"><span>Mai Lan, 28 tuổi</span><span>Hà Nội</span></div>
+        </div>
+      </div>
+      <div class="result-card">
+        <div class="result-imgs"><div>Trước</div><div>Sau</div></div>
+        <div class="result-body">
+          <div class="stars">
+            <svg viewBox="0 0 20 20"><polygon points="10,1 12.6,7 19,7.5 14,12 15.5,18.5 10,15 4.5,18.5 6,12 1,7.5 7.4,7"/></svg>
+            <svg viewBox="0 0 20 20"><polygon points="10,1 12.6,7 19,7.5 14,12 15.5,18.5 10,15 4.5,18.5 6,12 1,7.5 7.4,7"/></svg>
+            <svg viewBox="0 0 20 20"><polygon points="10,1 12.6,7 19,7.5 14,12 15.5,18.5 10,15 4.5,18.5 6,12 1,7.5 7.4,7"/></svg>
+            <svg viewBox="0 0 20 20"><polygon points="10,1 12.6,7 19,7.5 14,12 15.5,18.5 10,15 4.5,18.5 6,12 1,7.5 7.4,7"/></svg>
+            <svg viewBox="0 0 20 20"><polygon points="10,1 12.6,7 19,7.5 14,12 15.5,18.5 10,15 4.5,18.5 6,12 1,7.5 7.4,7"/></svg>
+          </div>
+          <h3>Giải nhiệt &amp; tái tạo da nhạy cảm</h3>
+          <p>Tảo Spirulina cao cấp làm dịu, phục hồi hàng rào bảo vệ da.</p>
+          <div class="result-meta"><span>Thanh Hằng</span><span>Giám đốc sáng tạo</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Thấu hiểu làn da bằng khoa học</div>
+        <h2>Tìm theo hoạt chất</h2>
+      </div>
+    </div>
+    <div class="ingredient-wrap">
+      <div class="ingredient-pill">Tretinoin <small>20 SP</small></div>
+      <div class="ingredient-pill">Retinol <small>56 SP</small></div>
+      <div class="ingredient-pill">Hyaluronic Acid <small>31 SP</small></div>
+      <div class="ingredient-pill">Azelaic Acid <small>25 SP</small></div>
+      <div class="ingredient-pill">Niacinamide B3 <small>22 SP</small></div>
+      <div class="ingredient-pill">Adapalene <small>15 SP</small></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Xếp hạng theo doanh số tháng này</div>
+        <h2>Sản phẩm bán chạy</h2>
+      </div>
+      <a class="btn-ghost" href="#" style="padding:10px 20px;">Xem tất cả →</a>
+    </div>
+    <div class="product-grid">
+      <div class="product-card">
+        <div class="product-img">
+          <span class="rank-tag">01</span>
+          <div class="wish-btn"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M12 21s-7-4.35-9.5-9C.5 8 3 4 7 4c2 0 4 1.5 5 3 1-1.5 3-3 5-3 4 0 6.5 4 4.5 8-2.5 4.65-9.5 9-9.5 9z"/></svg></div>
+          Ảnh sản phẩm
+        </div>
+        <div class="product-body">
+          <div class="product-brand">ZO Skin Health</div>
+          <div class="product-name">Exfoliating Cleanser làm sạch &amp; tẩy tế bào chết</div>
+          <div class="price-row"><span class="price-new">1.150.000₫</span></div>
+          <div class="stock-label">★★★★★ &nbsp;(214 đánh giá)</div>
+          <button class="cart-btn">Thêm vào giỏ</button>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img">
+          <span class="rank-tag">02</span>
+          <div class="wish-btn"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M12 21s-7-4.35-9.5-9C.5 8 3 4 7 4c2 0 4 1.5 5 3 1-1.5 3-3 5-3 4 0 6.5 4 4.5 8-2.5 4.65-9.5 9-9.5 9z"/></svg></div>
+          Ảnh sản phẩm
+        </div>
+        <div class="product-body">
+          <div class="product-brand">HistoLab</div>
+          <div class="product-name">Bộ liệu trình HistoLab trị mụn chuyên sâu</div>
+          <div class="price-row"><span class="price-new">3.280.000₫</span></div>
+          <div class="stock-label">★★★★★ &nbsp;(189 đánh giá)</div>
+          <button class="cart-btn">Thêm vào giỏ</button>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img">
+          <span class="rank-tag">03</span>
+          <div class="wish-btn"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M12 21s-7-4.35-9.5-9C.5 8 3 4 7 4c2 0 4 1.5 5 3 1-1.5 3-3 5-3 4 0 6.5 4 4.5 8-2.5 4.65-9.5 9-9.5 9z"/></svg></div>
+          Ảnh sản phẩm
+        </div>
+        <div class="product-body">
+          <div class="product-brand">CeraVe</div>
+          <div class="product-name">Kem dưỡng ẩm phục hồi da PM 340g</div>
+          <div class="price-row"><span class="price-new">465.000₫</span></div>
+          <div class="stock-label">★★★★★ &nbsp;(302 đánh giá)</div>
+          <button class="cart-btn">Thêm vào giỏ</button>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="product-img">
+          <span class="rank-tag">04</span>
+          <div class="wish-btn"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M12 21s-7-4.35-9.5-9C.5 8 3 4 7 4c2 0 4 1.5 5 3 1-1.5 3-3 5-3 4 0 6.5 4 4.5 8-2.5 4.65-9.5 9-9.5 9z"/></svg></div>
+          Ảnh sản phẩm
+        </div>
+        <div class="product-body">
+          <div class="product-brand">SVR</div>
+          <div class="product-name">Serum Sébiaclear cân bằng dầu &amp; ngừa mụn</div>
+          <div class="price-row"><span class="price-new">590.000₫</span></div>
+          <div class="stock-label">★★★★★ &nbsp;(167 đánh giá)</div>
+          <button class="cart-btn">Thêm vào giỏ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="logo" style="color:#fff;">Pharma<span style="color:#8FB9A8;">·</span>Cosmetics</div>
+        <p style="margin-top:14px; font-size:13px; max-width:280px;">Phòng trị liệu da chuyên nghiệp 1:1 — Số 44 Ngõ 897 Giải Phóng, Hoàng Mai, Hà Nội.</p>
+      </div>
+      <div>
+        <h4>Danh mục</h4>
+        <ul><li>Theo tình trạng da</li><li>Theo thành phần</li><li>TPCN khoẻ đẹp</li><li>Điều trị chuyên nghiệp</li></ul>
+      </div>
+      <div>
+        <h4>Chính sách</h4>
+        <ul><li>Đổi / trả hàng</li><li>Bảo mật thông tin</li><li>Vận chuyển</li></ul>
+      </div>
+      <div>
+        <h4>Kết nối</h4>
+        <ul><li>Zalo</li><li>Facebook</li><li>Instagram</li><li>0967 194 063</li></ul>
+      </div>
+    </div>
+    <div class="bottom">
+      <span>© Pharma Cosmetics</span>
+      <span>Đã đăng ký Bộ Công Thương</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -117,6 +117,9 @@
 			var el = e.target;
 			if (!el || el.tagName !== 'IMG' || el.dataset.fallbackApplied) return;
 			el.dataset.fallbackApplied = '1';
+			el.removeAttribute('srcset');
+			el.removeAttribute('data-srcset');
+			el.setAttribute('data-src', '{{ "no-image.jpg" | asset_url }}');
 			el.src = '{{ "no-image.jpg" | asset_url }}';
 		}, true);
 		</script>
@@ -318,9 +321,15 @@
 
 		</script>
 	{{ 'vendor_appbulk.css' | asset_url | stylesheet_tag }}
+{% include 'storefront_theme' %}
+{% if template == 'index' %}
+{{ 'home-portal.css' | asset_url | stylesheet_tag }}
+{{ 'home-portal-integration.css' | asset_url | stylesheet_tag }}
+{% endif %}
 </head>
-	<body>
+	<body class="pc-site-v3{% if template == 'index' %} pc-home-v3{% endif %}">
 		<div class="opacity_menu"></div>
+		{% if template == 'index' %}<a class="portal-skip-link" href="#portal-main">Đến nội dung chính</a>{% endif %}
 		{% include 'header' %}
 		<div class="bodywrap">
 			{{ content_for_layout }}

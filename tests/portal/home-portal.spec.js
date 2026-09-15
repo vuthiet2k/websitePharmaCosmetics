@@ -1,0 +1,178 @@
+const { test, expect } = require('@playwright/test');
+const { Liquid } = require('liquidjs');
+const path = require('path');
+const fs = require('fs');
+
+const settings = JSON.parse(fs.readFileSync(path.join(__dirname, '../../configs/settings_data.json'), 'utf8')).current;
+const engine = new Liquid({ root: path.join(__dirname, '../../snippets'), extname: '.bwt' });
+
+async function openHome(page) {
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('.pc-portal')).toBeVisible();
+  return errors;
+}
+
+test('v3 typography, section order and real destinations', async ({ page }) => {
+  const errors = await openHome(page);
+  await expect(page.locator('h1')).toHaveCount(1);
+  await expect(page.locator('.hero h1')).toHaveCSS('font-family', /Fraunces/);
+  await expect(page.locator('.hero .ring')).toHaveCSS('box-shadow', 'none');
+  await expect(page.locator('.pc-portal')).not.toContainText('GPKD 0109xxxxxx');
+  expect(await page.locator('.pc-portal a[href="#"]').count()).toBe(0);
+  const ids = await page.locator('.portal-section').evaluateAll(nodes => nodes.map(n => n.id));
+  expect(ids).toEqual(Array.from({ length: 18 }, (_, i) => settings[`home_section_${i+1}`]).filter(s => s !== 'none'));
+  await page.getByRole('link', { name: 'Chọn theo vấn đề da', exact: true }).click();
+  await expect(page).toHaveURL(/#section_solutions$/);
+  await expect(page.locator('.concerns a')).toHaveCount(6);
+  await expect(page.locator('.actives a')).toHaveCount(9);
+  await expect(page.locator('.post-lead')).toHaveAttribute('href', /\S+/);
+  expect(errors).toEqual([]);
+});
+
+test('flash sale and featured carousel move, prices and CTA stay readable', async ({ page }) => {
+  const errors = await openHome(page);
+  for (const selector of ['.swiper_sale', '.swiper_featured']) {
+    const carousel = page.locator(selector);
+    await carousel.scrollIntoViewIfNeeded();
+    await expect(carousel.locator('form').first()).toBeVisible();
+    await expect.poll(() => carousel.evaluate(e => e.swiper?.activeIndex)).toBe(0);
+    const sizing = await carousel.evaluate(e => ({ actual: e.querySelector('.swiper-slide').getBoundingClientRect().width, expected: (e.clientWidth - 3 * e.swiper.params.spaceBetween) / 4 }));
+    expect(Math.abs(sizing.actual - sizing.expected)).toBeLessThan(1);
+    await carousel.getByRole('button', { name: 'Sản phẩm tiếp theo', exact: true }).click();
+    await expect.poll(() => carousel.evaluate(e => e.swiper.activeIndex)).toBeGreaterThan(0);
+    await carousel.getByRole('button', { name: 'Sản phẩm trước', exact: true }).click();
+    await expect.poll(() => carousel.evaluate(e => e.swiper.activeIndex)).toBe(0);
+    await expect(carousel.locator('.pc-btn--action').first()).toHaveCSS('color', 'rgb(0, 63, 45)');
+  }
+  await expect(page.locator('.pc-flashsale')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(page.locator('.pc-flashsale__countdown-timer')).not.toContainText('NaN');
+  expect(errors).toEqual([]);
+});
+
+test('one click adds one item through the existing cart API', async ({ page }) => {
+  const errors = await openHome(page);
+  await page.locator('.swiper_featured').scrollIntoViewIfNeeded();
+  const add = page.locator('.swiper_featured .add_to_cart').first();
+  await expect(add).toBeAttached();
+  // Move Swiper to the purchasable single-variant card, then use the real button.
+  await add.evaluate(e => {
+    const slide = e.closest('.swiper-slide');
+    const swiper = e.closest('.swiper-container').swiper;
+    swiper.slideTo(Array.from(slide.parentElement.children).indexOf(slide), 0);
+  });
+  let requests = 0;
+  page.on('request', request => { if (new URL(request.url()).pathname === '/cart/add.js' && request.method() === 'POST') requests++; });
+  const response = page.waitForResponse(r => new URL(r.url()).pathname === '/cart/add.js' && r.request().method() === 'POST');
+  await add.click();
+  expect((await response).ok()).toBeTruthy();
+  await expect.poll(async () => (await (await page.request.get('/cart.js')).json()).item_count).toBe(1);
+  expect(requests).toBe(1);
+  expect(errors).toEqual([]);
+});
+
+test('multiple variants navigate to the product instead of submitting a guessed variant', async ({ page }) => {
+  await openHome(page);
+  await page.locator('.swiper_sale').scrollIntoViewIfNeeded();
+  const detail = page.locator('.swiper_sale').getByRole('button', { name: 'Xem chi tiết', exact: true }).first();
+  await expect(detail).toBeVisible();
+  const url = await detail.locator('xpath=ancestor::form').locator('.product-name a').getAttribute('href');
+  let adds = 0;
+  page.on('request', r => { if (r.url().includes('/cart/add')) adds++; });
+  await detail.click();
+  await expect(page).toHaveURL(new RegExp(url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'));
+  expect(adds).toBe(0);
+  await expect(page.locator('body')).not.toHaveClass(/pc-home-v3/);
+});
+
+for (const width of [360, 390, 768]) {
+  test(`responsive layout and mobile navigation at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    const errors = await openHome(page);
+    for (const section of ['.hero', '.concerns', '.swiper_sale', '.dark-zone', '.post-lead', '.footer']) {
+      await page.locator(section).scrollIntoViewIfNeeded();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+    }
+    await page.evaluate(() => scrollTo(0, 0));
+    await page.locator('#mb-search-open').click();
+    await expect(page.locator('#mb-search-popup')).toBeVisible();
+    await page.locator('#mb-search-input').fill('Retinol');
+    await page.locator('#mb-search-input').press('Enter');
+    await expect(page).toHaveURL(/\/search\?query=Retinol&type=product/);
+    expect(errors).toEqual([]);
+  });
+}
+
+test('missing and failed images use the local fallback, including dynamic app content', async ({ page }) => {
+  await openHome(page);
+  await page.evaluate(() => {
+    const img = document.createElement('img');
+    img.id = 'failed-product-image';
+    img.srcset = '/missing-product-image.jpg 1x';
+    img.src = '/missing-product-image.jpg';
+    document.querySelector('.ab-most-view-product-module').append(img);
+  });
+  const img = page.locator('#failed-product-image');
+  await expect(img).toHaveAttribute('src', /no-image\.jpg/);
+  await expect.poll(() => img.evaluate(e => e.complete && e.naturalWidth > 0)).toBeTruthy();
+  expect(await img.getAttribute('srcset')).toBeNull();
+});
+
+test('section settings tolerate disabled, unknown and duplicate slots', async () => {
+  const html = await engine.renderFile('home_portal', {
+    settings: { home_section_1: 'section_portal_split', home_section_2: 'none', home_section_3: 'removed_section', home_section_4: 'section_portal_split', home_section_5: 'section_hero' },
+    store: { name: 'Test Store' },
+  });
+  expect((html.match(/id="section_portal_split"/g) || []).length).toBe(1);
+  expect(html).not.toContain('removed_section');
+  expect(html.indexOf('id="section_portal_split"')).toBeLessThan(html.indexOf('id="section_hero"'));
+});
+
+test('empty blog, image mode fallback and newsletter configuration fail gracefully', async () => {
+  const hero = await engine.renderFile('portal_hero', {settings:{portal_hero_visual:'image'}});
+  expect(hero).toContain('Sơ đồ phân tích lớp da');
+  expect(hero).not.toContain('<img');
+  const blog = await engine.renderFile('section_portal_blog', { settings: { portal_blog: 'missing' }, blogs: {} });
+  expect(blog).toContain('Bài viết đang được cập nhật.');
+  const newsletter = await engine.renderFile('section_portal_newsletter', {settings:{}});
+  expect(newsletter.trim()).toBe('');
+  const configured = await engine.renderFile('section_portal_newsletter', {settings:{portal_newsletter_action:'https://example.test/subscribe/post'}});
+  expect(configured).toContain('action="https://example.test/subscribe/post"');
+  expect(configured).toContain('name="EMAIL"');
+  expect(configured).not.toContain('return false');
+});
+
+test('product cards keep sold-out, contact-price and preorder behavior', async () => {
+  const base = { id:1, name:'Test product', url:'/test-product', variants:[{id:11,price:100,compare_at_price:150}], selected_or_first_available_variant:{id:11,price:100,compare_at_price:150}, images:[], tags:[] };
+  const render = product => engine.renderFile('product_grid_office_sale', { product, settings: {}, template: 'index' });
+  const soldout = await render({...base, available:false});
+  expect(soldout).toContain('disabled class="pc-btn--action');
+  expect(soldout).not.toContain('class="pc-btn--action add_to_cart');
+  const contact = await render({...base, available:true, selected_or_first_available_variant:{price:0,compare_at_price:0}});
+  expect(contact).toContain('Liên hệ');
+  expect(contact).not.toContain('class="pc-btn--action add_to_cart');
+  const preorder = await render({...base, available:true,tags:['Pre-order']});
+  expect(preorder).toContain('Đặt hàng trước');
+  expect(preorder).not.toContain('class="pc-btn--action add_to_cart');
+  expect(preorder).not.toContain('class="lazyload duration-300 image2"');
+});
+
+test('late app carousel moves and other routes keep their layout', async ({ page }) => {
+  await openHome(page);
+  await page.locator('.ab-most-view-product-module').scrollIntoViewIfNeeded();
+  const body = page.locator('.most-view-module-body');
+  await expect.poll(() => body.evaluate(e => !!e.swiper)).toBeTruthy();
+  // The preview app has four products: desktop shows all four, so Next is correctly disabled.
+  await expect(page.locator('.most-view-btn-pager-next')).toBeDisabled();
+  await page.setViewportSize({width:768,height:1000});
+  await expect(page.locator('.most-view-btn-pager-next')).toBeEnabled();
+  await page.locator('.most-view-btn-pager-next').click();
+  await expect.poll(() => body.evaluate(e => e.swiper.activeIndex)).toBeGreaterThan(0);
+  for (const url of ['/collections/all', '/dat-lich-tu-van', '/skin-health-beauty', '/mops-admin']) {
+    const response = await page.goto(url, {waitUntil:'domcontentloaded'});
+    expect(response.status()).toBe(200);
+    await expect(page.locator('body')).not.toHaveClass(/pc-home-v3/);
+    await expect(page.locator('link[href*="home-portal"]')).toHaveCount(0);
+  }
+});

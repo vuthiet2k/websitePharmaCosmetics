@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SKIN HEALTH BEAUTY × PHARMA COSMETICS — Đề xuất giao diện</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,450;9..144,560;9..144,650&family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  /* ===== Design tokens — GIỐNG HỆT hệ thống Pharma Cosmetics để đồng nhất thương hiệu ===== */
+  :root{
+    --bg:#F5F6F1;
+    --surface:#FFFFFF;
+    --ink:#13241F;
+    --ink-soft:#4B5B54;
+    --primary:#3cb371;
+    --primary-deep:#1F5A3B;
+    --clay:#DE9E7D;
+    --clay-soft:#F3DFD1;
+    --line:#DBDFD5;
+    --radius:2px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; line-height:1.5;}
+  img,svg{display:block; max-width:100%;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 32px;}
+  h1,h2,h3,.display{font-family:'Fraunces',serif;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--primary); display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{content:""; width:22px; height:1px; background:var(--primary);}
+  .eyebrow.on-dark{color:#9FDBB8;}
+  .eyebrow.on-dark::before{background:#9FDBB8;}
+  button,.btn{font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px; cursor:pointer; border:none;
+    padding:15px 28px; border-radius:var(--radius); display:inline-flex; align-items:center; gap:8px;
+    transition:transform .15s ease, background .15s ease;}
+  .btn-primary{background:var(--primary); color:#fff;}
+  .btn-primary:hover{filter:brightness(.92); transform:translateY(-1px);}
+  .btn-ghost{background:transparent; color:var(--ink); border:1px solid var(--ink);}
+  .btn-ghost:hover{border-color:var(--primary); color:var(--primary);}
+
+  /* ===== Utility bar — cùng dải trên cùng như site mẹ Pharma Cosmetics ===== */
+  .util-bar{background:var(--primary-deep); color:#EAF1EC; font-size:12px;}
+  .util-bar .wrap{display:flex; justify-content:space-between; align-items:center; height:34px;}
+  .util-bar .links{display:flex; gap:22px; opacity:.85;}
+
+  /* ===== Header — cùng khung, khác lockup logo để thể hiện quan hệ thương hiệu con ===== */
+  header{background:var(--surface); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:50;}
+  .nav-row{display:flex; align-items:center; justify-content:space-between; height:78px;}
+  .lockup{display:flex; align-items:center; gap:12px;}
+  .lockup .parent{font-family:'Montserrat',sans-serif; font-size:9.5px; font-weight:700; letter-spacing:.06em; color:var(--ink-soft);
+    display:flex; flex-direction:column; line-height:1.25;}
+  .lockup .parent b{color:var(--primary); font-size:10.5px;}
+  .lockup .divider{width:1px; height:30px; background:var(--line);}
+  .logo{font-family:'Montserrat',sans-serif; font-weight:700; font-size:19px; letter-spacing:.005em; text-transform:uppercase;}
+  .logo span{color:var(--primary);}
+  nav ul{display:flex; gap:30px; list-style:none;}
+  nav a{font-size:13.5px; font-weight:500; color:var(--ink-soft);}
+  nav a:hover{color:var(--primary);}
+  .nav-actions{display:flex; align-items:center; gap:16px;}
+  .icon-btn{width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid var(--line);}
+
+  /* ===== Hero ===== */
+  .hero{padding:70px 0 84px; overflow:hidden;}
+  .hero .wrap{display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:center;}
+  .hero h1{font-size:46px; font-weight:560; line-height:1.1; letter-spacing:-.01em; margin:20px 0 22px;}
+  .hero h1 em{font-style:italic; color:var(--primary);}
+  .hero p{font-size:16px; color:var(--ink-soft); max-width:440px; margin-bottom:32px;}
+  .hero .cta-row{display:flex; gap:14px;}
+
+  .scan-figure{position:relative; aspect-ratio:1/1;}
+  .scan-figure svg{width:100%; height:100%;}
+  .scan-tag{position:absolute; font-family:'IBM Plex Mono',monospace; font-size:10.5px; background:var(--surface);
+    border:1px solid var(--line); padding:5px 9px; border-radius:20px; display:flex; align-items:center; gap:6px; white-space:nowrap;}
+  .scan-tag .dot{width:5px; height:5px; border-radius:50%; background:var(--primary);}
+
+  /* ===== Section shell ===== */
+  section{padding:76px 0;}
+  .section-head{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:40px; gap:24px; flex-wrap:wrap;}
+  .section-head h2{font-size:30px; font-weight:560; letter-spacing:-.01em; margin-top:12px;}
+  .section-head p{color:var(--ink-soft); font-size:14.5px; max-width:420px;}
+
+  /* ===== Quote block ===== */
+  .quote-block{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--primary);
+    padding:40px 48px; display:grid; grid-template-columns:1.3fr 1fr; gap:48px; align-items:center;}
+  .quote-block blockquote{font-family:'Fraunces',serif; font-size:23px; font-weight:450; line-height:1.45; font-style:italic; color:var(--ink);}
+  .quote-block cite{display:block; margin-top:18px; font-style:normal; font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-soft);}
+  .quote-block .side p{font-size:14px; color:var(--ink-soft); line-height:1.7;}
+
+  /* ===== Metric cards (Skin Type / Hydration / Lipid Barrier) ===== */
+  .metric-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); border:1px solid var(--line); margin-top:40px;}
+  .metric-card{background:var(--surface); padding:30px 26px;}
+  .metric-num{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--primary); margin-bottom:16px;}
+  .metric-card h3{font-size:17px; font-weight:600; margin-bottom:10px; font-family:'Inter',sans-serif;}
+  .metric-card p{font-size:13.5px; color:var(--ink-soft); line-height:1.6;}
+
+  /* ===== 6 nhóm giải pháp ===== */
+  .solution-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); border:1px solid var(--line);}
+  .solution-card{background:var(--surface); padding:28px 26px; display:flex; flex-direction:column; gap:16px; min-height:170px;}
+  .solution-tag{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em;}
+  .solution-card h3{font-size:16.5px; font-weight:600; line-height:1.35;}
+  .solution-card a{font-size:12.5px; font-weight:600; color:var(--primary); margin-top:auto; display:flex; align-items:center; gap:6px;}
+
+  /* ===== 6-step journey (timeline dọc, số thứ tự đúng vì là quy trình thật) ===== */
+  .journey{background:var(--primary-deep); color:#fff;}
+  .journey .section-head h2{color:#fff;}
+  .journey .section-head p{color:#B9D3C6;}
+  .timeline{border-top:1px solid rgba(255,255,255,.18); margin-top:8px;}
+  .step-row{display:grid; grid-template-columns:70px 1fr 130px; gap:24px; padding:26px 0; border-bottom:1px solid rgba(255,255,255,.15); align-items:start;}
+  .step-num{font-family:'Fraunces',serif; font-size:26px; font-weight:560; color:#7FC79E;}
+  .step-body h3{font-size:17px; font-weight:600; margin-bottom:8px;}
+  .step-body p{font-size:13.5px; color:#CFE0D7; line-height:1.65; max-width:560px;}
+  .step-time{font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#9FDBB8; text-align:right; padding-top:6px;}
+
+  /* ===== Case study / khi phác đồ cần thay đổi ===== */
+  .chart-card{background:var(--surface); border:1px solid var(--line); padding:32px; margin-bottom:36px;}
+  .chart-label{display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); margin-bottom:14px;}
+  .chart-svg{width:100%; height:120px;}
+  .case-grid{display:grid; grid-template-columns:1fr 1fr; gap:24px;}
+  .case-card{background:var(--surface); border:1px solid var(--line); padding:28px;}
+  .case-card .eyebrow{margin-bottom:14px;}
+  .case-card h3{font-size:17px; font-weight:600; margin-bottom:12px; line-height:1.4;}
+  .case-card p{font-size:13.5px; color:var(--ink-soft); line-height:1.7;}
+
+  /* ===== Footer — cùng hệ thống với Pharma Cosmetics ===== */
+  footer{background:var(--primary-deep); color:#CFE0D7; padding:64px 0 28px;}
+  .footer-grid{display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:40px; padding-bottom:40px; border-bottom:1px solid rgba(255,255,255,.15);}
+  footer h4{color:#fff; font-size:12.5px; letter-spacing:.06em; text-transform:uppercase; margin-bottom:16px; font-weight:600;}
+  footer ul{list-style:none; display:flex; flex-direction:column; gap:10px; font-size:13.5px;}
+  footer .bottom{display:flex; justify-content:space-between; padding-top:24px; font-size:12px; color:#8FB9A8;}
+
+  .note-banner{background:var(--clay-soft); border:1px dashed var(--clay); color:var(--primary); font-size:13px; padding:14px 18px; margin-bottom:36px; border-radius:2px;}
+
+  @media (max-width:960px){
+    nav{display:none;}
+    .hero .wrap{grid-template-columns:1fr;}
+    .hero h1{font-size:34px;}
+    .quote-block{grid-template-columns:1fr;}
+    .metric-grid,.solution-grid{grid-template-columns:1fr;}
+    .step-row{grid-template-columns:50px 1fr; grid-template-areas:"num body" "time time";}
+    .step-time{text-align:left;}
+    .case-grid{grid-template-columns:1fr;}
+    .footer-grid{grid-template-columns:1fr 1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="util-bar">
+  <div class="wrap">
+    <div>Phòng trị liệu da 1:1 — 44 Ngõ 897 Giải Phóng, Hoàng Mai, Hà Nội</div>
+    <div class="links"><span>0967 194 063</span><span>Tiếng Việt</span></div>
+  </div>
+</div>
+
+<header>
+  <div class="wrap nav-row">
+    <div class="lockup">
+      <div class="parent">PHARMA<br><b>COSMETICS</b></div>
+      <div class="divider"></div>
+      <div class="logo">Skin Health<span> ·</span> Beauty</div>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="#">Sản Phẩm</a></li>
+        <li><a href="#">Dịch Vụ</a></li>
+        <li><a href="#">Theo Nhu Cầu</a></li>
+        <li><a href="#">Thành Phần</a></li>
+        <li><a href="#">Khoa Học</a></li>
+        <li><a href="#">Liên Hệ</a></li>
+      </ul>
+    </nav>
+    <div class="nav-actions">
+      <div class="icon-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#13241F" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>
+      <button class="btn-primary">Soi da miễn phí, đặt lịch</button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">Dịch vụ trị liệu thuộc hệ thống Pharma Cosmetics</div>
+      <h1>Khoa học<br>vì <em>làn da</em> của bạn.</h1>
+      <p>Tiếp cận da theo cách chuyên gia da liễu tiếp cận bệnh nhân — phân tích cấp độ tế bào, không phải phỏng đoán bằng mắt thường.</p>
+      <div class="cta-row">
+        <button class="btn-primary">Khám phá phác đồ →</button>
+        <button class="btn-ghost">Xem hành trình 6 bước</button>
+      </div>
+    </div>
+    <div class="scan-figure">
+      <svg viewBox="0 0 400 400">
+        <circle cx="200" cy="200" r="150" fill="none" stroke="#DBDFD5" stroke-width="1"/>
+        <circle cx="200" cy="200" r="110" fill="none" stroke="#DBDFD5" stroke-width="1"/>
+        <circle cx="200" cy="200" r="70" fill="none" stroke="#3cb371" stroke-width="1.4" stroke-dasharray="2 5"/>
+        <circle cx="200" cy="200" r="34" fill="#F3DFD1" stroke="#DE9E7D" stroke-width="1.2"/>
+        <circle cx="284" cy="150" r="4" fill="#DE9E7D"/>
+        <circle cx="120" cy="255" r="4" fill="#3cb371"/>
+        <circle cx="215" cy="330" r="4" fill="#DE9E7D"/>
+        <line x1="284" y1="150" x2="330" y2="105" stroke="#DBDFD5" stroke-width="1"/>
+        <line x1="120" y1="255" x2="55" y2="270" stroke="#DBDFD5" stroke-width="1"/>
+        <line x1="215" y1="330" x2="240" y2="372" stroke="#DBDFD5" stroke-width="1"/>
+      </svg>
+      <div class="scan-tag" style="top:6%; left:0;"><span class="dot" style="background:#DE9E7D;"></span>Skin Type — Baumann 16</div>
+      <div class="scan-tag" style="right:-8%; top:58%;"><span class="dot"></span>Hydration &amp; TEWL</div>
+      <div class="scan-tag" style="bottom:2%; left:36%;"><span class="dot" style="background:#DE9E7D;"></span>Lipid Barrier</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="quote-block">
+      <div>
+        <blockquote>"Làn da khỏe mạnh ở cấp độ tế bào là nền tảng của mọi vẻ đẹp. Chúng tôi không che giấu khuyết điểm — chúng tôi chữa lành từ bên trong."</blockquote>
+        <cite>— ĐỘI NGŨ CHUYÊN GIA, SKIN HEALTH BEAUTY</cite>
+      </div>
+      <div class="side">
+        <p>Mỗi liệu trình bắt đầu bằng phân tích chuyên sâu: loại da, chỉ số ẩm và TEWL, hàng rào lipid, lịch sử điều trị và yếu tố lối sống. Từ đó, chúng tôi thiết kế phác đồ cá nhân hóa — không có công thức chung cho mọi người.</p>
+      </div>
+    </div>
+
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-num">01 — SKIN TYPE</div>
+        <h3>Phân loại Baumann</h3>
+        <p>Phân loại theo hệ thống Baumann với 16 nhóm da đặc thù, xác định đúng bản chất làn da trước khi điều trị.</p>
+      </div>
+      <div class="metric-card">
+        <div class="metric-num">02 — HYDRATION &amp; TEWL</div>
+        <h3>Chỉ số mất nước qua da</h3>
+        <p>Đo lường mức độ mất nước qua da để thiết lập hàng rào bảo vệ phù hợp với từng tình trạng.</p>
+      </div>
+      <div class="metric-card">
+        <div class="metric-num">03 — LIPID BARRIER</div>
+        <h3>Màng béo tự nhiên</h3>
+        <p>Phân tích màng béo tự nhiên để phục hồi khả năng tự bảo vệ vốn có của làn da.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Giải pháp khoa học</div>
+        <h2>6 Nhóm giải pháp chủ đạo</h2>
+      </div>
+      <p>Mỗi nhóm giải pháp gắn với một cơ chế sinh học cụ thể của da — không phân loại theo tên sản phẩm.</p>
+    </div>
+    <div class="solution-grid">
+      <div class="solution-card">
+        <div class="solution-tag">Barrier Recovery</div>
+        <h3>Phục hồi hàng rào bảo vệ da</h3>
+        <a href="#">Khám phá phác đồ →</a>
+      </div>
+      <div class="solution-card">
+        <div class="solution-tag">Pigment Regulation</div>
+        <h3>Điều hòa sinh học sắc tố</h3>
+        <a href="#">Khám phá phác đồ →</a>
+      </div>
+      <div class="solution-card">
+        <div class="solution-tag">Acne Management</div>
+        <h3>Điều trị mụn &amp; cân bằng da dầu</h3>
+        <a href="#">Khám phá phác đồ →</a>
+      </div>
+      <div class="solution-card">
+        <div class="solution-tag">Skin Regeneration</div>
+        <h3>Tái tạo &amp; trẻ hóa sinh học</h3>
+        <a href="#">Khám phá phác đồ →</a>
+      </div>
+      <div class="solution-card">
+        <div class="solution-tag">Scar Remodeling</div>
+        <h3>Sẹo &amp; tái cấu trúc da</h3>
+        <a href="#">Khám phá phác đồ →</a>
+      </div>
+      <div class="solution-card">
+        <div class="solution-tag">Maintenance</div>
+        <h3>Duy trì &amp; quản lý sức khỏe da</h3>
+        <a href="#">Khám phá phác đồ →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="journey">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow on-dark">Quy trình 1:1 tại phòng trị liệu</div>
+        <h2>Hành trình làn da — 6 bước</h2>
+      </div>
+      <p>Từng bước nối tiếp nhau, có thời lượng cụ thể — không rút gọn quy trình để tiết kiệm thời gian.</p>
+    </div>
+    <div class="timeline">
+      <div class="step-row">
+        <div class="step-num">01</div>
+        <div class="step-body"><h3>Phân tích da (Clinical Consultation)</h3><p>Lắng nghe lịch sử làn da, phân tích tình trạng hiện tại và xác định mục tiêu điều trị rõ ràng.</p></div>
+        <div class="step-time">⏱ 30–45 phút</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">02</div>
+        <div class="step-body"><h3>Số hóa hồ sơ (Digital Skin Profiling)</h3><p>Cấp mã ID hồ sơ da độc bản, lưu trữ dữ liệu hình ảnh đa phổ để theo dõi tiến trình điều trị real-time.</p></div>
+        <div class="step-time">⏱ 15–20 phút</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">03</div>
+        <div class="step-body"><h3>Thiết kế phác đồ (Personalized Protocol)</h3><p>Hội chẩn chuyên môn để lên lộ trình điều trị cá nhân hóa theo từng giai đoạn, dựa trên dữ liệu thực tế.</p></div>
+        <div class="step-time">⏱ 20–30 phút</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">04</div>
+        <div class="step-body"><h3>Trị liệu chuyên sâu 1:1 (Private Treatment)</h3><p>Buổi trị liệu 1:1 riêng tư với chuyên gia được đào tạo bài bản trong không gian vô trùng, biệt lập.</p></div>
+        <div class="step-time">⏱ 60–120 phút</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">05</div>
+        <div class="step-body"><h3>Kê đơn hoạt chất (Prescriptive Actives)</h3><p>Kê đúng dược mỹ phẩm Pharma Cosmetics nồng độ cao cho routine tại nhà — đúng thứ tự, đúng tình trạng da.</p></div>
+        <div class="step-time">⏱ 10–15 phút</div>
+      </div>
+      <div class="step-row">
+        <div class="step-num">06</div>
+        <div class="step-body"><h3>Tối ưu &amp; căn chỉnh (Clinical Optimization)</h3><p>Đánh giá lâm sàng định kỳ qua mỗi buổi trị liệu để điều chỉnh phác đồ phù hợp với tốc độ phục hồi của da.</p></div>
+        <div class="step-time">Định kỳ theo phác đồ</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Minh bạch về giới hạn điều trị</div>
+        <h2>Khi phác đồ cần thay đổi giữa chừng</h2>
+      </div>
+      <p>Chúng tôi công khai cả những ca không đi đúng kế hoạch ban đầu — vì đó mới là thực tế lâm sàng.</p>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-label"><span>TUẦN 01</span><span style="color:var(--primary); font-weight:600;">● ĐIỂM CAN THIỆP</span><span>TUẦN 08</span></div>
+      <svg class="chart-svg" viewBox="0 0 900 120" preserveAspectRatio="none">
+        <line x1="0" y1="110" x2="900" y2="110" stroke="#DBDFD5" stroke-width="1"/>
+        <path d="M0,90 C150,80 280,70 380,55 L380,55 C420,75 460,95 500,88 C650,68 780,40 900,20" fill="none" stroke="#3cb371" stroke-width="2.5"/>
+        <circle cx="380" cy="55" r="6" fill="#DE9E7D" stroke="#fff" stroke-width="2"/>
+      </svg>
+    </div>
+
+    <div class="case-grid">
+      <div class="case-card">
+        <div class="eyebrow">Ca lâm sàng 01</div>
+        <h3>Khi phác đồ ban đầu không còn phù hợp</h3>
+        <p>Một khách hàng bắt đầu với liệu trình phục hồi hàng rào bảo vệ da tiêu chuẩn, nhưng sau 2 buổi da xuất hiện phản ứng kích ứng nhẹ. Thay vì tiếp tục theo kế hoạch cũ, chuyên gia đã đổi hoạt chất và giảm tần suất trị liệu để da có thời gian thích nghi trước khi quay lại lộ trình chính.</p>
+      </div>
+      <div class="case-card">
+        <div class="eyebrow">Ca lâm sàng 02</div>
+        <h3>Kết quả chậm hơn dự kiến, và tại sao điều đó ổn</h3>
+        <p>Một ca tăng sắc tố sau viêm cần thời gian dài hơn ước tính ban đầu vì cơ địa da đáp ứng chậm với hoạt chất điều hòa melanin. Thay vì tăng nồng độ để đẩy nhanh tiến độ, đội ngũ chọn giữ nguyên nồng độ an toàn và kéo dài thời gian theo dõi.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="logo" style="color:#fff;">Skin Health<span style="color:#8FB9A8;"> ·</span> Beauty</div>
+        <p style="margin-top:10px; font-size:12px; color:#9FDBB8; font-family:'IBM Plex Mono',monospace;">MỘT DỊCH VỤ THUỘC PHARMA COSMETICS</p>
+        <p style="margin-top:14px; font-size:13px; max-width:280px;">Phòng trị liệu da chuyên nghiệp 1:1 — Số 44 Ngõ 897 Giải Phóng, Hoàng Mai, Hà Nội.</p>
+      </div>
+      <div>
+        <h4>Hướng dẫn</h4>
+        <ul><li>Hướng dẫn mua hàng</li><li>Hướng dẫn thanh toán</li><li>Hướng dẫn giao nhận</li><li>Điều khoản dịch vụ</li></ul>
+      </div>
+      <div>
+        <h4>Về chúng tôi</h4>
+        <ul><li>Giới thiệu</li><li>Dịch vụ trị liệu</li><li>Phương pháp</li><li>Hệ thống cửa hàng</li></ul>
+      </div>
+      <div>
+        <h4>Kết nối</h4>
+        <ul><li>Zalo</li><li>Facebook</li><li>Instagram</li><li>0967 194 063</li></ul>
+      </div>
+    </div>
+    <div class="bottom">
+      <span>© 2026 Pharma Cosmetics. All rights reserved.</span>
+      <span>Chính sách bảo mật / Điều khoản sử dụng</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

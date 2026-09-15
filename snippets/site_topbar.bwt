@@ -1,0 +1,40 @@
+{% assign announcement_text = settings.header_topbar_text %}
+{% if topbar_context == 'clinic' and settings.skinhealthy_announce != blank %}{% assign announcement_text = settings.skinhealthy_announce %}{% endif %}
+{% assign announcements = announcement_text | split: ';' %}
+<div class="pc-topbar" data-topbar data-delay="{{ settings.header_topbar_delay | default: 4000 }}" data-autoplay="{{ settings.header_topbar_autoplay }}">
+  <div class="container pc-topbar__inner">
+    <div class="pc-topbar__announcements" aria-label="{{ settings.header_topbar_label | default: 'Thông tin nổi bật' | escape }}">
+      <div class="topbar-slider swiper-container" aria-roledescription="carousel">
+        <div class="swiper-wrapper">
+          {% for message in announcements %}{% assign message_text = message | strip %}{% if message_text != blank %}
+          <div class="swiper-slide"><span class="pc-topbar__dot" aria-hidden="true"></span><span class="pc-topbar__message">{{ message_text | escape }}</span></div>
+          {% endif %}{% endfor %}
+        </div>
+      </div>
+      {% if announcements.size > 1 %}<button class="pc-topbar__pause" type="button" data-topbar-pause aria-label="Tạm dừng thông báo" aria-pressed="false"><span aria-hidden="true">Ⅱ</span></button>{% endif %}
+    </div>
+    <div class="pc-topbar__actions">
+      <div class="lang-switcher notranslate" id="langSwitcher" translate="no">
+        <button class="lang-btn" id="langBtn" type="button" aria-label="Chọn ngôn ngữ" aria-expanded="false" aria-controls="langList">
+          <img id="langFlag" src="{{ 'flag-vn.svg' | asset_url }}" width="20" height="14" alt="">
+          <span id="langLabel">Tiếng Việt</span><span aria-hidden="true">⌄</span>
+        </button>
+        <ul class="lang-list" id="langList" hidden>
+          {% assign languages = 'vi,en,zh-CN,ja,ko' | split: ',' %}
+          {% assign language_labels = 'Tiếng Việt,English,中文,日本語,한국어' | split: ',' %}
+          {% assign language_flags = 'flag-vn.svg,flag-us.svg,flag-cn.svg,flag-jp.svg,flag-kr.svg' | split: ',' %}
+          {% for language in languages %}<li><button type="button" data-lang="{{ language }}" data-label="{{ language_labels[forloop.index0] }}" data-flag="{{ language_flags[forloop.index0] | asset_url }}"><img src="{{ language_flags[forloop.index0] | asset_url }}" width="20" height="14" alt="">{{ language_labels[forloop.index0] }}</button></li>{% endfor %}
+        </ul>
+      </div>
+      <a class="pc-topbar__phone" href="tel:{{ settings.store_phone | default: store.phone_number | remove: ' ' | remove: '.' }}">{{ settings.store_phone | default: store.phone_number | escape }}</a>
+      <div class="topbar-account" id="topbarAccount">
+        <button class="topbar-account-btn" type="button" aria-expanded="false" aria-controls="topbarAccountList">{% if customer %}{{ customer.name | escape }}{% else %}Tài khoản{% endif %} ⌄</button>
+        <ul class="topbar-account-list" id="topbarAccountList" hidden>
+          {% if customer %}<li><a href="/account">Tài khoản</a></li><li><a href="/account/logout">Đăng xuất</a></li>{% else %}<li><a href="/account/login">Đăng nhập</a></li><li><a href="/account/register">Đăng ký</a></li>{% endif %}
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div id="google_translate_element" hidden></div>
+  <span id="translation-status" class="pc-topbar__status" role="status"></span>
+</div>

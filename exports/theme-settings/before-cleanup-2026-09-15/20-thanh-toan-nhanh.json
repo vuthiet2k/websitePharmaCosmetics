@@ -1,0 +1,152 @@
+{
+  "group": "Thanh toán nhanh",
+  "values": {
+    "mops_pickup_col": "peel-da-tai-nha",
+    "mops_stores": "Hà Nội;",
+    "mops_time_slots": "9:00;9:30;10:00;10:30;11:00;13:00;13:30;14:00;14:30;15:00;15:30;16:00;16:30;17:00",
+    "mops_deposit_pct": "30",
+    "mops_gas_url": "https://script.google.com/macros/s/AKfycbzwsTdtK23Z5yvUyuKflfsgdr0Ak2ZG9sG-jG6VFoBsoV-Ya6LW7AOi7rxOfCAnZa-s/exec",
+    "mops_edge_url": "",
+    "mops_label_shipper_note": "Cho xem hàng - không cho thử",
+    "mops_shipping_note_default": "CHO XEM HÀNG - KHÔNG CHO THỬ; ĐỒNG KIỂM",
+    "lookup_help_1_title": "Đơn chưa cập nhật?",
+    "lookup_help_1_desc": "Trạng thái mất tối đa 30 phút sau khi đơn vị vận chuyển quét gói.",
+    "lookup_help_2_title": "Sai địa chỉ / sản phẩm?",
+    "lookup_help_2_desc": "Chỉ sửa được khi đơn còn ở \"Chờ đóng gói\".",
+    "lookup_help_2_link_text": "liên hệ shop",
+    "lookup_help_3_title": "Cần hỗ trợ nhanh",
+    "lookup_help_3_hours": "8h–22h hằng ngày"
+  },
+  "fields": [
+    {
+      "type": "paragraph",
+      "content": "Bank info, Telegram token lưu trong Google Sheet Settings tab — không để trong Sapo vì có thể bị lộ ra frontend."
+    },
+    {
+      "type": "header",
+      "content": "── CẤU HÌNH CATALOG & ĐẶT LỊCH ──"
+    },
+    {
+      "type": "collection",
+      "id": "mops_pickup_col",
+      "label": "Collection sản phẩm lấy tại cơ sở",
+      "info": "Sản phẩm trong collection này xuất hiện ở tab Sản phẩm bên cạnh Liệu trình. Để trống → chỉ hiển thị Liệu trình."
+    },
+    {
+      "type": "textarea",
+      "id": "mops_stores",
+      "label": "Danh sách cơ sở",
+      "info": "Mỗi cơ sở 1 dòng, phân cách bằng dấu ; — vd: CS Quận 1;CS Quận 3. Để trống → không hiện chọn cơ sở.",
+      "default": ""
+    },
+    {
+      "type": "text",
+      "id": "mops_time_slots",
+      "label": "Khung giờ hẹn",
+      "info": "Phân cách bằng dấu ;, vd: 9:00;9:30;10:00;...",
+      "default": "9:00;9:30;10:00;10:30;11:00;13:00;13:30;14:00;14:30;15:00;15:30;16:00;16:30;17:00"
+    },
+    {
+      "type": "text",
+      "id": "mops_deposit_pct",
+      "label": "Tỷ lệ đặt cọc sản phẩm (%)",
+      "info": "Số nguyên 1–100, áp dụng cho sản phẩm pickup. Dịch vụ luôn dùng giá cọc từ Google Sheet.",
+      "default": "30"
+    },
+    {
+      "type": "text",
+      "id": "mops_gas_url",
+      "label": "Google Apps Script URL (Web App)"
+    },
+    {
+      "type": "text",
+      "id": "mops_edge_url",
+      "label": "Vercel Edge Proxy URL (Zero-Wait)",
+      "info": "Base URL của Vercel deployment (không kèm /api/gas). Vd https://mops-abc.vercel.app. Để trống → FE gọi thẳng GAS_URL. Bật khi đã deploy api/gas.js + connect Vercel KV."
+    },
+    {
+      "type": "header",
+      "content": "── TEM IN VẬN ĐƠN (A6 fallback) ──"
+    },
+    {
+      "type": "paragraph",
+      "content": "Áp dụng cho tem HTML fallback MOPS tự dựng (khi hãng không trả label PDF). Note in nổi bật giữa tem, giúp shipper thao tác đúng — VD chính sách cho xem/không cho thử, hàng dễ vỡ, gọi trước khi giao."
+    },
+    {
+      "type": "text",
+      "id": "mops_label_shipper_note",
+      "label": "Ghi chú cho shipper (in trên tem)",
+      "info": "In nổi bật trên mọi tem A6 fallback. Để trống → không in dòng note. VD: \"Cho xem hàng - không cho thử\"",
+      "default": "Cho xem hàng - không cho thử"
+    },
+    {
+      "type": "paragraph",
+      "content": "Mẫu ghi chú giao hàng mặc định prefill vào form Tạo đơn (delivery_note). Staff có thể sửa per-đơn. Khác với 'Ghi chú cho shipper' phía trên: cái trên là text GLOBAL in mọi tem, cái này là text KHỞI TẠO khi tạo đơn mới — staff chỉnh riêng cho từng đơn."
+    },
+    {
+      "type": "textarea",
+      "id": "mops_shipping_note_default",
+      "label": "Ghi chú giao hàng mặc định (prefill form Tạo đơn)",
+      "info": "Prefill ô delivery_note khi staff mở form Tạo đơn. Staff có thể xóa/sửa cho từng đơn. Rỗng → form khởi tạo trống.",
+      "default": "CHO XEM HÀNG - KHÔNG CHO THỬ; ĐỒNG KIỂM"
+    },
+    {
+      "type": "header",
+      "content": "── TRANG TRA CỨU ĐƠN — 3 GỢI Ý HỖ TRỢ ──"
+    },
+    {
+      "type": "paragraph",
+      "content": "3 khối gợi ý hiển thị cuối trang /tra-cuu-don. Icon cố định (?, ✉, ☏). Link tự ẩn nếu không chọn trang/số điện thoại — không render <a href='#'> trống."
+    },
+    {
+      "type": "text",
+      "id": "lookup_help_1_title",
+      "label": "Khối 1 · Tiêu đề",
+      "default": "Đơn chưa cập nhật?"
+    },
+    {
+      "type": "textarea",
+      "id": "lookup_help_1_desc",
+      "label": "Khối 1 · Mô tả",
+      "default": "Trạng thái mất tối đa 30 phút sau khi đơn vị vận chuyển quét gói."
+    },
+    {
+      "type": "text",
+      "id": "lookup_help_2_title",
+      "label": "Khối 2 · Tiêu đề",
+      "default": "Sai địa chỉ / sản phẩm?"
+    },
+    {
+      "type": "textarea",
+      "id": "lookup_help_2_desc",
+      "label": "Khối 2 · Mô tả",
+      "default": "Chỉ sửa được khi đơn còn ở \"Chờ đóng gói\"."
+    },
+    {
+      "type": "page",
+      "id": "lookup_help_2_page",
+      "label": "Khối 2 · Trang liên hệ shop",
+      "info": "Chọn trang nội dung có form/thông tin liên hệ. Để trống → khối này chỉ hiện text, không có link."
+    },
+    {
+      "type": "text",
+      "id": "lookup_help_2_link_text",
+      "label": "Khối 2 · Chữ hiển thị của link",
+      "info": "Chữ sẽ đứng cuối mô tả, gắn tới trang đã chọn ở trên",
+      "default": "liên hệ shop"
+    },
+    {
+      "type": "text",
+      "id": "lookup_help_3_title",
+      "label": "Khối 3 · Tiêu đề",
+      "default": "Cần hỗ trợ nhanh"
+    },
+    {
+      "type": "text",
+      "id": "lookup_help_3_hours",
+      "label": "Khối 3 · Giờ làm việc",
+      "info": "Vd: '8h–22h hằng ngày'. Số hotline tự lấy từ setting Số điện thoại cửa hàng (store_phone) — không cần nhập lại.",
+      "default": "8h–22h hằng ngày"
+    }
+  ]
+}

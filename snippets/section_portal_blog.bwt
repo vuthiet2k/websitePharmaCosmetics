@@ -1,0 +1,24 @@
+{% assign portal_blog_handle = settings.portal_blog | default: settings.section_blog_url %}
+{% assign portal_blog = blogs[portal_blog_handle] %}
+<div class="chapter"><div class="wrap"><div class="tag"><b>III</b> {{ settings.portal_chapter_3 | default: 'Đồng hành' | escape }}</div><div class="rule"></div></div></div>
+<section class="blog"><div class="wrap">
+  <div class="section-head"><div><p class="eyebrow">{{ settings.portal_blog_eyebrow | default: 'Kiến thức chăm sóc da' | escape }}</p><h2>{{ settings.portal_blog_title | default: 'Blog Pharma Cosmetics' | escape }}</h2></div>
+    <div class="blog-tabs">{% assign blog_menu = linklists[settings.portal_blog_menu] %}{% for link in blog_menu.links %}<a class="blog-tab" href="{{ link.url | escape }}">{{ link.title | escape }}</a>{% endfor %}</div>
+  </div>
+  {% if portal_blog.articles.size > 0 %}
+  <div class="blog-grid">
+    {% for article in portal_blog.articles limit: 1 %}
+    <a class="post-lead" href="{{ article.url }}">
+      <div class="thumb"><span class="post-cat">Bài nổi bật</span><img src="{% if article.image.src != blank %}{{ article.image.src | img_url: 'large' }}{% else %}{{ 'no-image.jpg' | asset_url }}{% endif %}" alt="{{ article.title | escape }}" width="700" height="440" loading="lazy"></div>
+      <div class="body"><h3>{{ article.title | escape }}</h3><p>{{ article.summary | default: article.content | strip_html | truncate: 210 }}</p><div class="post-meta"><span>{{ article.author | escape }}</span><span>{{ article.published_on | date: '%d.%m.%Y' }}</span></div></div>
+    </a>
+    {% endfor %}
+    <div class="post-list">
+      {% for article in portal_blog.articles offset: 1 limit: 4 %}
+      <a class="post-row" href="{{ article.url }}"><div class="thumb"><img src="{% if article.image.src != blank %}{{ article.image.src | img_url: 'medium' }}{% else %}{{ 'no-image.jpg' | asset_url }}{% endif %}" alt="{{ article.title | escape }}" width="160" height="120" loading="lazy"></div><div><div class="k">{{ portal_blog.name | default: portal_blog.title | escape }}</div><h3>{{ article.title | escape }}</h3><div class="t">{{ article.published_on | date: '%d.%m.%Y' }}</div></div></a>
+      {% endfor %}
+      <div class="more"><a class="btn btn-o" href="{{ portal_blog.url }}">Xem tất cả bài viết →</a></div>
+    </div>
+  </div>
+  {% else %}<p class="portal-empty">Bài viết đang được cập nhật.</p>{% endif %}
+</div></section>

@@ -35,6 +35,9 @@
 .pc-flashsale .swiper-button-next svg path, .pc-flashsale .swiper-button-prev svg path { stroke: #fff !important; }
 .pc-flashsale .swiper-button-next:hover, .pc-flashsale .swiper-button-prev:hover { background-color: var(--color-gold-dark, #B8860B) !important; }
 </style>
+{% assign flash_collection = collections[settings.home_flashsale_collection] %}
+{% capture flash_fallback_url %}/{{ settings.home_flashsale_collection }}{% endcapture %}
+{% assign flash_collection_url = flash_collection.url | default: flash_fallback_url %}
 {% assign count = collections[settings.home_flashsale_collection].products_count %}
 <section class="pc-section section--brand section_flash_sale pc-flashsale">
 	<div class="pc-flashsale__body {%if settings.home_flashsale_countdown_enable%}has-deal-time{%endif%}">
@@ -42,7 +45,7 @@
 			<div class="container">
 				<div class="pc-flashsale__header-inner">
 					<h2 class="pc-flashsale__title">
-						<a href="{{settings.home_flashsale_collection}}" title="{{settings.home_flashsale_title}}">
+						<a href="{{ flash_collection_url | escape }}" title="{{settings.home_flashsale_title}}">
 							<img width="32" height="32" alt="{{settings.home_flashsale_title}}" src="{{'flash_-1.png' | asset_url}}">
 							{{settings.home_flashsale_title}}
 						</a>
@@ -57,7 +60,7 @@
 
 					{% if count > 0 %}
 					<div class="pc-flashsale__viewall sm-hidden">
-						<a href="{{settings.home_flashsale_collection}}" title="Xem tất cả" class="ssmore action">Xem tất cả
+						<a href="{{ flash_collection_url | escape }}" title="Xem tất cả" class="ssmore action">Xem tất cả
 							<svg height="64" viewBox="0 0 24 24" width="64" xmlns="http://www.w3.org/2000/svg" data-name="Layer 2"><path d="m22.707 11.293-7-7a1 1 0 0 0 -1.414 1.414l5.293 5.293h-17.586a1 1 0 0 0 0 2h17.586l-5.293 5.293a1 1 0 1 0 1.414 1.414l7-7a1 1 0 0 0 0-1.414z"/></svg></a>
 					</div>
 					{%endif%}
@@ -90,20 +93,20 @@
 							{{product_html}}
 					</script>
 				</div>
-				<div class="swiper-button-prev">
+				<button type="button" aria-label="Sản phẩm trước" class="swiper-button-prev">
 					<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
 						<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 						<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 					</svg>
-				</div>
-				<div class="swiper-button-next">
+				</button>
+				<button type="button" aria-label="Sản phẩm tiếp theo" class="swiper-button-next">
 					<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
 						<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 						<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 					</svg>
-				</div>
+				</button>
 				<div class="pc-flashsale__viewmore clearfix">
-					<a href="{{settings.home_flashsale_collection}}" title="Xem tất cả" class="show-more btn btn-extent frame flexbtn">
+					<a href="{{ flash_collection_url | escape }}" title="Xem tất cả" class="show-more btn btn-extent frame flexbtn">
 						Xem tất cả <svg height="64" viewBox="0 0 24 24" width="64" xmlns="http://www.w3.org/2000/svg" data-name="Layer 2"><path d="m22.707 11.293-7-7a1 1 0 0 0 -1.414 1.414l5.293 5.293h-17.586a1 1 0 0 0 0 2h17.586l-5.293 5.293a1 1 0 1 0 1.414 1.414l7-7a1 1 0 0 0 0-1.414z"/></svg>
 					</a>
 				</div>
@@ -136,7 +139,7 @@
 					},
 					breakpoints: {
 						280: {
-							slidesPerView: 1.5,
+							slidesPerView: {% if template == 'index' %}2{% else %}1.5{% endif %},
 							spaceBetween: 14
 						},
 						480: {
@@ -152,7 +155,7 @@
 							spaceBetween: 20
 						},
 						1025: {
-							slidesPerView: 5,
+							slidesPerView: {% if template == 'index' %}4{% else %}5{% endif %},
 							spaceBetween: 20
 						}
 					}

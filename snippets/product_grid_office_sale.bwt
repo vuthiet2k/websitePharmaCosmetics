@@ -67,6 +67,8 @@
 {%- assign on_var = true -%}
 {%- endif -%}
 {%- assign featured_image_alt = product.featured_image.alt | default: product.name -%}
+{%- assign card_image = 'no-image.jpg' | asset_url -%}
+{%- if product.featured_image.src != blank -%}{%- assign card_image = product.featured_image.src | img_url: 'large' -%}{%- endif -%}
 {%- assign item = false -%}
 {%- assign quycach = false -%}
 {%- assign preorder = false -%}
@@ -109,10 +111,8 @@
 <form action="/cart/add" method="post" class="variants product-action item-product-main pc-flashsale__card duration-300" data-cart-form data-id="product-actions-{{ product.id }}" enctype="multipart/form-data">
 	<div class="product-thumbnail">
 		<a class="image_thumb scale_hover" href="{{ product.url }}" title="{{ product.name }}">
-			<img class="lazyload duration-300 image1" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC"  data-src="{{ product.featured_image.src | img_url:'large' }}" alt="{{ product.name }}">
+			<img class="lazyload duration-300 image1" width="480" height="480" src="{{ 'no-image.jpg' | asset_url }}" data-src="{{ card_image }}" alt="{{ featured_image_alt | escape }}">
 			{% if product.images.size >= 2  %}
-			<img class="lazyload duration-300 image2" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC"  data-src="{{ product.images[1].src | img_url:'large' }}" alt="{{ product.name }}">
-			{%else%}
 			<img class="lazyload duration-300 image2" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC"  data-src="{{ product.images[1].src | img_url:'large' }}" alt="{{ product.name }}">
 			{% endif %}
 		</a>
@@ -186,6 +186,7 @@
 		{%- endif -%}
 	</div>
 	<div class="product-info">
+		{% if template == 'index' and product.vendor != blank %}<p class="portal-product-vendor">{{ product.vendor | escape }}</p>{% endif %}
 		<h3 class="product-name line-clamp-2-new notranslate" translate="no">
 			<a href="{{ product.url }}" title="{{ product.name }}">{{ product.name }}</a>
 		</h3>
@@ -257,13 +258,14 @@
 		<button disabled class="pc-btn--action pc-btn--action--disabled" title="Hết hàng" type="button">Hết hàng</button>
 		{%- else -%}
 		<input type="hidden" name="variantId" value="{{ product.variants[0].id }}" />
-		<button class="pc-btn--action add_to_cart{%if contact and variantCount == 1%} hidden{%endif%}" title="Mua ngay">Mua ngay</button>
+		<button type="submit" class="pc-btn--action add_to_cart{%if contact and variantCount == 1%} hidden{%endif%}" title="Thêm vào giỏ">Thêm vào giỏ</button>
 		{%- endif -%}
 		{%- endif -%}
 	</div>
 	
 </form>
 <style>
+.pc-flashsale__card .image_thumb:not(:has(.image2)) .image1 { opacity: 1 !important; visibility: visible !important; }
 /* ── Product Description tagline ── */
 .pc-product__desc {
 	font-family: var(--font-secondary);

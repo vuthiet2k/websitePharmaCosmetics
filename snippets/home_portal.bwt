@@ -1,0 +1,18 @@
+{%- comment -%}V3 keeps the Sapo section slots and existing commerce snippets. Unknown and duplicate slots are ignored.{%- endcomment -%}
+{% assign valid_sections = 'section_hero,section_portal_split,section_solutions,section_flash_sale,section_featured_products,section_spa,section_brand_marquee,section_testimonials,section_ingredients,section_portal_blog,section_portal_social,section_portal_newsletter' | split: ',' %}
+{% assign rendered_sections = '|' %}
+<main class="pc-portal" id="portal-main">
+{% assign portal_has_hero = false %}
+{% for i in (1..18) %}{% capture key %}home_section_{{ i }}{% endcapture %}{% if settings[key] == 'section_hero' %}{% assign portal_has_hero = true %}{% endif %}{% endfor %}
+{% unless portal_has_hero %}<h1 class="visually-hidden">{{ store.name | escape }}</h1>{% endunless %}
+{% for i in (1..18) %}
+  {% capture key %}home_section_{{ i }}{% endcapture %}{% assign sec = settings[key] %}{% capture section_marker %}|{{ sec }}|{% endcapture %}
+  {% if valid_sections contains sec %}{% unless rendered_sections contains section_marker %}
+    <div id="{{ sec }}" class="portal-section">
+    {% include sec %}
+    </div>
+    {% assign rendered_sections = rendered_sections | append: sec | append: '|' %}
+  {% endunless %}{% endif %}
+{% endfor %}
+<div class="ab-most-view-product-module ab-hide"></div>
+</main>

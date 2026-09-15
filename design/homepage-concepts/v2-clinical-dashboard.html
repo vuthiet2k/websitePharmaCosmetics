@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V2 — Clinical Dashboard (đầy đủ section)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  /* ==== Color Design Tokens — theo "00_Quy_Chuan_Design_System" (16 nhóm màu chuẩn) ==== */
+  :root{
+    --color-brand-primary:#3CB371;      /* Medium Sea Green — logo, topbar, CTA chính */
+    --color-brand-green:#267348;        /* Clinical Jade Green — CTA phụ, tiêu đề mục */
+    --color-brand-dark:#166B55;         /* Medical Emerald Teal — chữ logo, hero title, hover */
+    --color-brand-deep:#0F2318;         /* Pine Dark Green — nền banner tư vấn, khối tối */
+    --color-brand-mint-light:#D7F3E3;   /* Soft Mint Light — card phác đồ, placeholder */
+    --color-brand-mint-subtle:#E8F8EE;  /* Subtle Mint Wash — gradient hero, viền thẻ */
+    --color-badge-green:#E8F5E9;        /* Pharmacy Light Green — badge lâm sàng */
+    --color-gold-sand:#DFBA73;          /* Medical Gold Sand — thanh tiến trình, viền tiêu điểm */
+    --color-gold-dark:#B8860B;          /* Dark Ochre Gold — avatar sắc tố, mini card chống nắng */
+    --color-peach:#D79A7D;              /* Warm Derma Peach — video hub, tông phục hồi biểu bì */
+    --color-peach-light:#F6E3D8;        /* Soft Peach Tint — icon thử nghiệm, ảnh thẻ chuyên gia */
+    --color-text-main:#13241F;          /* Deep Charcoal Green — H1/H2, nhãn quan trọng */
+    --color-text-body:#334155;          /* Slate Body Text — nội dung */
+    --color-text-muted:#64748B;         /* Slate Muted Gray — meta, chú thích */
+    --color-border:#E2E8F0;             /* Clinical Light Border */
+    --color-bg-page:#F8FAF7;            /* Off-White Medical Wash — nền trang */
+    --color-semantic-success:#10B981;   /* Emerald Success Green — CTA đăng ký tư vấn */
+    /* alias nội bộ cho code cũ */
+    --ink:var(--color-text-main); --ink-soft:var(--color-text-body); --line:var(--color-border);
+    --green:var(--color-brand-dark); --green-deep:var(--color-brand-deep); --mint:var(--color-brand-primary);
+    --paper:#FFFFFF; --paper-alt:var(--color-bg-page); --orange:var(--color-gold-dark);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --color-brand-primary:#3ED58C; --color-brand-green:#34D399; --color-brand-dark:#2DD4BF;
+      --color-brand-deep:#132E20; --color-brand-mint-light:#1B3E2D; --color-brand-mint-subtle:#112A1E;
+      --color-badge-green:#143823; --color-gold-sand:#F3CA7E; --color-gold-dark:#E0A838;
+      --color-peach:#E8A588; --color-peach-light:#2E1D16;
+      --color-text-main:#F1F5F3; --color-text-body:#CBD5E1; --color-text-muted:#94A3B8;
+      --color-border:#1E3A2B; --color-bg-page:#0B1712; --color-semantic-success:#34D399;
+      --paper:#0F1D16;
+    }
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--paper);line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background .3s,color .3s}
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%;display:block}
+  h1,h2,h3,.logo{font-family:'Playfair Display',serif}
+  .container{max-width:1280px;margin:0 auto;padding:0 32px 0 68px}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--color-brand-green);font-weight:600}
+
+  /* CMP-01 Reading Progress Bar — thanh tiến trình cuộn trang, gradient Jade → Gold theo spec */
+  .scroll-progress{position:fixed;top:0;left:0;height:3px;width:0%;
+    background:linear-gradient(90deg,var(--color-brand-green),var(--color-gold-sand));
+    z-index:9999;transition:width .1s linear}
+
+  .rv{opacity:0;transform:translateY(22px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+  .rv.in{opacity:1;transform:translateY(0)}
+  .rv-stagger.in > *{transition-delay:calc(var(--i,0) * 70ms)}
+
+  /* rail nav */
+  .rail{position:fixed;left:22px;top:50%;transform:translateY(-50%);z-index:60;display:flex;flex-direction:column;gap:14px}
+  .rail button{width:8px;height:8px;border-radius:50%;background:var(--line);border:none;cursor:pointer;transition:.25s;position:relative}
+  .rail button.active{background:var(--green);transform:scale(1.5)}
+  .rail button::after{content:attr(data-label);position:absolute;left:16px;top:50%;transform:translateY(-50%);font-family:'IBM Plex Mono',monospace;font-size:10px;white-space:nowrap;background:var(--ink);color:#fff;padding:4px 8px;opacity:0;pointer-events:none;transition:.2s}
+  .rail button:hover::after{opacity:1}
+
+  .topbar{background:var(--color-brand-primary);color:#fff;font-size:12.5px;padding:9px 0}
+  .topbar .container{display:flex;justify-content:space-between;align-items:center;padding-left:32px}
+  .topbar-right{display:flex;gap:22px;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px}
+
+  header.main{border-bottom:1px solid var(--line);background:var(--paper);opacity:.97;backdrop-filter:blur(6px);position:sticky;top:0;z-index:50;transition:background .3s,box-shadow .3s}
+  header.main.is-sticky{box-shadow:0 4px 16px -8px rgba(15,35,24,.18)}
+  .header-row{display:flex;align-items:center;justify-content:space-between;gap:22px;height:76px;padding-left:32px;max-width:1280px;margin:0 auto;padding-right:32px}
+  .head-left{display:flex;align-items:center;gap:18px;flex:0 0 auto}
+  .logo{font-size:18px;font-weight:800;letter-spacing:-.01em;flex:0 0 auto;color:var(--color-brand-dark)}
+  .logo span{color:var(--color-brand-primary)}
+
+  /* Nút Danh mục — luôn hiển thị cạnh logo (thay vì chỉ hiện khi cuộn như bản gốc, để không ẩn chức năng) */
+  .cate-dropdown{position:relative;flex:0 0 auto}
+  .cate-btn{display:flex;align-items:center;gap:8px;background:var(--color-brand-mint-subtle);color:var(--color-brand-dark);border:1px solid var(--color-brand-mint-light);padding:9px 14px;font-size:12.5px;font-weight:700;white-space:nowrap;cursor:pointer;transition:.2s}
+  .cate-btn:hover{background:var(--color-brand-mint-light)}
+  .cate-btn .chev{font-size:10px;transition:transform .2s}
+  .cate-dropdown.open .cate-btn .chev{transform:rotate(180deg)}
+  .cate-panel{position:absolute;top:calc(100% + 8px);left:0;background:#fff;border:1px solid var(--line);min-width:220px;box-shadow:0 16px 32px -12px rgba(15,35,24,.2);opacity:0;visibility:hidden;transform:translateY(-6px);transition:.2s;z-index:60}
+  .cate-dropdown.open .cate-panel{opacity:1;visibility:visible;transform:translateY(0)}
+  .cate-panel a{display:block;padding:11px 16px;font-size:13px;font-weight:600;color:var(--ink);border-bottom:1px solid var(--line);transition:.15s}
+  .cate-panel a:last-child{border-bottom:none}
+  .cate-panel a:hover{background:var(--color-brand-mint-subtle);color:var(--color-brand-dark)}
+
+  nav.primary{display:flex;gap:22px;font-size:13px;font-weight:600;white-space:nowrap}
+  nav.primary a.active{color:var(--green)}
+  .head-actions{display:flex;gap:16px;align-items:center;font-size:13px;font-weight:600;white-space:nowrap;flex:0 0 auto}
+  .head-actions .cart{border:1px solid var(--ink);padding:8px 16px;font-size:12.5px;letter-spacing:.03em}
+
+  /* Search box — icon thu gọn, bung input khi bấm để tiết kiệm chỗ trên header */
+  .search-box{display:flex;align-items:center;position:relative}
+  .search-toggle{width:34px;height:34px;flex:0 0 auto;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);transition:.2s;z-index:2}
+  .search-toggle:hover{border-color:var(--color-brand-primary);color:var(--color-brand-primary)}
+  .search-box input{width:0;opacity:0;padding:0;border:1px solid var(--line);border-left:none;height:34px;font-size:13px;font-family:'Inter',sans-serif;transition:width .25s ease,opacity .2s,padding .25s}
+  .search-box.open input{width:210px;opacity:1;padding:0 12px}
+  .search-box input:focus{outline:none;border-color:var(--color-brand-primary)}
+
+  /* hero: image left, text right, floating widget */
+  .hero{padding:70px 0 70px;border-bottom:1px solid var(--line)}
+  .hero-grid{display:grid;grid-template-columns:.95fr 1.05fr;gap:56px;align-items:center}
+  .hero-visual{aspect-ratio:1/1;border:1px solid var(--line);position:relative;overflow:hidden;
+    background:repeating-linear-gradient(135deg, rgba(22,107,85,.06) 0 2px, transparent 2px 34px), linear-gradient(160deg,#EFF5F1,#DCE7DF);
+    display:flex;align-items:center;justify-content:center}
+  .hero-visual svg{width:42%}
+
+  /* icon-visual: khối minh hoạ line-art thay ảnh stock không kiểm chứng được nội dung */
+  .icon-visual{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+  .icon-visual svg{width:46%;transition:transform .5s ease}
+  a:hover .icon-visual svg, .product:hover .icon-visual svg, .flash-card:hover .icon-visual svg{transform:scale(1.08)}
+  .wash-amber{background:linear-gradient(160deg,#F5EAD2,#E9D2A0)}
+  .wash-sky{background:linear-gradient(160deg,#E6F2ED,#CFE6DC)}
+  .wash-mint{background:linear-gradient(160deg,#E8F8EE,#D7F3E3)}
+  .wash-teal{background:linear-gradient(160deg,#DCEDE6,#B9D9CC)}
+  .wash-coral{background:linear-gradient(160deg,#F6E3D8,#E8B99C)}
+  .wash-sand{background:linear-gradient(160deg,#F1E4C4,#DFBA73)}
+  .wash-rose{background:linear-gradient(160deg,#F8ECE6,#EFCEBB)}
+  .wash-sage{background:linear-gradient(160deg,#ECF3ED,#D3E3D8)}
+  .widget{position:absolute;bottom:20px;left:20px;right:20px;background:#fff;border:1px solid var(--line);padding:16px 18px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 12px 30px -10px rgba(15,35,24,.18)}
+  .widget b{font-family:'IBM Plex Mono',monospace;font-size:20px}
+  .widget span{font-size:11px;color:var(--ink-soft);display:block}
+  .hero h1{font-size:48px;line-height:1.08;font-weight:800;letter-spacing:-.02em;margin:16px 0 18px}
+  .hero p.lede{font-size:15.5px;color:var(--ink-soft);max-width:480px;margin-bottom:24px}
+  .checklist{list-style:none;margin-bottom:28px;display:flex;flex-direction:column;gap:10px}
+  .checklist li{display:flex;gap:12px;font-size:13.5px;align-items:flex-start}
+  .checklist li::before{content:"";width:16px;height:16px;flex:0 0 16px;margin-top:2px;border-radius:2px;background:var(--green)}
+  .cta-row{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-bottom:38px}
+  .btn-primary{background:var(--color-semantic-success);color:#fff;padding:14px 26px;font-weight:700;font-size:13px;letter-spacing:.03em;text-transform:uppercase;transition:.25s cubic-bezier(.2,.7,.2,1);box-shadow:0 0 0 0 rgba(16,185,129,.5)}
+  .btn-primary:hover{background:var(--color-brand-green);transform:translateY(-3px);box-shadow:0 10px 24px -8px rgba(16,185,129,.45)}
+  .btn-link{font-weight:700;font-size:13px;border-bottom:2px solid var(--green);padding-bottom:3px}
+  .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+  .stat-row div{background:#fff;padding:16px}
+  .stat-row b{display:block;font-size:22px;font-weight:800;font-family:'IBM Plex Mono',monospace}
+  .stat-row span{font-size:11px;color:var(--ink-soft)}
+
+  section{padding:70px 0}
+  section.alt{background:var(--paper-alt)}
+  .sec-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:34px;border-bottom:1px solid var(--line);padding-bottom:18px}
+  .sec-head h2{font-size:27px;font-weight:800;letter-spacing:-.01em;margin-top:8px}
+  .sec-head a{font-size:13px;font-weight:700;border-bottom:2px solid var(--ink);white-space:nowrap}
+  .seg{display:flex;gap:1px;background:var(--line);border:1px solid var(--line)}
+  .seg button{background:#fff;border:none;padding:9px 16px;font-size:12px;font-weight:700;font-family:'IBM Plex Mono',monospace;cursor:pointer;color:var(--ink-soft)}
+  .seg button.active{background:var(--ink);color:#fff}
+
+  /* flash sale: draggable carousel */
+  .flash-bar{display:flex;justify-content:space-between;align-items:center;background:var(--ink);color:#fff;padding:14px 22px;margin-bottom:24px}
+  .flash-bar .lbl{font-weight:800;font-size:13px;letter-spacing:.04em;display:flex;align-items:center;gap:10px}
+  .flash-bar .lbl::before{content:"";width:8px;height:8px;background:var(--orange);border-radius:50%;animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+  .flash-bar .timer{display:flex;gap:6px;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px}
+  .flash-bar .timer b{background:rgba(255,255,255,.14);padding:5px 9px;min-width:30px;text-align:center}
+  .carousel-wrap{position:relative}
+  .carousel{display:flex;gap:1px;background:var(--line);border:1px solid var(--line);overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+  .carousel::-webkit-scrollbar{display:none}
+  .flash-card{background:#fff;min-width:230px;scroll-snap-align:start;flex:0 0 auto;position:relative;border:1px solid transparent;transition:transform .25s cubic-bezier(.2,.7,.2,1),border-color .25s,box-shadow .25s}
+  .flash-card:hover{transform:translateY(-4px);border-color:var(--color-semantic-success);box-shadow:0 14px 28px -14px rgba(16,185,129,.28)}
+  .flash-card .badge{position:absolute;top:10px;left:10px;background:var(--orange);color:#fff;font-size:11px;font-weight:800;padding:4px 8px;z-index:1}
+  .flash-card .imgwrap{aspect-ratio:1;overflow:hidden}
+  .flash-card .imgwrap img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
+  .flash-card:hover .imgwrap img{transform:scale(1.06)}
+  .flash-card .body{padding:16px}
+  .flash-card h4{font-size:13px;font-weight:700;line-height:1.35;min-height:36px;margin-bottom:8px}
+  .flash-card .price{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:14px}
+  .flash-card .price s{color:#9AA79E;font-weight:400;margin-left:6px;font-size:11.5px}
+  .flash-card .buy{margin-top:12px;display:block;text-align:center;background:var(--ink);color:#fff;padding:9px;font-size:11.5px;font-weight:700}
+  .carousel-nav{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;background:#fff;border:1px solid var(--line);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;z-index:2}
+  .carousel-nav.prev{left:-18px}
+  .carousel-nav.next{right:-18px}
+
+  /* solutions: list rows */
+  .solutions-list{display:flex;flex-direction:column;border:1px solid var(--line)}
+  .sol-row{display:grid;grid-template-columns:120px 1fr auto;gap:22px;align-items:center;padding:18px 20px;border-bottom:1px solid var(--line);transition:background .2s}
+  .sol-row:last-child{border-bottom:none}
+  .sol-row:hover{background:var(--paper-alt)}
+  .sol-row .imgwrap{width:120px;height:80px;overflow:hidden}
+  .sol-row .imgwrap img{width:100%;height:100%;object-fit:cover}
+  .sol-row .n{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--green);font-weight:600}
+  .sol-row h3{font-size:15px;font-weight:800;margin:3px 0 4px}
+  .sol-row p{font-size:12.5px;color:var(--ink-soft)}
+  .sol-row .arrow{font-family:'IBM Plex Mono',monospace;font-size:18px;color:var(--ink-soft);transition:.2s}
+  .sol-row:hover .arrow{color:var(--green);transform:translateX(4px)}
+
+  .products{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+  .product{background:#fff;border:1px solid transparent;transition:transform .25s cubic-bezier(.2,.7,.2,1),border-color .25s,box-shadow .25s}
+  .product:hover{transform:translateY(-4px);border-color:var(--color-semantic-success);box-shadow:0 14px 28px -14px rgba(16,185,129,.28)}
+  .product .imgwrap{aspect-ratio:1;overflow:hidden;position:relative}
+  .product .imgwrap img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
+  .product:hover .imgwrap img{transform:scale(1.06)}
+  .product .clinical{position:absolute;top:10px;left:10px;background:var(--color-badge-green);color:var(--color-brand-green);border:1px solid var(--color-brand-mint-light);font-size:9.5px;font-weight:700;padding:3px 7px}
+  .product .body{padding:18px}
+  .product h4{font-size:13.5px;font-weight:700;margin-bottom:6px;line-height:1.35;min-height:36px}
+  .product .price{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:14.5px}
+  .product .price s{color:#9AA79E;font-weight:400;margin-left:8px;font-size:12px}
+  .product .buy{margin-top:12px;display:block;text-align:center;border:1px solid var(--ink);padding:9px;font-size:11.5px;font-weight:700;transition:.2s}
+  .product .buy:hover{background:var(--ink);color:#fff}
+
+  /* process: stepper with linked image */
+  .process-wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+  .process-photo{aspect-ratio:4/5;overflow:hidden;border:1px solid var(--line);position:relative;background:linear-gradient(160deg,#EFF5F1,#DCE7DF)}
+  .process-photo .step-icon{width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:absolute;inset:0;opacity:0;transition:opacity .4s}
+  .process-photo .step-icon.active{opacity:1}
+  .process-photo svg{width:42%}
+  .stepper div{padding:22px;border:1px solid var(--line);margin-bottom:-1px;cursor:pointer;transition:background .2s}
+  .stepper div.active{background:var(--ink);color:#fff}
+  .stepper .num{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:var(--green)}
+  .stepper div.active .num{color:var(--mint)}
+  .stepper h4{font-size:15.5px;font-weight:800;margin:6px 0}
+  .stepper p{font-size:13px;color:var(--ink-soft);max-height:0;overflow:hidden;transition:max-height .3s}
+  .stepper div.active p{max-height:80px;color:#CFE0D6}
+
+  /* team horizontal scroll */
+  .team-scroll{display:flex;gap:20px;overflow-x:auto;scrollbar-width:none;padding-bottom:6px}
+  .team-scroll::-webkit-scrollbar{display:none}
+  .team-card{border:1px solid var(--line);min-width:220px;flex:0 0 auto}
+  .team-card .photo{width:220px;height:220px;overflow:hidden}
+  .team-card .photo img{width:100%;height:100%;object-fit:cover;filter:grayscale(.35);transition:filter .3s}
+  .team-card:hover .photo img{filter:grayscale(0)}
+  .team-card .body{padding:16px}
+  .team-card h4{font-size:14px;font-weight:800}
+  .team-card .role{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--green);margin:4px 0 8px;text-transform:uppercase}
+  .team-card p{font-size:11.5px;color:var(--ink-soft)}
+
+  /* evidence: case switcher (chân dung thật + số liệu đo lường, không dựng before/after giả) */
+  .evidence-panel{max-width:720px;margin:0 auto;border:1px solid var(--line);padding:32px 36px}
+  .evidence-top{display:flex;gap:18px;align-items:center;margin-bottom:22px}
+  .evidence-photo{width:64px;height:64px;border-radius:50%;object-fit:cover}
+  .evidence-top h4{font-size:16px;font-weight:800}
+  .evidence-tag{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--green);text-transform:uppercase;letter-spacing:.03em}
+  .evidence-metric{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--ink-soft);margin-bottom:8px}
+  .evidence-metric b{font-family:'IBM Plex Mono',monospace;font-size:24px;color:var(--ink);font-weight:700}
+  .evidence-bar{height:8px;background:var(--paper-alt);border:1px solid var(--line);overflow:hidden;margin-bottom:22px}
+  .evidence-bar-fill{height:100%;background:var(--green);width:0;transition:width 1.1s cubic-bezier(.2,.7,.2,1)}
+  .evidence-quote{font-size:14.5px;color:var(--ink-soft);font-style:italic;padding-top:20px;border-top:1px solid var(--line)}
+  .evidence-quote b{display:block;font-style:normal;color:var(--ink);font-size:13px;margin-top:8px}
+  .evidence-dots{display:flex;justify-content:center;gap:8px;margin-top:20px}
+  .evidence-dots button{width:7px;height:7px;border-radius:50%;background:var(--line);border:none;cursor:pointer}
+  .evidence-dots button.active{background:var(--green);transform:scale(1.4)}
+
+  .treat-cta{background:var(--green-deep);color:#EAF3EC;padding:70px 0}
+  .treat-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+  .treat-cta h2{font-size:30px;font-weight:800;margin:14px 0 16px;color:#fff}
+  .treat-cta p{color:#B9CCC0;font-size:14.5px;max-width:440px;margin-bottom:24px}
+  .treat-list{display:flex;flex-direction:column;gap:12px;margin-bottom:28px}
+  .treat-list div{border-left:2px solid var(--mint);padding-left:16px}
+  .treat-list b{display:block;font-size:13.5px;color:#fff}
+  .treat-list span{font-size:12px;color:#9FB6A9}
+  .treat-visual{aspect-ratio:4/3;overflow:hidden;border:1px solid rgba(255,255,255,.15);background:radial-gradient(circle at 30% 30%,#1B3A2A,#0B1C13 75%);display:flex;align-items:center;justify-content:center}
+  .treat-visual svg{width:44%}
+  .btn-mint{background:var(--mint);color:#06231A;padding:14px 26px;font-weight:800;font-size:13px;display:inline-block}
+
+  .marquee-wrap{overflow:hidden;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:22px 0}
+  .marquee-track{display:flex;gap:16px;width:max-content;animation:scroll-right 30s linear infinite}
+  .marquee-wrap:hover .marquee-track{animation-play-state:paused}
+  .marquee-track span{font-size:13px;font-weight:700;color:var(--ink);letter-spacing:.02em;white-space:nowrap;border:1px solid var(--line);padding:9px 18px;font-family:'IBM Plex Mono',monospace}
+  @keyframes scroll-right{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+
+  .science-tabs{display:grid;grid-template-columns:.8fr 1.2fr;gap:44px;align-items:center}
+  .sci-tab-list{display:flex;flex-direction:column}
+  .sci-tab{padding:20px;border:1px solid var(--line);margin-bottom:-1px;cursor:pointer}
+  .sci-tab.active{background:var(--paper-alt);border-color:var(--green)}
+  .sci-tab .pct{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:var(--green)}
+  .sci-tab h4{font-size:15px;font-weight:800;margin:4px 0}
+  .sci-tab p{font-size:12.5px;color:var(--ink-soft);display:none}
+  .sci-tab.active p{display:block}
+  .sci-photo{aspect-ratio:16/10;overflow:hidden;border:1px solid var(--line);position:relative;background:var(--paper-alt)}
+  .sci-photo .sci-icon{position:absolute;inset:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .4s}
+  .sci-photo .sci-icon.active{opacity:1}
+  .sci-photo svg{width:38%}
+
+  .qr-cta{background:var(--paper-alt);border:1px solid var(--line);display:grid;grid-template-columns:1fr auto;align-items:center;gap:40px;padding:36px 44px}
+  .qr-cta h3{font-size:20px;font-weight:800;margin-bottom:8px}
+  .qr-cta p{font-size:13.5px;color:var(--ink-soft);max-width:520px}
+  .qr-box{width:110px;height:110px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+
+  /* Master Footer — theo đúng Figma gốc: nền brand-primary (không phải brand-deep), chữ mint sáng */
+  footer{background:var(--color-brand-primary);color:#ECFDF5;padding:60px 0 26px}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.25)}
+  .foot-grid h5{color:#fff;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px}
+  .foot-grid a{display:block;font-size:13px;margin-bottom:9px;color:#ECFDF5}
+  .foot-grid a:hover{text-decoration:underline}
+  .foot-brand{font-size:18px;font-weight:800;color:#fff;margin-bottom:12px}
+  .foot-bottom{padding-top:20px;font-size:12px;color:#D1FAE5;display:flex;justify-content:space-between}
+</style>
+</head>
+<body>
+
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<div class="rail" id="rail">
+  <button data-target="#hero" class="active" data-label="Đầu trang"></button>
+  <button data-target="#flash" data-label="Flash sale"></button>
+  <button data-target="#solutions" data-label="Giải pháp"></button>
+  <button data-target="#featured" data-label="Sản phẩm nổi bật"></button>
+  <button data-target="#process" data-label="Quy trình"></button>
+  <button data-target="#team" data-label="Chuyên gia"></button>
+  <button data-target="#evidence" data-label="Minh chứng"></button>
+  <button data-target="#science" data-label="Khoa học"></button>
+  <button data-target="#mostviewed" data-label="Xem nhiều nhất"></button>
+</div>
+
+<div class="topbar">
+  <div class="container">
+    <span>Giao hàng toàn quốc — Trị liệu da cá nhân hóa chuẩn y khoa</span>
+    <div class="topbar-right"><span>VI / EN</span><span>0967.194.063</span><span>Tài khoản</span></div>
+  </div>
+</div>
+
+<header class="main" id="mainHeader">
+  <div class="header-row">
+    <div class="head-left">
+      <div class="logo">PHARMA<span>·</span>COSMETICS</div>
+      <div class="cate-dropdown" id="cateDropdown">
+        <button class="cate-btn" id="cateBtn" aria-expanded="false">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          Danh mục <span class="chev">▾</span>
+        </button>
+        <div class="cate-panel" id="catePanel">
+          <a href="#">Mỹ phẩm High-End</a>
+          <a href="#">Chăm sóc da mặt</a>
+          <a href="#">Đặc trị (kê đơn)</a>
+          <a href="#">TPCN &amp; Sức khoẻ</a>
+          <a href="#">Liệu trình &amp; Dịch vụ</a>
+        </div>
+      </div>
+    </div>
+    <nav class="primary">
+      <a href="#" class="active">Trang chủ</a>
+      <a href="#">Điều trị chuyên nghiệp</a>
+      <a href="#">Mua theo thành phần</a>
+      <a href="#">TPCN Khoẻ &amp; Đẹp</a>
+      <a href="#">Khuyến mãi</a>
+      <a href="#">Blog</a>
+    </nav>
+    <div class="head-actions">
+      <div class="search-box" id="searchBox">
+        <button class="search-toggle" id="searchToggle" aria-label="Tìm kiếm">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+        <input type="text" id="searchInput" placeholder="Tìm sản phẩm, hoạt chất...">
+      </div>
+      <span>Yêu thích</span>
+      <div class="cart">Giỏ hàng (0)</div>
+    </div>
+  </div>
+</header>
+
+<section class="hero" id="hero">
+  <div class="container hero-grid">
+    <div class="hero-visual rv">
+      <svg viewBox="0 0 200 200" fill="none">
+        <circle cx="100" cy="90" r="52" stroke="#166B55" stroke-width="2"/>
+        <circle cx="100" cy="90" r="34" stroke="#166B55" stroke-width="1" stroke-dasharray="2 5" opacity=".6"/>
+        <circle cx="100" cy="90" r="6" fill="#166B55"/>
+        <path d="M100 38v14M100 128v14M48 90h14M138 90h14" stroke="#3CB371" stroke-width="2"/>
+        <path d="M62 52l10 10M128 128l10 10M138 52l-10 10M72 128l-10 10" stroke="#3CB371" stroke-width="2" opacity=".6"/>
+      </svg>
+      <div class="widget"><div><span>Độ chính xác chẩn đoán</span><b>98.6%</b></div><div style="text-align:right"><span>Thời gian phân tích</span><b>3 phút</b></div></div>
+    </div>
+    <div class="rv">
+      <div class="eyebrow">Trị liệu da chuyên sâu 1:1 — tại Hà Nội</div>
+      <h1>Quản lý sức khỏe làn da cá nhân hóa 1:1</h1>
+      <p class="lede">Mỗi làn da là một hệ sinh học riêng biệt. Chúng tôi phân tích da, xây dựng hồ sơ cá nhân, thiết kế phác đồ trị liệu và đồng hành cùng bạn suốt hành trình phục hồi.</p>
+      <ul class="checklist">
+        <li>Soi da vi điểm AI &amp; đánh giá màng lipid chuyên sâu — miễn phí</li>
+        <li>Kê đơn hoạt chất nồng độ chuẩn lâm sàng, không kích ứng</li>
+        <li>Theo dõi tiến trình phục hồi, tối ưu liều lượng suốt 30 ngày</li>
+      </ul>
+      <div class="cta-row">
+        <a href="#" class="btn-primary">Đặt lịch phân tích da</a>
+        <a href="#" class="btn-link">Khám phá hành trình cá nhân hóa →</a>
+      </div>
+      <div class="stat-row">
+        <div><b>15.000+</b><span>Khách hàng phục hồi</span></div>
+        <div><b>98.6%</b><span>Hiệu quả lâm sàng</span></div>
+        <div><b>200+</b><span>Chuyên gia da liễu</span></div>
+        <div><b>100%</b><span>Hàng chính ngạch</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="flash">
+  <div class="container">
+    <div class="flash-bar rv">
+      <div class="lbl">⚡ FLASH SALE HÔM NAY</div>
+      <div class="timer" id="flashTimer"><b id="t-h">08</b><b id="t-m">41</b><b id="t-s">19</b></div>
+    </div>
+    <div class="carousel-wrap rv">
+      <button class="carousel-nav prev" id="prevBtn">‹</button>
+      <div class="carousel" id="carousel">
+        <div class="flash-card"><span class="badge">-29%</span><div class="imgwrap"><div class="icon-visual wash-amber"><svg viewBox="0 0 100 130" fill="none"><rect x="38" y="8" width="24" height="16" rx="2" stroke="#B8860B" stroke-width="2.5"/><rect x="26" y="24" width="48" height="88" rx="12" stroke="#B8860B" stroke-width="2.5"/><path d="M26 60h48" stroke="#B8860B" stroke-width="1.5" stroke-dasharray="3 4"/><path d="M50 74c-4 4-6 8-6 11a6 6 0 0 0 12 0c0-3-2-7-6-11z" fill="#B8860B"/></svg></div></div><div class="body"><h4>Kem Dưỡng Retinol 0.3% + Peptide Chống Lão Hoá</h4><div class="price">850.000₫<s>1.200.000₫</s></div><a class="buy" href="#">Mua ngay</a></div></div>
+        <div class="flash-card"><span class="badge">-18%</span><div class="imgwrap"><div class="icon-visual wash-sky"><svg viewBox="0 0 100 130" fill="none"><rect x="34" y="14" width="32" height="14" rx="3" stroke="#166B55" stroke-width="2.5"/><path d="M42 28v10M58 28v10" stroke="#166B55" stroke-width="2.5"/><rect x="24" y="38" width="52" height="74" rx="12" stroke="#166B55" stroke-width="2.5"/><circle cx="50" cy="70" r="14" stroke="#166B55" stroke-width="2"/><path d="M50 56v4M50 80v4M36 70h4M60 70h4" stroke="#166B55" stroke-width="2"/></svg></div></div><div class="body"><h4>Kem Chống Nắng Mineral SPF50+ PA++++</h4><div class="price">450.000₫<s>550.000₫</s></div><a class="buy" href="#">Mua ngay</a></div></div>
+        <div class="flash-card"><span class="badge">-20%</span><div class="imgwrap"><div class="icon-visual wash-mint"><svg viewBox="0 0 100 130" fill="none"><path d="M40 10h20l4 18H36l4-18z" stroke="#267348" stroke-width="2.5"/><path d="M36 28c-8 14-10 30-10 46 0 16 10 28 24 28s24-12 24-28c0-16-2-32-10-46" stroke="#267348" stroke-width="2.5"/><circle cx="50" cy="76" r="4" fill="#267348"/><circle cx="42" cy="88" r="3" fill="#267348" opacity=".6"/><circle cx="58" cy="88" r="3" fill="#267348" opacity=".6"/></svg></div></div><div class="body"><h4>Sữa Rửa Mặt Tạo Bọt Amino Acid Dịu Nhẹ</h4><div class="price">280.000₫<s>350.000₫</s></div><a class="buy" href="#">Mua ngay</a></div></div>
+        <div class="flash-card"><span class="badge">-15%</span><div class="imgwrap"><div class="icon-visual wash-teal"><svg viewBox="0 0 100 130" fill="none"><rect x="30" y="16" width="40" height="22" rx="4" stroke="#166B55" stroke-width="2.5"/><rect x="20" y="38" width="60" height="76" rx="14" stroke="#166B55" stroke-width="2.5"/><path d="M35 60c5-6 10-6 15 0s10 6 15 0 10-6 15 0" stroke="#166B55" stroke-width="2"/><path d="M35 78c5-6 10-6 15 0s10 6 15 0 10-6 15 0" stroke="#166B55" stroke-width="2" opacity=".6"/></svg></div></div><div class="body"><h4>Kem Dưỡng Ẩm Hyaluronic Acid 3 Tầng</h4><div class="price">520.000₫<s>610.000₫</s></div><a class="buy" href="#">Mua ngay</a></div></div>
+        <div class="flash-card"><span class="badge">-22%</span><div class="imgwrap"><div class="icon-visual wash-coral"><svg viewBox="0 0 100 130" fill="none"><rect x="38" y="6" width="24" height="18" rx="2" stroke="#8B5A42" stroke-width="2.5"/><rect x="30" y="24" width="40" height="18" stroke="#8B5A42" stroke-width="2.5"/><path d="M28 42l6 66a6 6 0 0 0 6 6h20a6 6 0 0 0 6-6l6-66" stroke="#8B5A42" stroke-width="2.5"/><path d="M40 58h20M40 70h20M40 82h14" stroke="#8B5A42" stroke-width="2"/></svg></div></div><div class="body"><h4>Serum Tái Tạo Da AHA 10% / BHA 2%</h4><div class="price">610.000₫<s>780.000₫</s></div><a class="buy" href="#">Mua ngay</a></div></div>
+      </div>
+      <button class="carousel-nav next" id="nextBtn">›</button>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="solutions">
+  <div class="container">
+    <div class="sec-head rv"><div><div class="eyebrow">Danh mục điều trị</div><h2>Giải pháp cho từng vấn đề</h2></div><a href="#">Xem tất cả →</a></div>
+    <div class="solutions-list rv">
+      <div class="sol-row"><div class="imgwrap"><div class="icon-visual wash-rose"><svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="34" stroke="#8B5A42" stroke-width="2.5"/><circle cx="38" cy="42" r="4" fill="#8B5A42"/><circle cx="60" cy="38" r="3" fill="#8B5A42" opacity=".7"/><circle cx="62" cy="58" r="4" fill="#8B5A42"/><circle cx="42" cy="62" r="2.5" fill="#8B5A42" opacity=".6"/></svg></div></div><div><div class="n">01</div><h3>Mụn trứng cá</h3><p>Làm sạch sâu, kiểm soát bã nhờn, giảm viêm chuyên sâu.</p></div><div class="arrow">→</div></div>
+      <div class="sol-row"><div class="imgwrap"><div class="icon-visual wash-sand"><svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="34" stroke="#B8860B" stroke-width="2.5"/><ellipse cx="42" cy="46" rx="7" ry="5" fill="#B8860B" opacity=".55"/><ellipse cx="60" cy="52" rx="5" ry="4" fill="#B8860B" opacity=".4"/><ellipse cx="50" cy="62" rx="6" ry="4" fill="#B8860B" opacity=".5"/></svg></div></div><div><div class="n">02</div><h3>Nám &amp; tàn nhang</h3><p>Ức chế sắc tố melanin, đều màu da bền vững.</p></div><div class="arrow">→</div></div>
+      <div class="sol-row"><div class="imgwrap"><div class="icon-visual wash-sky"><svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="34" stroke="#166B55" stroke-width="2.5"/><path d="M50 34c6 8 10 14 10 20a10 10 0 0 1-20 0c0-6 4-12 10-20z" stroke="#166B55" stroke-width="2"/></svg></div></div><div><div class="n">03</div><h3>Da khô thiếu ẩm</h3><p>Tái cấu trúc hàng rào bảo vệ, cấp ẩm sâu 3 tầng.</p></div><div class="arrow">→</div></div>
+      <div class="sol-row"><div class="imgwrap"><div class="icon-visual wash-sage"><svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="34" stroke="#267348" stroke-width="2.5"/><path d="M34 44c6-4 10-4 16 0s10 4 16 0" stroke="#267348" stroke-width="2"/><path d="M34 58c6-4 10-4 16 0s10 4 16 0" stroke="#267348" stroke-width="2" opacity=".55"/></svg></div></div><div><div class="n">04</div><h3>Lão hóa da</h3><p>Kích sinh collagen, cải thiện độ săn chắc đàn hồi.</p></div><div class="arrow">→</div></div>
+      <div class="sol-row"><div class="imgwrap"><div class="icon-visual wash-amber"><svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="34" stroke="#B8860B" stroke-width="2.5"/><path d="M50 34c5 7 9 12 9 17a9 9 0 0 1-18 0c0-5 4-10 9-17z" fill="#B8860B" opacity=".85"/></svg></div></div><div><div class="n">05</div><h3>Kiểm soát dầu thừa</h3><p>Se khít lỗ chân lông, thanh lọc da chết vi mô.</p></div><div class="arrow">→</div></div>
+      <div class="sol-row"><div class="imgwrap"><div class="icon-visual wash-mint"><svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="34" stroke="#267348" stroke-width="2.5"/><path d="M50 30l16 8v10c0 12-7 22-16 26-9-4-16-14-16-26V38z" stroke="#267348" stroke-width="2"/></svg></div></div><div><div class="n">06</div><h3>Da nhạy cảm</h3><p>Công thức tối giản, an toàn cho nền da tổn thương.</p></div><div class="arrow">→</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="featured">
+  <div class="container">
+    <div class="sec-head rv">
+      <div><div class="eyebrow">Cửa hàng trực tuyến — kiểm định lâm sàng</div><h2>Sản phẩm nổi bật</h2></div>
+      <div class="seg"><button class="active" data-sort="ban-chay">Bán chạy</button><button data-sort="moi">Mới nhất</button><button data-sort="danh-gia">Đánh giá cao</button></div>
+    </div>
+    <div class="products rv-stagger rv">
+      <div class="product" style="--i:0"><div class="imgwrap"><span class="clinical">✓ LÂM SÀNG</span><div class="icon-visual wash-amber"><svg viewBox="0 0 100 130" fill="none"><rect x="38" y="8" width="24" height="16" rx="2" stroke="#B8860B" stroke-width="2.5"/><rect x="26" y="24" width="48" height="88" rx="12" stroke="#B8860B" stroke-width="2.5"/><path d="M26 60h48" stroke="#B8860B" stroke-width="1.5" stroke-dasharray="3 4"/><path d="M50 74c-4 4-6 8-6 11a6 6 0 0 0 12 0c0-3-2-7-6-11z" fill="#B8860B"/></svg></div></div><div class="body"><h4>Kem Dưỡng Retinol 0.3% + Peptide Chống Lão Hoá</h4><div class="price">850.000₫<s>1.200.000₫</s></div><a class="buy" href="#">Mua ngay</a></div></div>
+      <div class="product" style="--i:1"><div class="imgwrap"><span class="clinical">✓ LÂM SÀNG</span><div class="icon-visual wash-coral"><svg viewBox="0 0 100 130" fill="none"><rect x="38" y="6" width="24" height="18" rx="2" stroke="#8B5A42" stroke-width="2.5"/><rect x="30" y="24" width="40" height="18" stroke="#8B5A42" stroke-width="2.5"/><path d="M28 42l6 66a6 6 0 0 0 6 6h20a6 6 0 0 0 6-6l6-66" stroke="#8B5A42" stroke-width="2.5"/><path d="M50 55l4 8h-8l4 8" stroke="#8B5A42" stroke-width="2"/></svg></div></div><div class="body"><h4>Serum Vitamin C 15% Làm Sáng &amp; Đều Màu Da</h4><div class="price">650.000₫</div><a class="buy" href="#">Mua ngay</a></div></div>
+      <div class="product" style="--i:2"><div class="imgwrap"><span class="clinical">✓ LÂM SÀNG</span><div class="icon-visual wash-sky"><svg viewBox="0 0 100 130" fill="none"><rect x="34" y="14" width="32" height="14" rx="3" stroke="#166B55" stroke-width="2.5"/><path d="M42 28v10M58 28v10" stroke="#166B55" stroke-width="2.5"/><rect x="24" y="38" width="52" height="74" rx="12" stroke="#166B55" stroke-width="2.5"/><circle cx="50" cy="70" r="14" stroke="#166B55" stroke-width="2"/><path d="M50 56v4M50 80v4M36 70h4M60 70h4" stroke="#166B55" stroke-width="2"/></svg></div></div><div class="body"><h4>Kem Chống Nắng Mineral SPF50+ Không Nhờn</h4><div class="price">480.000₫<s>560.000₫</s></div><a class="buy" href="#">Mua ngay</a></div></div>
+      <div class="product" style="--i:3"><div class="imgwrap"><span class="clinical">✓ LÂM SÀNG</span><div class="icon-visual wash-mint"><svg viewBox="0 0 100 130" fill="none"><path d="M40 10h20l4 18H36l4-18z" stroke="#267348" stroke-width="2.5"/><path d="M36 28c-8 14-10 30-10 46 0 16 10 28 24 28s24-12 24-28c0-16-2-32-10-46" stroke="#267348" stroke-width="2.5"/><circle cx="50" cy="76" r="4" fill="#267348"/><circle cx="42" cy="88" r="3" fill="#267348" opacity=".6"/><circle cx="58" cy="88" r="3" fill="#267348" opacity=".6"/></svg></div></div><div class="body"><h4>Sữa Rửa Mặt Tạo Bọt Amino Acid Dịu Nhẹ</h4><div class="price">280.000₫<s>320.000₫</s></div><a class="buy" href="#">Mua ngay</a></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="process">
+  <div class="container">
+    <div class="sec-head rv"><div><div class="eyebrow">Quy trình khoa học chứng minh</div><h2>Phác đồ điều trị 3 bước chuẩn clinic</h2></div></div>
+    <div class="process-wrap rv">
+      <div class="stepper" id="stepper">
+        <div class="active" data-step="0"><div class="num">01</div><h4>Chẩn đoán da</h4><p>Đánh giá chính xác mức độ tổn thương màng lipid, mật độ sắc tố và tuyến bã nhờn bằng thiết bị chuyên dụng.</p></div>
+        <div data-step="1"><div class="num">02</div><h4>Kê đơn cá nhân hóa</h4><p>Chuyên gia da liễu xây dựng liệu trình phối hợp hoạt chất nồng độ chính xác, hạn chế tối đa nguy cơ kích ứng.</p></div>
+        <div data-step="2"><div class="num">03</div><h4>Đồng hành 1:1</h4><p>Đội ngũ chuyên viên theo dõi sát sao tiến trình phục hồi, điều chỉnh liều lượng đảm bảo hiệu quả tối đa.</p></div>
+      </div>
+      <div class="process-photo">
+        <div class="step-icon active" data-step-img="0"><svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="90" r="50" stroke="#166B55" stroke-width="2"/><circle cx="100" cy="90" r="50" stroke="#166B55" stroke-width="2"/><circle cx="100" cy="90" r="6" fill="#166B55"/><path d="M100 40v14M100 126v14M50 90h14M136 90h14" stroke="#3CB371" stroke-width="2"/><circle cx="100" cy="90" r="30" stroke="#166B55" stroke-width="1" stroke-dasharray="2 5" opacity=".6"/></svg></div>
+        <div class="step-icon" data-step-img="1"><svg viewBox="0 0 200 200" fill="none"><rect x="60" y="50" width="80" height="100" rx="6" stroke="#166B55" stroke-width="2"/><path d="M75 75h50M75 92h50M75 109h30" stroke="#3CB371" stroke-width="2.5"/><circle cx="140" cy="130" r="16" fill="#fff" stroke="#166B55" stroke-width="2"/><path d="M134 130l4 5 8-9" stroke="#166B55" stroke-width="2"/></svg></div>
+        <div class="step-icon" data-step-img="2"><svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="52" stroke="#166B55" stroke-width="2"/><path d="M100 68v32l22 14" stroke="#3CB371" stroke-width="3" stroke-linecap="round"/><circle cx="100" cy="100" r="4" fill="#166B55"/></svg></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="team">
+  <div class="container">
+    <div class="sec-head rv"><div><div class="eyebrow">Hội đồng chuyên môn</div><h2>Đội ngũ chuyên gia da liễu</h2></div></div>
+    <div class="team-scroll rv">
+      <div class="team-card"><div class="photo"><img src="https://i.pravatar.cc/400?img=12" alt="Chuyên gia Nguyễn Thanh Tùng"></div><div class="body"><h4>Chuyên gia Nguyễn Thanh Tùng</h4><div class="role">Chuyên gia điều trị chuyên sâu</div><p>15 năm điều trị mụn &amp; sẹo rỗ, ĐH Y Hà Nội.</p></div></div>
+      <div class="team-card"><div class="photo"><img src="https://i.pravatar.cc/400?img=47" alt="Chuyên gia Trần Thu Hương"></div><div class="body"><h4>Chuyên gia Trần Thu Hương</h4><div class="role">Chuyên gia sắc tố da</div><p>Chuyên sâu điều trị nám, tàn nhang.</p></div></div>
+      <div class="team-card"><div class="photo"><img src="https://i.pravatar.cc/400?img=33" alt="Chuyên gia Lê Vũ Lan"></div><div class="body"><h4>Chuyên gia Lê Vũ Lan</h4><div class="role">Chuyên gia lão hóa da</div><p>Chứng chỉ Anti-Aging Hàn Quốc.</p></div></div>
+      <div class="team-card"><div class="photo"><img src="https://i.pravatar.cc/400?img=60" alt="Chuyên gia Phạm Gia Bảo"></div><div class="body"><h4>Chuyên gia Phạm Gia Bảo</h4><div class="role">Chuyên gia da nhạy cảm</div><p>Phác đồ an toàn cho da tổn thương.</p></div></div>
+      <div class="team-card"><div class="photo"><img src="https://i.pravatar.cc/400?img=25" alt="Chuyên gia Đỗ Minh Anh"></div><div class="body"><h4>Chuyên gia Đỗ Minh Anh</h4><div class="role">Chuyên gia phục hồi da</div><p>Trị liệu sau laser, peel hoá học.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="evidence">
+  <div class="container">
+    <div class="sec-head rv"><div><div class="eyebrow">Hiệu quả lâm sàng</div><h2>Minh chứng cho làn da rạng rỡ</h2></div></div>
+    <div class="evidence-panel rv">
+      <div class="evidence-top"><img class="evidence-photo" id="evidencePhoto" src="https://i.pravatar.cc/150?img=5" alt="Khách hàng"><div><h4 id="evidenceWho">Khách hàng, 24 tuổi</h4><div class="evidence-tag" id="evidenceTag">Mụn viêm · 8 tuần</div></div></div>
+      <div class="evidence-metric"><span id="evidenceLabel">Giảm mụn viêm</span><b id="evidencePct">82%</b></div>
+      <div class="evidence-bar"><div class="evidence-bar-fill" id="evidenceBar" data-target="82"></div></div>
+      <p class="evidence-quote" id="evidenceQuote">"Da giảm mụn viêm rõ rệt chỉ sau 2 tháng theo phác đồ, không còn nổi mụn mới."<b>— Hồ sơ điều trị #A182</b></p>
+      <div class="evidence-dots" id="evidenceDots">
+        <button class="active" data-i="0"></button><button data-i="1"></button><button data-i="2"></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="treat-cta">
+  <div class="container treat-grid">
+    <div class="treat-visual rv">
+      <svg viewBox="0 0 200 200" fill="none">
+        <path d="M40 100c20-40 100-40 120 0" stroke="#3CB371" stroke-width="2" opacity=".7"/>
+        <ellipse cx="100" cy="100" rx="55" ry="30" stroke="#3CB371" stroke-width="2"/>
+        <ellipse cx="100" cy="100" rx="30" ry="16" stroke="#3CB371" stroke-width="2" opacity=".7"/>
+        <circle cx="100" cy="100" r="5" fill="#3CB371"/>
+        <circle cx="70" cy="90" r="3" fill="#3CB371" opacity=".8"/><circle cx="130" cy="92" r="3" fill="#3CB371" opacity=".8"/>
+        <circle cx="82" cy="112" r="3" fill="#3CB371" opacity=".8"/><circle cx="118" cy="114" r="3" fill="#3CB371" opacity=".8"/>
+      </svg>
+    </div>
+    <div class="rv">
+      <div class="eyebrow" style="color:var(--mint)">Skin Health Beauty</div>
+      <h2>Trị liệu chuyên sâu cho từng tế bào</h2>
+      <p>Kết hợp giữa công nghệ y khoa tân tiến nhất và sự tận tâm của đội ngũ chuyên gia, chúng tôi kiến tạo lộ trình điều trị riêng biệt cho làn da bạn.</p>
+      <div class="treat-list">
+        <div><b>Chăm sóc da duy trì</b><span>Làm sạch sâu, cấp ẩm, duy trì 1–2 lần/tháng.</span></div>
+        <div><b>Điều trị nhắm mục tiêu</b><span>Xử lý sẹo, mụn, thâm nám theo từng loại tổn thương.</span></div>
+        <div><b>Điều trị xâm lấn tối thiểu</b><span>Đưa dưỡng chất vào da bằng kim vi điểm.</span></div>
+      </div>
+      <a href="#" class="btn-mint">Về Skin Health Beauty →</a>
+    </div>
+  </div>
+</section>
+
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span>THE ORDINARY</span><span>PAULA'S CHOICE</span><span>SKIN1004</span><span>COSRX</span><span>BIODERMA</span><span>AVÈNE</span><span>OBAGI MEDICAL</span>
+    <span>THE ORDINARY</span><span>PAULA'S CHOICE</span><span>SKIN1004</span><span>COSRX</span><span>BIODERMA</span><span>AVÈNE</span><span>OBAGI MEDICAL</span>
+  </div>
+</div>
+
+<section id="science">
+  <div class="container">
+    <div class="sec-head rv"><div><div class="eyebrow">Hoạt chất cốt lõi</div><h2>Thấu hiểu làn da bằng khoa học</h2></div></div>
+    <div class="science-tabs rv">
+      <div class="sci-tab-list">
+        <div class="sci-tab active" data-sci="0"><div class="pct">0.3%</div><h4>Retinol</h4><p>Kích thích tái tạo tế bào, làm mờ nếp nhăn và cải thiện kết cấu da theo cơ chế đã được chứng minh lâm sàng.</p></div>
+        <div class="sci-tab" data-sci="1"><div class="pct">3 tầng</div><h4>Hyaluronic Acid</h4><p>Cấp ẩm đa phân tử lượng, giữ nước sâu trong biểu bì suốt 24 giờ.</p></div>
+        <div class="sci-tab" data-sci="2"><div class="pct">5 loại</div><h4>Ceramides</h4><p>Tái cấu trúc hàng rào bảo vệ da, giảm mất nước qua biểu bì (TEWL).</p></div>
+      </div>
+      <div class="sci-photo">
+        <div class="sci-icon active" data-sci-img="0"><svg viewBox="0 0 120 75" fill="none"><circle cx="30" cy="38" r="10" stroke="#B8860B" stroke-width="2"/><circle cx="60" cy="24" r="10" stroke="#B8860B" stroke-width="2"/><circle cx="90" cy="38" r="10" stroke="#B8860B" stroke-width="2"/><circle cx="60" cy="52" r="10" stroke="#B8860B" stroke-width="2"/><path d="M39 34l12-6M69 20l12 6M69 46l12-6M39 42l12 6" stroke="#B8860B" stroke-width="2"/></svg></div>
+        <div class="sci-icon" data-sci-img="1"><svg viewBox="0 0 120 75" fill="none"><path d="M60 14c8 12 16 22 16 32a16 16 0 0 1-32 0c0-10 8-20 16-32z" stroke="#166B55" stroke-width="2.5"/><path d="M60 30c4 6 8 11 8 16a8 8 0 0 1-16 0c0-5 4-10 8-16z" fill="#166B55" opacity=".5"/></svg></div>
+        <div class="sci-icon" data-sci-img="2"><svg viewBox="0 0 120 75" fill="none"><rect x="20" y="20" width="80" height="8" rx="4" stroke="#267348" stroke-width="2"/><rect x="20" y="34" width="80" height="8" rx="4" stroke="#267348" stroke-width="2" opacity=".7"/><rect x="20" y="48" width="80" height="8" rx="4" stroke="#267348" stroke-width="2" opacity=".45"/></svg></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="container">
+    <div class="qr-cta rv">
+      <div><h3>Giải đáp cùng chuyên gia AI da liễu</h3><p>Quét mã để trò chuyện trực tiếp với hệ thống AI phân tích da 17 câu hỏi, nhận gợi ý phác đồ sơ bộ trong 2 phút — miễn phí.</p></div>
+      <div class="qr-box">
+        <svg viewBox="0 0 100 100" width="86" height="86"><rect width="100" height="100" fill="#fff"/><g fill="#0F2318">
+          <rect x="6" y="6" width="24" height="24"/><rect x="12" y="12" width="12" height="12" fill="#fff"/>
+          <rect x="70" y="6" width="24" height="24"/><rect x="76" y="12" width="12" height="12" fill="#fff"/>
+          <rect x="6" y="70" width="24" height="24"/><rect x="12" y="76" width="12" height="12" fill="#fff"/>
+          <rect x="40" y="10" width="6" height="6"/><rect x="50" y="10" width="6" height="6"/><rect x="40" y="40" width="6" height="6"/>
+          <rect x="50" y="40" width="6" height="6"/><rect x="60" y="40" width="6" height="6"/><rect x="40" y="60" width="6" height="6"/>
+          <rect x="70" y="40" width="6" height="6"/><rect x="80" y="50" width="6" height="6"/><rect x="60" y="70" width="6" height="6"/><rect x="88" y="88" width="6" height="6"/>
+        </g></svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="mostviewed">
+  <div class="container">
+    <div class="sec-head rv"><div><div class="eyebrow">Cửa hàng trực tuyến</div><h2>Sản phẩm xem nhiều nhất</h2></div><a href="#">Xem tất cả →</a></div>
+    <div class="products rv-stagger rv">
+      <div class="product" style="--i:0"><div class="imgwrap"><span class="clinical">-29%</span><img src="https://bizweb.dktcdn.net/thumb/large/100/415/053/products/thiet-ke-chua-co-ten-2024-11-25t145955-840.png?v=1773033389693" alt="AZELDERM"></div><div class="body"><h4>AZELDERM 20% Krem Azelaic Acid 30g</h4><div class="price">576.000₫<s>985.000₫</s></div><a class="buy" href="#">Mua ngay</a></div></div>
+      <div class="product" style="--i:1"><div class="imgwrap"><img src="https://bizweb.dktcdn.net/thumb/large/100/415/053/products/09t84cartontube.png?v=1777434418733" alt="Tretinoin"></div><div class="body"><h4>Tretinoin Cream, USP Padagis</h4><div class="price">1.690.000₫</div><a class="buy" href="#">Xem sản phẩm</a></div></div>
+      <div class="product" style="--i:2"><div class="imgwrap"><span class="clinical">-23%</span><img src="https://bizweb.dktcdn.net/thumb/large/100/415/053/products/kho-ng-co-tie-u-de-1-55183c59-e375-4b63-9ed4-74d4a5b36bda.jpg?v=1773033411343" alt="Clascon"></div><div class="body"><h4>Clascon Cream (Clascoterone 1%)</h4><div class="price">750.000₫<s>980.000₫</s></div><a class="buy" href="#">Mua ngay</a></div></div>
+      <div class="product" style="--i:3"><div class="imgwrap"><img src="https://bizweb.dktcdn.net/thumb/large/100/415/053/products/z7622714336177-f05693ac0e7450b1f054a920354c6fa0.jpg?v=1773563205580" alt="Sensilis"></div><div class="body"><h4>Sensilis Azelaic [Peel]</h4><div class="price">780.000₫</div><a class="buy" href="#">Mua ngay</a></div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container" style="padding-left:32px">
+    <div class="foot-grid">
+      <div><div class="foot-brand">Pharma Cosmetics</div><p style="font-size:13px;color:#ECFDF5;margin-bottom:8px">Clinical Dermatology Vietnam — Số 897 Đường Giải Phóng, Hoàng Mai, Hà Nội</p><p style="font-size:11px;color:#D1FAE5">Số GPĐKKD: 0108923456 do Sở KH&amp;ĐT TP. Hà Nội cấp.</p></div>
+      <div><h5>Thông tin</h5><a href="#">Giới thiệu</a><a href="#">Tin tức</a><a href="#">Chính sách bảo mật</a><a href="#">Tuyển dụng</a></div>
+      <div><h5>Chính sách &amp; dịch vụ</h5><a href="#">Giao hàng nhanh</a><a href="#">Đổi trả 30 ngày</a><a href="#">Tư vấn miễn phí</a><a href="#">Đặt lịch trực tuyến</a></div>
+      <div><h5>Danh mục</h5><a href="#">Mỹ phẩm High-End</a><a href="#">Chăm sóc da mặt</a><a href="#">Đặc trị (kê đơn)</a><a href="#">TPCN &amp; Sức khoẻ</a></div>
+    </div>
+    <div class="foot-bottom"><span>© Bản quyền thuộc về Pharma Cosmetics</span><span>V2 — Clinical Dashboard</span></div>
+  </div>
+</footer>
+
+<script>
+  // CMP-01 Reading Progress Bar — cập nhật theo % cuộn trang thực tế
+  const scrollProgress = document.getElementById('scrollProgress');
+  function updateScrollProgress(){
+    const h = document.documentElement;
+    const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+    scrollProgress.style.width = scrolled + '%';
+  }
+  document.addEventListener('scroll', updateScrollProgress, {passive:true});
+  updateScrollProgress();
+
+  // Header: nút Danh mục (mở/đóng panel, đóng khi click ra ngoài)
+  const cateDropdown = document.getElementById('cateDropdown');
+  const cateBtn = document.getElementById('cateBtn');
+  cateBtn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    const willOpen = !cateDropdown.classList.contains('open');
+    cateDropdown.classList.toggle('open', willOpen);
+    cateBtn.setAttribute('aria-expanded', willOpen);
+  });
+  document.addEventListener('click', (e)=>{ if(!cateDropdown.contains(e.target)) cateDropdown.classList.remove('open'); });
+
+  // Header: search box thu gọn/bung ra
+  const searchBox = document.getElementById('searchBox');
+  const searchToggle = document.getElementById('searchToggle');
+  const searchInput = document.getElementById('searchInput');
+  searchToggle.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    const willOpen = !searchBox.classList.contains('open');
+    searchBox.classList.toggle('open', willOpen);
+    if(willOpen) searchInput.focus();
+  });
+  document.addEventListener('click', (e)=>{ if(!searchBox.contains(e.target)) searchBox.classList.remove('open'); });
+
+  // Header: thêm bóng đổ khi cuộn qua khỏi đầu trang, xác nhận menu/danh mục/search luôn ở lại (sticky)
+  const mainHeader = document.getElementById('mainHeader');
+  const updateHeaderSticky = ()=> mainHeader.classList.toggle('is-sticky', window.scrollY > 8);
+  document.addEventListener('scroll', updateHeaderSticky, {passive:true});
+  updateHeaderSticky();
+
+  const rv = document.querySelectorAll('.rv');
+  const io = new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12});
+  rv.forEach(el=>io.observe(el));
+
+  // rail nav active state + scroll
+  const railBtns = document.querySelectorAll('.rail button');
+  railBtns.forEach(b=>b.addEventListener('click',()=>document.querySelector(b.dataset.target)?.scrollIntoView({behavior:'smooth'})));
+  const sections = [...railBtns].map(b=>document.querySelector(b.dataset.target)).filter(Boolean);
+  const secIo = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        railBtns.forEach(b=>b.classList.remove('active'));
+        const idx = sections.indexOf(e.target);
+        if(railBtns[idx]) railBtns[idx].classList.add('active');
+      }
+    });
+  },{threshold:.4});
+  sections.forEach(s=>secIo.observe(s));
+
+  // flash countdown
+  let total = 8*3600+41*60+19;
+  setInterval(()=>{
+    total = total>0?total-1:0;
+    document.getElementById('t-h').textContent=String(Math.floor(total/3600)).padStart(2,'0');
+    document.getElementById('t-m').textContent=String(Math.floor((total%3600)/60)).padStart(2,'0');
+    document.getElementById('t-s').textContent=String(total%60).padStart(2,'0');
+  },1000);
+
+  // carousel arrows
+  const carousel = document.getElementById('carousel');
+  document.getElementById('prevBtn').addEventListener('click',()=>carousel.scrollBy({left:-250,behavior:'smooth'}));
+  document.getElementById('nextBtn').addEventListener('click',()=>carousel.scrollBy({left:250,behavior:'smooth'}));
+
+  // sort segmented control (visual only)
+  document.querySelectorAll('.seg button').forEach(btn=>btn.addEventListener('click',()=>{
+    document.querySelectorAll('.seg button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  }));
+
+  // stepper linked image
+  document.querySelectorAll('#stepper > div').forEach(step=>step.addEventListener('mouseenter',()=>{
+    document.querySelectorAll('#stepper > div').forEach(s=>s.classList.remove('active'));
+    step.classList.add('active');
+    const idx = step.dataset.step;
+    document.querySelectorAll('[data-step-img]').forEach(img=>img.classList.toggle('active', img.dataset.stepImg===idx));
+  }));
+
+  // science tabs
+  document.querySelectorAll('.sci-tab').forEach(tab=>tab.addEventListener('click',()=>{
+    document.querySelectorAll('.sci-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    const idx = tab.dataset.sci;
+    document.querySelectorAll('[data-sci-img]').forEach(img=>img.classList.toggle('active', img.dataset.sciImg===idx));
+  }));
+
+  // evidence case switcher (chân dung thật + số liệu đo lường)
+  const evidenceSets = [
+    {photo:'https://i.pravatar.cc/150?img=5', who:'Khách hàng, 24 tuổi', tag:'Mụn viêm · 8 tuần', label:'Giảm mụn viêm', pct:82, quote:'"Da giảm mụn viêm rõ rệt chỉ sau 2 tháng theo phác đồ, không còn nổi mụn mới."', ref:'— Hồ sơ điều trị #A182'},
+    {photo:'https://i.pravatar.cc/150?img=32', who:'Khách hàng, 31 tuổi', tag:'Nám mảng · 12 tuần', label:'Giảm sắc tố nám', pct:68, quote:'"Vùng nám sáng đều hơn hẳn, tự tin không cần trang điểm dày mỗi ngày."', ref:'— Hồ sơ điều trị #A231'},
+    {photo:'https://i.pravatar.cc/150?img=68', who:'Khách hàng, 42 tuổi', tag:'Lão hoá sớm · 16 tuần', label:'Cải thiện độ đàn hồi', pct:74, quote:'"Da căng bóng hơn, nếp nhăn khoé mắt mờ đi thấy rõ sau từng đợt tái khám."', ref:'— Hồ sơ điều trị #A309'}
+  ];
+  const evidenceBar = document.getElementById('evidenceBar');
+  document.querySelectorAll('#evidenceDots button').forEach(dot=>dot.addEventListener('click',()=>{
+    document.querySelectorAll('#evidenceDots button').forEach(d=>d.classList.remove('active'));
+    dot.classList.add('active');
+    const set = evidenceSets[dot.dataset.i];
+    document.getElementById('evidencePhoto').src = set.photo;
+    document.getElementById('evidenceWho').textContent = set.who;
+    document.getElementById('evidenceTag').textContent = set.tag;
+    document.getElementById('evidenceLabel').textContent = set.label;
+    document.getElementById('evidencePct').textContent = set.pct + '%';
+    document.getElementById('evidenceQuote').innerHTML = set.quote + '<b>' + set.ref + '</b>';
+    evidenceBar.style.width = '0'; evidenceBar.dataset.target = set.pct;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ evidenceBar.style.width = set.pct + '%'; }));
+  }));
+  const evBarIo = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ evidenceBar.style.width = evidenceBar.dataset.target + '%'; evBarIo.unobserve(e.target); } });
+  },{threshold:.4});
+  evBarIo.observe(evidenceBar);
+</script>
+
+</body>
+</html>

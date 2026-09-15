@@ -1,59 +1,11 @@
-{%- comment -%}
-  section_brand_marquee.bwt (T-20 batch B redesign) — Tailwind thay cho .pc-brand-marquee cũ.
-  Giữ NGUYÊN 100% logic Liquid gốc: nhánh linklist (settings.home_brand_menu) VS nhánh fallback
-  store.vendors, marquee_duration (dùng làm --marquee-duration cho @keyframes), img_url filter.
-  CSS animation viết thuần (không Tailwind) vì @keyframes tuỳ biến theo biến CSS marquee-duration.
-{%- endcomment -%}
-{%- assign brand_ll = linklists[settings.home_brand_menu] -%}
-{%- if settings.home_brand_menu != blank and brand_ll and brand_ll.links.size > 0 -%}
-  {%- assign marquee_duration = brand_ll.links.size | times: 3 -%}
-  {%- comment -%}
-    T-145 (2026-09-12) — nguoi dung bao dai thuong hieu "troi noi vo nghia": no nam kep giua 2
-    khoi noi dung lon ma khong co nhan dan nhap nen khong ai biet day la gi. Them 1 dong nhan
-    ngan phia tren dai chay (doc tu lop schema-admin de sua duoc trong Sapo Admin).
-  {%- endcomment -%}
-  <section class="bg-white border-y border-gray-100 py-6 overflow-hidden">
-    <p class="pc-marquee-lead">{{ settings.home_brand_lead | default: 'Phân phối chính ngạch từ các thương hiệu dược mỹ phẩm quốc tế' }}</p>
-    <div class="pc-marquee-track" style="--marquee-duration: {{ marquee_duration }}s">
-      {%- for link in brand_ll.links -%}
-        {%- capture image_key -%}home_brand_marquee_image_{{ forloop.index }}{%- endcapture -%}
-        <a href="{{ link.url }}" class="pc-marquee-brand flex items-center gap-2 px-6 text-sm font-semibold text-gray-400 hover:text-clinical-700 transition flex-shrink-0" title="{{ link.title }}">
-          {%- if settings[image_key] != blank -%}<img src="{{ settings[image_key] | img_url: 'compact' }}" alt="{{ link.title }}" class="h-8 w-auto object-contain grayscale hover:grayscale-0 transition">{%- endif -%}
-          <span>{{ link.title | upcase }}</span>
-        </a>
-      {%- endfor -%}
-      {%- for link in brand_ll.links -%}
-        {%- capture image_key -%}home_brand_marquee_image_{{ forloop.index }}{%- endcapture -%}
-        <a href="{{ link.url }}" class="pc-marquee-brand flex items-center gap-2 px-6 text-sm font-semibold text-gray-400 hover:text-clinical-700 transition flex-shrink-0" title="{{ link.title }}" aria-hidden="true">
-          {%- if settings[image_key] != blank -%}<img src="{{ settings[image_key] | img_url: 'compact' }}" alt="" class="h-8 w-auto object-contain grayscale hover:grayscale-0 transition">{%- endif -%}
-          <span>{{ link.title | upcase }}</span>
-        </a>
-      {%- endfor -%}
-    </div>
-  </section>
-{%- else -%}
-  {%- assign vendor_count = store.vendors | size -%}
-  {%- assign marquee_duration = vendor_count | times: 3 -%}
-  <section class="bg-white border-y border-gray-100 py-6 overflow-hidden">
-    <p class="pc-marquee-lead">{{ settings.home_brand_lead | default: 'Phân phối chính ngạch từ các thương hiệu dược mỹ phẩm quốc tế' }}</p>
-    <div class="pc-marquee-track" style="--marquee-duration: {{ marquee_duration }}s">
-      {%- for vendor in store.vendors -%}
-        <a href="/collections/all?q=vendor:({{ vendor | url_encode }})&page=1&view=grid" class="pc-marquee-brand px-6 text-sm font-semibold text-gray-400 hover:text-clinical-700 transition flex-shrink-0">{{ vendor | upcase }}</a>
-      {%- endfor -%}
-      {%- for vendor in store.vendors -%}
-        <a href="/collections/all?q=vendor:({{ vendor | url_encode }})&page=1&view=grid" class="pc-marquee-brand px-6 text-sm font-semibold text-gray-400 hover:text-clinical-700 transition flex-shrink-0" aria-hidden="true">{{ vendor | upcase }}</a>
-      {%- endfor -%}
-    </div>
-  </section>
-{%- endif -%}
-<style>
-  .pc-marquee-track {
-    display: flex;
-    width: max-content;
-    animation: pc-marquee var(--marquee-duration, 30s) linear infinite;
-  }
-  @keyframes pc-marquee {
-    from { transform: translateX(0); }
-    to { transform: translateX(-50%); }
-  }
-</style>
+<section class="brands"><div class="wrap">
+  <div class="section-head"><div><p class="eyebrow">{{ settings.home_brand_lead | default: 'Nhập khẩu chính hãng' | escape }}</p><h2>{{ settings.home_brand_title | default: 'Thương hiệu tiêu biểu' | escape }}</h2></div><a class="link-more" href="{{ settings.home_brand_url | default: settings.portal_shop_url | default: '/collections/all' | escape }}">{{ settings.home_brand_viewall_text | default: 'Khám phá sản phẩm' | escape }} →</a></div>
+  <div class="bgrid">
+    {% assign brand_ll = linklists[settings.home_brand_menu] %}
+    {% if brand_ll.links.size > 0 %}
+      {% for link in brand_ll.links limit: 12 %}{% capture logo_key %}home_brand_marquee_image_{{ forloop.index }}{% endcapture %}<a href="{{ link.url | escape }}">{% if settings[logo_key] != blank %}<img src="{{ settings[logo_key] | img_url: 'compact' }}" alt="{{ link.title | escape }}" width="120" height="48" loading="lazy">{% else %}{{ link.title | escape }}{% endif %}</a>{% endfor %}
+    {% else %}
+      {% for vendor in store.vendors limit: 6 %}<a href="/collections/all?q=vendor:({{ vendor | url_encode }})&page=1&view=grid">{{ vendor | escape }}</a>{% endfor %}
+    {% endif %}
+  </div>
+</div></section>
