@@ -252,6 +252,12 @@ engine.registerFilter('date',         (v, fmt) => {
   } catch { return String(v || ''); }
 });
 engine.registerFilter('json', (v) => JSON.stringify(v));
+engine.registerFilter('alias', (v) => String(v || '')
+  .normalize('NFD').replace(/[̀-ͯ]/g, '')
+  .replace(/đ/gi, 'd')
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/^-+|-+$/g, ''));
 
 // ── Load mock context (reload khi settings thay đổi) ──────────────────────
 let mockModule = null;
@@ -495,6 +501,7 @@ function devToolbarHtml(tpl) {
       ['index',      'index (Trang chủ)'],
       ['product',    'product (Sản phẩm)'],
       ['collection', 'collection (Danh mục)'],
+      ['list_collections', 'list_collections (Tất cả danh mục)'],
       ['cart',       'cart (Giỏ hàng)'],
       ['blog',       'blog (Blog)'],
       ['article',    'article (Bài viết)'],
@@ -840,9 +847,10 @@ function resolvePrettyPath(pathname, searchParams) {
     }
   }
 
-  // /collections/:handle
-  if (parts.length === 2 && parts[0] === 'collections') {
-    return { tpl: 'collection', routeParams: { collectionHandle: parts[1] } };
+  // /collections (danh sách toàn bộ danh mục) và /collections/:handle
+  if (parts[0] === 'collections') {
+    if (parts.length === 1) return { tpl: 'list_collections', routeParams: {} };
+    if (parts.length === 2) return { tpl: 'collection', routeParams: { collectionHandle: parts[1] } };
   }
 
   // Root-level 1-segment slug — thứ tự ưu tiên khớp đúng cách Sapo thật phân
