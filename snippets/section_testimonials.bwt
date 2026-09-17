@@ -3,12 +3,32 @@
   <div class="proof">
     {% for i in (1..3) %}
       {% capture title %}home_testi_{{ i }}_result_title{% endcapture %}{% capture desc %}home_testi_{{ i }}_result_desc{% endcapture %}
-      {% capture before %}home_testi_{{ i }}_before{% endcapture %}{% capture after %}home_testi_{{ i }}_after{% endcapture %}
       {% capture author %}home_testi_{{ i }}_author{% endcapture %}{% capture tag %}home_testi_{{ i }}_tag{% endcapture %}
+      {% assign case_image_count = 0 %}
       {% if settings[title] != blank %}<article class="pcase">
-        <div class="imgs{% if settings[after] == blank %} portal-proof-single{% endif %}">
-          {% if settings[before] != blank %}<div><img src="{{ settings[before] | img_url: 'large' }}" alt="{{ settings[title] | escape }}{% if settings[after] != blank %} — Trước{% endif %}" width="540" height="400" loading="lazy">{% if settings[after] != blank %}<span>Trước</span>{% endif %}</div>{% else %}<div><img src="{{ 'no-image.jpg' | asset_url }}" width="540" height="400" alt="Hình ảnh đang cập nhật" loading="lazy"></div>{% endif %}
-          {% if settings[after] != blank %}<div><img src="{{ settings[after] | img_url: 'large' }}" alt="{{ settings[title] | escape }} — Sau" width="540" height="400" loading="lazy"><span>Sau</span></div>{% endif %}
+        <div class="imgs swiper-container" data-pcase-media>
+          <div class="swiper-wrapper">
+            {% for n in (1..3) %}
+              {% capture image_key %}home_testi_{{ i }}_image_{{ n }}{% endcapture %}
+              {% assign case_image = settings[image_key] %}
+              {% if case_image != blank %}
+                {% assign case_image_count = case_image_count | plus: 1 %}
+                <div class="swiper-slide"><img src="{{ case_image | img_url: 'large' }}" alt="{{ settings[title] | escape }} — Ảnh {{ n }}" width="540" height="540" loading="lazy"></div>
+              {% endif %}
+            {% endfor %}
+            {% if case_image_count == 0 %}
+              <div class="swiper-slide"><img src="{{ 'no-image.jpg' | asset_url }}" width="540" height="540" alt="Hình ảnh đang cập nhật" loading="lazy"></div>
+            {% endif %}
+          </div>
+          {% if case_image_count > 1 %}
+          <button type="button" aria-label="Ảnh trước" class="swiper-button-prev pcase-prev">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button type="button" aria-label="Ảnh tiếp theo" class="swiper-button-next pcase-next">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="swiper-pagination pcase-pagination"></div>
+          {% endif %}
         </div>
         <div class="body"><h3>{{ settings[title] | escape }}</h3><p>{{ settings[desc] | escape }}</p><div class="meta"><span>{{ settings[author] | escape }}</span><b>{{ settings[tag] | escape }}</b></div></div>
       </article>{% endif %}

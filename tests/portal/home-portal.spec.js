@@ -39,15 +39,17 @@ test('hero uses a stable full-background fade while copy and CTA stay static', a
   await expect(hero.locator('.portal-hero__media')).toHaveCSS('position', 'absolute');
   await expect(hero.locator('.portal-hero__content')).toHaveCSS('z-index', '2');
   const copy = hero.locator('.portal-hero__copy');
-  await expect(copy).toHaveCSS('background-color', 'rgba(255, 255, 255, 0.88)');
-  await expect(copy).toHaveCSS('backdrop-filter', /blur\(14px\)/);
-  const centerOffset = await copy.evaluate(el => {
+  await expect(copy).toHaveCSS('background-color', 'rgba(255, 255, 255, 0.94)');
+  await expect(copy).toHaveCSS('backdrop-filter', /blur\(16px\)/);
+  const leftOffset = await copy.evaluate(el => {
     const copyRect = el.getBoundingClientRect();
-    const heroRect = el.closest('.hero').getBoundingClientRect();
-    return Math.abs((copyRect.left + copyRect.width / 2) - (heroRect.left + heroRect.width / 2));
+    const wrapRect = el.parentElement.getBoundingClientRect();
+    return copyRect.left - wrapRect.left;
   });
-  expect(centerOffset).toBeLessThan(1.5);
+  expect(leftOffset).toBeGreaterThan(28);
+  expect(leftOffset).toBeLessThan(36);
   await expect(hero.locator('h1')).toHaveCSS('color', 'rgb(0, 46, 35)');
+  await expect(hero.locator('h1 em')).toHaveCSS('color', 'rgb(60, 179, 113)');
   await expect(hero.locator('.eyebrow')).toHaveCSS('color', 'rgb(60, 179, 113)');
   await expect(hero.locator('.sub')).toHaveCSS('color', 'rgb(78, 101, 96)');
   await expect(hero.locator('.portal-hero__media h1')).toHaveCount(0);
@@ -101,7 +103,7 @@ test('topbar keeps accessible contrast, vector icons and a readable vertical tic
   await page.setViewportSize({ width: 1920, height: 1080 });
   const errors = await openHome(page);
   const topbar = page.locator('.pc-topbar');
-  await expect(topbar).toHaveCSS('background-color', 'rgb(30, 126, 72)');
+  await expect(topbar).toHaveCSS('background-color', 'rgb(60, 179, 113)');
   await expect(topbar).toHaveCSS('color', 'rgb(255, 255, 255)');
   await expect(topbar).toHaveCSS('font-weight', '600');
   const originalSlides = topbar.locator('.swiper-slide:not(.swiper-slide-duplicate)');
@@ -152,11 +154,37 @@ test('topbar disables autoplay and animation when reduced motion is requested', 
   expect(errors).toEqual([]);
 });
 
-test('footer uses the master logo and white content on the accessible brand background', async ({ page }) => {
+test('desktop header is compact, token-consistent and opaque while sticky', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const errors = await openHome(page);
+  const header = page.locator('header.header');
+  const mainRow = header.locator('.pc-header-row');
+  expect(await mainRow.evaluate(el => el.getBoundingClientRect().height)).toBe(68);
+
+  const interactiveColors = await header.evaluate(el => [
+    el.querySelector('.pc-logo-master'),
+    el.querySelector('.header-action-search'),
+    el.querySelector('.sudes-header-cart > a'),
+    el.querySelector('.sudes-header-iwish > a'),
+  ].filter(Boolean).map(node => getComputedStyle(node).color));
+  expect(new Set(interactiveColors)).toEqual(new Set(['rgb(0, 63, 45)']));
+
+  await page.evaluate(() => window.scrollTo(0, 900));
+  await expect(header).toHaveClass(/hSticky/);
+  const stickyMenu = header.locator('.header-menu');
+  await expect(stickyMenu).toHaveCSS('position', 'fixed');
+  await expect(stickyMenu).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(stickyMenu).toHaveCSS('isolation', 'isolate');
+  expect(Number(await stickyMenu.evaluate(el => getComputedStyle(el).zIndex))).toBeGreaterThan(10000);
+  expect(await stickyMenu.evaluate(el => el.getBoundingClientRect().height)).toBeLessThanOrEqual(48);
+  expect(errors).toEqual([]);
+});
+
+test('footer uses the master logo and white content on the mainColor brand background', async ({ page }) => {
   const errors = await openHome(page);
   const footer = page.locator('footer.footer');
   await footer.scrollIntoViewIfNeeded();
-  await expect(footer).toHaveCSS('background-color', 'rgb(0, 63, 45)');
+  await expect(footer).toHaveCSS('background-color', 'rgb(60, 179, 113)');
   await expect(footer).toHaveCSS('color', 'rgb(255, 255, 255)');
   await expect(footer.locator('.pc-footer-logo .pc-logo-master-svg')).toHaveCount(1);
   await expect(footer.locator('.logo-icon, .logo-text-block')).toHaveCount(0);
@@ -184,6 +212,22 @@ test('flash sale and featured carousel move, prices and CTA stay readable', asyn
   }
   await expect(page.locator('.pc-flashsale')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
   await expect(page.locator('.pc-flashsale__countdown-timer')).not.toContainText('NaN');
+
+  const featured = page.locator('.pc-featured-products');
+  const navGeometry = await featured.evaluate(section => {
+    const prev = section.querySelector('.pc-featured__prev').getBoundingClientRect();
+    const next = section.querySelector('.pc-featured__next').getBoundingClientRect();
+    const thumbnails = [...section.querySelectorAll('.product-thumbnail')].map(el => el.getBoundingClientRect());
+    const overlaps = (button, image) => !(button.right <= image.left || button.left >= image.right || button.bottom <= image.top || button.top >= image.bottom);
+    return {
+      axisOffset: Math.abs((prev.top + prev.height / 2) - (next.top + next.height / 2)),
+      targetSizes: [prev.width, prev.height, next.width, next.height],
+      overlapsProduct: thumbnails.some(image => overlaps(prev, image) || overlaps(next, image)),
+    };
+  });
+  expect(navGeometry.axisOffset).toBeLessThan(1);
+  expect(navGeometry.targetSizes).toEqual([44, 44, 44, 44]);
+  expect(navGeometry.overlapsProduct).toBe(false);
   expect(errors).toEqual([]);
 });
 

@@ -78,6 +78,12 @@ Bổ sung cho `01-quy-chuan-theme-sapo.md` (quy chuẩn nền tảng Sapo). File
   đã bị xoá có chủ ý (commit `58bda23`, `952d950`).
 - Không bịa dữ liệu (% đã bán, đánh giá khách hàng, thống kê) để "trông đẹp hơn".
 - Không tự ý đổi giá trị `settings_data.json` của khách nếu không được yêu cầu.
+- **Không tự ý xoá hoặc tạo mới field trong `settings_schema.json`/`settings_data.json`, không tự ý
+  đổi kiến trúc giao diện (đổi cách 1 phần tử lấy màu/dữ liệu từ đâu, gộp/tách setting, đổi cấu trúc
+  section) khi việc được giao chỉ là chỉnh 1 giá trị/màu cụ thể.** Nếu thấy có setting trùng chức năng
+  hoặc muốn tái cấu trúc, phải hỏi trước và được đồng ý rồi mới làm — không tự quyết. Sự cố 17/09/2026:
+  xoá nhầm `header_topbar_bg`/`header_topbar_text_color` khi "gộp" topbar vào mainColor mà không hỏi,
+  làm mất một cấu hình Admin đang dùng (xem mục 8).
 - Không commit `dist/`, `vercel-dist/`, `node_modules/`, `.env*` thật, `.vercel/`.
 - **Rule không được "sinh ra" từ file báo cáo theo phase.** `phase/<tên-việc>/` vẫn dùng được làm không
   gian làm việc tạm cho một đầu việc cụ thể, nhưng làm xong thì dọn — không để nó thành nơi lưu rule.
@@ -112,7 +118,7 @@ dữ liệu Admin đã lưu trong `settings_data.json`.
 | 5 | Sản phẩm nổi bật | `section_featured_products.bwt` | `home_featured_*` |
 | 6 | Chương II — Skin Health Beauty | `section_spa.bwt` | `portal_chapter_2`, `portal_clinic_chips`, `home_spa_*` |
 | 7 | Thương hiệu tiêu biểu | `section_brand_marquee.bwt` | `home_brand_*`, `portal_shop_url` |
-| 8 | Minh chứng khách hàng | `section_testimonials.bwt` | `home_testi_*` |
+| 8 | Minh chứng khách hàng | `section_testimonials.bwt` | `home_testi_*` (mỗi thẻ tối đa 3 ảnh: `home_testi_{n}_image_1..3`, xem bằng swiper — 17/09/2026 thay cho cặp `_before`/`_after`, vì không phải case nào cũng có đúng 1 ảnh trước + 1 ảnh sau) |
 | 9 | Hoạt chất / Khoa học | `section_ingredients.bwt` | `home_ing_*` |
 | 10 | Chương III — Blog | `section_portal_blog.bwt` | `portal_chapter_3`, `portal_blog*`, `section_blog_url` |
 | 11 | Mạng xã hội + Đặt lịch | `section_portal_social.bwt` | `portal_social_*`, `portal_booking_*`, `store_name` |
@@ -125,33 +131,56 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
 **Kiến trúc Hero/Header v3 hiện tại:**
 
 - Hero (`section_hero.bwt` + `home-portal.css` + `home-hero.js`) là **Swiper ảnh nền full-bleed**;
-  lớp nội dung/CTA đứng yên trong thẻ kính trắng mờ căn giữa, chữ dùng hệ màu tối của thiết kế sáng;
-  không phủ mask lên toàn ảnh. Ảnh đầu preload + eager/high priority,
+  lớp nội dung/CTA đứng yên trong thẻ kính trắng mờ (`background:rgba(255,255,255,.94)`,
+  `backdrop-filter:blur(16px)`), neo **góc trái** wrap (`justify-content:flex-start`, cập nhật
+  17/09/2026 — trước đó từng căn giữa) để ảnh nền vẫn hiện rõ phần còn lại; chữ dùng hệ màu tối của
+  thiết kế sáng, riêng cụm từ nhấn mạnh trong H1 (`<em>`, từ `settings.portal_hero_highlight`) tô
+  `var(--green)`/mainColor. Không phủ mask lên toàn ảnh. Ảnh đầu preload + eager/high priority,
   các ảnh sau lazy-load; khung Hero khóa `min-height` để tránh CLS. Fade 700ms mỗi 5s, dừng khi
   hover/focus và tắt autoplay theo `prefers-reduced-motion`. Không dựng lại grid 2 cột cho Hero.
 - Header: `header.header` là wrapper trong suốt theo thiết kế — màu nằm ở phần tử con: `.main-header`
-  có nền dự phòng `#002E23`, `.pc-topbar` dùng setting riêng (mặc định `#1E7E48`), `.box-hearder`
-  (logo/menu) nền trắng. Đo `background-color` phải đo đúng tầng con, không đo `header.header`.
+  có nền dự phòng `#002E23`, `.pc-topbar` lấy nền từ `--mainColor` (schema-admin, xem dưới),
+  `.box-hearder` (logo/menu) nền trắng. Main header desktop cao 68px; khi cuộn chỉ `.header-menu` cao
+  48px được fixed với nền trắng đục, stacking riêng và shadow. Logo/icon dùng `mainColorDark` đủ
+  tương phản, còn `mainColor` dùng cho accent. Đo `background-color` phải đo đúng tầng con, không đo
+  wrapper.
 - Ảnh dưới fold dùng lazyload (`class="lazyload"`/`data-src`) — phải `scrollTo(0, document.body.scrollHeight)`
   để trigger trước khi đo `naturalWidth` (tránh nhầm "chưa tải" thành ảnh 404).
 
 **Quyết định tương phản hiện tại cho topbar/footer — tính bằng công thức WCAG 2.x relative luminance:**
 
-| Cặp màu (chữ trắng #FFF trên nền) | Contrast ratio | WCAG 2.2 AA (≥4.5:1 văn bản thường) |
+| Cặp màu | Contrast ratio | WCAG 2.2 AA (≥4.5:1 văn bản thường) |
 | :-- | :-- | :-- |
-| nền `--mainColor` #3CB371 | **2.66:1** | ❌ Trượt — không dùng được cho nền có chữ |
-| nền `--mainColorDark` #267348 | **5.78:1** | ✅ Đạt AA |
-| nền/dark token `#002E23` | **14.85:1** | ✅ Vượt cả AAA (≥7:1) |
+| nền `--mainColor` #3CB371 + chữ trắng #FFF | **2.66:1** | ❌ Trượt |
+| nền `--mainColor` #3CB371 + chữ dark ink `--pc-brand-dark` #002E23 | **5.57:1** | ✅ Đạt AA |
+| nền/dark token `#002E23` + chữ trắng | **14.85:1** | ✅ Vượt cả AAA (≥7:1) |
 
-`mainColor` #3CB371 không được ghép với chữ trắng vì chỉ đạt 2.66:1. Trạng thái chuẩn hiện tại:
+**Cập nhật 17/09/2026 — topbar và footer khớp `mainColor` của schema-admin:**
 
-- Topbar dùng cặp setting `header_topbar_bg` / `header_topbar_text_color`; mặc định `#1E7E48` +
-  `#FFFFFF` đạt **5.08:1**. Thông báo phân tách bằng `;`, chuyển dọc 600ms mỗi 4s, dừng khi hover và
-  tắt autoplay theo `prefers-reduced-motion`; icon phone/user/chevron dùng SVG inline.
-- Footer dùng Logo Master SVG chung với header; nền là `mainColorDark` (biến thể đậm của xanh thương
-  hiệu) và toàn bộ chữ/icon trắng. Không dùng trực tiếp `mainColor` #3CB371 với chữ trắng vì cặp đó
-  chỉ đạt ~2.66:1; `mainColorDark` mặc định của storefront là `#003F2D`, đạt ~11.7:1 với trắng.
-- Khi đổi một màu nền, phải đo lại và đổi đồng bộ màu chữ/icon để giữ tối thiểu 4.5:1 cho văn bản.
+- Footer (`.footer`/`.mid-footer`/`.bg-footer-bottom`, `assets/storefront-v3.css`) dùng thẳng
+  `background:var(--mainColor)` (chuỗi token `settings.theme_main_color` → `--pc-brand-primary` →
+  `--mainColor`, xem `storefront_theme.bwt`) — đổi `theme_main_color` ở Admin (Màu sắc) là đổi luôn
+  footer, không có setting riêng cho footer.
+- Topbar (`.pc-topbar`) **vẫn giữ setting riêng** `header_topbar_bg` / `header_topbar_text_color`
+  (`configs/settings_schema.json`, truyền qua `--pc-topbar-bg`/`--pc-topbar-fg` trong
+  `site_topbar.bwt`) — KHÔNG xoá field này. Giá trị mặc định hiện tại: `#3CB371` (khớp `mainColor`)
+  + **chữ trắng `#FFFFFF`** — người dùng chủ đích chọn lại chữ trắng ngày 17/09/2026 sau khi đã thử
+  dark ink, dù chỉ đạt ~2.66:1 (dưới AA 4.5:1). Đây là quyết định thẩm mỹ có chủ đích, không phải lỗi
+  — không tự ý đổi lại sang dark ink nếu không được yêu cầu (xem mục 7).
+- Footer dùng **cùng chữ trắng `#fff`** cho chữ/icon/logo (đồng bộ thẩm mỹ với topbar, cùng ngày
+  17/09/2026) — cũng dưới AA (~2.66:1), cũng là lựa chọn chủ đích, không tự ý đổi sang dark ink.
+  Footer border-top dùng `--mainColorDark` (`theme_forest_color`) để có viền phân cách nhìn được
+  (không lặp lại chính màu nền).
+- Topbar: thông báo phân tách bằng `;`, chuyển dọc 600ms mỗi 4s, dừng khi hover và tắt autoplay theo
+  `prefers-reduced-motion`; icon phone/user/chevron dùng SVG inline, kế thừa `currentColor` (trắng).
+- Footer dùng Logo Master SVG chung với header, kế thừa `currentColor` (trắng) qua `.pc-footer-logo`.
+- Khi đổi một màu nền/chữ theo yêu cầu mới, chỉ đổi đúng giá trị được yêu cầu — không tự suy ra và đổi
+  thêm màu khác "cho đủ AA" nếu không được hỏi trước (xem mục 7); nếu phát hiện contrast dưới AA thì
+  báo cho người dùng biết, không tự ý sửa.
+- **17/09/2026 (sự cố):** đã từng xoá nhầm field `header_topbar_bg`/`header_topbar_text_color` khỏi
+  schema+data khi "gộp" topbar vào mainColor mà không hỏi trước — vi phạm mục 7 (không tự ý đổi
+  `settings_data.json`) và làm mất một cấu hình Admin đang dùng. Đã khôi phục. Xem quy tắc bắt buộc
+  ở mục 7.
 
 **Còn thiếu (ngoài phạm vi trang chủ, chưa triển khai):** nhóm Thanh toán & VietQR (`vietqr_bank_code`,
 `vietqr_account_no`, `vietqr_account_name`, `vietqr_auto_approve`); khối "Đội ngũ chuyên gia" trên trang
