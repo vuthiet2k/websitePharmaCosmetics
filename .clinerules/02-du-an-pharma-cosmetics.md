@@ -122,37 +122,36 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
 `theme_{main_color,forest_color,secondary_green,dark_color,page_background}`), khung section
 (`home_portal.bwt`, `home_section_1..18`).
 
-**Kiến trúc Hero/Header v3 (hay bị báo cáo QA ngoài hiểu sai — xác minh trực tiếp trên bản test
-16/09/2026 trước khi tin báo cáo khác):**
+**Kiến trúc Hero/Header v3 hiện tại:**
 
-- Hero (`.hero` trong `assets/home-portal.css`) là bố cục **2 cột** (nội dung trái, ảnh chân dung phải,
-  nền `var(--white)`) — **không phải** ảnh nền full-bleed. Đây là thiết kế chủ đích của v3.
-- Header: `header.header` là wrapper trong suốt theo thiết kế — màu thương hiệu nằm ở phần tử con:
-  `.main-header`/topbar nền `#002E23`, `.box-hearder` (logo/menu) nền trắng, `--mainColor` (#3CB371)
-  dùng cho accent icon/badge. Đo `background-color` phải đo đúng tầng con, không đo `header.header`.
+- Hero (`section_hero.bwt` + `home-portal.css` + `home-hero.js`) là **Swiper ảnh nền full-bleed**;
+  lớp nội dung/CTA đứng yên trong thẻ kính trắng mờ căn giữa, chữ dùng hệ màu tối của thiết kế sáng;
+  không phủ mask lên toàn ảnh. Ảnh đầu preload + eager/high priority,
+  các ảnh sau lazy-load; khung Hero khóa `min-height` để tránh CLS. Fade 700ms mỗi 5s, dừng khi
+  hover/focus và tắt autoplay theo `prefers-reduced-motion`. Không dựng lại grid 2 cột cho Hero.
+- Header: `header.header` là wrapper trong suốt theo thiết kế — màu nằm ở phần tử con: `.main-header`
+  có nền dự phòng `#002E23`, `.pc-topbar` dùng setting riêng (mặc định `#1E7E48`), `.box-hearder`
+  (logo/menu) nền trắng. Đo `background-color` phải đo đúng tầng con, không đo `header.header`.
 - Ảnh dưới fold dùng lazyload (`class="lazyload"`/`data-src`) — phải `scrollTo(0, document.body.scrollHeight)`
   để trigger trước khi đo `naturalWidth` (tránh nhầm "chưa tải" thành ảnh 404).
 
-**Vì sao `--mainColor` (#3CB371) không bao giờ là nền lớn ở header/footer — chủ đích, có phép đo, không
-phải thiếu sót.** Tính bằng công thức WCAG 2.x relative luminance:
+**Quyết định tương phản hiện tại cho topbar/footer — tính bằng công thức WCAG 2.x relative luminance:**
 
 | Cặp màu (chữ trắng #FFF trên nền) | Contrast ratio | WCAG 2.2 AA (≥4.5:1 văn bản thường) |
 | :-- | :-- | :-- |
 | nền `--mainColor` #3CB371 | **2.66:1** | ❌ Trượt — không dùng được cho nền có chữ |
-| nền `--mainColorDark` #267348 (bản sửa lần 1, xem comment `DEF-GT-01` trong `assets/global_core.scss.bwt`) | **5.78:1** | ✅ Đạt AA |
-| nền `#002E23` (bản v3 hiện tại, `assets/storefront-v3.css:11,17`, header + footer) | **14.85:1** | ✅ Vượt cả AAA (≥7:1) |
+| nền `--mainColorDark` #267348 | **5.78:1** | ✅ Đạt AA |
+| nền/dark token `#002E23` | **14.85:1** | ✅ Vượt cả AAA (≥7:1) |
 
-Header/footer có nhiều chữ trắng đè trực tiếp (menu, hotline, link chân trang) nên bắt buộc nền phải đủ
-tối để đạt AA — `mainColor` một mình không đủ. `mainColor` chỉ dùng ở diện tích nhỏ không phải nền chữ
-(icon, badge, viền 3px chân trang) — nơi áp dụng ngưỡng tương phản UI component thấp hơn (1.4.11, 3:1),
-không phải ngưỡng văn bản (1.4.3).
+`mainColor` #3CB371 không được ghép với chữ trắng vì chỉ đạt 2.66:1. Trạng thái chuẩn hiện tại:
 
-> **Cập nhật 16/09/2026:** user chủ đích ghi đè quyết định trên — đã đổi nền topbar (`.pc-topbar`) và
-> footer (`.footer`/`.mid-footer`) sang `mainColor` #3CB371 thẳng trong `assets/storefront-v3.css`, đồng
-> thời đổi chữ/icon/svg trong hai vùng đó sang `#002E23` (dark ink, ~5.6:1, vẫn đạt AA) thay vì giữ chữ
-> trắng — không chấp nhận vỡ contrast dù đổi nền theo yêu cầu. Bảng trên vẫn đúng về lý do kỹ thuật gốc,
-> chỉ không còn là lựa chọn nền cuối cùng — nếu cần đổi lại, phải giữ nguyên tắc "đổi nền thì phải đổi
-> luôn màu chữ/icon đi kèm để không lặp lại lỗi 2.66:1".
+- Topbar dùng cặp setting `header_topbar_bg` / `header_topbar_text_color`; mặc định `#1E7E48` +
+  `#FFFFFF` đạt **5.08:1**. Thông báo phân tách bằng `;`, chuyển dọc 600ms mỗi 4s, dừng khi hover và
+  tắt autoplay theo `prefers-reduced-motion`; icon phone/user/chevron dùng SVG inline.
+- Footer dùng Logo Master SVG chung với header; nền là `mainColorDark` (biến thể đậm của xanh thương
+  hiệu) và toàn bộ chữ/icon trắng. Không dùng trực tiếp `mainColor` #3CB371 với chữ trắng vì cặp đó
+  chỉ đạt ~2.66:1; `mainColorDark` mặc định của storefront là `#003F2D`, đạt ~11.7:1 với trắng.
+- Khi đổi một màu nền, phải đo lại và đổi đồng bộ màu chữ/icon để giữ tối thiểu 4.5:1 cho văn bản.
 
 **Còn thiếu (ngoài phạm vi trang chủ, chưa triển khai):** nhóm Thanh toán & VietQR (`vietqr_bank_code`,
 `vietqr_account_no`, `vietqr_account_name`, `vietqr_auto_approve`); khối "Đội ngũ chuyên gia" trên trang

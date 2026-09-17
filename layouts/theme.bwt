@@ -15,6 +15,15 @@
 		<meta name="google-site-verification" content="hQIumWld_-_PQCp9rfFO617FC5Z_MRszJ95bfzgWxzE" />
 		<meta name="theme-color" content="{{ settings.theme_main_color }}" />
 		<link rel="canonical" href="{{ canonical_url }}"/>
+		{%- if template contains 'index' -%}
+		  {%- assign home_has_hero = false -%}
+		  {%- for i in (1..18) -%}{%- capture home_section_key -%}home_section_{{ i }}{%- endcapture -%}{%- if settings[home_section_key] == 'section_hero' -%}{%- assign home_has_hero = true -%}{%- endif -%}{%- endfor -%}
+		  {%- if home_has_hero and settings.portal_hero_visual == 'image' and settings.home_hero_image != blank -%}
+		    {%- comment -%}HERO-FULLBG 2026-09-17: preload đúng ảnh LCP; các slide sau vẫn lazy-load.{%- endcomment -%}
+		    {%- if settings.home_hero_mobile_image != blank -%}<link rel="preload" as="image" href="{{ settings.home_hero_mobile_image | img_url: '800x' }}" media="(max-width: 680px)" fetchpriority="high">{%- endif -%}
+		    <link rel="preload" as="image" href="{{ settings.home_hero_image | img_url: '1920x' }}"{% if settings.home_hero_mobile_image != blank %} media="(min-width: 681px)"{% endif %} fetchpriority="high">
+		  {%- endif -%}
+		{%- endif -%}
 		<meta name='revisit-after' content='2 days' />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">	
 		{% if template contains 'mops-admin' %}<meta name="robots" content="noindex,nofollow" />{% else %}<meta name="robots" content="noodp,index,follow" />{% endif %}
@@ -324,6 +333,7 @@
 {% if template contains 'index' %}
 {{ 'home-portal.css' | asset_url | stylesheet_tag }}
 {{ 'home-portal-integration.css' | asset_url | stylesheet_tag }}
+<script defer src="{{ 'home-hero.js' | asset_url }}"></script>
 {% endif %}
 {{ content_for_header }}
 </head>
