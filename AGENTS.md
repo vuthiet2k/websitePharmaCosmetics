@@ -30,3 +30,14 @@ Repo: **websitePharmaCosmetics** — theme giao diện **Sapo Web (.bwt)** cho P
   `npx vercel --prod --yes` (**cần token/login** — máy dev không lưu credential).
 - Không dựng lại `.project-agent/`; không bịa dữ liệu (đánh giá, % đã bán, thống kê);
   không commit `dist/`, `vercel-dist/`, `node_modules/`, `.env*` thật, `.vercel/`.
+- **Rule phải có sẵn từ đầu dự án trong `.clinerules/`/`Rule&HDKTXD.md` — không phải thứ đi "phát hiện
+  dần" qua từng phase việc.** Rule là nguyên tắc đứng vững quanh năm bất kể đang làm việc gì: cấu hình
+  hoá (không hardcode), dùng "Chuyên gia" chứ không "Bác sĩ" (RULE-P0-02), ảnh phải `img_url`+`alt`
+  riêng, v.v. — những thứ này *phải* nằm trong rule chuẩn trước khi bắt tay code, không đợi một phase
+  cụ thể "phát hiện" ra rồi mới ghi lại.
+- `phase/<tên-việc>/` vẫn dùng được để chia việc theo từng đầu việc cụ thể (báo cáo QA cần đối chiếu,
+  bản nháp thiết kế...) — nhưng đó là **không gian làm việc tạm, làm xong thì thôi**: xong việc thì dọn
+  (xoá hoặc archive), không để tồn tại vĩnh viễn như một nguồn rule. Bất kỳ phát hiện nào trong lúc làm
+  phase mà **đứng vững lâu dài** (vd một mapping kiến trúc, một quyết định thiết kế chốt) phải được chép
+  thẳng vào `.clinerules`/`Rule&HDKTXD.md` trước khi đóng phase đó — không để nó chỉ tồn tại trong
+  `phase/` rồi biến mất theo phase.
