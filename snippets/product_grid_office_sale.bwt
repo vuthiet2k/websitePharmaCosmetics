@@ -22,9 +22,13 @@
 {%- if variantCount > 1 -%}
 {%- assign on_var = true -%}
 {%- endif -%}
+{%- comment -%}
+  G02 (phase home-shopping-ux, 2026-09-20): khối tính variantCount/on_var/discount này bị lặp lại
+  y hệt 3 lần liên tiếp (vô hại vì idempotent, nhưng dư) — chỉ giữ 1 lần.
+{%- endcomment -%}
 {%- if awe-compare-price > awe-price -%}
-{%- capture discount -%} 
-{{awe-compare-price | minus:awe-price | times:100 | divided_by:awe-compare-price | round }}% 
+{%- capture discount -%}
+{{awe-compare-price | minus:awe-price | times:100 | divided_by:awe-compare-price | round }}%
 {%- endcapture -%}
 {%- assign pt = awe-compare-price | minus:awe-price | times:100 | divided_by:awe-compare-price -%}
 {%- if pt > 99 -%}
@@ -38,33 +42,6 @@
 {%- endcapture -%}
 {%- endif -%}
 {%- assign on_sale = true -%}
-{%- endif -%}
-{%- assign variantCount = product.variants | size -%}
-{%- assign on_var = false -%}
-{%- if variantCount > 1 -%}
-{%- assign on_var = true -%}
-{%- endif -%}
-{%- if awe-compare-price > awe-price -%}
-{%- capture discount -%} 
-{{awe-compare-price | minus:awe-price | times:100 | divided_by:awe-compare-price | round }}% 
-{%- endcapture -%}
-{%- assign pt = awe-compare-price | minus:awe-price | times:100 | divided_by:awe-compare-price -%}
-{%- if pt > 99 -%}
-{%- capture discount -%}
-99%
-{%- endcapture -%}
-{%- endif -%}
-{%- if pt < 1 -%}
-{%- capture discount -%}
-1%
-{%- endcapture -%}
-{%- endif -%}
-{%- assign on_sale = true -%}
-{%- endif -%}
-{%- assign variantCount = product.variants | size -%}
-{%- assign on_var = false -%}
-{%- if variantCount > 1 -%}
-{%- assign on_var = true -%}
 {%- endif -%}
 {%- assign featured_image_alt = product.featured_image.alt | default: product.name -%}
 {%- assign card_image = 'no-image.jpg' | asset_url -%}
@@ -284,8 +261,8 @@
 /* ── Flash Sale Badge ── */
 .pc-flashsale__badge {
 	position: absolute;
-	top: 8px; left: 8px;
-	background: var(--sale-color);
+	top: 8px; right: 8px;
+	background: var(--flashsale-badge-bg, #D92D20);
 	color: #fff;
 	font-family: var(--font-primary);
 	font-size: var(--fs-sm);

@@ -1,0 +1,39 @@
+{%- comment -%}
+  F01/F02 (phase home-shopping-ux, 2026-09-20): ô danh mục con trên trang danh mục cha. CHỈ hiện
+  khi collection.alias khớp đúng 1 trong tối đa 3 quy tắc cấu hình ở Admin (collection cha + menu
+  danh mục con) — không tự gán quan hệ cha/con bằng cách dò tiêu đề hoặc dữ liệu mock. Tên/ảnh/số
+  sản phẩm của mỗi ô lấy từ chính object collection thật trong linklist (link.object), cùng cơ chế
+  đã dùng ở snippets/menu-col-cate.bwt và snippets/section_ingredients.bwt — không tự đặt tên/ảnh.
+  Mặc định cả 3 quy tắc để trống ⇒ không render gì cho tới khi merchant tạo Menu (Linklist) trỏ tới
+  các collection con thật trong Sapo Admin rồi chọn ở Customize theme.
+{%- endcomment -%}
+{%- assign subnav_menu = blank -%}
+{%- assign subnav_title = blank -%}
+{%- for i in (1..3) -%}
+  {%- capture rule_col -%}collection_subnav_{{ i }}_collection{%- endcapture -%}
+  {%- capture rule_menu -%}collection_subnav_{{ i }}_menu{%- endcapture -%}
+  {%- capture rule_title -%}collection_subnav_{{ i }}_title{%- endcapture -%}
+  {%- if settings[rule_col] != blank and settings[rule_col] == collection.alias and settings[rule_menu] != blank -%}
+    {%- assign subnav_menu = settings[rule_menu] -%}
+    {%- assign subnav_title = settings[rule_title] -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- assign subnav_ll = linklists[subnav_menu] -%}
+{%- if subnav_menu != blank and subnav_ll.links.size > 0 -%}
+<div class="pc-collection-subnav">
+  {%- if subnav_title != blank -%}<h2 class="pc-collection-subnav__title">{{ subnav_title | escape }}</h2>{%- endif -%}
+  <div class="pc-collection-subnav__grid">
+    {%- for link in subnav_ll.links -%}
+    <a class="pc-collection-subnav__item" href="{{ link.url | escape }}">
+      {%- if link.object.image.src != blank -%}
+      <img class="pc-collection-subnav__img lazyload" width="120" height="120" loading="lazy" src="{{ 'lazy.png' | asset_url }}" data-src="{{ link.object.image.src | img_url: '240x240' }}" alt="{{ link.title | escape }}">
+      {%- else -%}
+      <span class="pc-collection-subnav__fallback" aria-hidden="true">{{ link.title | slice: 0, 1 | escape }}</span>
+      {%- endif -%}
+      <span class="pc-collection-subnav__name">{{ link.title | escape }}</span>
+      {%- if link.object.all_products_count > 0 -%}<span class="pc-collection-subnav__count">{{ link.object.all_products_count }} sản phẩm</span>{%- endif -%}
+    </a>
+    {%- endfor -%}
+  </div>
+</div>
+{%- endif -%}

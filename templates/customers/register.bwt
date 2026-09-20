@@ -1,86 +1,105 @@
-{% comment %} templates/customers/register.bwt — T-112 (2026-09-12): tách khỏi layout chung, dùng
-  layouts/auth.bwt (split-screen). Form/field 'customer_register' GIỮ NGUYÊN tên field
+{% comment %} templates/customers/register.bwt — 2026-09-18: quay lại dùng layout chung
+  (layouts/theme.bwt, đầy đủ topbar/header/menu/search/cart/footer) theo yêu cầu người dùng, sau
+  khi phát hiện comment cũ "T-112, theo yêu cầu người dùng (báo cáo audit 2026-09-12)" không có
+  tài liệu nào xác minh được trong repo hay git history — xem sự cố ghi ở
+  .clinerules/02-du-an-pharma-cosmetics.md mục 7. layouts/auth.bwt (layout tách riêng cũ) đã xoá.
+  Bố cục 2 cột (form trái / panel ảnh phải) theo mockup thật design/auth/register.html + auth.css
+  (thêm có chủ đích ở commit b6019d2, khác hẳn layout bịa) — không tự nghĩ ra bố cục, xem
+  feedback_no_unilateral_ui_layout_changes. Ảnh + tiêu đề panel lấy từ settings.auth_panel_image/
+  auth_panel_headline/auth_panel_tagline (Sapo admin, nhóm "Trang Đăng nhập / Đăng ký") — trống thì
+  dùng gradient thương hiệu. Giữ nguyên các fix hợp lệ làm trong lúc tồn tại layout tách riêng:
+  toggle ẩn/hiện mật khẩu, chỉ hiện khối social khi Sapo thật sự trả về nút, checkbox đồng ý Điều
+  khoản sử dụng + Chính sách bảo mật (T-134). Form/field 'customer_register' GIỮ NGUYÊN tên field
   (firstName/lastName/email/PhoneNumber/password — Sapo native form, đổi tên có thể vỡ xử lý
-  backend), chỉ đổi khung bọc + thêm ẩn/hiện mật khẩu + checkbox đồng ý chính sách (liên kết
-  /chinh-sach-bao-mat có sẵn trong data/navigation.js, KHÔNG tự trích dẫn số hiệu luật cụ thể vì
-  không xác minh được từ nguồn nào trong repo — xem T-110 lý do không tin nguyên văn báo cáo). Họ
-  và Tên giữ 2 field riêng (không gộp) vì đây là 2 tham số Sapo form thật, gộp sẽ vỡ submit. {% endcomment %}
-{% layout 'auth' %}
+  backend). Họ và Tên giữ 2 field riêng (không gộp) vì đây là 2 tham số Sapo form thật, gộp sẽ vỡ
+  submit.
+{% endcomment %}
+{% include 'breadcrumb' %}
+<section class="section pc-auth-section">
+	<div class="container">
+		<div class="pc-auth-shell">
+			<div class="row pc-auth-row">
+				<div class="col-lg-6 col-12 pc-auth-form-col">
+					<div class="pc-auth-card">
+						<div class="pc-auth-card__head">
+							<h1 class="pc-auth-card__title">Tạo tài khoản mới</h1>
+							<p class="pc-auth-card__sub">
+								Đã có tài khoản? <a href="/account/login" class="pc-auth-link">Đăng nhập tại đây</a>
+							</p>
+						</div>
 
-<div class="pc-auth-card">
-	<div class="pc-auth-card__head">
-		<h1 class="pc-auth-card__title">Tạo tài khoản mới</h1>
-		<p class="pc-auth-card__sub">
-			Đã có tài khoản? <a href="/account/login" class="pc-auth-link">Đăng nhập tại đây</a>
-		</p>
+						<div class="pc-auth-card__body">
+							{% form "customer_register" %}
+							{% if form.errors %}
+							<div class="pc-auth-alert pc-auth-alert--error">{{ form.errors | default_errors }}</div>
+							{% endif %}
+
+							<div class="pc-auth-field-row">
+								<div class="pc-auth-field">
+									<label for="lastName" class="pc-auth-label">Họ</label>
+									<input type="text" class="pc-auth-input" value="" name="lastName" id="lastName" placeholder="Nguyễn" required>
+								</div>
+								<div class="pc-auth-field">
+									<label for="firstName" class="pc-auth-label">Tên</label>
+									<input type="text" class="pc-auth-input" value="" name="firstName" id="firstName" placeholder="Văn A" required>
+								</div>
+							</div>
+
+							<div class="pc-auth-field">
+								<label for="email" class="pc-auth-label">Email</label>
+								<input type="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$" class="pc-auth-input" value="" name="email" id="email" placeholder="ban@email.com" required>
+							</div>
+							<div class="pc-auth-field">
+								<label for="PhoneNumber" class="pc-auth-label">Số điện thoại</label>
+								<input placeholder="09xxxxxxxx" type="text" pattern="\d+" class="pc-auth-input" name="PhoneNumber" id="PhoneNumber" required>
+							</div>
+							<div class="pc-auth-field pc-auth-field--password">
+								<label for="password" class="pc-auth-label">Mật khẩu</label>
+								<div class="pc-auth-password-wrap">
+									<input type="password" class="pc-auth-input" value="" name="password" id="password" placeholder="Tối thiểu 6 ký tự" required>
+									<button type="button" class="pc-auth-password-toggle" aria-label="Hiện/ẩn mật khẩu" onclick="pcAuthTogglePassword('password', this)">
+										<i class="fa-regular fa-eye"></i>
+									</button>
+								</div>
+							</div>
+
+							<label class="pc-auth-checkbox">
+								<input type="checkbox" id="pc-auth-terms" required>
+								<span>Tôi đã đọc, đồng ý với <a href="/dieu-khoan" target="_blank" rel="noopener">Điều khoản sử dụng</a> và đồng ý cho {{ store.name }} xử lý dữ liệu cá nhân của tôi theo <a href="/chinh-sach-bao-mat" target="_blank" rel="noopener">Chính sách bảo mật</a> (Luật 91/2025/QH15).</span>
+							</label>
+
+							<button type="submit" value="Đăng ký" class="pc-auth-btn-primary">Tạo tài khoản</button>
+							{% endform %}
+
+							{% if social_login.facebook_button != blank or social_login.google_button != blank %}
+							<div class="pc-auth-social">
+								<div class="pc-auth-social__divider"><span>hoặc đăng ký qua</span></div>
+								{{ social_login.script }}
+								<div class="pc-auth-social__buttons">
+									{{ social_login.facebook_button }}
+									{{ social_login.google_button }}
+								</div>
+							</div>
+							{% endif %}
+						</div>
+					</div>
+				</div>
+
+				<div class="col-lg-6 col-12 pc-auth-visual-col">
+					<div class="pc-auth-visual">
+						{% if settings.auth_panel_image != blank %}
+						<img src="{{ settings.auth_panel_image | img_url: 'grande' }}" alt="{{ settings.auth_panel_headline | escape }}" class="pc-auth-visual__img" loading="lazy">
+						{% endif %}
+						<div class="pc-auth-visual__overlay">
+							{% if settings.auth_panel_headline != blank %}<h2 class="pc-auth-visual__headline">{{ settings.auth_panel_headline }}</h2>{% endif %}
+							{% if settings.auth_panel_tagline != blank %}<p class="pc-auth-visual__tagline">{{ settings.auth_panel_tagline }}</p>{% endif %}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
-
-	<div class="pc-auth-card__body">
-		{% form "customer_register" %}
-		{% if form.errors %}
-		<div class="pc-auth-alert pc-auth-alert--error">{{ form.errors | default_errors }}</div>
-		{% endif %}
-
-		<div class="pc-auth-field-row">
-			<div class="pc-auth-field">
-				<label for="lastName" class="pc-auth-label">Họ</label>
-				<input type="text" class="pc-auth-input" value="" name="lastName" id="lastName" placeholder="Nguyễn" required>
-			</div>
-			<div class="pc-auth-field">
-				<label for="firstName" class="pc-auth-label">Tên</label>
-				<input type="text" class="pc-auth-input" value="" name="firstName" id="firstName" placeholder="Văn A" required>
-			</div>
-		</div>
-
-		<div class="pc-auth-field">
-			<label for="email" class="pc-auth-label">Email</label>
-			<input type="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$" class="pc-auth-input" value="" name="email" id="email" placeholder="ban@email.com" required>
-		</div>
-		<div class="pc-auth-field">
-			<label for="PhoneNumber" class="pc-auth-label">Số điện thoại</label>
-			<input placeholder="09xxxxxxxx" type="text" pattern="\d+" class="pc-auth-input" name="PhoneNumber" id="PhoneNumber" required>
-		</div>
-		<div class="pc-auth-field pc-auth-field--password">
-			<label for="password" class="pc-auth-label">Mật khẩu</label>
-			<div class="pc-auth-password-wrap">
-				<input type="password" class="pc-auth-input" value="" name="password" id="password" placeholder="Tối thiểu 6 ký tự" required>
-				<button type="button" class="pc-auth-password-toggle" aria-label="Hiện/ẩn mật khẩu" onclick="pcAuthTogglePassword('password', this)">
-					<i class="fa-regular fa-eye"></i>
-				</button>
-			</div>
-		</div>
-
-		{%- comment -%}
-		  T-134 (2026-09-12) — nội dung đồng ý trước đây chỉ nhắc "Chính sách bảo mật". Luật Bảo vệ
-		  dữ liệu cá nhân 91/2025/QH15 yêu cầu sự đồng ý phải RÕ ràng về việc xử lý dữ liệu cá nhân,
-		  nên nêu đích danh cả Điều khoản sử dụng lẫn việc xử lý dữ liệu, kèm link tới đúng 2 trang.
-		{%- endcomment -%}
-		<label class="pc-auth-checkbox">
-			<input type="checkbox" id="pc-auth-terms" required>
-			<span>Tôi đã đọc, đồng ý với <a href="/dieu-khoan" target="_blank" rel="noopener">Điều khoản sử dụng</a> và đồng ý cho {{ store.name }} xử lý dữ liệu cá nhân của tôi theo <a href="/chinh-sach-bao-mat" target="_blank" rel="noopener">Chính sách bảo mật</a> (Luật 91/2025/QH15).</span>
-		</label>
-
-		<button type="submit" value="Đăng ký" class="pc-auth-btn-primary">Tạo tài khoản</button>
-		{% endform %}
-
-		{%- comment -%}
-		  T-134 — BUG THẬT (đo thật: divider hiện, số nút social = 0): social_login.facebook_button /
-		  google_button là đối tượng do Sapo render, RỖNG khi cửa hàng chưa bật đăng nhập mạng xã hội.
-		  Trước đây khối này render vô điều kiện nên khách thấy đúng dòng chữ "hoặc đăng ký qua" rồi
-		  bên dưới TRỐNG TRƠN. Chỉ hiện khi thật sự có nút để hiện.
-		{%- endcomment -%}
-		{% if social_login.facebook_button != blank or social_login.google_button != blank %}
-		<div class="pc-auth-social">
-			<div class="pc-auth-social__divider"><span>hoặc đăng ký qua</span></div>
-			{{ social_login.script }}
-			<div class="pc-auth-social__buttons">
-				{{ social_login.facebook_button }}
-				{{ social_login.google_button }}
-			</div>
-		</div>
-		{% endif %}
-	</div>
-</div>
+</section>
 
 <script>
 	function pcAuthTogglePassword(fieldId, btn) {

@@ -40,16 +40,21 @@
   els.forEach(function(el) { io.observe(el); });
 })();
 
-/* UX-01 (Báo cáo E2E 13/09/2026): .main-widget (nút Zalo/hotline nổi) và .backtop (về đầu
-   trang) đều position:fixed theo "bottom" cố định nên khi cuộn tới cuối trang sẽ đè lên nội
-   dung footer (bản quyền, liên kết chân trang) phía dưới. Đẩy 2 widget lên đúng bằng phần
-   footer đã lộ ra trong viewport — chỉ chỉnh "bottom" (không đụng transform/opacity đang
-   dùng cho animation ẩn/hiện của 2 widget), trả về vị trí gốc khi footer chưa lộ ra. */
+/* UX-01 (Báo cáo E2E 13/09/2026), sửa lại T-home-shopping-ux D03 (2026-09-20): .main-widget
+   (nút Zalo/hotline nổi) và .backtop (về đầu trang) đều position:fixed theo "bottom" cố định
+   nên khi cuộn tới cuối trang sẽ đè lên nội dung footer (bản quyền, liên kết chân trang) phía
+   dưới. Bản cũ dùng `innerHeight - footer.top` làm "shift" — với footer cao hơn viewport (phổ
+   biến ở mobile 390×900 vì footer nhiều cột/social), giá trị này vượt quá chiều cao màn hình,
+   đẩy widget vọt lên trên mép trên viewport (top âm, mất hẳn khỏi màn hình — đúng lỗi khảo sát
+   trong PLAN.md phase home-shopping-ux). Sửa: (1) tính đúng phần giao nhau thật của footer với
+   viewport (không vượt quá chiều cao viewport), (2) luôn chặn "bottom" cuối để đáy widget không
+   vượt quá viewport trừ safe-area, dù footer cao bao nhiêu. */
 (function() {
   var footer = document.querySelector('footer.footer');
   var widgets = [document.querySelector('.main-widget'), document.querySelector('.backtop')].filter(Boolean);
   if (!footer || !widgets.length) return;
   var GAP = 12;
+  var MIN_TOP_GAP = 8;
   var baseBottoms = widgets.map(function() { return 0; });
   function captureBase() {
     widgets.forEach(function(el, i) {
@@ -58,10 +63,17 @@
     });
   }
   function update() {
-    var footerVisible = window.innerHeight - footer.getBoundingClientRect().top;
-    var shift = Math.max(0, footerVisible);
+    var vh = window.innerHeight;
+    var rect = footer.getBoundingClientRect();
+    // Phần footer thực sự đang nằm trong viewport, không thể vượt quá chiều cao viewport.
+    var overlap = Math.max(0, Math.min(rect.bottom, vh) - Math.max(rect.top, 0));
     widgets.forEach(function(el, i) {
-      el.style.bottom = shift > 0 ? (baseBottoms[i] + shift + GAP) + 'px' : '';
+      if (overlap <= 0) { el.style.bottom = ''; return; }
+      var wanted = baseBottoms[i] + overlap + GAP;
+      // Chặn cuối: đáy widget (bottom + height) không được vượt quá viewport - MIN_TOP_GAP,
+      // để widget luôn còn nằm trong màn hình dù footer cao hơn viewport.
+      var maxBottom = Math.max(baseBottoms[i], vh - el.offsetHeight - MIN_TOP_GAP);
+      el.style.bottom = Math.min(wanted, maxBottom) + 'px';
     });
   }
   captureBase();

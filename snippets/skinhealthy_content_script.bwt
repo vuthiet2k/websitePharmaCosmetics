@@ -1,0 +1,112 @@
+{%- comment -%}19/09/2026: giữ reveal và giỏ dịch vụ khi bỏ layout riêng; header/menu dùng theme.bwt.{%- endcomment -%}
+{%- assign sh_book_page = pages[settings.skinhealthy_booking_page] -%}
+<div class="sh-cart-bar" id="sh-cart-bar" role="complementary" aria-label="{{ settings.skinhealthy_cart_aria | default: 'Dịch vụ đã chọn' | escape }}">
+  <div class="sh-cart-bar__inner">
+    <span class="sh-cart-bar__count" aria-live="polite">0</span>
+    <span class="sh-cart-bar__label">{{ settings.skinhealthy_cart_label | default: 'dịch vụ đã chọn' }}</span>
+    <span class="sh-cart-bar__deposit"></span>
+    <a href="{{ sh_book_page.url | default: pages['dat-lich-tu-van'].url | default: '/dat-lich-tu-van' }}" class="sh-cart-bar__cta">
+      {{ settings.skinhealthy_cart_cta | default: 'Đặt lịch ngay' }}
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+    <button type="button" class="sh-cart-bar__clear" id="sh-cart-clear" aria-label="{{ settings.skinhealthy_cart_clear | default: 'Xóa tất cả dịch vụ đã chọn' | escape }}">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+</div>
+<script>
+(function () {
+  /* Scroll reveal */
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          e.target.classList.add('is-visible');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -48px 0px' });
+    document.querySelectorAll('.sh-reveal').forEach(function (el) { io.observe(el); });
+  } else {
+    document.querySelectorAll('.sh-reveal').forEach(function (el) { el.classList.add('is-visible'); });
+  }
+
+  /* ── SHCart — global service basket ───────────────────────── */
+  {%- comment -%}
+    skinhealthy_booking_page (setting "Trang đặt lịch / MOPS") tồn tại trong schema
+    từ trước nhưng chưa nơi nào đọc — trỏ cứng "dat-lich-tu-van" (trang cũ, không
+    còn dùng trong luồng MOPS hiện tại). Ưu tiên setting nếu owner đã chọn trang thật.
+  {%- endcomment -%}
+  {%- assign sh_book_page = pages[settings.skinhealthy_booking_page] -%}
+  window.SHCart = (function () {
+    var KEY       = 'sh_svc_cart';
+    var BOOK_BASE = {{ sh_book_page.url | default: pages['dat-lich-tu-van'].url | default: '/dat-lich-tu-van' | json }};
+    var bar, countEl, depositEl, ctaEl;
+
+    function load() {
+      try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { return []; }
+    }
+
+    function save(items) {
+      try { localStorage.setItem(KEY, JSON.stringify(items)); } catch (e) {}
+      render(items);
+      document.dispatchEvent(new CustomEvent('shCartChange', { detail: { items: items } }));
+    }
+
+    function has(svc_id) {
+      return load().some(function (i) { return i.svc_id === svc_id; });
+    }
+
+    function add(svc) {
+      var items = load();
+      if (!items.some(function (i) { return i.svc_id === svc.svc_id; })) {
+        items.push(svc);
+        save(items);
+      }
+    }
+
+    function remove(svc_id) {
+      save(load().filter(function (i) { return i.svc_id !== svc_id; }));
+    }
+
+    function clear() { save([]); }
+
+    function render(items) {
+      items = items || load();
+      bar       = bar       || document.getElementById('sh-cart-bar');
+      if (!bar) return;
+
+      if (!items.length) { bar.classList.remove('is-open'); return; }
+      bar.classList.add('is-open');
+
+      countEl   = countEl   || bar.querySelector('.sh-cart-bar__count');
+      depositEl = depositEl || bar.querySelector('.sh-cart-bar__deposit');
+      ctaEl     = ctaEl     || bar.querySelector('.sh-cart-bar__cta');
+
+      if (countEl) { countEl.textContent = items.length; }
+
+      var total = items.reduce(function (s, i) { return s + (Number(i.deposit) || 0); }, 0);
+      if (depositEl) {
+        depositEl.textContent = total > 0
+          ? {{ settings.skinhealthy_cart_deposit | default: 'Cọc' | json }} + ' ' + total.toLocaleString('vi-VN') + ' ₫'
+          : {{ settings.skinhealthy_cart_free | default: 'Miễn phí' | json }};
+      }
+
+      if (ctaEl) {
+        var params = items.map(function (i) {
+          return 'svc=' + encodeURIComponent(i.svc_id);
+        }).join('&');
+        ctaEl.href = BOOK_BASE + '?' + params;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      render();
+      var clearBtn = document.getElementById('sh-cart-clear');
+      if (clearBtn) { clearBtn.addEventListener('click', function () { clear(); }); }
+    });
+
+    return { add: add, remove: remove, clear: clear, has: has, load: load, render: render };
+  }());
+})();
+</script>

@@ -117,18 +117,16 @@ module.exports = {
         gutter: '24px'
       },
       fontFamily: {
-        // REOPEN 2026-09-10 (ADR-007/T-70): heading font đổi sang Playfair Display theo xlsx
-        // design system (Display Title/Section Heading/Subsection Heading), thay Plus Jakarta
-        // Sans (T-10). Fallback Inter/serif.
-        heading: ['Playfair Display', 'Inter', 'serif'],
-        'headline-lg-mobile': ['Inter', 'system-ui', 'sans-serif'],
-        'label-md': ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Inter', 'system-ui', 'sans-serif'],
-        'headline-md': ['Inter', 'system-ui', 'sans-serif'],
-        'headline-lg': ['Inter', 'system-ui', 'sans-serif'],
-        'body-md': ['Inter', 'system-ui', 'sans-serif'],
-        'body-lg': ['Inter', 'system-ui', 'sans-serif'],
-        'body-sm': ['Inter', 'system-ui', 'sans-serif']
+        // 19/09/2026: Montserrat là font UI duy nhất của theme.
+        heading: ['Montserrat', 'system-ui', 'sans-serif'],
+        'headline-lg-mobile': ['Montserrat', 'system-ui', 'sans-serif'],
+        'label-md': ['Montserrat', 'system-ui', 'sans-serif'],
+        display: ['Montserrat', 'system-ui', 'sans-serif'],
+        'headline-md': ['Montserrat', 'system-ui', 'sans-serif'],
+        'headline-lg': ['Montserrat', 'system-ui', 'sans-serif'],
+        'body-md': ['Montserrat', 'system-ui', 'sans-serif'],
+        'body-lg': ['Montserrat', 'system-ui', 'sans-serif'],
+        'body-sm': ['Montserrat', 'system-ui', 'sans-serif']
       },
       fontSize: {
         'headline-lg-mobile': ['20px', { lineHeight: '28px', fontWeight: '600' }],

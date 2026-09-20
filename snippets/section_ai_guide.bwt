@@ -1,0 +1,34 @@
+{%- comment -%}
+  C02 (phase home-shopping-ux, 2026-09-20): khối hướng dẫn ngay sau Hero để người mới biết bắt
+  đầu Quiz da AI từ trang chủ (trước đây Hero chỉ có "Đặt lịch phân tích da" và "Chọn theo vấn đề
+  da", không có đường dẫn nào tới /kham-da-ai). Cả 3 bước dưới đây bám đúng luồng thật của
+  templates/page.ai-skin-quiz.bwt: (1) trả lời câu hỏi dạng chat với "Dr. Pharma AI", (2) nhận
+  thẻ chẩn đoán + gợi ý hoạt chất ngay trong hội thoại, (3) xem phác đồ chi tiết hoặc được nối
+  máy Zalo với chuyên gia thật — không phải một phiên chat AI tự do tiếp diễn sau đó, nên nhãn
+  bước 3 không dùng chữ "AI" để khỏi hiểu nhầm.
+{%- endcomment -%}
+<section class="pc-ai-guide"><div class="wrap">
+  <div class="pc-ai-guide__body">
+    <div class="pc-ai-guide__copy">
+      <p class="eyebrow">{{ settings.home_ai_guide_eyebrow | default: 'Chưa biết bắt đầu từ đâu?' | escape }}</p>
+      <h2>{{ settings.home_ai_guide_title | default: 'Chưa biết chọn sản phẩm phù hợp với làn da?' | escape }}</h2>
+      {%- assign ai_guide_desc = settings.home_ai_guide_desc | default: 'Trả lời một chuỗi câu hỏi ngắn cùng Dr. Pharma AI để nhận gợi ý hoạt chất phù hợp với tình trạng da của bạn.' -%}
+      {%- if ai_guide_desc != blank -%}<p class="lead">{{ ai_guide_desc | escape }}</p>{%- endif -%}
+      <a class="btn btn-p pc-ai-guide__cta" href="{{ settings.home_ai_guide_cta_url | default: '/kham-da-ai' | escape }}">{{ settings.home_ai_guide_cta_text | default: 'Bắt đầu Quiz da cùng AI' | escape }} →</a>
+    </div>
+    <ol class="pc-ai-guide__steps">
+      <li>
+        <span class="pc-ai-guide__num" aria-hidden="true">1</span>
+        <span>{{ settings.home_ai_guide_step1 | default: 'Trả lời câu hỏi cùng Dr. Pharma AI' | escape }}</span>
+      </li>
+      <li>
+        <span class="pc-ai-guide__num" aria-hidden="true">2</span>
+        <span>{{ settings.home_ai_guide_step2 | default: 'Nhận chẩn đoán & gợi ý hoạt chất' | escape }}</span>
+      </li>
+      <li>
+        <span class="pc-ai-guide__num" aria-hidden="true">3</span>
+        <span>{{ settings.home_ai_guide_step3 | default: 'Xem phác đồ chi tiết hoặc nối máy chuyên gia' | escape }}</span>
+      </li>
+    </ol>
+  </div>
+</div></section>

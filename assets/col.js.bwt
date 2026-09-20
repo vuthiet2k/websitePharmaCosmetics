@@ -190,6 +190,14 @@ var CollectionFilter = (function () {
 	return { parseQ: parseQ, renderBar: renderBar, removeFilter: removeFilter };
 })();
 
+/* F03 (phase home-shopping-ux, 2026-09-20): doSearch() không có bảo vệ chống request chồng —
+   gõ nhanh/bấm nhiều filter liên tiếp bắn nhiều $.get() song song, và nếu request CŨ trả về SAU
+   request MỚI (mạng chậm/không đều), .done() của nó vẫn chạy và ghi đè kết quả mới bằng kết quả cũ
+   không còn đúng bộ lọc hiện tại. Thêm token tăng dần, chỉ áp dụng response của request mới nhất.
+   Đồng thời .fail() cũ chỉ gỡ is-loading rồi im lặng — không có thông báo lỗi/thử lại, người dùng
+   không biết filter có chạy hay không. */
+var _doSearchToken = 0;
+
 /* ── doSearch() — AJAX load results into #ajax-result ── */
 function doSearch(page) {
 	var view = (typeof selectedViewData !== 'undefined') ? selectedViewData : 'data';
@@ -214,7 +222,9 @@ function doSearch(page) {
 	}
 
 	var $wrap = $('#ajax-result');
-	$wrap.addClass('is-loading');
+	$wrap.addClass('is-loading').find('.afw-error').remove();
+
+	var myToken = ++_doSearchToken;
 
 	/* Pre-build the display q= for the address bar
 	   (strip the implicit collections: constraint — it's conveyed by the URL path) */
@@ -229,6 +239,7 @@ function doSearch(page) {
 	if (priceQ) displayQ = displayQ ? displayQ + ' AND ' + priceQ : priceQ;
 
 	$.get(url, function (html) {
+		if (myToken !== _doSearchToken) return; /* có request mới hơn đã gửi sau — bỏ kết quả cũ này */
 		$wrap.html(html).removeClass('is-loading');
 
 		/* Keep address bar in sync so page reload / back-button preserves filter state */
@@ -244,7 +255,11 @@ function doSearch(page) {
 			$('html, body').animate({ scrollTop: $wrap.offset().top - 100 }, 300);
 		}
 	}).fail(function () {
+		if (myToken !== _doSearchToken) return;
 		$wrap.removeClass('is-loading');
+		$('<div class="afw-error">Không tải được kết quả lọc. <button type="button" class="afw-error__retry">Thử lại</button></div>')
+			.find('.afw-error__retry').on('click', function () { doSearch(page); }).end()
+			.prependTo($wrap);
 	});
 }
 
@@ -350,6 +365,17 @@ $(function () {
 		$('.layout-collection .left-content').removeClass('active');
 		$('body').removeClass('filter-open');
 		$('.filter-overlay').removeClass('active');
+	});
+	/* F03 (phase home-shopping-ux, 2026-09-20): sheet bộ lọc mobile đã khoá cuộn nền
+	   (body.filter-open) nhưng chưa đóng được bằng Escape — thêm cho đồng bộ với hành vi drawer
+	   menu mobile (đã sửa ở header.bwt). */
+	$(document).on('keydown', function (e) {
+		if (e.key === 'Escape' && $('.layout-collection .left-content').hasClass('active')) {
+			$('.layout-collection .left-content').removeClass('active');
+			$('body').removeClass('filter-open');
+			$('.filter-overlay').removeClass('active');
+			$('.btn-filter-mobile').trigger('focus');
+		}
 	});
 
 	/* Filter group collapse/expand (B4) */

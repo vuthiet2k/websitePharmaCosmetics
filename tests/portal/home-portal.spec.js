@@ -17,7 +17,7 @@ async function openHome(page) {
 test('v3 typography, section order and real destinations', async ({ page }) => {
   const errors = await openHome(page);
   await expect(page.locator('h1')).toHaveCount(1);
-  await expect(page.locator('.hero h1')).toHaveCSS('font-family', /Fraunces/);
+  await expect(page.locator('.hero h1')).toHaveCSS('font-family', /Montserrat/);
   await expect(page.locator('.pc-portal')).not.toContainText('GPKD 0109xxxxxx');
   expect(await page.locator('.pc-portal a[href="#"]').count()).toBe(0);
   const ids = await page.locator('.portal-section').evaluateAll(nodes => nodes.map(n => n.id));
@@ -39,8 +39,14 @@ test('hero uses a stable full-background fade while copy and CTA stay static', a
   await expect(hero.locator('.portal-hero__media')).toHaveCSS('position', 'absolute');
   await expect(hero.locator('.portal-hero__content')).toHaveCSS('z-index', '2');
   const copy = hero.locator('.portal-hero__copy');
-  await expect(copy).toHaveCSS('background-color', 'rgba(255, 255, 255, 0.94)');
-  await expect(copy).toHaveCSS('backdrop-filter', /blur\(16px\)/);
+  // C01 (phase home-shopping-ux, 2026-09-20): bỏ khối kính trắng .94/blur cũ — nền phải trong
+  // suốt, khung chữ tối đa 564px tính cả padding (border-box), radius 40px. Độ rõ chữ trên ảnh
+  // nền lấy từ scrim gradient của .portal-hero__mask + chữ trắng (xem home-portal.css).
+  await expect(copy).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  await expect(copy).toHaveCSS('backdrop-filter', 'none');
+  await expect(copy).toHaveCSS('max-width', '564px');
+  await expect(copy).toHaveCSS('box-sizing', 'border-box');
+  await expect(copy).toHaveCSS('border-radius', '40px');
   const leftOffset = await copy.evaluate(el => {
     const copyRect = el.getBoundingClientRect();
     const wrapRect = el.parentElement.getBoundingClientRect();
@@ -48,10 +54,10 @@ test('hero uses a stable full-background fade while copy and CTA stay static', a
   });
   expect(leftOffset).toBeGreaterThan(28);
   expect(leftOffset).toBeLessThan(36);
-  await expect(hero.locator('h1')).toHaveCSS('color', 'rgb(0, 46, 35)');
+  await expect(hero.locator('h1')).toHaveCSS('color', 'rgb(255, 255, 255)');
   await expect(hero.locator('h1 em')).toHaveCSS('color', 'rgb(60, 179, 113)');
   await expect(hero.locator('.eyebrow')).toHaveCSS('color', 'rgb(60, 179, 113)');
-  await expect(hero.locator('.sub')).toHaveCSS('color', 'rgb(78, 101, 96)');
+  await expect(hero.locator('.sub')).toHaveCSS('color', 'rgba(255, 255, 255, 0.86)');
   await expect(hero.locator('.portal-hero__media h1')).toHaveCount(0);
   await expect(hero.getByRole('link', { name: 'Đặt lịch phân tích da →', exact: true })).toHaveAttribute('href', '/dat-lich-tu-van');
   await expect(hero.getByRole('link', { name: 'Chọn theo vấn đề da', exact: true })).toHaveAttribute('href', '#section_solutions');

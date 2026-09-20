@@ -38,7 +38,7 @@ Tuỳ chọn: copy `.env.example` → `.env` để nạp `GAS_URL`, `KV_REST_API
 | :--- | :--- |
 | `assets/` | CSS/JS/SCSS/ảnh của theme (gồm `*.scss.bwt`, `*.js.bwt`, `mops-*.js`, CSS layout v3) |
 | `configs/` | `settings_schema.json` (định nghĩa cấu hình) + `settings_data.json` (giá trị cấu hình thật) |
-| `layouts/` | Layout master & layout phụ: `theme.bwt`, `auth.bwt`, `chat.bwt`, `clean.bwt`, `mops-admin.bwt`, `skinhealthy.bwt` |
+| `layouts/` | Layout chung storefront: `theme.bwt` (gồm Skin Health Beauty và AI tư vấn da); layout chuyên biệt: `chat.bwt`, `mops-admin.bwt` |
 | `snippets/` | Snippet tái sử dụng (`header`, `footer`, `product-item`, `section_*`, `portal_*`…) |
 | `templates/` | Template theo loại URL / theo view (`index.bwt`, `product.bwt`, `collection.*.bwt`, `page.*.bwt`…) |
 | `api/` | Entry serverless cho Vercel (`index.js` — bọc lại handler của `dev-server.js`; `vercel.json` route toàn bộ request vào đây) |
@@ -69,3 +69,5 @@ Biến môi trường production khai báo trong Vercel → Project Settings →
   mô tả rõ vấn đề → cách sửa.
 - Kiểm tra tối thiểu trước khi commit: parse JSON config, `npm run build` khi sửa asset,
   `npm run test:portal` khi sửa snippet Home Portal.
+
+Font UI chuẩn hiện tại là **Montserrat**. `theme.bwt` là layout storefront dùng chung cho các trang Pharma và Skin Health Beauty; `chat.bwt` và `mops-admin.bwt` giữ shell riêng nhưng cũng dùng Montserrat cho chữ UI.

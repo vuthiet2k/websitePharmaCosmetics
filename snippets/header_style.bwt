@@ -3,7 +3,7 @@
 {%- if template contains 'cart' -%}
 <link rel="preload" as="fetch" href="/cart.js" crossorigin>
 {%- endif -%}
-{%if template contains 'index'%}
+{%if template contains 'index' and is_skinhealthy_content == false%}
 <link rel="preload" as='style'  type="text/css" href="{{ 'page_home.scss.css' | asset_url }}">
 {%endif%}
 {%if template contains '404'%}
@@ -80,6 +80,12 @@
 		--sale-color:        #cc3d00;
 		--sale-color-dark:   #a83200;
 		--sale-gradient:     linear-gradient(295deg, #CD1A0C 0%, #FF5246 98.45%);
+		{%- comment -%}
+		  E01 (phase home-shopping-ux, 2026-09-20) — người dùng yêu cầu trực tiếp: badge % giảm giá
+		  đổi hẳn sang đỏ, tách riêng khỏi --sale-color (cam-đỏ trầm #cc3d00 đang dùng cho nút CTA/
+		  progress bar, không đổi 2 chỗ đó). Đo contrast #D92D20 + chữ trắng ≈ 4.83:1, đạt AA.
+		{%- endcomment -%}
+		--flashsale-badge-bg: #D92D20;
 		--sale-bar-gradient: linear-gradient(90deg, var(--sale-color), #ffcc00);
 
 		/* ══ E. Header / Layout ══════════════════════════════════════ */
@@ -93,10 +99,11 @@
 		--textorder: {{ settings.color_txt_order | default: settings.theme_body_text_color }};
 
 		/* ══ F. Font Families ════════════════════════════════════════ */
-		--font-primary:   'Montserrat', sans-serif;   /* Heading, Button, Nav */
-		--font-secondary: 'Inter', sans-serif;         /* Body, Description */
-		--font-display:   'Playfair Display', serif;   /* REOPEN 2026-09-10: xlsx mới — Editorial H1/H2 — hero, testimonials */
-		--font-mono:      'IBM Plex Mono', ui-monospace, monospace;/* Eyebrow, tag, meta */
+		/* 19/09/2026: Montserrat là font chữ UI duy nhất; alias cũ giữ để CSS legacy không vỡ. */
+		--font-primary:   'Montserrat', system-ui, sans-serif;
+		--font-secondary: 'Montserrat', system-ui, sans-serif;
+		--font-display:   'Montserrat', system-ui, sans-serif;
+		--font-mono:      'Montserrat', system-ui, sans-serif;
 
 		/* ══ G. Typography Scale (1rem = 16px — Bootstrap 5 standard) ══ */
 		--fs-xs:   0.75rem;   /* 12px — caption, thông tin phụ */
@@ -411,7 +418,7 @@
 {{ 'comp_mobile_search.scss.css' | asset_url | stylesheet_tag }}
 <link rel="stylesheet" href="{{'vendor_bootstrap.css' | asset_url}}">
 {%if template != 'index'%}{{ 'comp_breadcrumb.scss.css' | asset_url | stylesheet_tag }}{%endif%}
-{%if template contains 'index'%}{{ 'page_home.scss.css' | asset_url | stylesheet_tag }}{%endif%}
+{%if template contains 'index' and is_skinhealthy_content == false%}{{ 'page_home.scss.css' | asset_url | stylesheet_tag }}{%endif%}
 {%if template contains '404'%}{{ 'page_404.scss.css' | asset_url | stylesheet_tag }}{%endif%}
 {%if template contains 'page'%}{{ 'page_static.scss.css' | asset_url | stylesheet_tag }}{%endif%}
 {%if template contains 'cart'%}{{ 'page_cart.scss.css' | asset_url | stylesheet_tag }}{%endif%}

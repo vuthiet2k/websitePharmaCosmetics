@@ -17,7 +17,8 @@
 
 - `{{ content_for_header }}` đặt ngay trước `</head>` — bắt buộc tuyệt đối.
 - `{{ content_for_layout }}` **hoặc** `{% block "ContentPlaceHolder" %}{% endblock %}` trong `<body>`.
-  Repo này dùng `{{ content_for_layout }}` (theme.bwt + 5 layout phụ cũng có đủ 2 thẻ trên).
+  Repo này dùng `{{ content_for_layout }}`; storefront dùng chung `theme.bwt`, kể cả Skin Health Beauty
+  và AI tư vấn da. Layout chuyên biệt còn lại: `chat.bwt`, `mops-admin.bwt`.
 - 4 thành phần giao diện bắt buộc: (1) Logo hoặc `{{ store.name }}` bọc link về `/`;
   (2) main menu từ `linklists['main-menu']`; (3) footer menu từ `linklists['footer']`;
   (4) ô/nút tìm kiếm trỏ `/search`.

@@ -91,6 +91,44 @@ Bổ sung cho `01-quy-chuan-theme-sapo.md` (quy chuẩn nền tảng Sapo). File
   thiết kế chốt, v.v.) phải chép thẳng vào `.clinerules/` hoặc `Rule&HDKTXD.md` — xem mục 8/9. Thiết kế
   thay đổi theo thời gian là bình thường; rule chỉ cần phản ánh đúng trạng thái **hiện tại**, không cần
   giữ lại lịch sử "đã từng sai thế nào".
+- **18/09/2026 (sự cố — comment bịa "theo yêu cầu người dùng"):** commit `58bda23` (12/09/2026, tiêu đề
+  chỉ nói về sửa màu icon header/mobile) lén kèm theo việc tạo mới `layouts/auth.bwt` (layout tách
+  riêng, split-screen, KHÔNG có header/topbar/menu/search/cart) và viết lại toàn bộ
+  `templates/customers/login.bwt`/`register.bwt` để dùng layout đó, kèm comment ghi "T-112, theo yêu
+  cầu người dùng (Phần III/IV báo cáo audit 2026-09-12)". Xác minh 18/09/2026: **không có file báo cáo
+  audit nào như vậy** trong repo hay git history — chỉ có `T-106-ui-ux-audit-fixes.log` (mã khác) trong
+  `.project-agent/` cũ (đã xoá). Kết luận: đây là 1 agent tự quyết đổi kiến trúc trang rồi ghi chú như
+  đã được duyệt — vi phạm đúng nguyên tắc ở đầu mục này. Đã khôi phục: `login.bwt`/`register.bwt` dùng
+  lại layout chung `theme.bwt` (đầy đủ header), xoá `layouts/auth.bwt` và phần CSS shell riêng
+  (`.pc-auth-body/-topbar/-shell/-panel*/-formzone`) trong `assets/page_account.scss.bwt`; giữ lại các
+  fix hợp lệ không liên quan tới layout (toggle ẩn/hiện mật khẩu, ẩn khối social khi rỗng — T-134).
+  **`layouts/chat.bwt` — đã đối chiếu, GIỮ NGUYÊN:** dùng đúng câu chữ tương tự ("T-113, REOPEN
+  2026-09-12, Phần V báo cáo audit 2026-09-12") — cùng nguồn báo cáo bịa. Xác minh: không template nào
+  dùng `{% layout 'chat' %}` (tính năng chat AI thật, `page.ai-skin-quiz.bwt`, hiện dùng `layouts/theme.bwt`), không có CSS `pc-chat-*` nào,
+  không có field settings mồ côi. Vậy `layouts/chat.bwt` là file chết về mặt kỹ thuật, nhưng người dùng
+  yêu cầu giữ lại nguyên trạng (18/09/2026: "vẫn giữ - mục này tôi dùng") — không xoá.
+  `configs/settings_schema.json`/`settings_data.json` vẫn còn field `auth_panel_image`,
+  `auth_panel_headline`, `auth_trust_badge_1..3` (dựng riêng cho layout đã xoá) — CHƯA xoá vì mục 7 cấm
+  tự ý xoá field settings, cần hỏi người dùng trước.
+  **Sửa lại nhận định (cùng ngày):** sau khi đưa login/register về 1 cột đơn giản, người dùng phản hồi
+  bố cục ĐÚNG phải là 2 cột 6-6 (form + ảnh minh hoạ), theo đúng mockup thật tại `design/auth/login.html`
+  / `register.html` / `auth.css` (thêm có chủ đích ở commit `b6019d2`, khác hẳn `layouts/auth.bwt` bịa).
+  Rút kinh nghiệm: comment "theo yêu cầu người dùng" bịa chỉ làm mất hiệu lực CĂN CỨ đã nêu, không có
+  nghĩa là bố cục split-screen tự nó sai — bố cục đó có nguồn thật, chỉ là chưa ai tra trước khi sửa.
+  **Rule mới:** trước khi đổi/viết lại bố cục 1 trang, luôn `Glob`/`Grep` thư mục `design/` tìm mockup
+  tương ứng và bám theo cấu trúc đó (mã màu/font đổi theo token thật của theme, không copy nguyên giá
+  trị cứng trong mockup); chỉ tự đề xuất bố cục khi thật sự không có mockup nào, và phải hỏi trước khi
+  làm — không tự quyết như các lần trước.
+
+## Layout storefront dùng chung (19/09/2026)
+
+- `theme.bwt` là layout chung storefront, gồm `page.indexskinhealthy`, `page.skinhealthy-services`,
+  `collection.skinhealthy`, `page.skinhealthy-service-detail`, `page.ai-skin-quiz`. Bỏ `layouts/skinhealthy.bwt` và `layouts/clean.bwt`.
+- CSS nội dung Skin Health, reveal và giỏ dịch vụ nằm trong `snippets/skinhealthy_content_style.bwt`
+  và `skinhealthy_content_script.bwt`, nạp có điều kiện; header/footer dùng chung Pharma.
+- `indexskinhealthy` không phải Home Portal: không nạp CSS/JS và skip link của Portal.
+- CSS AI chat phải giới hạn trong `.ai-skin-chat-app`, không khoá cuộn toàn trang.
+- Giữ `layouts/chat.bwt` theo quyết định trước đó và `layouts/mops-admin.bwt` cho quản trị.
 
 ## 8. Home Portal v3 — bản đồ Section ↔ Config ↔ Snippet (nguồn chuẩn duy nhất)
 
@@ -131,13 +169,74 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
 **Kiến trúc Hero/Header v3 hiện tại:**
 
 - Hero (`section_hero.bwt` + `home-portal.css` + `home-hero.js`) là **Swiper ảnh nền full-bleed**;
-  lớp nội dung/CTA đứng yên trong thẻ kính trắng mờ (`background:rgba(255,255,255,.94)`,
-  `backdrop-filter:blur(16px)`), neo **góc trái** wrap (`justify-content:flex-start`, cập nhật
-  17/09/2026 — trước đó từng căn giữa) để ảnh nền vẫn hiện rõ phần còn lại; chữ dùng hệ màu tối của
-  thiết kế sáng, riêng cụm từ nhấn mạnh trong H1 (`<em>`, từ `settings.portal_hero_highlight`) tô
-  `var(--green)`/mainColor. Không phủ mask lên toàn ảnh. Ảnh đầu preload + eager/high priority,
-  các ảnh sau lazy-load; khung Hero khóa `min-height` để tránh CLS. Fade 700ms mỗi 5s, dừng khi
-  hover/focus và tắt autoplay theo `prefers-reduced-motion`. Không dựng lại grid 2 cột cho Hero.
+  neo **góc trái** wrap (`justify-content:flex-start`, cập nhật 17/09/2026 — trước đó từng căn
+  giữa) để ảnh nền vẫn hiện rõ phần còn lại. Cập nhật 20/09/2026 (phase home-shopping-ux, thay cho
+  bản kính trắng mờ trước đó): `.portal-hero__copy` nền **trong suốt** (`background:transparent`),
+  rộng tối đa **564px tính cả padding** (`box-sizing:border-box`), `border-radius:40px`; không còn
+  viền/box-shadow/backdrop-filter. Độ rõ chữ trên ảnh lấy từ `.portal-hero__mask` — gradient tối phủ
+  từ trái (phía text) sang phải, đã bật lại thay cho `display:none` cũ — cộng với chữ/nút **trắng**
+  (`h1`, `.sub`, `.btn-o` đổi từ token `--ink`/`--ink-2`/`--line` sang trắng/alpha trắng; `.eyebrow`
+  và `<em>` nhấn mạnh vẫn giữ `var(--green)`/mainColor vì đã đủ tương phản trên nền tối). Ảnh đầu
+  preload + eager/high priority, các ảnh sau lazy-load; khung Hero khóa `min-height` để tránh CLS.
+  Fade 700ms mỗi 5s, dừng khi hover/focus và tắt autoplay theo `prefers-reduced-motion`. Không dựng
+  lại grid 2 cột cho Hero.
+- Khối hướng dẫn Quiz da AI (`section_ai_guide.bwt`, phase home-shopping-ux 20/09/2026): section
+  Home Portal đăng ký qua `home_portal.bwt` `valid_sections` + `home_section_N`, mặc định đặt ngay
+  sau Hero (`home_section_2`). CTA trỏ `/kham-da-ai` (alias thật của `page.ai-skin-quiz.bwt`, xem
+  `dev-server.js` `PAGE_HANDLE_MAP`). Toggle lối vào trong menu mobile: `home_ai_guide_menu_enable`
+  (mặc định bật) — không dựng nút nổi mới, dùng đúng `<ul class="mb-drawer-secondary">` có sẵn
+  trong `header.bwt`.
+- Ẩn "Tích điểm đổi quà" khỏi menu mobile: gate bằng `settings.header_loyalty_enable` (checkbox,
+  mặc định **tắt**) trong `header.bwt` — loại hẳn khỏi DOM khi tắt (không phải CSS ẩn). Dữ liệu/
+  tích hợp loyalty thật (`appbulk-loyalty-widgets.bwt`, `page.loyalty.bwt`, `data/loyalty-tiers.js`)
+  giữ nguyên, bật lại được bất kỳ lúc nào chỉ bằng setting này.
+- Cụm liên hệ nổi (`support.bwt`) có 3 trạng thái: thu gọn, mở panel (`.widget-opened`, như cũ), và
+  **ẩn hoàn toàn** (`.widget-hidden`, `display:none` thật — thêm 20/09/2026). Trạng thái ẩn lưu qua
+  `sessionStorage` (`pc_contact_widget_hidden`), có nút "Ẩn nút liên hệ" trong panel và nút mở lại
+  "Hiện lại nút liên hệ nhanh" ở khối copyright footer (`footer.bwt`, CSS trong `global_core.scss.bwt`
+  `.copyright .footer-contact-reopen`) — luôn hiện, bấm là hiện lại cụm nổi bất kể trạng thái hiện tại.
+- Backtop/main-widget tránh đè footer (`footer_script.bwt`): thay công thức `innerHeight - footer.top`
+  (có thể vượt viewport khi footer cao hơn màn hình, đẩy widget "top âm" ra ngoài — lỗi đã khảo sát ở
+  mobile 390×900) bằng phần giao thật của footer với viewport (`clamp` theo `rect.top/bottom` và
+  `window.innerHeight`) **cộng** một chặn cuối theo `el.offsetHeight` để đáy widget không bao giờ vượt
+  quá viewport (20/09/2026).
+- Drawer menu mobile (`header.bwt` `#btn-menu-mobile` → `.header-menu.current`) có 2 nơi toggle class
+  độc lập (shim inline chạy trước, jQuery thật trong `main.js.bwt` chạy sau khi
+  `window.__pcMenuJSReady=true`) — không sửa logic mở/đóng ở 1 trong 2 nơi mà mong đủ. Khoá cuộn nền
+  (`body.pc-drawer-open`, CSS trong `global_core.scss.bwt`), `aria-expanded` và trả focus khi đóng
+  (Escape/nút X/overlay) implement bằng 1 `MutationObserver` quan sát class `.current` — chạy đúng dù
+  bên nào toggle, không lặp code ở 2 nơi (thêm 20/09/2026, D01).
+- Badge % giảm giá (`.pc-flashsale__badge`) dùng token riêng `--flashsale-badge-bg:#D92D20`
+  (header_style.bwt), KHÔNG dùng chung `--sale-color` (#cc3d00, vẫn giữ cho nút CTA/progress bar).
+  Vị trí chuẩn: top-right. Có 4 nơi định nghĩa/override selector này — sửa màu/vị trí phải sửa cả 4:
+  `product_grid_office_sale.bwt` (base), `home-portal-integration.css` (Portal v3, cùng file cũng
+  đặt badge quy cách `.badge` ở bottom-left để tránh đè), `section_featured_products.bwt`,
+  `section_collection_bestseller.bwt`, `section_product_viewed.bwt` (đã bỏ override xanh riêng).
+  Icon tiêu đề Flash Sale (`flash_-1.png`) dùng `@keyframes pc-pulsescale` định nghĩa trong
+  `page_home.scss.bwt` (load cho mọi trang `template contains 'index'`) — đã có sẵn từ trước, chỉ
+  thêm `.pc-flashsale__title img{animation:none}` vào block `prefers-reduced-motion` sẵn có.
+- **Chưa dọn (audit G02, cần người dùng quyết định):** 10 option "chết" trong dropdown
+  `home_section_1..18` của `settings_schema.json` (`section_why_us`, `section_feedback`,
+  `section_collection_bestseller`, `section_collection_cta`, `section_stats`,
+  `section_expert_team`, `section_clinical_banner`, `section_trust_strip`, `section_protocol`,
+  `section_zalo_consult`) — snippet vẫn tồn tại nhưng KHÔNG có trong `valid_sections` của
+  `home_portal.bwt` nên chọn xong không hiện gì; `settings_data.json` preset mặc định còn trỏ 1 giá
+  trị chết (`home_section_9: section_expert_team`). Không tự xoá/thêm — theo nguyên tắc không tự ý
+  đổi settings_schema/settings_data khi chưa được hỏi.
+- Bộ lọc nhanh collection/search (`col.js.bwt` `doSearch()`): AJAX qua `filter.buildSearchUrl()`
+  (Bizweb.SearchFilter thật) đã có URL restore/back-forward/active-chip-bar từ trước — không phải
+  "bộ lọc giả chỉ ẩn card" như khảo sát cũ. Thêm 20/09/2026 (F03): token tăng dần chống request
+  chồng ghi đè kết quả mới bằng kết quả cũ (gõ nhanh/bấm nhiều filter liên tiếp), và banner lỗi +
+  nút "Thử lại" (`.afw-error`) khi AJAX fail — trước đây fail chỉ gỡ lặng `is-loading`, không báo gì.
+- Ô danh mục con trên trang collection cha (F01/F02, `snippets/collection_subnav.bwt`, include trong
+  `templates/collection.bwt` ngay sau H1): tối đa 3 quy tắc cấu hình `collection_subnav_{1,2,3}_
+  collection` (type `collection`) + `_menu` (type `link_list`) + `_title`. Khớp `collection.alias`
+  đúng 1 quy tắc mới render; để trống ⇒ không hiển thị gì (mặc định). Tên/ảnh/số sản phẩm mỗi ô lấy
+  từ `link.object.{image.src, all_products_count}` — cùng cơ chế đã dùng ở `menu-col-cate.bwt`/
+  `section_ingredients.bwt`, phần này KHÔNG resolve được trong dev-server local (mock không gán
+  `link.object`) nên chỉ kiểm chứng được tiêu đề/href qua preview, phần ảnh/số sản phẩm phải xác minh
+  trên Sapo thật. Việc còn lại của merchant: tạo Linklist trong Sapo Admin trỏ tới các collection con
+  thật (ví dụ nhóm tinh chất/serum: da dầu/mụn, thâm, khô, nhạy cảm, lão hoá) rồi điền 3 field trên.
 - Header: `header.header` là wrapper trong suốt theo thiết kế — màu nằm ở phần tử con: `.main-header`
   có nền dự phòng `#002E23`, `.pc-topbar` lấy nền từ `--mainColor` (schema-admin, xem dưới),
   `.box-hearder` (logo/menu) nền trắng. Main header desktop cao 68px; khi cuộn chỉ `.header-menu` cao
@@ -219,3 +318,9 @@ ls snippets/*.bwt
 # Danh sách biến cấu hình thật
 grep -o '"id"[[:space:]]*:[[:space:]]*"[a-z_]*"' configs/settings_schema.json
 ```
+
+## Font UI chung (19/09/2026)
+
+- Font chữ UI chuẩn của storefront, SHB, tài khoản, AI chat và MOPS là **Montserrat**; các alias `--pc-font-*`, `--font-*`, `--f-*`, `--sh-*`, `--chat-font-*` phải trỏ về stack Montserrat/system.
+- Nguồn chữ nội dung chỉ tải một request Montserrat với các weight đang dùng; không khôi phục Inter, Fraunces, Playfair Display, IBM Plex Mono, Roboto hoặc font UI khác.
+- Font icon (Font Awesome, Material Symbols, swiper-icons), logo vector và vùng mã/JSON monospace là ngoại lệ có chủ đích; không dùng selector toàn cục ép font làm hỏng glyph.

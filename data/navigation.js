@@ -80,6 +80,31 @@ const linklists = {
     ],
   },
 
+  // ── F01/F02 (phase home-shopping-ux, 2026-09-20) — DEMO/TEST cho ô danh mục
+  //    con nhóm tinh chất/serum, dùng qua settings collection_subnav_1_menu.
+  //    Người dùng đã duyệt tạo linklist demo này để thấy trên bản test; sẽ tự
+  //    tạo Menu/collection thật trên Sapo Admin khi triển khai production.
+  //    2 ô có collection thật trong data/collections.js (da-mun-dau,
+  //    top-10-kem-duong-am-...) trỏ thẳng collection; 3 ô còn lại (thâm/nám,
+  //    nhạy cảm, lão hoá) CHƯA có collection con thật trong data mock nên trỏ
+  //    /search?query=...&type=product — cùng cách section_solutions.bwt đang
+  //    dùng cho nút "Chọn theo vấn đề da" (xem snippets/section_solutions.bwt),
+  //    không phải cơ chế mới. Nhóm + từ khoá tham khảo cấu trúc Biologique
+  //    Recherche (blemishes/hydration/pigmentation/sensitivity/anti-aging) và
+  //    từ khoá tiếng Việt thực tế (kem trị nám/tàn nhang, serum trị thâm mụn,
+  //    kem dưỡng ẩm da dầu — tìm kiếm 09/2026), KHÔNG sao chép nội dung/ảnh BR.
+  'serum-nhu-cau-da': {
+    title:  'Serum theo nhu cầu da',
+    handle: 'serum-nhu-cau-da',
+    links: [
+      link('Da dầu, mụn và lỗ chân lông', '/da-mun-dau', 'da-mun-dau'),
+      link('Thâm sau mụn, không đều màu', '/search?query=' + encodeURIComponent('trị thâm nám') + '&type=product', ''),
+      link('Da khô, thiếu ẩm', '/top-10-kem-duong-am-chuyen-biet-tu-tam-trung-den-cao-cap-phu-hop-cho-mua-chuyen-mua', 'top-10-kem-duong-am-chuyen-biet-tu-tam-trung-den-cao-cap-phu-hop-cho-mua-chuyen-mua'),
+      link('Da nhạy cảm, hỗ trợ phục hồi', '/search?query=' + encodeURIComponent('da nhạy cảm phục hồi') + '&type=product', ''),
+      link('Chăm sóc dấu hiệu tuổi tác', '/search?query=' + encodeURIComponent('chống lão hoá') + '&type=product', ''),
+    ],
+  },
+
   // ── Skin Healthy — nhóm dịch vụ (cho page.skinhealthy-services.bwt) ────────
   'skinhealthy-services': {
     title:  'Nhóm dịch vụ Skin Healthy',

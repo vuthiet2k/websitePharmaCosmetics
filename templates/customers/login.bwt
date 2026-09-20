@@ -1,89 +1,119 @@
-{% comment %} templates/customers/login.bwt — T-112 (2026-09-12): tách khỏi layout chung, dùng
-  layouts/auth.bwt (split-screen). Form/field/social_login.* GIỮ NGUYÊN không đổi (Sapo native
-  form 'customer_login' — đổi tên field có thể vỡ xử lý phía backend Sapo), chỉ đổi khung bọc +
-  thêm nút ẩn/hiện mật khẩu (JS thuần, không đổi hành vi submit). {% endcomment %}
-{% layout 'auth' %}
+{% comment %} templates/customers/login.bwt — 2026-09-18: quay lại dùng layout chung
+  (layouts/theme.bwt, đầy đủ topbar/header/menu/search/cart/footer) theo yêu cầu người dùng, sau
+  khi phát hiện comment cũ "T-112, theo yêu cầu người dùng (báo cáo audit 2026-09-12)" không có
+  tài liệu nào xác minh được trong repo hay git history — xem sự cố ghi ở
+  .clinerules/02-du-an-pharma-cosmetics.md mục 7. layouts/auth.bwt (layout tách riêng cũ) đã xoá.
+  Bố cục 2 cột (form trái / panel ảnh phải) theo mockup thật design/auth/login.html + auth.css
+  (thêm có chủ đích ở commit b6019d2, khác hẳn layout bịa) — không tự nghĩ ra bố cục, xem
+  feedback_no_unilateral_ui_layout_changes. Ảnh + tiêu đề panel lấy từ settings.auth_panel_image/
+  auth_panel_headline/auth_panel_tagline (Sapo admin, nhóm "Trang Đăng nhập / Đăng ký") — trống thì
+  dùng gradient thương hiệu. Giữ nguyên các fix hợp lệ làm trong lúc tồn tại layout tách riêng:
+  toggle ẩn/hiện mật khẩu, chỉ hiện khối social khi Sapo thật sự trả về nút (T-134). Form/field/
+  social_login.* GIỮ NGUYÊN không đổi (Sapo native form 'customer_login' — đổi tên field có thể vỡ
+  xử lý phía backend Sapo).
+{% endcomment %}
+{% include 'breadcrumb' %}
+<section class="section pc-auth-section">
+	<div class="container">
+		<div class="pc-auth-shell">
+			<div class="row pc-auth-row">
+				<div class="col-lg-6 col-12 pc-auth-form-col">
+					<div class="pc-auth-card">
+						<div class="pc-auth-card__head">
+							<h1 class="pc-auth-card__title">Đăng nhập</h1>
+							<p class="pc-auth-card__sub">Đăng nhập để tiếp tục theo dõi đơn hàng &amp; ưu đãi thành viên</p>
+						</div>
 
-<div class="pc-auth-card">
-	<div class="pc-auth-card__head">
-		<h1 class="pc-auth-card__title">Chào mừng trở lại</h1>
-		<p class="pc-auth-card__sub">Đăng nhập để tiếp tục theo dõi đơn hàng &amp; ưu đãi thành viên</p>
-	</div>
+						<div id="login" class="pc-auth-card__body">
+							{% form 'customer_login' %}
+							{% if form.errors %}
+							<div class="pc-auth-alert pc-auth-alert--error">
+								{% for field in form.errors %}
+								<p>{{ form.errors.messages[field] }}</p>
+								{% endfor %}
+							</div>
+							{% endif %}
 
-	<div id="login" class="pc-auth-card__body">
-		{% form 'customer_login' %}
-		{% if form.errors %}
-		<div class="pc-auth-alert pc-auth-alert--error">
-			{% for field in form.errors %}
-			<p>{{ form.errors.messages[field] }}</p>
-			{% endfor %}
-		</div>
-		{% endif %}
+							<div class="pc-auth-field">
+								<label for="customer_email" class="pc-auth-label">Email</label>
+								<input type="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$" class="pc-auth-input" value="" name="email" id="customer_email" placeholder="ban@email.com" required>
+							</div>
+							<div class="pc-auth-field pc-auth-field--password">
+								<label for="customer_password" class="pc-auth-label">Mật khẩu</label>
+								<div class="pc-auth-password-wrap">
+									<input type="password" class="pc-auth-input" value="" name="password" id="customer_password" placeholder="Mật khẩu" required>
+									<button type="button" class="pc-auth-password-toggle" aria-label="Hiện/ẩn mật khẩu" onclick="pcAuthTogglePassword('customer_password', this)">
+										<i class="fa-regular fa-eye"></i>
+									</button>
+								</div>
+							</div>
 
-		<div class="pc-auth-field">
-			<label for="customer_email" class="pc-auth-label">Email</label>
-			<input type="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$" class="pc-auth-input" value="" name="email" id="customer_email" placeholder="ban@email.com" required>
-		</div>
-		<div class="pc-auth-field pc-auth-field--password">
-			<label for="customer_password" class="pc-auth-label">Mật khẩu</label>
-			<div class="pc-auth-password-wrap">
-				<input type="password" class="pc-auth-input" value="" name="password" id="customer_password" placeholder="Mật khẩu" required>
-				<button type="button" class="pc-auth-password-toggle" aria-label="Hiện/ẩn mật khẩu" onclick="pcAuthTogglePassword('customer_password', this)">
-					<i class="fa-regular fa-eye"></i>
-				</button>
+							<div class="pc-auth-row-between">
+								<span class="pc-auth-link" onclick="showRecoverPasswordForm()" role="button" tabindex="0">Quên mật khẩu?</span>
+								<a href="/account/register" class="pc-auth-link">Chưa có tài khoản? Đăng ký</a>
+							</div>
+
+							<button type="submit" value="Đăng nhập" class="pc-auth-btn-primary">Đăng nhập</button>
+							{% endform %}
+						</div>
+
+						{% if form.posted_successfully %}
+						<div class="pc-auth-alert pc-auth-alert--success">
+							<p>Chúng tôi đã gửi 1 email đến bạn. Vui lòng kiểm tra để đặt lại mật khẩu.</p>
+						</div>
+						{% endif %}
+
+						<div id="recover-password" class="pc-auth-card__body pc-auth-recover" style="display:none;">
+							<p class="pc-auth-recover__hint">Nhập email đã đăng ký, chúng tôi sẽ gửi liên kết đặt lại mật khẩu.</p>
+							{% form 'recover_customer_password' %}
+							{% if form.errors %}
+							<div class="pc-auth-alert pc-auth-alert--error">
+								{% for field in form.errors %}
+								<p>{{ form.errors.messages[field] }}</p>
+								{% endfor %}
+							</div>
+							{% endif %}
+							<div class="pc-auth-field">
+								<label for="recover-email" class="pc-auth-label">Email</label>
+								<input type="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$" class="pc-auth-input" value="" name="Email" id="recover-email" placeholder="ban@email.com" required>
+							</div>
+							<button type="submit" value="Lấy lại mật khẩu" class="pc-auth-btn-primary">Lấy lại mật khẩu</button>
+							<button type="button" class="pc-auth-link pc-auth-back-to-login" onclick="hideRecoverPasswordForm()">← Quay lại đăng nhập</button>
+							{% endform %}
+						</div>
+
+						{%- comment -%}
+						  T-134 (2026-09-12): khối social chỉ render khi Sapo thật sự trả về nút, tránh cảnh dòng
+						  chữ "hoặc đăng nhập qua" đứng trơ trọi không có nút nào bên dưới.
+						{%- endcomment -%}
+						{% if social_login.facebook_button != blank or social_login.google_button != blank %}
+						<div class="pc-auth-social">
+							<div class="pc-auth-social__divider"><span>hoặc đăng nhập qua</span></div>
+							{{ social_login.script }}
+							<div class="pc-auth-social__buttons">
+								{{ social_login.facebook_button }}
+								{{ social_login.google_button }}
+							</div>
+						</div>
+						{% endif %}
+					</div>
+				</div>
+
+				<div class="col-lg-6 col-12 pc-auth-visual-col">
+					<div class="pc-auth-visual">
+						{% if settings.auth_panel_image != blank %}
+						<img src="{{ settings.auth_panel_image | img_url: 'grande' }}" alt="{{ settings.auth_panel_headline | escape }}" class="pc-auth-visual__img" loading="lazy">
+						{% endif %}
+						<div class="pc-auth-visual__overlay">
+							{% if settings.auth_panel_headline != blank %}<h2 class="pc-auth-visual__headline">{{ settings.auth_panel_headline }}</h2>{% endif %}
+							{% if settings.auth_panel_tagline != blank %}<p class="pc-auth-visual__tagline">{{ settings.auth_panel_tagline }}</p>{% endif %}
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
-
-		<div class="pc-auth-row-between">
-			<span class="pc-auth-link" onclick="showRecoverPasswordForm()" role="button" tabindex="0">Quên mật khẩu?</span>
-			<a href="/account/register" class="pc-auth-link">Chưa có tài khoản? Đăng ký</a>
-		</div>
-
-		<button type="submit" value="Đăng nhập" class="pc-auth-btn-primary">Đăng nhập</button>
-		{% endform %}
 	</div>
-
-	{% if form.posted_successfully %}
-	<div class="pc-auth-alert pc-auth-alert--success">
-		<p>Chúng tôi đã gửi 1 email đến bạn. Vui lòng kiểm tra để đặt lại mật khẩu.</p>
-	</div>
-	{% endif %}
-
-	<div id="recover-password" class="pc-auth-card__body pc-auth-recover" style="display:none;">
-		<p class="pc-auth-recover__hint">Nhập email đã đăng ký, chúng tôi sẽ gửi liên kết đặt lại mật khẩu.</p>
-		{% form 'recover_customer_password' %}
-		{% if form.errors %}
-		<div class="pc-auth-alert pc-auth-alert--error">
-			{% for field in form.errors %}
-			<p>{{ form.errors.messages[field] }}</p>
-			{% endfor %}
-		</div>
-		{% endif %}
-		<div class="pc-auth-field">
-			<label for="recover-email" class="pc-auth-label">Email</label>
-			<input type="email" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,63}$" class="pc-auth-input" value="" name="Email" id="recover-email" placeholder="ban@email.com" required>
-		</div>
-		<button type="submit" value="Lấy lại mật khẩu" class="pc-auth-btn-primary">Lấy lại mật khẩu</button>
-		<button type="button" class="pc-auth-link pc-auth-back-to-login" onclick="hideRecoverPasswordForm()">← Quay lại đăng nhập</button>
-		{% endform %}
-	</div>
-
-	{%- comment -%}
-	  T-134 (2026-09-12) — xem ghi chú cùng mã ở templates/customers/register.bwt: khối social chỉ
-	  render khi Sapo thật sự trả về nút, tránh cảnh dòng chữ "hoặc đăng nhập qua" đứng trơ trọi
-	  không có nút nào bên dưới.
-	{%- endcomment -%}
-	{% if social_login.facebook_button != blank or social_login.google_button != blank %}
-	<div class="pc-auth-social">
-		<div class="pc-auth-social__divider"><span>hoặc đăng nhập qua</span></div>
-		{{ social_login.script }}
-		<div class="pc-auth-social__buttons">
-			{{ social_login.facebook_button }}
-			{{ social_login.google_button }}
-		</div>
-	</div>
-	{% endif %}
-</div>
+</section>
 
 <script>
 	if (window.location.hash === '#recover') {

@@ -88,7 +88,19 @@
 
 								</div>
 												<ul class="md-hidden mb-drawer-secondary">
+									{%- comment -%}
+										G01 (phase home-shopping-ux, 2026-09-20): ẩn mục "Tích điểm đổi quà" khỏi menu
+										mobile theo yêu cầu. Không xoá hẳn để còn bật lại được bằng 1 setting khi cần —
+										không phải CSS display:none (phần tử vẫn còn DOM/focus được), mà loại hẳn khỏi
+										cây render khi tắt. Dữ liệu/tích hợp loyalty thật (appbulk-loyalty-widgets,
+										page.loyalty, data/loyalty-tiers.js) giữ nguyên, chỉ ẩn đường điều hướng này.
+									{%- endcomment -%}
+									{%- if settings.header_loyalty_enable -%}
 									<li><a href="https://pharmacosmetics-vn.com/apps/tich-diem-doi-qua" title="Tích điểm đổi quà">Tích điểm đổi quà</a></li>
+									{%- endif -%}
+									{%- if settings.home_ai_guide_menu_enable -%}
+									<li><a href="{{ settings.home_ai_guide_cta_url | default: '/kham-da-ai' | escape }}" title="Quiz da cùng AI">{{ settings.home_ai_guide_menu_label | default: 'Quiz da cùng AI' | escape }}</a></li>
+									{%- endif -%}
 									{%- if settings.iwish_enable -%}
 									<li><a href="{{ pages[settings.wishlist_page].url }}" title="Sản phẩm yêu thích">Sản phẩm yêu thích <span class="js-wishlist-count" style="display:none">0</span></a></li>
 									{%- endif -%}
@@ -276,6 +288,36 @@
 			var hm2 = q('.header-menu'); if (hm2) hm2.classList.remove('current');
 			var ov2 = q('.mobile-nav-overflow'); if (ov2) ov2.classList.remove('open');
 		}
+	});
+})();
+</script>
+<script>
+/* D01 (phase home-shopping-ux, 2026-09-20): drawer menu mobile (#btn-menu-mobile → .header-menu
+   .current) mở/đóng qua 2 cơ chế riêng — shim ở trên (trước khi main.js sẵn sàng) và jQuery
+   handler thật trong main.js.bwt (sau khi window.__pcMenuJSReady = true). Quan sát trực tiếp class
+   ".current" bằng MutationObserver thay vì viết lại logic khoá cuộn/aria/focus ở cả 2 nơi — chạy
+   đúng dù bên nào bật/tắt class. Khoá cuộn nền + Escape để đóng + trả focus về nút mở (trước đây
+   không có cả 3, đo được bằng cách bấm mở drawer rồi bắn KeyboardEvent Escape: class "current"
+   không đổi). */
+(function () {
+	var headerMenu = document.querySelector('.header-menu');
+	var btn = document.getElementById('btn-menu-mobile');
+	if (!headerMenu || !btn) return;
+	var wasOpen = false;
+	function sync() {
+		var isOpen = headerMenu.classList.contains('current');
+		if (isOpen === wasOpen) return;
+		document.body.classList.toggle('pc-drawer-open', isOpen);
+		btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+		if (wasOpen && !isOpen) btn.focus();
+		wasOpen = isOpen;
+	}
+	new MutationObserver(sync).observe(headerMenu, { attributes: true, attributeFilter: ['class'] });
+	document.addEventListener('keydown', function (e) {
+		if (e.key !== 'Escape' || !headerMenu.classList.contains('current')) return;
+		headerMenu.classList.remove('current');
+		var overflow = document.querySelector('.mobile-nav-overflow');
+		if (overflow) overflow.classList.remove('open');
 	});
 })();
 </script>

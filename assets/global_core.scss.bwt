@@ -5,11 +5,7 @@
    FONTS
    ══════════════════════════════════════════ */
 
-/* Montserrat + Inter — loaded via Google Fonts CDN in theme.bwt <head>.
-   REOPEN 2026-09-11: xoá 2 @font-face 'Inter' tự host trỏ tới
-   ucco3fwrk3iltcv*.woff2 — file KHÔNG tồn tại trong assets/ (404 mỗi lần tải
-   trang), và Inter đã được nạp đủ qua Google Fonts <link> nên fallback này
-   chưa từng cần thiết. */
+/* Montserrat — loaded via the single Google Fonts request in the active layout. */
 
 
 /* ══════════════════════════════════════════
@@ -299,6 +295,12 @@ html, body {
 	padding: 0 !important;
 	margin: 0;
 }
+/* D01 (phase home-shopping-ux, 2026-09-20): khoá cuộn nền khi drawer menu mobile
+   (header.bwt #btn-menu-mobile → .header-menu.current) đang mở toàn màn hình — tạm thời override
+   overflow-y:visible ở trên, chỉ khi có class này (JS gỡ class khi đóng drawer). */
+body.pc-drawer-open {
+	overflow-y: hidden !important;
+}
 html {
 	/* Rem base — admin chỉnh qua Tùy chỉnh → "Cỡ chữ tổng thể". Mọi --fs-* (rem) co/giãn theo.
 	   87.5% = 1rem 14px (mặc định). LƯU Ý: chữ hardcode px (code cũ) KHÔNG đổi theo núm này. */
@@ -317,6 +319,7 @@ html {
 body {
 	background: {{settings.theme_body_bg | default: '#fff'}};
 	font-size: var(--fs-base);
+	font-family: var(--pc-font-body, var(--font-secondary, 'Montserrat', system-ui, sans-serif));
 	line-height: 1.5;
 	word-break: break-word;
 	-webkit-font-smoothing: antialiased;
@@ -381,7 +384,7 @@ select {
 }
 body{
 	font-size: var(--fs-base);
-	font-family: var(--font-secondary);
+	font-family: var(--pc-font-body, var(--font-secondary, 'Montserrat', system-ui, sans-serif));
 	color: var(--textColor);
 }
 
@@ -4104,7 +4107,23 @@ footer.footer {
 				font-weight: 700;
 			}
 		}
-		a{     
+		// D02 (phase home-shopping-ux, 2026-09-20): đường mở lại cụm liên hệ nổi khi đã bị ẩn
+		// hoàn toàn — xem data-contact-show trong snippets/footer.bwt + snippets/support.bwt.
+		.footer-contact-reopen {
+			display: inline-block;
+			margin: 0 0 10px;
+			padding: 0;
+			background: transparent;
+			border: none;
+			color: rgba(255, 255, 255, 0.78);
+			font-size: var(--fs-sm);
+			text-decoration: underline;
+			cursor: pointer;
+			&:hover, &:focus-visible {
+				color: #fff;
+			}
+		}
+		a{
 			font-weight: 700;
 			color: #fff;
 			&:hover{

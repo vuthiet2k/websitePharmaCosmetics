@@ -1,0 +1,373 @@
+{%- comment -%}19/09/2026: giữ CSS nội dung Skin Health khi dùng chung header/footer Pharma; không mang reset toàn trang từ layout cũ.{%- endcomment -%}
+<style>
+    .pc-clinic-content {
+      /* REOPEN 2026-09-10 (ADR-007/T-70): palette xlsx mới — thống nhất 1 hệ thương hiệu
+         "SKIN HEALTH BEAUTY by PHARMA COSMETICS" với theme.bwt (2 file xlsx dùng chung 1 design
+         system). Tên biến giữ nguyên (--sh-ink, --sh-gold, --sh-ivory...) để CSS layer bên dưới
+         KHÔNG phải sửa; chỉ giá trị đổi. --sh-ink/--sh-primary vốn đã trùng token mới
+         (text-main #13241F, brand-primary #3cb371) từ lần chỉnh init data 2026-08 trước — giữ
+         nguyên, không đổi. */
+      --sh-ivory:       {{ settings.skinhealthy_bg_color | default: '#F8FAF7' }};
+      --sh-ivory-dark:  #EAEBE5;
+      --sh-ink:         {{ settings.skinhealthy_accent_color | default: '#13241F' }};
+      --sh-ink-60:      rgba(19,36,31,.6);
+      --sh-ink-30:      rgba(19,36,31,.3);
+      --sh-gold:        {{ settings.skinhealthy_main_color | default: '#D79A7D' }};   /* peach accent theo xlsx */
+      --sh-clay-soft:   #F6E3D8;
+      --sh-primary:     #3cb371;   /* brand-primary Pharma Cosmetics — dùng cho CTA/eyebrow */
+      --sh-primary-deep:#166B55;
+      --sh-white:       #FFFFFF;
+      --sh-line:        #E2E8F0;
+
+      /* 19/09/2026: Montserrat là font chữ duy nhất của SHB, giữ alias cũ để CSS legacy không vỡ. */
+      --sh-serif:  'Montserrat', system-ui, sans-serif;
+      --sh-sans:   'Montserrat', system-ui, sans-serif;
+      --sh-mono:   'Montserrat', system-ui, sans-serif;
+
+      /* spacing */
+      --sh-container: 1280px;
+
+      /* motion */
+      --sh-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+
+    }
+
+    {%- comment -%}
+      REOPEN 2026-09-10 (ADR-007/T-71): dark theme cho hệ --sh-* — cặp giá trị dark đúng xlsx,
+      đồng bộ cơ chế với snippets/pharma_ui_kit.bwt (theme.bwt): @media prefers-color-scheme
+      + [data-theme="dark"] toggle thủ công.
+    {%- endcomment -%}
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .pc-clinic-content {
+        --sh-ivory:        #0B1712;
+        --sh-ivory-dark:   #112A1E;
+        --sh-ink:          #F1F5F3;
+        --sh-ink-60:       rgba(241,245,243,.6);
+        --sh-ink-30:       rgba(241,245,243,.3);
+        --sh-gold:         #E8A588;
+        --sh-clay-soft:    #2E1D16;
+        --sh-primary:      #3ED58C;
+        --sh-primary-deep: #2DD4BF;
+        --sh-white:        #132E20;
+        --sh-line:         #1E3A2B;
+      }
+    }
+    :root[data-theme="dark"] .pc-clinic-content {
+      --sh-ivory:        #0B1712;
+      --sh-ivory-dark:   #112A1E;
+      --sh-ink:          #F1F5F3;
+      --sh-ink-60:       rgba(241,245,243,.6);
+      --sh-ink-30:       rgba(241,245,243,.3);
+      --sh-gold:         #E8A588;
+      --sh-clay-soft:    #2E1D16;
+      --sh-primary:      #3ED58C;
+      --sh-primary-deep: #2DD4BF;
+      --sh-white:        #132E20;
+      --sh-line:         #1E3A2B;
+    }
+
+    .pc-clinic-content, .pc-clinic-content * { box-sizing: border-box; }
+
+
+    .pc-clinic-content {
+      background: var(--sh-ivory);
+      color: var(--sh-ink);
+      font-family: var(--sh-sans);
+      font-size: var(--fs-base);
+    }
+
+    /* 19/09/2026: các selector shell/header/footer của layout SHB cũ đã bỏ; chỉ giữ
+       animation và utility đang được template nội dung sử dụng. */
+    .pc-clinic-content .sh-reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 700ms var(--sh-ease), transform 700ms var(--sh-ease);
+    }
+    .pc-clinic-content .sh-reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .pc-clinic-content .sh-section-label {
+      font-family: var(--sh-sans);
+      font-size: 0.6875rem;
+      font-weight: 500;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--sh-ink-60);
+      margin-bottom: 40px;
+      display: block;
+    }
+    .pc-clinic-content .sh-section-heading {
+      font-family: var(--sh-sans);
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: .03em;
+      color: var(--sh-ink);
+      margin-bottom: 8px;
+    }
+
+    .sh-container {
+      max-width: var(--sh-container);
+      margin: 0 auto;
+      padding: 0 40px;
+    }
+
+    @media (max-width: 767px) {
+      .sh-container { padding: 0 20px; }
+    }
+
+    /* ── SERVICE BASKET BAR ─────────────────────────────── */
+    .sh-cart-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 120;
+      background: var(--sh-ink);
+      transform: translateY(100%);
+      transition: transform 320ms var(--sh-ease);
+    }
+    .sh-cart-bar.is-open { transform: translateY(0); }
+    .sh-cart-bar__inner {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 14px 40px;
+      max-width: var(--sh-container);
+      margin: 0 auto;
+    }
+    .sh-cart-bar__count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      background: var(--sh-gold);
+      color: var(--sh-ink);
+      font-family: var(--sh-sans);
+      font-size: 0.6875rem;
+      font-weight: 700;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .sh-cart-bar__label {
+      flex: 1;
+      font-family: var(--sh-sans);
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--sh-ivory);
+    }
+    .sh-cart-bar__deposit {
+      font-family: var(--sh-sans);
+      font-size: 1rem;
+      color: var(--sh-gold);
+      white-space: nowrap;
+    }
+    .sh-cart-bar__cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 24px;
+      background: var(--sh-gold);
+      color: var(--sh-ink);
+      font-family: var(--sh-sans);
+      font-size: 0.6875rem;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: background 200ms;
+      flex-shrink: 0;
+    }
+    .sh-cart-bar__cta:hover { background: var(--sh-ivory); }
+    .sh-cart-bar__clear {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: transparent;
+      border: 1px solid rgba(247,244,239,.25);
+      color: rgba(247,244,239,.6);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: border-color 200ms, color 200ms;
+    }
+    .sh-cart-bar__clear:hover { border-color: var(--sh-ivory); color: var(--sh-ivory); }
+    @media (max-width: 767px) {
+      .sh-cart-bar__inner { padding: 12px 20px; gap: 12px; }
+      .sh-cart-bar__deposit { display: none; }
+      .sh-cart-bar__label { font-size: 0.625rem; }
+    }
+
+    /* ── Editorial clinic gallery (Swiper background fade) ─ */
+    .sh-editorial {
+      position: relative;
+      overflow: hidden;
+      min-height: 560px;
+      display: flex;
+      align-items: center;
+    }
+    /* Swiper fills the entire section background */
+    .sh-edit-swiper {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      overflow: hidden;
+    }
+    /* Fade: slides stack absolutely, opacity-driven */
+    .sh-edit-swiper .swiper-wrapper { display: block; position: relative; height: 100%; }
+    .sh-edit-swiper .swiper-slide {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1.2s ease;
+    }
+    .sh-edit-swiper .swiper-slide-active { opacity: 1; pointer-events: auto; }
+    .sh-edit-swiper .swiper-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .sh-edit-swiper__placeholder { background: var(--sh-ink); }
+    /* Zoom-to-lightbox icon, bottom-right of each slide */
+    .sh-edit-swiper__zoom {
+      position: absolute;
+      bottom: 20px; right: 20px;
+      width: 44px; height: 44px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.28);
+      color: #fff;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 3;
+      transition: background 200ms;
+    }
+    .sh-edit-swiper__zoom:hover { background: rgba(255,255,255,.3); }
+    /* Pagination dots */
+    .sh-edit-swiper__dots {
+      position: absolute;
+      bottom: 20px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+      display: flex; gap: 8px; align-items: center;
+    }
+    .sh-edit-swiper__dots .swiper-pagination-bullet {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,255,255,.35);
+      transition: background 200ms, transform 200ms;
+      cursor: pointer;
+    }
+    .sh-edit-swiper__dots .swiper-pagination-bullet-active {
+      background: #fff; transform: scale(1.4);
+    }
+    /* Gradient so text is always legible over the photos */
+    .sh-editorial__overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(115deg, rgba(26,26,24,.72) 0%, rgba(26,26,24,.28) 58%, transparent 100%);
+      pointer-events: none;
+      z-index: 2;
+    }
+    .sh-editorial .sh-container { position: relative; z-index: 3; }
+
+    /* ── Clinic lightbox ────────────────────────────────── */
+    .sh-clinic-lb {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 9990;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 250ms var(--sh-ease);
+    }
+    .sh-clinic-lb.is-open { opacity: 1; pointer-events: all; }
+    .sh-clinic-lb__back {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,.92);
+      cursor: zoom-out;
+    }
+    .sh-clinic-lb__stage {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      width: 90vw;
+    }
+    .sh-clinic-lb__img {
+      display: block;
+      max-width: 100%;
+      max-height: 82vh;
+      object-fit: contain;
+      transition: opacity 180ms;
+    }
+    .sh-clinic-lb__close {
+      position: absolute;
+      top: -48px; right: 0;
+      width: 40px; height: 40px;
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      color: #fff; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 200ms;
+    }
+    .sh-clinic-lb__close:hover { background: rgba(255,255,255,.25); }
+    .sh-clinic-lb__prev,
+    .sh-clinic-lb__next {
+      position: absolute;
+      top: 50%; transform: translateY(-50%);
+      width: 48px; height: 48px;
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      color: #fff; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 200ms;
+    }
+    .sh-clinic-lb__prev { left: -64px; }
+    .sh-clinic-lb__next { right: -64px; }
+    .sh-clinic-lb__prev:hover,
+    .sh-clinic-lb__next:hover { background: rgba(255,255,255,.25); }
+    .sh-clinic-lb__counter {
+      text-align: center;
+      color: rgba(255,255,255,.5);
+      font-family: var(--sh-sans);
+      font-size: 0.6875rem;
+      letter-spacing: .08em;
+      margin-top: 10px;
+    }
+    @media (max-width: 767px) {
+      .sh-editorial { min-height: 420px; }
+      .sh-clinic-lb__prev { left: 8px; }
+      .sh-clinic-lb__next { right: 8px; }
+      .sh-clinic-lb__stage { width: 100vw; }
+    }
+
+  
+
+@media (max-width: 991px) { .pc-clinic-content .sh-cart-bar { bottom: calc(56px + env(safe-area-inset-bottom, 0px)); } }
+</style>
+{% if template contains 'indexskinhealthy' %}
+{{ 'page_skinhealthy_home.scss.css' | asset_url | stylesheet_tag }}
+{% if settings.skinhealthy_hero_img != blank %}<link rel="preload" as="image" href="{{ settings.skinhealthy_hero_img | img_url: '1440x' }}">{% endif %}
+{% endif %}
+<style>
+  /* Khung SHB đồng bộ với .bodywrap/.container của storefront Pharma. */
+  .pc-clinic-content { --sh-container: 1180px; }
+  .pc-clinic-content .sh-container {
+    max-width: 1180px;
+    width: 100%;
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+  .pc-clinic-content .sh-main { padding-top: 0; }
+  .pc-clinic-content .sh-hero { margin-top: 0; }
+  .pc-clinic-content :is(h1,h2,h3,h4,h5,h6,p,a,button,input,select,textarea,label,span) {
+    font-family: var(--pc-font-body, 'Montserrat', system-ui, sans-serif);
+  }
+  .pc-clinic-content :is(h1,h2,h3,h4,h5,h6) { font-weight: 600; letter-spacing: -.01em; }
+  .pc-clinic-content .svcs-subnav,
+  .pc-clinic-content .sh-col-sidebar { top: 113px; }
+  @media (max-width: 680px) {
+    .pc-clinic-content .sh-container { padding-left: 20px; padding-right: 20px; }
+    .pc-clinic-content .svcs-subnav,
+    .pc-clinic-content .sh-col-sidebar { top: 79px; }
+  }
+</style>

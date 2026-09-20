@@ -2,6 +2,14 @@
 <html lang="vi">
 	<head>
 		{% include 'router' %}
+        {%- assign is_skinhealthy_content = false -%}
+        {%- assign is_skinhealthy_cart = false -%}
+        {%- if template contains 'indexskinhealthy' or template contains 'page.skinhealthy-services' or template contains 'collection.skinhealthy' or template contains 'page.skinhealthy-service-detail' -%}
+          {%- assign is_skinhealthy_content = true -%}
+        {%- endif -%}
+        {%- if template contains 'indexskinhealthy' or template contains 'page.skinhealthy-services' or template contains 'collection.skinhealthy' -%}
+          {%- assign is_skinhealthy_cart = true -%}
+        {%- endif -%}
 		<meta charset="UTF-8" />
 		{%- if settings.ga_id != blank -%}
 		<script async src="https://www.googletagmanager.com/gtag/js?id={{ settings.ga_id }}"></script>
@@ -15,7 +23,7 @@
 		<meta name="google-site-verification" content="hQIumWld_-_PQCp9rfFO617FC5Z_MRszJ95bfzgWxzE" />
 		<meta name="theme-color" content="{{ settings.theme_main_color }}" />
 		<link rel="canonical" href="{{ canonical_url }}"/>
-		{%- if template contains 'index' -%}
+		{%- if template contains 'index' and is_skinhealthy_content == false -%}
 		  {%- assign home_has_hero = false -%}
 		  {%- for i in (1..18) -%}{%- capture home_section_key -%}home_section_{{ i }}{%- endcapture -%}{%- if settings[home_section_key] == 'section_hero' -%}{%- assign home_has_hero = true -%}{%- endif -%}{%- endfor -%}
 		  {%- if home_has_hero and settings.portal_hero_visual == 'image' and settings.home_hero_image != blank -%}
@@ -29,23 +37,19 @@
 		{% if template contains 'mops-admin' %}<meta name="robots" content="noindex,nofollow" />{% else %}<meta name="robots" content="noodp,index,follow" />{% endif %}
 		{% if current_page != 1 %}<meta name="description" content="{{ page_description }} | Trang {{ current_page }}">{% else %}<meta name="description" content="{{ page_description }}">{% endif %}
 		<title>{%if page_title == 'All'%}Tất cả sản phẩm{%else%}{{ page_title }}{%endif%}{% if current_tags %} tagged "{{ current_tags | join: ', ' }}"{% endif %}{% if current_page != 1 %} - Trang {{ current_page }}{% endif %}		</title>
-		{%if template contains 'index'%}{%if settings.home_page_keywords != '' and settings.home_page_keywords != null%}<meta name="keywords" content="{{settings.home_page_keywords}}"/>{%else%}<meta name="keywords" content="{{store.name}}, {{store.domain}}"/>{%endif%}{%elsif template contains 'product'%}<meta name="keywords" content="{{product.name}}, {%for collection in product.collections%}{{collection.name}}, {%endfor%}{%if product.tags.size > 0%}{% for tag in product.tags %}{{tag}}, {%endfor%}{%endif%}{{store.name}}, {{store.domain}}"/>{%elsif template contains 'collection'%}<meta name="keywords" content="{{collection.name }}, {{store.name}}, {{store.domain}}"/>{%elsif template contains 'blog'%}<meta name="keywords" content="{{blog.name }}, {{store.name}}, {{store.domain}}"/>{%elsif template contains 'article'%}<meta name="keywords" content="{{article.title}}, {{blog.name}}, {%if article.tags.size > 0%}{% for tag in article.tags %}{{tag}}, {%endfor%}{%endif%} {{store.name}}, {{store.domain}}"/>{%else%}<meta name="keywords" content="{{page_title}}, {{store.name}}, {{store.domain}}"/>{%endif%}		
-		{% include 'fb-open-graph-tags' %}	
+		{%if template contains 'index' and is_skinhealthy_content == false%}{%if settings.home_page_keywords != '' and settings.home_page_keywords != null%}<meta name="keywords" content="{{settings.home_page_keywords}}"/>{%else%}<meta name="keywords" content="{{store.name}}, {{store.domain}}"/>{%endif%}{%elsif template contains 'product'%}<meta name="keywords" content="{{product.name}}, {%for collection in product.collections%}{{collection.name}}, {%endfor%}{%if product.tags.size > 0%}{% for tag in product.tags %}{{tag}}, {%endfor%}{%endif%}{{store.name}}, {{store.domain}}"/>{%elsif template contains 'collection'%}<meta name="keywords" content="{{collection.name }}, {{store.name}}, {{store.domain}}"/>{%elsif template contains 'blog'%}<meta name="keywords" content="{{blog.name }}, {{store.name}}, {{store.domain}}"/>{%elsif template contains 'article'%}<meta name="keywords" content="{{article.title}}, {{blog.name}}, {%if article.tags.size > 0%}{% for tag in article.tags %}{{tag}}, {%endfor%}{%endif%} {{store.name}}, {{store.domain}}"/>{%else%}<meta name="keywords" content="{{page_title}}, {{store.name}}, {{store.domain}}"/>{%endif%}
+		{% include 'fb-open-graph-tags' %}
 		{%if settings.theme_favicon_enable%}<link rel="icon" href="{{ 'favicon.png' | asset_url }}" type="image/x-icon" />{%endif%}
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		{%- comment -%}
-		  REOPEN 2026-09-10 (ADR-007/T-70): Fraunces → Playfair Display, đồng bộ với
-		  --font-display trong snippets/header_style.bwt và layouts/skinhealthy.bwt.
-		  REOPEN 2026-09-11: gộp về 1 request duy nhất (trước đây có 2 <link> Google
-		  Fonts riêng — dòng này + dòng Inter bên dưới — cả 2 đều xin lại
-		  "Playfair+Display:wght@700;800;900", tải trùng font 2 lần mỗi lượt xem trang).
+		  19/09/2026: hợp nhất font chữ UI về Montserrat; không tải thêm serif/mono.
 		{%- endcomment -%}
-		<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 		{%- comment -%}
 		  REOPEN 2026-09-10 (ADR-007/T-70): palette xlsx mới thay T-10 — Tailwind CDN (JIT,
-		  không build step), theo đúng quy ước đã dùng ở layouts/skinhealthy.bwt (xem comment
+		  không build step), theo đúng quy ước đã dùng ở CSS nội dung Skin Health (xem comment
 		  tương ứng ở đó). preflight tắt vì layout này đã có CSS/theme cũ riêng
 		  (vendor_appbulk.css + assets/*.scss.bwt) — bật preflight sẽ đè margin/font mặc định
 		  của các thẻ đang dùng chung.
@@ -56,8 +60,7 @@
 		  để không phải sửa ~35 file template/snippet đang dùng utility class cũ — xem mapping
 		  đầy đủ trong tailwind.config.js (bản tài liệu 1 nguồn sự thật, doc-mirror). Token mới
 		  (brand-primary/brand-green/... tên đúng theo xlsx) dùng cho markup M7+.
-		  REOPEN 2026-09-11: Inter + Playfair Display đã gộp vào <link> Google Fonts
-		  phía trên (cùng Montserrat/IBM Plex Mono) — xoá request trùng ở đây.
+		  19/09/2026: request font chữ đã hợp nhất về Montserrat ở một nguồn.
 		{%- endcomment -%}
 		<script src="https://cdn.tailwindcss.com"></script>
 		<script id="pharma-tailwind-config">
@@ -92,7 +95,7 @@
 		          'semantic-success': 'var(--color-semantic-success)'
 		        },
 		        fontFamily: {
-		          heading: ['Playfair Display', 'Inter', 'serif']
+		          heading: ['Montserrat', 'system-ui', 'sans-serif']
 		        }
 		      }
 		    }
@@ -330,20 +333,23 @@
 		</script>
 	{{ 'vendor_appbulk.css' | asset_url | stylesheet_tag }}
 {% include 'storefront_theme' %}
-{% if template contains 'index' %}
+{% if template contains 'index' and is_skinhealthy_content == false %}
 {{ 'home-portal.css' | asset_url | stylesheet_tag }}
 {{ 'home-portal-integration.css' | asset_url | stylesheet_tag }}
 <script defer src="{{ 'home-hero.js' | asset_url }}"></script>
 <script defer src="{{ 'testimonial-swiper.js' | asset_url }}"></script>
 {% endif %}
+{% if is_skinhealthy_content %}{% include 'skinhealthy_content_style' %}{% endif %}
 {{ content_for_header }}
 </head>
-	<body class="{{ template | replace: '.', ' ' | truncatewords: 1, '' }} pc-site-v3{% if template contains 'index' %} pc-home-v3{% endif %}" id="{{ page_title | alias }}">
+	<body class="{{ template | replace: '.', ' ' | truncatewords: 1, '' }} pc-site-v3{% if template contains 'index' and is_skinhealthy_content == false %} pc-home-v3{% endif %}" id="{{ page_title | alias }}">
 		<div class="opacity_menu"></div>
-		{% if template contains 'index' %}<a class="portal-skip-link" href="#portal-main">Đến nội dung chính</a>{% endif %}
+		{% if template contains 'index' and is_skinhealthy_content == false %}<a class="portal-skip-link" href="#portal-main">Đến nội dung chính</a>{% endif %}
 		{% include 'header' %}
 		<div class="bodywrap">
-			{{ content_for_layout }}
+			{% if is_skinhealthy_content %}<div class="pc-clinic-v3 pc-clinic-content"><main class="sh-main" id="sh-main">{% endif %}
+            {{ content_for_layout }}
+			{% if is_skinhealthy_content %}</main>{% if is_skinhealthy_cart %}{% include 'skinhealthy_content_script' %}{% endif %}</div>{% endif %}
 			<div id="js-global-alert" class="alert alert-success" role="alert">
 				<button type="button" class="close"><span aria-hidden="true"><span aria-hidden="true">&times;</span></span></button>
 				<h5 class="alert-heading"></h5>

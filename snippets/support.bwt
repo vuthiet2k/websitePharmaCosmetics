@@ -83,6 +83,10 @@
 			</div>
 			{%endif%}
 		</div>
+		<button type="button" class="widget-hide-action" data-contact-hide>
+			<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" stroke="currentColor" stroke-width="1.6"/><path d="M3 3l18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+			<span>Ẩn nút liên hệ</span>
+		</button>
 	</div>
 
 	<div class="out-circle" id="toggle-widget-btn">
@@ -131,14 +135,45 @@
 		var w = document.querySelector('.main-widget');
 		if (w) w.classList.toggle('widget-opened');
 	});
+
+	// D02 (phase home-shopping-ux, 2026-09-20): 3 trạng thái — thu gọn (mặc định), mở panel
+	// (widget-opened, xử lý ở khối trên) và ẩn hoàn toàn (widget-hidden, khối này). Ẩn hoàn toàn
+	// dùng display:none thật (không chỉ ẩn thị giác) nên phần tử không còn bắt được click/focus.
+	// Lưu lựa chọn qua sessionStorage; nếu storage bị chặn (Safari riêng tư, v.v.) thì coi như
+	// không lưu được và luôn hiện lại — không lỗi vỡ trang.
+	(function(){
+		var STORE_KEY = 'pc_contact_widget_hidden';
+		var widget = document.querySelector('.main-widget');
+		if (!widget) return;
+		function readHidden(){
+			try { return sessionStorage.getItem(STORE_KEY) === '1'; } catch(e){ return false; }
+		}
+		function setHidden(hide){
+			if (hide && document.activeElement && widget.contains(document.activeElement)) {
+				document.activeElement.blur();
+			}
+			widget.classList.toggle('widget-hidden', hide);
+			widget.setAttribute('aria-hidden', hide ? 'true' : 'false');
+			try {
+				if (hide) { sessionStorage.setItem(STORE_KEY, '1'); } else { sessionStorage.removeItem(STORE_KEY); }
+			} catch(e) {}
+		}
+		if (readHidden()) setHidden(true);
+		document.addEventListener('click', function(e){
+			if (!e.target.closest) return;
+			if (e.target.closest('[data-contact-hide]')) { e.preventDefault(); setHidden(true); }
+			if (e.target.closest('[data-contact-show]')) { e.preventDefault(); setHidden(false); }
+		});
+	})();
 	$(function(){
 		// 2. Logic Carousel Icon: Dùng Fade (mờ dần) thay vì trượt ngang bằng tọa độ (Rất mượt)
 		var $carouselItems = $('.ser-icon .process .item');
 		if ($carouselItems.length > 1) {
 			var currentIndex = 0;
 			setInterval(function(){
-				// Nếu người dùng đang mở menu, tạm dừng hiệu ứng chuyển icon để đỡ rối mắt
-				if ($('.main-widget').hasClass('widget-opened')) return; 
+				// Nếu người dùng đang mở menu hoặc đã ẩn hoàn toàn cụm liên hệ, tạm dừng hiệu ứng
+				// chuyển icon — vừa đỡ rối mắt, vừa khỏi chạy animation vô ích khi display:none.
+				if ($('.main-widget').hasClass('widget-opened') || $('.main-widget').hasClass('widget-hidden')) return;
 
 				$carouselItems.eq(currentIndex).removeClass('active-icon');
 				currentIndex = (currentIndex + 1) % $carouselItems.length;
@@ -219,5 +254,35 @@
 .main-widget.widget-opened .close-icon-main {
 	opacity: 1;
 	transform: translate(-50%, -50%) rotate(0deg);
+}
+
+/* --- TRẠNG THÁI ẨN HOÀN TOÀN (D02) --- */
+/* display:none thật: không còn chiếm chỗ, không còn bắt click/focus/hover — khác thu gọn. */
+.main-widget.widget-hidden {
+	display: none !important;
+}
+
+.widget-hide-action {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	width: 100%;
+	margin-top: 4px;
+	padding: 8px 6px;
+	background: transparent;
+	border: none;
+	border-top: 1px solid rgba(0,0,0,.08);
+	color: #767676;
+	font-size: 12px;
+	line-height: 1.2;
+	cursor: pointer;
+	text-align: left;
+}
+.widget-hide-action:hover,
+.widget-hide-action:focus-visible {
+	color: #333;
+}
+.widget-hide-action svg {
+	flex: 0 0 auto;
 }
 </style>

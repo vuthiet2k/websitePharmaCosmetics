@@ -2205,123 +2205,68 @@ div#social_login {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   T-112 (2026-09-12) — Standalone Auth (login/register), layouts/auth.bwt.
-   Split-screen desktop (panel thương hiệu trái, form phải) / banner-trên mobile.
-   Dùng var(--color-brand-*) từ pharma_ui_kit.bwt (T-70/71) — không hardcode hex mới,
-   trừ trắng/trong suốt thuần tuý. Tiền tố pc-auth-* (không trùng .btn-primary/.nav-link
-   site-wide — xem cảnh báo đầu file pharma_ui_kit.bwt). ══════════════════════════════ */
-.pc-auth-body {
-	margin: 0;
-	min-height: 100dvh;
-	background: var(--color-bg-page, #F8FAF7);
-	font-family: var(--font-secondary, 'Inter', sans-serif);
-}
-.pc-auth-topbar {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 14px 20px;
-	position: relative;
-	z-index: 5;
-}
-.pc-auth-back {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	color: var(--color-text-body, #334155);
-	text-decoration: none;
-	font-size: var(--fs-sm, 0.875rem);
-	font-weight: 600;
-	min-height: 44px;
-}
-.pc-auth-back:hover { color: var(--color-brand-primary, #3CB371); }
-.pc-auth-lang.lang-switcher { position: relative; }
-/* global_core.scss.bwt chỉ ẩn .lang-list mặc định trong ngữ cảnh sâu
-   "header.header .top-main-header .text-hea-right .lang-switcher .lang-list"
-   (dùng ở header chính) — layout auth KHÔNG có các lớp cha đó nên phải khai báo
-   lại tường minh ở đây, nếu không dropdown sẽ hiện mở sẵn ngay khi tải trang. */
-.pc-auth-lang .lang-list { display: none; position: absolute; top: calc(100% + 8px); right: 0; z-index: 20; }
-.pc-auth-lang .lang-list.open { display: block; }
-
+   2026-09-18: form card đăng nhập/đăng ký (templates/customers/login.bwt,
+   register.bwt), render trong layout chung (layouts/theme.bwt). Trước đây có
+   1 shell split-screen riêng (layouts/auth.bwt, .pc-auth-body/-topbar/-shell/
+   -panel-xxx/-formzone, KHÔNG có header/footer) — đã xoá cùng layout đó, xem
+   .clinerules/02-du-an-pharma-cosmetics.md mục 7. Bố cục 2 cột (.pc-auth-shell
+   > .pc-auth-row > .pc-auth-form-col + .pc-auth-visual-col) quay lại SAU đó
+   theo mockup thật design/auth/login.html + register.html + auth.css (thêm có
+   chủ đích ở commit b6019d2) — khác layout auth.bwt bịa, vẫn nằm trong
+   layouts/theme.bwt bình thường. Dùng var(--color-brand-*)/var(--font-display)
+   từ pharma_ui_kit.bwt + header_style.bwt (T-70/71, real token, không hardcode
+   hex mới trừ trắng/trong suốt thuần tuý). Tiền tố pc-auth-* (không trùng
+   .btn-primary/.nav-link site-wide — xem cảnh báo đầu file pharma_ui_kit.bwt).
+   ══════════════════════════════════════════════════════════════════════════ */
 .pc-auth-shell {
-	display: grid;
-	grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-	min-height: calc(100dvh - 64px);
+	background: #fff;
+	border-radius: 24px;
+	box-shadow: 0 24px 60px -18px rgba(15,35,24,0.18), 0 0 0 1px rgba(15,35,24,0.05);
+	padding: 24px;
+	margin: 24px 0 40px;
 }
+.pc-auth-row { align-items: stretch; }
+.pc-auth-form-col { padding: 20px; display: flex; flex-direction: column; justify-content: center; }
 @media (max-width: 991px) {
-	.pc-auth-shell { grid-template-columns: 1fr; min-height: auto; }
+	.pc-auth-shell { padding: 16px; border-radius: 18px; }
+	.pc-auth-form-col { padding: 8px; }
+	.pc-auth-visual-col { order: -1; margin-bottom: 20px; }
 }
 
-.pc-auth-panel {
+.pc-auth-visual {
 	position: relative;
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
-	padding: 40px 36px;
-	background: var(--color-brand-deep, #0F2318);
-	background-size: cover;
-	background-position: center;
-	color: #fff;
+	width: 100%;
+	height: 100%;
 	min-height: 480px;
+	border-radius: 18px;
+	overflow: hidden;
+	background: linear-gradient(160deg, var(--color-brand-dark, #166B55) 0%, var(--color-brand-deep, #0F2318) 100%);
+	display: flex;
+	align-items: flex-end;
 }
-@media (max-width: 991px) {
-	.pc-auth-panel { min-height: 0; padding: 28px 20px 32px; border-radius: 0 0 24px 24px; }
-}
-.pc-auth-panel__mark img { height: 34px; width: auto; }
-.pc-auth-panel__body { max-width: 460px; }
-.pc-auth-panel__headline {
-	font-family: var(--font-display, 'Playfair Display', serif);
-	font-weight: 700;
-	font-size: clamp(1.5rem, 2.4vw + 1rem, 2.25rem);
-	line-height: 1.25;
-	margin: 24px 0 12px;
+@media (max-width: 991px) { .pc-auth-visual { min-height: 180px; max-height: 220px; } }
+.pc-auth-visual__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.pc-auth-visual__overlay {
+	position: relative;
+	z-index: 1;
+	width: 100%;
+	padding: 32px 28px 26px;
+	background: linear-gradient(180deg, transparent 0%, rgba(15,35,24,0.82) 55%, rgba(15,35,24,0.95) 100%);
 	color: #fff;
 }
-.pc-auth-panel__tagline {
-	font-size: var(--fs-sm, 0.875rem);
-	line-height: 1.6;
-	color: rgba(255,255,255,0.78);
-	margin: 0 0 22px;
+.pc-auth-visual__headline {
+	font-family: var(--font-display, 'Montserrat', sans-serif);
+	font-size: 1.375rem;
+	font-weight: 700;
+	line-height: 1.3;
+	margin: 0 0 8px;
 }
-.pc-auth-panel__badges { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
-.pc-auth-panel__badges li {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	font-size: var(--fs-sm, 0.875rem);
-	color: rgba(255,255,255,0.92);
-}
-.pc-auth-panel__badges i {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 28px;
-	height: 28px;
-	border-radius: 50%;
-	background: rgba(255,255,255,0.14);
-	color: var(--color-mint-light, #D7F3E3);
-	flex-shrink: 0;
-	font-size: 13px;
-}
-@media (max-width: 991px) {
-	.pc-auth-panel__headline { font-size: 1.375rem; margin-top: 16px; }
-	.pc-auth-panel__badges { display: none; }
-}
+.pc-auth-visual__tagline { font-size: 0.8125rem; color: rgba(255,255,255,0.78); line-height: 1.55; margin: 0; }
 
-.pc-auth-formzone {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	padding: 40px 24px;
-}
-@media (max-width: 480px) {
-	.pc-auth-formzone { padding: 28px 16px 40px; }
-}
-
-.pc-auth-card { width: 100%; max-width: 420px; }
+.pc-auth-card { width: 100%; max-width: 480px; }
 .pc-auth-card__head { margin-bottom: 22px; }
 .pc-auth-card__title {
-	font-family: var(--font-display, 'Playfair Display', serif);
+	font-family: var(--font-display, 'Montserrat', sans-serif);
 	font-size: 1.75rem;
 	font-weight: 700;
 	color: var(--color-text-main, #13241F);
