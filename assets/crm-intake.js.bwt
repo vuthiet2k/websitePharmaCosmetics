@@ -1,0 +1,68 @@
+/* CRM Intake 2026-09-23: client độc lập cho Sheet/GAS CRM; tuyệt đối không gọi MOPS. */
+(function (window) {
+  'use strict';
+
+  var config = window.PharmaCrmIntakeConfig || {};
+  var context = window.PharmaCrmCustomerContext || {};
+  var sessionId = (function () {
+    try {
+      var key = 'pc_crm_intake_session_id';
+      var stored = window.sessionStorage.getItem(key);
+      if (stored) return stored;
+      var created = 'crm_session_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+      window.sessionStorage.setItem(key, created);
+      return created;
+    } catch (error) {
+      return 'crm_session_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+    }
+  })();
+
+  function ready() {
+    return config.enabled === true && /^https:\/\/script\.google\.com\//i.test(String(config.endpoint || ''));
+  }
+
+  function submissionId() {
+    if (window.crypto && typeof window.crypto.randomUUID === 'function') return 'crm_' + window.crypto.randomUUID();
+    return 'crm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 12);
+  }
+
+  function send(action, data) {
+    if (!ready()) return Promise.reject(new Error('crm_safe_mode'));
+    if (data.consent !== true || !data.consent_at) return Promise.reject(new Error('consent_required'));
+    var controller = typeof AbortController === 'function' ? new AbortController() : null;
+    var timeoutMs = Math.max(1000, Math.min(30000, Number(config.timeout_ms) || 10000));
+    var timer = controller ? window.setTimeout(function () { controller.abort(); }, timeoutMs) : null;
+    var payload = Object.assign({
+      action: action,
+      submission_id: data.submission_id || submissionId(),
+      session_id: sessionId,
+      customer: context,
+      page_url: window.location.href,
+      website: ''
+    }, data);
+
+    return window.fetch(config.endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+      signal: controller ? controller.signal : undefined
+    }).then(function (response) {
+      if (timer) window.clearTimeout(timer);
+      if (!response.ok) throw new Error('crm_http_' + response.status);
+      return response.json();
+    }).then(function (result) {
+      if (!result || result.success !== true) throw new Error((result && result.error) || 'crm_rejected');
+      return result;
+    }).catch(function (error) {
+      if (timer) window.clearTimeout(timer);
+      throw error;
+    });
+  }
+
+  window.PharmaCrmIntake = {
+    isReady: ready,
+    createSubmissionId: submissionId,
+    submitAiChat: function (data) { return send('save_ai_chat', data); },
+    submitContactLead: function (data) { return send('submit_contact', data); }
+  };
+})(window);

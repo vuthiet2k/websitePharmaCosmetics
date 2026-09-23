@@ -1,0 +1,50 @@
+{%- comment -%}
+  CRM Intake 2026-09-23: chỉ xuất ngữ cảnh tài khoản đã đăng nhập cho các luồng CRM độc lập.
+  Không đọc, không ghi và không dùng bất kỳ cấu hình hay endpoint MOPS nào.
+{%- endcomment -%}
+{%- assign crm_customer_name = '' -%}
+{%- assign crm_customer_id = '' -%}
+{%- assign crm_customer_email = '' -%}
+{%- assign crm_customer_phone = '' -%}
+{%- assign crm_customer_address_1 = '' -%}
+{%- assign crm_customer_address_2 = '' -%}
+{%- assign crm_customer_city = '' -%}
+{%- assign crm_customer_district = '' -%}
+{%- assign crm_customer_ward = '' -%}
+{%- assign crm_customer_zip = '' -%}
+{%- assign crm_customer_logged_in = false -%}
+{%- if customer != blank -%}
+  {%- assign crm_customer_logged_in = true -%}
+  {%- assign crm_customer_id = customer.id | default: '' -%}
+  {%- assign crm_customer_name = customer.name | default: customer.first_name | append: ' ' | append: customer.last_name | strip -%}
+  {%- assign crm_customer_email = customer.email | default: '' -%}
+  {%- assign crm_customer_phone = customer.phone | default: customer.default_address.phone | default: '' -%}
+  {%- assign crm_customer_address_1 = customer.default_address.address1 | default: '' -%}
+  {%- assign crm_customer_address_2 = customer.default_address.address2 | default: '' -%}
+  {%- assign crm_customer_city = customer.default_address.city | default: '' -%}
+  {%- assign crm_customer_district = customer.default_address.district | default: '' -%}
+  {%- assign crm_customer_ward = customer.default_address.ward | default: '' -%}
+  {%- assign crm_customer_zip = customer.default_address.zip | default: '' -%}
+{%- endif -%}
+<script>
+window.PharmaCrmCustomerContext = {
+  logged_in: {{ crm_customer_logged_in | json }},
+  id: {{ crm_customer_id | json }},
+  name: {{ crm_customer_name | json }},
+  email: {{ crm_customer_email | json }},
+  phone: {{ crm_customer_phone | json }},
+  default_address: {
+    address1: {{ crm_customer_address_1 | json }},
+    address2: {{ crm_customer_address_2 | json }},
+    city: {{ crm_customer_city | json }},
+    district: {{ crm_customer_district | json }},
+    ward: {{ crm_customer_ward | json }},
+    zip: {{ crm_customer_zip | json }}
+  }
+};
+window.PharmaCrmIntakeConfig = window.PharmaCrmIntakeConfig || {
+  enabled: {{ settings.crm_intake_enabled | default: false | json }},
+  endpoint: {{ settings.crm_intake_url | default: '' | json }},
+  timeout_ms: {{ settings.crm_intake_timeout_ms | default: '10000' | json }}
+};
+</script>

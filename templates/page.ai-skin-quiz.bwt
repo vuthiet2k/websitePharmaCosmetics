@@ -1,5 +1,7 @@
 {% layout 'theme' %}
 {{ 'page_ai_skin_quiz.scss.css' | asset_url | stylesheet_tag }}
+{% include 'customer_context_extractor' %}
+<script src="{{ 'crm-intake.js' | asset_url }}" defer></script>
 
 <div class="ai-skin-chat-app" id="aiSkinChatApp">
   <h1 class="sr-only">{{ page.title | default: page_title | escape }}</h1>
@@ -17,7 +19,7 @@
       </div>
       <div class="doctor-info">
         <div class="doctor-name-row">
-          <span class="doctor-name">Dr. Pharma AI</span>
+          <span class="doctor-name">Chuyên gia Pharma AI</span>
           <span class="verified-badge" title="Chuyên gia Y khoa được chứng thực"><i class="fas fa-certificate"></i> AI Clinic</span>
         </div>
         <div class="doctor-status">
@@ -83,6 +85,19 @@
       </button>
     </div>
   </footer>
+</div>
+
+<div class="ai-skin-crm-modal" id="aiSkinCrmConsentModal" hidden aria-hidden="true">
+  <div class="ai-skin-crm-modal__backdrop" data-crm-consent-close></div>
+  <section class="ai-skin-crm-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="aiSkinCrmConsentTitle">
+    <h2 id="aiSkinCrmConsentTitle">{{ settings.crm_consent_title | default: 'Lưu kết quả tư vấn' | escape }}</h2>
+    <p>{{ settings.crm_consent_description | default: 'Khi bạn đồng ý, Pharma Cosmetics sẽ lưu kết quả tư vấn, câu trả lời và thông tin tài khoản (nếu đã đăng nhập) để hỗ trợ bạn theo dõi và tư vấn tiếp theo.' | escape }}</p>
+    <p class="ai-skin-crm-modal__status" id="aiSkinCrmConsentStatus" aria-live="polite"></p>
+    <div class="ai-skin-crm-modal__actions">
+      <button type="button" class="ai-skin-crm-modal__cancel" data-crm-consent-close>{{ settings.crm_consent_cancel_label | default: 'Không lưu' | escape }}</button>
+      <button type="button" class="ai-skin-crm-modal__accept" id="aiSkinCrmConsentAccept">{{ settings.crm_consent_accept_label | default: 'Đồng ý lưu kết quả' | escape }}</button>
+    </div>
+  </section>
 </div>
 
 <script>
@@ -168,6 +183,15 @@
 
   var currentQuestionIndex = -1;
   var userScores = {};
+  var quizAnswers = [];
+  var latestCrmResult = null;
+  var crmUi = {
+    openLabel: {{ settings.crm_consent_open_label | default: 'Lưu kết quả tư vấn' | json }},
+    acceptLabel: {{ settings.crm_consent_accept_label | default: 'Đồng ý lưu kết quả' | json }},
+    successMessage: {{ settings.crm_consent_success_message | default: 'Kết quả đã được lưu.' | json }},
+    safeModeMessage: {{ settings.crm_consent_safe_mode_message | default: 'Tính năng lưu kết quả đang tạm thời chưa được cấu hình. Vui lòng liên hệ chuyên gia nếu cần hỗ trợ.' | json }},
+    errorMessage: {{ settings.crm_consent_error_message | default: 'Chưa thể lưu kết quả lúc này. Vui lòng thử lại hoặc liên hệ chuyên gia.' | json }}
+  };
   var isTyping = false;
 
   var messagesFlow = document.getElementById('messagesFlow');
@@ -181,6 +205,16 @@
   var progressStepLabel = document.getElementById('progressStepLabel');
   var progressPercentLabel = document.getElementById('progressPercentLabel');
   var headerStatus = document.getElementById('headerStatusText');
+  var crmConsentModal = document.getElementById('aiSkinCrmConsentModal');
+  var crmConsentStatus = document.getElementById('aiSkinCrmConsentStatus');
+  var crmConsentAccept = document.getElementById('aiSkinCrmConsentAccept');
+  var crmSubmissionId = '';
+
+  function escapeHtml(value) {
+    var el = document.createElement('div');
+    el.textContent = String(value || '');
+    return el.innerHTML;
+  }
 
   function getCurrentTime() {
     var d = new Date();
@@ -297,6 +331,7 @@
     addBotMessage(botHtml, function() {
       renderQuickReplies(q.options, function(selectedOpt) {
         var st = selectedOpt.skin_type || 'normal';
+        quizAnswers.push({ question_id: q.id || index + 1, answer: selectedOpt.text || '', skin_type: st });
         userScores[st] = (userScores[st] || 0) + 1;
         
         // Conversational encouragement every 4 questions
@@ -305,7 +340,7 @@
             askQuestion(index + 1);
           });
         } else if (index === 12) {
-          addBotMessage("Tuyệt vời! Chỉ còn vài câu hỏi cuối cùng để bác sĩ xác lập phác đồ hoạt chất chính xác cho bạn.", function() {
+          addBotMessage("Tuyệt vời! Chỉ còn vài câu hỏi cuối cùng để chuyên gia hoàn thiện gợi ý hoạt chất phù hợp cho bạn.", function() {
             askQuestion(index + 1);
           });
         } else {
@@ -330,6 +365,13 @@
     }
 
     var res = quizResults[best] || quizResults['normal'] || { skin_type: 'Da Khỏe', recommend: [] };
+    latestCrmResult = {
+      skin_type: res.skin_type || '',
+      scores: userScores,
+      recommendations: res.recommend || [],
+      answers: quizAnswers,
+      summary: res.skin_type || ''
+    };
 
     // Save to localStorage
     try {
@@ -337,7 +379,7 @@
       localStorage.setItem('pc_quiz_scores', JSON.stringify(userScores));
     } catch(e) {}
 
-    addBotMessage("🎉 <strong>Phân tích hoàn tất!</strong> Dựa trên dữ liệu lâm sàng bạn vừa cung cấp, Dr. Pharma AI đã xây dựng xong hồ sơ bệnh lý làn da của bạn:", function() {
+    addBotMessage("🎉 <strong>Phân tích hoàn tất!</strong> Dựa trên thông tin bạn vừa cung cấp, Chuyên gia Pharma AI đã tổng hợp kết quả tư vấn da cho bạn:", function() {
       
       var recTags = '';
       (res.recommend || []).forEach(function(r) {
@@ -360,6 +402,7 @@
           </div>
 
           <div class="result-card-actions">
+            <button type="button" class="btn-result-crm" id="btnSaveAiResult">${escapeHtml(crmUi.openLabel)}</button>
             <a href="/pages/ai-skin-quiz-results" class="btn-result-cta">
               <span>Xem Phác Đồ Trị Liệu Chi Tiết</span>
               <i class="fas fa-arrow-right"></i>
@@ -395,9 +438,11 @@
     quickReplies.innerHTML = '';
     currentQuestionIndex = -1;
     userScores = {};
+    quizAnswers = [];
+    latestCrmResult = null;
     updateProgress(0, quizQuestions.length);
 
-    addBotMessage("Chào bạn! 👋 Mình là <strong>Dr. Pharma AI</strong> - Trợ lý Chẩn đoán Làn da Thông minh của Pharma Cosmetics.", function() {
+    addBotMessage("Chào bạn! 👋 Mình là <strong>Chuyên gia Pharma AI</strong> - Trợ lý tư vấn làn da thông minh của Pharma Cosmetics.", function() {
       addBotMessage("Hôm nay làn da của bạn đang có dấu hiệu gì cần cải thiện không? Hãy cùng mình trò chuyện qua 17 câu hỏi lâm sàng để tìm ra phác đồ y khoa chuẩn nhất nhé!", function() {
         renderQuickReplies([
           { text: "🚀 Bắt đầu khám da ngay ➔" },
@@ -439,6 +484,47 @@
     if (confirm("Bạn có muốn bắt đầu lại phiên khám da từ đầu không?")) {
       startConversation();
     }
+  });
+
+  function closeCrmConsent() {
+    crmConsentModal.hidden = true;
+    crmConsentModal.setAttribute('aria-hidden', 'true');
+  }
+
+  function openCrmConsent() {
+    if (!latestCrmResult) return;
+    crmSubmissionId = (window.PharmaCrmIntake && window.PharmaCrmIntake.createSubmissionId)
+      ? window.PharmaCrmIntake.createSubmissionId() : '';
+    crmConsentStatus.textContent = '';
+    crmConsentAccept.disabled = !(window.PharmaCrmIntake && window.PharmaCrmIntake.isReady && window.PharmaCrmIntake.isReady());
+    if (crmConsentAccept.disabled) crmConsentStatus.textContent = crmUi.safeModeMessage;
+    crmConsentModal.hidden = false;
+    crmConsentModal.setAttribute('aria-hidden', 'false');
+    if (!crmConsentAccept.disabled) crmConsentAccept.focus();
+  }
+
+  messagesFlow.addEventListener('click', function(event) {
+    if (event.target.closest('#btnSaveAiResult')) openCrmConsent();
+  });
+  document.querySelectorAll('[data-crm-consent-close]').forEach(function(button) {
+    button.addEventListener('click', closeCrmConsent);
+  });
+  crmConsentAccept.addEventListener('click', function() {
+    if (!latestCrmResult || !window.PharmaCrmIntake) return;
+    crmConsentAccept.disabled = true;
+    crmConsentStatus.textContent = '';
+    window.PharmaCrmIntake.submitAiChat({
+      submission_id: crmSubmissionId,
+      consent: true,
+      consent_at: new Date().toISOString(),
+      source: 'ai_skin_quiz',
+      result: latestCrmResult
+    }).then(function() {
+      crmConsentStatus.textContent = crmUi.successMessage;
+    }).catch(function(error) {
+      crmConsentAccept.disabled = false;
+      crmConsentStatus.textContent = error && error.message === 'crm_safe_mode' ? crmUi.safeModeMessage : crmUi.errorMessage;
+    });
   });
 
   // Start chat on page ready
