@@ -1,0 +1,53 @@
+{%- comment -%}
+  Soi da AI 2026-09-24: camera chạy trên thiết bị; ảnh gốc chỉ tồn tại trong RAM trình duyệt.
+{%- endcomment -%}
+<section class="pc-skin-scan" id="pcSkinScan" data-skin-scan data-skin-scan-enabled="{{ settings.ai_skin_scan_enable | default: true }}" data-skin-analysis-mode="{{ settings.ai_skin_scan_mode | default: 'client_edge' | escape }}" data-skin-deid-enabled="{{ settings.ai_skin_scan_deid_enable | default: true }}" data-skin-min-light="{{ settings.ai_skin_scan_min_light | default: '80' | escape }}" data-skin-model-url="{{ settings.ai_skin_scan_onnx_model_url | default: '' | escape }}" data-skin-model-sha256="{{ settings.ai_skin_scan_onnx_model_sha256 | default: '' | escape }}" hidden>
+  <div class="pc-skin-scan__intro">
+    <p class="pc-skin-scan__eyebrow">{{ settings.ai_skin_scan_eyebrow | default: 'Soi da tham khảo tại thiết bị' | escape }}</p>
+    <h2>{{ settings.ai_skin_scan_title | default: 'Phân tích ảnh 3 góc tại thiết bị' | escape }}</h2>
+    <p>{{ settings.ai_skin_scan_intro | default: 'Chụp chính diện, má trái và má phải. Khi chưa có model đã thẩm định, hệ thống chỉ chạy phép đo Canvas thử nghiệm. Kết quả mang tính tham khảo; ảnh xử lý trên thiết bị và không tự động lưu hoặc gửi đi.' | escape }}</p>
+  </div>
+  <ol class="pc-skin-scan__steps" aria-label="{{ settings.ai_skin_scan_steps_label | default: 'Tiến độ chụp ảnh' | escape }}">
+    <li data-skin-step="front" class="is-active">{{ settings.ai_skin_scan_step_front | default: 'Chính diện' | escape }}</li>
+    <li data-skin-step="left">{{ settings.ai_skin_scan_step_left | default: 'Má trái 45 độ' | escape }}</li>
+    <li data-skin-step="right">{{ settings.ai_skin_scan_step_right | default: 'Má phải 45 độ' | escape }}</li>
+  </ol>
+  <div class="pc-skin-scan__stage">
+    <p class="pc-skin-scan__status" data-skin-mode-unavailable hidden role="status"></p>
+    <video id="skinCameraStream" playsinline muted aria-label="{{ settings.ai_skin_scan_video_label | default: 'Luồng camera soi da' | escape }}"></video>
+    <canvas id="skinGuidanceCanvas" aria-hidden="true"></canvas>
+    <p class="pc-skin-scan__status" id="skinCameraStatus" aria-live="polite"></p>
+  </div>
+  <div class="pc-skin-scan__actions">
+    <button type="button" class="pc-skin-scan__primary" data-skin-camera-start>{{ settings.ai_skin_scan_start_label | default: 'Bắt đầu soi da' | escape }}</button>
+    <button type="button" class="pc-skin-scan__primary" data-skin-camera-capture disabled>{{ settings.ai_skin_scan_capture_label | default: 'Chụp góc này' | escape }}</button>
+    <button type="button" class="pc-skin-scan__secondary" data-skin-camera-switch hidden>{{ settings.ai_skin_scan_switch_label | default: 'Đổi camera' | escape }}</button>
+    <button type="button" class="pc-skin-scan__secondary" data-skin-open-upload>{{ settings.ai_skin_scan_upload_label | default: 'Tải 3 ảnh từ thiết bị' | escape }}</button>
+  </div>
+  <div class="pc-skin-scan__upload" data-skin-upload hidden>
+    <label>{{ settings.ai_skin_scan_step_front | default: 'Chính diện' | escape }}<input type="file" accept="image/*" data-skin-upload-angle="front"></label>
+    <label>{{ settings.ai_skin_scan_step_left | default: 'Má trái 45 độ' | escape }}<input type="file" accept="image/*" data-skin-upload-angle="left"></label>
+    <label>{{ settings.ai_skin_scan_step_right | default: 'Má phải 45 độ' | escape }}<input type="file" accept="image/*" data-skin-upload-angle="right"></label>
+  </div>
+  <button type="button" class="pc-skin-scan__primary" data-skin-analyze disabled>{{ settings.ai_skin_scan_analyze_label | default: 'Phân tích 3 ảnh đã chụp' | escape }}</button>
+  <section class="pc-skin-scan__report" data-skin-inline-report hidden aria-live="polite">
+    <h3>{{ settings.ai_skin_scan_report_title | default: 'Ảnh soi da và vùng được nhận diện' | escape }}</h3>
+    <p class="pc-skin-scan__method" data-skin-analysis-method role="status"></p>
+    <p data-skin-overlay-empty>{{ settings.ai_skin_scan_overlay_empty | default: 'Chưa có vùng được nhận diện. Để hiển thị đánh dấu, cần cấu hình model ONNX đã được thẩm định.' | escape }}</p>
+    <fieldset class="pc-skin-scan__layers">
+      <legend>{{ settings.ai_skin_scan_layers_label | default: 'Lớp đánh dấu' | escape }}</legend>
+      <label><input type="checkbox" data-skin-layer="acne" checked> {{ settings.ai_skin_scan_layer_acne | default: 'Mụn' | escape }}</label>
+      <label><input type="checkbox" data-skin-layer="pigmentation" checked> {{ settings.ai_skin_scan_layer_pigmentation | default: 'Sắc tố' | escape }}</label>
+      <label><input type="checkbox" data-skin-layer="pores" checked> {{ settings.ai_skin_scan_layer_pores | default: 'Lỗ chân lông' | escape }}</label>
+      <label><input type="checkbox" data-skin-layer="wrinkles" checked> {{ settings.ai_skin_scan_layer_wrinkles | default: 'Nếp nhăn' | escape }}</label>
+      <label><input type="checkbox" data-skin-layer="redness" checked> {{ settings.ai_skin_scan_layer_redness | default: 'Vùng đỏ' | escape }}</label>
+    </fieldset>
+    <div class="pc-skin-scan__previews">
+      <figure><figcaption>{{ settings.ai_skin_scan_step_front | default: 'Chính diện' | escape }}</figcaption><canvas data-skin-preview="front"></canvas></figure>
+      <figure><figcaption>{{ settings.ai_skin_scan_step_left | default: 'Má trái 45 độ' | escape }}</figcaption><canvas data-skin-preview="left"></canvas></figure>
+      <figure><figcaption>{{ settings.ai_skin_scan_step_right | default: 'Má phải 45 độ' | escape }}</figcaption><canvas data-skin-preview="right"></canvas></figure>
+    </div>
+    <a class="pc-skin-scan__primary pc-skin-scan__report-link" href="/pages/ai-skin-quiz-results">{{ settings.ai_skin_scan_report_link | default: 'Xem báo cáo và gợi ý sản phẩm' | escape }}</a>
+  </section>
+  <p class="pc-skin-scan__disclaimer">{{ settings.ai_skin_scan_disclaimer | default: 'Kết quả là gợi ý tự động để tham khảo, không phải chẩn đoán y khoa và không thay thế đánh giá trực tiếp từ chuyên gia phù hợp. Nếu có lo ngại về da, hãy trao đổi với chuyên gia y tế.' | escape }}</p>
+</section>

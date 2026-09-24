@@ -12,6 +12,7 @@
 const http    = require('http');
 const fs      = require('fs');
 const path    = require('path');
+const crypto  = require('crypto');
 const { Liquid, Tag, evalToken, Tokenizer } = require('liquidjs');
 const chokidar   = require('chokidar');
 const { WebSocketServer } = require('ws');
@@ -48,6 +49,57 @@ const IS_STATIC_EXPORT = process.env.STATIC_EXPORT === 'true';
 // toolbar (badge live-reload + script kết nối ws://localhost:WS_PORT không hề
 // tồn tại trên serverless, gây spam lỗi console vô hạn — xem REOPEN 2026-09-11).
 const IS_PROD_SERVER = !!process.env.VERCEL;
+
+// Soi da AI 2026-09-24: giới hạn theo IP cho adapter cloud tùy chọn. Luồng mặc
+// định vẫn chạy tại thiết bị, do đó không có ảnh nào đi qua route này.
+const skinAnalysisRate = new Map();
+async function allowSkinAnalysis(ip) {
+  const now = Date.now();
+  const windowMs = 60 * 1000;
+  const kvUrl = process.env.KV_REST_API_URL;
+  const kvToken = process.env.KV_REST_API_TOKEN;
+  if (kvUrl && kvToken) {
+    try {
+      const key = `skin-analysis-rate:${crypto.createHash('sha256').update(ip).digest('hex').slice(0, 32)}`;
+      const script = "redis.call('ZREMRANGEBYSCORE', KEYS[1], '-inf', ARGV[1]); local n=redis.call('ZCARD', KEYS[1]); if n >= 5 then return 0 end; redis.call('ZADD', KEYS[1], ARGV[2], ARGV[3]); redis.call('EXPIRE', KEYS[1], ARGV[4]); return 1";
+      const response = await fetch(kvUrl, {
+        method: 'POST', headers: { Authorization: `Bearer ${kvToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(['EVAL', script, '1', key, String(now - windowMs), String(now), `${now}:${crypto.randomBytes(6).toString('hex')}`, '60'])
+      });
+      if (response.ok) { const result = await response.json(); if (typeof result.result === 'number') return result.result === 1; }
+    } catch (_) { /* Trên serverless không được hạ cấp âm thầm sang limiter theo instance. */ }
+  }
+  // Bộ nhớ tiến trình chỉ dùng trong local preview; trên Vercel mỗi instance có
+  // Map riêng nên không thể bảo đảm quota theo IP giữa các lần gọi.
+  if (process.env.VERCEL) return null;
+  for (const [key, timestamps] of skinAnalysisRate) {
+    const active = timestamps.filter((time) => now - time < windowMs);
+    if (active.length) skinAnalysisRate.set(key, active);
+    else skinAnalysisRate.delete(key);
+  }
+  if (!skinAnalysisRate.has(ip) && skinAnalysisRate.size >= 5000) return false;
+  const recent = (skinAnalysisRate.get(ip) || []).filter((time) => now - time < windowMs);
+  if (recent.length >= 5) { skinAnalysisRate.set(ip, recent); return false; }
+  recent.push(now); skinAnalysisRate.set(ip, recent);
+  return true;
+}
+
+function normaliseSkinAnalysis(payload, provider) {
+  if (!payload || payload.success === false || typeof payload !== 'object') throw new Error('adapter_invalid_response');
+  const source = payload && payload.scores ? payload.scores : payload && payload.data && payload.data.scores ? payload.data.scores : payload && payload.data ? payload.data : payload;
+  const keys = ['acne', 'pigmentation', 'wrinkles', 'redness', 'pores'];
+  const scores = {};
+  keys.forEach((key) => {
+    const item = source && source[key];
+    if (!item || typeof item !== 'object') throw new Error('adapter_invalid_response');
+    const rawValue = item.raw_score != null ? item.raw_score : item.raw;
+    const uiValue = item.ui_score != null ? item.ui_score : item.ui;
+    const raw = Number(rawValue); const ui = Number(uiValue);
+    if (!Number.isFinite(raw) || raw < 0 || raw > 1 || !Number.isFinite(ui) || ui < 50 || ui > 98 || !Number.isInteger(ui)) throw new Error('adapter_invalid_response');
+    scores[key] = { raw_score: raw, ui_score: ui, level: String(item.level || '') };
+  });
+  return { success: true, provider: provider || 'cloud_adapter', scores };
+}
 
 // ── Sapo Liquid syntax preprocessor ───────────────────────────────────────
 // Sapo dùng một số syntax không chuẩn mà LiquidJS không hỗ trợ.
@@ -763,6 +815,7 @@ const PAGE_HANDLE_MAP = {
   'ai-skin-quiz':                'page.ai-skin-quiz',
   'ai-skin-quiz-results':        'page.ai-skin-quiz-results',
   'kham-da-ai':                  'page.ai-skin-quiz', // alias tiếng Việt (T-113) — cùng 1 template, tránh 404 khi vào thẳng /kham-da-ai
+  'soi-da':                      'page.ai-skin-quiz', // Soi da AI 2026-09-24: alias mở sẵn tab camera ở client.
   'chuyen-gia':                  'page.chuyen-gia',
   'chuyen-gia-detail':           'page.chuyen-gia-detail',
   'clinical-proof':              'page.clinical-proof',
@@ -944,11 +997,17 @@ function buildCartFromLines(lines) {
   };
 }
 
-function readRequestBody(req) {
+function readRequestBody(req, maxBytes) {
   return new Promise((resolve, reject) => {
     let body = '';
-    req.on('data', (chunk) => { body += chunk; });
-    req.on('end', () => resolve(body));
+    let bytes = 0;
+    let tooLarge = false;
+    req.on('data', (chunk) => {
+      bytes += chunk.length;
+      if (maxBytes && bytes > maxBytes) { tooLarge = true; return; }
+      body += chunk;
+    });
+    req.on('end', () => tooLarge ? reject(new Error('payload_too_large')) : resolve(body));
     req.on('error', reject);
   });
 }
@@ -1275,6 +1334,94 @@ if (require.main === module) {
 async function requestHandler(req, res) {
   const url = new URL(req.url, `http://localhost:${PORT}`);
   const pathname = url.pathname;
+
+  // Adapter cloud tùy chọn: chỉ nhận ảnh mà caller khai báo đã áp dụng face mask.
+  // Flag không chứng minh ảnh ẩn danh; không có URL/token thì giữ luồng local.
+  if (pathname === '/api/skin-analysis') {
+    if (req.method !== 'POST') {
+      res.writeHead(405, { Allow: 'POST', 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ success: false, error: 'method_not_allowed' }));
+      return;
+    }
+    // Vercel cung cấp header hệ thống riêng để giữ IP client khi có proxy đứng
+    // trước Vercel; không ưu tiên giá trị X-Forwarded-For do proxy/client truyền.
+    const forwardedIp = process.env.VERCEL
+      ? (req.headers['x-vercel-forwarded-for'] || req.headers['x-forwarded-for'])
+      : (req.headers['x-forwarded-for'] || req.socket.remoteAddress);
+    const ip = String(forwardedIp || 'unknown').split(',')[0].trim();
+    const rateAllowed = await allowSkinAnalysis(ip);
+    if (rateAllowed === null) {
+      res.writeHead(503, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify({ success: false, error: 'rate_limit_unavailable', fallback: 'client_edge' }));
+      return;
+    }
+    if (!rateAllowed) {
+      res.writeHead(429, { 'Content-Type': 'application/json; charset=utf-8', 'Retry-After': '60' });
+      res.end(JSON.stringify({ success: false, error: 'rate_limited', fallback: 'client_edge' }));
+      return;
+    }
+    if (Number(req.headers['content-length'] || 0) > 6 * 1024 * 1024) {
+      res.writeHead(413, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ success: false, error: 'payload_too_large', fallback: 'client_edge' }));
+      return;
+    }
+    try {
+      const raw = await readRequestBody(req, 6 * 1024 * 1024);
+      const body = parseBody(req, raw);
+      const provider = String(body.provider || 'auto');
+      if (!['auto', 'perfect_corp', 'skinive', 'faceplusplus'].includes(provider)) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify({ success: false, error: 'provider_not_supported', fallback: 'client_edge' }));
+        return;
+      }
+      const consentAt = Date.parse(body.cloud_consent_at || '');
+      if (body.cloud_consent !== true || !Number.isFinite(consentAt) || consentAt > Date.now() + 5 * 60 * 1000) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify({ success: false, error: 'cloud_consent_required', fallback: 'client_edge' }));
+        return;
+      }
+      if (body.face_mask_applied !== true) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify({ success: false, error: 'face_mask_required', fallback: 'client_edge' }));
+        return;
+      }
+      if (typeof body.image !== 'string' || !/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(body.image)) {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify({ success: false, error: 'invalid_image_payload', fallback: 'client_edge' }));
+        return;
+      }
+      const adapterUrl = process.env.SKIN_ANALYSIS_ADAPTER_URL;
+      const adapterToken = process.env.SKIN_ANALYSIS_ADAPTER_TOKEN;
+      if (!adapterUrl || !adapterToken) {
+        res.writeHead(503, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify({ success: false, error: 'cloud_adapter_not_configured', fallback: 'client_edge' }));
+        return;
+      }
+      const target = new URL(adapterUrl);
+      if (target.protocol !== 'https:') throw new Error('invalid_adapter_url');
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      let upstream;
+      try {
+        upstream = await fetch(target, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adapterToken}` },
+          body: JSON.stringify({ provider, image: body.image }),
+          signal: controller.signal
+        });
+      } finally { clearTimeout(timeout); }
+      if (!upstream.ok) throw new Error(`adapter_http_${upstream.status}`);
+      const data = await upstream.json();
+      const normalised = normaliseSkinAnalysis(data, provider);
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify(normalised));
+    } catch (error) {
+      const status = error && error.message === 'payload_too_large' ? 413 : 502;
+      const code = status === 413 ? 'payload_too_large' : 'cloud_adapter_failed';
+      res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify({ success: false, error: code, fallback: 'client_edge' }));
+    }
+    return;
+  }
 
   // ── Route: /assets/<file> — compile .scss.bwt → CSS, .js.bwt → JS, serve statics
   if (pathname.startsWith('/assets/')) {

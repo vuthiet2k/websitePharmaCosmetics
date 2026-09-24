@@ -1,0 +1,124 @@
+/* Soi da AI 2026-09-24: chụp tuần tự 3 góc, fallback upload và xử lý mặc định tại thiết bị. */
+(function (window, document) {
+  'use strict';
+  var scan = document.querySelector('[data-skin-scan]'); if (!scan || scan.dataset.skinScanEnabled === 'false') return;
+  var copy = window.PharmaSkinScanCopy || {};
+  var modeAvailable = (scan.dataset.skinAnalysisMode || 'client_edge') === 'client_edge';
+  var MAX_IMAGE_EDGE = 1280; var MAX_UPLOAD_BYTES = 12 * 1024 * 1024; var MAX_SOURCE_PIXELS = 32000000;
+  var quiz = document.getElementById('aiSkinChatApp');
+  scan.hidden = false;
+  function selectMode(mode) {
+    var cameraMode = mode === 'camera';
+    scan.hidden = !cameraMode;
+    if (quiz) quiz.hidden = cameraMode;
+    document.querySelectorAll('[data-skin-mode]').forEach(function (button) { button.setAttribute('aria-selected', String(button.dataset.skinMode === mode)); });
+    if (!cameraMode) stop();
+  }
+  document.querySelectorAll('[data-skin-mode]').forEach(function (button) { button.addEventListener('click', function () { selectMode(button.dataset.skinMode); }); });
+  var video = document.getElementById('skinCameraStream'); var guide = document.getElementById('skinGuidanceCanvas'); var status = document.getElementById('skinCameraStatus');
+  var start = scan.querySelector('[data-skin-camera-start]'); var capture = scan.querySelector('[data-skin-camera-capture]'); var switcher = scan.querySelector('[data-skin-camera-switch]'); var uploadToggle = scan.querySelector('[data-skin-open-upload]'); var upload = scan.querySelector('[data-skin-upload]'); var analyze = scan.querySelector('[data-skin-analyze]');
+  var inlineReport = scan.querySelector('[data-skin-inline-report]'); var overlayEmpty = scan.querySelector('[data-skin-overlay-empty]'); var methodNotice = scan.querySelector('[data-skin-analysis-method]'); var detectionsByAngle = {};
+  var modeUnavailable = scan.querySelector('[data-skin-mode-unavailable]');
+  var angles = ['front', 'left', 'right']; var step = 0; var stream; var facing = 'user'; var images = {}; var previewImages = {}; var captureQuality = {}; var landmarksByAngle = {}; var lastLandmarks; var meshSession; var meshQuality; var meshPending = false;
+  function message(text) { status.textContent = text; }
+  function drawGuide() { var width = video.videoWidth || 720; var height = video.videoHeight || 540; guide.width = width; guide.height = height; var c = guide.getContext('2d'); c.clearRect(0, 0, width, height); c.strokeStyle = meshQuality && meshQuality.available && !meshQuality.valid ? '#F59E0B' : '#3CB371'; c.lineWidth = Math.max(3, width / 180); c.setLineDash([12, 9]); c.beginPath(); c.ellipse(width / 2, height / 2, width * .24, height * .36, 0, 0, Math.PI * 2); c.stroke(); c.setLineDash([]); }
+  function update() { angles.forEach(function (angle, index) { var indicator = scan.querySelector('[data-skin-step="' + angle + '"]'); indicator.classList.toggle('is-active', index === step); indicator.classList.toggle('is-complete', Boolean(images[angle])); }); capture.disabled = !stream || step >= angles.length || meshPending || Boolean(meshSession && (!meshQuality || !meshQuality.available || !meshQuality.valid)); analyze.disabled = angles.some(function (angle) { return !images[angle]; }); if (step < angles.length && !meshQuality && !status.textContent) message((copy.prompt || 'Hãy chụp góc: {angle}.').replace('{angle}', scan.querySelector('[data-skin-step="' + angles[step] + '"]').textContent)); }
+  function stop() { if (meshSession) meshSession.stop(); meshSession = null; meshQuality = null; lastLandmarks = null; meshPending = false; if (stream) stream.getTracks().forEach(function (track) { track.stop(); }); stream = null; video.srcObject = null; capture.disabled = true; }
+  function releaseImageBuffers() {
+    stop();
+    images = {}; previewImages = {}; captureQuality = {}; landmarksByAngle = {}; detectionsByAngle = {};
+    scan.querySelectorAll('[data-skin-upload-angle]').forEach(function (input) { input.value = ''; });
+    scan.querySelectorAll('[data-skin-preview]').forEach(function (canvas) { canvas.width = 0; canvas.height = 0; });
+    guide.width = 0; guide.height = 0;
+    inlineReport.hidden = true;
+  }
+  function meshFeedback(points) { lastLandmarks = points; meshQuality = window.PharmaSkinMesh.evaluate(points, angles[step], video.videoWidth / video.videoHeight); drawGuide(); if (meshQuality.valid) message(copy.facePass || 'Tư thế đạt yêu cầu. Bạn có thể chụp góc này.'); else if (!meshQuality.available) message(copy.noFace || 'Chưa nhận diện được khuôn mặt. Hãy căn mặt vào khung.'); else message(copy.faceAdjust || 'Hãy điều chỉnh góc mặt và khoảng cách theo khung hướng dẫn.'); update(); }
+  async function begin() { if (!modeAvailable) { message(copy.modeUnavailable || 'Chế độ xử lý qua máy chủ chưa được tích hợp hoặc phê duyệt.'); return; } try { stop(); stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1920, min: 720 }, height: { ideal: 1080, min: 480 }, facingMode: facing }, audio: false }); video.srcObject = stream; await video.play(); drawGuide(); capture.disabled = false; switcher.hidden = false; update(); if (window.PharmaSkinMesh) { meshPending = true; update(); window.PharmaSkinMesh.start(video, meshFeedback).then(function (session) { meshSession = session; meshPending = false; update(); }).catch(function () { meshPending = false; message(copy.meshFallback || 'Đang dùng hướng dẫn căn mặt thủ công do thiết bị chưa tải được nhận diện khuôn mặt.'); capture.disabled = false; }); } } catch (error) { upload.hidden = false; message(copy.cameraFallback || 'Không thể mở camera. Bạn có thể tải đủ 3 ảnh từ thiết bị.'); } }
+  function snapshot(source) { var sourceWidth = source.videoWidth || source.naturalWidth || source.width; var sourceHeight = source.videoHeight || source.naturalHeight || source.height; var scale = Math.min(1, MAX_IMAGE_EDGE / sourceWidth, MAX_IMAGE_EDGE / sourceHeight); var canvas = document.createElement('canvas'); canvas.width = Math.max(1, Math.round(sourceWidth * scale)); canvas.height = Math.max(1, Math.round(sourceHeight * scale)); canvas.getContext('2d').drawImage(source, 0, 0, canvas.width, canvas.height); return canvas; }
+  function save(angle, canvas, quality, landmarks) { images[angle] = canvas; captureQuality[angle] = quality; if (landmarks) landmarksByAngle[angle] = landmarks; else delete landmarksByAngle[angle]; step = Math.min(angles.length, step + 1); if (step === angles.length) { stop(); message(copy.photosComplete || 'Đã có đủ 3 góc. Bạn có thể bắt đầu phân tích tại thiết bị.'); } update(); }
+  function renderPreviews() {
+    var visibleTypes = Array.prototype.filter.call(scan.querySelectorAll('[data-skin-layer]:checked'), function (input) { return input.checked; }).map(function (input) { return input.dataset.skinLayer; });
+    var hasDetections = false;
+    angles.forEach(function (angle) {
+      var boxes = detectionsByAngle[angle] || []; hasDetections = hasDetections || boxes.length > 0;
+      window.PharmaSkinOverlay.render(scan.querySelector('[data-skin-preview="' + angle + '"]'), previewImages[angle] || images[angle], boxes, visibleTypes);
+    });
+    overlayEmpty.hidden = hasDetections;
+  }
+  scan.querySelectorAll('[data-skin-layer]').forEach(function (input) { input.addEventListener('change', renderPreviews); });
+  function lightingMessage(reason) { if (reason === 'too_dark') return copy.lightDark || 'Không gian quá tối, vui lòng bổ sung ánh sáng.'; if (reason === 'too_bright') return copy.lightBright || 'Ảnh quá sáng, vui lòng tránh ánh sáng gắt hoặc ngược sáng.'; if (reason === 'low_contrast') return copy.lightLowContrast || 'Ảnh thiếu tương phản, vui lòng tìm nơi có ánh sáng dịu và rõ hơn.'; return copy.lightUneven || 'Ánh sáng hai bên mặt chưa đều, vui lòng điều chỉnh trước khi chụp.'; }
+  capture.addEventListener('click', function () { if (!stream || step >= angles.length) return; if (meshQuality && meshQuality.available && !meshQuality.valid) { message(copy.faceAdjust || 'Góc mặt chưa đạt yêu cầu. Vui lòng điều chỉnh theo khung hướng dẫn.'); return; } var frame = snapshot(video); var light = window.PharmaSkinLighting && window.PharmaSkinLighting.analyze(frame, scan.dataset.skinMinLight, lastLandmarks); if (light && !light.valid) { message(lightingMessage(light.reason)); return; } save(angles[step], frame, light || { valid: true }, lastLandmarks); });
+  start.addEventListener('click', begin); switcher.addEventListener('click', function () { facing = facing === 'user' ? 'environment' : 'user'; begin(); }); uploadToggle.addEventListener('click', function () { upload.hidden = !upload.hidden; });
+  upload.querySelectorAll('input[type="file"]').forEach(function (input) { input.addEventListener('change', function () { var file = input.files && input.files[0]; if (!file) return; if (file.size > MAX_UPLOAD_BYTES) { input.value = ''; message(copy.uploadTooLarge || 'Ảnh vượt dung lượng 12 MB. Hãy chọn ảnh nhỏ hơn để tránh quá tải thiết bị.'); return; } var image = new Image(); image.onload = function () { var angle = input.dataset.skinUploadAngle; if (image.naturalWidth * image.naturalHeight > MAX_SOURCE_PIXELS) { input.value = ''; message(copy.imageDimensionsTooLarge || 'Độ phân giải ảnh vượt giới hạn xử lý an toàn trên thiết bị. Hãy giảm kích thước ảnh rồi thử lại.'); URL.revokeObjectURL(image.src); return; } var frame = snapshot(image); var light = window.PharmaSkinLighting && window.PharmaSkinLighting.analyze(frame, scan.dataset.skinMinLight); if (light && !light.valid) { delete images[angle]; delete captureQuality[angle]; step = angles.filter(function (item) { return images[item]; }).length; message(lightingMessage(light.reason)); update(); URL.revokeObjectURL(image.src); return; } images[angle] = frame; captureQuality[angle] = light || { valid: true }; step = angles.filter(function (item) { return images[item]; }).length; update(); URL.revokeObjectURL(image.src); }; image.src = URL.createObjectURL(file); }); });
+  function analyzeLocal() {
+    if (angles.some(function (angle) { return !images[angle]; })) return;
+    var rejectedAngle = angles.find(function (angle) { return !captureQuality[angle] || captureQuality[angle].valid !== true; });
+    if (rejectedAngle) { message(lightingMessage(captureQuality[rejectedAngle] && captureQuality[rejectedAngle].reason)); return; }
+    message(copy.analyzing || 'Đang phân tích tại thiết bị…');
+    var roiByAngle = {};
+    angles.forEach(function (angle) {
+      // Ảnh gốc chỉ ở RAM máy khách; mask chỉ áp dụng cho luồng truyền ảnh ra ngoài.
+      // Phép đo local phải dùng pixel gốc để vùng che không làm sai lệch ROI.
+      roiByAngle[angle] = window.PharmaSkinDeid.extractRois(images[angle]);
+    });
+    function average(items, key) { return items.reduce(function (sum, item) { return sum + item[key]; }, 0) / Math.max(1, items.length); }
+    var rednessMeasures = angles.map(function (angle) { return window.PharmaSkinCV.analyzeRedness(roiByAngle[angle].u_zone_left); });
+    var wrinkle = window.PharmaSkinCV.analyzeWrinkles(roiByAngle.front.neck);
+    var surfaceMeasures = angles.map(function (angle) { return window.PharmaSkinCV.analyzeSurface(roiByAngle[angle].t_zone); });
+    var surface = { acne_ratio: average(surfaceMeasures, 'acne_ratio'), pigment_ratio: average(surfaceMeasures, 'pigment_ratio'), texture_ratio: average(surfaceMeasures, 'texture_ratio') };
+    var redness = { ratio: average(rednessMeasures, 'ratio') };
+    var tone = window.PharmaSkinMst.sample(images.front, landmarksByAngle.front);
+    var modelUrl = scan.dataset.skinModelUrl;
+    var modelHash = scan.dataset.skinModelSha256;
+    var detectionsPromise = modelUrl && window.PharmaSkinOnnx
+      ? Promise.all(angles.map(function (angle) { return window.PharmaSkinOnnx.detect(roiByAngle[angle].t_zone, modelUrl, modelHash); }))
+      : Promise.resolve(angles.map(function () { return []; }));
+    detectionsPromise.catch(function () { return angles.map(function () { return []; }); }).then(function (sets) {
+      var detectionCount = sets.reduce(function (count, items) { return count + (items || []).length; }, 0);
+      var counts = { acne: 0, pigmentation: 0, pores: 0 };
+      angles.forEach(function (angle, index) {
+        var source = images[angle]; var roi = roiByAngle[angle].t_zone;
+        detectionsByAngle[angle] = (sets[index] || []).map(function (box) {
+          var types = { 0: 'acne', 1: 'acne', 2: 'pigmentation', 3: 'pores', 4: 'wrinkles', 5: 'redness' };
+          var type = types[box.classId];
+          if (type === 'acne') counts.acne++; else if (type === 'pigmentation') counts.pigmentation++; else if (type === 'pores') counts.pores++;
+          return Object.assign({}, box, { type: type || 'unknown', x: source.width * .30 + box.x * (source.width * .40 / roi.width), y: source.height * .12 + box.y * (source.height * .48 / roi.height), width: box.width * (source.width * .40 / roi.width), height: box.height * (source.height * .48 / roi.height) });
+        });
+      });
+      angles.forEach(function (angle) {
+        previewImages[angle] = window.PharmaSkinDeid.deidentify(images[angle], scan.dataset.skinDeidEnabled !== 'false', landmarksByAngle[angle]);
+      });
+      renderPreviews();
+      if (methodNotice) methodNotice.textContent = modelUrl && detectionCount ? (copy.analysisMethodOnnx || 'Báo cáo có sử dụng model ONNX được cấu hình cho cửa hàng. Kết quả vẫn chỉ mang tính tham khảo.') : (copy.analysisMethodCanvas || 'Đây là phép đo ảnh thử nghiệm trên thiết bị, không phải kết quả từ mô hình AI đã thẩm định. Các điểm số và gợi ý chỉ mang tính tham khảo.');
+      inlineReport.hidden = false;
+      var melaninFactor = tone.available ? tone.melanin_factor : 1;
+      var erythemaFactor = tone.available ? tone.erythema_factor : 1;
+      var raw = {
+        acne: detectionCount ? Math.min(1, counts.acne / 12) : surface.acne_ratio * 7,
+        pigmentation: detectionCount ? Math.min(1, counts.pigmentation / 10) : surface.pigment_ratio * 5 / melaninFactor,
+        wrinkles: wrinkle.density,
+        redness: redness.ratio * 4 / erythemaFactor,
+        pores: detectionCount ? Math.min(1, counts.pores / 20) : surface.texture_ratio
+      };
+      var report = window.PharmaSkinScoring.make(raw);
+      var routine = window.PharmaSkinRoutine.match(report.scores);
+      var payload = { scores: report.scores, skin_age: report.skin_age, monk_skin_tone: tone.available ? tone.monk_skin_tone : null, primary_concern: routine.primary_concern, regimen: routine.stages, recommended_products: routine.products, tech_neck: wrinkle.tech_neck_detected, source: 'ai_skin_scan_camera', inference: detectionCount ? 'onnx_local' : 'canvas_local' };
+      try { sessionStorage.setItem('pc_skin_scan_result', JSON.stringify(payload)); } catch (error) {}
+      message(copy.analysisComplete || 'Phân tích hoàn tất. Ảnh soi da đã hiển thị bên dưới.');
+      inlineReport.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+  analyze.addEventListener('click', function () { if (!modeAvailable) { message(copy.modeUnavailable || 'Chế độ xử lý qua máy chủ chưa được tích hợp hoặc phê duyệt.'); return; } analyzeLocal(); }); window.addEventListener('pagehide', releaseImageBuffers);
+  if (!modeAvailable) {
+    var unavailableMessage = copy.modeUnavailable || 'Chế độ xử lý qua máy chủ chưa được tích hợp hoặc phê duyệt. Ảnh chưa được xử lý; bạn có thể chuyển sang khảo sát câu hỏi.';
+    if (modeUnavailable) { modeUnavailable.textContent = unavailableMessage; modeUnavailable.hidden = false; }
+    status.textContent = unavailableMessage;
+    start.disabled = true;
+    capture.disabled = true;
+    switcher.disabled = true;
+    uploadToggle.disabled = true;
+    scan.querySelectorAll('[data-skin-upload-angle]').forEach(function (input) { input.disabled = true; });
+    analyze.disabled = true;
+  }
+  selectMode(window.location.pathname === '/soi-da' ? 'camera' : 'quiz'); update();
+})(window, document);

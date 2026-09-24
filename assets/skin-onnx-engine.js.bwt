@@ -1,0 +1,118 @@
+/* Soi da AI 2026-09-24: ONNX chỉ nạp khi Admin cung cấp model đã được thẩm định. */
+(function (window, document) {
+  'use strict';
+  var runtimeLoader;
+  var sessions = {};
+  function loadRuntime() {
+    if (window.ort) return Promise.resolve(window.ort);
+    if (runtimeLoader) return runtimeLoader;
+    runtimeLoader = new Promise(function (resolve, reject) {
+      var script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js';
+      script.async = true;
+      script.onload = function () { window.ort ? resolve(window.ort) : reject(new Error('onnx_runtime_unavailable')); };
+      script.onerror = function () { reject(new Error('onnx_runtime_load_failed')); };
+      document.head.appendChild(script);
+    });
+    return runtimeLoader;
+  }
+  function verifyModelBytes(buffer, expectedHash) {
+    if (!/^[a-f0-9]{64}$/i.test(String(expectedHash || ''))) return Promise.reject(new Error('onnx_model_hash_required'));
+    if (!window.crypto || !window.crypto.subtle) return Promise.reject(new Error('onnx_model_hash_unavailable'));
+    return window.crypto.subtle.digest('SHA-256', buffer).then(function (digest) {
+      var actual = Array.prototype.map.call(new Uint8Array(digest), function (byte) { return byte.toString(16).padStart(2, '0'); }).join('');
+      if (actual !== expectedHash.toLowerCase()) throw new Error('onnx_model_hash_mismatch');
+      return new Uint8Array(buffer);
+    });
+  }
+  function createSession(modelUrl, expectedHash) {
+    if (!modelUrl) return Promise.reject(new Error('onnx_model_not_configured'));
+    if (!/^https:\/\//i.test(modelUrl) && !/^https?:\/\/localhost(?::\d+)?\//i.test(modelUrl)) return Promise.reject(new Error('onnx_model_url_invalid'));
+    if (!/^[a-f0-9]{64}$/i.test(String(expectedHash || ''))) return Promise.reject(new Error('onnx_model_hash_required'));
+    var key = modelUrl + ':' + expectedHash.toLowerCase();
+    if (sessions[key]) return sessions[key];
+    sessions[key] = fetch(modelUrl, { credentials: 'omit', cache: 'force-cache' }).then(function (response) {
+      if (!response.ok) throw new Error('onnx_model_fetch_failed');
+      var length = Number(response.headers.get('content-length') || 0);
+      if (length > 16 * 1024 * 1024) throw new Error('onnx_model_too_large');
+      return response.arrayBuffer();
+    }).then(function (buffer) {
+      if (buffer.byteLength > 16 * 1024 * 1024) throw new Error('onnx_model_too_large');
+      return verifyModelBytes(buffer, expectedHash);
+    }).then(function (modelBytes) { return loadRuntime().then(function (ort) {
+      return ort.InferenceSession.create(modelBytes, { executionProviders: ['webgl', 'wasm'], graphOptimizationLevel: 'all' });
+    });
+    }).catch(function (error) {
+      delete sessions[key];
+      throw error;
+    });
+    return sessions[key];
+  }
+  function preprocess(canvas, size) {
+    var work = document.createElement('canvas'); work.width = size; work.height = size;
+    var context = work.getContext('2d', { willReadFrequently: true });
+    var scale = Math.min(size / canvas.width, size / canvas.height);
+    var drawWidth = Math.round(canvas.width * scale); var drawHeight = Math.round(canvas.height * scale);
+    var padX = Math.floor((size - drawWidth) / 2); var padY = Math.floor((size - drawHeight) / 2);
+    context.fillStyle = '#000'; context.fillRect(0, 0, size, size); context.drawImage(canvas, 0, 0, canvas.width, canvas.height, padX, padY, drawWidth, drawHeight);
+    var rgba = context.getImageData(0, 0, size, size).data; var values = new Float32Array(3 * size * size);
+    for (var pixel = 0, point = 0; pixel < rgba.length; pixel += 4, point++) { values[point] = rgba[pixel] / 255; values[size * size + point] = rgba[pixel + 1] / 255; values[2 * size * size + point] = rgba[pixel + 2] / 255; }
+    return { values: values, scale: scale, padX: padX, padY: padY };
+  }
+  function iou(a, b) { var left = Math.max(a.x, b.x); var top = Math.max(a.y, b.y); var right = Math.min(a.x + a.width, b.x + b.width); var bottom = Math.min(a.y + a.height, b.y + b.height); var overlap = Math.max(0, right - left) * Math.max(0, bottom - top); return overlap / Math.max(1, a.width * a.height + b.width * b.height - overlap); }
+  function nms(items) {
+    var pending = items.map(function (item) { return Object.assign({}, item); }); var kept = [];
+    while (pending.length) {
+      pending.sort(function (a, b) { return b.confidence - a.confidence; });
+      var best = pending.shift();
+      if (best.confidence < .35) break;
+      kept.push(best);
+      pending = pending.map(function (candidate) {
+        if (candidate.classId === best.classId) candidate.confidence *= Math.exp(-(Math.pow(iou(best, candidate), 2)) / .5);
+        return candidate;
+      }).filter(function (candidate) { return candidate.confidence >= .35; });
+    }
+    return kept;
+  }
+  function decode(output, transform, source) {
+    var values = output.data || []; var boxes = []; var dims = output.dims || [];
+    var rows = 0; var features = 0; var transposed = false; var postprocessed = false;
+    if (dims.length === 2 && dims[1] === 6) { rows = dims[0]; features = 6; postprocessed = true; }
+    else if (dims.length === 3 && dims[0] === 1 && dims[2] === 6) { rows = dims[1]; features = 6; postprocessed = true; }
+    else if (dims.length === 3 && dims[0] === 1 && dims[2] === 10) { rows = dims[1]; features = 10; }
+    else if (dims.length === 3 && dims[0] === 1 && dims[1] === 10) { rows = dims[2]; features = 10; transposed = true; }
+    // Raw YOLOv8/v11 contract: [cx,cy,w,h] + exactly six class probabilities,
+    // either [1,N,10] or [1,10,N]. Other class counts/layouts need an explicit adapter.
+    if (!rows || values.length !== rows * features) throw new Error('onnx_output_format_unsupported');
+    function value(row, feature) { return Number(values[transposed ? feature * rows + row : row * features + feature]); }
+    for (var row = 0; row < rows; row++) {
+      var confidence; var classId;
+      if (postprocessed) { confidence = value(row, 4); classId = Math.round(value(row, 5)); }
+      else {
+        confidence = -Infinity; classId = -1;
+        for (var classIndex = 0; classIndex < 6; classIndex++) {
+          var classScore = value(row, classIndex + 4);
+          if (classScore > confidence) { confidence = classScore; classId = classIndex; }
+        }
+      }
+      if (!Number.isFinite(confidence) || confidence < .35 || confidence > 1 || classId < 0 || classId > 5) continue;
+      var centerX = value(row, 0); var centerY = value(row, 1); var width = value(row, 2); var height = value(row, 3);
+      if (![centerX, centerY, width, height].every(Number.isFinite) || width <= 0 || height <= 0) continue;
+      // Model export có thể dùng pixel hoặc normalized coordinates.
+      if (Math.max(centerX, centerY, width, height) <= 1.5) { centerX *= 640; centerY *= 640; width *= 640; height *= 640; }
+      var left = Math.max(0, (centerX - width / 2 - transform.padX) / transform.scale);
+      var top = Math.max(0, (centerY - height / 2 - transform.padY) / transform.scale);
+      var right = Math.min(source.width, (centerX + width / 2 - transform.padX) / transform.scale);
+      var bottom = Math.min(source.height, (centerY + height / 2 - transform.padY) / transform.scale);
+      if (right > left && bottom > top) boxes.push({ x: left, y: top, width: right - left, height: bottom - top, confidence: confidence, classId: classId });
+    }
+    return nms(boxes);
+  }
+  function detect(canvas, modelUrl, expectedHash) {
+    return createSession(modelUrl, expectedHash).then(function (session) {
+      var input = preprocess(canvas, 640); var tensor = new window.ort.Tensor('float32', input.values, [1, 3, 640, 640]); var feeds = {}; feeds[session.inputNames[0]] = tensor;
+      return session.run(feeds).then(function (outputs) { return decode(outputs[session.outputNames[0]], input, canvas); });
+    });
+  }
+  window.PharmaSkinOnnx = { detect: detect, preprocess: preprocess, nms: nms, decode: decode, verifyModelBytes: verifyModelBytes };
+})(window, document);

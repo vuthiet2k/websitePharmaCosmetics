@@ -1,0 +1,32 @@
+/* Soi da AI 2026-09-24: ghép giai đoạn với alias sản phẩm đang có trong data/products.js. */
+(function (window) {
+  'use strict';
+  var routines = {
+    acne: { stages: ['Làm dịu: làm sạch dịu nhẹ', 'Phục hồi: củng cố hàng rào da', 'Chăm sóc chuyên sâu: cân nhắc hoạt chất cùng chuyên gia'], products: [
+      ['sua-rua-mat-amino-acid', 1, []], ['kem-phuc-hoi-ceramide-niacinamide', 2, ['niacinamide']], ['serum-aha-10-bha-2', 3, ['aha-bha']]
+    ] },
+    pigmentation: { stages: ['Làm dịu: bảo vệ da trước nắng', 'Phục hồi: hỗ trợ đều màu da', 'Chăm sóc sắc tố: cân nhắc hoạt chất cùng chuyên gia'], products: [
+      ['kem-chong-nang-mineral-spf50', 1, []], ['serum-vitamin-c-15', 2, ['vitamin-c']], ['serum-tranexamic-acid-3', 3, ['niacinamide']]
+    ] },
+    wrinkles: { stages: ['Làm dịu: duy trì dưỡng ẩm', 'Phục hồi: bắt đầu hoạt chất từ từ', 'Chăm sóc chuyên sâu: tăng cường theo khả năng dung nạp'], products: [
+      ['kem-duong-am-hyaluronic-acid', 1, ['hyaluronic-acid']], ['kem-duong-retinol-0-3-peptide', 2, ['retinol']], ['retinol-advanced-0-5-night-serum', 3, ['retinol']]
+    ] },
+    redness: { stages: ['Làm dịu: ưu tiên làm sạch nhẹ dịu', 'Phục hồi: củng cố hàng rào da', 'Bảo vệ da: duy trì chống nắng'], products: [
+      ['sua-rua-mat-amino-acid', 1, []], ['kem-phuc-hoi-ceramide-niacinamide', 2, ['niacinamide']], ['kem-chong-nang-mineral-spf50', 3, []]
+    ] },
+    pores: { stages: ['Làm dịu: làm sạch dịu nhẹ', 'Phục hồi: kiểm soát dầu và cấp ẩm', 'Chăm sóc chuyên sâu: cân nhắc tẩy da chết cùng chuyên gia'], products: [
+      ['sua-rua-mat-amino-acid', 1, []], ['toner-niacinamide-5-zinc', 2, ['niacinamide']], ['serum-aha-10-bha-2', 3, ['aha-bha']]
+    ] }
+  };
+  function match(scores) {
+    var primary = Object.keys(scores || {}).sort(function (a, b) { return Number(scores[b] && scores[b].raw_score || 0) - Number(scores[a] && scores[a].raw_score || 0); })[0] || 'redness';
+    var selected = routines[primary] || routines.redness;
+    return {
+      primary_concern: primary,
+      stages: selected.stages.slice(),
+      products: selected.products.map(function (entry) { return { handle: entry[0], label: (window.PharmaSkinScanProductLabels || {})[entry[0]] || '', stage: entry[1], ingredient_ids: entry[2].slice(), url: '/' + entry[0] }; }),
+      products_url: '/collections/all'
+    };
+  }
+  window.PharmaSkinRoutine = { match: match };
+})(window);

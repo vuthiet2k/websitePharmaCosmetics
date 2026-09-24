@@ -1,0 +1,32 @@
+/* Soi da AI 2026-09-24: che mắt bằng mask mờ đục trên bản xử lý cục bộ; ảnh gốc không bị đổi. */
+(function (window, document) {
+  'use strict';
+  var eyeRegions = [
+    [33, 133, 160, 159, 158, 157, 173, 155, 154, 153, 145, 144, 163, 7, 246, 161, 70, 63, 105, 66, 107, 55, 65, 52, 53, 46],
+    [362, 263, 387, 386, 385, 384, 398, 382, 381, 380, 374, 373, 390, 249, 466, 388, 300, 293, 334, 296, 336, 285, 295, 282, 283, 276]
+  ];
+  function canvasFrom(source) { var canvas = document.createElement('canvas'); canvas.width = source.width || source.videoWidth; canvas.height = source.height || source.videoHeight; canvas.getContext('2d').drawImage(source, 0, 0, canvas.width, canvas.height); return canvas; }
+  function crop(source, x, y, width, height) { var out = document.createElement('canvas'); out.width = Math.max(1, Math.round(width)); out.height = Math.max(1, Math.round(height)); out.getContext('2d').drawImage(source, x, y, width, height, 0, 0, out.width, out.height); return out; }
+  function maskRect(points, width, height) {
+    var valid = points.filter(Boolean); if (!valid.length) return null;
+    var xs = valid.map(function (point) { return point.x; }); var ys = valid.map(function (point) { return point.y; });
+    var left = Math.min.apply(null, xs); var right = Math.max.apply(null, xs); var top = Math.min.apply(null, ys); var bottom = Math.max.apply(null, ys);
+    var padX = Math.max(.012, (right - left) * .28); var padY = Math.max(.018, (bottom - top) * .40);
+    return { x: Math.max(0, (left - padX) * width), y: Math.max(0, (top - padY) * height), right: Math.min(width, (right + padX) * width), bottom: Math.min(height, (bottom + padY) * height) };
+  }
+  function deidentify(source, enabled, landmarks) {
+    var canvas = canvasFrom(source);
+    if (enabled === false) return canvas;
+    var context = canvas.getContext('2d'); var masks = [];
+    if (landmarks && landmarks.length >= 468) {
+      masks = eyeRegions.map(function (indices) { return maskRect(indices.map(function (index) { return landmarks[index]; }), canvas.width, canvas.height); }).filter(Boolean);
+    }
+    // Không suy đoán eye position nếu mesh không có; che một dải rộng bảo thủ.
+    if (!masks.length) masks = [{ x: canvas.width * .14, y: canvas.height * .24, right: canvas.width * .86, bottom: canvas.height * .50 }];
+    context.fillStyle = '#26332d';
+    masks.forEach(function (rect) { context.fillRect(rect.x, rect.y, rect.right - rect.x, rect.bottom - rect.y); });
+    return canvas;
+  }
+  function extractRois(source) { var width = source.width; var height = source.height; return { t_zone: crop(source, width * .30, height * .12, width * .40, height * .48), u_zone_left: crop(source, width * .08, height * .38, width * .36, height * .42), u_zone_right: crop(source, width * .56, height * .38, width * .36, height * .42), neck: crop(source, width * .30, height * .74, width * .40, height * .24) }; }
+  window.PharmaSkinDeid = { deidentify: deidentify, extractRois: extractRois };
+})(window, document);

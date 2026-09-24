@@ -1,0 +1,11 @@
+/* Soi da AI 2026-09-24: tách điểm kỹ thuật và điểm diễn giải, có giới hạn an toàn. */
+(function (window) {
+  'use strict';
+  function clamp(value) { return Math.max(0, Math.min(1, Number(value) || 0)); }
+  // raw_score tăng theo mức độ concern; ui_score mang nghĩa sức khỏe nên phải
+  // giảm đơn điệu khi raw_score tăng (khớp các mốc AC-M3-02 trong kế hoạch).
+  function ui(raw) { return Math.max(54, Math.min(98, Math.round(52 + 46 / (1 + Math.exp(10 * (clamp(raw) - .35)))))); }
+  function level(score) { return score >= 90 ? 'Rất khỏe' : score >= 75 ? 'Khá tốt' : score >= 60 ? 'Cần cải thiện' : 'Cần được chuyên gia hỗ trợ'; }
+  function make(raw, age) { var keys = ['acne', 'pigmentation', 'wrinkles', 'redness', 'pores']; var scores = {}; keys.forEach(function (key) { scores[key] = { raw_score: clamp(raw[key]), ui_score: ui(raw[key]), level: level(ui(raw[key])) }; }); var baseline = Number(age); var delta = Math.max(-5, Math.min(7, Math.round(((raw.wrinkles || 0) + (raw.pigmentation || 0) + (raw.pores || 0) - .6) * 12))); return { scores: scores, skin_age: Number.isFinite(baseline) ? baseline + delta : null }; }
+  window.PharmaSkinScoring = { ui: ui, make: make };
+})(window);

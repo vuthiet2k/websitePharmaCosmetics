@@ -29,6 +29,7 @@
   function send(action, data) {
     if (!ready()) return Promise.reject(new Error('crm_safe_mode'));
     if (data.consent !== true || !data.consent_at) return Promise.reject(new Error('consent_required'));
+    if (/data:image\/(?:jpeg|png|webp);base64,/i.test(JSON.stringify(data))) return Promise.reject(new Error('image_payload_forbidden'));
     var controller = typeof AbortController === 'function' ? new AbortController() : null;
     var timeoutMs = Math.max(1000, Math.min(30000, Number(config.timeout_ms) || 10000));
     var timer = controller ? window.setTimeout(function () { controller.abort(); }, timeoutMs) : null;
@@ -52,6 +53,9 @@
       return response.json();
     }).then(function (result) {
       if (!result || result.success !== true) throw new Error((result && result.error) || 'crm_rejected');
+      if (result.record_id) {
+        try { window.sessionStorage.setItem('pc_crm_intake_record_id', String(result.record_id)); } catch (error) {}
+      }
       return result;
     }).catch(function (error) {
       if (timer) window.clearTimeout(timer);
@@ -63,6 +67,13 @@
     isReady: ready,
     createSubmissionId: submissionId,
     submitAiChat: function (data) { return send('save_ai_chat', data); },
+    submitSkinAnalysis: function (data) {
+      return send('save_skin_analysis', {
+        submission_id: data.submission_id || submissionId(), consent: data.consent === true,
+        consent_at: data.consent_at, source: 'ai_skin_scan_camera',
+        analysis_result: { scores: data.scores, monk_skin_tone: data.monk_skin_tone, skin_age: data.skin_age, primary_concern: data.primary_concern, tech_neck: data.tech_neck === true, regimen: data.regimen, recommended_products: data.recommended_products || [] }
+      });
+    },
     submitContactLead: function (data) { return send('submit_contact', data); }
   };
 })(window);

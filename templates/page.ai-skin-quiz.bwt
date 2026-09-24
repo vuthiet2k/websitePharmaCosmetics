@@ -2,6 +2,74 @@
 {{ 'page_ai_skin_quiz.scss.css' | asset_url | stylesheet_tag }}
 {% include 'customer_context_extractor' %}
 <script src="{{ 'crm-intake.js' | asset_url }}" defer></script>
+{% if settings.ai_skin_scan_enable != false %}
+<script>
+window.PharmaSkinScanCopy = {
+  prompt: {{ settings.ai_skin_scan_prompt | default: 'Hãy căn mặt vào khung và chụp lần lượt đủ ba góc.' | json }},
+  facePass: {{ settings.ai_skin_scan_face_pass | default: 'Tư thế đạt yêu cầu. Bạn có thể chụp góc này.' | json }},
+  faceAdjust: {{ settings.ai_skin_scan_face_adjust | default: 'Hãy điều chỉnh góc mặt và khoảng cách theo khung hướng dẫn.' | json }},
+  noFace: {{ settings.ai_skin_scan_no_face | default: 'Chưa nhận diện được khuôn mặt. Hãy căn mặt vào khung.' | json }},
+  cameraFallback: {{ settings.ai_skin_scan_camera_fallback | default: 'Không thể mở camera. Bạn có thể tải đủ ba ảnh từ thiết bị để tiếp tục.' | json }},
+  lightDark: {{ settings.ai_skin_scan_light_dark | default: 'Không gian quá tối, vui lòng bổ sung ánh sáng.' | json }},
+  lightBright: {{ settings.ai_skin_scan_light_bright | default: 'Ảnh quá sáng, vui lòng tránh ánh sáng gắt hoặc ngược sáng.' | json }},
+  lightLowContrast: {{ settings.ai_skin_scan_light_low_contrast | default: 'Ảnh thiếu tương phản, vui lòng tìm nơi có ánh sáng dịu và rõ hơn.' | json }},
+  lightUneven: {{ settings.ai_skin_scan_light_uneven | default: 'Ánh sáng chưa đều, vui lòng điều chỉnh trước khi chụp.' | json }},
+  photosComplete: {{ settings.ai_skin_scan_photos_complete | default: 'Đã có đủ ba góc. Bạn có thể bắt đầu phân tích tại thiết bị.' | json }},
+  analyzing: {{ settings.ai_skin_scan_analyzing | default: 'Đang phân tích tại thiết bị…' | json }},
+  analysisComplete: {{ settings.ai_skin_scan_analysis_complete | default: 'Phân tích hoàn tất. Ảnh soi da đã hiển thị bên dưới.' | json }},
+  analysisMethodCanvas: {{ settings.ai_skin_scan_method_canvas | default: 'Đây là phép đo ảnh thử nghiệm trên thiết bị, không phải kết quả từ mô hình AI đã thẩm định. Các điểm số và gợi ý chỉ mang tính tham khảo.' | json }},
+  analysisMethodOnnx: {{ settings.ai_skin_scan_method_onnx | default: 'Báo cáo có sử dụng model ONNX được cấu hình cho cửa hàng. Kết quả vẫn chỉ mang tính tham khảo, không thay thế đánh giá của Chuyên gia.' | json }},
+  quizResultBadge: {{ settings.ai_skin_scan_quiz_result_badge | default: 'Kết quả tham khảo' | json }},
+  quizResultSummary: {{ settings.ai_skin_scan_quiz_result_summary | default: 'Gợi ý được tổng hợp tự động từ thông tin bạn cung cấp và danh mục hiện có; chỉ mang tính tham khảo.' | json }},
+  quizRecommendationLabel: {{ settings.ai_skin_scan_quiz_recommendation_label | default: 'Hoạt chất và sản phẩm tham khảo:' | json }},
+  quizDetailedLinkLabel: {{ settings.ai_skin_scan_quiz_detail_label | default: 'Xem gợi ý chi tiết' | json }},
+  quizIntro: {{ settings.ai_skin_scan_quiz_intro | default: 'Trả lời một số câu hỏi về làn da và thói quen chăm sóc để nhận gợi ý tham khảo từ Pharma Cosmetics.' | json }},
+  quizMethodInfo: {{ settings.ai_skin_scan_quiz_method_info | default: 'Các gợi ý được tổng hợp tự động từ câu trả lời và danh mục sản phẩm hiện có. Đây không phải kết quả đo bằng thiết bị chuyên dụng hay đánh giá đã được thẩm định lâm sàng.' | json }},
+  quizStartLabel: {{ settings.ai_skin_scan_quiz_start_label | default: 'Bắt đầu khảo sát' | json }},
+  quizInfoLabel: {{ settings.ai_skin_scan_quiz_info_label | default: 'Cách tạo gợi ý' | json }},
+  quizChatStatus: {{ settings.ai_skin_scan_chat_status | default: 'Trợ lý tư vấn • Gợi ý tham khảo' | json }},
+  quizTypingStatus: {{ settings.ai_skin_scan_typing_status | default: 'Đang soạn phản hồi…' | json }},
+  quizProgressStart: {{ settings.ai_skin_scan_progress_start | default: 'Bắt đầu khảo sát' | json }},
+  quizProgressComplete: {{ settings.ai_skin_scan_progress_complete | default: 'Hoàn tất khảo sát' | json }},
+  quizRestartConfirm: {{ settings.ai_skin_scan_restart_confirm | default: 'Bạn muốn làm lại khảo sát từ đầu không?' | json }},
+  modeUnavailable: {{ settings.ai_skin_scan_mode_unavailable | default: 'Chế độ xử lý qua máy chủ chưa được tích hợp hoặc phê duyệt. Ảnh chưa được xử lý; bạn có thể chuyển sang khảo sát câu hỏi.' | json }},
+  uploadTooLarge: {{ settings.ai_skin_scan_upload_too_large | default: 'Ảnh vượt dung lượng 12 MB. Hãy chọn ảnh nhỏ hơn để tránh quá tải thiết bị.' | json }},
+  imageDimensionsTooLarge: {{ settings.ai_skin_scan_dimensions_too_large | default: 'Độ phân giải ảnh vượt giới hạn xử lý an toàn trên thiết bị. Hãy giảm kích thước ảnh rồi thử lại.' | json }},
+  meshFallback: {{ settings.ai_skin_scan_mesh_fallback | default: 'Đang dùng hướng dẫn căn mặt thủ công vì chưa tải được bộ nhận diện.' | json }},
+  productLinkLabel: {{ settings.skin_scan_product_link_label | default: 'Xem sản phẩm tham khảo' | json }}
+};
+window.PharmaSkinScanProductLabels = {
+  'sua-rua-mat-amino-acid': {{ settings.skin_scan_product_cleanser_label | default: 'Sữa Rửa Mặt Tạo Bọt Amino Acid Dịu Nhẹ' | json }},
+  'kem-phuc-hoi-ceramide-niacinamide': {{ settings.skin_scan_product_repair_label | default: 'Kem Phục Hồi Hàng Rào Da Ceramide + Niacinamide Chuyên Sâu' | json }},
+  'serum-aha-10-bha-2': {{ settings.skin_scan_product_aha_label | default: 'Serum Tái Tạo Da AHA 10% / BHA 2% Mịn Màng & Sáng Đều' | json }},
+  'kem-chong-nang-mineral-spf50': {{ settings.skin_scan_product_sunscreen_label | default: 'Kem Chống Nắng Mineral SPF50+ PA++++ Không Nhờn' | json }},
+  'serum-vitamin-c-15': {{ settings.skin_scan_product_vitamin_c_label | default: 'Serum Vitamin C 15% Làm Sáng & Đều Màu Da' | json }},
+  'serum-tranexamic-acid-3': {{ settings.skin_scan_product_tranexamic_label | default: 'Serum Mờ Thâm Tranexamic Acid 3% & Niacinamide Đều Màu Da' | json }},
+  'kem-duong-am-hyaluronic-acid': {{ settings.skin_scan_product_hyaluronic_label | default: 'Kem Dưỡng Ẩm Hyaluronic Acid 3 Tầng Căng Mướt Suốt Ngày' | json }},
+  'kem-duong-retinol-0-3-peptide': {{ settings.skin_scan_product_retinol_03_label | default: 'Kem Dưỡng Retinol 0.3% + Peptide Chống Lão Hoá' | json }},
+  'retinol-advanced-0-5-night-serum': {{ settings.skin_scan_product_retinol_05_label | default: 'Retinol Advanced 0.5% Night Serum Chống Lão Hoá Chuyên Sâu' | json }},
+  'toner-niacinamide-5-zinc': {{ settings.skin_scan_product_niacinamide_label | default: 'Toner Niacinamide 5% + Zinc Kiểm Soát Dầu & Thu Nhỏ Lỗ Chân Lông' | json }}
+};
+</script>
+<script src="{{ 'skin-liqa-lighting.js' | asset_url }}" defer></script>
+  <script src="{{ 'skin-liqa-mesh.js' | asset_url }}" defer></script>
+  <script src="{{ 'skin-deid-roi.js' | asset_url }}" defer></script>
+  <script src="{{ 'skin-cv-engine.js' | asset_url }}" defer></script>
+  <script src="{{ 'skin-onnx-engine.js' | asset_url }}" defer></script>
+  <script src="{{ 'skin-mst-debiasing.js' | asset_url }}" defer></script>
+  <script src="{{ 'skin-scoring-engine.js' | asset_url }}" defer></script>
+  <script src="{{ 'skin-routine-matcher.js' | asset_url }}" defer></script>
+  <script src="{{ 'skin-visual-overlay.js' | asset_url }}" defer></script>
+  <script src="{{ 'skin-camera.js' | asset_url }}" defer></script>
+{% endif %}
+
+{% if settings.ai_skin_scan_enable != false %}
+<nav class="pc-skin-mode-tabs" aria-label="{{ settings.ai_skin_scan_modes_label | default: 'Chọn cách phân tích da' | escape }}" role="tablist">
+  <button type="button" role="tab" aria-selected="true" data-skin-mode="camera">{{ settings.ai_skin_scan_camera_tab | default: 'Phân tích ảnh qua camera' | escape }}</button>
+  <button type="button" role="tab" aria-selected="false" data-skin-mode="quiz">{{ settings.ai_skin_scan_quiz_tab | default: 'Khảo sát câu hỏi' | escape }}</button>
+</nav>
+{% include 'skin_scan_camera' %}
+{% endif %}
 
 <div class="ai-skin-chat-app" id="aiSkinChatApp">
   <h1 class="sr-only">{{ page.title | default: page_title | escape }}</h1>
@@ -20,10 +88,10 @@
       <div class="doctor-info">
         <div class="doctor-name-row">
           <span class="doctor-name">Chuyên gia Pharma AI</span>
-          <span class="verified-badge" title="Chuyên gia Y khoa được chứng thực"><i class="fas fa-certificate"></i> AI Clinic</span>
+           <span class="verified-badge" title="{{ settings.ai_skin_scan_chat_badge | default: 'Gợi ý tự động, chỉ mang tính tham khảo' | escape }}"><i class="fas fa-circle-info" aria-hidden="true"></i> {{ settings.ai_skin_scan_chat_badge | default: 'Gợi ý tham khảo' | escape }}</span>
         </div>
         <div class="doctor-status">
-          <span class="typing-status" id="headerStatusText">Trực tuyến 24/7 • Chẩn đoán da 1:1</span>
+           <span class="typing-status" id="headerStatusText">{{ settings.ai_skin_scan_chat_status | default: 'Trợ lý tư vấn • Gợi ý tham khảo' | escape }}</span>
         </div>
       </div>
     </div>
@@ -38,7 +106,7 @@
   <!-- Diagnostic Progress Indicator -->
   <div class="chat-progress-wrap">
     <div class="progress-info-row">
-      <span class="progress-step-label" id="progressStepLabel">Bắt đầu chẩn đoán</span>
+      <span class="progress-step-label" id="progressStepLabel">{{ settings.ai_skin_scan_progress_start | default: 'Bắt đầu khảo sát' | escape }}</span>
       <span class="progress-percent-label" id="progressPercentLabel">0%</span>
     </div>
     <div class="progress-track">
@@ -53,7 +121,7 @@
     </div>
     <div class="chat-security-banner">
       <i class="fas fa-shield-halved" aria-hidden="true"></i>
-      <span>Cuộc trò chuyện bảo mật y khoa theo Luật 91/2025/QH15 & Tiêu chuẩn GSP/GDP</span>
+      <span>{{ settings.ai_skin_scan_privacy_caption | default: 'Thông tin bạn cung cấp được xử lý theo Chính sách bảo mật của Pharma Cosmetics.' | escape }}</span>
     </div>
 
     <!-- Message bubbles will be appended dynamically by JavaScript -->
@@ -87,22 +155,12 @@
   </footer>
 </div>
 
-<div class="ai-skin-crm-modal" id="aiSkinCrmConsentModal" hidden aria-hidden="true">
-  <div class="ai-skin-crm-modal__backdrop" data-crm-consent-close></div>
-  <section class="ai-skin-crm-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="aiSkinCrmConsentTitle">
-    <h2 id="aiSkinCrmConsentTitle">{{ settings.crm_consent_title | default: 'Lưu kết quả tư vấn' | escape }}</h2>
-    <p>{{ settings.crm_consent_description | default: 'Khi bạn đồng ý, Pharma Cosmetics sẽ lưu kết quả tư vấn, câu trả lời và thông tin tài khoản (nếu đã đăng nhập) để hỗ trợ bạn theo dõi và tư vấn tiếp theo.' | escape }}</p>
-    <p class="ai-skin-crm-modal__status" id="aiSkinCrmConsentStatus" aria-live="polite"></p>
-    <div class="ai-skin-crm-modal__actions">
-      <button type="button" class="ai-skin-crm-modal__cancel" data-crm-consent-close>{{ settings.crm_consent_cancel_label | default: 'Không lưu' | escape }}</button>
-      <button type="button" class="ai-skin-crm-modal__accept" id="aiSkinCrmConsentAccept">{{ settings.crm_consent_accept_label | default: 'Đồng ý lưu kết quả' | escape }}</button>
-    </div>
-  </section>
-</div>
+{% include 'skin_consent_modal' %}
 
 <script>
 (function() {
   'use strict';
+  var copy = window.PharmaSkinScanCopy || {};
 
   // 17 Clinical Questions Data
   var quizQuestions = {{ quiz_questions | json }};
@@ -235,7 +293,7 @@
   function setTyping(state) {
     isTyping = state;
     typingIndicator.style.display = state ? 'flex' : 'none';
-    headerStatus.textContent = state ? 'Chuyên gia đang soạn tin nhắn...' : 'Trực tuyến 24/7 • Chẩn đoán da 1:1';
+    headerStatus.textContent = state ? (copy.quizTypingStatus || 'Đang soạn phản hồi…') : (copy.quizChatStatus || 'Trợ lý tư vấn • Gợi ý tham khảo');
     if (state) scrollToBottom();
   }
 
@@ -284,9 +342,9 @@
     progressBar.style.width = percent + '%';
     progressPercentLabel.textContent = percent + '%';
     if (step === 0) {
-      progressStepLabel.textContent = 'Bắt đầu';
+      progressStepLabel.textContent = copy.quizProgressStart || 'Bắt đầu khảo sát';
     } else if (step > total) {
-      progressStepLabel.textContent = 'Hoàn tất chẩn đoán';
+      progressStepLabel.textContent = copy.quizProgressComplete || 'Hoàn tất khảo sát';
     } else {
       progressStepLabel.textContent = 'Câu ' + step + '/' + total;
     }
@@ -373,29 +431,30 @@
       summary: res.skin_type || ''
     };
 
-    // Save to localStorage
+    // 2026-09-24: chỉ giữ loại da trong tab hiện tại để chuyển sang trang kết quả; điểm chi tiết không cần lưu phía trình duyệt.
+    try { sessionStorage.setItem('pc_quiz_skin_type', best); } catch(e) {}
     try {
-      localStorage.setItem('pc_quiz_skin_type', best);
-      localStorage.setItem('pc_quiz_scores', JSON.stringify(userScores));
+      localStorage.removeItem('pc_quiz_skin_type');
+      localStorage.removeItem('pc_quiz_scores');
     } catch(e) {}
 
     addBotMessage("🎉 <strong>Phân tích hoàn tất!</strong> Dựa trên thông tin bạn vừa cung cấp, Chuyên gia Pharma AI đã tổng hợp kết quả tư vấn da cho bạn:", function() {
       
       var recTags = '';
       (res.recommend || []).forEach(function(r) {
-        recTags += `<span class="res-rec-badge"><i class="fas fa-check"></i> ${r}</span>`;
+        recTags += `<span class="res-rec-badge"><i class="fas fa-check"></i> ${escapeHtml(r)}</span>`;
       });
 
       var resultCardHtml = `
         <div class="diagnostic-result-card">
           <div class="result-card-header">
-            <span class="card-tag">🔬 KẾT QUẢ CHẨN ĐOÁN LÂM SÀNG</span>
-            <h2 class="result-skin-title">${res.skin_type}</h2>
-            <p class="result-skin-summary">Phác đồ đã được đối soát theo chuẩn GSP/GDP và cơ sở dữ liệu y dược Pharma Cosmetics.</p>
+            <span class="card-tag">${escapeHtml(copy.quizResultBadge || 'Kết quả tham khảo')}</span>
+            <h2 class="result-skin-title">${escapeHtml(res.skin_type)}</h2>
+            <p class="result-skin-summary">${escapeHtml(copy.quizResultSummary || 'Gợi ý được tổng hợp tự động từ thông tin bạn cung cấp và danh mục hiện có; chỉ mang tính tham khảo.')}</p>
           </div>
           
           <div class="result-card-body">
-            <h4 class="rec-title"><i class="fas fa-flask"></i> Hoạt chất vàng được chỉ định ưu tiên:</h4>
+            <h4 class="rec-title"><i class="fas fa-flask"></i> ${escapeHtml(copy.quizRecommendationLabel || 'Hoạt chất và sản phẩm tham khảo:')}</h4>
             <div class="result-recommend-grid">
               ${recTags}
             </div>
@@ -404,7 +463,7 @@
           <div class="result-card-actions">
             <button type="button" class="btn-result-crm" id="btnSaveAiResult">${escapeHtml(crmUi.openLabel)}</button>
             <a href="/pages/ai-skin-quiz-results" class="btn-result-cta">
-              <span>Xem Phác Đồ Trị Liệu Chi Tiết</span>
+              <span>${escapeHtml(copy.quizDetailedLinkLabel || 'Xem gợi ý chi tiết')}</span>
               <i class="fas fa-arrow-right"></i>
             </a>
             <a href="https://zalo.me/0967194063" target="_blank" rel="noopener" class="btn-result-zalo">
@@ -436,6 +495,7 @@
   function startConversation() {
     messagesFlow.innerHTML = '';
     quickReplies.innerHTML = '';
+    try { sessionStorage.removeItem('pc_quiz_skin_type'); } catch (error) {}
     currentQuestionIndex = -1;
     userScores = {};
     quizAnswers = [];
@@ -443,14 +503,14 @@
     updateProgress(0, quizQuestions.length);
 
     addBotMessage("Chào bạn! 👋 Mình là <strong>Chuyên gia Pharma AI</strong> - Trợ lý tư vấn làn da thông minh của Pharma Cosmetics.", function() {
-      addBotMessage("Hôm nay làn da của bạn đang có dấu hiệu gì cần cải thiện không? Hãy cùng mình trò chuyện qua 17 câu hỏi lâm sàng để tìm ra phác đồ y khoa chuẩn nhất nhé!", function() {
+      addBotMessage(escapeHtml(copy.quizIntro || 'Trả lời một số câu hỏi về làn da và thói quen chăm sóc để nhận gợi ý tham khảo từ Pharma Cosmetics.'), function() {
         renderQuickReplies([
-          { text: "🚀 Bắt đầu khám da ngay ➔" },
-          { text: "💡 Tìm hiểu thêm về tiêu chuẩn chẩn đoán" }
+          { text: "🚀 " + (copy.quizStartLabel || 'Bắt đầu khảo sát') + " ➔" },
+          { text: "💡 " + (copy.quizInfoLabel || 'Cách tạo gợi ý') }
         ], function(choice) {
-          if (choice.text.includes("Tìm hiểu thêm")) {
-            addBotMessage("Quy trình chẩn đoán của Pharma Cosmetics dựa trên thang đo Fitzpatrick và công nghệ soi da đa tầng VISIA Gen 7, kết hợp bảng hoạt chất chuẩn hóa quốc tế.", function() {
-              renderQuickReplies([{ text: "Bắt đầu khám da ngay ➔" }], function() {
+          if (choice.text.includes(copy.quizInfoLabel || 'Cách tạo gợi ý')) {
+            addBotMessage(escapeHtml(copy.quizMethodInfo || 'Các gợi ý được tổng hợp tự động từ câu trả lời và danh mục sản phẩm hiện có. Đây không phải kết quả đo bằng thiết bị chuyên dụng hay đánh giá đã được thẩm định lâm sàng.'), function() {
+              renderQuickReplies([{ text: "🚀 " + (copy.quizStartLabel || 'Bắt đầu khảo sát') + " ➔" }], function() {
                 askQuestion(0);
               });
             });
@@ -481,7 +541,7 @@
   });
 
   btnRestart.addEventListener('click', function() {
-    if (confirm("Bạn có muốn bắt đầu lại phiên khám da từ đầu không?")) {
+    if (confirm(copy.quizRestartConfirm || 'Bạn muốn làm lại khảo sát từ đầu không?')) {
       startConversation();
     }
   });

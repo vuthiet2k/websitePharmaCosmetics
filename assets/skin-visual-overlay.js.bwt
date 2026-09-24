@@ -1,0 +1,19 @@
+/* Soi da AI 2026-09-24: overlay chỉ render cục bộ từ kết quả phiên hiện tại. */
+(function (window) {
+  'use strict';
+  var colors = { acne: '#EF4444', pigmentation: '#F59E0B', pores: '#38BDF8', wrinkles: '#A855F7', redness: '#F97316' };
+  function render(canvas, image, detections, visibleTypes) {
+    if (!canvas || !image) return;
+    var width = image.naturalWidth || image.width; var height = image.naturalHeight || image.height;
+    canvas.width = width; canvas.height = height;
+    var context = canvas.getContext('2d');
+    context.clearRect(0, 0, width, height); context.drawImage(image, 0, 0, width, height);
+    var visible = visibleTypes || Object.keys(colors);
+    (detections || []).forEach(function (box) {
+      if (!colors[box.type] || visible.indexOf(box.type) < 0) return;
+      context.strokeStyle = colors[box.type]; context.lineWidth = Math.max(2, width / 400);
+      context.strokeRect(box.x, box.y, box.width, box.height);
+    });
+  }
+  window.PharmaSkinOverlay = { render: render };
+})(window);

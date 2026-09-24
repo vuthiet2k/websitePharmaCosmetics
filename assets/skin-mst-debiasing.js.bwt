@@ -1,0 +1,74 @@
+/* Soi da AI 2026-09-24: ước lượng gần swatch MST; không suy ra chủng tộc hay chẩn đoán. */
+(function (window) {
+  'use strict';
+  // Swatch A-J và mã sRGB lấy từ thẻ Monk Scale trong tài liệu FDA/Dr. Ellis Monk.
+  // Ánh xạ thứ tự A-J thành mức 1-10; matching ảnh chưa hiệu chuẩn màu chỉ là ước lượng.
+  var swatches = [
+    ['f7ede4', 1], ['f3e7da', 2], ['f6ead0', 3], ['ead9bb', 4], ['d7bd96', 5],
+    ['9f7d54', 6], ['815d44', 7], ['604234', 8], ['3a312a', 9], ['2a2420', 10]
+  ];
+  function rgbToLab(red, green, blue) {
+    var rgb = [red, green, blue].map(function (channel) {
+      var value = channel / 255;
+      return value <= .04045 ? value / 12.92 : Math.pow((value + .055) / 1.055, 2.4);
+    });
+    var x = (rgb[0] * .4124 + rgb[1] * .3576 + rgb[2] * .1805) / .95047;
+    var y = rgb[0] * .2126 + rgb[1] * .7152 + rgb[2] * .0722;
+    var z = (rgb[0] * .0193 + rgb[1] * .1192 + rgb[2] * .9505) / 1.08883;
+    function curve(value) { return value > .008856 ? Math.pow(value, 1 / 3) : 7.787 * value + 16 / 116; }
+    var fx = curve(x); var fy = curve(y); var fz = curve(z);
+    return { l: 116 * fy - 16, a: 500 * (fx - fy), b: 200 * (fy - fz) };
+  }
+  var references = swatches.map(function (item) {
+    return Object.assign({ tone: item[1], hex: item[0] }, rgbToLab(parseInt(item[0].slice(0, 2), 16), parseInt(item[0].slice(2, 4), 16), parseInt(item[0].slice(4, 6), 16)));
+  });
+  function fromLab(l, a, b) {
+    var nearest = references.reduce(function (best, item) {
+      var distance = Math.sqrt(Math.pow(l - item.l, 2) + Math.pow(a - item.a, 2) + Math.pow(b - item.b, 2));
+      return !best || distance < best.distance ? { tone: item.tone, distance: distance } : best;
+    }, null);
+    // Giữ hệ số hiệu chỉnh đơn điệu để hiệu chỉnh ngưỡng heuristic; chưa được
+    // hiệu chuẩn lâm sàng và không được diễn giải như một kết quả y khoa.
+    var tonePosition = (nearest.tone - 1) / 9;
+    return { monk_skin_tone: nearest.tone, delta_e: nearest.distance, melanin_factor: 1 + tonePosition * .8, erythema_factor: 1 + tonePosition * .5 };
+  }
+  function classifyRgb(red, green, blue) {
+    var lab = rgbToLab(red, green, blue);
+    return Object.assign({ l: lab.l, a: lab.a, b: lab.b }, fromLab(lab.l, lab.a, lab.b));
+  }
+  function sample(canvas, landmarks) {
+    var context = canvas.getContext('2d', { willReadFrequently: true });
+    var regions = [];
+    if (landmarks && landmarks.length >= 468 && landmarks[234] && landmarks[454] && landmarks[33] && landmarks[263] && landmarks[1] && landmarks[13] && landmarks[10] && landmarks[152]) {
+      var left = landmarks[234].x; var right = landmarks[454].x; var faceWidth = right - left;
+      var faceHeight = landmarks[152].y - landmarks[10].y; var nose = landmarks[1].x;
+      var eyeY = (landmarks[33].y + landmarks[263].y) / 2; var mouthY = landmarks[13].y;
+      var top = Math.max(0, eyeY + faceHeight * .07); var bottom = Math.min(1, mouthY - faceHeight * .07);
+      var leftEnd = nose - faceWidth * .055; var rightStart = nose + faceWidth * .055;
+      if (faceWidth > 0 && faceHeight > 0 && bottom > top && leftEnd > left + faceWidth * .18 && right > rightStart + faceWidth * .18) {
+        regions = [
+          { x: left + faceWidth * .18, y: top, width: leftEnd - (left + faceWidth * .18), height: bottom - top },
+          { x: rightStart, y: top, width: right - faceWidth * .18 - rightStart, height: bottom - top }
+        ];
+      }
+    }
+    // Ảnh tải lên không có mesh LIQA: giữ fallback hình học chuẩn hóa, chỉ là ước lượng thô.
+    if (!regions.length) regions = [{ x: .35, y: .35, width: .3, height: .25 }];
+    var rgb = [0, 0, 0]; var count = 0;
+    regions.forEach(function (region) {
+      var x0 = Math.max(0, Math.floor(region.x * canvas.width)); var y0 = Math.max(0, Math.floor(region.y * canvas.height));
+      var x1 = Math.min(canvas.width, Math.ceil((region.x + region.width) * canvas.width)); var y1 = Math.min(canvas.height, Math.ceil((region.y + region.height) * canvas.height));
+      if (x1 <= x0 || y1 <= y0) return;
+      var data = context.getImageData(x0, y0, x1 - x0, y1 - y0).data;
+      for (var i = 0; i < data.length; i += 4) {
+        if (data[i + 3] < 200 || Math.max(data[i], data[i + 1], data[i + 2]) > 248) continue;
+        rgb[0] += data[i]; rgb[1] += data[i + 1]; rgb[2] += data[i + 2]; count++;
+      }
+    });
+    if (!count) return { available: false };
+    var average = rgb.map(function (channel) { return channel / count; });
+    var lab = rgbToLab(average[0], average[1], average[2]);
+    return Object.assign({ available: true, l: lab.l, a: lab.a, b: lab.b, sample_count: count }, fromLab(lab.l, lab.a, lab.b));
+  }
+  window.PharmaSkinMst = { fromLab: fromLab, classifyRgb: classifyRgb, sample: sample, references: references };
+})(window);

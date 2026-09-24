@@ -75,6 +75,16 @@ const pages = {
     published: true,
   },
 
+  'soi-da': {
+    id:      108,
+    title:   'Soi Da AI Miễn Phí - Phân Tích Làn Da 1:1',
+    alias:   'soi-da',
+    handle:  'soi-da',
+    url:     '/soi-da',
+    content: '<p>Soi da trực tuyến với quy trình chụp ba góc mặt tại thiết bị.</p>',
+    published: true,
+  },
+
 };
 
 module.exports = { pages };

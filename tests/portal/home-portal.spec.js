@@ -71,7 +71,7 @@ test('hero uses a stable full-background fade while copy and CTA stay static', a
   await expect(heroImages.nth(1)).toHaveAttribute('fetchpriority', 'low');
   expect(await heroImages.evaluateAll(images => images.every(img => img.alt && img.getAttribute('width') === '1920' && img.getAttribute('height') === '800'))).toBeTruthy();
   expect(await heroImages.evaluateAll(images => new Set(images.map(img => img.alt)).size)).toBe(3);
-  const lcpSource = await heroImages.nth(0).getAttribute('src');
+  const lcpSource = await heroImages.nth(0).getAttribute('data-hero-source');
   await expect(page.locator('link[rel="preload"][as="image"][fetchpriority="high"]')).toHaveAttribute('href', lcpSource);
 
   const slider = hero.locator('.portal-hero__media');

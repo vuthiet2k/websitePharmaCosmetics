@@ -1,0 +1,39 @@
+/* Soi da AI 2026-09-24: đo sáng/lệch sáng cục bộ, không đưa pixel rời khỏi trình duyệt. */
+(function (window) {
+  'use strict';
+  var oval = [10, 109, 67, 103, 54, 21, 162, 127, 234, 93, 132, 58, 172, 136, 150, 149, 176, 148, 152, 377, 400, 378, 379, 365, 397, 288, 361, 323, 454, 356, 389, 251, 284, 332, 297, 338];
+  function stats(data, width, height, bounds) {
+    var x0 = bounds ? Math.max(0, Math.floor(bounds.left * width)) : 0;
+    var y0 = bounds ? Math.max(0, Math.floor(bounds.top * height)) : 0;
+    var x1 = bounds ? Math.min(width, Math.ceil(bounds.right * width)) : width;
+    var y1 = bounds ? Math.min(height, Math.ceil(bounds.bottom * height)) : height;
+    var sum = 0; var square = 0; var count = 0;
+    for (var y = y0; y < y1; y += 1) for (var x = x0; x < x1; x += 1) {
+      var index = (y * width + x) * 4;
+      var value = data[index] * .299 + data[index + 1] * .587 + data[index + 2] * .114;
+      sum += value; square += value * value; count++;
+    }
+    var mean = count ? sum / count : 0;
+    return { mean: mean, deviation: count ? Math.sqrt(Math.max(0, square / count - mean * mean)) : 0 };
+  }
+  function analyze(canvas, minimum, landmarks) {
+    var width = canvas.width; var height = canvas.height;
+    var context = canvas.getContext('2d', { willReadFrequently: true });
+    var data = context.getImageData(0, 0, width, height).data;
+    var points = landmarks && oval.map(function (index) { return landmarks[index]; }).filter(Boolean);
+    var bounds = null; var leftCheek = null; var rightCheek = null;
+    if (points && points.length === oval.length) {
+      var xs = points.map(function (point) { return point.x; }); var ys = points.map(function (point) { return point.y; });
+      bounds = { left: Math.min.apply(null, xs), right: Math.max.apply(null, xs), top: Math.min.apply(null, ys), bottom: Math.max.apply(null, ys) };
+      var faceWidth = bounds.right - bounds.left; var faceHeight = bounds.bottom - bounds.top;
+      leftCheek = stats(data, width, height, { left: bounds.left + faceWidth * .24, right: bounds.left + faceWidth * .46, top: bounds.top + faceHeight * .48, bottom: bounds.top + faceHeight * .70 });
+      rightCheek = stats(data, width, height, { left: bounds.left + faceWidth * .54, right: bounds.left + faceWidth * .76, top: bounds.top + faceHeight * .48, bottom: bounds.top + faceHeight * .70 });
+    }
+    var overall = stats(data, width, height, bounds);
+    var floor = Math.max(0, Math.min(255, Number(minimum) || 85));
+    var cheekDifference = leftCheek && rightCheek ? Math.abs(leftCheek.mean - rightCheek.mean) : 0;
+    var reason = overall.mean < floor ? 'too_dark' : overall.mean > 225 ? 'too_bright' : overall.deviation < 18 ? 'low_contrast' : cheekDifference > 38 ? 'uneven_light' : '';
+    return { mean: overall.mean, deviation: overall.deviation, cheek_difference: cheekDifference, valid: !reason, reason: reason };
+  }
+  window.PharmaSkinLighting = { analyze: analyze };
+})(window);

@@ -1,0 +1,9 @@
+/* Soi da AI 2026-09-24: phép đo tham khảo Canvas, tránh phụ thuộc model/cloud cho luồng mặc định. */
+(function (window) {
+  'use strict';
+  function pixels(canvas) { return canvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, canvas.width, canvas.height).data; }
+  function analyzeRedness(canvas) { var data = pixels(canvas); var red = 0; var total = data.length / 4; for (var i = 0; i < data.length; i += 4) if (data[i] > data[i + 1] * 1.18 && data[i] > data[i + 2] * 1.08) red++; return { ratio: total ? red / total : 0, mask: [] }; }
+  function analyzeWrinkles(canvas) { var data = pixels(canvas); var contrast = 0; var rows = Math.max(1, canvas.width * 4); for (var i = rows; i < data.length; i += 4) contrast += Math.abs(data[i] - data[i - rows]); var density = Math.min(1, contrast / Math.max(1, (data.length / 4) * 95)); return { density: density, length: density * canvas.width * canvas.height / 100, tech_neck_detected: density > .55, mask: [] }; }
+  function analyzeSurface(canvas) { var data = pixels(canvas); var acne = 0; var pigment = 0; var texture = 0; var total = data.length / 4; for (var i = 0; i < data.length; i += 4) { var red = data[i]; var green = data[i + 1]; var blue = data[i + 2]; if (red > green * 1.22 && red > blue * 1.15) acne++; if (red > blue * 1.35 && green > blue * 1.12 && red < 205) pigment++; texture += Math.abs(red - green) + Math.abs(green - blue); } return { acne_ratio: total ? acne / total : 0, pigment_ratio: total ? pigment / total : 0, texture_ratio: total ? Math.min(1, texture / (total * 190)) : 0 }; }
+  window.PharmaSkinCV = { analyzeRedness: analyzeRedness, analyzeWrinkles: analyzeWrinkles, analyzeSurface: analyzeSurface };
+})(window);
