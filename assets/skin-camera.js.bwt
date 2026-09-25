@@ -1,4 +1,6 @@
-/* Soi da AI 2026-09-24: chụp tuần tự 3 góc, hỗ trợ Auto-shutter, fallback upload và xử lý mặc định tại thiết bị. */
+/* Soi da AI 2026-09-24: chụp tuần tự 3 góc, hỗ trợ Auto-shutter, fallback upload và xử lý mặc định tại thiết bị.
+   Nâng cấp 2026-09-25: Báo cáo kết quả trực tiếp tại chỗ (Inline Dashboard) không chuyển trang,
+   quét AI Deliberate có tiến trình 2s, kiểm định khuôn mặt thực tế trên ảnh tải lên. */
 (function (window, document) {
   'use strict';
   var scan = document.querySelector('[data-skin-scan]'); if (!scan || scan.dataset.skinScanEnabled === 'false') return;
@@ -35,6 +37,8 @@
   var overlayEmpty = scan.querySelector('[data-skin-overlay-empty]');
   var methodNotice = scan.querySelector('[data-skin-analysis-method]');
   var stageEl = document.getElementById('skinCameraStageContainer');
+  var scanningOverlay = scan.querySelector('[data-skin-scanning-progress]');
+  var rescanBtn = scan.querySelector('[data-skin-rescan]');
 
   var detectionsByAngle = {};
   var modeUnavailable = scan.querySelector('[data-skin-mode-unavailable]');
@@ -51,6 +55,7 @@
   var meshQuality;
   var meshPending = false;
   var autoCaptureTimer = null;
+  var isAnalyzing = false;
 
   function message(text) { status.textContent = text; }
 
@@ -80,7 +85,7 @@
     });
 
     capture.disabled = !stream || step >= angles.length || meshPending || Boolean(meshSession && (!meshQuality || !meshQuality.available || !meshQuality.valid));
-    analyze.disabled = angles.some(function (angle) { return !images[angle]; });
+    analyze.disabled = angles.some(function (angle) { return !images[angle]; }) || isAnalyzing;
 
     if (step < angles.length && !meshQuality && !status.textContent) {
       var stepEl = scan.querySelector('[data-skin-step="' + angles[step] + '"]');
@@ -112,6 +117,18 @@
     scan.querySelectorAll('[data-skin-preview]').forEach(function (canvas) { canvas.width = 0; canvas.height = 0; });
     guide.width = 0; guide.height = 0;
     inlineReport.hidden = true;
+    if (scanningOverlay) scanningOverlay.hidden = true;
+    step = 0;
+    isAnalyzing = false;
+    update();
+  }
+
+  if (rescanBtn) {
+    rescanBtn.addEventListener('click', function () {
+      releaseImageBuffers();
+      message('Đã đặt lại. Bạn có thể bắt đầu soi da hoặc tải ảnh mới.');
+      window.scrollTo({ top: scan.offsetTop - 20, behavior: 'smooth' });
+    });
   }
 
   function triggerCapture() {
@@ -228,12 +245,12 @@
 
     if (step === angles.length) {
       stop();
-      message(copy.photosComplete || 'Đã có đủ 3 góc. Đang tự động phân tích tại thiết bị…');
+      message('Đã hoàn tất chụp 3 góc mặt! Bạn có thể kiểm tra và bấm "Phân tích 3 ảnh đã chụp" bên dưới.');
       update();
-      // Tự động phân tích da ngay khi chụp xong đủ 3 góc
-      setTimeout(function () {
-        analyzeLocal();
-      }, 500);
+      if (analyze) {
+        analyze.disabled = false;
+        analyze.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
     } else {
       update();
     }
@@ -285,7 +302,7 @@
         return;
       }
       var image = new Image();
-      image.onload = function () {
+      image.onload = async function () {
         var angle = input.dataset.skinUploadAngle;
         if (image.naturalWidth * image.naturalHeight > MAX_SOURCE_PIXELS) {
           input.value = '';
@@ -299,6 +316,7 @@
         if (light && !light.valid) {
           delete images[angle];
           delete captureQuality[angle];
+          delete landmarksByAngle[angle];
           if (card) card.classList.remove('has-file');
           step = angles.filter(function (item) { return images[item]; }).length;
           message(lightingMessage(light.reason));
@@ -306,16 +324,179 @@
           URL.revokeObjectURL(image.src);
           return;
         }
+
+        // KIỂM ĐỊNH KHUÔN MẶT BẰNG AI MESH TRÊN ẢNH TẢI LÊN
+        var faceCheck = { available: false, valid: true };
+        if (window.PharmaSkinMesh && window.PharmaSkinMesh.detectImage) {
+          message('Đang kiểm tra khuôn mặt trong ảnh…');
+          try {
+            faceCheck = await window.PharmaSkinMesh.detectImage(frame, angle);
+          } catch (e) {
+            faceCheck = { available: false, valid: true };
+          }
+        }
+
+        if (faceCheck.available && !faceCheck.valid) {
+          input.value = '';
+          delete images[angle];
+          delete captureQuality[angle];
+          delete landmarksByAngle[angle];
+          if (card) card.classList.remove('has-file');
+          step = angles.filter(function (item) { return images[item]; }).length;
+          update();
+          URL.revokeObjectURL(image.src);
+          if (faceCheck.reason === 'no_face') {
+            message('❌ Ảnh ' + (angle === 'front' ? 'chính diện' : angle === 'left' ? 'má trái' : 'má phải') + ' không nhận diện được khuôn mặt. Vui lòng tải ảnh rõ mặt người.');
+          } else {
+            message(faceCheck.guidance || 'Góc mặt chưa đúng yêu cầu cho góc chụp này. Vui lòng chọn ảnh phù hợp.');
+          }
+          return;
+        }
+
         images[angle] = frame;
         captureQuality[angle] = light || { valid: true };
+        if (faceCheck.landmarks) {
+          landmarksByAngle[angle] = faceCheck.landmarks;
+        }
         if (card) card.classList.add('has-file');
         step = angles.filter(function (item) { return images[item]; }).length;
+
+        if (angles.every(function (ang) { return Boolean(images[ang]); })) {
+          message('Đã nạp đủ 3 ảnh hợp lệ! Bạn có thể nhấn "Phân tích 3 ảnh đã chụp" bên dưới.');
+        } else {
+          message('Đã nạp ảnh ' + (angle === 'front' ? 'chính diện' : angle === 'left' ? 'má trái' : 'má phải') + ' thành công.');
+        }
         update();
         URL.revokeObjectURL(image.src);
       };
       image.src = URL.createObjectURL(file);
     });
   });
+
+  function renderInlineDashboard(report, routine, tone, wrinkle) {
+    // 1. Điền 5 thẻ điểm số
+    var scoreGrid = scan.querySelector('[data-inline-scan-scores]');
+    if (scoreGrid && report && report.scores) {
+      scoreGrid.innerHTML = '';
+      var names = {
+        acne: 'Mụn & Bít tắc',
+        pigmentation: 'Sắc tố & Thâm sạm',
+        wrinkles: 'Nếp nhăn & Rãnh',
+        redness: 'Vùng đỏ & Nhạy cảm',
+        pores: 'Lỗ chân lông'
+      };
+      var colorClasses = {
+        acne: 'pc-metric--acne',
+        pigmentation: 'pc-metric--pigment',
+        wrinkles: 'pc-metric--wrinkle',
+        redness: 'pc-metric--redness',
+        pores: 'pc-metric--pores'
+      };
+      Object.keys(report.scores).forEach(function (key) {
+        var sc = report.scores[key];
+        var card = document.createElement('div');
+        card.className = 'pc-inline-score-card ' + (colorClasses[key] || '');
+        var levelClass = sc.ui_score >= 85 ? 'is-good' : sc.ui_score >= 70 ? 'is-fair' : 'is-attention';
+        card.innerHTML = `
+          <div class="pc-score-card-header">
+            <span class="pc-score-name">${names[key] || key}</span>
+            <span class="pc-score-badge ${levelClass}">${sc.level || ''}</span>
+          </div>
+          <div class="pc-score-main">
+            <span class="pc-score-number">${sc.ui_score || '—'}</span>
+            <span class="pc-score-unit">/100</span>
+          </div>
+          <div class="pc-score-bar-track">
+            <div class="pc-score-bar-fill ${levelClass}" style="width: ${Math.min(100, sc.ui_score || 0)}%"></div>
+          </div>
+        `;
+        scoreGrid.appendChild(card);
+      });
+    }
+
+    // 2. Điền tuổi da & vấn đề chính
+    var ageEl = scan.querySelector('[data-inline-skin-age]');
+    var ageVal = scan.querySelector('[data-inline-skin-age-val]');
+    if (ageEl && ageVal) {
+      if (report && report.skin_age) {
+        ageVal.textContent = report.skin_age + ' tuổi';
+        ageEl.hidden = false;
+      } else {
+        ageEl.hidden = true;
+      }
+    }
+
+    var concernEl = scan.querySelector('[data-inline-primary-concern]');
+    var concernVal = scan.querySelector('[data-inline-primary-concern-val]');
+    if (concernEl && concernVal && routine) {
+      var concernNames = {
+        acne: 'Chăm sóc mụn & làm dịu',
+        pigmentation: 'Làm sáng & đều màu da',
+        wrinkles: 'Cải thiện nếp nhăn & chống lão hóa',
+        redness: 'Phục hồi da nhạy cảm & làm dịu đỏ',
+        pores: 'Kiểm soát dầu & thu nhỏ lỗ chân lông'
+      };
+      concernVal.textContent = concernNames[routine.primary_concern] || routine.primary_concern || 'Nền da cần phục hồi';
+      concernEl.hidden = false;
+    }
+
+    // 3. Vẽ Radar Chart 5 trục
+    var radarShape = scan.querySelector('[data-inline-radar-shape]');
+    if (radarShape && report && report.scores) {
+      var radarKeys = ['acne', 'pigmentation', 'wrinkles', 'redness', 'pores'];
+      var radarPoints = radarKeys.map(function (key, index) {
+        var raw = Number(report.scores[key] && report.scores[key].raw_score) || 0;
+        var value = Math.max(0.12, Math.min(1, raw));
+        var angle = (-90 + index * 72) * Math.PI / 180;
+        return {
+          x: 180 + Math.cos(angle) * 105 * value,
+          y: 160 + Math.sin(angle) * 105 * value
+        };
+      });
+      radarShape.setAttribute('points', radarPoints.map(function (pt) { return pt.x.toFixed(1) + ',' + pt.y.toFixed(1); }).join(' '));
+    }
+
+    // 4. Điền Phác đồ 3 giai đoạn & sản phẩm
+    var regimenGrid = scan.querySelector('[data-inline-regimen-grid]');
+    if (regimenGrid && routine) {
+      regimenGrid.innerHTML = '';
+      var stages = [
+        { num: 1, title: 'Làm Dịu & Ổn Định', desc: 'Ưu tiên làm sạch dịu nhẹ, hạn chế sản phẩm đặc trị nặng đô, cân bằng pH và giữ ẩm cơ bản.' },
+        { num: 2, title: 'Phục Hồi Hàng Rào Da', desc: 'Củng cố màng lipid với ceramide, B5, hyaluronic acid; tăng cường sức đề kháng cho làn da.' },
+        { num: 3, title: 'Điều Trị Chuyên Sâu', desc: 'Định hướng can thiệp hoạt chất mục tiêu (AHA/BHA/Retinol/Vitamin C) theo dung nạp của da.' }
+      ];
+
+      stages.forEach(function (stg, idx) {
+        var col = document.createElement('div');
+        col.className = 'pc-regimen-stage-card';
+        var stageRoutineText = (routine.stages && routine.stages[idx]) ? routine.stages[idx] : stg.desc;
+        
+        var productHtml = '';
+        if (routine.products && routine.products.length) {
+          var matchedProd = routine.products.find(function (p) { return p.stage === stg.num; }) || routine.products[idx];
+          if (matchedProd && matchedProd.label) {
+            productHtml = `
+              <div class="pc-regimen-product-box">
+                <span class="pc-regimen-prod-label"><i class="fas fa-prescription-bottle-medical"></i> Sản phẩm tham khảo:</span>
+                <a href="${matchedProd.url || '/collections/all'}" target="_blank" rel="noopener" class="pc-regimen-prod-link">
+                  <span>${matchedProd.label}</span>
+                  <i class="fas fa-arrow-up-right-from-square"></i>
+                </a>
+              </div>
+            `;
+          }
+        }
+
+        col.innerHTML = `
+          <div class="pc-stage-badge">GIAI ĐOẠN ${stg.num}</div>
+          <h5 class="pc-stage-title">${stg.title}</h5>
+          <p class="pc-stage-desc">${stageRoutineText}</p>
+          ${productHtml}
+        `;
+        regimenGrid.appendChild(col);
+      });
+    }
+  }
 
   function analyzeLocal() {
     if (angles.some(function (angle) { return !images[angle]; })) return;
@@ -324,7 +505,35 @@
       message(lightingMessage(captureQuality[rejectedAngle] && captureQuality[rejectedAngle].reason));
       return;
     }
+
+    isAnalyzing = true;
+    update();
     message(copy.analyzing || 'Đang phân tích tại thiết bị…');
+
+    // Kích hoạt tiến trình quét AI Deliberate
+    if (scanningOverlay) {
+      scanningOverlay.hidden = false;
+      var barFill = scanningOverlay.querySelector('.pc-scanning-bar-fill');
+      var statusTxt = scanningOverlay.querySelector('.pc-scanning-status-text');
+      var percentTxt = scanningOverlay.querySelector('.pc-scanning-percent');
+      
+      if (barFill) barFill.style.width = '30%';
+      if (percentTxt) percentTxt.textContent = '30%';
+      if (statusTxt) statusTxt.textContent = 'Đang nhận diện các vùng da T-Zone và U-Zone…';
+
+      setTimeout(function () {
+        if (barFill) barFill.style.width = '70%';
+        if (percentTxt) percentTxt.textContent = '70%';
+        if (statusTxt) statusTxt.textContent = 'Đang đo đạc sắc tố, nếp nhăn và bề mặt lỗ chân lông…';
+      }, 700);
+
+      setTimeout(function () {
+        if (barFill) barFill.style.width = '95%';
+        if (percentTxt) percentTxt.textContent = '95%';
+        if (statusTxt) statusTxt.textContent = 'Đang hoàn tất bảng chỉ số lâm sàng và phác đồ…';
+      }, 1400);
+    }
+
     var roiByAngle = {};
     angles.forEach(function (angle) {
       roiByAngle[angle] = window.PharmaSkinDeid.extractRois(images[angle]);
@@ -341,6 +550,7 @@
     var detectionsPromise = modelUrl && window.PharmaSkinOnnx
       ? Promise.all(angles.map(function (angle) { return window.PharmaSkinOnnx.detect(roiByAngle[angle].t_zone, modelUrl, modelHash); }))
       : Promise.resolve(angles.map(function () { return []; }));
+
     detectionsPromise.catch(function () { return angles.map(function () { return []; }); }).then(function (sets) {
       var detectionCount = sets.reduce(function (count, items) { return count + (items || []).length; }, 0);
       var counts = { acne: 0, pigmentation: 0, pores: 0 };
@@ -358,7 +568,7 @@
       });
       renderPreviews();
       if (methodNotice) methodNotice.textContent = modelUrl && detectionCount ? (copy.analysisMethodOnnx || 'Báo cáo có sử dụng model ONNX được cấu hình cho cửa hàng. Kết quả vẫn chỉ mang tính tham khảo.') : (copy.analysisMethodCanvas || 'Đây là phép đo ảnh thử nghiệm trên thiết bị, không phải kết quả từ mô hình AI đã thẩm định. Các điểm số và gợi ý chỉ mang tính tham khảo.');
-      inlineReport.hidden = false;
+      
       var melaninFactor = tone.available ? tone.melanin_factor : 1;
       var erythemaFactor = tone.available ? tone.erythema_factor : 1;
       var raw = {
@@ -372,8 +582,17 @@
       var routine = window.PharmaSkinRoutine.match(report.scores);
       var payload = { scores: report.scores, skin_age: report.skin_age, monk_skin_tone: tone.available ? tone.monk_skin_tone : null, primary_concern: routine.primary_concern, regimen: routine.stages, recommended_products: routine.products, tech_neck: wrinkle.tech_neck_detected, source: 'ai_skin_scan_camera', inference: detectionCount ? 'onnx_local' : 'canvas_local' };
       try { sessionStorage.setItem('pc_skin_scan_result', JSON.stringify(payload)); } catch (error) {}
-      message(copy.analysisComplete || 'Phân tích hoàn tất. Ảnh soi da đã hiển thị bên dưới.');
-      inlineReport.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      // Hoàn tất quét sau thời gian deliberate
+      setTimeout(function () {
+        if (scanningOverlay) scanningOverlay.hidden = true;
+        isAnalyzing = false;
+        renderInlineDashboard(report, routine, tone, wrinkle);
+        inlineReport.hidden = false;
+        message(copy.analysisComplete || 'Phân tích hoàn tất. Báo cáo soi da đã hiển thị trực tiếp bên dưới.');
+        inlineReport.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        update();
+      }, 1800);
     });
   }
 
