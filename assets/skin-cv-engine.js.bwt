@@ -1,9 +1,128 @@
-/* Soi da AI 2026-09-24: phép đo tham khảo Canvas, tránh phụ thuộc model/cloud cho luồng mặc định. */
+/* Soi da AI 2026-09-24: phép đo tham khảo Canvas, tránh phụ thuộc model/cloud cho luồng mặc định.
+   Nâng cấp 2026-09-25: Bổ sung detectFeatures trích xuất bounding boxes trực quan cho đốm mụn, vùng đỏ và lỗ chân lông. */
 (function (window) {
   'use strict';
   function pixels(canvas) { return canvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, canvas.width, canvas.height).data; }
-  function analyzeRedness(canvas) { var data = pixels(canvas); var red = 0; var total = data.length / 4; for (var i = 0; i < data.length; i += 4) if (data[i] > data[i + 1] * 1.18 && data[i] > data[i + 2] * 1.08) red++; return { ratio: total ? red / total : 0, mask: [] }; }
-  function analyzeWrinkles(canvas) { var data = pixels(canvas); var contrast = 0; var rows = Math.max(1, canvas.width * 4); for (var i = rows; i < data.length; i += 4) contrast += Math.abs(data[i] - data[i - rows]); var density = Math.min(1, contrast / Math.max(1, (data.length / 4) * 95)); return { density: density, length: density * canvas.width * canvas.height / 100, tech_neck_detected: density > .55, mask: [] }; }
-  function analyzeSurface(canvas) { var data = pixels(canvas); var acne = 0; var pigment = 0; var texture = 0; var total = data.length / 4; for (var i = 0; i < data.length; i += 4) { var red = data[i]; var green = data[i + 1]; var blue = data[i + 2]; if (red > green * 1.22 && red > blue * 1.15) acne++; if (red > blue * 1.35 && green > blue * 1.12 && red < 205) pigment++; texture += Math.abs(red - green) + Math.abs(green - blue); } return { acne_ratio: total ? acne / total : 0, pigment_ratio: total ? pigment / total : 0, texture_ratio: total ? Math.min(1, texture / (total * 190)) : 0 }; }
-  window.PharmaSkinCV = { analyzeRedness: analyzeRedness, analyzeWrinkles: analyzeWrinkles, analyzeSurface: analyzeSurface };
+  
+  function analyzeRedness(canvas) {
+    var data = pixels(canvas); var red = 0; var total = data.length / 4;
+    for (var i = 0; i < data.length; i += 4) {
+      if (data[i] > data[i + 1] * 1.18 && data[i] > data[i + 2] * 1.08) red++;
+    }
+    return { ratio: total ? red / total : 0, mask: [] };
+  }
+
+  function analyzeWrinkles(canvas) {
+    var data = pixels(canvas); var contrast = 0; var rows = Math.max(1, canvas.width * 4);
+    for (var i = rows; i < data.length; i += 4) contrast += Math.abs(data[i] - data[i - rows]);
+    var density = Math.min(1, contrast / Math.max(1, (data.length / 4) * 95));
+    return { density: density, length: density * canvas.width * canvas.height / 100, tech_neck_detected: density > .55, mask: [] };
+  }
+
+  function analyzeSurface(canvas) {
+    var data = pixels(canvas); var acne = 0; var pigment = 0; var texture = 0; var total = data.length / 4;
+    for (var i = 0; i < data.length; i += 4) {
+      var red = data[i]; var green = data[i + 1]; var blue = data[i + 2];
+      if (red > green * 1.22 && red > blue * 1.15) acne++;
+      if (red > blue * 1.35 && green > blue * 1.12 && red < 205) pigment++;
+      texture += Math.abs(red - green) + Math.abs(green - blue);
+    }
+    return { acne_ratio: total ? acne / total : 0, pigment_ratio: total ? pigment / total : 0, texture_ratio: total ? Math.min(1, texture / (total * 190)) : 0 };
+  }
+
+  function detectFeatures(sourceCanvas, roiMap, angle) {
+    var boxes = [];
+    if (!sourceCanvas || !roiMap) return boxes;
+    var width = sourceCanvas.width;
+    var height = sourceCanvas.height;
+
+    // Quét vùng T-zone (Trán, Mũi, Cằm)
+    var tZone = roiMap.t_zone;
+    if (tZone && tZone.width > 30 && tZone.height > 30) {
+      var tCtx = tZone.getContext('2d', { willReadFrequently: true });
+      var tData = tCtx.getImageData(0, 0, tZone.width, tZone.height).data;
+      var cellSize = Math.max(16, Math.round(tZone.width / 14));
+      var cols = Math.floor(tZone.width / cellSize);
+      var rows = Math.floor(tZone.height / cellSize);
+
+      for (var r = 1; r < rows - 1; r++) {
+        for (var c = 1; c < cols - 1; c++) {
+          var acneCount = 0; var redCount = 0; var poreCount = 0; var total = 0;
+          for (var py = r * cellSize; py < (r + 1) * cellSize; py += 2) {
+            for (var px = c * cellSize; px < (c + 1) * cellSize; px += 2) {
+              var idx = (py * tZone.width + px) * 4;
+              var red = tData[idx]; var green = tData[idx + 1]; var blue = tData[idx + 2];
+              if (red > 250 && green > 250 && blue > 250) continue;
+              if (Math.abs(red - green) < 6 && Math.abs(green - blue) < 6) continue;
+              total++;
+              if (red > green * 1.25 && red > blue * 1.18) acneCount++;
+              else if (red > green * 1.16 && red > blue * 1.08) redCount++;
+              if (red < 90 && green < 80 && blue < 75 && total > 0) poreCount++;
+            }
+          }
+          if (total >= 8) {
+            var boxW = cellSize * 1.2;
+            var boxH = cellSize * 1.2;
+            var globalX = width * .30 + (c * cellSize) * (width * .40 / tZone.width);
+            var globalY = height * .12 + (r * cellSize) * (height * .48 / tZone.height);
+
+            if (acneCount / total > 0.32 && boxes.filter(function (b) { return b.type === 'acne'; }).length < 8) {
+              boxes.push({ type: 'acne', x: Math.round(globalX), y: Math.round(globalY), width: Math.round(boxW), height: Math.round(boxH), confidence: 0.88 });
+            } else if (redCount / total > 0.38 && boxes.filter(function (b) { return b.type === 'redness'; }).length < 6) {
+              boxes.push({ type: 'redness', x: Math.round(globalX), y: Math.round(globalY), width: Math.round(boxW * 1.3), height: Math.round(boxH * 1.3), confidence: 0.82 });
+            } else if (poreCount / total > 0.30 && boxes.filter(function (b) { return b.type === 'pores'; }).length < 6) {
+              boxes.push({ type: 'pores', x: Math.round(globalX), y: Math.round(globalY), width: Math.round(boxW), height: Math.round(boxH), confidence: 0.79 });
+            }
+          }
+        }
+      }
+    }
+
+    // Quét vùng U-zone (Má & Cằm)
+    var uZone = angle === 'left' ? roiMap.u_zone_left : roiMap.u_zone_right;
+    if (uZone && uZone.width > 30 && uZone.height > 30) {
+      var uCtx = uZone.getContext('2d', { willReadFrequently: true });
+      var uData = uCtx.getImageData(0, 0, uZone.width, uZone.height).data;
+      var uCell = Math.max(18, Math.round(uZone.width / 12));
+      var uCols = Math.floor(uZone.width / uCell);
+      var uRows = Math.floor(uZone.height / uCell);
+      var uOffsetX = angle === 'left' ? width * .08 : width * .56;
+      var uOffsetY = height * .38;
+
+      for (var ur = 1; ur < uRows - 1; ur++) {
+        for (var uc = 1; uc < uCols - 1; uc++) {
+          var uRed = 0; var uPigment = 0; var uTot = 0;
+          for (var upy = ur * uCell; upy < (ur + 1) * uCell; upy += 2) {
+            for (var upx = uc * uCell; upx < (uc + 1) * uCell; upx += 2) {
+              var uidx = (upy * uZone.width + upx) * 4;
+              var urVal = uData[uidx]; var ugVal = uData[uidx + 1]; var ubVal = uData[uidx + 2];
+              if (urVal > 250 && ugVal > 250 && ubVal > 250) continue;
+              if (Math.abs(urVal - ugVal) < 6 && Math.abs(ugVal - ubVal) < 6) continue;
+              uTot++;
+              if (urVal > ugVal * 1.18 && urVal > ubVal * 1.12) uRed++;
+              if (urVal > ubVal * 1.35 && ugVal > ubVal * 1.12 && urVal < 190) uPigment++;
+            }
+          }
+          if (uTot >= 8) {
+            var gX = uOffsetX + (uc * uCell) * (width * .36 / uZone.width);
+            var gY = uOffsetY + (ur * uCell) * (height * .42 / uZone.height);
+            if (uRed / uTot > 0.35 && boxes.filter(function (b) { return b.type === 'redness'; }).length < 8) {
+              boxes.push({ type: 'redness', x: Math.round(gX), y: Math.round(gY), width: Math.round(uCell * 1.3), height: Math.round(uCell * 1.3), confidence: 0.84 });
+            } else if (uPigment / uTot > 0.28 && boxes.filter(function (b) { return b.type === 'pigmentation'; }).length < 6) {
+              boxes.push({ type: 'pigmentation', x: Math.round(gX), y: Math.round(gY), width: Math.round(uCell), height: Math.round(uCell), confidence: 0.80 });
+            }
+          }
+        }
+      }
+    }
+
+    return boxes;
+  }
+
+  window.PharmaSkinCV = {
+    analyzeRedness: analyzeRedness,
+    analyzeWrinkles: analyzeWrinkles,
+    analyzeSurface: analyzeSurface,
+    detectFeatures: detectFeatures
+  };
 })(window);
