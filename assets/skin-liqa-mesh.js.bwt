@@ -26,8 +26,33 @@
     var face = oval.map(function (index) { return landmarks[index]; }).filter(Boolean);
     var xs = face.map(function (point) { return point.x; }); var ys = face.map(function (point) { return point.y; });
     var area = (Math.max.apply(null, xs) - Math.min.apply(null, xs)) * (Math.max.apply(null, ys) - Math.min.apply(null, ys));
-    var yawPass = step === 'front' ? Math.abs(yaw) <= 10 : step === 'left' ? yaw >= -52 && yaw <= -38 : yaw >= 38 && yaw <= 52;
-    return { available: true, yaw: yaw, pitch: pitch, faceAreaRatio: area, valid: yawPass && Math.abs(pitch) <= 15 && area >= .08 && area <= .55 };
+    
+    // Mở rộng góc yaw linh hoạt theo nhân trắc học và hỗ trợ camera lật gương:
+    var yawPass = false;
+    var guidance = '';
+    if (step === 'front') {
+      yawPass = Math.abs(yaw) <= 18;
+      if (!yawPass) guidance = 'Hãy quay mặt nhìn thẳng vào camera.';
+    } else if (step === 'left') {
+      yawPass = (yaw >= -65 && yaw <= -16) || (yaw >= 16 && yaw <= 65);
+      if (!yawPass) guidance = (Math.abs(yaw) < 16) ? 'Hãy nghiêng mặt sang trái khoảng 45 độ.' : 'Hãy căn chỉnh lại góc nghiêng trái vừa phải.';
+    } else {
+      yawPass = (yaw >= 16 && yaw <= 65) || (yaw >= -65 && yaw <= -16);
+      if (!yawPass) guidance = (Math.abs(yaw) < 16) ? 'Hãy nghiêng mặt sang phải khoảng 45 độ.' : 'Hãy căn chỉnh lại góc nghiêng phải vừa phải.';
+    }
+
+    var pitchPass = Math.abs(pitch) <= 28;
+    if (yawPass && !pitchPass) {
+      guidance = pitch > 0 ? 'Hạ cằm xuống một chút.' : 'Nâng cằm lên một chút.';
+    }
+
+    var areaPass = area >= 0.04 && area <= 0.75;
+    if (yawPass && pitchPass && !areaPass) {
+      guidance = area < 0.04 ? 'Hãy đưa mặt lại gần camera hơn.' : 'Hãy lùi ra xa camera một chút.';
+    }
+
+    var valid = yawPass && pitchPass && areaPass;
+    return { available: true, yaw: yaw, pitch: pitch, faceAreaRatio: area, valid: valid, guidance: guidance };
   }
   function start(video, onQuality) {
     var stopped = false;
