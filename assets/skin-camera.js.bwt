@@ -1,6 +1,7 @@
 /* Soi da AI 2026-09-24: chụp tuần tự 3 góc, hỗ trợ Auto-shutter, fallback upload và xử lý mặc định tại thiết bị.
    Nâng cấp 2026-09-25: Báo cáo kết quả trực tiếp tại chỗ (Inline Dashboard) không chuyển trang,
-   quét AI Deliberate có tiến trình 2s, kiểm định khuôn mặt thực tế trên ảnh tải lên. */
+   quét AI Deliberate có tiến trình 2s, kiểm định khuôn mặt thực tế trên ảnh tải lên.
+   Nâng cấp Fullscreen & State Split: Camera toàn màn hình tập trung cao độ, xem lại 3 ảnh và phân tách rạch ròi 2 trạng thái. */
 (function (window, document) {
   'use strict';
   var scan = document.querySelector('[data-skin-scan]'); if (!scan || scan.dataset.skinScanEnabled === 'false') return;
@@ -39,6 +40,11 @@
   var stageEl = document.getElementById('skinCameraStageContainer');
   var scanningOverlay = scan.querySelector('[data-skin-scanning-progress]');
   var rescanBtn = scan.querySelector('[data-skin-rescan]');
+  var sessionView = scan.querySelector('[data-skin-session-view]');
+  var exitBtn = scan.querySelector('[data-skin-camera-exit]');
+  var reviewStage = scan.querySelector('[data-skin-review-stage]');
+  var analyzeTrigger = scan.querySelector('[data-skin-analyze-trigger]');
+  var retakeAllBtn = scan.querySelector('[data-skin-retake-all]');
 
   var detectionsByAngle = {};
   var modeUnavailable = scan.querySelector('[data-skin-mode-unavailable]');
@@ -97,7 +103,10 @@
   function stop() {
     if (autoCaptureTimer) { clearTimeout(autoCaptureTimer); autoCaptureTimer = null; }
     scan.classList.remove('is-streaming');
+    scan.classList.remove('is-camera-fullscreen');
     if (stageEl) stageEl.classList.remove('is-streaming');
+    if (exitBtn) exitBtn.hidden = true;
+    document.body.classList.remove('pc-camera-fullscreen-active');
     if (meshSession) meshSession.stop();
     meshSession = null;
     meshQuality = null;
@@ -117,6 +126,8 @@
     scan.querySelectorAll('[data-skin-preview]').forEach(function (canvas) { canvas.width = 0; canvas.height = 0; });
     guide.width = 0; guide.height = 0;
     inlineReport.hidden = true;
+    if (sessionView) sessionView.hidden = false;
+    if (reviewStage) reviewStage.hidden = true;
     if (scanningOverlay) scanningOverlay.hidden = true;
     step = 0;
     isAnalyzing = false;
@@ -197,7 +208,10 @@
       video.srcObject = stream;
       await video.play();
       scan.classList.add('is-streaming');
+      scan.classList.add('is-camera-fullscreen');
       if (stageEl) stageEl.classList.add('is-streaming');
+      if (exitBtn) exitBtn.hidden = false;
+      document.body.classList.add('pc-camera-fullscreen-active');
       drawGuide();
       capture.disabled = false;
       switcher.hidden = false;
@@ -218,7 +232,10 @@
       }
     } catch (error) {
       scan.classList.remove('is-streaming');
+      scan.classList.remove('is-camera-fullscreen');
       if (stageEl) stageEl.classList.remove('is-streaming');
+      if (exitBtn) exitBtn.hidden = true;
+      document.body.classList.remove('pc-camera-fullscreen-active');
       upload.hidden = false;
       message(copy.cameraFallback || 'Không thể mở camera. Bạn có thể tải đủ 3 ảnh từ thiết bị.');
     }
@@ -245,15 +262,29 @@
 
     if (step === angles.length) {
       stop();
-      message('Đã hoàn tất chụp 3 góc mặt! Bạn có thể kiểm tra và bấm "Phân tích 3 ảnh đã chụp" bên dưới.');
+      message('Đã hoàn tất chụp 3 góc mặt! Vui lòng kiểm tra lại ảnh trước khi phân tích.');
       update();
-      if (analyze) {
-        analyze.disabled = false;
-        analyze.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
+      updateReviewGallery();
     } else {
       update();
     }
+  }
+
+  function updateReviewGallery() {
+    if (!reviewStage) return;
+    angles.forEach(function (ang) {
+      var imgEl = reviewStage.querySelector('[data-review-img="' + ang + '"]');
+      if (imgEl && images[ang]) {
+        try {
+          imgEl.src = images[ang].toDataURL('image/jpeg', 0.85);
+        } catch (e) {
+          // Fallback if canvas is tainted
+        }
+      }
+    });
+    reviewStage.hidden = false;
+    reviewStage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (analyze) analyze.disabled = false;
   }
 
   function renderPreviews() {
@@ -362,7 +393,8 @@
         step = angles.filter(function (item) { return images[item]; }).length;
 
         if (angles.every(function (ang) { return Boolean(images[ang]); })) {
-          message('Đã nạp đủ 3 ảnh hợp lệ! Bạn có thể nhấn "Phân tích 3 ảnh đã chụp" bên dưới.');
+          message('Đã nạp đủ 3 ảnh hợp lệ! Bạn có thể kiểm tra lại 3 ảnh và nhấn "Phân tích 3 ảnh đã chụp" bên dưới.');
+          updateReviewGallery();
         } else {
           message('Đã nạp ảnh ' + (angle === 'front' ? 'chính diện' : angle === 'left' ? 'má trái' : 'má phải') + ' thành công.');
         }
@@ -665,11 +697,53 @@
         if (scanningOverlay) scanningOverlay.hidden = true;
         isAnalyzing = false;
         renderInlineDashboard(report, routine, tone, wrinkle, surface, redness);
+        // PHÂN TÁCH RẠCH RÒI 2 TRẠNG THÁI:
+        if (sessionView) sessionView.hidden = true;
         inlineReport.hidden = false;
-        message(copy.analysisComplete || 'Phân tích hoàn tất. Báo cáo soi da đã hiển thị trực tiếp bên dưới.');
+        message(copy.analysisComplete || 'Phân tích hoàn tất. Báo cáo lâm sàng đã hiển thị trực tiếp bên dưới.');
         inlineReport.scrollIntoView({ behavior: 'smooth', block: 'start' });
         update();
       }, 1800);
+    });
+  }
+
+  if (exitBtn) {
+    exitBtn.addEventListener('click', function () {
+      stop();
+      message('Đã thoát chế độ camera toàn màn hình.');
+    });
+  }
+
+  if (analyzeTrigger) {
+    analyzeTrigger.addEventListener('click', function () {
+      if (analyze && !analyze.disabled) {
+        analyze.click();
+      }
+    });
+  }
+
+  if (retakeAllBtn) {
+    retakeAllBtn.addEventListener('click', function () {
+      releaseImageBuffers();
+      begin();
+    });
+  }
+
+  if (reviewStage) {
+    reviewStage.querySelectorAll('[data-skin-retake-angle]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var ang = btn.dataset.skinRetakeAngle;
+        var angIdx = angles.indexOf(ang);
+        if (angIdx !== -1) {
+          delete images[ang];
+          delete captureQuality[ang];
+          delete landmarksByAngle[ang];
+          delete detectionsByAngle[ang];
+          step = angIdx;
+          update();
+          begin();
+        }
+      });
     });
   }
 
