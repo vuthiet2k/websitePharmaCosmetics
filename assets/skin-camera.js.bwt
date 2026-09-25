@@ -373,7 +373,69 @@
     });
   });
 
-  function renderInlineDashboard(report, routine, tone, wrinkle) {
+  function renderInlineDashboard(report, routine, tone, wrinkle, surface, redness) {
+    surface = surface || { acne_ratio: 0.02, pigment_ratio: 0.02, texture_ratio: 0.15 };
+    redness = redness || { ratio: 0.05 };
+    wrinkle = wrinkle || { density: 0.1 };
+
+    // 0. Điền Thẻ Đánh Giá Lâm Sàng Toàn Diện
+    var skinTypeEl = scan.querySelector('[data-assessment-skin-type]');
+    var overallScoreEl = scan.querySelector('[data-assessment-overall-score]');
+    var overallStatusEl = scan.querySelector('[data-assessment-overall-status]');
+    var zoneTEl = scan.querySelector('[data-zone-t]');
+    var zoneUEl = scan.querySelector('[data-zone-u]');
+    var zoneChinEl = scan.querySelector('[data-zone-chin]');
+    var zoneAgingEl = scan.querySelector('[data-zone-aging]');
+    var adviceEl = scan.querySelector('[data-assessment-advice]');
+
+    if (report && report.scores) {
+      var scKeys = Object.keys(report.scores);
+      var avgScore = Math.round(scKeys.reduce(function (sum, k) { return sum + (report.scores[k].ui_score || 75); }, 0) / Math.max(1, scKeys.length));
+      if (overallScoreEl) overallScoreEl.textContent = avgScore + '/100';
+      if (overallStatusEl) {
+        overallStatusEl.textContent = avgScore >= 85 ? '(Rất khỏe mạnh)' : avgScore >= 72 ? '(Khá tốt, cần cân bằng)' : '(Cần chăm sóc phục hồi)';
+      }
+
+      var skinTypeName = 'Làn da hỗn hợp thiên dầu';
+      var adviceText = 'Ưu tiên làm sạch dịu nhẹ với sữa rửa mặt pH 5.5, bổ sung Niacinamide 5% kết hợp Zinc PCA để kiềm dầu và thu nhỏ lỗ chân lông, kết hợp BHA 2% 2-3 lần/tuần để thông thoáng bít tắc.';
+      if (surface.acne_ratio > 0.06 || report.scores.acne.raw_score > 0.35) {
+        skinTypeName = 'Làn Da Dầu Dễ Bít Tắc & Nổi Mụn';
+        adviceText = 'Ưu tiên kiềm dầu và kháng viêm dịu nhẹ: Sữa rửa mặt tạo bọt Amino Acid, Toner BHA 2% thông thoáng cổ nang lông, kết hợp Serum Niacinamide + Kẽm để kiểm soát dầu thừa.';
+      } else if (redness.ratio > 0.10) {
+        skinTypeName = 'Làn Da Nhạy Cảm / Dễ Kích Ứng';
+        adviceText = 'Tập trung phục hồi hàng rào bảo vệ da: Dùng nước tẩy trang dịu nhẹ, bổ sung Panthenol (Vitamin B5), Ceramide và rau má Centella; tạm ngưng các sản phẩm acid nồng độ cao.';
+      } else if (wrinkle.density > 0.30) {
+        skinTypeName = 'Làn Da Lão Hóa & Cần Cải Thiện Độ Săn Chắc';
+        adviceText = 'Duy trì độ ẩm đa tầng với Hyaluronic Acid và phục hồi màng bảo vệ da. Buổi tối cân nhắc bổ sung Retinol 0.3% hoặc phức hợp Peptide để kích thích tái sinh tế bào.';
+      } else if (surface.pigment_ratio > 0.06) {
+        skinTypeName = 'Làn Da Tăng Sắc Tố & Không Đều Màu';
+        adviceText = 'Bảo vệ nghiêm ngặt bằng kem chống nắng phổ rộng SPF50+ PA++++. Kết hợp Serum Vitamin C 15% hoặc Tranexamic Acid 3% vào chu trình buổi sáng và tối.';
+      }
+      if (skinTypeEl) skinTypeEl.textContent = skinTypeName;
+
+      if (zoneTEl) {
+        zoneTEl.textContent = (surface.texture_ratio > 0.18 || surface.acne_ratio > 0.03)
+          ? 'Tuyến bã nhờn vùng trán và sống mũi hoạt động khá mạnh, có độ bóng nhờn nhẹ và lỗ chân lông vùng cánh mũi có xu hướng giãn nở.'
+          : 'Vùng chữ T kiểm soát bã nhờn tương đối tốt, bề mặt trán và sống mũi mịn màng, ít bít tắc.';
+      }
+      if (zoneUEl) {
+        zoneUEl.textContent = (redness.ratio > 0.07)
+          ? 'Hai bên má có mao mạch hơi nhạy cảm nhẹ hoặc ửng đỏ sau khi làm sạch, sắc tố tương đối đều màu, ít đốm thâm nâu.'
+          : 'Hai bên má mịn màng, sắc thái da tươi sáng đồng đều, hàng rào biểu bì duy trì độ ẩm tự nhiên tốt.';
+      }
+      if (zoneChinEl) {
+        zoneChinEl.textContent = (surface.acne_ratio > 0.02)
+          ? 'Vùng cằm và quanh khóe miệng phát hiện một vài điểm bít tắc cổ nang lông nhỏ, cần lưu ý thao tác làm sạch kỹ càng.'
+          : 'Vùng cằm và đường viền hàm sạch thoáng, bề mặt da láng mịn không có ổ viêm bít tắc.';
+      }
+      if (zoneAgingEl) {
+        zoneAgingEl.textContent = (wrinkle.density > 0.25)
+          ? 'Bắt đầu có rãnh cười nhẹ hoặc đường mảnh do thiếu ẩm biểu bì, cần tăng cường cấp ẩm sâu.'
+          : 'Chưa xuất hiện nếp nhăn tĩnh sâu, cấu trúc mô liên kết duy trì độ săn chắc và đàn hồi tự nhiên rất tốt.';
+      }
+      if (adviceEl) adviceEl.textContent = adviceText;
+    }
+
     // 1. Điền 5 thẻ điểm số
     var scoreGrid = scan.querySelector('[data-inline-scan-scores]');
     if (scoreGrid && report && report.scores) {
@@ -556,12 +618,27 @@
       var counts = { acne: 0, pigmentation: 0, pores: 0 };
       angles.forEach(function (angle, index) {
         var source = images[angle]; var roi = roiByAngle[angle].t_zone;
-        detectionsByAngle[angle] = (sets[index] || []).map(function (box) {
-          var types = { 0: 'acne', 1: 'acne', 2: 'pigmentation', 3: 'pores', 4: 'wrinkles', 5: 'redness' };
-          var type = types[box.classId];
-          if (type === 'acne') counts.acne++; else if (type === 'pigmentation') counts.pigmentation++; else if (type === 'pores') counts.pores++;
-          return Object.assign({}, box, { type: type || 'unknown', x: source.width * .30 + box.x * (source.width * .40 / roi.width), y: source.height * .12 + box.y * (source.height * .48 / roi.height), width: box.width * (source.width * .40 / roi.width), height: box.height * (source.height * .48 / roi.height) });
-        });
+        var onnxBoxes = sets[index] || [];
+        if (onnxBoxes.length > 0) {
+          detectionsByAngle[angle] = onnxBoxes.map(function (box) {
+            var types = { 0: 'acne', 1: 'acne', 2: 'pigmentation', 3: 'pores', 4: 'wrinkles', 5: 'redness' };
+            var type = types[box.classId];
+            if (type === 'acne') counts.acne++; else if (type === 'pigmentation') counts.pigmentation++; else if (type === 'pores') counts.pores++;
+            return Object.assign({}, box, { type: type || 'unknown', x: source.width * .30 + box.x * (source.width * .40 / roi.width), y: source.height * .12 + box.y * (source.height * .48 / roi.height), width: box.width * (source.width * .40 / roi.width), height: box.height * (source.height * .48 / roi.height) });
+          });
+        } else if (window.PharmaSkinCV && window.PharmaSkinCV.detectFeatures) {
+          // Fallback Canvas CV Detection: Tự động trích xuất các đốm mụn và vùng đỏ trực tiếp trên ảnh
+          var cvBoxes = window.PharmaSkinCV.detectFeatures(source, roiByAngle[angle], angle);
+          detectionsByAngle[angle] = cvBoxes;
+          cvBoxes.forEach(function (box) {
+            if (box.type === 'acne') counts.acne++;
+            else if (box.type === 'pigmentation') counts.pigmentation++;
+            else if (box.type === 'pores') counts.pores++;
+          });
+          detectionCount += cvBoxes.length;
+        } else {
+          detectionsByAngle[angle] = [];
+        }
       });
       angles.forEach(function (angle) {
         previewImages[angle] = window.PharmaSkinDeid.deidentify(images[angle], scan.dataset.skinDeidEnabled !== 'false', landmarksByAngle[angle]);
@@ -587,7 +664,7 @@
       setTimeout(function () {
         if (scanningOverlay) scanningOverlay.hidden = true;
         isAnalyzing = false;
-        renderInlineDashboard(report, routine, tone, wrinkle);
+        renderInlineDashboard(report, routine, tone, wrinkle, surface, redness);
         inlineReport.hidden = false;
         message(copy.analysisComplete || 'Phân tích hoàn tất. Báo cáo soi da đã hiển thị trực tiếp bên dưới.');
         inlineReport.scrollIntoView({ behavior: 'smooth', block: 'start' });
