@@ -65,6 +65,34 @@
 
   function message(text) { status.textContent = text; }
 
+  // 2026-09-25: phản hồi ngay trên thẻ upload — #skinCameraStatus nằm trên đầu khung camera nên người dùng
+  // đang thao tác ở 3 ô upload không nhìn thấy thông báo. Ảnh hợp lệ được hiển thị làm nền thẻ (object URL
+  // của file gốc, không dùng toDataURL để tránh chuỗi base64 vài MB trong inline style).
+  var cardPreviewUrls = {};
+  scan.querySelectorAll('[data-dropzone-card] .pc-dropzone-hint').forEach(function (hint) {
+    hint.dataset.defaultHint = hint.textContent;
+  });
+  function setCardState(card, state, hintText, previewUrl) {
+    if (!card) return;
+    var angle = card.dataset.dropzoneCard;
+    if (angle && cardPreviewUrls[angle] && cardPreviewUrls[angle] !== previewUrl) {
+      URL.revokeObjectURL(cardPreviewUrls[angle]);
+      delete cardPreviewUrls[angle];
+    }
+    card.classList.toggle('has-file', state === 'ok');
+    card.classList.toggle('has-preview', state === 'ok' && Boolean(previewUrl));
+    card.classList.toggle('has-error', state === 'error');
+    card.classList.toggle('is-checking', state === 'checking');
+    if (state === 'ok' && previewUrl) {
+      if (angle) cardPreviewUrls[angle] = previewUrl;
+      card.style.setProperty('--pc-upload-preview', 'url("' + previewUrl + '")');
+    } else {
+      card.style.removeProperty('--pc-upload-preview');
+    }
+    var hint = card.querySelector('.pc-dropzone-hint');
+    if (hint) hint.textContent = hintText || hint.dataset.defaultHint || '';
+  }
+
   function drawGuide() {
     var width = video.videoWidth || 720;
     var height = video.videoHeight || 540;
@@ -92,6 +120,7 @@
 
     capture.disabled = !stream || step >= angles.length || meshPending || Boolean(meshSession && (!meshQuality || !meshQuality.available || !meshQuality.valid));
     analyze.disabled = angles.some(function (angle) { return !images[angle]; }) || isAnalyzing;
+    if (analyzeTrigger) analyzeTrigger.disabled = analyze.disabled;
 
     if (step < angles.length && !meshQuality && !status.textContent) {
       var stepEl = scan.querySelector('[data-skin-step="' + angles[step] + '"]');
@@ -122,7 +151,7 @@
     stop();
     images = {}; previewImages = {}; captureQuality = {}; landmarksByAngle = {}; detectionsByAngle = {};
     scan.querySelectorAll('[data-skin-upload-angle]').forEach(function (input) { input.value = ''; });
-    scan.querySelectorAll('[data-dropzone-card]').forEach(function (card) { card.classList.remove('has-file'); });
+    scan.querySelectorAll('[data-dropzone-card]').forEach(function (card) { setCardState(card, 'idle'); });
     scan.querySelectorAll('[data-skin-preview]').forEach(function (canvas) { canvas.width = 0; canvas.height = 0; });
     guide.width = 0; guide.height = 0;
     inlineReport.hidden = true;
@@ -326,9 +355,19 @@
       var file = input.files && input.files[0];
       if (!file) return;
       var card = input.closest('[data-dropzone-card]') || input.closest('.pc-upload-card');
-      if (file.size > MAX_UPLOAD_BYTES) {
+      var uploadAngle = input.dataset.skinUploadAngle;
+      // Ảnh bị từ chối thì bỏ luôn ảnh cũ của góc này, để trạng thái thẻ khớp với số ảnh được tính.
+      function rejectUpload(hintText) {
         input.value = '';
-        if (card) card.classList.remove('has-file');
+        delete images[uploadAngle];
+        delete captureQuality[uploadAngle];
+        delete landmarksByAngle[uploadAngle];
+        setCardState(card, 'error', hintText);
+        step = angles.filter(function (item) { return images[item]; }).length;
+        update();
+      }
+      if (file.size > MAX_UPLOAD_BYTES) {
+        rejectUpload(copy.uploadHintTooLarge || 'Ảnh vượt quá dung lượng 12 MB');
         message(copy.uploadTooLarge || 'Ảnh vượt dung lượng 12 MB. Hãy chọn ảnh nhỏ hơn để tránh quá tải thiết bị.');
         return;
       }
@@ -336,8 +375,7 @@
       image.onload = async function () {
         var angle = input.dataset.skinUploadAngle;
         if (image.naturalWidth * image.naturalHeight > MAX_SOURCE_PIXELS) {
-          input.value = '';
-          if (card) card.classList.remove('has-file');
+          rejectUpload(copy.uploadHintDimensions || 'Độ phân giải ảnh quá lớn');
           message(copy.imageDimensionsTooLarge || 'Độ phân giải ảnh vượt giới hạn xử lý an toàn trên thiết bị. Hãy giảm kích thước ảnh rồi thử lại.');
           URL.revokeObjectURL(image.src);
           return;
@@ -345,13 +383,8 @@
         var frame = snapshot(image);
         var light = window.PharmaSkinLighting && window.PharmaSkinLighting.analyze(frame, scan.dataset.skinMinLight);
         if (light && !light.valid) {
-          delete images[angle];
-          delete captureQuality[angle];
-          delete landmarksByAngle[angle];
-          if (card) card.classList.remove('has-file');
-          step = angles.filter(function (item) { return images[item]; }).length;
+          rejectUpload(lightingMessage(light.reason));
           message(lightingMessage(light.reason));
-          update();
           URL.revokeObjectURL(image.src);
           return;
         }
@@ -360,6 +393,7 @@
         var faceCheck = { available: false, valid: true };
         if (window.PharmaSkinMesh && window.PharmaSkinMesh.detectImage) {
           message('Đang kiểm tra khuôn mặt trong ảnh…');
+          setCardState(card, 'checking', copy.uploadHintChecking || 'Đang kiểm tra khuôn mặt…');
           try {
             faceCheck = await window.PharmaSkinMesh.detectImage(frame, angle);
           } catch (e) {
@@ -368,13 +402,9 @@
         }
 
         if (faceCheck.available && !faceCheck.valid) {
-          input.value = '';
-          delete images[angle];
-          delete captureQuality[angle];
-          delete landmarksByAngle[angle];
-          if (card) card.classList.remove('has-file');
-          step = angles.filter(function (item) { return images[item]; }).length;
-          update();
+          rejectUpload(faceCheck.reason === 'no_face'
+            ? (copy.uploadHintNoFace || 'Không nhận diện được khuôn mặt người')
+            : (faceCheck.guidance || copy.faceAdjust || 'Góc mặt chưa đúng yêu cầu'));
           URL.revokeObjectURL(image.src);
           if (faceCheck.reason === 'no_face') {
             message('❌ Ảnh ' + (angle === 'front' ? 'chính diện' : angle === 'left' ? 'má trái' : 'má phải') + ' không nhận diện được khuôn mặt. Vui lòng tải ảnh rõ mặt người.');
@@ -389,7 +419,7 @@
         if (faceCheck.landmarks) {
           landmarksByAngle[angle] = faceCheck.landmarks;
         }
-        if (card) card.classList.add('has-file');
+        setCardState(card, 'ok', copy.uploadHintOk || 'Đã tải ảnh — nhấn để đổi ảnh khác', URL.createObjectURL(file));
         step = angles.filter(function (item) { return images[item]; }).length;
 
         if (angles.every(function (ang) { return Boolean(images[ang]); })) {

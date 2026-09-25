@@ -190,11 +190,32 @@ function awe_category(){
 	});
 } window.awe_category=awe_category;
 
+// 2026-09-25: nút chỉ hiện trong lúc đang cuộn, dừng cuộn 1,4s thì ẩn — trước đây hiện cố định sau mốc 200px,
+// che nội dung và đè sát icon chat Zalo/Messenger. Giữ hiện khi đang hover/chạm/focus để bấm được.
 function awe_backtotop() { 
-	$(window).scroll(function() {
-		$(this).scrollTop() > 200 ? $('.backtop').addClass('show') : $('.backtop').removeClass('show')
+	var $btn = $('.backtop');
+	if (!$btn.length) return;
+	var hideTimer = null;
+	var isHeld = false;
+	function scheduleHide() {
+		clearTimeout(hideTimer);
+		hideTimer = setTimeout(function() {
+			if (!isHeld) $btn.removeClass('show');
+		}, 1400);
+	}
+	$btn.on('mouseenter touchstart focusin', function() { isHeld = true; clearTimeout(hideTimer); });
+	$btn.on('mouseleave touchend touchcancel focusout', function() { isHeld = false; scheduleHide(); });
+	$(window).on('scroll', function() {
+		if ($(this).scrollTop() > 200) {
+			$btn.addClass('show');
+			scheduleHide();
+		} else {
+			clearTimeout(hideTimer);
+			$btn.removeClass('show');
+		}
 	});
-	$('.backtop').click(function() {
+	$btn.click(function() {
+		clearTimeout(hideTimer);
 		return $("body,html").animate({
 			scrollTop: 0
 		}, 800), !1
