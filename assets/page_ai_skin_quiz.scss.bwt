@@ -221,6 +221,8 @@
 .pc-skin-scan__stage {
   position: relative;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   aspect-ratio: 4 / 3;
   min-height: 380px;
   border-radius: 20px;
@@ -881,24 +883,121 @@
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .pc-skin-scan {
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    padding: 20px 16px;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    padding: 16px 12px;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
   }
 
-  .pc-skin-scan__steps,
+  .pc-skin-scan__layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .pc-skin-scan__col-stage {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .pc-skin-scan__stage {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    min-height: 320px !important;
+    aspect-ratio: auto !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .pc-skin-standby {
+    padding: 20px 14px !important;
+    box-sizing: border-box;
+  }
+
+  .pc-skin-standby__ring-icon {
+    width: 58px !important;
+    height: 58px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .pc-skin-standby__ring-icon svg {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .pc-skin-standby__title {
+    font-size: 1.05rem !important;
+    margin: 0 0 6px !important;
+    max-width: 100% !important;
+    line-height: 1.35 !important;
+  }
+
+  .pc-skin-standby__subtitle {
+    font-size: 0.82rem !important;
+    margin: 0 0 16px !important;
+    max-width: 280px !important;
+    line-height: 1.4 !important;
+  }
+
+  .pc-btn-start-pill {
+    min-height: 42px !important;
+    padding: 10px 22px !important;
+    font-size: 0.92rem !important;
+    position: relative !important;
+    z-index: 10 !important;
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    box-shadow: 0 4px 16px rgba(38, 115, 72, 0.4) !important;
+  }
+
+  /* Trong standby: ẩn các bước để không che khuất nút Bắt đầu soi da */
+  .pc-skin-scan:not(.is-streaming) .pc-skin-scan__steps {
+    display: none !important;
+  }
+
+  /* Khi streaming: hiển thị thanh bước dạng hàng ngang nhỏ gọn ở dưới */
+  .pc-skin-scan.is-streaming .pc-skin-scan__steps {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+    bottom: 8px !important;
+    left: 8px !important;
+    right: 8px !important;
+    padding: 4px 6px !important;
+    gap: 4px !important;
+    z-index: 6 !important;
+  }
+
+  .pc-skin-scan__steps li {
+    padding: 4px 6px !important;
+    font-size: 0.72rem !important;
+    white-space: nowrap !important;
+    gap: 4px !important;
+  }
+
+  .pc-skin-scan__steps li .pc-step-dot {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .pc-skin-scan__steps li .pc-step-dot svg {
+    width: 10px !important;
+    height: 10px !important;
+  }
+
   .pc-skin-scan__upload,
   .pc-skin-scan__previews {
     grid-template-columns: 1fr;
-  }
-
-  .pc-skin-scan__steps {
-    border-radius: 12px;
-    flex-direction: column;
-    gap: 4px;
   }
 
   .pc-skin-mode-tabs {
@@ -1599,123 +1698,183 @@
   width: 100vw !important;
   height: 100vh !important;
   height: 100dvh !important;
-  max-width: none !important;
-  max-height: none !important;
+  max-width: 100% !important;
+  aspect-ratio: auto !important;
+  min-height: 100% !important;
   border-radius: 0 !important;
   z-index: 99999 !important;
-  aspect-ratio: auto !important;
+  background: radial-gradient(circle at center, #0e2a1d 0%, #05120c 100%) !important;
   box-shadow: none !important;
-  background: #000000 !important;
+  padding: 0 !important;
+  animation: fadeInCameraStage 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInCameraStage {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.pc-skin-scan.is-camera-fullscreen .pc-skin-scan__stage video,
+.pc-skin-scan.is-camera-fullscreen .pc-skin-scan__stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 body.pc-camera-fullscreen-active {
   overflow: hidden !important;
 }
 
-.pc-skin-camera-exit-btn {
+.pc-camera-modal-close {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  z-index: 100001;
-  width: 44px;
-  height: 44px;
+  top: 20px;
+  right: 76px;
+  z-index: 100002;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: rgba(15, 35, 24, 0.85);
+  background: rgba(10, 27, 19, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.25);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   transition: all 0.2s ease;
 }
 
-.pc-skin-camera-exit-btn:hover {
+.pc-camera-modal-close:hover {
   background: #dc2626;
   border-color: #ef4444;
   transform: scale(1.08);
 }
 
-/* ==========================================================================
-   Captured 3-Angle Review Gallery (Step before Final Processing)
-   ========================================================================== */
-.pc-skin-review-stage {
-  margin-top: 24px;
-  padding: 24px 20px;
-  background: #f8faf8;
-  border-radius: 18px;
-  border: 1.5px solid #d1fae5;
-  animation: fadeInReview 0.3s ease-out;
+.pc-camera-modal-close svg {
+  stroke: currentColor;
 }
+
+/* ==========================================================================
+   Pharma Cosmetics - Captured 3-Angle Review Gallery & Final Step Trigger
+   ========================================================================== */
 
 .pc-skin-review-stage[hidden] {
   display: none !important;
 }
 
-@keyframes fadeInReview {
-  from { opacity: 0; transform: translateY(10px); }
+.pc-skin-review-stage {
+  margin-top: 28px;
+  padding: 28px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1.5px solid #d1fae5;
+  box-shadow: 0 10px 30px rgba(38, 115, 72, 0.08);
+  animation: fadeInReviewStage 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInReviewStage {
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .pc-review-header {
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
   margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #edf2ef;
+}
+
+.pc-review-badge-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: #e8f8ee;
+  color: #267348;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
 }
 
 .pc-review-title {
-  font-size: 1.15rem;
+  margin: 0 0 6px;
+  font-size: 1.35rem;
   font-weight: 800;
   color: #0f2318;
-  margin-bottom: 4px;
 }
 
 .pc-review-subtitle {
-  font-size: 0.86rem;
+  margin: 0;
+  font-size: 0.88rem;
   color: #52655b;
+  line-height: 1.5;
 }
 
-.pc-review-gallery {
+.pc-btn-retake-all {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pc-review-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 22px;
+  gap: 18px;
+  margin: 22px 0 24px;
 }
 
 .pc-review-card {
-  background: #ffffff;
+  background: #f8faf8;
+  border-radius: 16px;
   border: 1.5px solid #e2e8f0;
-  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition: all 0.25s ease;
 }
 
 .pc-review-card:hover {
+  border-color: #34d399;
   transform: translateY(-2px);
-  border-color: #3cb371;
+  box-shadow: 0 8px 24px rgba(38, 115, 72, 0.1);
 }
 
-.pc-review-thumb-wrap {
+.pc-review-img-wrap {
+  position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
-  background: #0f2318;
-  position: relative;
+  background: #05120c;
   overflow: hidden;
 }
 
-.pc-review-thumb-wrap canvas {
+.pc-review-img-wrap img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
 
+.pc-review-chip-status {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  background: rgba(16, 185, 129, 0.9);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
 .pc-review-card-footer {
-  padding: 10px 12px;
+  padding: 12px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1723,101 +1882,120 @@ body.pc-camera-fullscreen-active {
   border-top: 1px solid #edf2ef;
 }
 
-.pc-review-angle-name {
-  font-size: 0.84rem;
-  font-weight: 700;
+.pc-review-card-meta strong {
+  display: block;
+  font-size: 0.88rem;
   color: #0f2318;
 }
 
-.pc-btn-retake {
-  background: transparent;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  color: #475569;
+.pc-review-card-meta span {
+  display: block;
   font-size: 0.78rem;
-  font-weight: 600;
-  padding: 4px 8px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  transition: all 0.15s ease;
+  color: #64748b;
 }
 
-.pc-btn-retake:hover {
-  border-color: #267348;
+.pc-btn-retake-angle {
+  font-size: 0.82rem;
+  font-weight: 700;
   color: #267348;
-  background: #f0fdf4;
+  background: transparent;
+  border: 1px solid #d1fae5;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.pc-review-actions {
+.pc-btn-retake-angle:hover {
+  background: #e8f8ee;
+  border-color: #267348;
+}
+
+.pc-review-action-wrap {
   display: flex;
   justify-content: center;
-  max-width: 440px;
-  margin: 0 auto;
 }
 
-.pc-btn-confirm-analyze {
-  width: 100%;
-  min-height: 48px;
-  padding: 12px 24px;
-  border-radius: 9999px;
-  background: linear-gradient(135deg, #267348 0%, #166b55 100%);
-  color: #ffffff;
-  font-size: 1rem;
-  font-weight: 800;
-  border: none;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  box-shadow: 0 6px 20px rgba(38, 115, 72, 0.35);
-  transition: all 0.25s ease;
+.pc-btn-analyze-large {
+  min-width: 320px;
+  font-size: 1.02rem !important;
+  padding: 14px 32px !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 8px 24px rgba(38, 115, 72, 0.35) !important;
 }
 
-.pc-btn-confirm-analyze:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(38, 115, 72, 0.45);
+.pc-btn-analyze-large:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(38, 115, 72, 0.45) !important;
 }
 
-/* ==========================================================================
-   Navigation Bar above Report (Back to Scan / Retake Flow)
-   ========================================================================== */
+/* Report Session View & Navbar */
 .pc-report-nav-bar {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 12px 18px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: 12px;
-  margin-bottom: 20px;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: #f8faf8;
+  border: 1.5px solid #d1fae5;
+  margin-bottom: 24px;
+}
+
+.pc-report-badge {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #267348;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.pc-report-nav-info h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f2318;
 }
 
 .pc-btn-restart-scan {
-  background: #ffffff;
-  border: 1.5px solid #267348;
-  color: #267348;
-  border-radius: 8px;
-  padding: 6px 14px;
-  font-weight: 700;
-  font-size: 0.86rem;
-  cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  border: 1.5px solid #267348;
+  background: #ffffff;
+  color: #267348;
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .pc-btn-restart-scan:hover {
   background: #267348;
   color: #ffffff;
+  transform: translateY(-1px);
 }
 
 @media (max-width: 768px) {
-  .pc-review-gallery {
+  .pc-review-grid {
     grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .pc-review-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .pc-review-action-wrap .pc-btn-analyze-large {
+    width: 100%;
+    min-width: unset;
+  }
+  .pc-report-nav-bar {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 
