@@ -1,4 +1,4 @@
-/* CRM Intake 2026-09-23: client độc lập cho Sheet/GAS CRM; tuyệt đối không gọi MOPS. */
+/* CRM Intake 2026-09-25: client độc lập cho Sheet/GAS CRM; tuyệt đối không gọi MOPS. */
 (function (window) {
   'use strict';
 
@@ -53,8 +53,12 @@
       return response.json();
     }).then(function (result) {
       if (!result || result.success !== true) throw new Error((result && result.error) || 'crm_rejected');
-      if (result.record_id) {
-        try { window.sessionStorage.setItem('pc_crm_intake_record_id', String(result.record_id)); } catch (error) {}
+      var recId = result.record_id || payload.submission_id;
+      if (recId) {
+        try {
+          window.sessionStorage.setItem('pc_crm_intake_record_id', String(recId));
+          window.sessionStorage.setItem('pc_crm_saved_at', new Date().toISOString());
+        } catch (error) {}
       }
       return result;
     }).catch(function (error) {
@@ -63,17 +67,113 @@
     });
   }
 
+  function getCustomerInfo(query) {
+    query = query || {};
+    var savedRecId = null;
+    var savedTime = null;
+    try {
+      savedRecId = window.sessionStorage.getItem('pc_crm_intake_record_id');
+      savedTime = window.sessionStorage.getItem('pc_crm_saved_at');
+    } catch (e) {}
+
+    // Nếu endpoint GAS được bật và khả dụng, thực hiện query đến GAS
+    if (ready()) {
+      var queryPayload = Object.assign({
+        action: 'get_customer_info',
+        session_id: sessionId,
+        submission_id: savedRecId || '',
+        customer_id: context.id || '',
+        phone: context.phone || '',
+        email: context.email || ''
+      }, query);
+
+      return window.fetch(config.endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(queryPayload)
+      }).then(function (res) { return res.json(); }).then(function (res) {
+        if (res && res.success && res.found) {
+          return {
+            success: true,
+            stored_in_gas: true,
+            source: res.source,
+            record_id: res.record.submission_id,
+            saved_at: res.record.created_at,
+            customer: {
+              id: res.record.customer_id || context.id || '',
+              name: res.record.customer_name || context.name || 'Khách Hàng',
+              phone: res.record.customer_phone || context.phone || '',
+              email: res.record.customer_email || context.email || ''
+            },
+            consultation: res.record
+          };
+        }
+        return buildLocalCustomerFallback(savedRecId, savedTime);
+      }).catch(function () {
+        return buildLocalCustomerFallback(savedRecId, savedTime);
+      });
+    }
+
+    // Local / Safe mode fallback
+    return Promise.resolve(buildLocalCustomerFallback(savedRecId, savedTime));
+  }
+
+  function buildLocalCustomerFallback(savedRecId, savedTime) {
+    var skinScan = null;
+    var skinType = null;
+    try {
+      skinScan = JSON.parse(window.sessionStorage.getItem('pc_skin_scan_result') || 'null');
+      skinType = window.sessionStorage.getItem('pc_quiz_skin_type');
+    } catch (e) {}
+
+    var isStored = Boolean(savedRecId);
+    var source = skinScan ? 'ai_skin_scan_camera' : (skinType ? 'ai_skin_quiz' : 'client_session');
+
+    return {
+      success: true,
+      stored_in_gas: isStored,
+      record_id: savedRecId || null,
+      saved_at: savedTime || (isStored ? new Date().toISOString() : null),
+      source: source,
+      customer: {
+        id: context.id || '',
+        name: context.name || (context.logged_in ? 'Khách Hàng Thành Viên' : 'Khách Hàng Tư Vấn'),
+        phone: context.phone || '',
+        email: context.email || '',
+        logged_in: Boolean(context.logged_in)
+      },
+      consultation: skinScan || (skinType ? { skin_type: skinType } : null)
+    };
+  }
+
   window.PharmaCrmIntake = {
     isReady: ready,
     createSubmissionId: submissionId,
     submitAiChat: function (data) { return send('save_ai_chat', data); },
     submitSkinAnalysis: function (data) {
       return send('save_skin_analysis', {
-        submission_id: data.submission_id || submissionId(), consent: data.consent === true,
-        consent_at: data.consent_at, source: 'ai_skin_scan_camera',
-        analysis_result: { scores: data.scores, monk_skin_tone: data.monk_skin_tone, skin_age: data.skin_age, primary_concern: data.primary_concern, tech_neck: data.tech_neck === true, regimen: data.regimen, recommended_products: data.recommended_products || [] }
+        submission_id: data.submission_id || submissionId(),
+        consent: data.consent === true,
+        consent_at: data.consent_at || new Date().toISOString(),
+        source: 'ai_skin_scan_camera',
+        analysis_result: {
+          scores: data.scores,
+          skin_type: data.skin_type || 'Báo cáo soi da camera',
+          skin_age: data.skin_age,
+          primary_concern: data.primary_concern,
+          regimen: data.regimen,
+          recommended_products: data.recommended_products || []
+        }
       });
     },
-    submitContactLead: function (data) { return send('submit_contact', data); }
+    submitContactLead: function (data) { return send('submit_contact', data); },
+    getCustomerInfo: getCustomerInfo,
+    checkCustomerSaved: function () {
+      try {
+        return Boolean(window.sessionStorage.getItem('pc_crm_intake_record_id'));
+      } catch (e) {
+        return false;
+      }
+    }
   };
 })(window);
