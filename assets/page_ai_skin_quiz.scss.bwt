@@ -902,12 +902,24 @@
   }
 
   .pc-skin-mode-tabs {
-    flex-direction: column;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 8px !important;
+    margin: 14px auto 10px !important;
+    padding: 0 2px !important;
+    width: 100% !important;
   }
 
   .pc-skin-mode-tabs button {
-    width: 100%;
-    justify-content: center;
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    width: 50% !important;
+    padding: 8px 6px !important;
+    font-size: 0.86rem !important;
+    white-space: nowrap !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    min-height: 42px !important;
   }
 }
 
@@ -1500,682 +1512,210 @@
    Pharma Cosmetics - AI Deliberate Scanning Overlay & Inline Clinical Dashboard
    ========================================================================== */
 
-/* Scanning Overlay (~2s deliberate experience) */
-.pc-skin-scanning-overlay {
+/* Scanning Active State Overlay on Viewfinder */
+.pc-skin-scan__stage.is-scanning::before {
+  content: '';
   position: absolute;
   inset: 0;
-  background: rgba(10, 27, 19, 0.88);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  animation: fadeInScanOverlay 0.3s ease-out forwards;
+  background: rgba(12, 33, 23, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 8;
+  pointer-events: none;
 }
 
-.pc-skin-scanning-overlay[hidden] {
-  display: none !important;
+.pc-skin-laser-beam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(45, 212, 191, 0) 0%, #2dd4bf 50%, rgba(45, 212, 191, 0) 100%);
+  box-shadow: 0 0 16px #2dd4bf, 0 0 30px rgba(45, 212, 191, 0.8);
+  z-index: 9;
+  pointer-events: none;
+  display: none;
 }
 
-@keyframes fadeInScanOverlay {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.pc-skin-scan__stage.is-scanning .pc-skin-laser-beam {
+  display: block;
+  animation: laserScanVertical 2.2s infinite ease-in-out;
 }
 
-.pc-scanning-card {
-  background: #ffffff;
-  border-radius: 24px;
-  padding: 36px 32px 30px;
-  max-width: 420px;
-  width: 100%;
-  text-align: center;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-  position: relative;
-  overflow: hidden;
-  border: 1px solid #d1fae5;
+@keyframes laserScanVertical {
+  0% { top: 5%; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { top: 92%; opacity: 0; }
 }
 
-.pc-scanning-radar-pulse {
-  position: relative;
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pc-pulse-ring, .pc-pulse-ring-delay {
+/* Inline Scanning HUD Diagnostics */
+.pc-skin-scan-hud {
   position: absolute;
   inset: 0;
-  border-radius: 50%;
-  border: 2px solid #3cb371;
-  opacity: 0.8;
-  animation: radarRingPulse 2s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
-}
-
-.pc-pulse-ring-delay {
-  animation-delay: 0.6s;
-}
-
-@keyframes radarRingPulse {
-  0% { transform: scale(0.6); opacity: 0.9; }
-  100% { transform: scale(1.6); opacity: 0; }
-}
-
-.pc-scanning-title {
-  color: #0f2318;
-  font-size: 1.25rem;
-  font-weight: 800;
-  margin-bottom: 8px;
-}
-
-.pc-scanning-status-text {
-  color: #267348;
-  font-size: 0.92rem;
-  font-weight: 600;
-  min-height: 1.4em;
-  margin-bottom: 18px;
-}
-
-.pc-scanning-bar-track {
-  width: 100%;
-  height: 8px;
-  background: #edf2ef;
-  border-radius: 999px;
-  overflow: hidden;
-  margin-bottom: 8px;
-}
-
-.pc-scanning-bar-fill {
-  width: 0%;
-  height: 100%;
-  background: linear-gradient(90deg, #3cb371 0%, #166b55 100%);
-  border-radius: 999px;
-  transition: width 0.35s ease;
-}
-
-.pc-scanning-percent {
-  display: block;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #64748b;
-  margin-bottom: 12px;
-}
-
-.pc-scanning-subhint {
-  font-size: 0.78rem;
-  color: #94a3b8;
-  line-height: 1.4;
-  margin: 0;
-}
-
-/* Clinical Assessment Card (4 Zones + Advice) */
-.pc-inline-assessment-section {
-  background: #ffffff;
-  border: 1.5px solid #267348;
-  border-radius: 20px;
-  padding: 24px;
-  margin: 28px 0 24px;
-  box-shadow: 0 10px 30px rgba(38, 115, 72, 0.08);
-}
-
-.pc-assessment-main-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #edf2ef;
-  padding-bottom: 14px;
-  margin-bottom: 18px;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.pc-assessment-eyebrow {
-  display: block;
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  color: #267348;
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
-
-.pc-assessment-skin-type {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: #0f2318;
-}
-
-.pc-assessment-score-badge {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  padding: 6px 14px;
-  border-radius: 999px;
-}
-
-.pc-overall-label {
-  font-size: 0.82rem;
-  color: #64748b;
-  font-weight: 600;
-}
-
-.pc-overall-score {
-  font-size: 1.3rem;
-  font-weight: 900;
-  color: #267348;
-}
-
-.pc-overall-status {
-  font-size: 0.82rem;
-  color: #166534;
-  font-weight: 700;
-}
-
-.pc-assessment-zones-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.pc-zone-item {
-  display: flex;
-  gap: 12px;
-  background: #f8faf8;
-  border: 1px solid #edf2ef;
-  border-radius: 14px;
-  padding: 14px;
-  align-items: flex-start;
-}
-
-.pc-zone-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: #e8f5ee;
-  color: #267348;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.pc-zone-name {
-  display: block;
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: #0f2318;
-  margin-bottom: 4px;
-}
-
-.pc-zone-desc {
-  margin: 0;
-  font-size: 0.82rem;
-  color: #52655b;
-  line-height: 1.5;
-}
-
-.pc-assessment-advice-box {
-  background: #f0fdf4;
-  border: 1px dashed #34d399;
-  border-radius: 14px;
-  padding: 14px 18px;
-}
-
-.pc-advice-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #267348;
-  font-weight: 700;
-  font-size: 0.88rem;
-  margin-bottom: 6px;
-}
-
-.pc-advice-body {
-  margin: 0;
-  font-size: 0.85rem;
-  color: #166534;
-  line-height: 1.55;
-}
-
-/* 5 Inline Score Cards */
-.pc-inline-scores-section {
-  margin: 28px 0;
-}
-
-.pc-inline-section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px;
-}
-
-.pc-inline-section-heading {
-  margin: 0;
-  font-size: 1.12rem;
-  font-weight: 800;
-  color: #0f2318;
-}
-
-.pc-inline-section-badge {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #267348;
-  background: #e8f5ee;
-  padding: 3px 10px;
-  border-radius: 999px;
-}
-
-.pc-inline-scores-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.pc-inline-score-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 14px 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-  transition: transform 0.2s ease, border-color 0.2s ease;
-}
-
-.pc-inline-score-card:hover {
-  transform: translateY(-2px);
-  border-color: #34d399;
-}
-
-.pc-score-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.pc-score-name {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #0f2318;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.pc-score-badge {
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 999px;
-}
-
-.pc-score-badge.is-good { background: #e8f5ee; color: #267348; }
-.pc-score-badge.is-fair { background: #fef3c7; color: #b45309; }
-.pc-score-badge.is-attention { background: #fee2e2; color: #b91c1c; }
-
-.pc-score-main {
-  display: flex;
-  align-items: baseline;
-  gap: 2px;
-  margin-bottom: 8px;
-}
-
-.pc-score-number {
-  font-size: 1.45rem;
-  font-weight: 800;
-  color: #0f2318;
-}
-
-.pc-score-unit {
-  font-size: 0.75rem;
-  color: #94a3b8;
-}
-
-.pc-score-bar-track {
-  height: 5px;
-  background: #edf2ef;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.pc-score-bar-fill {
-  height: 100%;
-  border-radius: 999px;
-}
-
-.pc-score-bar-fill.is-good { background: #267348; }
-.pc-score-bar-fill.is-fair { background: #eab308; }
-.pc-score-bar-fill.is-attention { background: #ef4444; }
-
-.pc-inline-meta-row {
-  display: flex;
-  gap: 12px;
-  margin-top: 14px;
-}
-
-.pc-inline-meta-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: #f8faf8;
-  border: 1px solid #edf2ef;
-  font-size: 0.82rem;
-}
-
-.pc-inline-meta-chip[hidden] {
-  display: none !important;
-}
-
-.pc-meta-label {
-  color: #64748b;
-}
-
-.pc-meta-val {
-  font-weight: 700;
-  color: #267348;
-}
-
-/* Radar Chart Box */
-.pc-inline-radar-box {
-  background: #f8faf8;
-  border: 1px solid #edf2ef;
-  border-radius: 18px;
-  padding: 20px;
-  margin: 24px auto;
-}
-
-.pc-radar-heading {
-  margin: 0 0 12px;
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: #0f2318;
-  text-align: center;
-}
-
-/* 3-Stage Regimen Grid */
-.pc-inline-regimen-section {
-  margin: 28px 0;
-}
-
-.pc-inline-regimen-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.pc-regimen-stage-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 18px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-  display: flex;
+  z-index: 9;
+  display: none;
   flex-direction: column;
+  justify-content: space-between;
+  padding: 16px;
+  pointer-events: none;
+  color: #2dd4bf;
+  font-family: monospace;
+  font-size: 0.82rem;
 }
 
-.pc-stage-badge {
-  display: inline-block;
-  align-self: flex-start;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  background: #e8f5ee;
-  color: #267348;
-  padding: 3px 8px;
-  border-radius: 6px;
-  margin-bottom: 8px;
-}
-
-.pc-stage-title {
-  margin: 0 0 8px;
-  font-size: 0.98rem;
-  font-weight: 800;
-  color: #0f2318;
-}
-
-.pc-stage-desc {
-  font-size: 0.84rem;
-  color: #52655b;
-  line-height: 1.5;
-  margin-bottom: 12px;
-  flex: 1;
-}
-
-.pc-regimen-product-box {
-  margin-top: auto;
-  padding-top: 10px;
-  border-top: 1px dashed #e2e8f0;
-}
-
-.pc-regimen-prod-label {
+.pc-skin-scan__stage.is-scanning .pc-skin-scan-hud {
   display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.76rem;
-  color: #64748b;
-  margin-bottom: 4px;
 }
 
-.pc-regimen-prod-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.84rem;
-  font-weight: 700;
-  color: #267348;
-  text-decoration: none;
+.pc-hud-corner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #2dd4bf;
+  position: absolute;
 }
+.pc-hud-tl { top: 14px; left: 14px; border-right: none; border-bottom: none; }
+.pc-hud-tr { top: 14px; right: 14px; border-left: none; border-bottom: none; }
+.pc-hud-bl { bottom: 14px; left: 14px; border-right: none; border-top: none; }
+.pc-hud-br { bottom: 14px; right: 14px; border-left: none; border-top: none; }
 
-.pc-regimen-prod-link:hover {
-  text-decoration: underline;
-}
-
-.pc-btn-rescan {
-  background: #f8faf8;
-  border: 1.5px solid #d1fae5;
-  color: #1e6b42;
-}
-
-.pc-btn-zalo-doctor {
-  background: #0068ff;
-  border: 1.5px solid #0068ff;
-  color: #ffffff;
-}
-
-.pc-btn-zalo-doctor:hover {
-  background: #0056d6;
-  border-color: #0056d6;
+.pc-hud-telemetry {
+  background: rgba(10, 27, 19, 0.85);
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  padding: 8px 12px;
+  border-radius: 8px;
+  align-self: flex-start;
+  margin-top: 36px;
+  letter-spacing: 0.05em;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 /* ==========================================================================
-   Pharma Cosmetics - Fullscreen Immersive Camera & Dual State Separation
+   Full Screen Immersive Viewfinder Modal (Mobile & Tablet Ergonomics)
    ========================================================================== */
-
-/* Fullscreen Immersive Viewfinder Stage */
 .pc-skin-scan.is-camera-fullscreen .pc-skin-scan__stage {
   position: fixed !important;
   inset: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
   height: 100dvh !important;
-  max-width: 100% !important;
-  aspect-ratio: auto !important;
-  min-height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
   border-radius: 0 !important;
   z-index: 99999 !important;
-  background: radial-gradient(circle at center, #0e2a1d 0%, #05120c 100%) !important;
+  aspect-ratio: auto !important;
   box-shadow: none !important;
-  padding: 0 !important;
-  animation: fadeInCameraStage 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes fadeInCameraStage {
-  from { opacity: 0; transform: scale(0.98); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.pc-skin-scan.is-camera-fullscreen .pc-skin-scan__stage video,
-.pc-skin-scan.is-camera-fullscreen .pc-skin-scan__stage canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  background: #000000 !important;
 }
 
 body.pc-camera-fullscreen-active {
   overflow: hidden !important;
 }
 
-.pc-camera-modal-close {
+.pc-skin-camera-exit-btn {
   position: absolute;
-  top: 20px;
-  right: 76px;
-  z-index: 100002;
-  width: 42px;
-  height: 42px;
+  top: 16px;
+  left: 16px;
+  z-index: 100001;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: rgba(10, 27, 19, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(15, 35, 24, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.25);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   transition: all 0.2s ease;
 }
 
-.pc-camera-modal-close:hover {
-  background: rgba(220, 38, 38, 0.9);
-  border-color: rgba(220, 38, 38, 0.9);
-  transform: rotate(90deg);
+.pc-skin-camera-exit-btn:hover {
+  background: #dc2626;
+  border-color: #ef4444;
+  transform: scale(1.08);
 }
 
-.pc-camera-modal-close[hidden] {
-  display: none !important;
+/* ==========================================================================
+   Captured 3-Angle Review Gallery (Step before Final Processing)
+   ========================================================================== */
+.pc-skin-review-stage {
+  margin-top: 24px;
+  padding: 24px 20px;
+  background: #f8faf8;
+  border-radius: 18px;
+  border: 1.5px solid #d1fae5;
+  animation: fadeInReview 0.3s ease-out;
 }
 
-/* Review 3 Angles Stage */
 .pc-skin-review-stage[hidden] {
   display: none !important;
 }
 
-.pc-skin-review-stage {
-  margin-top: 28px;
-  padding: 28px;
-  border-radius: 20px;
-  background: #ffffff;
-  border: 1.5px solid #d1fae5;
-  box-shadow: 0 10px 30px rgba(38, 115, 72, 0.08);
-  animation: fadeInReviewStage 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes fadeInReviewStage {
-  from { opacity: 0; transform: translateY(12px); }
+@keyframes fadeInReview {
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .pc-review-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #edf2ef;
-  flex-wrap: wrap;
-}
-
-.pc-review-badge-top {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  background: #e8f5ee;
-  color: #267348;
-  border: 1px solid #c6f6d5;
+  text-align: center;
+  margin-bottom: 20px;
 }
 
 .pc-review-title {
-  margin: 8px 0 4px;
-  font-size: 1.18rem;
+  font-size: 1.15rem;
   font-weight: 800;
   color: #0f2318;
+  margin-bottom: 4px;
 }
 
 .pc-review-subtitle {
-  margin: 0;
   font-size: 0.86rem;
   color: #52655b;
-  line-height: 1.5;
 }
 
-.pc-review-grid {
+.pc-review-gallery {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-  margin: 22px 0 24px;
+  gap: 14px;
+  margin-bottom: 22px;
 }
 
 .pc-review-card {
-  background: #f8faf8;
-  border-radius: 16px;
+  background: #ffffff;
   border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
   overflow: hidden;
-  transition: all 0.25s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
 .pc-review-card:hover {
-  border-color: #34d399;
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(38, 115, 72, 0.1);
+  border-color: #3cb371;
 }
 
-.pc-review-img-wrap {
-  position: relative;
+.pc-review-thumb-wrap {
   width: 100%;
   aspect-ratio: 4 / 3;
   background: #0f2318;
+  position: relative;
   overflow: hidden;
 }
 
-.pc-review-img-wrap img {
+.pc-review-thumb-wrap canvas {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
 
-.pc-review-chip-status {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 10.5px;
-  font-weight: 700;
-  background: #267348;
-  color: #ffffff;
-  padding: 3px 8px;
-  border-radius: 999px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-}
-
 .pc-review-card-footer {
-  padding: 12px 14px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2183,133 +1723,133 @@ body.pc-camera-fullscreen-active {
   border-top: 1px solid #edf2ef;
 }
 
-.pc-review-card-meta strong {
-  display: block;
-  font-size: 0.88rem;
+.pc-review-angle-name {
+  font-size: 0.84rem;
+  font-weight: 700;
   color: #0f2318;
 }
 
-.pc-review-card-meta span {
-  display: block;
+.pc-btn-retake {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: #475569;
   font-size: 0.78rem;
-  color: #64748b;
-}
-
-.pc-btn-retake-angle {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #267348;
-  background: none;
-  border: none;
+  font-weight: 600;
+  padding: 4px 8px;
   cursor: pointer;
-  text-decoration: underline;
-  padding: 4px 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
 }
 
-.pc-btn-retake-angle:hover {
-  color: #1e5c3a;
+.pc-btn-retake:hover {
+  border-color: #267348;
+  color: #267348;
+  background: #f0fdf4;
 }
 
-.pc-review-action-wrap {
+.pc-review-actions {
   display: flex;
   justify-content: center;
-  margin-top: 8px;
+  max-width: 440px;
+  margin: 0 auto;
 }
 
-.pc-btn-analyze-large {
-  min-width: 320px;
-  font-size: 1.02rem !important;
-  padding: 14px 32px !important;
-  border-radius: 9999px !important;
-  box-shadow: 0 8px 24px rgba(38, 115, 72, 0.35) !important;
+.pc-btn-confirm-analyze {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 24px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #267348 0%, #166b55 100%);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 6px 20px rgba(38, 115, 72, 0.35);
+  transition: all 0.25s ease;
 }
 
-.pc-btn-analyze-large:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 12px 30px rgba(38, 115, 72, 0.45) !important;
+.pc-btn-confirm-analyze:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(38, 115, 72, 0.45);
 }
 
-/* Report Session View & Navbar */
+/* ==========================================================================
+   Navigation Bar above Report (Back to Scan / Retake Flow)
+   ========================================================================== */
 .pc-report-nav-bar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  padding: 16px 20px;
-  margin-bottom: 24px;
+  justify-content: space-between;
+  padding: 12px 18px;
   background: #f0fdf4;
-  border: 1.5px solid #bbf7d0;
-  border-radius: 16px;
-  flex-wrap: wrap;
-}
-
-.pc-report-nav-info h3 {
-  margin: 0;
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: #0f2318;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  margin-bottom: 20px;
 }
 
 .pc-btn-restart-scan {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 18px;
-  border-radius: 12px;
-  background: #267348;
-  color: #ffffff;
+  background: #ffffff;
+  border: 1.5px solid #267348;
+  color: #267348;
+  border-radius: 8px;
+  padding: 6px 14px;
   font-weight: 700;
   font-size: 0.86rem;
-  border: none;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(38, 115, 72, 0.25);
 }
 
 .pc-btn-restart-scan:hover {
-  background: #1e5c3a;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(38, 115, 72, 0.35);
+  background: #267348;
+  color: #ffffff;
 }
 
-@media (max-width: 860px) {
-  .pc-inline-scores-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .pc-inline-regimen-grid {
+@media (max-width: 768px) {
+  .pc-review-gallery {
     grid-template-columns: 1fr;
-  }
-  .pc-assessment-zones-grid {
-    grid-template-columns: 1fr;
-  }
-  .pc-report-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .pc-report-actions > * {
-    width: 100%;
-    justify-content: center;
-  }
-  .pc-review-grid {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-  .pc-review-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .pc-review-action-wrap .pc-btn-analyze-large {
-    width: 100%;
-    min-width: unset;
-  }
-  .pc-report-nav-bar {
-    flex-direction: column;
-    align-items: stretch;
   }
 }
 
-@media (max-width: 480px) {
-  .pc-inline-scores-grid {
-    grid-template-columns: 1fr;
+/* Mobile UI Refinement (<=767px): Header and 2 Mode Buttons side-by-side */
+@media (max-width: 767px) {
+  .pc-skin-mode-tabs {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 8px !important;
+    margin: 16px auto 12px !important;
+    padding: 0 4px !important;
+    width: 100% !important;
+  }
+
+  .pc-skin-mode-tabs button {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    width: 50% !important;
+    padding: 8px 8px !important;
+    font-size: 0.88rem !important;
+    white-space: nowrap !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    min-height: 44px !important;
+  }
+
+  .chat-app-header {
+    padding: 10px 14px;
+  }
+
+  .chat-app-header .verified-badge,
+  .chat-app-header .header-right {
+    display: none !important;
   }
 }
