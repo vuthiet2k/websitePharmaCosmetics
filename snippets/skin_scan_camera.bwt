@@ -1,8 +1,11 @@
 {%- comment -%}
   Soi da AI 2026-09-24: camera chạy trên thiết bị; ảnh gốc chỉ tồn tại trong RAM trình duyệt.
-  Giao diện thiết kế mới chuẩn y khoa theo bản vẽ PharmaCosmetics (1).svg.
+  Giao diện thiết kế mới chuẩn y khoa Pharma Cosmetics 2026 (Mockup PharmaCosmetics (1).svg).
+  Cập nhật: Đưa khối Tải 3 ảnh & Phân tích xuống hàng riêng col-12 toàn chiều rộng; tích hợp Auto-Shutter.
 {%- endcomment -%}
 <section class="pc-skin-scan" id="pcSkinScan" data-skin-scan data-skin-scan-enabled="{{ settings.ai_skin_scan_enable | default: true }}" data-skin-analysis-mode="{{ settings.ai_skin_scan_mode | default: 'client_edge' | escape }}" data-skin-deid-enabled="{{ settings.ai_skin_scan_deid_enable | default: true }}" data-skin-min-light="{{ settings.ai_skin_scan_min_light | default: '80' | escape }}" data-skin-model-url="{{ settings.ai_skin_scan_onnx_model_url | default: '' | escape }}" data-skin-model-sha256="{{ settings.ai_skin_scan_onnx_model_sha256 | default: '' | escape }}" hidden>
+  
+  <!-- HÀNG TRÊN: LƯỚI 2 CỘT (THÔNG TIN Y KHOA & KHUNG CAMERA VIEWFINDER) -->
   <div class="pc-skin-scan__layout">
     <!-- CỘT TRÁI: TIÊU ĐỀ & LỢI ÍCH Y KHOA -->
     <div class="pc-skin-scan__col-info">
@@ -12,6 +15,7 @@
         <p class="pc-skin-scan__desc">{{ settings.ai_skin_scan_intro | default: 'Chụp chính diện, má trái và má phải. Khi chưa có model đã thẩm định, hệ thống chỉ chạy phép đo Canvas thử nghiệm. Kết quả mang tính tham khảo; ảnh xử lý trên thiết bị và không tự động lưu hoặc giữ dữ liệu.' | escape }}</p>
       </div>
 
+      <!-- 3 Khối tính năng y khoa chuẩn Mockup -->
       <div class="pc-skin-features">
         <div class="pc-skin-feature-item">
           <div class="pc-skin-feature-icon">
@@ -139,43 +143,73 @@
           </li>
         </ol>
       </div>
+    </div>
+  </div>
 
-      <!-- Thanh công cụ dưới Viewfinder -->
-      <div class="pc-skin-scan__actions">
-        <button type="button" class="pc-skin-scan__secondary pc-btn-upload-trigger" data-skin-open-upload>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="17 8 12 3 7 8"/>
-            <line x1="12" y1="3" x2="12" y2="15"/>
-          </svg>
-          <span>{{ settings.ai_skin_scan_upload_label | default: 'Tải 3 ảnh từ thiết bị' | escape }}</span>
-        </button>
-        <button type="button" class="pc-skin-scan__primary pc-btn-analyze" data-skin-analyze disabled>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <span>{{ settings.ai_skin_scan_analyze_label | default: 'Phân tích 3 ảnh đã chụp' | escape }}</span>
-        </button>
-      </div>
+  <!-- HÀNG DƯỚI COL-12 CÙNG CẤP ROW CHA: THANH TÁC VỤ & PHÂN HỆ TẢI ẢNH CHUẨN Y KHOA -->
+  <div class="pc-skin-scan__bottom-bar">
+    <div class="pc-skin-scan__actions">
+      <button type="button" class="pc-skin-scan__secondary pc-btn-upload-trigger" data-skin-open-upload>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <span>{{ settings.ai_skin_scan_upload_label | default: 'Tải 3 ảnh từ thiết bị' | escape }}</span>
+      </button>
+      <button type="button" class="pc-skin-scan__primary pc-btn-analyze" data-skin-analyze disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <span>{{ settings.ai_skin_scan_analyze_label | default: 'Phân tích 3 ảnh đã chụp' | escape }}</span>
+      </button>
+    </div>
 
-      <!-- Phân hệ tải ảnh dự phòng (Clinical 3-Angle Upload Dropzone) -->
-      <div class="pc-skin-scan__upload" data-skin-upload hidden>
-        <div class="pc-upload-card">
+    <!-- Phân hệ tải ảnh dạng 3 Dropzone Cards rộng rãi toàn chiều rộng (col-12) -->
+    <div class="pc-skin-scan__upload" data-skin-upload hidden>
+      <div class="pc-dropzone-grid">
+        <div class="pc-upload-card" data-dropzone-card="front">
           <label>
+            <div class="pc-dropzone-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
             <span class="pc-upload-label">{{ settings.ai_skin_scan_step_front | default: 'Chính diện' | escape }}</span>
+            <span class="pc-dropzone-hint">Chọn hoặc kéo thả ảnh góc 0°</span>
             <input type="file" accept="image/*" data-skin-upload-angle="front">
           </label>
         </div>
-        <div class="pc-upload-card">
+
+        <div class="pc-upload-card" data-dropzone-card="left">
           <label>
+            <div class="pc-dropzone-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
             <span class="pc-upload-label">{{ settings.ai_skin_scan_step_left | default: 'Má trái 45 độ' | escape }}</span>
+            <span class="pc-dropzone-hint">Chọn hoặc kéo thả ảnh nghiêng trái 45°</span>
             <input type="file" accept="image/*" data-skin-upload-angle="left">
           </label>
         </div>
-        <div class="pc-upload-card">
+
+        <div class="pc-upload-card" data-dropzone-card="right">
           <label>
+            <div class="pc-dropzone-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
             <span class="pc-upload-label">{{ settings.ai_skin_scan_step_right | default: 'Má phải 45 độ' | escape }}</span>
+            <span class="pc-dropzone-hint">Chọn hoặc kéo thả ảnh nghiêng phải 45°</span>
             <input type="file" accept="image/*" data-skin-upload-angle="right">
           </label>
         </div>
