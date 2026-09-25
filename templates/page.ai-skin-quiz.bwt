@@ -67,11 +67,13 @@ window.PharmaSkinScanProductLabels = {
 <nav class="container pc-skin-mode-tabs" aria-label="{{ settings.ai_skin_scan_modes_label | default: 'Chọn cách phân tích da' | escape }}" role="tablist">
   <button type="button" role="tab" aria-selected="true" data-skin-mode="camera">
     <svg class="pc-mode-tab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-    <span>{{ settings.ai_skin_scan_camera_tab | default: 'Phân tích ảnh qua camera' | escape }}</span>
+    <span class="d-none d-md-inline">{{ settings.ai_skin_scan_camera_tab | default: 'Phân tích ảnh qua camera' | escape }}</span>
+    <span class="d-inline d-md-none">AI camera</span>
   </button>
   <button type="button" role="tab" aria-selected="false" data-skin-mode="quiz">
     <svg class="pc-mode-tab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-    <span>{{ settings.ai_skin_scan_quiz_tab | default: 'Khảo sát câu hỏi' | escape }}</span>
+    <span class="d-none d-md-inline">{{ settings.ai_skin_scan_quiz_tab | default: 'Khảo sát câu hỏi' | escape }}</span>
+    <span class="d-inline d-md-none">AI chat</span>
   </button>
 </nav>
 {% include 'skin_scan_camera' %}
@@ -83,9 +85,6 @@ window.PharmaSkinScanProductLabels = {
   <!-- Chat App Header -->
   <header class="chat-app-header">
     <div class="header-left">
-      <a href="/" class="btn-back-nav" aria-label="Quay lại trang chủ">
-        <i class="fas fa-chevron-left" aria-hidden="true"></i>
-      </a>
       <div class="doctor-avatar-wrap">
         <div class="doctor-avatar">
           <i class="fas fa-user-doctor" aria-hidden="true"></i>
@@ -95,14 +94,14 @@ window.PharmaSkinScanProductLabels = {
       <div class="doctor-info">
         <div class="doctor-name-row">
           <span class="doctor-name">Chuyên gia Pharma AI</span>
-           <span class="verified-badge" title="{{ settings.ai_skin_scan_chat_badge | default: 'Gợi ý tự động, chỉ mang tính tham khảo' | escape }}"><i class="fas fa-circle-info" aria-hidden="true"></i> {{ settings.ai_skin_scan_chat_badge | default: 'Gợi ý tham khảo' | escape }}</span>
+           <span class="verified-badge d-none d-md-inline-flex" title="{{ settings.ai_skin_scan_chat_badge | default: 'Gợi ý tự động, chỉ mang tính tham khảo' | escape }}"><i class="fas fa-circle-info" aria-hidden="true"></i> {{ settings.ai_skin_scan_chat_badge | default: 'Gợi ý tham khảo' | escape }}</span>
         </div>
         <div class="doctor-status">
            <span class="typing-status" id="headerStatusText">{{ settings.ai_skin_scan_chat_status | default: 'Trợ lý tư vấn • Gợi ý tham khảo' | escape }}</span>
         </div>
       </div>
     </div>
-    <div class="header-right">
+    <div class="header-right d-none d-md-block">
       <button type="button" class="btn-chat-action" id="btnRestartChat" title="Làm lại từ đầu">
         <i class="fas fa-rotate-right" aria-hidden="true"></i>
         <span class="action-text">Làm lại</span>
@@ -568,31 +567,42 @@ window.PharmaSkinScanProductLabels = {
     if (crmConsentAccept.disabled) crmConsentStatus.textContent = crmUi.safeModeMessage;
     crmConsentModal.hidden = false;
     crmConsentModal.setAttribute('aria-hidden', 'false');
-    if (!crmConsentAccept.disabled) crmConsentAccept.focus();
   }
 
-  messagesFlow.addEventListener('click', function(event) {
-    if (event.target.closest('#btnSaveAiResult')) openCrmConsent();
+  document.addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'btnSaveAiResult') {
+      openCrmConsent();
+    }
+    if (e.target && e.target.id === 'aiSkinCrmConsentCancel') {
+      closeCrmConsent();
+    }
   });
-  document.querySelectorAll('[data-crm-consent-close]').forEach(function(button) {
-    button.addEventListener('click', closeCrmConsent);
-  });
+
   crmConsentAccept.addEventListener('click', function() {
     if (!latestCrmResult || !window.PharmaCrmIntake) return;
     crmConsentAccept.disabled = true;
-    crmConsentStatus.textContent = '';
-    window.PharmaCrmIntake.submitAiChat({
+    crmConsentStatus.textContent = 'Đang lưu…';
+
+    var payload = {
       submission_id: crmSubmissionId,
-      consent: true,
-      consent_at: new Date().toISOString(),
-      source: 'ai_skin_quiz',
-      result: latestCrmResult
-    }).then(function() {
-      crmConsentStatus.textContent = crmUi.successMessage;
-    }).catch(function(error) {
-      crmConsentStatus.textContent = (error && error.message === 'crm_intake_consent_required')
-        ? 'Cần có sự đồng ý trước khi lưu kết quả.'
-        : crmUi.errorMessage;
+      customer_id: (window.PharmaCustomerContext && window.PharmaCustomerContext.customerId) || '',
+      skin_type: latestCrmResult.skin_type,
+      scores: latestCrmResult.scores,
+      recommendations: latestCrmResult.recommendations,
+      answers: latestCrmResult.answers,
+      source: 'quiz'
+    };
+
+    window.PharmaCrmIntake.submit(payload).then(function(res) {
+      if (res && res.success) {
+        crmConsentStatus.textContent = crmUi.successMessage;
+        setTimeout(closeCrmConsent, 1200);
+      } else {
+        crmConsentStatus.textContent = (res && res.message) || crmUi.errorMessage;
+        crmConsentAccept.disabled = false;
+      }
+    }).catch(function(err) {
+      crmConsentStatus.textContent = (err && err.message) || crmUi.errorMessage;
       crmConsentAccept.disabled = false;
     });
   });
