@@ -54,6 +54,71 @@
     var valid = yawPass && pitchPass && areaPass;
     return { available: true, yaw: yaw, pitch: pitch, faceAreaRatio: area, valid: valid, guidance: guidance };
   }
+
+  var staticMeshInstance = null;
+  function getStaticMesh(FaceMesh) {
+    if (staticMeshInstance) return staticMeshInstance;
+    staticMeshInstance = new FaceMesh({
+      locateFile: function (file) {
+        return 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/' + file;
+      }
+    });
+    staticMeshInstance.setOptions({
+      maxNumFaces: 1,
+      refineLandmarks: false,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5
+    });
+    return staticMeshInstance;
+  }
+
+  function detectImage(source, expectedAngle) {
+    return load().then(function (FaceMesh) {
+      if (!FaceMesh) return { available: false, valid: true, reason: 'mesh_unavailable' };
+      return new Promise(function (resolve) {
+        var timer = setTimeout(function () {
+          resolve({ available: false, valid: true, reason: 'timeout' });
+        }, 4000);
+        try {
+          var mesh = getStaticMesh(FaceMesh);
+          mesh.onResults(function (result) {
+            clearTimeout(timer);
+            var landmarks = (result.multiFaceLandmarks && result.multiFaceLandmarks[0]) || null;
+            if (!landmarks || landmarks.length < 468) {
+              resolve({
+                available: true,
+                valid: false,
+                reason: 'no_face',
+                landmarks: null,
+                guidance: 'Chưa nhận diện được khuôn mặt người trong ảnh. Vui lòng chọn ảnh chụp rõ khuôn mặt.'
+              });
+            } else {
+              var evalResult = evaluate(landmarks, expectedAngle || 'front', (source.width || source.naturalWidth || 640) / (source.height || source.naturalHeight || 480));
+              resolve({
+                available: true,
+                valid: evalResult.valid,
+                reason: evalResult.valid ? '' : 'invalid_pose',
+                landmarks: landmarks,
+                guidance: evalResult.guidance,
+                yaw: evalResult.yaw,
+                pitch: evalResult.pitch
+              });
+            }
+          });
+          mesh.send({ image: source }).catch(function () {
+            clearTimeout(timer);
+            resolve({ available: false, valid: true, reason: 'send_error' });
+          });
+        } catch (e) {
+          clearTimeout(timer);
+          resolve({ available: false, valid: true, reason: 'exception' });
+        }
+      });
+    }).catch(function () {
+      return { available: false, valid: true, reason: 'mesh_load_error' };
+    });
+  }
+
   function start(video, onQuality) {
     var stopped = false;
     var mesh;
@@ -75,5 +140,5 @@
       return { stop: function () { stopped = true; if (mesh && mesh.close) mesh.close(); } };
     });
   }
-  window.PharmaSkinMesh = { load: load, evaluate: evaluate, start: start };
+  window.PharmaSkinMesh = { load: load, evaluate: evaluate, detectImage: detectImage, start: start };
 })(window, document);
