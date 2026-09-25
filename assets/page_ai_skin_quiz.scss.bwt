@@ -520,11 +520,36 @@
   background: #ffffff;
 }
 
-/* Secondary Actions below Stage */
+/* Shutter Flash Animation */
+.pc-skin-scan__stage.pc-shutter-flash::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  z-index: 10;
+  pointer-events: none;
+  animation: shutterFlashFade 0.22s ease-out forwards;
+}
+
+@keyframes shutterFlashFade {
+  0% { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+
+/* Bottom Bar - Full Width col-12 Row below 2-Col Layout */
+.pc-skin-scan__bottom-bar {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1.5px solid #edf2ef;
+  width: 100%;
+}
+
 .pc-skin-scan__actions {
   display: flex;
-  gap: 12px;
-  margin-top: 16px;
+  gap: 14px;
+  justify-content: center;
+  max-width: 580px;
+  margin: 0 auto;
 }
 
 .pc-skin-scan__primary,
@@ -577,35 +602,80 @@
   flex: 1;
 }
 
-/* Clinical 3-Angle Upload Grid */
+/* Clinical 3-Angle Upload Dropzone Cards */
 .pc-skin-scan__upload {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-top: 16px;
-  padding: 16px;
-  background: #f8faf8;
-  border-radius: 16px;
-  border: 1px dashed #b8c7c0;
+  margin-top: 20px;
+  width: 100%;
 }
 
 .pc-skin-scan__upload[hidden] {
   display: none !important;
 }
 
-.pc-upload-card label {
+.pc-dropzone-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  width: 100%;
+}
+
+.pc-upload-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 22px 18px;
+  border: 1.5px dashed #b8c7c0;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  position: relative;
+}
+
+.pc-upload-card:hover {
+  border-color: #267348;
+  background: #fbfdfc;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(38, 115, 72, 0.12);
+}
+
+.pc-upload-card.has-file {
+  border-color: #34d399;
+  border-style: solid;
+  background: #f0fdf4;
+}
+
+.pc-dropzone-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #e8f5ee;
+  color: #267348;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  color: #164834;
-  font-size: 0.82rem;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+}
+
+.pc-upload-label {
+  display: block;
   font-weight: 700;
+  font-size: 0.95rem;
+  color: #0f2318;
+  margin-bottom: 4px;
+}
+
+.pc-dropzone-hint {
+  display: block;
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-bottom: 12px;
 }
 
 .pc-upload-card input[type="file"] {
   width: 100%;
   font-size: 0.8rem;
   color: #52655b;
+  cursor: pointer;
 }
 
 /* Report Section */
@@ -798,6 +868,20 @@
     margin: 20px auto 12px;
     padding: 0 12px;
   }
+
+  .pc-dropzone-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .pc-skin-scan__actions {
+    max-width: 100%;
+    flex-direction: column;
+  }
+
+  .pc-skin-scan__actions > * {
+    width: 100%;
+  }
 }
 
 @media (max-width: 600px) {
@@ -818,14 +902,6 @@
     border-radius: 12px;
     flex-direction: column;
     gap: 4px;
-  }
-
-  .pc-skin-scan__actions {
-    flex-direction: column;
-  }
-
-  .pc-skin-scan__actions > * {
-    width: 100%;
   }
 
   .pc-skin-mode-tabs {
