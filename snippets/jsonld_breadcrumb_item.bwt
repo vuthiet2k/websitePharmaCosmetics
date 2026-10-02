@@ -1,0 +1,8 @@
+{%- comment -%}
+  1 ListItem của BreadcrumbList JSON-LD (snippets/schema.bwt). Đầu vào: pc_bc_pos, pc_bc_url (đường
+  dẫn tương đối hoặc tuyệt đối), pc_bc_name. In dấu phẩy ĐỨNG TRƯỚC để không bao giờ có dấu phẩy
+  thừa cuối mảng (2026-10-03: lỗi cũ làm JSON-LD vỡ ở /account/login, /collections).
+{%- endcomment -%}
+{%- assign pc_bc_abs = pc_bc_url -%}
+{%- unless pc_bc_url contains '//' -%}{%- assign pc_bc_abs = pc_jsonld_base | append: pc_bc_url -%}{%- endunless -%}
+,{"@type": "ListItem", "position": {{ pc_bc_pos }}, "item": {"@id": {{ pc_bc_abs | json }}, "name": {{ pc_bc_name | strip_html | strip | json }}}}

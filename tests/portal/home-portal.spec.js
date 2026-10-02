@@ -301,7 +301,9 @@ test('missing and failed images use the local fallback, including dynamic app co
     document.querySelector('.ab-most-view-product-module').append(img);
   });
   const img = page.locator('#failed-product-image');
-  await expect(img).toHaveAttribute('src', /no-image\.jpg/);
+  // 2026-10-03: ảnh dự phòng lấy từ snippet placeholder_img_url (settings.placeholder_image hoặc
+  // khung SVG inline) thay cho assets/no-image.jpg — build:sapo cấm ảnh bitmap nội dung trong assets/.
+  await expect(img).toHaveAttribute('src', /^data:image\/svg\+xml,/);
   await expect.poll(() => img.evaluate(e => e.complete && e.naturalWidth > 0)).toBeTruthy();
   expect(await img.getAttribute('srcset')).toBeNull();
 });

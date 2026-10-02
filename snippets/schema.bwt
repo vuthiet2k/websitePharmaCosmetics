@@ -1,167 +1,49 @@
+{%- comment -%}
+  2026-10-03 SEO: dựng lại BreadcrumbList — mọi chuỗi qua | json (tên có dấu " không làm vỡ JSON),
+  item in qua snippet jsonld_breadcrumb_item (dấu phẩy đứng trước), URL chuẩn hoá về https dù
+  store.url dạng //domain hay https://domain. Trang chỉ có "Trang chủ" thì không in khối này.
+{%- endcomment -%}
+{%- assign pc_jsonld_base = store.url | remove: 'https:' | remove: 'http:' | prepend: 'https:' -%}
 {%unless template contains 'index' or template contains '404'%}
+{%- capture pc_bc_items -%}
+{%- if template contains 'product' -%}
+  {%- assign pc_bc_pos = 2 -%}{%- assign pc_bc_url = '/' | append: product.alias -%}{%- assign pc_bc_name = product.name -%}{%- include 'jsonld_breadcrumb_item' -%}
+{%- endif -%}
+{%- if template contains 'collection' and collection.alias -%}
+  {%- assign pc_bc_pos = 2 -%}{%- assign pc_bc_name = collection.name -%}
+  {%- if collection.alias == 'all' -%}{%- assign pc_bc_url = '/collections/all' -%}{%- else -%}{%- assign pc_bc_url = '/' | append: collection.alias -%}{%- endif -%}
+  {%- include 'jsonld_breadcrumb_item' -%}
+  {%- if current_tags -%}
+    {%- assign pc_bc_pos = 3 -%}{%- assign pc_bc_url = pc_bc_url | append: '/' | append: current_tags.first -%}{%- assign pc_bc_name = current_tags.first -%}{%- include 'jsonld_breadcrumb_item' -%}
+  {%- endif -%}
+{%- endif -%}
+{%- if template contains 'article' -%}
+  {%- assign pc_bc_pos = 2 -%}{%- assign pc_bc_url = blog.url -%}{%- assign pc_bc_name = blog.name -%}{%- include 'jsonld_breadcrumb_item' -%}
+  {%- assign pc_bc_pos = 3 -%}{%- assign pc_bc_url = article.url -%}{%- assign pc_bc_name = article.title -%}{%- include 'jsonld_breadcrumb_item' -%}
+{%- endif -%}
+{%- if template == 'blog' -%}
+  {%- assign pc_bc_pos = 2 -%}{%- assign pc_bc_name = blog.name -%}
+  {%- if current_url contains 'blogs/all' -%}{%- assign pc_bc_url = '/blogs/all' -%}{%- else -%}{%- assign pc_bc_url = blog.url -%}{%- endif -%}
+  {%- include 'jsonld_breadcrumb_item' -%}
+  {%- if current_tags and pc_bc_url != '/blogs/all' -%}
+    {%- assign pc_bc_pos = 3 -%}{%- assign pc_bc_url = blog.url | append: '/' | append: current_tags.first -%}{%- assign pc_bc_name = current_tags.first -%}{%- include 'jsonld_breadcrumb_item' -%}
+  {%- endif -%}
+{%- endif -%}
+{%- if template contains 'page' -%}
+  {%- assign pc_bc_pos = 2 -%}{%- assign pc_bc_url = '/' | append: page.alias -%}{%- assign pc_bc_name = page.title -%}{%- include 'jsonld_breadcrumb_item' -%}
+{%- endif -%}
+{%- if template contains 'cart' -%}
+  {%- assign pc_bc_pos = 2 -%}{%- assign pc_bc_url = '/cart' -%}{%- assign pc_bc_name = 'Giỏ hàng' -%}{%- include 'jsonld_breadcrumb_item' -%}
+{%- endif -%}
+{%- if template contains 'search' -%}
+  {%- assign pc_bc_pos = 2 -%}{%- assign pc_bc_url = '/search' -%}{%- assign pc_bc_name = 'Tìm kiếm' -%}{%- include 'jsonld_breadcrumb_item' -%}
+{%- endif -%}
+{%- endcapture -%}
+{%- if pc_bc_items != blank -%}
 <script type="application/ld+json">
-        {
-        "@context": "http://schema.org",
-        "@type": "BreadcrumbList",
-        "itemListElement": 
-        [
-            {
-                "@type": "ListItem",
-                "position": 1,
-                "item": 
-                {
-                  "@id": "https:{{store.url}}",
-                  "name": "Trang chủ"
-                }
-            },
-      {% if template contains 'product' %}
-            {
-                "@type": "ListItem",
-                "position": 2,
-                "item": 
-                {
-                  "@id": "https:{{store.url}}/{{ product.alias }}",
-                  "name": "{{ product.name }}"
-                }
-            }
-      {%endif%}
-        {% if template contains 'collection' and collection.alias %}
-      {%if collection.alias == 'all'%}
-      {
-                "@type": "ListItem",
-                "position": 2,
-                "item": 
-                {
-                  "@id": "https:{{store.url}}/collections/all",
-                  "name": "{{ collection.name }}"
-                }
-            }{% if current_tags %},{%endif%}
-      {%else%}
-      {
-                "@type": "ListItem",
-                "position": 2,
-                "item": 
-                {
-                  "@id": "https:{{store.url}}/{{ collection.alias }}",
-                  "name": "{{ collection.name }}"
-                }
-            }{% if current_tags %},{%endif%}
-      {%endif%}
-      {% if current_tags %}
-        {%if collection.alias == 'all'%}
-        {
-          "@type": "ListItem",
-          "position": 3,
-          "item": 
-          {
-            "@id": "https:{{store.url}}/collections/all/{{ current_tags.first }}",
-            "name": "{{ current_tags.first }}"
-          }
-        }
-        {%else%}
-        {
-          "@type": "ListItem",
-          "position": 3,
-          "item": 
-          {
-            "@id": "https:{{store.url}}/{{ collection.alias }}/{{ current_tags.first }}",
-            "name": "{{ current_tags.first }}"
-          }
-        }
-        {%endif%}
-      {%endif%}
-      {%endif%}
-      {% if template contains 'article' %}
-            {
-                "@type": "ListItem",
-                "position": 2,
-                "item": 
-                {
-                  "@id": "https:{{store.url}}{{ blog.url }}",
-                  "name": "{{ blog.name }}"
-                }
-            },
-      {
-                "@type": "ListItem",
-                "position": 3,
-                "item": 
-                {
-                  "@id": "https:{{store.url}}{{ article.url }}",
-                  "name": "{{ article.title }}"
-                }
-            }
-      {%endif%}
-      {% if template == 'blog' %}
-      {%if current_url contains 'blogs/all'%}
-            {
-                "@type": "ListItem",
-                "position": 2,
-                "item": 
-                {
-                  "@id": "https:{{store.url}}/blogs/all",
-                  "name": "{{ blog.name }}"
-                }
-            }
-      {%else%}
-        {
-                "@type": "ListItem",
-                "position": 2,
-                "item": 
-                {
-                  "@id": "https:{{store.url}}{{blog.url}}",
-                  "name": "{{ blog.name }}"
-                }
-            }
-      {%if current_tags%}
-      ,
-      {
-                "@type": "ListItem",
-                "position": 3,
-                "item": 
-                {
-                  "@id": "https:{{store.url}}{{blog.url}}/{{ current_tags.first }}",
-                  "name": "{{ current_tags.first }}"
-                }
-            }
-      {%endif%}
-      {%endif%}
-      {%endif%}
-      {% if template contains 'page' %}
-      {
-                "@type": "ListItem",
-                "position": 2,
-                "item": 
-                {
-                  "@id": "https:{{store.url}}/{{ page.alias }}",
-                  "name": "{{ page.title }}"
-                }
-            }
-      {% endif %}
-      {% if template contains 'cart' %}
-      {
-                "@type": "ListItem",
-                "position": 2,
-                "item": 
-                {
-                  "@id": "https:{{store.url}}/cart",
-                  "name": "Giỏ hàng"
-                }
-            }
-      {% endif %}
-    {% if template contains 'search' %}
-      {
-                "@type": "ListItem",
-                "position": 2,
-                "item": 
-                {
-                  "@id": "https:{{store.url}}/search",
-                  "name": "Tìm kiếm"
-                }
-            }
-      {% endif %}
-        ]
-        }
+{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "item": {"@id": {{ pc_jsonld_base | json }}, "name": "Trang chủ"}}{{ pc_bc_items | strip }}]}
 </script>
+{%- endif -%}
 {%endunless%}
 {%- comment -%}
   T-138 (2026-09-12) — SEO: nâng khối Organization lên HealthAndBeautyBusiness (phân nhóm
@@ -172,53 +54,62 @@
   trang và structured data là một lỗi SEO thường gặp).
   Mọi giá trị đọc từ lớp schema-admin, KHÔNG hardcode — sửa trong Sapo Admin là schema tự đổi theo.
 {%- endcomment -%}
+{%- comment -%} 2026-10-03: chuỗi qua | json, URL/logo chuẩn https, bỏ trường rỗng. {%- endcomment -%}
+{%- assign pc_ld_phone = settings.footer_legal_phone | default: settings.store_phone | default: store.phone_number -%}
+{%- assign pc_ld_logo = 'logo.png' | asset_url | remove: 'https:' | remove: 'http:' | prepend: 'https:' -%}
+{%- assign _seo_addr = settings.footer_legal_address | default: settings.store_address -%}
 <script type="application/ld+json">
 {
-	"@context" : "https://schema.org",
-  	"@type" : "HealthAndBeautyBusiness",
-  	"name" : "{{ settings.store_name | default: store.name }}",
-  	"legalName" : "{{ settings.footer_legal_company | default: store.name }}",
-  	"url" : "https:{{ store.url }}",
+	"@context": "https://schema.org",
+	"@type": "HealthAndBeautyBusiness",
+	"name": {{ settings.store_name | default: store.name | json }},
+	"legalName": {{ settings.footer_legal_company | default: store.name | json }},
+	"url": {{ pc_jsonld_base | json }},
 	{%- if settings.footer_legal_tax_code != blank %}
-  	"taxID" : "{{ settings.footer_legal_tax_code }}",
-	"vatID" : "{{ settings.footer_legal_tax_code }}",
+	"taxID": {{ settings.footer_legal_tax_code | json }},
+	"vatID": {{ settings.footer_legal_tax_code | json }},
 	{%- endif %}
-	{%- assign _seo_addr = settings.footer_legal_address | default: settings.store_address -%}
 	{%- if _seo_addr != blank %}
-	"address" : {
-		"@type" : "PostalAddress",
-		"streetAddress" : "{{ _seo_addr | strip_newlines | remove: 'Địa chỉ:' | strip | escape }}",
-		"addressLocality" : "Hà Nội",
-		"addressCountry" : "VN"
+	"address": {
+		"@type": "PostalAddress",
+		"streetAddress": {{ _seo_addr | strip_newlines | remove: 'Địa chỉ:' | strip | json }},
+		"addressLocality": "Hà Nội",
+		"addressCountry": "VN"
 	},
 	{%- endif %}
 	{%- if settings.footer_legal_email != blank %}
-	"email" : "{{ settings.footer_legal_email }}",
+	"email": {{ settings.footer_legal_email | json }},
 	{%- endif %}
-  	"telephone" : "{{ settings.footer_legal_phone | default: settings.store_phone | default: store.phone_number }}",
-  	"contactPoint":[{
-    	"@type" : "ContactPoint",
-    	"telephone" : "{{ settings.footer_legal_phone | default: settings.store_phone | default: store.phone_number }}",
-    	"contactType" : "customer service",
-		"availableLanguage" : ["vi", "en"]
-  	}],
-  	"logo":"{{ 'logo.png' | asset_url }}",
-  	"sameAs":[
-  	"{{ settings.social_facebook_link }}",
-    "{{ settings.social_twitter_link }}"
-	]
+	{%- comment -%} 2026-10-03: sameAs đọc footer_social_fb / footer_social_insta (field cũ social_facebook_link/social_twitter_link không tồn tại trong schema). {%- endcomment -%}
+	{%- if settings.footer_social_fb != blank or settings.footer_social_insta != blank %}
+	"sameAs": [
+		{%- assign pc_ld_comma = "" -%}
+		{%- if settings.footer_social_fb != blank -%}{{ pc_ld_comma }}{{ settings.footer_social_fb | strip | json }}{%- assign pc_ld_comma = "," -%}{%- endif -%}
+		{%- if settings.footer_social_insta != blank -%}{{ pc_ld_comma }}{{ settings.footer_social_insta | strip | json }}{%- assign pc_ld_comma = "," -%}{%- endif -%}
+	],
+	{%- endif %}
+	{%- if pc_ld_phone != blank %}
+	"telephone": {{ pc_ld_phone | json }},
+	"contactPoint": [{
+		"@type": "ContactPoint",
+		"telephone": {{ pc_ld_phone | json }},
+		"contactType": "customer service",
+		"availableLanguage": ["vi", "en"]
+	}],
+	{%- endif %}
+	"logo": {{ pc_ld_logo | json }}
 }
 </script>
 <script type="application/ld+json">
 {
-  "@context" : "http://schema.org",
-  "@type" : "WebSite", 
-  "name" : "{{ store.name }}",
-  "url" : "https:{{ store.url }}",
-  "potentialAction":{
-    	"@type" : "SearchAction",
-    	"target" : "https:{{ store.url}}/search?query={search_term}",
-    	"query-input" : "required name=search_term"
-  	}                     
+	"@context": "https://schema.org",
+	"@type": "WebSite",
+	"name": {{ store.name | json }},
+	"url": {{ pc_jsonld_base | json }},
+	"potentialAction": {
+		"@type": "SearchAction",
+		"target": {{ pc_jsonld_base | append: '/search?query={search_term}' | json }},
+		"query-input": "required name=search_term"
+	}
 }
 </script>

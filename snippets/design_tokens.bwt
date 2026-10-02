@@ -1,0 +1,339 @@
+{%- comment -%}
+  design_tokens.bwt — nguồn token CSS duy nhất (SSOT) của theme (2026-10-03). Gộp nguyên văn các
+  khối :root trước đây nằm rải ở pharma_ui_kit.bwt, header_style.bwt, storefront_theme.bwt và
+  assets/global_core.scss.bwt; tên + giá trị giữ nguyên để không đổi giao diện. Token mới thêm
+  vào đây, không khai báo :root ở file khác. Include 1 lần trong <head> của mọi layout storefront.
+{%- endcomment -%}
+<style id="pc-design-tokens">
+  {%- comment -%}
+    REOPEN 2026-09-10 (ADR-007/T-70): giá trị hex đổi sang palette xlsx mới, TÊN biến CSS giữ
+    nguyên (không đổi --primary-forest-900 thành tên khác) vì các rule .pc-kit-* bên dưới tham
+    chiếu trực tiếp — chỉ cần đổi giá trị là toàn bộ component tự động theo palette mới. Mapping
+    giống hệt tailwind.config.js: forest-900→brand-deep, forest-800→brand-dark,
+    emerald-700→brand-green, emerald-600→brand-primary, mint→mint-subtle/mint-light,
+    gold→gold-dark, sale-orange→peach, luxury-sand→peach-light. flash-red giữ nguyên.
+  {%- endcomment -%}
+  :root {
+    --primary-forest-900: #0F2318;
+    --primary-forest-800: #166B55;
+    --primary-emerald-700: #267348;
+    --primary-emerald-600: var(--pc-brand-primary); /* 2026-10-03: theo Customizer settings.theme_main_color (không dùng --primary: vendor_bootstrap.css ghi đè thành #007bff) */
+    --primary-mint-100: #D7F3E3;
+    --primary-mint-50: #E8F8EE;
+    --accent-flash-red: #DC2626;
+    --accent-sale-orange: #D79A7D;
+    --accent-gold: #B8860B;
+    --accent-luxury-sand: #F6E3D8;
+
+    {%- comment -%}
+      REOPEN 2026-09-10 (ADR-007/T-71): token mới đặt tên đúng theo xlsx --color-brand-* (dùng
+      cho markup M7+ qua Tailwind key brand-primary/brand-green/... trong tailwind.config.js +
+      layouts/theme.bwt, hoặc trực tiếp var(--color-*) trong CSS/inline style mới).
+    {%- endcomment -%}
+    --color-brand-primary: var(--pc-brand-primary); /* 2026-10-03: theo Customizer settings.theme_main_color (không dùng --primary: vendor_bootstrap.css ghi đè thành #007bff) */
+    --color-brand-green: #267348;
+    --color-brand-dark: #166B55;
+    --color-brand-deep: #0F2318;
+    --color-mint-light: #D7F3E3;
+    --color-mint-subtle: #E8F8EE;
+    --color-badge-green-bg: #E8F5E9;
+    --color-badge-green-text: #267348;
+    --color-gold-sand: #DFBA73;
+    --color-gold-dark: #B8860B;
+    --color-peach: #D79A7D;
+    --color-peach-light: #F6E3D8;
+    --color-text-main: #13241F;
+    --color-text-body: #334155;
+    --color-text-muted: #64748B;
+    --color-border-clinical: #E2E8F0;
+    --color-bg-page: #F8FAF7;
+    --color-semantic-success: #10B981;
+  }
+
+  {%- comment -%}
+    REOPEN 2026-09-10 (ADR-007/T-71): dark theme — cặp giá trị dark đúng theo xlsx (WCAG
+    AA/AAA), áp dụng cả 2 cơ chế: tự động theo OS (@media prefers-color-scheme) VÀ toggle thủ
+    công qua [data-theme="dark"] trên <html>/<body>. Chỉ áp cho các biến CSS custom property
+    (tiêu thụ qua var() trực tiếp, vd. .pc-kit-top-bar-clinical, section_hero.bwt,
+    section_solutions.bwt) — KHÔNG áp cho Tailwind utility class tĩnh (bg-forest-900 v.v., đã
+    biên dịch thành hex cố định ở T-70) vì 1 class (page.about-us.bwt) dùng opacity modifier
+    (bg-forest-900/70) không tương thích với giá trị CSS var (xem AC-28: phạm vi "token mới").
+  {%- endcomment -%}
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --primary-forest-900: #132E20;
+      --primary-forest-800: #2DD4BF;
+      --primary-emerald-700: #34D399;
+      --primary-emerald-600: #3ED58C;
+      --primary-mint-100: #1B3E2D;
+      --primary-mint-50: #112A1E;
+      --accent-sale-orange: #E8A588;
+      --accent-gold: #E0A838;
+      --accent-luxury-sand: #2E1D16;
+      --color-brand-primary: #3ED58C;
+      --color-brand-green: #34D399;
+      --color-brand-dark: #2DD4BF;
+      --color-brand-deep: #132E20;
+      --color-mint-light: #1B3E2D;
+      --color-mint-subtle: #112A1E;
+      --color-badge-green-bg: #143823;
+      --color-badge-green-text: #34D399;
+      --color-gold-sand: #F3CA7E;
+      --color-gold-dark: #E0A838;
+      --color-peach: #E8A588;
+      --color-peach-light: #2E1D16;
+      --color-text-main: #F1F5F3;
+      --color-text-body: #CBD5E1;
+      --color-text-muted: #94A3B8;
+      --color-border-clinical: #1E3A2B;
+      --color-bg-page: #0B1712;
+      --color-semantic-success: #34D399;
+    }
+  }
+  :root[data-theme="dark"] {
+    --primary-forest-900: #132E20;
+    --primary-forest-800: #2DD4BF;
+    --primary-emerald-700: #34D399;
+    --primary-emerald-600: #3ED58C;
+    --primary-mint-100: #1B3E2D;
+    --primary-mint-50: #112A1E;
+    --accent-sale-orange: #E8A588;
+    --accent-gold: #E0A838;
+    --accent-luxury-sand: #2E1D16;
+    --color-brand-primary: #3ED58C;
+    --color-brand-green: #34D399;
+    --color-brand-dark: #2DD4BF;
+    --color-brand-deep: #132E20;
+    --color-mint-light: #1B3E2D;
+    --color-mint-subtle: #112A1E;
+    --color-badge-green-bg: #143823;
+    --color-badge-green-text: #34D399;
+    --color-gold-sand: #F3CA7E;
+    --color-gold-dark: #E0A838;
+    --color-peach: #E8A588;
+    --color-peach-light: #2E1D16;
+    --color-text-main: #F1F5F3;
+    --color-text-body: #CBD5E1;
+    --color-text-muted: #94A3B8;
+    --color-border-clinical: #1E3A2B;
+    --color-bg-page: #0B1712;
+    --color-semantic-success: #34D399;
+  }
+
+	:root {
+		/* ══ A. Brand Colors ══════════════════════════════════════════ */
+		--mainColor:         {{settings.theme_main_color}};
+		--mainColorDark:     #267348;    /* dùng cho Title/Heading — độ tương phản cao */
+		--mainColorLight:    #eaf7ee;    /* dùng cho hover bg, icon nền */
+		--mainColorGradient: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+		--subColor:          {{settings.theme_sub_color}};
+		--hover:             {{settings.theme_sub_color}};
+		--accentColor:       #E35D5D;
+		--accentColor-rgb:   227, 93, 93;
+
+		/* ── Editorial palette (REOPEN 2026-09-10, ADR-007/T-70 — palette xlsx mới, thay giá trị
+		   init-data-2026-08 cũ; dùng cho hero/testimonials/ingredients hệ mới) ─ */
+		--primary:      {{settings.theme_main_color | default: '#3cb371'}};   /* alias --mainColor, = brand-primary xlsx */
+		--primary-deep: {{settings.theme_sub_color  | default: '#166B55'}};   /* alias --subColor, = brand-dark xlsx */
+		--ink:          #13241F;                 /* deep editorial ink, = text-main xlsx (không đổi) */
+		--ink-soft:     #4B5B54;                 /* body copy, meta */
+		--clay:         #D79A7D;                 /* accent tương phản với primary, = peach xlsx */
+		--clay-soft:    #F6E3D8;                 /* nền phụ ấm — subtle section, = peach-light xlsx */
+		--line:         #E2E8F0;                 /* border editorial 1px, = border-clinical xlsx */
+		--surface:      #FFFFFF;                 /* nền card / khối content */
+		--bg-page:      {{settings.theme_body_bg | default: '#F8FAF7'}};   /* nền body editorial, = bg-page xlsx */
+		--radius-editorial: 2px;                 /* boxy — không bo tròn */
+
+		/* ══ B. Section Backgrounds ═══════════════════════════════════ */
+		--bg-default:  #ffffff;                  /* section--light */
+		--bg-subtle:   #F8F9FA;                  /* section--subtle, xen kẽ với default */
+		--bg-surface:  #eaf7ee;                  /* nền xanh lá cực nhạt */
+
+		/* Gradients theo ngữ cảnh */
+		--bg-gradient-green:    linear-gradient(135deg, #f4fcf6 0%, #e8f5e9 100%);  /* section--brand: Hero, Testimonials */
+		--bg-gradient-sale:     linear-gradient(135deg, #fff5f5 0%, #ffe3e3 100%);  /* section--sale: Flash Sale */
+		--bg-gradient-clinical: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);  /* section--clinical: Ingredients, Y khoa */
+		--bg-gradient: var(--bg-gradient-green);  /* alias backward-compat */
+
+		/* ══ C. Text Colors ══════════════════════════════════════════ */
+		--textColor:   {{settings.theme_body_text_color}};
+		--textBody:    #2D3436;
+		--textSub:     #636E72;
+		--lineColor:   #DFE6E9;
+		--white:       #ffffff;
+
+		--star-color:  #f5a623;       /* star rating — dùng var(--star-color) thay hardcode */
+
+		/* ══ D. Status / Functional ══════════════════════════════════ */
+		--price:             {{settings.color_price}};   /* legacy — dùng trong code cũ */
+		--price-color:       var(--mainColorDark);        /* dùng biến này cho code mới — đậm hơn, tạo tin cậy */
+		{%- comment -%}
+		  DEF-A11Y-01 (Báo cáo UI Quality Audit 13/09/2026): chữ trắng trên --sale-color cũ (#FF4D00)
+		  đo thực tế chỉ đạt 3.33:1 (badge giảm giá & nút CTA Flash Sale) — dưới chuẩn WCAG 2.2 AA
+		  4.5:1. Đổi sang #cc3d00 (vốn đã dùng làm màu :hover cũ, đã kiểm chứng đạt 4.96:1) làm màu
+		  nền chính; :hover đổi sang tông đậm hơn nữa #a83200 (6.73:1) để vẫn phân biệt được 2 trạng
+		  thái. --section-eyebrow-color (dùng làm màu CHỮ, không phải nền) cũng ăn theo biến này nên
+		  càng đậm càng lợi cho tương phản, không có tác dụng phụ.
+		{%- endcomment -%}
+		--sale-color:        #cc3d00;
+		--sale-color-dark:   #a83200;
+		--sale-gradient:     linear-gradient(295deg, #CD1A0C 0%, #FF5246 98.45%);
+		{%- comment -%}
+		  E01 (phase home-shopping-ux, 2026-09-20) — người dùng yêu cầu trực tiếp: badge % giảm giá
+		  đổi hẳn sang đỏ, tách riêng khỏi --sale-color (cam-đỏ trầm #cc3d00 đang dùng cho nút CTA/
+		  progress bar, không đổi 2 chỗ đó). Đo contrast #D92D20 + chữ trắng ≈ 4.83:1, đạt AA.
+		{%- endcomment -%}
+		--flashsale-badge-bg: #D92D20;
+		--sale-bar-gradient: linear-gradient(90deg, var(--sale-color), #ffcc00);
+
+		/* ══ E. Header / Layout ══════════════════════════════════════ */
+		/* Header/footer bám theo primary-deep (REOPEN 2026-09-10, brand-dark xlsx) — dải điều
+		   hướng đậm tương phản với --primary #3cb371 dùng ở button/tag. */
+		--bgHeader:  {{settings.theme_sub_color | default: '#166B55'}};
+		--txtHeader: {{settings.txt_header}};
+		--bgBodySub: {{settings.body_bg_sub}};
+		--bgBody:    #F8F9FA;
+		--bgincol:   {{ settings.col_gradient | default: settings.theme_main_color }};
+		--textorder: {{ settings.color_txt_order | default: settings.theme_body_text_color }};
+
+		/* ══ F. Font Families ════════════════════════════════════════ */
+		/* 19/09/2026: Montserrat là font chữ UI duy nhất; alias cũ giữ để CSS legacy không vỡ. */
+		--font-primary:   'Montserrat', system-ui, sans-serif;
+		--font-secondary: 'Montserrat', system-ui, sans-serif;
+		--font-display:   'Montserrat', system-ui, sans-serif;
+		--font-mono:      'Montserrat', system-ui, sans-serif;
+
+		/* ══ G. Typography Scale (1rem = 16px — Bootstrap 5 standard) ══ */
+		--fs-xs:   0.75rem;   /* 12px — caption, thông tin phụ */
+		--fs-sm:   0.875rem;  /* 14px — mô tả sản phẩm, text phụ */
+		--fs-base: 1rem;      /* 16px — body mặc định toàn trang */
+		--fs-md:   1.125rem;  /* 18px — tiêu đề phụ, giá tiền lớn */
+		--fs-lg:   1.25rem;   /* 20px — h3, heading nhỏ */
+		--fs-xl:   1.5rem;    /* 24px — h2, section heading */
+		--fs-2xl:  2rem;      /* 32px — h1, big banner */
+		--fs-3xl:  2.5rem;    /* 40px — landing page đặc biệt */
+
+		/* ══ H. Motion (Duration + Easing) ══════════════════════════ */
+		--dur-fast:  150ms;
+		--dur-base:  300ms;
+		--dur-slow:  500ms;
+		--dur-xslow: 800ms;
+		--ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+		--ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+		--ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+		--ease-linear: linear;
+	}
+	{%- comment -%}
+	  REOPEN 2026-09-10 (ADR-007/T-71): dark theme cho "Editorial palette" (--primary/--clay/
+	  --line/--bg-page) — chỉ áp cho các biến CSS custom property đang định nghĩa trong khối này,
+	  đồng bộ cơ chế @media/[data-theme] với snippets/pharma_ui_kit.bwt.
+	{%- endcomment -%}
+	@media (prefers-color-scheme: dark) {
+		:root:not([data-theme="light"]) {
+			--primary-deep: #2DD4BF;
+			--clay:         #E8A588;
+			--clay-soft:    #2E1D16;
+			--line:         #1E3A2B;
+			--bg-page:      #0B1712;
+		}
+	}
+	:root[data-theme="dark"] {
+		--primary-deep: #2DD4BF;
+		--clay:         #E8A588;
+		--clay-soft:    #2E1D16;
+		--line:         #1E3A2B;
+		--bg-page:      #0B1712;
+	}
+
+	@media (max-width: 768px) {
+	:root {
+		--fs-base: 0.95rem;
+		--fs-lg:   1.1rem;
+		--fs-xl:   1.35rem;
+	}
+	}
+
+/* Spacing tokens — chỉnh 1 chỗ áp toàn site. Giảm để bớt "trống trải". */
+:root {
+  --pc-section-mb: 24px;     /* khoảng cách tiêu đề → nội dung (cũ 32px) */
+  --pc-section-py: 56px;     /* padding dọc mỗi section, desktop (cũ 80px) */
+  --pc-section-py-sm: 36px;  /* padding dọc mỗi section, mobile (cũ 48px) */
+}
+
+  /* Shared brand tokens — 19/09/2026: toàn site dùng Montserrat; chỉ giữ font icon riêng. */
+  :root {
+    --pc-brand-primary: {{ settings.theme_main_color | default: '#3CB371' }};
+    --pc-brand-deep: {{ settings.theme_forest_color | default: '#003F2D' }};
+    --pc-brand-dark: {{ settings.theme_dark_color | default: '#002E23' }};
+    --pc-brand-secondary: {{ settings.theme_secondary_green | default: '#075B40' }};
+    --pc-page-background: {{ settings.theme_page_background | default: '#F4F7F4' }};
+    --pc-font-display: 'Montserrat', system-ui, sans-serif;
+    --pc-font-body: 'Montserrat', system-ui, sans-serif;
+  }
+  {%- comment -%}
+    2026-10-03: token cho giá trị hardcode trong assets/global_core.scss.bwt — cùng giá trị cũ (không
+    đổi giao diện), không có biến thể dark. Thang xám đặt tên theo mã hex vì nhiều sắc gần nhau
+    (#eee/#ededed/#ebebeb…) — gộp lại là quyết định thiết kế riêng, chưa làm.
+  {%- endcomment -%}
+  :root {
+    --black: #000000;
+    --gray-111: #111111;
+    --gray-1c1c1c: #1c1c1c;
+    --gray-212121: #212121;
+    --gray-222: #222222;
+    --gray-2a2a2a: #2a2a2a;
+    --gray-333: #333333;
+    --gray-444: #444444;
+    --gray-494949: #494949;
+    --gray-555: #555555;
+    --gray-666: #666666;
+    --gray-777: #777777;
+    --gray-787878: #787878;
+    --gray-999: #999999;
+    --gray-9e9e9e: #9e9e9e;
+    --gray-aaa: #aaaaaa;
+    --gray-b8b8b8: #b8b8b8;
+    --gray-bbb: #bbbbbb;
+    --gray-c9c9c9: #c9c9c9;
+    --gray-ccc: #cccccc;
+    --gray-ddd: #dddddd;
+    --gray-e0e0e0: #e0e0e0;
+    --gray-e8e8e8: #e8e8e8;
+    --gray-e9e9e9: #e9e9e9;
+    --gray-ebebeb: #ebebeb;
+    --gray-ededed: #ededed;
+    --gray-eee: #eeeeee;
+    --gray-f0f0f0: #f0f0f0;
+    --gray-f1f1f1: #f1f1f1;
+    --gray-f5f5f5: #f5f5f5;
+    --gray-f7f7f7: #f7f7f7;
+    --gray-f9f9f9: #f9f9f9;
+    --alert-warning-text: #856404;
+    --alert-warning-bg: #fff3cd;
+    --alert-warning-border: #ffeeba;
+    --alert-danger-text: #721c24;
+    --alert-danger-bg: #f8d7da;
+    --alert-danger-border: #f5c6cb;
+    --alert-primary-text: #004085;
+    --alert-primary-bg: #cce5ff;
+    --alert-primary-border: #b8daff;
+    --alert-success-text: #155724;
+    --alert-success-bg: #d4edda;
+    --alert-success-border: #c3e6cb;
+    --btn-continue-bg: #ec2c1e;
+    --input-border: #eaebf3;
+    --coupon-bg: #fff8f0;
+    --coupon-border: #f0ebe3;
+    --coupon-hover-bg: #fff3e6;
+    --forest-1b5e3f: #1b5e3f;
+    --notice-bg: #ffedca;
+    --contact-phone: #4eb625;
+    --contact-messenger: #31adff;
+    --contact-zalo: #0165f8;
+    --contact-map: #d94234;
+    --contact-whatsapp: #25d366;
+    --lang-switch-bg: #dd0115;
+    --sale-title-color: #c0392b;
+    --dark-eyebrow-color: #fcdc9d;
+  }
+</style>

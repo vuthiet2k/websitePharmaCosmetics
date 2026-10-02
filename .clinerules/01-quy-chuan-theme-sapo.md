@@ -30,10 +30,55 @@
 - 5 thư mục cốt lõi: `assets/`, `configs/`, `layouts/`, `snippets/`, `templates/`.
 - `settings_schema.json` + `settings_data.json` phải là JSON hợp lệ (kiểm tra ngay sau khi sửa).
 - Tên thư mục: cẩm nang Sapo ghi `config/` & `layout/`, còn repo này đóng gói `configs/` & `layouts/`
-  (xem `scripts/build-theme.js`, `vercel.json`) — **giữ nguyên theo repo**, nhưng khi chuẩn bị nộp
-  theme cho Sapo review phải đối chiếu lại tên thư mục theo checklist duyệt.
+  (xem `scripts/build-theme.js`, `vercel.json`) — **giữ nguyên theo repo**. Gói nộp Sapo do
+  `npm run build:sapo` tự đổi sang `config/` & `layout/` (mục 2.2).
 - Asset dùng biến `settings`: file phải có đuôi `.scss.bwt` hoặc `.js.bwt`, gọi qua
   `{{ 'app.css' | asset_url | stylesheet_tag }}`.
+
+### 2.2. Gói zip nộp Sapo — `npm run build:sapo` (chốt 2026-10-03)
+
+- Chuỗi: `clean:sapo` → `audit:assets` → `lint:guardrails` (chỉ cảnh báo, mục 2.4) →
+  `compile:sapo` (staging `sapo-dist/`) → `pack:sapo` (`exports/sapo-theme-<version>.zip`) →
+  `validate:sapo`. Bước nào fail là dừng, exit 1.
+- Zip **< 5.000.000 bytes** (vượt thì xoá zip + in top 10 file nặng); root zip phẳng
+  `assets/ config/ layout/ snippets/ templates/`, không thư mục bọc, không file rác.
+- **Không** nén tay bằng `Compress-Archive` của Windows PowerShell 5.1: nó ghi đường dẫn bằng dấu
+  backslash (validator báo lỗi). Luôn dùng `npm run pack:sapo`.
+- Minify giữ nguyên tên file (template gọi asset theo tên); `.scss.bwt` và `.js.bwt` có Liquid được
+  copy nguyên bản.
+
+### 2.3. Ảnh: `assets/` chỉ chứa ảnh hệ thống — nguồn chuẩn `scripts/lib/sapo-asset-policy.js`
+
+- Sapo **không có** `image_picker` / `section.settings` (đó là Shopify). Input ảnh duy nhất là
+  `type: "image"`, có 2 dạng:
+  - `id` = tên file (vd `"logo.png"`): admin upload thì Sapo ghi đè `assets/<id>`, template gọi
+    `'<id>' | asset_url`. File mặc định được phép nằm trong `assets/`.
+  - `id` thường (vd `footer_qr_image`): render trong `{% if settings.<id> != blank %}` bằng
+    `{{ settings.<id> | img_url: '…' }}`. **Ảnh nội dung mới (banner, QR, logo đối tác, ảnh demo…)
+    dùng dạng này**, để trống thì ẩn.
+- Được phép trong `assets/` (mỗi file ≤ 150 KB): SVG `icon-*/flag-*/lang-*/sprite.svg`; icon UI
+  trong `UI_ICON_WHITELIST`; ảnh mặc định của field `type:"image"` id = tên file. Ngoài ra thì
+  `audit:assets` fail. Icon UI mới phải thêm vào whitelist, **không** tạo field schema cho icon.
+- Ảnh dự phòng khi thiếu ảnh: `{% include 'placeholder_img_url' %}` (lấy `settings.placeholder_image`
+  hoặc khung SVG inline), không gọi `'no-image.jpg' | asset_url`.
+- Ảnh gốc đã gỡ khỏi `assets/` (để admin upload lại) nằm ở `design/seed-images/`.
+
+### 2.4. Design token — SSOT `snippets/design_tokens.bwt` (chốt 2026-10-03)
+
+- **Mọi** custom property `:root` của theme khai báo tại `snippets/design_tokens.bwt` (include trong
+  `<head>` của `layouts/theme.bwt` và `layouts/chat.bwt`). Không thêm `:root { … }` ở snippet/asset
+  khác. Ngoại lệ còn lại: vendor (`vendor_bootstrap.css`, swiper trong `global_core`),
+  `layouts/mops-admin.bwt` (app admin riêng), `--chat-*` trong `page_ai_skin_quiz.scss.bwt`.
+- Màu thương hiệu lấy từ Customizer qua `--pc-brand-*` (`settings.theme_*_color`).
+  **Không dùng `var(--primary)`**: `vendor_bootstrap.css` nạp sau và ghi đè `--primary: #007bff`
+  (cũng trùng `--white`, `--gray`, `--secondary`, `--success`…). Token mới đặt tên không trùng Bootstrap 4.
+- Thay hex bằng token **chỉ khi cùng giá trị** và token đó **không có biến thể dark** (nếu không
+  giao diện dark đổi màu). Kiểm chứng bằng diff computed style sáng/tối trước-sau, không chỉ nhìn mắt.
+- Không dùng `var()` bên trong hàm SCSS (`rgba(#fff,.5)`, `darken()`…) — Sapo biên dịch SCSS sẽ lỗi.
+- `npm run lint:guardrails` đếm hex hardcode / `!important` / `style=""` tĩnh / comment kiểu
+  "Updated by AI" theo file, so với `scripts/guardrails-baseline.json`: chỉ cảnh báo phần **tăng
+  thêm**. Khi chủ động giảm số cũ thì chạy `--update-baseline`. Comment nêu lý do + ngày/mã
+  ticket (AGENTS.md) **không** bị coi là rác.
 
 ### 2.1. Container chuẩn — mép trái/phải mọi section phải thẳng hàng với header
 
@@ -94,10 +139,27 @@
 
 ## 5. SEO onpage
 
-- Mỗi trang chỉ **01** thẻ `<h1>`.
-- Mọi `<img>` có `alt` mô tả; mỗi ảnh một alt riêng (không dùng chung alt cho nhiều ảnh).
-- Đủ `<title>`, `<meta name="description">`, Open Graph; JSON-LD: Product + AggregateRating
-  (`product.bwt`), BreadcrumbList + Organization.
+- Mỗi trang chỉ **01** thẻ `<h1>` (kể cả các nhánh rỗng/không có kết quả). Trang không có tiêu đề
+  hiển thị thì dùng `<h1 class="visually-hidden">` — không đổi giao diện. Không lồng `<h1>` trong `<h1>`.
+- Mọi `<img>` có `alt` mô tả; mỗi ảnh một alt riêng (không dùng chung alt cho nhiều ảnh). Ảnh trang
+  trí đứng cạnh chữ (vd cờ ngôn ngữ + "English") dùng `alt=""` là đúng chuẩn.
+- Đủ `<title>`, `<meta name="description">`, Open Graph. Structured data **chỉ dùng JSON-LD**,
+  không thêm microdata `itemscope/itemprop` (2 dạng song song tạo 2 thực thể trùng). Nguồn
+  (chốt 2026-10-03): `snippets/schema.bwt` (BreadcrumbList, HealthAndBeautyBusiness, WebSite),
+  `snippets/product_schema.bwt` (Product + Offer + AggregateRating từ `metafields.bpr`),
+  `templates/article.bwt` (Article).
+- Trong JSON-LD: mọi chuỗi qua `| json` (không `"{{ x }}"`); trường tuỳ chọn bọc `{% if x != blank %}`
+  để không ra `"a": ,`; URL chuẩn hoá `| remove: 'https:' | remove: 'http:' | prepend: 'https:'`
+  (store.url / img_url có thể là `//domain`). Item mảng in dấu phẩy **đứng trước**.
+  Kiểm bằng `JSON.parse` từng khối `ld+json` trên trang render, kể cả dữ liệu có dấu `"` và trường rỗng.
+- **Không hardcode cam kết kinh doanh** (phí ship, thời gian giao, số ngày/phí đổi trả) trong JSON-LD.
+  `shippingDetails` / `hasMerchantReturnPolicy` chỉ in khi admin bật `enable_shipping_policy` /
+  `enable_return_policy` (nhóm "Trang sản phẩm", mặc định tắt) và mọi số liệu là số nguyên hợp lệ —
+  thiếu/sai thì bỏ cả khối (chốt 2026-10-03).
+- `sameAs` đọc `settings.footer_social_fb` / `footer_social_insta` (field social thật; không có
+  `footer_social_zalo`/`_yt`). Ngày JSON-LD dạng ISO `'%Y-%m-%dT%H:%M:%S+07:00'` từ `article.published_on`.
+- Dev server (`dev-server.js`) **không** mô phỏng đúng filter `date` (bỏ qua format) và `asset_url`
+  (trả `/assets/…` thay vì `//bizweb.dktcdn.net/…`) — ngày/logo JSON-LD trên local sai là bình thường.
 - Bản bàn giao: zip chuẩn + `settings_data.json` chứa dữ liệu mẫu để cài là có giao diện như demo.
 
 ## 6. Luồng TMĐT
@@ -126,3 +188,12 @@
    thẳng hàng header (mục 2.1).
 5. SEO: 1 `<h1>`, meta/OG đủ, JSON-LD khi trang có sản phẩm/breadcrumb.
 6. Đã chạy kiểm tra tối thiểu, đúng trọng tâm và báo cáo bằng tiếng Việt có cấu trúc.
+
+### 8.1. Checkpoint Release (bắt buộc sau khi import zip lên cửa hàng Sapo thật)
+
+1. `npm run build:sapo` exit 0, upload `exports/sapo-theme-<version>.zip`.
+2. **Google Rich Results Test** (https://search.google.com/test/rich-results) cho tối thiểu: 1 trang
+   sản phẩm (Product/Offer, AggregateRating nếu có đánh giá), 1 bài viết (Article — kiểm
+   `datePublished` đúng ISO, không phải chuỗi format thô), 1 trang danh mục (BreadcrumbList), trang chủ
+   (HealthAndBeautyBusiness — logo là URL https tuyệt đối). 0 lỗi; cảnh báo phải được ghi nhận.
+3. Nếu bật chính sách giao hàng/đổi trả: số liệu hiển thị trong Rich Results khớp chính sách thực tế.

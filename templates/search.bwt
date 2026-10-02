@@ -26,6 +26,8 @@
 		{%endif%}
 		{% else %}
 		<div class="category-products">
+		{%- comment -%} 2026-10-03 SEO: kết quả sản phẩm và trang chưa nhập từ khoá không có <h1> nào — thêm h1 ẩn (visually-hidden) để mỗi trang có đúng 1 h1, không đổi giao diện. {%- endcomment -%}
+			{%- unless search.types contains 'article' -%}{%- assign pc_search_keyword = search.terms | split: '(*' | last | split: '*)' | first -%}<h1 class="visually-hidden">Kết quả tìm kiếm: {{ pc_search_keyword | escape }}</h1>{%- endunless -%}
 			<div class="d-none">
 				{% if search.types contains 'product' %}
 				{%unless search.terms contains 'name:' %}
@@ -103,6 +105,7 @@
 		{% endif %}
 		{% endpaginate %}
 		{% else %}
+		<h1 class="visually-hidden">Tìm kiếm</h1>
 		<div class="bg-white p-8 sm:p-12 rounded-2xl shadow-sm border border-gray-200 text-center max-w-xl mx-auto">
 			<h2 class="title-head title_search text-lg font-bold text-forest-900 font-heading mb-4"><a href="#" class="title-box">Nhập từ khóa để tìm kiếm</a></h2>
 			<div class="serachpc_searchpage">

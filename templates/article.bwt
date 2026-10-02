@@ -16,24 +16,33 @@
 {%- endcomment -%}
 <div class="pc-cmp-progress-bar"><div class="pc-cmp-progress-bar__fill"></div></div>
 <section class="blogpage">
-	<div class="container layout-article" itemscope itemtype="https://schema.org/Article">
+	<div class="container layout-article">
 		<div class="bg_blog">
-			<meta itemprop="mainEntityOfPage" content="{{ article.url }}">
-			<meta itemprop="description" content="{{ article.summary | strip_html }}">
-			<meta itemprop="author" content="{{ article.author }}">
-			<meta itemprop="headline" content="{{ article.title | truncate: 100}}">
-			<meta itemprop="image" content="https:{%if article.image.src == null %}{{ 'logo.png' | asset_url }}{%else%}{{ article.image.src }}{%endif%}">
-			<meta itemprop="datePublished" content="{{ article.published_on | date: '%Y-%m-%d' }}">
-			<meta itemprop="dateModified" content="{{ article.created_on | date: '%Y-%m-%d' }}">
-			<div itemprop="publisher" itemscope itemtype="https://schema.org/Organization">
-				<div itemprop="logo" itemscope itemtype="https://schema.org/ImageObject">
-					<img class="d-none" src="{{'logo.png'|asset_url}}" alt="{{ store.name }}"/>
-					<meta itemprop="url" content="https:{{'logo.png'|asset_url}}">
-					<meta itemprop="width" content="400">
-					<meta itemprop="height" content="60">
-				</div>
-				<meta itemprop="name" content="{{store.name}}">
-			</div>
+			{%- comment -%} 2026-10-03: microdata Article chuyển sang JSON-LD (cùng dữ kiện; dateModified giữ nguồn created_on như bản cũ; ngày ISO 8601 giờ VN +07:00). {%- endcomment -%}
+			{%- assign pc_ld_base = store.url | remove: 'https:' | remove: 'http:' | prepend: 'https:' -%}
+			{%- if article.image.src != blank -%}{%- assign pc_ld_article_img = article.image.src | img_url: 'grande' -%}{%- else -%}{%- assign pc_ld_article_img = 'logo.png' | asset_url -%}{%- endif -%}
+			{%- assign pc_ld_article_img = pc_ld_article_img | remove: 'https:' | remove: 'http:' | prepend: 'https:' -%}
+			<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@type": "Article",
+				"mainEntityOfPage": {{ pc_ld_base | append: article.url | json }},
+				"headline": {{ article.title | truncate: 100 | json }},
+				{%- assign pc_ld_desc = article.summary | strip_html | strip_newlines | strip -%}
+				{%- if pc_ld_desc != blank %}
+				"description": {{ pc_ld_desc | json }},
+				{%- endif %}
+				"image": {{ pc_ld_article_img | json }},
+				{%- if article.author != blank %}
+				"author": {"@type": "Person", "name": {{ article.author | json }}},
+				{%- endif %}
+				"datePublished": {{ article.published_on | date: '%Y-%m-%dT%H:%M:%S+07:00' | json }},
+				{%- if article.created_on != blank %}
+				"dateModified": {{ article.created_on | date: '%Y-%m-%dT%H:%M:%S+07:00' | json }},
+				{%- endif %}
+				"publisher": {"@type": "Organization", "name": {{ store.name | json }}, "logo": {"@type": "ImageObject", "url": {{ 'logo.png' | asset_url | remove: 'https:' | remove: 'http:' | prepend: 'https:' | json }}, "width": 400, "height": 60}}
+			}
+			</script>
 			<article class="article-main">
 				<div class="row">
 					<div class="right-content {%if settings.right_asideblog_enable%}col-lg-9 {%else%} col-lg-12 {%endif%} col-12">

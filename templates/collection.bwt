@@ -10,10 +10,6 @@
 <div class="layout-collection">
 	{% include 'breadcrumb' %}  
 	<div class="container">
-		<div class="col-title d-none">
-			<h1>{%if collection.name == 'All'%}Tất cả sản phẩm{%else%}{{ collection.name }}{%endif%}</h1>
-
-		</div>
 		<div class="row">
 			{%if settings.aside_coupon_enable%}
 			<div class="col-12">
@@ -26,11 +22,12 @@
 							{%- capture time -%}promo_coupon_{{i}}_expires{%- endcapture -%}
 							{%- capture giatri -%}promo_coupon_{{i}}_value{%- endcapture -%}
 							{%- capture dieukien -%}promo_coupon_{{i}}_condition{%- endcapture -%}
+							{%- capture image -%}promo_coupon_{{i}}_image{%- endcapture -%}
 							{%if settings[enable_slide]%}
 							<div class="swiper-slide">
 								<div class="box-coupon">
 									<div class="image">
-										<img  width="128" height="128" class="lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC" data-src="{{ 'coupon.png' | asset_url}}" alt="{{settings[code]}}">
+										{%- if settings[image] != blank -%}<img  width="128" height="128" class="lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC" data-src="{{ settings[image] | img_url: 'compact' }}" alt="{{settings[code]}}">{%- endif -%}
 									</div>
 									<div class="content_wrap">
 										<a title="Chi tiết" href="javascript:void(0)" class="info-button" data-coupon="{{settings[code]}}" data-time="{{settings[time] | remove: "Ngày hết hạn: "}}" data-content="{{settings[dieukien]}}">

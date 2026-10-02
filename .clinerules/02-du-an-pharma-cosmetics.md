@@ -22,6 +22,7 @@ Bổ sung cho `01-quy-chuan-theme-sapo.md` (quy chuẩn nền tảng Sapo). File
 | Preview local | `npm run preview` → http://localhost:3000 (đổi bằng `PORT`), live-reload WS `3001` |
 | Đóng gói theme | `npm run build` → `build:tailwind` + `scripts/build-theme.js` (copy 5 thư mục vào `dist/`) |
 | Build bản tĩnh | `npm run build:vercel` → `vercel-dist/` (đã gitignore) |
+| Zip nộp Sapo | `npm run build:sapo` → `exports/sapo-theme-<version>.zip` (< 5.000.000 bytes; xem `.clinerules/01` mục 2.2–2.3) |
 | Test portal | `npm run test:portal` (Playwright, `playwright.portal.config.js`, `tests/portal/`) |
 | Kiểm tra JSON | `node -e "JSON.parse(require('fs').readFileSync('configs/settings_schema.json','utf8'))"` |
 | Deploy production | `npx vercel --prod --yes` (**cần auth** — xem mục 5) |

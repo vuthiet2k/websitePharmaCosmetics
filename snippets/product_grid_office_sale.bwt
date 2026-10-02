@@ -44,7 +44,7 @@
 {%- assign on_sale = true -%}
 {%- endif -%}
 {%- assign featured_image_alt = product.featured_image.alt | default: product.name -%}
-{%- assign card_image = 'no-image.jpg' | asset_url -%}
+{%- capture card_image -%}{% include 'placeholder_img_url' %}{%- endcapture -%}
 {%- if product.featured_image.src != blank -%}{%- assign card_image = product.featured_image.src | img_url: 'large' -%}{%- endif -%}
 {%- assign item = false -%}
 {%- assign quycach = false -%}
@@ -88,7 +88,7 @@
 <form action="/cart/add" method="post" class="variants product-action item-product-main pc-flashsale__card duration-300" data-cart-form data-id="product-actions-{{ product.id }}" enctype="multipart/form-data">
 	<div class="product-thumbnail">
 		<a class="image_thumb scale_hover" href="{{ product.url }}" title="{{ product.name }}">
-			<img class="lazyload duration-300 image1" width="480" height="480" src="{{ 'no-image.jpg' | asset_url }}" data-src="{{ card_image }}" alt="{{ featured_image_alt | escape }}">
+			<img class="lazyload duration-300 image1" width="480" height="480" src="{% include 'placeholder_img_url' %}" data-src="{{ card_image }}" alt="{{ featured_image_alt | escape }}">
 			{% if product.images.size >= 2  %}
 			<img class="lazyload duration-300 image2" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC"  data-src="{{ product.images[1].src | img_url:'large' }}" alt="{{ product.name }}">
 			{% endif %}

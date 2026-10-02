@@ -9,7 +9,14 @@
     "preview": "node dev-server.js",
     "build:tailwind": "tailwindcss --config tailwind.config.js --input scripts/mops-tailwind.input.css --output assets/mops-tailwind.css --minify && node scripts/strip-css-comments.js assets/mops-tailwind.css",
     "build": "npm run build:tailwind && node scripts/build-theme.js",
-    "build:vercel": "npm run build:tailwind && node scripts/build-vercel.js"
+    "build:vercel": "npm run build:tailwind && node scripts/build-vercel.js",
+    "clean:sapo": "node scripts/clean-sapo.js",
+    "audit:assets": "node scripts/audit-assets.js",
+    "compile:sapo": "node scripts/build-sapo-staging.js",
+    "pack:sapo": "node scripts/package-sapo.js",
+    "validate:sapo": "node scripts/validate-sapo-zip.js",
+    "build:sapo": "npm run clean:sapo && npm run audit:assets && npm run lint:guardrails && npm run compile:sapo && npm run pack:sapo && npm run validate:sapo",
+    "lint:guardrails": "node scripts/lint-guardrails.js"
   },
   "dependencies": {
     "chokidar": "^3.6.0",
@@ -20,8 +27,11 @@
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "@tailwindcss/forms": "^0.5.10",
+    "archiver": "^7.0.1",
     "autoprefixer": "^10.4.20",
+    "clean-css": "^5.3.3",
     "postcss": "^8.5.3",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "terser": "^5.51.2"
   }
 }

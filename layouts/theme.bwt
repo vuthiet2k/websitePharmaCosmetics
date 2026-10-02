@@ -104,6 +104,7 @@
 		    }
 		  };
 		</script>
+		{% include 'design_tokens' %}
 		{% include 'pharma_ui_kit' %}
 		{% include 'pc_clinical_components' %}
 		<link rel="preload" as="script" href="{{ 'jquery.js' | asset_url }}" />
@@ -123,7 +124,7 @@
 		  trong .most-view-product-img, tức khối do app ngoài (.ab-most-view-product-module) chèn
 		  bằng JS chứ KHÔNG phải markup của theme → không thể gắn onerror vào từng thẻ <img>.
 		  Bắt sự kiện 'error' ở pha capture trên window: hứng được cả ảnh do app chèn động lẫn ảnh
-		  của theme, đổi sang ảnh dự phòng có sẵn (assets/no-image.jpg) thay vì để lộ khung vỡ/ô
+		  của theme, đổi sang ảnh dự phòng có sẵn (snippet placeholder_img_url — settings.placeholder_image hoặc khung SVG) thay vì để lộ khung vỡ/ô
 		  xám. Gắn cờ dataset để không lặp vô hạn nếu chính ảnh dự phòng cũng lỗi.
 		{%- endcomment -%}
 		<script>
@@ -133,8 +134,8 @@
 			el.dataset.fallbackApplied = '1';
 			el.removeAttribute('srcset');
 			el.removeAttribute('data-srcset');
-			el.setAttribute('data-src', '{{ "no-image.jpg" | asset_url }}');
-			el.src = '{{ "no-image.jpg" | asset_url }}';
+			el.setAttribute('data-src', '{% include 'placeholder_img_url' %}');
+			el.src = '{% include 'placeholder_img_url' %}';
 		}, true);
 		</script>
 		{%- comment -%}

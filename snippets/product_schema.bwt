@@ -1,81 +1,103 @@
-<meta itemprop="category" content="{{ product.collections.first.name }}">
-	<meta itemprop="url" content="{{ store.url }}{{ product.url }}">
-	<meta itemprop="name" content="{{ product.name }}">
-	<meta itemprop="image" content="http:{{ product.featured_image.src | img_url: 'grande' }}">
-	<meta itemprop="description" content="{{product.summary_or_content | strip_html | replace:'"','' }}">
-	{%-if product.vendor != null-%}
-	<div class="d-none" itemprop="brand" itemtype="https://schema.org/Brand" itemscope>
-		<meta itemprop="name" content="{{product.vendor}}" />
-	</div>
-	{%- endif -%}
-
-	{%-if product.type != null-%}
-	<meta itemprop="model" content="{{ product.style }}">
-	{%-endif-%}
-	{%-if product.variants[0].sku != null-%}
-	<meta itemprop="sku" content="{{product.variants[0].sku }}">
-	{%- endif -%}
-	{%-if product.variants[0].barcode != null-%}
-	<meta itemprop="gtin" content="{{product.variants[0].barcode }}">
-	{%- endif -%}
-	<div class="d-none hidden" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
-		<div class="inventory_quantity hidden" itemscope itemtype="https://schema.org/ItemAvailability">
-			{%- if product.available -%}
-			<span class="a-stock" itemprop="supersededBy">
-				Còn hàng
-			</span>
-			{%- else -%}
-			<span class="a-stock" itemprop="supersededBy">
-				Hết hàng
-			</span>
-			{%- endif -%}
-		</div>
-		<link itemprop="availability" href="https://schema.org/{% if product.available %}InStock{% else %}OutOfStock{% endif %}">
-		<meta itemprop="priceCurrency" content="{{ store.currency }}">
-		<meta itemprop="price" content="{{ product.variants[0].price | round }}">
-		<meta itemprop="url" content="https:{{ store.url }}{{ product.url }}">
-		<span itemprop="UnitPriceSpecification" itemscope itemtype="https://schema.org/Downpayment">
-			<meta itemprop="priceType" content="{{ product.variants[0].price | round }}">
-		</span>
-		{%- if product.variants[0].compare_at_price > 0 -%}
-		<span itemprop="UnitPriceSpecification" itemscope itemtype="https://schema.org/Downpayment">
-			<meta itemprop="priceSpecification" content="{{ product.variants[0].compare_at_price | round }}">
-		</span>
-		{%- endif -%}
-		<meta itemprop="priceValidUntil" content="2099-01-01">
-
-		<div itemprop="shippingDetails" itemtype="https://schema.org/OfferShippingDetails" itemscope>
-			<div itemprop="shippingRate" itemtype="https://schema.org/MonetaryAmount" itemscope>
-				<meta itemprop="value" content="0" />
-				<meta itemprop="currency" content="{{ store.currency }}" />
-			</div>
-			<div itemprop="shippingDestination" itemtype="https://schema.org/DefinedRegion" itemscope>
-				<meta itemprop="addressCountry" content="VN" />
-			</div>
-			<div itemprop="deliveryTime" itemtype="https://schema.org/ShippingDeliveryTime" itemscope>
-				<div itemprop="handlingTime" itemtype="https://schema.org/QuantitativeValue" itemscope>
-					<meta itemprop="minValue" content="0" />
-					<meta itemprop="maxValue" content="1" />
-					<meta itemprop="unitCode" content="DAY" />
-				</div>
-				<div itemprop="transitTime" itemtype="https://schema.org/QuantitativeValue" itemscope>
-					<meta itemprop="minValue" content="1" />
-					<meta itemprop="maxValue" content="5" />
-					<meta itemprop="unitCode" content="DAY" />
-				</div>
-			</div>
-
-		</div>
-		<div itemprop="hasMerchantReturnPolicy" itemtype="https://schema.org/MerchantReturnPolicy" itemscope>
-			<meta itemprop="applicableCountry" content="VN" />
-			<meta itemprop="returnPolicyCategory" content="https://schema.org/MerchantReturnFiniteReturnWindow" />
-			<meta itemprop="merchantReturnDays" content="30" />
-			<meta itemprop="returnMethod" content="https://schema.org/ReturnByMail" />
-			<meta itemprop="returnFees" content="https://schema.org/FreeReturn" />
-		</div>
-	</div>
-	<div class="d-none hidden" id="https:{{store.url}}" itemprop="seller" itemtype="https://schema.org/Organization" itemscope>
-		<meta itemprop="name" content="{{store.name}}" />
-		<meta itemprop="url" content="https:{{store.url}}" />
-		<meta itemprop="logo" content="http:{{ 'logo.png' | asset_url }}" />
-	</div>
+{%- comment -%}
+  Product JSON-LD (2026-10-03) — thay microdata cũ (itemprop rải trong <section> + product-reviews.bwt,
+  tạo 2 thực thể Product tách rời). Giữ nguyên các dữ kiện cũ đã khai báo; bỏ phần sai kiểu schema.org
+  (ItemAvailability/supersededBy, Downpayment) và sửa URL "http:"/"https:https:". aggregateRating lấy
+  từ app Sapo Product Reviews (metafields.bpr), chỉ in khi có đánh giá thật.
+  shippingDetails / hasMerchantReturnPolicy: chỉ in khi admin bật enable_shipping_policy /
+  enable_return_policy VÀ nhập đủ số liệu (nhóm "Trang sản phẩm") — không khai báo chính sách giả định
+  (quyết định 2026-10-03: bản cũ hardcode "miễn phí ship, đổi trả 30 ngày").
+{%- endcomment -%}
+{%- comment -%} Mỗi số liệu phải là số nguyên thuần (cho phép dấu . , ngăn cách nghìn) — nhập "7 ngày" thì bỏ cả khối thay vì khai báo 0. {%- endcomment -%}
+{%- assign pc_ld_ship = settings.enable_shipping_policy -%}
+{%- assign pc_ld_keys = 'shipping_policy_rate,shipping_policy_handling_min_days,shipping_policy_handling_max_days,shipping_policy_transit_min_days,shipping_policy_transit_max_days' | split: ',' -%}
+{%- for pc_ld_key in pc_ld_keys -%}
+  {%- assign pc_ld_raw = settings[pc_ld_key] | append: '' | remove: '.' | remove: ',' | strip -%}
+  {%- assign pc_ld_num = pc_ld_raw | plus: 0 | append: '' -%}
+  {%- if pc_ld_raw == blank or pc_ld_num != pc_ld_raw -%}{%- assign pc_ld_ship = false -%}{%- endif -%}
+{%- endfor -%}
+{%- assign pc_ld_return = settings.enable_return_policy -%}
+{%- assign pc_ld_raw = settings.return_policy_days | append: '' | strip -%}
+{%- assign pc_ld_num = pc_ld_raw | plus: 0 | append: '' -%}
+{%- if pc_ld_raw == blank or pc_ld_num != pc_ld_raw or pc_ld_num == '0' -%}{%- assign pc_ld_return = false -%}{%- endif -%}
+{%- assign pc_ld_base = store.url | remove: 'https:' | remove: 'http:' | prepend: 'https:' -%}
+{%- assign pc_ld_variant = product.variants[0] -%}
+{%- capture pc_ld_images -%}
+  {%- for image in product.images limit: 5 -%}
+    {%- assign pc_ld_img = image.src | img_url: 'grande' | remove: 'https:' | remove: 'http:' | prepend: 'https:' -%}
+    {{ pc_ld_img | json }}{% unless forloop.last %},{% endunless %}
+  {%- endfor -%}
+{%- endcapture -%}
+{%- if pc_ld_images == blank and product.featured_image.src != blank -%}
+  {%- capture pc_ld_images -%}{{ product.featured_image.src | img_url: 'grande' | remove: 'https:' | remove: 'http:' | prepend: 'https:' | json }}{%- endcapture -%}
+{%- endif -%}
+<script type="application/ld+json">
+{
+	"@context": "https://schema.org",
+	"@type": "Product",
+	"name": {{ product.name | json }},
+	"url": {{ pc_ld_base | append: product.url | json }},
+	{%- if pc_ld_images != blank %}
+	"image": [{{ pc_ld_images | strip }}],
+	{%- endif %}
+	{%- assign pc_ld_desc = product.summary_or_content | strip_html | strip_newlines | strip -%}
+	{%- if pc_ld_desc != blank %}
+	"description": {{ pc_ld_desc | json }},
+	{%- endif %}
+	{%- if product.collections.first.name != blank %}
+	"category": {{ product.collections.first.name | json }},
+	{%- endif %}
+	{%- if product.vendor != blank %}
+	"brand": {"@type": "Brand", "name": {{ product.vendor | json }}},
+	{%- endif %}
+	{%- if product.style != blank %}
+	"model": {{ product.style | json }},
+	{%- endif %}
+	{%- if pc_ld_variant.sku != blank %}
+	"sku": {{ pc_ld_variant.sku | json }},
+	{%- endif %}
+	{%- if pc_ld_variant.barcode != blank %}
+	"gtin": {{ pc_ld_variant.barcode | json }},
+	{%- endif %}
+	{%- if product.metafields.bpr.votes > 0 %}
+	"aggregateRating": {
+		"@type": "AggregateRating",
+		"ratingValue": {{ product.metafields.bpr.rating | json }},
+		"ratingCount": {{ product.metafields.bpr.votes | json }},
+		"bestRating": 5,
+		"worstRating": 1
+	},
+	{%- endif %}
+	"offers": {
+		"@type": "Offer",
+		"url": {{ pc_ld_base | append: product.url | json }},
+		"price": {{ pc_ld_variant.price | round | json }},
+		"priceCurrency": {{ store.currency | default: 'VND' | json }},
+		"priceValidUntil": "2099-01-01",
+		"availability": "https://schema.org/{% if product.available %}InStock{% else %}OutOfStock{% endif %}",
+		"itemCondition": "https://schema.org/NewCondition",
+		{%- if pc_ld_ship %}
+		"shippingDetails": {
+			"@type": "OfferShippingDetails",
+			"shippingRate": {"@type": "MonetaryAmount", "value": {{ settings.shipping_policy_rate | remove: '.' | remove: ',' | strip | plus: 0 }}, "currency": {{ store.currency | default: 'VND' | json }}},
+			"shippingDestination": {"@type": "DefinedRegion", "addressCountry": "VN"},
+			"deliveryTime": {
+				"@type": "ShippingDeliveryTime",
+				"handlingTime": {"@type": "QuantitativeValue", "minValue": {{ settings.shipping_policy_handling_min_days | plus: 0 }}, "maxValue": {{ settings.shipping_policy_handling_max_days | plus: 0 }}, "unitCode": "DAY"},
+				"transitTime": {"@type": "QuantitativeValue", "minValue": {{ settings.shipping_policy_transit_min_days | plus: 0 }}, "maxValue": {{ settings.shipping_policy_transit_max_days | plus: 0 }}, "unitCode": "DAY"}
+			}
+		},
+		{%- endif %}
+		{%- if pc_ld_return %}
+		"hasMerchantReturnPolicy": {
+			"@type": "MerchantReturnPolicy",
+			"applicableCountry": "VN",
+			"returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+			"merchantReturnDays": {{ settings.return_policy_days | plus: 0 }},
+			"returnMethod": {{ settings.return_policy_method | default: 'ReturnByMail' | prepend: 'https://schema.org/' | json }},
+			"returnFees": {{ settings.return_policy_fees | default: 'FreeReturn' | prepend: 'https://schema.org/' | json }}
+		},
+		{%- endif %}
+		"seller": {"@type": "Organization", "name": {{ store.name | json }}, "url": {{ pc_ld_base | json }}}
+	}
+}
+</script>
