@@ -35,6 +35,36 @@
 - Asset dùng biến `settings`: file phải có đuôi `.scss.bwt` hoặc `.js.bwt`, gọi qua
   `{{ 'app.css' | asset_url | stylesheet_tag }}`.
 
+### 2.1. Container chuẩn — mép trái/phải mọi section phải thẳng hàng với header
+
+- **Nguồn duy nhất (SSOT):** khối `CONTAINER-SSOT` đầu `assets/storefront-v3.css`, với 2 biến
+  `--pc-container-max` (1280px) và `--pc-container-gutter` (20px ≤680px · 32px 681–1199px · 30px ≥1200px).
+  Header, footer, thân trang và home portal (`home-portal*.css`) đều đọc 2 biến này. Muốn đổi bề rộng hay
+  lề của site thì **chỉ sửa 2 biến này**.
+- **Cấm** khai báo thêm `max-width`/`padding`/`width` chung cho `.container` ở bất kỳ file nào khác
+  (`vendor_bootstrap.css`, `global_core.scss.bwt` hay snippet `<style>`). Các định nghĩa cũ ở
+  `vendor_bootstrap.css` (15px/1140px) và `global_core.scss.bwt` (14px/30px, 960/1280px) chỉ còn là
+  fallback, bị SSOT đè. Không "vá" bằng cách sửa chúng hay thêm `!important`. Chúng từng chồng nhau với
+  header 32px, footer 32px và `.container` của Tailwind CDN, làm khung nhảy lệch mép giữa các trang.
+  Tailwind CDN đã tắt `container` (`corePlugins.container: false` trong `layouts/theme.bwt`).
+- Rule thân trang dùng `:where(.pc-site-v3) .container` (độ ưu tiên 0,1,0), **không `!important`**.
+  Nhờ vậy khung hẹp có chủ đích vẫn ghi đè được theo ngữ cảnh, ví dụ `.ot-page .container` 640px,
+  `.mops-hero .container` 720px, `.header-menu > .container`. Ngoại lệ mới phải scope theo class
+  trang/section, kèm comment lý do.
+- Khung nội dung của **mọi** section storefront (breadcrumb, hero, các module) dùng class `.container`
+  — **giống hệt** `snippets/header.bwt`. Nền full-width (gradient, màu nền) đặt ở thẻ `<section>` ngoài,
+  `.container` nằm bên trong. Code CSS/JS không được ghi số px trùng giá trị container. Phải dùng
+  `var(--pc-container-gutter)` để giá trị không bị lệch khi đổi biến.
+- **Cấm** tự dựng khung bằng Tailwind `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8` (hay `max-w-6xl`,
+  `max-w-screen-xl`…). Lý do: `html { font-size: 87.5% }` (`settings.theme_font_scale`) làm 1rem = 14px
+  ⇒ `max-w-7xl` chỉ còn 1120px, `lg:px-8` = 28px ⇒ nội dung hẹp hơn header ~156px, logo/giỏ hàng lệch
+  khỏi mép breadcrumb/hero (lỗi trang GetGlowing Micro-Peel, 2026-10-02).
+- Cột đọc hẹp (FAQ, CTA, tiêu đề section) được phép `max-w-3xl/4xl mx-auto` nhưng phải là **con bên
+  trong** `.container`, không thay thế nó.
+- Không thêm `px-*` lên chính thẻ `.container` (padding đã do theme quản lý).
+- Self-check: ở 1440px, mép trái chữ breadcrumb/hero phải trùng mép trái logo header, mép phải card/khối
+  cuối phải trùng mép phải icon giỏ hàng.
+
 ## 3. Liquid
 
 - 3 thành phần: Tag `{% ... %}`, Object `{{ ... }}`, Filter `{{ x | filter }}`.
@@ -92,6 +122,7 @@
 1. `configs/*.json` parse được; `npm run build` chạy không lỗi (khi sửa asset/config).
 2. Không hardcode nội dung cấu hình: mọi chuỗi/nút/URL có `setting + default`.
 3. Ảnh: đúng `img_url`, `alt` riêng, `width/height`, lazy đúng chỗ (hero thì preload thay vì lazy).
-4. Responsive 320–1920 OK, không scrollbar ngang, không console error.
+4. Responsive 320–1920 OK, không scrollbar ngang, không console error; khung section dùng `.container`
+   thẳng hàng header (mục 2.1).
 5. SEO: 1 `<h1>`, meta/OG đủ, JSON-LD khi trang có sản phẩm/breadcrumb.
 6. Đã chạy kiểm tra tối thiểu, đúng trọng tâm và báo cáo bằng tiếng Việt có cấu trúc.

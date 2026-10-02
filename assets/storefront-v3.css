@@ -2,7 +2,17 @@
 body.pc-site-v3{font-family:var(--pc-font-body);}
 .pc-site-v3 :where(input,select,textarea,button,option){font-family:var(--pc-font-body)}
 .pc-site-v3 .bodywrap{background:var(--pc-page-background)}
-.pc-site-v3 .bodywrap .container{max-width:1280px}
+/* CONTAINER-SSOT 2026-10-02: NGUỒN DUY NHẤT cho khung nội dung storefront (header, body, footer, home portal).
+   Trước đây .container bị định nghĩa chồng 5 nơi (vendor_bootstrap 15px/1140, global_core 30px/1280!important,
+   Tailwind CDN, header 32px, footer 32px) + chuỗi rác "$C" làm rơi rule >=1200px => header/thân trang lệch mép.
+   Đổi bề rộng/lề CHỈ qua 2 biến dưới đây; cấm khai báo max-width/padding cho .container ở file khác (.clinerules 2.1). */
+.pc-site-v3{--pc-container-max:1280px;--pc-container-gutter:32px}
+@media (min-width:1200px){.pc-site-v3{--pc-container-gutter:30px}}
+@media (max-width:680px){.pc-site-v3{--pc-container-gutter:20px}}
+/* Thân trang: :where() giữ độ ưu tiên 0,1,0 — thắng vendor_bootstrap/global_core nhờ nạp sau, nhưng vẫn nhường
+   khung hẹp có chủ đích (.ot-page 640px, .mops-hero 720px…). Header/footer cần độ ưu tiên cao để thắng global_core/pharma_ui_kit. */
+:where(.pc-site-v3) .container{width:100%;max-width:var(--pc-container-max);margin-left:auto;margin-right:auto;padding-left:var(--pc-container-gutter);padding-right:var(--pc-container-gutter)}
+.pc-site-v3 header.header .main-header>.container,.pc-site-v3 header.header .box-hearder>.container,.pc-site-v3 .footer .container{width:100%;max-width:var(--pc-container-max)!important;padding-left:var(--pc-container-gutter);padding-right:var(--pc-container-gutter)}
 .pc-site-v3 :is(h1,h2){font-family:var(--pc-font-display)!important}
 .pc-site-v3 .bodywrap :is(input,select,textarea,button){font-family:var(--pc-font-body)}
 .pc-clinic-v3{--sh-serif:var(--pc-font-display);--sh-sans:var(--pc-font-body);--sh-primary:var(--pc-brand-primary);--sh-primary-deep:var(--pc-brand-deep)}
@@ -11,13 +21,9 @@ body.pc-site-v3{font-family:var(--pc-font-body);}
 /* Header and footer still use the store's menu, identity, legal content and account/cart hooks. */
 .pc-site-v3 header.header .main-header{background:#002E23!important}
 .pc-site-v3 header.header .box-hearder{background:#fff!important;border-bottom:1px solid #DCE5DF;box-shadow:none}
-.pc-site-v3 header.header .main-header>.container,.pc-site-v3 header.header .box-hearder>.container{max-width:1280px!important;width:100%;padding-left:32px;padding-right:32px}
 .pc-site-v3 header.header .top-main-header{min-height:34px}
 .pc-site-v3 header.header .top-main-header{background:transparent!important}
 .pc-site-v3 header.header .pc-logo-master{color:var(--mainColorDark,#003F2D)!important}
-.pc-site-v3 .footer .container{max-width:1280px;padding:0 32px}
-$C
-@media (min-width:1200px){.pc-site-v3 header.header .main-header>.container,.pc-site-v3 header.header .box-hearder>.container{padding-left:30px;padding-right:30px}.pc-site-v3 .footer .container{padding:0 30px}}
 .pc-site-v3 .footer a,.pc-site-v3 .footer p,.pc-site-v3 .footer span{color:inherit}
 /* TOPBAR-BRAND 2026-09-17: nền/chữ đọc từ setting header_topbar_bg / header_topbar_text_color
    (site_topbar.bwt truyền qua --pc-topbar-bg/--pc-topbar-fg), mặc định khớp mainColor của
@@ -54,7 +60,4 @@ $C
  .pc-site-v3 header.header .box-hearder .header-right .header-action-search{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;background:transparent;border:0}
  .pc-site-v3 header.header .box-hearder .header-menu .sudes-main-header #nav>.nav-item>a{font-size:12px;padding-left:8px;padding-right:8px}
  .pc-site-v3 header.header.hSticky .header-menu{z-index:10020!important;background:#fff!important;box-shadow:0 8px 24px rgba(0,46,35,.14)!important;isolation:isolate}
-}
-@media(max-width:680px){
- .pc-site-v3 header.header .box-hearder>.container,.pc-site-v3 .footer .container{padding-left:20px;padding-right:20px}
 }
