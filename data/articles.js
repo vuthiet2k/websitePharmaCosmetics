@@ -266,6 +266,28 @@ const ingredientArticles = ingredients.map((g, i) => ({
   blog: { handle: 'hoat-chat', title: 'Thư viện hoạt chất' },
 }));
 
+// 2026-10-03: blog "danh-gia-khach-hang" thay biến mock `patient_testimonials` — chuyển từ
+// data/testimonials.js (mock preview, tên hư cấu), tiêu đề = tên khách, tag ketqua:<kết quả>.
+const { testimonials } = require('./testimonials');
+const testimonialArticles = testimonials.map((t, i) => ({
+  id: 600 + i,
+  title: t.name,
+  alias: `danh-gia-${t.id}`,
+  handle: `danh-gia-${t.id}`,
+  url: `/blogs/danh-gia-khach-hang/danh-gia-${t.id}`,
+  summary: t.quote,
+  excerpt: t.quote,
+  content: `<p>${t.quote}</p>`,
+  image: t.avatar ? { src: t.avatar.src, alt: t.avatar.alt } : null,
+  featured_image: t.avatar ? { src: t.avatar.src, alt: t.avatar.alt } : null,
+  author: 'Pharma Cosmetics',
+  published_on: '2026-09-01T08:00:00',
+  created_at: '2026-09-01T08:00:00',
+  tags: t.result_title ? [`ketqua:${t.result_title}`] : [],
+  comments_count: 0,
+  blog: { handle: 'danh-gia-khach-hang', title: 'Đánh giá khách hàng' },
+}));
+
 // Byline: bài viết của chuyên gia gắn tag "chuyengia:<handle>" (trước đây so khớp tên tác giả).
 [...articles, ...beautyTipsArticles].forEach((a) => {
   const d = doctors.find((x) => x.name === a.author);
@@ -407,6 +429,13 @@ const blogs = {
     handle:  'hoat-chat',
     url:     '/blogs/hoat-chat',
     articles: ingredientArticles,
+  }),
+  'danh-gia-khach-hang': withBlogMeta({
+    id:      306,
+    title:   'Đánh giá khách hàng',
+    handle:  'danh-gia-khach-hang',
+    url:     '/blogs/danh-gia-khach-hang',
+    articles: testimonialArticles,
   }),
 };
 

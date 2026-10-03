@@ -1365,31 +1365,52 @@
   </div>
 </section>
 
+{%- comment -%}
+  2026-10-03: đánh giá khách hàng đọc từ Blog Sapo (settings.testimonial_blog_handle) thay biến
+  mock `patient_testimonials` (chỉ có ở preview-mock.js). Tiêu đề bài = tên khách, ảnh bài =
+  avatar, summary (hoặc content) = lời đánh giá, tag "ketqua:..." = kết quả điều trị.
+  Blog trống → ẩn cả section, không hiển thị đánh giá mẫu.
+{%- endcomment -%}
+{%- assign pc_tm_blog_handle = settings.testimonial_blog_handle | default: 'danh-gia-khach-hang' -%}
+{%- assign pc_tm_blog = blogs[pc_tm_blog_handle] -%}
+{%- if pc_tm_blog.articles.size > 0 -%}
 <section class="pc-pdp-reviews-section">
   <div class="container">
     <h2 class="pc-section-title pc-pdp-reviews-title">Đánh Giá Từ Bệnh Nhân Đã Điều Trị Thực Tế</h2>
     <div class="pc-pdp-reviews-grid">
-      {% for t in patient_testimonials limit: 3 %}
+      {% for pc_tm in pc_tm_blog.articles limit: 3 %}
+      {%- assign pc_tm_quote = pc_tm.summary | default: pc_tm.content | strip_html | strip -%}
+      {%- assign pc_tm_result = '' -%}
+      {%- for pc_tm_tag in pc_tm.tags -%}
+        {%- assign pc_tm_raw_key = pc_tm_tag | split: ':' | first -%}
+        {%- assign pc_tm_key = pc_tm_raw_key | strip | downcase -%}
+        {%- if pc_tm_tag contains ':' and pc_tm_key == 'ketqua' -%}
+          {%- assign pc_tm_result = pc_tm_tag | remove_first: pc_tm_raw_key | remove_first: ':' | strip -%}
+        {%- endif -%}
+      {%- endfor -%}
       <div class="pc-testi-card pc-pdp-review-card">
         <div class="pc-testi-card-inner">
           <div class="pc-testi-author-row">
-            <div class="pc-testi-avatar{% if t.avatar.src != blank %} pc-testi-avatar--img{% endif %}">
-              <img src="{{ t.avatar.src }}" alt="{{ t.avatar.alt }}" loading="lazy"
+            <div class="pc-testi-avatar{% if pc_tm.image.src != blank %} pc-testi-avatar--img{% endif %}">
+              {%- if pc_tm.image.src != blank -%}
+              <img src="{{ pc_tm.image.src | img_url: 'medium' }}" alt="{{ pc_tm.title | escape }}" width="48" height="48" loading="lazy"
                 onerror="this.onerror=null;this.closest('.pc-testi-avatar').classList.remove('pc-testi-avatar--img');this.remove();">
-              <span class="pc-testi-avatar-initials">{{ t.name | slice: 0, 2 | upcase }}</span>
+              {%- endif -%}
+              <span class="pc-testi-avatar-initials">{{ pc_tm.title | slice: 0, 2 | upcase }}</span>
             </div>
             <div>
-              <div class="pc-testi-author-name">{{ t.name }}</div>
-              <div class="pc-cg-testi-result">{{ t.result_title }}</div>
+              <div class="pc-testi-author-name">{{ pc_tm.title }}</div>
+              {%- if pc_tm_result != blank -%}<div class="pc-cg-testi-result">{{ pc_tm_result }}</div>{%- endif -%}
             </div>
           </div>
-          <p class="pc-testi-result-desc pc-pdp-review-quote">"{{ t.quote }}"</p>
+          <p class="pc-testi-result-desc pc-pdp-review-quote">"{{ pc_tm_quote }}"</p>
         </div>
       </div>
       {% endfor %}
     </div>
   </div>
 </section>
+{%- endif -%}
 
 <section class="pc-booking-faq-section pc-pdp-faq-section">
   <div class="container">
