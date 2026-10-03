@@ -288,6 +288,28 @@ const testimonialArticles = testimonials.map((t, i) => ({
   blog: { handle: 'danh-gia-khach-hang', title: 'Đánh giá khách hàng' },
 }));
 
+// 2026-10-03: blog "cau-hoi-san-pham" thay biến mock `faqs.product` — chuyển từ data/faqs.js
+// (mock preview), tiêu đề = câu hỏi, content = câu trả lời. faqs.booking/account vẫn dùng biến cũ.
+const { faqs } = require('./faqs');
+const productFaqArticles = faqs.product.map((f, i) => ({
+  id: 700 + i,
+  title: f.q,
+  alias: `cau-hoi-${i + 1}`,
+  handle: `cau-hoi-${i + 1}`,
+  url: `/blogs/cau-hoi-san-pham/cau-hoi-${i + 1}`,
+  summary: '',
+  excerpt: '',
+  content: `<p>${f.a}</p>`,
+  image: null,
+  featured_image: null,
+  author: 'Pharma Cosmetics',
+  published_on: '2026-09-01T08:00:00',
+  created_at: '2026-09-01T08:00:00',
+  tags: [],
+  comments_count: 0,
+  blog: { handle: 'cau-hoi-san-pham', title: 'Câu hỏi thường gặp' },
+}));
+
 // Byline: bài viết của chuyên gia gắn tag "chuyengia:<handle>" (trước đây so khớp tên tác giả).
 [...articles, ...beautyTipsArticles].forEach((a) => {
   const d = doctors.find((x) => x.name === a.author);
@@ -436,6 +458,13 @@ const blogs = {
     handle:  'danh-gia-khach-hang',
     url:     '/blogs/danh-gia-khach-hang',
     articles: testimonialArticles,
+  }),
+  'cau-hoi-san-pham': withBlogMeta({
+    id:      307,
+    title:   'Câu hỏi thường gặp',
+    handle:  'cau-hoi-san-pham',
+    url:     '/blogs/cau-hoi-san-pham',
+    articles: productFaqArticles,
   }),
 };
 

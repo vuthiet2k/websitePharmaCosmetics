@@ -243,6 +243,10 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
     `settings.testimonial_blog_handle` (mặc định `danh-gia-khach-hang`): tiêu đề = tên khách, ảnh bài
     = avatar, summary (hoặc content) = lời đánh giá, tag `ketqua:`. Blog trống → ẩn khối; không dùng
     biến mock `patient_testimonials`, không đăng đánh giá bịa.
+  - FAQ trang sản phẩm = bài viết trong blog `settings.product_faq_blog_handle` (mặc định
+    `cau-hoi-san-pham`, field ở section "Trang sản phẩm"): tiêu đề = câu hỏi, content = trả lời.
+    Blog trống → ẩn khối. `faqs.booking`/`faqs.account` (page.dat_lich_tu_van, customers/account)
+    VẪN là biến mock — chưa chuyển.
   - B2B (`b2b_tier_1..6_*`) và Loyalty (`loyalty_tier_1..6_*`): 6 ô, mặc định TẮT/TRỐNG — không điền
     sẵn % chiết khấu/ngưỡng điểm (cam kết kinh doanh); danh sách quyền lợi phân tách bằng `;`.
   - Handle bài viết lấy bằng `article.url | split: '/' | last`. Preview mô phỏng 2 blog trên trong
