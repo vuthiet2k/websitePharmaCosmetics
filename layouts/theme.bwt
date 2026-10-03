@@ -20,7 +20,15 @@
 		  gtag('config', '{{ settings.ga_id }}');
 		</script>
 		{%- endif -%}
-		<meta name="google-site-verification" content="hQIumWld_-_PQCp9rfFO617FC5Z_MRszJ95bfzgWxzE" />
+		{%- comment -%} 2026-10-03: mã xác minh + meta GEO đọc từ schema-admin (Section "SEO"), không hardcode; trường trống thì không in thẻ. {%- endcomment -%}
+		{%- if settings.seo_google_site_verification != blank -%}<meta name="google-site-verification" content="{{ settings.seo_google_site_verification | strip | escape }}" />{%- endif -%}
+		{%- if settings.seo_bing_site_verification != blank -%}<meta name="msvalidate.01" content="{{ settings.seo_bing_site_verification | strip | escape }}" />{%- endif -%}
+		{%- if settings.geo_region != blank -%}<meta name="geo.region" content="{{ settings.geo_region | strip | escape }}" />{%- endif -%}
+		{%- if settings.geo_placename != blank -%}<meta name="geo.placename" content="{{ settings.geo_placename | strip | escape }}" />{%- endif -%}
+		{%- if settings.geo_latitude != blank and settings.geo_longitude != blank -%}
+		<meta name="geo.position" content="{{ settings.geo_latitude | strip | escape }};{{ settings.geo_longitude | strip | escape }}" />
+		<meta name="ICBM" content="{{ settings.geo_latitude | strip | escape }}, {{ settings.geo_longitude | strip | escape }}" />
+		{%- endif -%}
 		<meta name="theme-color" content="{{ settings.theme_main_color }}" />
 		<link rel="canonical" href="{{ canonical_url }}"/>
 		{%- if template contains 'index' and is_skinhealthy_content == false -%}
@@ -36,7 +44,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">	
 		{% if template contains 'mops-admin' %}<meta name="robots" content="noindex,nofollow" />{% else %}<meta name="robots" content="noodp,index,follow" />{% endif %}
 		{% if current_page != 1 %}<meta name="description" content="{{ page_description }} | Trang {{ current_page }}">{% else %}<meta name="description" content="{{ page_description }}">{% endif %}
-		<title>{%if page_title == 'All'%}Tất cả sản phẩm{%else%}{{ page_title }}{%endif%}{% if current_tags %} tagged "{{ current_tags | join: ', ' }}"{% endif %}{% if current_page != 1 %} - Trang {{ current_page }}{% endif %}		</title>
+		<title>{%if page_title == 'All'%}Tất cả sản phẩm{%else%}{{ page_title }}{%endif%}{% if current_tags %} tagged "{{ current_tags | join: ', ' }}"{% endif %}{% if current_page != 1 %} - Trang {{ current_page }}{% endif %}{% if settings.seo_title_suffix != blank %} {{ settings.seo_title_suffix | strip | escape }}{% endif %}		</title>
 		{%if template contains 'index' and is_skinhealthy_content == false%}{%if settings.home_page_keywords != '' and settings.home_page_keywords != null%}<meta name="keywords" content="{{settings.home_page_keywords}}"/>{%else%}<meta name="keywords" content="{{store.name}}, {{store.domain}}"/>{%endif%}{%elsif template contains 'product'%}<meta name="keywords" content="{{product.name}}, {%for collection in product.collections%}{{collection.name}}, {%endfor%}{%if product.tags.size > 0%}{% for tag in product.tags %}{{tag}}, {%endfor%}{%endif%}{{store.name}}, {{store.domain}}"/>{%elsif template contains 'collection'%}<meta name="keywords" content="{{collection.name }}, {{store.name}}, {{store.domain}}"/>{%elsif template contains 'blog'%}<meta name="keywords" content="{{blog.name }}, {{store.name}}, {{store.domain}}"/>{%elsif template contains 'article'%}<meta name="keywords" content="{{article.title}}, {{blog.name}}, {%if article.tags.size > 0%}{% for tag in article.tags %}{{tag}}, {%endfor%}{%endif%} {{store.name}}, {{store.domain}}"/>{%else%}<meta name="keywords" content="{{page_title}}, {{store.name}}, {{store.domain}}"/>{%endif%}
 		{% include 'fb-open-graph-tags' %}
 		{%if settings.theme_favicon_enable%}<link rel="icon" href="{{ 'favicon.png' | asset_url }}" type="image/x-icon" />{%endif%}

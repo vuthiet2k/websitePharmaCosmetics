@@ -73,9 +73,31 @@
 	"address": {
 		"@type": "PostalAddress",
 		"streetAddress": {{ _seo_addr | strip_newlines | remove: 'Địa chỉ:' | strip | json }},
-		"addressLocality": "Hà Nội",
+		{%- if settings.geo_placename != blank %}
+		"addressLocality": {{ settings.geo_placename | strip | json }},
+		{%- endif %}
 		"addressCountry": "VN"
 	},
+	{%- endif %}
+	{%- comment -%} 2026-10-03: GEO local (Section "SEO") — chỉ in khi admin đã nhập, không bịa toạ độ/giờ/giá. {%- endcomment -%}
+	{%- if settings.geo_latitude != blank and settings.geo_longitude != blank %}
+	"geo": {
+		"@type": "GeoCoordinates",
+		"latitude": {{ settings.geo_latitude | strip | json }},
+		"longitude": {{ settings.geo_longitude | strip | json }}
+	},
+	{%- endif %}
+	{%- if settings.business_google_maps_url != blank %}
+	"hasMap": {{ settings.business_google_maps_url | strip | json }},
+	{%- endif %}
+	{%- if settings.business_opening_hours != blank %}
+	{%- assign pc_ld_hours = settings.business_opening_hours | split: ',' -%}
+	"openingHours": [
+		{%- for h in pc_ld_hours -%}{{ h | strip | json }}{% unless forloop.last %},{% endunless %}{%- endfor -%}
+	],
+	{%- endif %}
+	{%- if settings.business_price_range != blank %}
+	"priceRange": {{ settings.business_price_range | strip | json }},
 	{%- endif %}
 	{%- if settings.footer_legal_email != blank %}
 	"email": {{ settings.footer_legal_email | json }},

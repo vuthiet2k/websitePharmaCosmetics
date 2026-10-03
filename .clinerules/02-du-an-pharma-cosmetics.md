@@ -216,14 +216,19 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
   Icon tiêu đề Flash Sale (`flash_-1.png`) dùng `@keyframes pc-pulsescale` định nghĩa trong
   `page_home.scss.bwt` (load cho mọi trang `template contains 'index'`) — đã có sẵn từ trước, chỉ
   thêm `.pc-flashsale__title img{animation:none}` vào block `prefers-reduced-motion` sẵn có.
-- **Chưa dọn (audit G02, cần người dùng quyết định):** 10 option "chết" trong dropdown
-  `home_section_1..18` của `settings_schema.json` (`section_why_us`, `section_feedback`,
-  `section_collection_bestseller`, `section_collection_cta`, `section_stats`,
-  `section_expert_team`, `section_clinical_banner`, `section_trust_strip`, `section_protocol`,
-  `section_zalo_consult`) — snippet vẫn tồn tại nhưng KHÔNG có trong `valid_sections` của
-  `home_portal.bwt` nên chọn xong không hiện gì; `settings_data.json` preset mặc định còn trỏ 1 giá
-  trị chết (`home_section_9: section_expert_team`). Không tự xoá/thêm — theo nguyên tắc không tự ý
-  đổi settings_schema/settings_data khi chưa được hỏi.
+- **Option "chết" trong dropdown `home_section_1..18` (audit G02 — người dùng chốt 2026-10-03):**
+  10 giá trị (`section_why_us`, `section_feedback`, `section_collection_bestseller`,
+  `section_collection_cta`, `section_stats`, `section_expert_team`, `section_clinical_banner`,
+  `section_trust_strip`, `section_protocol`, `section_zalo_consult`) KHÔNG có trong `valid_sections`
+  của `home_portal.bwt` nên chọn xong không hiện gì. Quyết định: GIỮ option (không xoá, tránh vỡ
+  preset cũ), chỉ gắn tiền tố `[Chưa kích hoạt]` vào label. `section_expert_team` chỉ được đưa vào
+  `valid_sections` SAU KHI khối chuyên gia đọc dữ liệu thật (Blog Sapo), không còn dùng biến mock
+  `doctors`; preset `default` của `settings_data.json` vẫn trỏ `home_section_10: section_expert_team`.
+- **SEO/GEO cấu hình hoá (2026-10-03):** Section "SEO" của `settings_schema.json` chứa mã xác minh
+  Google/Bing, hậu tố tiêu đề, ảnh `og:image` mặc định, `geo_region`/`geo_placename`, toạ độ,
+  link Google Maps, giờ mở cửa, mức giá. Dùng ở `layouts/theme.bwt` (meta), `fb-open-graph-tags.bwt`
+  và `schema.bwt` (HealthAndBeautyBusiness). Toạ độ/giờ/giá/Maps mặc định TRỐNG và chỉ in khi admin
+  nhập — không điền số giả. `product_wishlist_collection` cố ý giữ ở section này.
 - Bộ lọc nhanh collection/search (`col.js.bwt` `doSearch()`): AJAX qua `filter.buildSearchUrl()`
   (Bizweb.SearchFilter thật) đã có URL restore/back-forward/active-chip-bar từ trước — không phải
   "bộ lọc giả chỉ ẩn card" như khảo sát cũ. Thêm 20/09/2026 (F03): token tăng dần chống request
