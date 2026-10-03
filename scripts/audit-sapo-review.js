@@ -54,7 +54,9 @@ const ROUTES = [
     }
     const info = await page.evaluate(() => {
       const vh = window.innerHeight;
-      const imgs = [...document.querySelectorAll('img')].filter((i) => !i.closest('noscript, template'));
+      // Bỏ qua (có lý do): .most-view-module-body = app bên thứ 3 (appbulk "sản phẩm xem nhiều") tự chèn
+      // bằng JS, không thuộc template; #sh-clinic-lb-img = ảnh lightbox, src do JS gán theo ảnh được bấm.
+      const imgs = [...document.querySelectorAll('img')].filter((i) => !i.closest('noscript, template, .most-view-module-body') && i.id !== 'sh-clinic-lb-img');
       const bad = { noAlt: [], noSize: [], noLazy: [] };
       for (const i of imgs) {
         const src = (i.getAttribute('data-src') || i.getAttribute('src') || '').slice(0, 80);
