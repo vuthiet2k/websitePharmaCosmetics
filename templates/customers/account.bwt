@@ -257,19 +257,28 @@
 	</div>
 </section>
 
+{%- comment -%}
+  2026-10-03: FAQ trang Tài khoản đọc từ Blog Sapo (settings.account_faq_blog_handle) thay biến mock
+  `faqs.account` (chỉ có ở preview-mock.js). Mỗi câu hỏi = 1 bài viết: tiêu đề = câu hỏi,
+  nội dung = câu trả lời. Blog trống → ẩn section.
+{%- endcomment -%}
+{%- assign pc_faq_account_handle = settings.account_faq_blog_handle | default: 'cau-hoi-tai-khoan' -%}
+{%- assign pc_faq_account_blog = blogs[pc_faq_account_handle] -%}
+{%- if pc_faq_account_blog.articles.size > 0 -%}
 <section class="pc-booking-faq-section pc-account-faq-section">
 	<div class="container">
 	<h2 class="pc-section-title pc-booking-faq-title">Câu Hỏi Thường Gặp</h2>
 	<div class="pc-booking-faq-list">
-		{% for item in faqs.account %}
+		{% for pc_faq in pc_faq_account_blog.articles %}
 		<details class="pc-faq-item">
-			<summary class="pc-faq-q">{{ item.q }}</summary>
-			<div class="pc-faq-a">{{ item.a }}</div>
+			<summary class="pc-faq-q">{{ pc_faq.title }}</summary>
+			<div class="pc-faq-a">{{ pc_faq.content }}</div>
 		</details>
 		{% endfor %}
 	</div>
 	</div>
 </section>
+{%- endif -%}
 
 <script>
 $(function() {

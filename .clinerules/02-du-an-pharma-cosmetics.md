@@ -230,7 +230,7 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
   và `schema.bwt` (HealthAndBeautyBusiness). Toạ độ/giờ/giá/Maps mặc định TRỐNG và chỉ in khi admin
   nhập — không điền số giả. `product_wishlist_collection` cố ý giữ ở section này.
 - **Trang chuyên khoa đọc dữ liệu Sapo thật (2026-10-03, người dùng chốt):** không dùng biến mock
-  `doctors`/`b2b_tiers`/`loyalty_tiers`/`ingredients`/`patient_testimonials` (chỉ có ở preview, trên Sapo = nil → trang trắng).
+  `doctors`/`b2b_tiers`/`loyalty_tiers`/`ingredients`/`patient_testimonials`/`faqs` (chỉ có ở preview, trên Sapo = nil → trang trắng).
   Cấu hình ở section "Trang chuyên khoa" của `settings_schema.json`.
   - Chuyên gia = bài viết trong blog `settings.expert_blog_handle` (mặc định `chuyen-gia`): tiêu đề =
     tên, ảnh bài = chân dung, summary = trích dẫn, content = học vấn + kinh nghiệm; tag `chucdanh:`,
@@ -245,8 +245,9 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
     biến mock `patient_testimonials`, không đăng đánh giá bịa.
   - FAQ trang sản phẩm = bài viết trong blog `settings.product_faq_blog_handle` (mặc định
     `cau-hoi-san-pham`, field ở section "Trang sản phẩm"): tiêu đề = câu hỏi, content = trả lời.
-    Blog trống → ẩn khối. `faqs.booking`/`faqs.account` (page.dat_lich_tu_van, customers/account)
-    VẪN là biến mock — chưa chuyển.
+    Blog trống → ẩn khối. Cùng cách cho FAQ trang Đặt lịch (`booking_faq_blog_handle`, mặc định
+    `cau-hoi-dat-lich`, section "Liên hệ & Hỗ trợ") và trang Tài khoản (`account_faq_blog_handle`,
+    mặc định `cau-hoi-tai-khoan`, section "Tài khoản khách hàng"); biến mock `faqs` đã gỡ.
   - B2B (`b2b_tier_1..6_*`) và Loyalty (`loyalty_tier_1..6_*`): 6 ô, mặc định TẮT/TRỐNG — không điền
     sẵn % chiết khấu/ngưỡng điểm (cam kết kinh doanh); danh sách quyền lợi phân tách bằng `;`.
   - Handle bài viết lấy bằng `article.url | split: '/' | last`. Preview mô phỏng 2 blog trên trong

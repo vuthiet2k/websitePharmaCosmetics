@@ -288,15 +288,16 @@ const testimonialArticles = testimonials.map((t, i) => ({
   blog: { handle: 'danh-gia-khach-hang', title: 'Đánh giá khách hàng' },
 }));
 
-// 2026-10-03: blog "cau-hoi-san-pham" thay biến mock `faqs.product` — chuyển từ data/faqs.js
-// (mock preview), tiêu đề = câu hỏi, content = câu trả lời. faqs.booking/account vẫn dùng biến cũ.
+// 2026-10-03: blog FAQ "cau-hoi-san-pham" / "cau-hoi-dat-lich" / "cau-hoi-tai-khoan" thay biến mock
+// `faqs.product/booking/account` — chuyển từ data/faqs.js (mock preview), tiêu đề = câu hỏi,
+// content = câu trả lời.
 const { faqs } = require('./faqs');
-const productFaqArticles = faqs.product.map((f, i) => ({
-  id: 700 + i,
+const faqArticles = (list, blogHandle, blogTitle, idBase) => list.map((f, i) => ({
+  id: idBase + i,
   title: f.q,
   alias: `cau-hoi-${i + 1}`,
   handle: `cau-hoi-${i + 1}`,
-  url: `/blogs/cau-hoi-san-pham/cau-hoi-${i + 1}`,
+  url: `/blogs/${blogHandle}/cau-hoi-${i + 1}`,
   summary: '',
   excerpt: '',
   content: `<p>${f.a}</p>`,
@@ -307,8 +308,11 @@ const productFaqArticles = faqs.product.map((f, i) => ({
   created_at: '2026-09-01T08:00:00',
   tags: [],
   comments_count: 0,
-  blog: { handle: 'cau-hoi-san-pham', title: 'Câu hỏi thường gặp' },
+  blog: { handle: blogHandle, title: blogTitle },
 }));
+const productFaqArticles = faqArticles(faqs.product, 'cau-hoi-san-pham', 'Câu hỏi thường gặp', 700);
+const bookingFaqArticles = faqArticles(faqs.booking, 'cau-hoi-dat-lich', 'Câu hỏi đặt lịch', 800);
+const accountFaqArticles = faqArticles(faqs.account, 'cau-hoi-tai-khoan', 'Câu hỏi tài khoản', 900);
 
 // Byline: bài viết của chuyên gia gắn tag "chuyengia:<handle>" (trước đây so khớp tên tác giả).
 [...articles, ...beautyTipsArticles].forEach((a) => {
@@ -465,6 +469,20 @@ const blogs = {
     handle:  'cau-hoi-san-pham',
     url:     '/blogs/cau-hoi-san-pham',
     articles: productFaqArticles,
+  }),
+  'cau-hoi-dat-lich': withBlogMeta({
+    id:      308,
+    title:   'Câu hỏi đặt lịch',
+    handle:  'cau-hoi-dat-lich',
+    url:     '/blogs/cau-hoi-dat-lich',
+    articles: bookingFaqArticles,
+  }),
+  'cau-hoi-tai-khoan': withBlogMeta({
+    id:      309,
+    title:   'Câu hỏi tài khoản',
+    handle:  'cau-hoi-tai-khoan',
+    url:     '/blogs/cau-hoi-tai-khoan',
+    articles: accountFaqArticles,
   }),
 };
 

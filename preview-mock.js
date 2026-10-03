@@ -64,7 +64,6 @@ const { linklists }                        = require('./data/navigation');
 const { pages }                            = require('./data/pages');
 const { cart }                             = require('./data/cart');
 const { articles, blogs, currentArticle }  = require('./data/articles');
-const { faqs }                             = require('./data/faqs');
 const { quizQuestions, quizResults }       = require('./data/quiz-questions');
 const { solutions, corePhilosophy }        = require('./data/solutions');
 
@@ -412,7 +411,6 @@ function getContext(templateName = 'index', routeParams = {}) {
     search,
 
     // Trang chuyên gia / loyalty / booking FAQ / AI quiz
-    faqs,
     quiz_questions: quizQuestions,
     quiz_results: quizResults,
 
