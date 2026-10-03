@@ -189,7 +189,7 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
   trong `header.bwt`.
 - Ẩn "Tích điểm đổi quà" khỏi menu mobile: gate bằng `settings.header_loyalty_enable` (checkbox,
   mặc định **tắt**) trong `header.bwt` — loại hẳn khỏi DOM khi tắt (không phải CSS ẩn). Dữ liệu/
-  tích hợp loyalty thật (`appbulk-loyalty-widgets.bwt`, `page.loyalty.bwt`, `data/loyalty-tiers.js`)
+  tích hợp loyalty thật (`appbulk-loyalty-widgets.bwt`, `page.loyalty.bwt`, hạng `loyalty_tier_1..6_*` trong settings)
   giữ nguyên, bật lại được bất kỳ lúc nào chỉ bằng setting này.
 - Cụm liên hệ nổi (`support.bwt`) có 3 trạng thái: thu gọn, mở panel (`.widget-opened`, như cũ), và
   **ẩn hoàn toàn** (`.widget-hidden`, `display:none` thật — thêm 20/09/2026). Trạng thái ẩn lưu qua
