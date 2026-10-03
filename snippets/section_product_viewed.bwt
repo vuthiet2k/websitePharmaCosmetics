@@ -135,6 +135,7 @@ $(document).ready(function() {
   if (size_pro_review < 1) return;
 
   var recentview_promises = [];
+  var requested_aliases = [];
   for (var i = 0; i < size_pro_review; i++) {
     var alias_product = last_viewd_pro_array[i];
     if (!!alias_product.alias) {
@@ -147,6 +148,7 @@ $(document).ready(function() {
           });
         });
         recentview_promises.push(promise);
+        requested_aliases.push(alias);
       })(alias_product.alias);
     }
   }
@@ -160,11 +162,20 @@ $(document).ready(function() {
     values.forEach(function(v) {
       if (v !== '') { $('.swiper_viewed .swiper-wrapper').append(v); }
     });
-    last_viewd_pro_array = last_viewd_pro_array.filter(function(item, i) {
-      return values[i] !== '';
+    /* 2026-10-03: KHÔNG ghi đè bằng bản đọc lúc đầu — product.bwt thêm sản phẩm đang xem vào
+       localStorage cùng lúc (document.ready) trước khi ajax xong, ghi đè bản cũ làm mất sản phẩm
+       đó và danh sách không bao giờ quá 1 (kiểm Playwright trên production). Đọc lại bản mới
+       nhất, chỉ bỏ các alias ajax trả về rỗng. */
+    var failed_aliases = requested_aliases.filter(function(alias, i) {
+      return values[i] === '';
     });
-
-    localStorage.setItem('last_viewed_products', JSON.stringify(last_viewd_pro_array));
+    if (failed_aliases.length) {
+      var latest_viewed = JSON.parse(localStorage.getItem('last_viewed_products')) || [];
+      latest_viewed = latest_viewed.filter(function(item) {
+        return failed_aliases.indexOf(item.alias) === -1;
+      });
+      localStorage.setItem('last_viewed_products', JSON.stringify(latest_viewed));
+    }
     $('.section-recenview-product').removeClass('d-none');
 
     setTimeout(function() {
