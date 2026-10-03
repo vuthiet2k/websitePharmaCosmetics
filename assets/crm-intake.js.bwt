@@ -156,8 +156,12 @@
         consent: data.consent === true,
         consent_at: data.consent_at || new Date().toISOString(),
         source: 'ai_skin_scan_camera',
+        // 2026-10-03: khôi phục monk_skin_tone + tech_neck — commit 828bb93 (thêm getCustomerInfo) viết lại
+        // khối này và vô tình bỏ 2 trường đang gửi về CRM (test skin-scan "CRM yêu cầu consent" bắt được).
         analysis_result: {
           scores: data.scores,
+          monk_skin_tone: data.monk_skin_tone,
+          tech_neck: data.tech_neck === true,
           skin_type: data.skin_type || 'Báo cáo soi da camera',
           skin_age: data.skin_age,
           primary_concern: data.primary_concern,

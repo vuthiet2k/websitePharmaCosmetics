@@ -37,7 +37,7 @@
   <div class="max-w-5xl mx-auto px-4 sm:px-6 space-y-6">
 
     <!-- 1. Disclaimer Banner (Căn lề chuẩn max-w-5xl) -->
-    <div class="bg-amber-50/90 border border-amber-200/90 text-amber-900 text-xs sm:text-sm rounded-2xl p-4 sm:p-5 flex items-start gap-3.5 shadow-sm">
+    <div data-result-disclaimer class="bg-amber-50/90 border border-amber-200/90 text-amber-900 text-xs sm:text-sm rounded-2xl p-4 sm:p-5 flex items-start gap-3.5 shadow-sm">
       <i class="fas fa-triangle-exclamation text-amber-500 text-base mt-0.5 shrink-0" aria-hidden="true"></i>
       <div class="leading-relaxed">
         <strong class="font-bold">{{ settings.ai_skin_scan_disclaimer_title | default: 'Lưu ý về kết quả' | escape }}:</strong>
@@ -385,6 +385,20 @@
         rec.appendChild(tag);
       });
     }
+
+    // 2026-10-03: khôi phục link sản phẩm theo từng giai đoạn routine — commit 017e220 viết lại trang
+    // và bỏ đoạn này nên 3 khung [data-scan-stage-products] luôn trống (test skin-scan "routine" bắt được).
+    (skinScan.recommended_products || []).forEach(function (product) {
+      if (!product || !/^\/[a-z0-9-]+$/.test(product.url || '')) return;
+      var stageProducts = root.querySelector('[data-scan-stage-products="' + Number(product.stage) + '"]');
+      if (!stageProducts) return;
+      var link = document.createElement('a');
+      link.className = 'pc-kit-btn-secondary px-4 py-2 text-xs';
+      link.href = product.url;
+      link.textContent = product.label || {{ settings.skin_scan_product_link_label | default: 'Xem sản phẩm tham khảo' | json }};
+      stageProducts.appendChild(link);
+      stageProducts.hidden = false;
+    });
   }
 
   // ── ĐỒNG BỘ THÔNG TIN KHÁCH HÀNG TỪ GAS HOẶC CONTEXT ────────────────────

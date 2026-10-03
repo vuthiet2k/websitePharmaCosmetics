@@ -286,6 +286,10 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
   `pc-checkbox-native` (đã gắn: about-us, đặt lịch, đăng ký) — nếu không khách không thấy ô bắt buộc.
 - AI Skin Quiz: 17 câu hỏi = `snippets/quiz_questions_data.bwt` (nguồn duy nhất; `data/quiz-questions.js`
   đã xoá) — trước đây Sapo chỉ chạy bộ dự phòng 5 câu.
+- `npm run test:portal` (39 test) PASS 2026-10-03. Test bám hook ổn định (`data-result-disclaimer`,
+  `data-scan-stage-products`, `data-skin-*`) — không bám class Tailwind/khung. CRM `save_skin_analysis` gửi
+  `analysis_result` gồm `scores`, `monk_skin_tone`, `tech_neck`, `skin_type`, `skin_age`, `primary_concern`,
+  `regimen`, `recommended_products` (KHÔNG ảnh); trang kết quả đổ `recommended_products` vào 3 giai đoạn.
   - B2B (`b2b_tier_1..6_*`) và Loyalty (`loyalty_tier_1..6_*`): 6 ô, mặc định TẮT/TRỐNG — không điền
     sẵn % chiết khấu/ngưỡng điểm (cam kết kinh doanh); danh sách quyền lợi phân tách bằng `;`.
   - Handle bài viết lấy bằng `article.url | split: '/' | last`. Preview mô phỏng 2 blog trên trong

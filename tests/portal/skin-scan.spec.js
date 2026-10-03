@@ -17,7 +17,9 @@ test('soft-disable ẩn camera nhưng giữ khảo sát dùng được', async (
   await page.route('**/soi-da', async route => {
     const response = await route.fetch();
     let html = await response.text();
-    html = html.replace(/<nav class="pc-skin-mode-tabs"[\s\S]*?<\/nav>\s*<section class="pc-skin-scan"[\s\S]*?<p class="pc-skin-scan__disclaimer"[\s\S]*?<\/p>\s*<\/section>/, '');
+    // 2026-10-03: nav có thêm class container (chuẩn hoá khung) → khớp class chứa pc-skin-mode-tabs.
+    // Section camera giờ nằm trong <div class="container"> bọc ngoài → bỏ luôn lớp bọc tuỳ chọn.
+    html = html.replace(/<nav class="[^"]*pc-skin-mode-tabs[^"]*"[\s\S]*?<\/nav>\s*(?:<div class="container">\s*)?<section class="pc-skin-scan"[\s\S]*?<p class="pc-skin-scan__disclaimer"[\s\S]*?<\/p>\s*<\/section>(?:\s*<\/div>)?/, '');
     html = html.replace(/<script src="[^"]*skin-(?:liqa|deid|cv|onnx|mst|scoring|routine|visual|camera)[^"]*"[^>]*><\/script>\s*/g, '');
     html = html.replace(/<script>\s*window\.PharmaSkinScanCopy = \{[\s\S]*?<\/script>\s*/, '');
     await route.fulfill({ response, body: html });
@@ -163,8 +165,9 @@ test('màn soi da không sử dụng danh xưng y tế bị cấm', async ({ pag
   expect(guideCopy).toContain('kết quả tham khảo');
 
   await page.goto('/pages/ai-skin-quiz-results');
-  await expect(page.locator('.bg-amber-50')).toContainText('Lưu ý về kết quả');
-  await expect(page.locator('.bg-amber-50')).not.toContainText(/kê phác đồ chính xác|chẩn đoán y khoa chính thức/i);
+  // 2026-10-03: banner đổi class sang bg-amber-50/90 → dùng hook ổn định data-result-disclaimer.
+  await expect(page.locator('[data-result-disclaimer]')).toContainText('Lưu ý về kết quả');
+  await expect(page.locator('[data-result-disclaimer]')).not.toContainText(/kê phác đồ chính xác|chẩn đoán y khoa chính thức/i);
 });
 
 test('LIQA chặn ảnh khi chưa có khuôn mặt và chấp nhận landmarks chính diện hợp lệ', async ({ page }) => {
@@ -409,7 +412,9 @@ test('kết quả camera hiển thị ba ảnh trong trang và có thể bật t
     scan.dataset.skinModelUrl = '';
     scan.dataset.skinDeidEnabled = 'false';
   });
-  await page.locator('[data-skin-analyze]').click();
+  // 2026-10-03: sau khi có báo cáo, khu vực chụp/tải (chứa nút phân tích) được ẩn theo thiết kế (2a150ee)
+  // → kích hoạt lại pipeline phân tích bằng element.click() để kiểm cấu hình không-model/không-khử-định-danh.
+  await page.locator('[data-skin-analyze]').evaluate(button => button.click());
   await expect(page.locator('[data-skin-analysis-method]')).toContainText('không phải kết quả từ mô hình AI đã thẩm định');
   const unmaskedPixel = await preview.evaluate(canvas => Array.from(canvas.getContext('2d').getImageData(50, 35, 1, 1).data));
   expect(unmaskedPixel.slice(0, 3)).toEqual([255, 255, 255]);
