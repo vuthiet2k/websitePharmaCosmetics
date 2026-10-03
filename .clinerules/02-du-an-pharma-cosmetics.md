@@ -217,13 +217,14 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
   `page_home.scss.bwt` (load cho mọi trang `template contains 'index'`) — đã có sẵn từ trước, chỉ
   thêm `.pc-flashsale__title img{animation:none}` vào block `prefers-reduced-motion` sẵn có.
 - **Option "chết" trong dropdown `home_section_1..18` (audit G02 — người dùng chốt 2026-10-03):**
-  10 giá trị (`section_why_us`, `section_feedback`, `section_collection_bestseller`,
-  `section_collection_cta`, `section_stats`, `section_expert_team`, `section_clinical_banner`,
-  `section_trust_strip`, `section_protocol`, `section_zalo_consult`) KHÔNG có trong `valid_sections`
-  của `home_portal.bwt` nên chọn xong không hiện gì. Quyết định: GIỮ option (không xoá, tránh vỡ
-  preset cũ), chỉ gắn tiền tố `[Chưa kích hoạt]` vào label. `section_expert_team` chỉ được đưa vào
-  `valid_sections` SAU KHI khối chuyên gia đọc dữ liệu thật (Blog Sapo), không còn dùng biến mock
-  `doctors`; preset `default` của `settings_data.json` vẫn trỏ `home_section_10: section_expert_team`.
+  9 giá trị (`section_why_us`, `section_feedback`, `section_collection_bestseller`,
+  `section_collection_cta`, `section_stats`, `section_clinical_banner`, `section_trust_strip`,
+  `section_protocol`, `section_zalo_consult`) KHÔNG có trong `valid_sections` của `home_portal.bwt` nên
+  chọn xong không hiện gì — GIỮ option (không xoá, tránh vỡ preset cũ), label gắn `[Chưa kích hoạt]`.
+  `section_expert_team` ĐÃ BẬT (2026-10-03, người dùng chốt): có trong `valid_sections`, đặt ở chương II
+  "Tin cậy" ngay sau `section_testimonials` (`home_section_10`), viết theo khung v3 (wrap /
+  section-head / lưới `.proof` + thẻ `.pcase`), 3 chuyên gia mới nhất của blog chuyên gia, tiêu đề cấu
+  hình `home_expert_*`.
 - **SEO/GEO cấu hình hoá (2026-10-03):** Section "SEO" của `settings_schema.json` chứa mã xác minh
   Google/Bing, hậu tố tiêu đề, ảnh `og:image` mặc định, `geo_region`/`geo_placename`, toạ độ,
   link Google Maps, giờ mở cửa, mức giá. Dùng ở `layouts/theme.bwt` (meta), `fb-open-graph-tags.bwt`
@@ -263,8 +264,10 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
     trang kết quả lấy blog `quiz_article_blog_handle` (mặc định `tin-tuc`).
 - **Chặn biến mock tái phát:** `npm run lint:liquid-globals` (nằm trong `build:sapo`) báo mọi biến
   Liquid không thuộc 38 đối tượng Sapo và không được assign/capture/for/tham số include ở đâu. Ngoại
-  lệ phải ghi lý do trong `ALLOW` của `scripts/lint-liquid-globals.js` (hiện có code gốc Bizweb chưa
-  xác nhận: `social_login`, `routes`, `{{amount}}`, `articles[handle]`).
+  lệ phải ghi lý do trong `ALLOW` của `scripts/lint-liquid-globals.js`. Đã kiểm trên shop Sapo thật
+  (2026-10-03): `social_login`, `routes.cart_url` hợp lệ; `articles[handle]` chưa đối chiếu được.
+  `Bizweb.money_format` gán bằng `{{ store.money_format | json }}` — chuỗi placeholder amount viết
+  thẳng trong file .bwt sẽ bị Liquid nuốt (shop thật ra "$", formatMoney không truyền format ném lỗi).
   Lint này cũng FAIL khi template đọc `settings.X` mà X chưa khai báo trong `settings_schema.json`
   (admin không sửa được) — bỏ qua có lý do: `popup_sapo.bwt` (demo theme gốc, tắt),
   `section_clinical_banner.bwt` (không được include).

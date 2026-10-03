@@ -31,11 +31,11 @@ const SAPO_OBJECTS = [
 const ALLOW = {
   canonical_url: 'biến chuẩn của Sapo layout (dùng cho <link rel="canonical">)',
   tablerowloop: 'helper của {% tablerow %}',
-  // Code theme gốc Bizweb/Sapo (không phải mock của repo) — CHƯA xác nhận trên Sapo thật:
-  social_login: 'nút đăng nhập MXH Sapo trả về (customers/login, register) — đã có if != blank',
-  routes: 'template Mustache ajaxcart gốc Bizweb (routes.cart_url)',
-  amount: 'chuỗi định dạng tiền "{{amount}}" trong thư viện Bizweb (ajaxcartfunction)',
-  articles: 'articles[handle] của tính năng kiểm duyệt dược sĩ gốc Bizweb (article, tab_product)',
+  // Code theme gốc Bizweb/Sapo — đã kiểm trên shop Sapo thật (pharmacosmetics-vn.com,
+  // bean-pharmacity.mysapo.net) ngày 2026-10-03:
+  social_login: 'ĐÃ XÁC NHẬN: Sapo render nút social-login--facebook/google ở /account/login',
+  routes: 'ĐÃ XÁC NHẬN: routes.cart_url render "/cart" trên Sapo (form ajaxcart)',
+  articles: 'CHƯA XÁC NHẬN: articles[handle] của khối kiểm duyệt dược sĩ gốc Bizweb — shop thật chưa có sản phẩm tag duocsi_ để đối chiếu',
   // Tham số tuỳ chọn của snippet, đã có giá trị mặc định khi không truyền:
   skeleton: "tham số tuỳ chọn mops_admin_state_block (mặc định 'table')",
   booking_url: "tham số tuỳ chọn product_grid_skinhealthy (| default: '/dat-lich-tu-van')",
