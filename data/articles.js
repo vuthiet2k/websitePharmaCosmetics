@@ -338,6 +338,28 @@ const expertOpinionArticles = [
   },
 ];
 
+// 2026-10-03: blog "giai-phap-skin-health" thay biến mock `solutions` (page.spa-services) — chuyển
+// nguyên từ data/solutions.js (trích xlsx Clinic), tag en:/phuhop:/tagline:.
+const { solutions } = require('./solutions');
+const solutionArticles = solutions.map((sol, i) => ({
+  id: 1100 + i,
+  title: sol.name_vi,
+  alias: sol.id.toLowerCase(),
+  handle: sol.id.toLowerCase(),
+  url: `/blogs/giai-phap-skin-health/${sol.id.toLowerCase()}`,
+  summary: sol.summary,
+  excerpt: sol.summary,
+  content: `<p>${sol.personalization_note || ''}</p>`,
+  image: null,
+  featured_image: null,
+  author: 'Skin Health Beauty',
+  published_on: '2026-09-01T08:00:00',
+  created_at: '2026-09-01T08:00:00',
+  tags: [`en:${sol.name_en}`, ...(sol.suitable_for || []).map((x) => `phuhop:${x}`), ...(sol.tagline ? [`tagline:${sol.tagline}`] : [])],
+  comments_count: 0,
+  blog: { handle: 'giai-phap-skin-health', title: 'Giải pháp Skin Health' },
+}));
+
 // Byline: bài viết của chuyên gia gắn tag "chuyengia:<handle>" (trước đây so khớp tên tác giả).
 [...articles, ...beautyTipsArticles].forEach((a) => {
   const d = doctors.find((x) => x.name === a.author);
@@ -514,6 +536,13 @@ const blogs = {
     handle:  'y-kien-chuyen-gia',
     url:     '/blogs/y-kien-chuyen-gia',
     articles: expertOpinionArticles,
+  }),
+  'giai-phap-skin-health': withBlogMeta({
+    id:      311,
+    title:   'Giải pháp Skin Health',
+    handle:  'giai-phap-skin-health',
+    url:     '/blogs/giai-phap-skin-health',
+    articles: solutionArticles,
   }),
 };
 

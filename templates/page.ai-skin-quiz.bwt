@@ -175,8 +175,11 @@ window.PharmaSkinScanProductLabels = {
   var copy = window.PharmaSkinScanCopy || {};
 
   // 17 Clinical Questions Data
-  var quizQuestions = {{ quiz_questions | json }};
-  var quizResults = {{ quiz_results | json }};
+  // 2026-10-03: quiz_questions/quiz_results là biến mock (không có trên Sapo, luôn rỗng) → dùng
+  // thẳng bộ câu hỏi bên dưới; bảng kết quả dùng chung snippets/quiz_results_data.bwt (cùng
+  // nguồn với trang kết quả, trước đây trang kết quả không có bảng này → luôn ra "Da dầu").
+  var quizQuestions = [];
+  var quizResults = {% include 'quiz_results_data' %};
 
   // Fallback data if server liquid template variables are empty
   if (!quizQuestions || quizQuestions.length === 0) {
@@ -239,17 +242,6 @@ window.PharmaSkinScanProductLabels = {
     ];
   }
 
-  if (!quizResults || Object.keys(quizResults).length === 0) {
-    quizResults = {
-      oily: { skin_type: "Làn Da Dầu / Dễ Nổi Mụn", recommend: ["Salicylic Acid (BHA 2%)", "Niacinamide 10%", "Gel Dưỡng Không Dầu Oil-Free"] },
-      dry: { skin_type: "Làn Da Khô Thiếu Ẩm", recommend: ["Hyaluronic Acid Đa Tầng", "Ceramide Phục Hồi", "Kem Dưỡng Khóa Ẩm Chuyên Sâu"] },
-      combination: { skin_type: "Làn Da Hỗn Hợp Thiên Dầu", recommend: ["Niacinamide 5%", "Serum Cấp Nước B5", "Kem Cân Bằng Dầu Nước"] },
-      sensitive: { skin_type: "Làn Da Nhạy Cảm / Tổn Thương", recommend: ["Rau Má Centella Asiatica", "Panthenol (Vitamin B5)", "Kem Chống Nắng Vật Lý Dịu Nhẹ"] },
-      normal: { skin_type: "Làn Da Thường Khỏe Mạnh", recommend: ["Vitamin C 15% Chống Oxy Hóa", "Kem Dưỡng Phục Hồi", "Chống Nắng Phổ Rộng Broad-Spectrum"] },
-      pigmentation: { skin_type: "Làn Da Tăng Sắc Tố & Nám", recommend: ["Tranexamic Acid 3%", "Vitamin C Tinh Khiết", "Retinoid Nồng Độ Kiểm Soát"] },
-      aging: { skin_type: "Làn Da Lão Hóa & Thiếu Săn Chắc", recommend: ["Retinol 0.5% - 1.0%", "Phức Hợp Peptides", "Kem Chống Nắng Phổ Rộng"] }
-    };
-  }
 
   var currentQuestionIndex = -1;
   var userScores = {};

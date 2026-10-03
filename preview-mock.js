@@ -64,8 +64,6 @@ const { linklists }                        = require('./data/navigation');
 const { pages }                            = require('./data/pages');
 const { cart }                             = require('./data/cart');
 const { articles, blogs, currentArticle }  = require('./data/articles');
-const { quizQuestions, quizResults }       = require('./data/quiz-questions');
-const { solutions, corePhilosophy }        = require('./data/solutions');
 
 // Inject phone_number thực từ settings nếu có
 if (settings.store_phone) store.phone_number = settings.store_phone;
@@ -411,12 +409,8 @@ function getContext(templateName = 'index', routeParams = {}) {
     search,
 
     // Trang chuyên gia / loyalty / booking FAQ / AI quiz
-    quiz_questions: quizQuestions,
-    quiz_results: quizResults,
 
     // REOPEN 2026-09-10 (ADR-007/T-80/T-82) — B2B distribution + ingredient lookup
-    solutions,
-    core_philosophy: corePhilosophy,
 
     // Pagination
     paginate: {

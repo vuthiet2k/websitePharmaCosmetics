@@ -256,6 +256,15 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
     phần mô tả + khối ý kiến dùng `doctors[0]` đã xoá) đọc blog hoạt chất: SẢN PHẨM gắn tag
     `hoatchat:<handle>` (thứ tự theo tag), thẻ = tiêu đề + summary, tag `icon:` tuỳ chọn trên bài.
     Không có tag → ẩn khối. `tab_product.bwt` loại tag `hoatchat:` khỏi danh sách tag hiển thị.
+  - Trang Dịch vụ trị liệu (`page.spa-services`): thông điệp = `spa_philosophy_quote`/`_signature`;
+    giải pháp = blog `spa_solution_blog_handle` (mặc định `giai-phap-skin-health`), tag `en:`,
+    `phuhop:` (lặp), `tagline:`. AI Skin Quiz: bảng kết quả theo loại da dùng chung
+    `snippets/quiz_results_data.bwt` (logic ứng dụng, không phải nội dung admin); bài khuyên đọc ở
+    trang kết quả lấy blog `quiz_article_blog_handle` (mặc định `tin-tuc`).
+- **Chặn biến mock tái phát:** `npm run lint:liquid-globals` (nằm trong `build:sapo`) báo mọi biến
+  Liquid không thuộc 38 đối tượng Sapo và không được assign/capture/for/tham số include ở đâu. Ngoại
+  lệ phải ghi lý do trong `ALLOW` của `scripts/lint-liquid-globals.js` (hiện có code gốc Bizweb chưa
+  xác nhận: `social_login`, `routes`, `{{amount}}`, `articles[handle]`).
   - B2B (`b2b_tier_1..6_*`) và Loyalty (`loyalty_tier_1..6_*`): 6 ô, mặc định TẮT/TRỐNG — không điền
     sẵn % chiết khấu/ngưỡng điểm (cam kết kinh doanh); danh sách quyền lợi phân tách bằng `;`.
   - Handle bài viết lấy bằng `article.url | split: '/' | last`. Preview mô phỏng 2 blog trên trong

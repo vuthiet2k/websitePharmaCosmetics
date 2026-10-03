@@ -12,12 +12,25 @@
 
 <script>
   // Dữ liệu sản phẩm và bài viết từ Sapo cung cấp qua Liquid context
+  // 2026-10-03: bỏ biến mock `products`/`articles`/`quiz_results` (không có trên Sapo). Bài viết
+  // khuyên đọc lấy từ blog settings.quiz_article_blog_handle; bảng kết quả dùng chung với trang quiz.
   window.PharmaSapoProducts = {{ collections['all'].products | json }};
-  if (!window.PharmaSapoProducts || window.PharmaSapoProducts.length === 0) {
-    window.PharmaSapoProducts = {{ products | json }};
-  }
-  window.PharmaSapoArticles = {{ articles | json }};
-  window.PharmaQuizResultsData = {{ quiz_results | json }};
+  {%- assign pc_qz_blog_handle = settings.quiz_article_blog_handle | default: 'tin-tuc' -%}
+  {%- assign pc_qz_blog = blogs[pc_qz_blog_handle] %}
+  window.PharmaSapoArticles = [
+    {%- for a in pc_qz_blog.articles limit: 30 -%}
+    {
+      "title": {{ a.title | json }},
+      "url": {{ a.url | json }},
+      "excerpt": {{ a.summary | default: a.content | strip_html | truncate: 200 | json }},
+      "tags": {{ a.tags | json }},
+      "author": {{ a.author | json }},
+      "published_on": {{ a.published_on | date: '%Y-%m-%dT%H:%M:%S+07:00' | json }},
+      "image": {% if a.image.src != blank %}{ "src": {{ a.image.src | img_url: 'large' | json }} }{% else %}null{% endif %}
+    }{% unless forloop.last %},{% endunless %}
+    {%- endfor -%}
+  ];
+  window.PharmaQuizResultsData = {% include 'quiz_results_data' %};
 </script>
 
 <section class="py-6 sm:py-10 bg-slate-50/50 min-h-screen">

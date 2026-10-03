@@ -23,7 +23,8 @@
 {%- endif -%}
 {%- if template == 'blog' -%}
   {%- assign pc_bc_pos = 2 -%}{%- assign pc_bc_name = blog.name -%}
-  {%- if current_url contains 'blogs/all' -%}{%- assign pc_bc_url = '/blogs/all' -%}{%- else -%}{%- assign pc_bc_url = blog.url -%}{%- endif -%}
+  {%- comment -%} 2026-10-03: current_url không tồn tại trên Sapo (luôn nil) → dùng canonical_url. {%- endcomment -%}
+  {%- if canonical_url contains 'blogs/all' -%}{%- assign pc_bc_url = '/blogs/all' -%}{%- else -%}{%- assign pc_bc_url = blog.url -%}{%- endif -%}
   {%- include 'jsonld_breadcrumb_item' -%}
   {%- if current_tags and pc_bc_url != '/blogs/all' -%}
     {%- assign pc_bc_pos = 3 -%}{%- assign pc_bc_url = blog.url | append: '/' | append: current_tags.first -%}{%- assign pc_bc_name = current_tags.first -%}{%- include 'jsonld_breadcrumb_item' -%}

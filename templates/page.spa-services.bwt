@@ -23,27 +23,54 @@
 		{%- endcomment -%}
 		{%- assign spa_cta_url = settings.spa_services_cta_url | default: '/pages/dat-lich-tu-van' -%}
 
-		{%- if core_philosophy -%}
+		{%- comment -%}
+		  2026-10-03: core_philosophy/solutions là biến mock (không có trên Sapo → trang trống). Thông
+		  điệp đọc settings.spa_philosophy_quote/_signature; 6 giải pháp đọc blog
+		  settings.spa_solution_blog_handle: tiêu đề = tên, summary = mô tả, tag en:<tên EN>,
+		  phuhop:<đối tượng> (lặp được), tagline:<câu chốt>. Trống → ẩn.
+		{%- endcomment -%}
+		{%- if settings.spa_philosophy_quote != blank -%}
 		<div class="pc-cmp-expert-callout text-center mb-10 mx-auto max-w-3xl">
-			"{{ core_philosophy.quote }}"
-			<span class="pc-cmp-expert-callout__signature">{{ core_philosophy.title_vi }}</span>
+			"{{ settings.spa_philosophy_quote }}"
+			{%- if settings.spa_philosophy_signature != blank -%}<span class="pc-cmp-expert-callout__signature">{{ settings.spa_philosophy_signature }}</span>{%- endif -%}
 		</div>
 		{%- endif -%}
+		{%- assign pc_sol_blog_handle = settings.spa_solution_blog_handle | default: 'giai-phap-skin-health' -%}
+		{%- assign pc_sol_blog = blogs[pc_sol_blog_handle] -%}
 
+		{%- if pc_sol_blog.articles.size > 0 -%}
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-			{%- for sol in solutions -%}
+			{%- for sol in pc_sol_blog.articles -%}
+			{%- assign pc_sol_en = '' -%}
+			{%- assign pc_sol_tagline = '' -%}
+			{%- assign pc_sol_fit = '' -%}
+			{%- for pc_sol_tag in sol.tags -%}
+				{%- if pc_sol_tag contains ':' -%}
+					{%- assign pc_sol_raw_key = pc_sol_tag | split: ':' | first -%}
+					{%- assign pc_sol_key = pc_sol_raw_key | strip | downcase -%}
+					{%- assign pc_sol_val = pc_sol_tag | remove_first: pc_sol_raw_key | remove_first: ':' | strip -%}
+					{%- case pc_sol_key -%}
+						{%- when 'en' -%}{%- assign pc_sol_en = pc_sol_val -%}
+						{%- when 'tagline' -%}{%- assign pc_sol_tagline = pc_sol_val -%}
+						{%- when 'phuhop' -%}{%- if pc_sol_fit != blank -%}{%- assign pc_sol_fit = pc_sol_fit | append: ', ' -%}{%- endif -%}{%- assign pc_sol_fit = pc_sol_fit | append: pc_sol_val -%}
+					{%- endcase -%}
+				{%- endif -%}
+			{%- endfor -%}
 			<div class="bg-gray-50 rounded-3xl p-6 border border-gray-200 space-y-3 hover:shadow-lg transition flex flex-col">
-				<span class="pc-kit-badge-clinical text-[11px] self-start">{{ sol.name_en }}</span>
-				<h3 class="text-lg font-bold text-forest-900 font-heading">{{ sol.name_vi }}</h3>
-				<p class="text-xs text-gray-600 leading-relaxed flex-1">{{ sol.summary }}</p>
+				{%- if pc_sol_en != blank -%}<span class="pc-kit-badge-clinical text-[11px] self-start">{{ pc_sol_en }}</span>{%- endif -%}
+				<h3 class="text-lg font-bold text-forest-900 font-heading">{{ sol.title }}</h3>
+				<p class="text-xs text-gray-600 leading-relaxed flex-1">{{ sol.summary | default: sol.content | strip_html }}</p>
+				{%- if pc_sol_fit != blank -%}
 				<div class="text-[11px] text-gray-500">
-					<strong>Phù hợp với:</strong> {{ sol.suitable_for | join: ', ' }}
+					<strong>Phù hợp với:</strong> {{ pc_sol_fit }}
 				</div>
-				<p class="text-[11px] italic text-clinical-700">{{ sol.tagline }}</p>
+				{%- endif -%}
+				{%- if pc_sol_tagline != blank -%}<p class="text-[11px] italic text-clinical-700">{{ pc_sol_tagline }}</p>{%- endif -%}
 				<a href="{{ spa_cta_url }}" class="block w-full pc-kit-btn-primary text-xs py-2.5 text-center mt-2">Đặt Lịch Phân Tích Da</a>
 			</div>
 			{%- endfor -%}
 		</div>
+		{%- endif -%}
 
 		<div class="bg-forest-900 text-white rounded-3xl p-8 sm:p-10 text-center">
 			<h2 class="text-xl sm:text-2xl font-bold font-heading mb-2">Chưa Chắc Liệu Trình Nào Phù Hợp?</h2>
