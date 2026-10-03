@@ -1350,20 +1350,69 @@
   </div>
 </section>
 
+{%- comment -%}
+  2026-10-03: "Ý kiến chuyên gia" đọc từ Blog Sapo (settings.expert_opinion_blog_handle) thay câu
+  trích dẫn + tên chuyên gia ghi cứng (trước đây hiện GIỐNG NHAU ở mọi sản phẩm). Mỗi ý kiến = 1 bài
+  viết: summary (hoặc content) = lời trích dẫn; tag "sanpham:<alias sản phẩm>" (gắn nhiều được) để
+  chọn sản phẩm; tag "chuyengia:<handle bài hồ sơ>" lấy tên/ảnh/năm KN từ blog chuyên gia
+  (snippets/expert_fields.bwt). Sản phẩm không có ý kiến riêng → ẩn khối (người dùng chốt).
+{%- endcomment -%}
+{%- assign pc_op_blog_handle = settings.expert_opinion_blog_handle | default: 'y-kien-chuyen-gia' -%}
+{%- assign pc_op_blog = blogs[pc_op_blog_handle] -%}
+{%- assign pc_op_alias = product.alias | downcase -%}
+{%- assign pc_op = false -%}
+{%- assign pc_op_found = false -%}
+{%- assign pc_op_expert_handle = '' -%}
+{%- for pc_op_item in pc_op_blog.articles -%}
+  {%- unless pc_op_found -%}
+    {%- assign pc_op_item_expert = '' -%}
+    {%- for pc_op_tag in pc_op_item.tags -%}
+      {%- if pc_op_tag contains ':' -%}
+        {%- assign pc_op_raw_key = pc_op_tag | split: ':' | first -%}
+        {%- assign pc_op_key = pc_op_raw_key | strip | downcase -%}
+        {%- assign pc_op_val = pc_op_tag | remove_first: pc_op_raw_key | remove_first: ':' | strip -%}
+        {%- if pc_op_key == 'chuyengia' -%}{%- assign pc_op_item_expert = pc_op_val -%}{%- endif -%}
+        {%- if pc_op_key == 'sanpham' -%}
+          {%- assign pc_op_val_lc = pc_op_val | downcase -%}
+          {%- if pc_op_val_lc == pc_op_alias -%}{%- assign pc_op = pc_op_item -%}{%- assign pc_op_found = true -%}{%- endif -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- if pc_op_found -%}{%- assign pc_op_expert_handle = pc_op_item_expert -%}{%- endif -%}
+  {%- endunless -%}
+{%- endfor -%}
+{%- if pc_op_found -%}
+{%- assign pc_op_expert = false -%}
+{%- if pc_op_expert_handle != blank -%}
+  {%- assign pc_ex_blog_handle = settings.expert_blog_handle | default: 'chuyen-gia' -%}
+  {%- assign pc_ex_blog = blogs[pc_ex_blog_handle] -%}
+  {%- for pc_ex_item in pc_ex_blog.articles -%}
+    {%- assign pc_ex_item_handle = pc_ex_item.url | split: '/' | last -%}
+    {%- if pc_ex_item_handle == pc_op_expert_handle -%}{%- assign pc_op_expert = pc_ex_item -%}{%- endif -%}
+  {%- endfor -%}
+  {%- if pc_op_expert -%}{%- assign pc_ex = pc_op_expert -%}{%- include 'expert_fields' -%}{%- endif -%}
+{%- endif -%}
+{%- if pc_op_expert -%}{%- assign pc_op_name = pc_op_expert.title -%}{%- else -%}{%- assign pc_op_name = pc_op.author -%}{%- endif -%}
+{%- assign pc_op_quote = pc_op.summary | default: pc_op.content | strip_html | strip -%}
 <section class="pc-pdp-expert-section">
   <div class="container">
     <div class="pc-pdp-expert-card">
-      <div class="pc-testi-avatar pc-pdp-expert-avatar">
-        <span class="pc-testi-avatar-initials">TH</span>
+      <div class="pc-testi-avatar pc-pdp-expert-avatar{% if pc_op_expert and pc_op_expert.image.src != blank %} pc-testi-avatar--img{% endif %}">
+        {%- if pc_op_expert and pc_op_expert.image.src != blank -%}
+        <img src="{{ pc_op_expert.image.src | img_url: 'medium' }}" alt="{{ pc_op_name | escape }}" width="64" height="64" loading="lazy"
+          onerror="this.onerror=null;this.closest('.pc-testi-avatar').classList.remove('pc-testi-avatar--img');this.remove();">
+        {%- endif -%}
+        <span class="pc-testi-avatar-initials">{{ pc_op_name | slice: 0, 2 | upcase }}</span>
       </div>
       <div class="pc-pdp-expert-content">
-        <span class="pc-pdp-expert-label">Ý KIẾN CHUYÊN GIA • THANH HẰNG (18 NĂM KINH NGHIỆM BV DA LIỄU TW)</span>
-        <p class="pc-pdp-expert-quote">"Sản phẩm này là nền tảng trong phác đồ phục hồi da tổn thương sau treatment và laser tại phòng khám của chúng tôi. Nồng độ hoạt chất kết hợp mang lại hiệu quả làm dịu mao mạch nhanh hơn đáng kể so với sản phẩm thông thường."</p>
+        <span class="pc-pdp-expert-label">Ý KIẾN CHUYÊN GIA{% if pc_op_name != blank %} • {{ pc_op_name | upcase }}{% endif %}{% if pc_op_expert and pc_ex_years != blank %} ({{ pc_ex_years }} NĂM KINH NGHIỆM){% endif %}</span>
+        <p class="pc-pdp-expert-quote">"{{ pc_op_quote }}"</p>
         <a href="/pages/dat-lich-tu-van" class="pc-cg-cta-btn pc-pdp-expert-btn">Đặt Lịch Tư Vấn Phác Đồ Cùng Chuyên Gia ➔</a>
       </div>
     </div>
   </div>
 </section>
+{%- endif -%}
 
 {%- comment -%}
   2026-10-03: đánh giá khách hàng đọc từ Blog Sapo (settings.testimonial_blog_handle) thay biến

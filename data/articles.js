@@ -314,6 +314,30 @@ const productFaqArticles = faqArticles(faqs.product, 'cau-hoi-san-pham', 'Câu h
 const bookingFaqArticles = faqArticles(faqs.booking, 'cau-hoi-dat-lich', 'Câu hỏi đặt lịch', 800);
 const accountFaqArticles = faqArticles(faqs.account, 'cau-hoi-tai-khoan', 'Câu hỏi tài khoản', 900);
 
+// 2026-10-03: blog "y-kien-chuyen-gia" thay khối "Ý kiến chuyên gia" ghi cứng ở product.bwt. Nội
+// dung = đúng câu trích dẫn cũ (mock preview); chỉ gắn 1 sản phẩm để xem được cả 2 trạng thái
+// (có ý kiến / ẩn khối).
+const expertOpinionArticles = [
+  {
+    id: 1001,
+    title: 'Ý kiến chuyên gia: Kem Dưỡng Ẩm Hyaluronic Acid',
+    alias: 'y-kien-kem-duong-am-hyaluronic-acid',
+    handle: 'y-kien-kem-duong-am-hyaluronic-acid',
+    url: '/blogs/y-kien-chuyen-gia/y-kien-kem-duong-am-hyaluronic-acid',
+    summary: 'Sản phẩm này là nền tảng trong phác đồ phục hồi da tổn thương sau treatment và laser tại phòng khám của chúng tôi. Nồng độ hoạt chất kết hợp mang lại hiệu quả làm dịu mao mạch nhanh hơn đáng kể so với sản phẩm thông thường.',
+    excerpt: '',
+    content: '',
+    image: null,
+    featured_image: null,
+    author: 'Chuyên gia Thanh Hằng',
+    published_on: '2026-09-01T08:00:00',
+    created_at: '2026-09-01T08:00:00',
+    tags: ['sanpham:kem-duong-am-hyaluronic-acid', 'chuyengia:chuyen-gia-thanh-hang'],
+    comments_count: 0,
+    blog: { handle: 'y-kien-chuyen-gia', title: 'Ý kiến chuyên gia' },
+  },
+];
+
 // Byline: bài viết của chuyên gia gắn tag "chuyengia:<handle>" (trước đây so khớp tên tác giả).
 [...articles, ...beautyTipsArticles].forEach((a) => {
   const d = doctors.find((x) => x.name === a.author);
@@ -483,6 +507,13 @@ const blogs = {
     handle:  'cau-hoi-tai-khoan',
     url:     '/blogs/cau-hoi-tai-khoan',
     articles: accountFaqArticles,
+  }),
+  'y-kien-chuyen-gia': withBlogMeta({
+    id:      310,
+    title:   'Ý kiến chuyên gia',
+    handle:  'y-kien-chuyen-gia',
+    url:     '/blogs/y-kien-chuyen-gia',
+    articles: expertOpinionArticles,
   }),
 };
 

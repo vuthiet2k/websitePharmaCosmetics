@@ -248,6 +248,10 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
     Blog trống → ẩn khối. Cùng cách cho FAQ trang Đặt lịch (`booking_faq_blog_handle`, mặc định
     `cau-hoi-dat-lich`, section "Liên hệ & Hỗ trợ") và trang Tài khoản (`account_faq_blog_handle`,
     mặc định `cau-hoi-tai-khoan`, section "Tài khoản khách hàng"); biến mock `faqs` đã gỡ.
+  - "Ý kiến chuyên gia" trang sản phẩm = bài viết trong blog `settings.expert_opinion_blog_handle`
+    (mặc định `y-kien-chuyen-gia`, section "Trang sản phẩm"): summary/content = trích dẫn, tag
+    `sanpham:<alias>` (nhiều được) chọn sản phẩm, `chuyengia:<handle>` lấy tên/ảnh/năm KN. Sản phẩm
+    không có ý kiến riêng → ẩn khối — KHÔNG hiện 1 câu khen chung cho mọi sản phẩm.
   - B2B (`b2b_tier_1..6_*`) và Loyalty (`loyalty_tier_1..6_*`): 6 ô, mặc định TẮT/TRỐNG — không điền
     sẵn % chiết khấu/ngưỡng điểm (cam kết kinh doanh); danh sách quyền lợi phân tách bằng `;`.
   - Handle bài viết lấy bằng `article.url | split: '/' | last`. Preview mô phỏng 2 blog trên trong
