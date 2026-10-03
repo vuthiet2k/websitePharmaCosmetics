@@ -1,6 +1,6 @@
 {%- comment -%}
   page.tra-cuu-hoat-chat.bwt (REOPEN 2026-09-10, ADR-007/T-82, MOD-05 xlsx "Tra Cứu Hoạt Chất Y
-  Khoa") — CREATE mới. Đọc-only, không cần backend mops-gas. Dữ liệu: data/ingredients.js.
+  Khoa") — CREATE mới. Đọc-only, không cần backend mops-gas. Dữ liệu: Blog Sapo (xem dưới).
 {%- endcomment -%}
 {% include 'breadcrumb' %}
 
@@ -19,44 +19,85 @@
       </p>
     </div>
 
+    {%- comment -%}
+      2026-10-03 (Bước 3): đọc hoạt chất từ Blog Sapo (settings.ingredient_blog_handle) thay biến
+      mock `ingredients` (không tồn tại trên Sapo). Mỗi hoạt chất = 1 bài viết: tiêu đề = tên,
+      summary = tóm tắt, content = lưu ý sử dụng / ghi chú phối hợp. Tag có tiền tố:
+        nhom:<nhóm>   inci:<tên INCI>   tuongtac:<handle bài hoạt chất khác> (lặp được)
+      Ma trận tương tác dựng từ tag tuongtac:. Blog trống → thông báo.
+    {%- endcomment -%}
+    {%- assign pc_ing_blog_handle = settings.ingredient_blog_handle | default: 'hoat-chat' -%}
+    {%- assign pc_ing_blog = blogs[pc_ing_blog_handle] -%}
+    {%- if pc_ing_blog.articles.size > 0 -%}
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
       <div class="lg:col-span-1">
         <div class="pc-cmp-taxonomy-filter">
           <div class="pc-cmp-taxonomy-filter__title">Nhóm hoạt chất</div>
           <div class="pc-cmp-taxonomy-filter__tags">
-            {%- assign pc_ing_groups = "" -%}
-            {%- for ing in ingredients -%}
-              {%- unless pc_ing_groups contains ing.group -%}
-                {%- assign pc_ing_groups = pc_ing_groups | append: ing.group | append: '||' -%}
-                <a href="#ing-{{ ing.id }}" class="pc-cmp-taxonomy-filter__tag">{{ ing.group }}</a>
-              {%- endunless -%}
+            {%- assign pc_ing_groups = "||" -%}
+            {%- for ing in pc_ing_blog.articles -%}
+              {%- assign pc_ing_handle = ing.url | split: '/' | last -%}
+              {%- for pc_ing_tag in ing.tags -%}
+                {%- assign pc_ing_key = pc_ing_tag | split: ':' | first | strip | downcase -%}
+                {%- if pc_ing_tag contains ':' and pc_ing_key == 'nhom' -%}
+                  {%- assign pc_ing_raw_key = pc_ing_tag | split: ':' | first -%}
+                  {%- assign pc_ing_group = pc_ing_tag | remove_first: pc_ing_raw_key | remove_first: ':' | strip -%}
+                  {%- capture pc_ing_group_mark -%}||{{ pc_ing_group }}||{%- endcapture -%}
+                  {%- unless pc_ing_groups contains pc_ing_group_mark -%}
+                    {%- assign pc_ing_groups = pc_ing_groups | append: pc_ing_group | append: '||' -%}
+                    <a href="#ing-{{ pc_ing_handle }}" class="pc-cmp-taxonomy-filter__tag">{{ pc_ing_group }}</a>
+                  {%- endunless -%}
+                {%- endif -%}
+              {%- endfor -%}
             {%- endfor -%}
           </div>
         </div>
       </div>
 
       <div class="lg:col-span-3 space-y-6">
-        {%- for ing in ingredients -%}
-        <div id="ing-{{ ing.id }}" class="bg-white rounded-2xl border border-border-clinical p-6 scroll-mt-24">
+        {%- for ing in pc_ing_blog.articles -%}
+        {%- assign pc_ing_handle = ing.url | split: '/' | last -%}
+        {%- assign pc_ing_group = '' -%}
+        {%- assign pc_ing_inci = '' -%}
+        {%- assign pc_ing_links = '' -%}
+        {%- for pc_ing_tag in ing.tags -%}
+          {%- if pc_ing_tag contains ':' -%}
+            {%- assign pc_ing_raw_key = pc_ing_tag | split: ':' | first -%}
+            {%- assign pc_ing_key = pc_ing_raw_key | strip | downcase -%}
+            {%- assign pc_ing_val = pc_ing_tag | remove_first: pc_ing_raw_key | remove_first: ':' | strip -%}
+            {%- case pc_ing_key -%}
+              {%- when 'nhom' -%}{%- assign pc_ing_group = pc_ing_val -%}
+              {%- when 'inci' -%}{%- assign pc_ing_inci = pc_ing_val -%}
+              {%- when 'tuongtac' -%}{%- assign pc_ing_links = pc_ing_links | append: pc_ing_val | append: ',' -%}
+            {%- endcase -%}
+          {%- endif -%}
+        {%- endfor -%}
+        <div id="ing-{{ pc_ing_handle }}" class="bg-white rounded-2xl border border-border-clinical p-6 scroll-mt-24">
           <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
             <div>
-              <span class="pc-cmp-verified-badge">{{ ing.group }}</span>
-              <h3 class="text-lg font-bold text-forest-900 font-heading mt-2">{{ ing.name }}</h3>
-              <p class="text-[11px] text-gray-400 italic">INCI: {{ ing.inci_name }}</p>
+              {%- if pc_ing_group != blank -%}<span class="pc-cmp-verified-badge">{{ pc_ing_group }}</span>{%- endif -%}
+              <h3 class="text-lg font-bold text-forest-900 font-heading mt-2">{{ ing.title }}</h3>
+              {%- if pc_ing_inci != blank -%}<p class="text-[11px] text-gray-400 italic">INCI: {{ pc_ing_inci }}</p>{%- endif -%}
             </div>
           </div>
-          <p class="text-sm text-gray-600 leading-relaxed mb-3">{{ ing.summary }}</p>
+          {%- if ing.summary != blank -%}
+          <p class="text-sm text-gray-600 leading-relaxed mb-3">{{ ing.summary | strip_html }}</p>
+          {%- endif -%}
+          {%- if ing.content != blank -%}
           <div class="pc-cmp-expert-callout mb-3">
-            <strong>Lưu ý sử dụng:</strong> {{ ing.caution }}
+            <strong>Lưu ý sử dụng:</strong> {{ ing.content }}
           </div>
-          {%- if ing.interacts_with.size > 0 -%}
+          {%- endif -%}
+          {%- if pc_ing_links != blank -%}
+          {%- assign pc_ing_link_list = pc_ing_links | split: ',' -%}
           <div class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3">
-            <strong>⚠️ Ma trận tương tác:</strong> {{ ing.interaction_note }}
+            <strong>⚠️ Ma trận tương tác — thận trọng khi phối hợp với:</strong>
             <div class="mt-1 flex flex-wrap gap-2">
-              {%- for other_id in ing.interacts_with -%}
-              {%- for other in ingredients -%}
-              {%- if other.id == other_id -%}
-              <a href="#ing-{{ other.id }}" class="underline">{{ other.name }}</a>
+              {%- for other_handle in pc_ing_link_list -%}
+              {%- for other in pc_ing_blog.articles -%}
+              {%- assign pc_ing_other_handle = other.url | split: '/' | last -%}
+              {%- if pc_ing_other_handle == other_handle -%}
+              <a href="#ing-{{ pc_ing_other_handle }}" class="underline">{{ other.title }}</a>
               {%- endif -%}
               {%- endfor -%}
               {%- endfor -%}
@@ -67,6 +108,9 @@
         {%- endfor -%}
       </div>
     </div>
+    {%- else -%}
+    <p class="text-sm text-gray-500 py-10 text-center">Thư viện hoạt chất đang được cập nhật.</p>
+    {%- endif -%}
 
     <div class="mt-10 bg-amber-50 border border-amber-200 rounded-xl p-5 text-xs text-amber-900 leading-relaxed">
       <p class="font-bold mb-1">⚠️ Lưu ý y khoa:</p>

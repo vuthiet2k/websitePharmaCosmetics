@@ -23,27 +23,58 @@
       </p>
     </div>
 
+    {%- comment -%}
+      2026-10-03 (Bước 3): 6 ô gói đại lý cấu hình ở settings (b2b_tier_1..6_*) thay biến mock
+      `b2b_tiers` (không tồn tại trên Sapo). Ô tắt hoặc chưa có tên → ẩn; không gói nào → thông
+      báo. Không điền sẵn % chiết khấu/hạn mức — đó là cam kết kinh doanh admin tự nhập.
+    {%- endcomment -%}
+    {%- assign pc_b2b_count = 0 -%}
+    {%- for i in (1..6) -%}
+      {%- capture pc_k_on -%}b2b_tier_{{ i }}_enable{%- endcapture -%}
+      {%- capture pc_k_name -%}b2b_tier_{{ i }}_name{%- endcapture -%}
+      {%- if settings[pc_k_on] and settings[pc_k_name] != blank -%}{%- assign pc_b2b_count = pc_b2b_count | plus: 1 -%}{%- endif -%}
+    {%- endfor -%}
+    {%- if pc_b2b_count > 0 -%}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-14">
-      {%- for tier in b2b_tiers -%}
-      <div class="rounded-2xl p-6 border {% if tier.featured %}border-brand-primary shadow-md{% else %}border-border-clinical{% endif %} bg-white flex flex-col">
-        {%- if tier.featured -%}
+      {%- for i in (1..6) -%}
+      {%- capture pc_k_on -%}b2b_tier_{{ i }}_enable{%- endcapture -%}
+      {%- capture pc_k_name -%}b2b_tier_{{ i }}_name{%- endcapture -%}
+      {%- capture pc_k_min -%}b2b_tier_{{ i }}_min_order{%- endcapture -%}
+      {%- capture pc_k_disc -%}b2b_tier_{{ i }}_discount{%- endcapture -%}
+      {%- capture pc_k_feat -%}b2b_tier_{{ i }}_features{%- endcapture -%}
+      {%- capture pc_k_hot -%}b2b_tier_{{ i }}_featured{%- endcapture -%}
+      {%- if settings[pc_k_on] and settings[pc_k_name] != blank -%}
+      <div class="rounded-2xl p-6 border {% if settings[pc_k_hot] %}border-brand-primary shadow-md{% else %}border-border-clinical{% endif %} bg-white flex flex-col">
+        {%- if settings[pc_k_hot] -%}
         <span class="pc-cmp-verified-badge mb-2 self-start">Phổ biến nhất</span>
         {%- endif -%}
-        <h3 class="text-lg font-bold text-forest-900 font-heading">{{ tier.name }}</h3>
-        <p class="text-xs text-gray-500 mt-1">Giá trị đơn hàng tối thiểu: {{ tier.min_order_value }}</p>
-        <div class="text-3xl font-extrabold text-brand-green font-heading mt-3">{{ tier.discount_pct }}</div>
+        <h3 class="text-lg font-bold text-forest-900 font-heading">{{ settings[pc_k_name] }}</h3>
+        {%- if settings[pc_k_min] != blank -%}
+        <p class="text-xs text-gray-500 mt-1">Giá trị đơn hàng tối thiểu: {{ settings[pc_k_min] }}</p>
+        {%- endif -%}
+        {%- if settings[pc_k_disc] != blank -%}
+        <div class="text-3xl font-extrabold text-brand-green font-heading mt-3">{{ settings[pc_k_disc] }}</div>
         <p class="text-xs text-gray-500 mb-4">chiết khấu trên giá niêm yết</p>
+        {%- endif -%}
         <ul class="space-y-2 text-xs text-gray-600 flex-1">
-          {%- for f in tier.features -%}
+          {%- assign pc_b2b_feats = settings[pc_k_feat] | split: ';' -%}
+          {%- for f in pc_b2b_feats -%}
+          {%- assign pc_b2b_f = f | strip -%}
+          {%- if pc_b2b_f != blank -%}
           <li class="flex items-start gap-2">
-            <span class="text-brand-primary">✓</span><span>{{ f }}</span>
+            <span class="text-brand-primary">✓</span><span>{{ pc_b2b_f }}</span>
           </li>
+          {%- endif -%}
           {%- endfor -%}
         </ul>
         <a href="#b2b-form" class="pc-kit-btn-primary text-xs py-3 px-5 mt-5 text-center">Đăng Ký Tier Này</a>
       </div>
+      {%- endif -%}
       {%- endfor -%}
     </div>
+    {%- else -%}
+    <p class="text-sm text-gray-500 text-center mb-14">Chính sách giá đại lý đang được cập nhật — vui lòng gửi đăng ký bên dưới để được tư vấn.</p>
+    {%- endif -%}
 
     <div id="b2b-form" class="max-w-2xl mx-auto bg-white rounded-2xl border border-border-clinical p-6 sm:p-8">
       <h2 class="text-xl font-bold text-forest-900 font-heading mb-1">Đăng Ký Làm Đại Lý</h2>

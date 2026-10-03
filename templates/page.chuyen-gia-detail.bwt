@@ -8,17 +8,33 @@
   bằng vòng lặp + assign, tránh phụ thuộc filter 'where' không chắc có sẵn trong engine
   Liquid ở đây.
 {%- endcomment -%}
-{%- assign flagship_doctor = null -%}
-{%- for doc in doctors -%}
-  {%- if doc.alias == 'chuyen-gia-thanh-hang' -%}
-    {%- assign flagship_doctor = doc -%}
-  {%- endif -%}
+{%- comment -%}
+  2026-10-03 (Bước 3): hồ sơ lấy từ Blog chuyên gia (settings.expert_blog_handle) thay biến mock
+  `doctors`. Chuyên gia hiển thị = bài có handle settings.expert_flagship_handle (trống → bài đầu
+  tiên của blog). Trường phụ qua snippets/expert_fields.bwt; chỉ số (bệnh nhân/hiệu quả/đánh
+  giá) chỉ hiện khi bài có tag tương ứng — không điền số mặc định.
+{%- endcomment -%}
+{%- assign pc_ex_blog_handle = settings.expert_blog_handle | default: 'chuyen-gia' -%}
+{%- assign pc_ex_blog = blogs[pc_ex_blog_handle] -%}
+{%- assign pc_ex_flagship = settings.expert_flagship_handle | default: '' | strip -%}
+{%- assign flagship_doctor = false -%}
+{%- assign pc_ex_found = false -%}
+{%- for pc_ex_item in pc_ex_blog.articles -%}
+  {%- assign pc_ex_item_handle = pc_ex_item.url | split: '/' | last -%}
+  {%- unless pc_ex_found -%}
+    {%- if pc_ex_flagship == blank or pc_ex_item_handle == pc_ex_flagship -%}
+      {%- assign flagship_doctor = pc_ex_item -%}
+      {%- assign pc_ex_found = true -%}
+    {%- endif -%}
+  {%- endunless -%}
 {%- endfor -%}
+{%- if flagship_doctor -%}{%- assign pc_ex = flagship_doctor -%}{%- include 'expert_fields' -%}{%- endif -%}
+{%- assign pc_ex_phone = settings.footer_legal_phone | default: settings.store_phone | default: store.phone_number -%}
 
 {% include 'breadcrumb' %}
 
 <main class="bg-white py-10">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="container">
 
     {%- if flagship_doctor -%}
     <!-- Doctor Main Info Hero -->
@@ -26,78 +42,87 @@
       <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
         <div class="md:col-span-4 flex justify-center">
           <div class="relative">
-            <img src="{{ flagship_doctor.photo.src }}" alt="{{ flagship_doctor.photo.alt }}" loading="lazy"
+            {%- if flagship_doctor.image.src != blank -%}
+            <img src="{{ flagship_doctor.image.src | img_url: 'large' }}" alt="{{ flagship_doctor.title | escape }}" width="256" height="256" loading="lazy"
               class="w-64 h-64 rounded-2xl object-cover shadow-xl border-4 border-white">
+            {%- endif -%}
             <span class="absolute -bottom-3 left-1/2 -translate-x-1/2 pc-kit-badge-clinical text-xs font-bold whitespace-nowrap shadow">
-              ✓ CHUYÊN GIA &bull; HỘI ĐỒNG TW
+              ✓ CHUYÊN GIA
             </span>
           </div>
         </div>
 
         <div class="md:col-span-8 space-y-4">
+          {%- if pc_ex_years != blank -%}
           <div class="inline-block px-3 py-1 rounded-full bg-emerald-200 text-emerald-900 text-xs font-bold">
-            {{ flagship_doctor.years_experience }}+ NĂM KINH NGHIỆM BV DA LIỄU TRUNG ƯƠNG
+            {{ pc_ex_years }}+ NĂM KINH NGHIỆM
           </div>
+          {%- endif -%}
           <h1 class="text-3xl sm:text-4xl font-extrabold text-forest-900 font-heading">
-            {{ flagship_doctor.name }}
+            {{ flagship_doctor.title }}
           </h1>
-          <p class="text-sm font-semibold text-emerald-800">
-            {{ flagship_doctor.specialty }}
-          </p>
+          {%- if pc_ex_title != blank -%}<p class="text-sm font-semibold text-emerald-800">{{ pc_ex_title }}</p>{%- endif -%}
+          {%- if pc_ex_specialty != blank -%}<p class="text-xs text-gray-600">{{ pc_ex_specialty }}</p>{%- endif -%}
+          {%- if pc_ex_years != blank or pc_ex_patients != blank or pc_ex_efficacy != blank or pc_ex_rating != blank -%}
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 py-2 border-y border-emerald-200/60 text-xs">
+            {%- if pc_ex_years != blank -%}
             <div>
-              <div class="text-xl font-bold text-forest-900">{{ flagship_doctor.years_experience }}+ Năm</div>
+              <div class="text-xl font-bold text-forest-900">{{ pc_ex_years }}+ Năm</div>
               <div class="text-gray-500">Kinh nghiệm</div>
             </div>
+            {%- endif -%}
+            {%- if pc_ex_patients != blank -%}
             <div>
-              <div class="text-xl font-bold text-emerald-700">{{ flagship_doctor.stats.patients_treated }}</div>
+              <div class="text-xl font-bold text-emerald-700">{{ pc_ex_patients }}</div>
               <div class="text-gray-500">Bệnh nhân phục hồi</div>
             </div>
+            {%- endif -%}
+            {%- if pc_ex_efficacy != blank -%}
             <div>
-              <div class="text-xl font-bold text-forest-900">{{ flagship_doctor.stats.clinical_efficacy }}</div>
+              <div class="text-xl font-bold text-forest-900">{{ pc_ex_efficacy }}</div>
               <div class="text-gray-500">Hiệu quả lâm sàng</div>
             </div>
+            {%- endif -%}
+            {%- if pc_ex_rating != blank -%}
             <div>
-              <div class="text-xl font-bold text-amber-600">⭐ {{ flagship_doctor.stats.rating }}</div>
-              <div class="text-gray-500">({{ flagship_doctor.stats.rating_count }} Đánh giá)</div>
+              <div class="text-xl font-bold text-amber-600">⭐ {{ pc_ex_rating }}</div>
+              <div class="text-gray-500">Đánh giá</div>
             </div>
+            {%- endif -%}
           </div>
+          {%- endif -%}
           <div class="flex flex-wrap gap-4 pt-2">
             <a href="/pages/dat-lich-tu-van" class="pc-kit-btn-primary text-sm py-3 px-6 shadow-md">
               <i class="fas fa-calendar-check"></i> Đặt Lịch Khám 1:1 Cùng Chuyên Gia
             </a>
-            <a href="tel:0967194063" class="pc-kit-btn-secondary text-sm py-3 px-6">
+            {%- if pc_ex_phone != blank -%}
+            <a href="tel:{{ pc_ex_phone | remove: ' ' | remove: '.' }}" class="pc-kit-btn-secondary text-sm py-3 px-6">
               <i class="fas fa-phone-alt"></i> Tư Vấn Trực Tuyến Miễn Phí
             </a>
+            {%- endif -%}
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Credentials & Timeline -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-      <div class="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm space-y-4">
-        <h3 class="text-base font-bold text-forest-900 uppercase tracking-wider flex items-center gap-2">
-          <i class="fas fa-graduation-cap text-emerald-700"></i> Học Vấn & Bằng Cấp Chuyên Khoa
-        </h3>
-        <p class="text-xs sm:text-sm text-gray-700 leading-relaxed">{{ flagship_doctor.education }}</p>
-      </div>
-
-      <div class="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm space-y-4">
-        <h3 class="text-base font-bold text-forest-900 uppercase tracking-wider flex items-center gap-2">
-          <i class="fas fa-hospital text-emerald-700"></i> Kinh Nghiệm Công Tác & Vị Trí
-        </h3>
-        <p class="text-xs sm:text-sm text-gray-700 leading-relaxed">{{ flagship_doctor.bio }}</p>
-      </div>
+    {%- comment -%} 2026-10-03: học vấn + kinh nghiệm gộp trong nội dung bài hồ sơ (Sapo chỉ có 1 trường content). {%- endcomment -%}
+    {%- if flagship_doctor.content != blank -%}
+    <div class="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm space-y-4 mb-16">
+      <h3 class="text-base font-bold text-forest-900 uppercase tracking-wider flex items-center gap-2">
+        <i class="fas fa-graduation-cap text-emerald-700"></i> Học Vấn &amp; Kinh Nghiệm Công Tác
+      </h3>
+      <div class="text-xs sm:text-sm text-gray-700 leading-relaxed">{{ flagship_doctor.content }}</div>
     </div>
+    {%- endif -%}
 
-    {%- if flagship_doctor.quote != blank -%}
+    {%- if flagship_doctor.summary != blank -%}
     <blockquote class="bg-emerald-900 text-white rounded-3xl p-8 sm:p-10 mb-16 shadow-lg italic text-sm sm:text-base text-emerald-100 leading-relaxed">
-      {{ flagship_doctor.quote }}
+      {{ flagship_doctor.summary | strip_html }}
     </blockquote>
     {%- endif -%}
     {%- else -%}
-    <p class="text-sm text-gray-500 py-10 text-center">Không tìm thấy hồ sơ chuyên gia.</p>
+    <h1 class="text-2xl font-extrabold text-forest-900 font-heading text-center pt-6">Hồ sơ chuyên gia</h1>
+    <p class="text-sm text-gray-500 py-10 text-center">Hồ sơ chuyên gia đang được cập nhật.</p>
     {%- endif -%}
 
   </div>

@@ -7,6 +7,14 @@
   /pages/chuyen-gia (trang chi tiết bác sĩ theo alias sẽ có ở T-33, chưa tồn tại nên chưa link
   thẳng theo doc.alias để tránh 404).
 {%- endcomment -%}
+{%- comment -%}
+  2026-10-03 (Bước 3): đọc từ Blog chuyên gia (settings.expert_blog_handle) thay biến mock
+  `doctors`; blog trống → không render cả section. Section vẫn CHƯA nằm trong valid_sections của
+  home_portal.bwt (chờ chốt bố cục trang chủ).
+{%- endcomment -%}
+{%- assign pc_ex_blog_handle = settings.expert_blog_handle | default: 'chuyen-gia' -%}
+{%- assign pc_ex_blog = blogs[pc_ex_blog_handle] -%}
+{%- if pc_ex_blog.articles.size > 0 -%}
 <section class="pc-section py-14 bg-white">
   <div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="text-center max-w-2xl mx-auto mb-10">
@@ -20,18 +28,20 @@
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {% for doc in doctors limit: 4 %}
+      {% for pc_ex in pc_ex_blog.articles limit: 4 %}
+      {%- include 'expert_fields' -%}
       <div class="rounded-2xl bg-white border border-gray-200 shadow-sm hover:shadow-lg hover:border-clinical-600 transition p-6 text-center">
-        <img src="{{ doc.photo.src }}" alt="{{ doc.photo.alt | default: doc.name }}" loading="lazy"
-          class="w-20 h-20 rounded-full object-cover mx-auto border-4 border-mint-100 mb-3"
-          onerror="this.onerror=null;this.src='https://placehold.co/160x160/0B4F30/ffffff?text={{ doc.name | slice: 0, 2 | upcase }}';">
-        <h3 class="text-base font-bold text-forest-900 font-heading">{{ doc.name }}</h3>
-        <p class="text-xs text-clinical-700 font-semibold mt-0.5">{{ doc.title }}</p>
-        {%- if doc.specialty != blank -%}
-        <span class="pc-kit-badge-clinical mt-3 inline-flex text-[11px]">{{ doc.specialty }}</span>
+        <img src="{% if pc_ex.image.src != blank %}{{ pc_ex.image.src | img_url: 'medium' }}{% else %}{% include 'placeholder_img_url' %}{% endif %}" alt="{{ pc_ex.title | escape }}" width="80" height="80" loading="lazy"
+          class="w-20 h-20 rounded-full object-cover mx-auto border-4 border-mint-100 mb-3">
+        <h3 class="text-base font-bold text-forest-900 font-heading">{{ pc_ex.title }}</h3>
+        {%- if pc_ex_title != blank -%}
+        <p class="text-xs text-clinical-700 font-semibold mt-0.5">{{ pc_ex_title }}</p>
         {%- endif -%}
-        {%- if doc.years_experience != blank -%}
-        <p class="text-[11px] text-gray-500 mt-3">{{ doc.years_experience }}+ năm kinh nghiệm</p>
+        {%- if pc_ex_specialty != blank -%}
+        <span class="pc-kit-badge-clinical mt-3 inline-flex text-[11px]">{{ pc_ex_specialty }}</span>
+        {%- endif -%}
+        {%- if pc_ex_years != blank -%}
+        <p class="text-[11px] text-gray-500 mt-3">{{ pc_ex_years }}+ năm kinh nghiệm</p>
         {%- endif -%}
       </div>
       {% endfor %}
@@ -42,3 +52,4 @@
     </div>
   </div>
 </section>
+{%- endif -%}

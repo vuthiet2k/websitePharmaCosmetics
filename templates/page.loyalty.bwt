@@ -36,26 +36,56 @@
 		  loyalty_tiers.size để không lệch lại nếu số hạng thay đổi sau này. Đổi lg:grid-cols-4 →
 		  lg:grid-cols-3 để 6 thẻ chia đều 3x2 thay vì 4+2 lệch dòng.
 		{%- endcomment -%}
-		<h2 class="font-heading text-xl sm:text-2xl font-extrabold text-forest-900 text-center mb-8">{{ loyalty_tiers.size }} Hạng Thành Viên</h2>
+		{%- comment -%}
+		  2026-10-03 (Bước 3): 6 ô hạng thành viên cấu hình ở settings (loyalty_tier_1..6_*) thay biến
+		  mock `loyalty_tiers` (không tồn tại trên Sapo). Đếm số hạng đang bật để tiêu đề không lệch.
+		  Không điền sẵn ngưỡng điểm/quyền lợi — admin tự nhập.
+		{%- endcomment -%}
+		{%- assign pc_loy_count = 0 -%}
+		{%- for i in (1..6) -%}
+		  {%- capture pc_k_on -%}loyalty_tier_{{ i }}_enable{%- endcapture -%}
+		  {%- capture pc_k_name -%}loyalty_tier_{{ i }}_name{%- endcapture -%}
+		  {%- if settings[pc_k_on] and settings[pc_k_name] != blank -%}{%- assign pc_loy_count = pc_loy_count | plus: 1 -%}{%- endif -%}
+		{%- endfor -%}
+		{%- if pc_loy_count > 0 -%}
+		<h2 class="font-heading text-xl sm:text-2xl font-extrabold text-forest-900 text-center mb-8">{{ pc_loy_count }} Hạng Thành Viên</h2>
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-			{% for tier in loyalty_tiers %}
-			<div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 border-t-4" style="border-top-color: {{ tier.color }}">
-				<span class="pc-kit-badge-gold text-xs">{{ tier.name }}</span>
+			{%- for i in (1..6) -%}
+			{%- capture pc_k_on -%}loyalty_tier_{{ i }}_enable{%- endcapture -%}
+			{%- capture pc_k_name -%}loyalty_tier_{{ i }}_name{%- endcapture -%}
+			{%- capture pc_k_pts -%}loyalty_tier_{{ i }}_threshold{%- endcapture -%}
+			{%- capture pc_k_perks -%}loyalty_tier_{{ i }}_perks{%- endcapture -%}
+			{%- capture pc_k_color -%}loyalty_tier_{{ i }}_color{%- endcapture -%}
+			{%- if settings[pc_k_on] and settings[pc_k_name] != blank -%}
+			{%- assign pc_loy_pts = settings[pc_k_pts] | strip -%}
+			<div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 border-t-4"{% if settings[pc_k_color] != blank %} style="border-top-color: {{ settings[pc_k_color] }}"{% endif %}>
+				<span class="pc-kit-badge-gold text-xs">{{ settings[pc_k_name] }}</span>
+				{%- if pc_loy_pts != blank -%}
 				<div class="text-xs text-gray-500 mt-3">
-					{% if tier.threshold_points == 0 %}
+					{% if pc_loy_pts == '0' %}
 						Mặc định khi đăng ký
 					{% else %}
-						Từ {{ tier.threshold_points }} điểm
+						Từ {{ pc_loy_pts }} điểm
 					{% endif %}
 				</div>
+				{%- endif -%}
 				<ul class="text-xs text-gray-700 space-y-1.5 mt-3">
-					{% for perk in tier.perks %}
-					<li class="flex items-start gap-2"><i class="fas fa-check-circle text-emerald-600 mt-0.5"></i><span>{{ perk }}</span></li>
+					{%- assign pc_loy_perks = settings[pc_k_perks] | split: ';' -%}
+					{% for perk in pc_loy_perks %}
+					{%- assign pc_loy_perk = perk | strip -%}
+					{%- if pc_loy_perk != blank -%}
+					<li class="flex items-start gap-2"><i class="fas fa-check-circle text-emerald-600 mt-0.5"></i><span>{{ pc_loy_perk }}</span></li>
+					{%- endif -%}
 					{% endfor %}
 				</ul>
 			</div>
-			{% endfor %}
+			{%- endif -%}
+			{%- endfor -%}
 		</div>
+		{%- else -%}
+		<h2 class="font-heading text-xl sm:text-2xl font-extrabold text-forest-900 text-center mb-4">Hạng Thành Viên</h2>
+		<p class="text-sm text-gray-500 text-center">Chính sách hạng thành viên đang được cập nhật.</p>
+		{%- endif -%}
 	</div>
 </section>
 

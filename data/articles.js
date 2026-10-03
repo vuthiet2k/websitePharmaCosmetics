@@ -218,6 +218,60 @@ const beautyTipsArticles = [
   },
 ];
 
+// 2026-10-03 (Bước 3): blog "chuyen-gia" và "hoat-chat" mô phỏng đúng cách Sapo lưu dữ liệu
+// (bài viết + tag "khoá:giá trị", xem snippets/expert_fields.bwt và page.tra-cuu-hoat-chat.bwt) —
+// thay các biến mock `doctors`/`ingredients` không tồn tại trên Sapo. Nội dung chuyển nguyên từ
+// data/doctors.js + data/ingredients.js (mock preview sẵn có), chỉ đổi định dạng.
+const { doctors } = require('./doctors');
+const { ingredients } = require('./ingredients');
+
+const expertArticles = doctors.map((d, i) => ({
+  id: 400 + i,
+  title: d.name,
+  alias: d.alias,
+  handle: d.alias,
+  url: `/blogs/chuyen-gia/${d.alias}`,
+  summary: (d.quote || '').replace(/^"|"$/g, ''),
+  excerpt: (d.quote || '').replace(/^"|"$/g, ''),
+  content: `<p>${d.education}</p><p>${d.bio}</p>`,
+  image: { src: d.photo.src, alt: d.photo.alt },
+  featured_image: { src: d.photo.src, alt: d.photo.alt },
+  author: d.name,
+  published_on: '2026-09-01T08:00:00',
+  created_at: '2026-09-01T08:00:00',
+  tags: [
+    `chucdanh:${d.title}`, `chuyenkhoa:${d.specialty}`, `kinhnghiem:${d.years_experience}`,
+    ...(d.stats ? [`benhnhan:${d.stats.patients_treated}`, `hieuqua:${d.stats.clinical_efficacy}`, `danhgia:${d.stats.rating}`] : []),
+  ],
+  comments_count: 0,
+  blog: { handle: 'chuyen-gia', title: 'Đội ngũ chuyên gia' },
+}));
+
+const ingredientArticles = ingredients.map((g, i) => ({
+  id: 500 + i,
+  title: g.name,
+  alias: g.id,
+  handle: g.id,
+  url: `/blogs/hoat-chat/${g.id}`,
+  summary: g.summary,
+  excerpt: g.summary,
+  content: `<p>${g.caution}</p>${g.interaction_note ? `<p>${g.interaction_note}</p>` : ''}`,
+  image: null,
+  featured_image: null,
+  author: 'Pharma Cosmetics',
+  published_on: '2026-09-01T08:00:00',
+  created_at: '2026-09-01T08:00:00',
+  tags: [`nhom:${g.group}`, `inci:${g.inci_name}`, ...(g.interacts_with || []).map((h) => `tuongtac:${h}`)],
+  comments_count: 0,
+  blog: { handle: 'hoat-chat', title: 'Thư viện hoạt chất' },
+}));
+
+// Byline: bài viết của chuyên gia gắn tag "chuyengia:<handle>" (trước đây so khớp tên tác giả).
+[...articles, ...beautyTipsArticles].forEach((a) => {
+  const d = doctors.find((x) => x.name === a.author);
+  if (d && !a.tags.includes(`chuyengia:${d.alias}`)) a.tags.push(`chuyengia:${d.alias}`);
+});
+
 // ── Blog objects ─────────────────────────────────────────────────────────────
 
 // 6 bài "Trước & Sau" — case study dạng bài viết mô tả bằng chữ (KHÔNG dùng ảnh lâm sàng
@@ -339,6 +393,20 @@ const blogs = {
     handle:  'bi-quyet',
     url:     '/blogs/bi-quyet',
     articles: beautyTipsArticles,
+  }),
+  'chuyen-gia': withBlogMeta({
+    id:      304,
+    title:   'Đội ngũ chuyên gia',
+    handle:  'chuyen-gia',
+    url:     '/blogs/chuyen-gia',
+    articles: expertArticles,
+  }),
+  'hoat-chat': withBlogMeta({
+    id:      305,
+    title:   'Thư viện hoạt chất',
+    handle:  'hoat-chat',
+    url:     '/blogs/hoat-chat',
+    articles: ingredientArticles,
   }),
 };
 

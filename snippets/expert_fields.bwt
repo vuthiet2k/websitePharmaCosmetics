@@ -1,0 +1,32 @@
+{%- comment -%}
+  expert_fields.bwt (2026-10-03, Bước 3 — thay biến mock `doctors` không tồn tại trên Sapo).
+  Hồ sơ chuyên gia = 1 bài viết trong blog chuyên gia (settings.expert_blog_handle):
+  tiêu đề = tên, ảnh bài = chân dung, summary = trích dẫn, content = tiểu sử/học vấn.
+  Trường phụ đọc từ tag có tiền tố "khoá:giá trị":
+    chucdanh:  chức danh          chuyenkhoa: chuyên khoa
+    kinhnghiem: số năm KN         benhnhan / hieuqua / danhgia: chỉ số hiển thị ở trang hồ sơ
+  Đầu vào: pc_ex (article). Đầu ra: pc_ex_handle, pc_ex_title, pc_ex_specialty, pc_ex_years,
+  pc_ex_patients, pc_ex_efficacy, pc_ex_rating. Không có tag thì để trống — không tự điền.
+{%- endcomment -%}
+{%- assign pc_ex_handle = pc_ex.url | split: '/' | last -%}
+{%- assign pc_ex_title = '' -%}
+{%- assign pc_ex_specialty = '' -%}
+{%- assign pc_ex_years = '' -%}
+{%- assign pc_ex_patients = '' -%}
+{%- assign pc_ex_efficacy = '' -%}
+{%- assign pc_ex_rating = '' -%}
+{%- for pc_ex_tag in pc_ex.tags -%}
+  {%- if pc_ex_tag contains ':' -%}
+    {%- assign pc_ex_raw_key = pc_ex_tag | split: ':' | first -%}
+    {%- assign pc_ex_key = pc_ex_raw_key | strip | downcase -%}
+    {%- assign pc_ex_val = pc_ex_tag | remove_first: pc_ex_raw_key | remove_first: ':' | strip -%}
+    {%- case pc_ex_key -%}
+      {%- when 'chucdanh' -%}{%- assign pc_ex_title = pc_ex_val -%}
+      {%- when 'chuyenkhoa' -%}{%- assign pc_ex_specialty = pc_ex_val -%}
+      {%- when 'kinhnghiem' -%}{%- assign pc_ex_years = pc_ex_val -%}
+      {%- when 'benhnhan' -%}{%- assign pc_ex_patients = pc_ex_val -%}
+      {%- when 'hieuqua' -%}{%- assign pc_ex_efficacy = pc_ex_val -%}
+      {%- when 'danhgia' -%}{%- assign pc_ex_rating = pc_ex_val -%}
+    {%- endcase -%}
+  {%- endif -%}
+{%- endfor -%}

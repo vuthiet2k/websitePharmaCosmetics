@@ -229,6 +229,20 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
   link Google Maps, giờ mở cửa, mức giá. Dùng ở `layouts/theme.bwt` (meta), `fb-open-graph-tags.bwt`
   và `schema.bwt` (HealthAndBeautyBusiness). Toạ độ/giờ/giá/Maps mặc định TRỐNG và chỉ in khi admin
   nhập — không điền số giả. `product_wishlist_collection` cố ý giữ ở section này.
+- **Trang chuyên khoa đọc dữ liệu Sapo thật (2026-10-03, người dùng chốt):** không dùng biến mock
+  `doctors`/`b2b_tiers`/`loyalty_tiers`/`ingredients` (chỉ có ở preview, trên Sapo = nil → trang trắng).
+  Cấu hình ở section "Trang chuyên khoa" của `settings_schema.json`.
+  - Chuyên gia = bài viết trong blog `settings.expert_blog_handle` (mặc định `chuyen-gia`): tiêu đề =
+    tên, ảnh bài = chân dung, summary = trích dẫn, content = học vấn + kinh nghiệm; tag `chucdanh:`,
+    `chuyenkhoa:`, `kinhnghiem:`, tuỳ chọn `benhnhan:`/`hieuqua:`/`danhgia:` (chỉ hiện khi có).
+    Đọc tag qua `snippets/expert_fields.bwt`. `/pages/chuyen-gia-detail` hiện bài
+    `expert_flagship_handle` (trống = bài đầu blog). Byline bài viết thường: tag `chuyengia:<handle>`.
+  - Hoạt chất = bài viết trong blog `settings.ingredient_blog_handle` (mặc định `hoat-chat`): tag
+    `nhom:`, `inci:`, `tuongtac:<handle>` (lặp được) dựng ma trận tương tác.
+  - B2B (`b2b_tier_1..6_*`) và Loyalty (`loyalty_tier_1..6_*`): 6 ô, mặc định TẮT/TRỐNG — không điền
+    sẵn % chiết khấu/ngưỡng điểm (cam kết kinh doanh); danh sách quyền lợi phân tách bằng `;`.
+  - Handle bài viết lấy bằng `article.url | split: '/' | last`. Preview mô phỏng 2 blog trên trong
+    `data/articles.js` (chuyển từ `data/doctors.js`, `data/ingredients.js`).
 - Bộ lọc nhanh collection/search (`col.js.bwt` `doSearch()`): AJAX qua `filter.buildSearchUrl()`
   (Bizweb.SearchFilter thật) đã có URL restore/back-forward/active-chip-bar từ trước — không phải
   "bộ lọc giả chỉ ẩn card" như khảo sát cũ. Thêm 20/09/2026 (F03): token tăng dần chống request

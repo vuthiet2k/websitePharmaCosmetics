@@ -9,40 +9,57 @@
 	</div>
 </section>
 
+{%- comment -%}
+  2026-10-03 (Bước 3): đọc chuyên gia từ Blog Sapo (settings.expert_blog_handle) thay biến mock
+  `doctors` (chỉ có ở preview-mock.js → trên Sapo thật trang trắng). Trường phụ đọc qua
+  snippets/expert_fields.bwt (tag chucdanh:/chuyenkhoa:/kinhnghiem:). Blog trống → thông báo.
+{%- endcomment -%}
+{%- assign pc_ex_blog_handle = settings.expert_blog_handle | default: 'chuyen-gia' -%}
+{%- assign pc_ex_blog = blogs[pc_ex_blog_handle] -%}
+{%- assign pc_ex_first = pc_ex_blog.articles | first -%}
+{%- assign pc_ex_flagship = settings.expert_flagship_handle | default: '' | strip -%}
+{%- if pc_ex_flagship == blank and pc_ex_first -%}{%- assign pc_ex_flagship = pc_ex_first.url | split: '/' | last -%}{%- endif -%}
 <section class="pc-cg-grid-section">
 	<div class="container">
+		{%- if pc_ex_blog.articles.size > 0 -%}
 		<div class="pc-cg-grid">
-			{% for doc in doctors %}
+			{% for pc_ex in pc_ex_blog.articles %}
+			{%- include 'expert_fields' -%}
 			<div class="pc-testi-card pc-cg-card">
 				<div class="pc-testi-card-inner">
 					<div class="pc-cg-avatar-row">
-						<div class="pc-testi-avatar pc-cg-avatar{% if doc.photo.src != blank %} pc-testi-avatar--img{% endif %}">
-							<img src="{{ doc.photo.src }}" alt="{{ doc.photo.alt }}" loading="lazy"
+						<div class="pc-testi-avatar pc-cg-avatar{% if pc_ex.image.src != blank %} pc-testi-avatar--img{% endif %}">
+							{%- if pc_ex.image.src != blank -%}
+							<img src="{{ pc_ex.image.src | img_url: 'medium' }}" alt="{{ pc_ex.title | escape }}" width="100" height="100" loading="lazy"
 								onerror="this.onerror=null;this.closest('.pc-testi-avatar').classList.remove('pc-testi-avatar--img');this.remove();">
-							<span class="pc-testi-avatar-initials">{{ doc.name | slice: 0, 2 | upcase }}</span>
+							{%- endif -%}
+							<span class="pc-testi-avatar-initials">{{ pc_ex.title | slice: 0, 2 | upcase }}</span>
 						</div>
 						<div class="pc-cg-name-block">
-							<h3 class="pc-testi-result-title pc-cg-name">{{ doc.name }}</h3>
-							<span class="pc-cg-role">{{ doc.title }}</span>
+							<h3 class="pc-testi-result-title pc-cg-name">{{ pc_ex.title }}</h3>
+							{%- if pc_ex_title != blank -%}<span class="pc-cg-role">{{ pc_ex_title }}</span>{%- endif -%}
 						</div>
 					</div>
-					<span class="pc-testi-treatment-tag pc-cg-specialty">{{ doc.specialty }}</span>
-					<p class="pc-testi-result-desc pc-cg-bio">{{ doc.bio }}</p>
+					{%- if pc_ex_specialty != blank -%}
+					<span class="pc-testi-treatment-tag pc-cg-specialty">{{ pc_ex_specialty }}</span>
+					{%- endif -%}
+					<p class="pc-testi-result-desc pc-cg-bio">{{ pc_ex.content | strip_html | truncatewords: 45 }}</p>
+					{%- if pc_ex_years != blank -%}
 					<div class="pc-cg-meta-row">
-						<span>🎓 {{ doc.education }}</span>
-						<span>•</span>
-						<span>{{ doc.years_experience }} năm kinh nghiệm</span>
+						<span>{{ pc_ex_years }} năm kinh nghiệm</span>
 					</div>
-					{% if doc.quote != blank %}
-					<blockquote class="pc-cg-quote">{{ doc.quote }}</blockquote>
+					{%- endif -%}
+					{% if pc_ex.summary != blank %}
+					<blockquote class="pc-cg-quote">{{ pc_ex.summary | strip_html }}</blockquote>
 					{% endif %}
-					{% if doc.alias == 'chuyen-gia-thanh-hang' %}
-					<a href="/pages/chuyen-gia-detail" class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800 mt-2">Xem hồ sơ đầy đủ →</a>
-					{% endif %}
+					<a href="{% if pc_ex_handle == pc_ex_flagship %}/pages/chuyen-gia-detail{% else %}{{ pc_ex.url }}{% endif %}" class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800 mt-2">Xem hồ sơ đầy đủ →</a>
 				</div>
 			</div>
 			{% endfor %}
 		</div>
+		{%- else -%}
+		<p class="text-sm text-gray-500 py-10 text-center">Hồ sơ đội ngũ chuyên gia đang được cập nhật.</p>
+		{%- endif -%}
 	</div>
 </section>
 

@@ -64,13 +64,9 @@ const { linklists }                        = require('./data/navigation');
 const { pages }                            = require('./data/pages');
 const { cart }                             = require('./data/cart');
 const { articles, blogs, currentArticle }  = require('./data/articles');
-const { doctors }                          = require('./data/doctors');
 const { testimonials: patientTestimonials } = require('./data/testimonials');
 const { faqs }                             = require('./data/faqs');
-const { loyaltyTiers }                     = require('./data/loyalty-tiers');
 const { quizQuestions, quizResults }       = require('./data/quiz-questions');
-const { b2bTiers }                         = require('./data/b2b-tiers');
-const { ingredients }                      = require('./data/ingredients');
 const { solutions, corePhilosophy }        = require('./data/solutions');
 
 // Inject phone_number thực từ settings nếu có
@@ -417,16 +413,12 @@ function getContext(templateName = 'index', routeParams = {}) {
     search,
 
     // Trang chuyên gia / loyalty / booking FAQ / AI quiz
-    doctors,
     patient_testimonials: patientTestimonials,
     faqs,
-    loyalty_tiers: loyaltyTiers,
     quiz_questions: quizQuestions,
     quiz_results: quizResults,
 
     // REOPEN 2026-09-10 (ADR-007/T-80/T-82) — B2B distribution + ingredient lookup
-    b2b_tiers: b2bTiers,
-    ingredients,
     solutions,
     core_philosophy: corePhilosophy,
 
