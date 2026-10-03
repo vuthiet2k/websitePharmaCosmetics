@@ -678,72 +678,10 @@
 						{%endif%}
 					</div>
 				</div>
-				{%- comment -%}
-				  T-23/T-24 (product-detail + product-vella, ADR-004: nội dung khác cùng template,
-				  không tách riêng) — 2 khối tĩnh minh hoạ theo Pharma_Cosmetics_Figma_Project/
-				  product-detail.html (dòng ~200-286): Active Ingredients Matrix + Doctor Clinical
-				  Endorsement. Không có field thành phần hoạt chất theo cấu trúc trên product thật
-				  -> dùng nội dung minh hoạ tĩnh (đúng mock_policy#frontend_theme). Endorsement bind
-				  vào doctors[0] (data/doctors.js, quy ước đã dùng ở templates/page.chuyen-gia.bwt)
-				  thay vì bịa tên/trích dẫn lâm sàng không kiểm chứng được.
-				  LƯU Ý: dùng Tailwind utility thuần (không dùng .btn-primary/.btn-secondary của
-				  snippets/pharma_ui_kit.bwt) vì các class đó đã tồn tại từ trước cho nút Bootstrap
-				  (.btn.btn-primary) ở assets/global_core.scss.bwt, assets/page_account.scss.bwt,
-				  assets/page_collection.scss.bwt — include global pharma_ui_kit ở layouts/theme.bwt
-				  có nguy cơ đè style các nút .btn-primary hiện có toàn site (cần rà soát riêng,
-				  ngoài phạm vi task này).
+				{%- comment -%} 2026-10-03: đã xoá khối "Thành phần hoạt chất" trùng lặp (khối cuối trang
+				  pc-pdp-ingredients-section giữ lại, đọc Blog Sapo) và khối "Ý kiến chuyên gia" dùng
+				  doctors[0] (biến mock, luôn ẩn trên Sapo; thay bằng pc-pdp-expert-section) — người dùng chốt.
 				{%- endcomment -%}
-				<div class="col-12">
-					<div class="bg-gray-50 rounded-3xl p-6 sm:p-8 mb-8 border border-gray-200">
-						<h2 class="text-lg sm:text-xl font-bold text-forest-900 font-heading mb-6 text-center">
-							Thành Phần Hoạt Chất &amp; Cơ Chế Tác Động Y Khoa
-						</h2>
-						<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-							<div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-								<div class="w-10 h-10 rounded-lg bg-emerald-100 text-clinical-700 flex items-center justify-center font-bold text-sm mb-3">B5</div>
-								<h3 class="text-sm font-bold text-gray-900 mb-1">Panthenol (B5) 10%</h3>
-								<p class="text-xs text-gray-600 leading-relaxed">Cấp ẩm sâu, kích thích tăng sinh nguyên bào sợi và đẩy nhanh tốc độ phục hồi biểu bì.</p>
-							</div>
-							<div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-								<div class="w-10 h-10 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm mb-3">CER</div>
-								<h3 class="text-sm font-bold text-gray-900 mb-1">Ceramide NP Đa Tầng</h3>
-								<p class="text-xs text-gray-600 leading-relaxed">Hàn gắn các đứt gãy trong lớp màng lipid, ngăn chặn hiện tượng mất nước qua biểu bì (TEWL).</p>
-							</div>
-							<div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-								<div class="w-10 h-10 rounded-lg bg-cyan-100 text-cyan-700 flex items-center justify-center font-bold text-sm mb-3">MAD</div>
-								<h3 class="text-sm font-bold text-gray-900 mb-1">Madecassoside (Rau Má)</h3>
-								<p class="text-xs text-gray-600 leading-relaxed">Ức chế phản ứng viêm dưới da, làm mát tức thì và làm mờ các nốt mao mạch nông nổi li ti.</p>
-							</div>
-							<div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-								<div class="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm mb-3">HA</div>
-								<h3 class="text-sm font-bold text-gray-900 mb-1">Multi-Molecular HA</h3>
-								<p class="text-xs text-gray-600 leading-relaxed">3 tầng phân tử ngậm nước giúp căng bóng đa tầng, củng cố liên kết gian bào của da thiếu ẩm.</p>
-							</div>
-						</div>
-					</div>
-
-					{%- assign endorse_doc = doctors[0] -%}
-					{%- if endorse_doc -%}
-					<div class="bg-forest-900 text-white rounded-3xl p-6 sm:p-10 mb-8 shadow-lg">
-						<div class="flex flex-col md:flex-row items-center gap-6 sm:gap-8">
-							{%- if endorse_doc.photo.src -%}
-							<img src="{{ endorse_doc.photo.src }}" alt="{{ endorse_doc.photo.alt | default: endorse_doc.name }}" class="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl object-cover border-4 border-white/20 flex-shrink-0" loading="lazy">
-							{%- endif -%}
-							<div class="space-y-3 text-center md:text-left">
-								<span class="text-xs font-bold text-clinical-600 uppercase tracking-widest">
-									Ý kiến chuyên gia &bull; {{ endorse_doc.name }} &bull; {{ endorse_doc.title }} ({{ endorse_doc.years_experience }} năm kinh nghiệm)
-								</span>
-								<p class="text-sm sm:text-base italic text-emerald-100 leading-relaxed">{{ endorse_doc.quote }}</p>
-								<div class="pt-2">
-									<a href="/dat-lich-tu-van" class="inline-flex items-center gap-2 bg-white text-forest-900 hover:bg-emerald-100 font-bold text-xs py-2.5 px-5 rounded-lg transition">
-										Đặt lịch tư vấn cùng {{ endorse_doc.name }} <i class="fas fa-arrow-right" aria-hidden="true"></i>
-									</a>
-								</div>
-							</div>
-						</div>
-					</div>
-					{%- endif -%}
-				</div>
 
 				{%- if settings.product_recent_enable -%}
 				{%- assign check11 = product.url -%}
@@ -1322,33 +1260,55 @@
 </script>
 {% include 'product-recommend' %}
 
+{%- comment -%}
+  2026-10-03: "Thành phần hoạt chất" đọc từ blog hoạt chất (settings.ingredient_blog_handle — cùng
+  blog của trang Tra cứu hoạt chất) thay 4 thẻ ghi cứng (trước đây giống nhau ở mọi sản phẩm).
+  Sản phẩm gắn tag "hoatchat:<handle bài hoạt chất>" (nhiều tag được, hiện theo thứ tự tag).
+  Thẻ: tiêu đề bài = tên, summary = cơ chế tác động, tag "icon:<ký hiệu>" (tuỳ chọn) trên bài.
+  Sản phẩm không có tag hoặc không khớp bài nào → ẩn khối (người dùng chốt).
+{%- endcomment -%}
+{%- assign pc_pi_blog_handle = settings.ingredient_blog_handle | default: 'hoat-chat' -%}
+{%- assign pc_pi_blog = blogs[pc_pi_blog_handle] -%}
+{%- capture pc_pi_cards -%}
+{%- for pc_pi_tag in product.tags -%}
+  {%- if pc_pi_tag contains ':' -%}
+    {%- assign pc_pi_raw_key = pc_pi_tag | split: ':' | first -%}
+    {%- assign pc_pi_key = pc_pi_raw_key | strip | downcase -%}
+    {%- if pc_pi_key == 'hoatchat' -%}
+      {%- assign pc_pi_handle = pc_pi_tag | remove_first: pc_pi_raw_key | remove_first: ':' | strip | downcase -%}
+      {%- for pc_pi in pc_pi_blog.articles -%}
+        {%- assign pc_pi_item_handle = pc_pi.url | split: '/' | last -%}
+        {%- if pc_pi_item_handle == pc_pi_handle -%}
+          {%- assign pc_pi_icon = '' -%}
+          {%- for pc_pi_atag in pc_pi.tags -%}
+            {%- assign pc_pi_akey = pc_pi_atag | split: ':' | first | strip | downcase -%}
+            {%- if pc_pi_atag contains ':' and pc_pi_akey == 'icon' -%}
+              {%- assign pc_pi_araw = pc_pi_atag | split: ':' | first -%}
+              {%- assign pc_pi_icon = pc_pi_atag | remove_first: pc_pi_araw | remove_first: ':' | strip -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {%- if pc_pi_icon == blank -%}{%- assign pc_pi_icon = pc_pi.title | slice: 0, 2 | upcase -%}{%- endif -%}
+      <div class="pc-pdp-ing-card">
+        <span class="pc-pdp-ing-icon">{{ pc_pi_icon }}</span>
+        <h3>{{ pc_pi.title }}</h3>
+        {%- if pc_pi.summary != blank -%}<p>{{ pc_pi.summary | strip_html }}</p>{%- endif -%}
+      </div>
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- endcapture -%}
+{%- if pc_pi_cards != blank -%}
 <section class="pc-pdp-ingredients-section">
   <div class="container">
     <h2 class="pc-section-title pc-pdp-ingredients-title">Thành Phần Hoạt Chất &amp; Cơ Chế Tác Động Y Khoa</h2>
     <div class="pc-pdp-ingredients-grid">
-      <div class="pc-pdp-ing-card">
-        <span class="pc-pdp-ing-icon">✎</span>
-        <h3>Panthenol (Vitamin B5) 10%</h3>
-        <p>Cấp ẩm sâu, kích thích tăng sinh nguyên bào sợi và đẩy nhanh phục hồi hàng rào bảo vệ da.</p>
-      </div>
-      <div class="pc-pdp-ing-card">
-        <span class="pc-pdp-ing-icon">💧</span>
-        <h3>Ceramide NP Đa Tầng</h3>
-        <p>Hàn gắn các đứt gãy trong lớp màng lipid, ngăn chặn hiện tượng mất nước xuyên biểu bì.</p>
-      </div>
-      <div class="pc-pdp-ing-card">
-        <span class="pc-pdp-ing-icon">🌿</span>
-        <h3>Madecassoside (Rau Má Vi Điểm)</h3>
-        <p>Ức chế phản ứng viêm dưới da, làm mát tức thì và làm mờ dấu hiệu đỏ rát.</p>
-      </div>
-      <div class="pc-pdp-ing-card">
-        <span class="pc-pdp-ing-icon">💦</span>
-        <h3>Multi-Molecular Hyaluronic Acid</h3>
-        <p>3 tầng phân tử ngậm nước giúp căng bóng đa tầng, củng cố độ đàn hồi tự nhiên của da.</p>
-      </div>
+      {{ pc_pi_cards }}
     </div>
   </div>
 </section>
+{%- endif -%}
 
 {%- comment -%}
   2026-10-03: "Ý kiến chuyên gia" đọc từ Blog Sapo (settings.expert_opinion_blog_handle) thay câu

@@ -88,7 +88,7 @@ const products = [
     id: 1001, name: 'Kem Dưỡng Retinol 0.3% + Peptide Chống Lão Hoá', alias: 'kem-duong-retinol-0-3-peptide',
     type: 'Kem dưỡng', votes: 170,
     description: 'Chống lão hoá chuyên sâu — da căng mướt, đầy sức sống.',
-    tags: ['ban-chay', 'chong-lao-hoa', 'retinol', 'san-pham-noi-bat', 'khuyen-mai'],
+    tags: ['ban-chay', 'chong-lao-hoa', 'retinol', 'san-pham-noi-bat', 'khuyen-mai', 'hoatchat:retinol', 'hoatchat:hyaluronic-acid'],
     variants: [
       variant(10011, '30ml', 850000, 1200000, 'PC-RET-30', true,  25),
       variant(10012, '50ml', 1250000, 1650000, 'PC-RET-50', true,  12),
@@ -104,7 +104,7 @@ const products = [
     id: 1002, name: 'Serum Vitamin C 15% Làm Sáng & Đều Màu Da', alias: 'serum-vitamin-c-15',
     type: 'Serum', votes: 199,
     description: 'Làm sáng đều màu, xoá thâm & rạng rỡ rõ từ tuần đầu.',
-    tags: ['lam-sang', 'vitamin-c', 'duong-trang', 'serum', 'san-pham-noi-bat', 'quycach_30ml'],
+    tags: ['lam-sang', 'vitamin-c', 'duong-trang', 'serum', 'san-pham-noi-bat', 'quycach_30ml', 'hoatchat:vitamin-c', 'hoatchat:niacinamide'],
     variants: [
       variant(10021, '30ml', 650000, 0, 'PC-VTC-30', true, 30),
     ],
@@ -166,7 +166,7 @@ const products = [
     id: 1006, name: 'Kem Dưỡng Ẩm Hyaluronic Acid 3 Tầng Căng Mướt Suốt Ngày', alias: 'kem-duong-am-hyaluronic-acid',
     type: 'Kem dưỡng', votes: 165,
     description: 'Cấp ẩm 3 tầng, da căng mướt và mềm mịn cả ngày dài.',
-    tags: ['duong-am', 'hyaluronic', 'ban-chay', 'san-pham-noi-bat', 'khuyen-mai'],
+    tags: ['duong-am', 'hyaluronic', 'ban-chay', 'san-pham-noi-bat', 'khuyen-mai', 'hoatchat:hyaluronic-acid', 'hoatchat:centella'],
     variants: [
       variant(10061, '50ml', 580000, 720000, 'PC-HAC-50', true, 22),
     ],

@@ -252,6 +252,10 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
     (mặc định `y-kien-chuyen-gia`, section "Trang sản phẩm"): summary/content = trích dẫn, tag
     `sanpham:<alias>` (nhiều được) chọn sản phẩm, `chuyengia:<handle>` lấy tên/ảnh/năm KN. Sản phẩm
     không có ý kiến riêng → ẩn khối — KHÔNG hiện 1 câu khen chung cho mọi sản phẩm.
+  - "Thành phần hoạt chất" trang sản phẩm (CHỈ 1 khối `pc-pdp-ingredients-section`; khối trùng trong
+    phần mô tả + khối ý kiến dùng `doctors[0]` đã xoá) đọc blog hoạt chất: SẢN PHẨM gắn tag
+    `hoatchat:<handle>` (thứ tự theo tag), thẻ = tiêu đề + summary, tag `icon:` tuỳ chọn trên bài.
+    Không có tag → ẩn khối. `tab_product.bwt` loại tag `hoatchat:` khỏi danh sách tag hiển thị.
   - B2B (`b2b_tier_1..6_*`) và Loyalty (`loyalty_tier_1..6_*`): 6 ô, mặc định TẮT/TRỐNG — không điền
     sẵn % chiết khấu/ngưỡng điểm (cam kết kinh doanh); danh sách quyền lợi phân tách bằng `;`.
   - Handle bài viết lấy bằng `article.url | split: '/' | last`. Preview mô phỏng 2 blog trên trong
