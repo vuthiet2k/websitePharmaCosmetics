@@ -175,72 +175,11 @@ window.PharmaSkinScanProductLabels = {
   var copy = window.PharmaSkinScanCopy || {};
 
   // 17 Clinical Questions Data
-  // 2026-10-03: quiz_questions/quiz_results là biến mock (không có trên Sapo, luôn rỗng) → dùng
-  // thẳng bộ câu hỏi bên dưới; bảng kết quả dùng chung snippets/quiz_results_data.bwt (cùng
-  // nguồn với trang kết quả, trước đây trang kết quả không có bảng này → luôn ra "Da dầu").
-  var quizQuestions = [];
+  // 2026-10-03: quiz_questions/quiz_results là biến mock (không có trên Sapo) → trước đây trên Sapo
+  // chỉ chạy bộ dự phòng 5 câu và trang kết quả luôn ra "Da dầu". Câu hỏi + bảng kết quả dùng chung
+  // snippets/quiz_questions_data.bwt và snippets/quiz_results_data.bwt (cùng nguồn với trang kết quả).
+  var quizQuestions = {% include 'quiz_questions_data' %};
   var quizResults = {% include 'quiz_results_data' %};
-
-  // Fallback data if server liquid template variables are empty
-  if (!quizQuestions || quizQuestions.length === 0) {
-    quizQuestions = [
-      {
-        id: 1,
-        phase: "Giai đoạn 1: Cơ địa da",
-        question: "Da bạn thường như thế nào vào giữa trưa (khi chưa rửa mặt từ sáng)?",
-        options: [
-          { text: "Bóng dầu toàn mặt, đặc biệt chữ T", skin_type: "oily" },
-          { text: "Căng rát, hơi bong nhẹ ở hai bên má", skin_type: "dry" },
-          { text: "Bóng dầu vùng chữ T, khô căng ở má", skin_type: "combination" },
-          { text: "Bình thường, mịn màng không bóng không khô", skin_type: "normal" }
-        ]
-      },
-      {
-        id: 2,
-        phase: "Giai đoạn 1: Cơ địa da",
-        question: "Da bạn có dễ bị đỏ, ngứa hoặc châm chích khi thử sản phẩm mới không?",
-        options: [
-          { text: "Rất dễ, hầu như sản phẩm nào cũng phải test trước", skin_type: "sensitive" },
-          { text: "Thỉnh thoảng, tuỳ thành phần hoạt chất", skin_type: "combination" },
-          { text: "Hiếm khi bị kích ứng", skin_type: "normal" },
-          { text: "Không bao giờ bị đỏ rát", skin_type: "oily" }
-        ]
-      },
-      {
-        id: 3,
-        phase: "Giai đoạn 1: Cơ địa da",
-        question: "Bạn có đang gặp vấn đề về sắc tố (nám, tàn nhang, thâm sau mụn) không?",
-        options: [
-          { text: "Có, các đốm nám/thâm khá nhiều và rõ", skin_type: "pigmentation" },
-          { text: "Có nhưng ở mức độ nhẹ rải rác", skin_type: "pigmentation" },
-          { text: "Không, vấn đề chính là dầu thừa và mụn", skin_type: "oily" },
-          { text: "Không, nền da khá đều màu", skin_type: "normal" }
-        ]
-      },
-      {
-        id: 4,
-        phase: "Giai đoạn 1: Cơ địa da",
-        question: "Mối quan tâm lớn nhất về làn da hiện tại của bạn là gì?",
-        options: [
-          { text: "Nếp nhăn, kém săn chắc, lão hóa sớm", skin_type: "aging" },
-          { text: "Mụn sưng viêm, mụn ẩn li ti", skin_type: "oily" },
-          { text: "Khô ráp, bong tróc, thiếu ẩm", skin_type: "dry" },
-          { text: "Nám mảng, sạm màu, không đều màu", skin_type: "pigmentation" }
-        ]
-      },
-      {
-        id: 5,
-        phase: "Giai đoạn 1: Cơ địa da",
-        question: "Lỗ chân lông vùng mũi và 2 bên má của bạn ở trạng thái nào?",
-        options: [
-          { text: "Rất to, dễ bít tắc và hay nổi mụn đầu đen", skin_type: "oily" },
-          { text: "Nhỏ mịn nhưng bề mặt da thiếu độ căng mọng", skin_type: "dry" },
-          { text: "To rõ ở vùng chữ T, mịn màng ở 2 má", skin_type: "combination" },
-          { text: "Đều đặn, kích thước lỗ chân lông bình thường", skin_type: "normal" }
-        ]
-      }
-    ];
-  }
 
 
   var currentQuestionIndex = -1;

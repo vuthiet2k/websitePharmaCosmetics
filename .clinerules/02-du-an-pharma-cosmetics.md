@@ -274,6 +274,15 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
   `page.patient-portal` (chỉ giữ tên + đơn hàng thật), ca bệnh/số liệu bịa ở `page.clinical-proof`
   (giới thiệu + 4 chỉ số = `clinical_*` settings, mặc định trống; ca điều trị = blog
   `clinical_case_blog_handle`, mặc định `truoc-va-sau`, ảnh trước/sau qua tag `anhtruoc:`/`anhsau:`).
+- **Audit Checklist Sapo tự động:** `BASE=http://localhost:3000 npm run audit:sapo-review` (Playwright,
+  33 route): 1 `<h1>`/trang, `<img>` có alt + width/height, ảnh dưới màn hình đầu lazy, không lỗi
+  JS/console/HTTP ≥400, không tràn ngang @375px. Chỉ thêm width/height cho ảnh khi CSS đã cố định CẢ 2
+  chiều (w-full h-full, absolute inset-0…) — nếu không thuộc tính height sẽ đổi kích thước hiển thị.
+- Checkbox: `global_core.scss.bwt` (theme gốc) ẩn MỌI `input[type=checkbox]` (opacity 0, absolute,
+  width 100%) cho checkbox tự vẽ bằng label. Ô đồng ý dùng checkbox gốc phải có class
+  `pc-checkbox-native` (đã gắn: about-us, đặt lịch, đăng ký) — nếu không khách không thấy ô bắt buộc.
+- AI Skin Quiz: 17 câu hỏi = `snippets/quiz_questions_data.bwt` (nguồn duy nhất; `data/quiz-questions.js`
+  đã xoá) — trước đây Sapo chỉ chạy bộ dự phòng 5 câu.
   - B2B (`b2b_tier_1..6_*`) và Loyalty (`loyalty_tier_1..6_*`): 6 ô, mặc định TẮT/TRỐNG — không điền
     sẵn % chiết khấu/ngưỡng điểm (cam kết kinh doanh); danh sách quyền lợi phân tách bằng `;`.
   - Handle bài viết lấy bằng `article.url | split: '/' | last`. Preview mô phỏng 2 blog trên trong
