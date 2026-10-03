@@ -1,7 +1,19 @@
 {% include 'breadcrumb' %}
-<section class="signup search-main wrap_background background_white clearfix bg-gray-50 py-8">
+{%- comment -%}
+  2026-10-03 (review giao diện trang tìm kiếm): bỏ nền bg-gray-50 + padding-top của section — breadcrumb
+  đã có margin-bottom 30px, nền xám riêng của section tạo 1 dải màu rỗng lệch nền trang ngay dưới
+  breadcrumb. Gộp tiêu đề kết quả (h1, trước đây ẩn) + tab Sản phẩm/Tin tức vào 1 hàng đầu trang.
+{%- endcomment -%}
+{%- assign pc_search_keyword = search.terms | split: '(*' | last | split: '*)' | first -%}
+<section class="signup search-main wrap_background background_white clearfix pb-8">
 	<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-		<ul class="search-type flex flex-wrap items-center gap-2 mb-6 text-xs font-medium">
+		<div class="pc-search-head">
+		{%- if search.performed and search.terms != blank and search.results_count > 0 -%}
+		{%- unless search.types contains 'article' -%}
+		<h1 class="pc-search-title">Kết quả tìm kiếm cho &ldquo;{{ pc_search_keyword | escape }}&rdquo;</h1>
+		{%- endunless -%}
+		{%- endif -%}
+		<ul class="search-type flex flex-wrap items-center gap-2 text-xs font-medium">
 			<li>
 				<a {% if search.types contains 'product' %}class="active bg-clinical-700 text-white"{%else%}class="bg-white text-gray-600 border border-gray-200 hover:border-clinical-500"{%endif%} href="/search?query=name:(*{{search.terms | split: '(*' | last | split: '*)'}}*)&type=product" title="Tìm theo sản phẩm" style="padding:8px 16px;border-radius:9999px;display:inline-block;">Sản phẩm</a>
 			</li>
@@ -9,6 +21,7 @@
 				<a {% if search.types contains 'article' %}class="active bg-clinical-700 text-white"{%else%}class="bg-white text-gray-600 border border-gray-200 hover:border-clinical-500"{%endif%} href="search?query=(*{{search.terms | split: '(*' | last | split: '*)'}}*)&type=article" title="Tìm theo tin tức" style="padding:8px 16px;border-radius:9999px;display:inline-block;">Tin tức</a>
 			</li>
 		</ul>
+		</div>
 		{% if search.performed and search.terms != blank %}
 		{% paginate search.results by 16 %}
 		{% if search.results_count == 0 %}
@@ -26,8 +39,6 @@
 		{%endif%}
 		{% else %}
 		<div class="category-products">
-		{%- comment -%} 2026-10-03 SEO: kết quả sản phẩm và trang chưa nhập từ khoá không có <h1> nào — thêm h1 ẩn (visually-hidden) để mỗi trang có đúng 1 h1, không đổi giao diện. {%- endcomment -%}
-			{%- unless search.types contains 'article' -%}{%- assign pc_search_keyword = search.terms | split: '(*' | last | split: '*)' | first -%}<h1 class="visually-hidden">Kết quả tìm kiếm: {{ pc_search_keyword | escape }}</h1>{%- endunless -%}
 			<div class="d-none">
 				{% if search.types contains 'product' %}
 				{%unless search.terms contains 'name:' %}
@@ -77,11 +88,12 @@
 							</div>
 						</div>
 						<div class="lg:col-span-3 space-y-6">
-							<div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-xl border border-gray-200 mb-6">
-								<div class="flex items-center gap-2">
-									<span class="text-sm font-bold text-gray-900">Kết quả tìm kiếm cho &quot;{{ search.terms }}&quot;:</span>
-									<span class="pc-kit-badge-clinical text-xs">{{ search.results_count }} sản phẩm</span>
-								</div>
+							{%- comment -%}
+							  2026-10-03: style .sort-cate chỉ khai báo lồng trong .layout-collection (page_collection.scss) —
+							  thiếu wrapper này thì khối Sắp xếp bung thành h3 to + list dọc. Bỏ badge đếm riêng vì
+							  collection-sortby đã tự hiện "N sản phẩm" (paginate.items).
+							{%- endcomment -%}
+							<div class="layout-collection pc-search-toolbar">
 								{% include 'collection-sortby' %}
 							</div>
 							<div class="row row-fix grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" style="display:grid;">
