@@ -1,55 +1,47 @@
 {%- comment -%}
-  section_expert_team.bwt — redesign T-20 (pharma brand). Trước đây mượn CSS của
-  section_testimonials.bwt (pc-testi-card/pc-testi-avatar) — dependency chéo giòn (đổi
-  testimonials là gãy style ở đây). Viết lại tự chứa 100% bằng Tailwind + snippets/pharma_ui_kit
-  (badge-clinical, btn-secondary, font-heading) — không phụ thuộc file khác ngoài include global
-  ở layouts/theme.bwt. Giữ nguyên vòng lặp `doctors` (data/doctors.js) + limit 4 + link CTA
-  /pages/chuyen-gia (trang chi tiết bác sĩ theo alias sẽ có ở T-33, chưa tồn tại nên chưa link
-  thẳng theo doc.alias để tránh 404).
-{%- endcomment -%}
-{%- comment -%}
-  2026-10-03 (Bước 3): đọc từ Blog chuyên gia (settings.expert_blog_handle) thay biến mock
-  `doctors`; blog trống → không render cả section. Section vẫn CHƯA nằm trong valid_sections của
-  home_portal.bwt (chờ chốt bố cục trang chủ).
+  section_expert_team.bwt — khối "Đội ngũ chuyên gia" trên trang chủ (Home Portal v3).
+  2026-10-03: người dùng chốt bật khối này (đưa vào valid_sections của home_portal.bwt, đặt ở chương
+  II "Tin cậy" ngay sau Minh chứng). Viết lại theo khung v3 dùng chung (wrap / section-head / eyebrow,
+  lưới .proof + thẻ .pcase của section_testimonials) thay cho markup Tailwind cũ để không lệch giao
+  diện với các section xung quanh. Dữ liệu: blog chuyên gia (settings.expert_blog_handle), trường
+  phụ qua snippets/expert_fields.bwt. Blog trống → không render. Lưới 3 cột → hiện 3 chuyên gia.
 {%- endcomment -%}
 {%- assign pc_ex_blog_handle = settings.expert_blog_handle | default: 'chuyen-gia' -%}
 {%- assign pc_ex_blog = blogs[pc_ex_blog_handle] -%}
 {%- if pc_ex_blog.articles.size > 0 -%}
-<section class="pc-section py-14 bg-white">
-  <div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center max-w-2xl mx-auto mb-10">
-      <span class="text-xs font-bold text-clinical-700 uppercase tracking-widest">Hội Đồng Chuyên Môn</span>
-      <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 font-heading mt-2">
-        Đội Ngũ Chuyên Gia Da Liễu
-      </h2>
-      <p class="text-sm text-gray-600 mt-2">
-        Mỗi phác đồ đều được xây dựng và theo sát bởi chuyên gia chuyên khoa — không áp dụng đại trà.
-      </p>
+{%- assign pc_ex_flagship = settings.expert_flagship_handle | default: '' | strip -%}
+{%- assign pc_ex_first = pc_ex_blog.articles | first -%}
+{%- if pc_ex_flagship == blank and pc_ex_first -%}{%- assign pc_ex_flagship = pc_ex_first.url | split: '/' | last -%}{%- endif -%}
+<section class="pc-expert-team"><div class="wrap">
+  <div class="section-head">
+    <div>
+      <p class="eyebrow">{{ settings.home_expert_eyebrow | default: 'Hội đồng chuyên môn' | escape }}</p>
+      <h2>{{ settings.home_expert_title | default: 'Đội ngũ chuyên gia da liễu' | escape }}</h2>
     </div>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {% for pc_ex in pc_ex_blog.articles limit: 4 %}
-      {%- include 'expert_fields' -%}
-      <div class="rounded-2xl bg-white border border-gray-200 shadow-sm hover:shadow-lg hover:border-clinical-600 transition p-6 text-center">
-        <img src="{% if pc_ex.image.src != blank %}{{ pc_ex.image.src | img_url: 'medium' }}{% else %}{% include 'placeholder_img_url' %}{% endif %}" alt="{{ pc_ex.title | escape }}" width="80" height="80" loading="lazy"
-          class="w-20 h-20 rounded-full object-cover mx-auto border-4 border-mint-100 mb-3">
-        <h3 class="text-base font-bold text-forest-900 font-heading">{{ pc_ex.title }}</h3>
-        {%- if pc_ex_title != blank -%}
-        <p class="text-xs text-clinical-700 font-semibold mt-0.5">{{ pc_ex_title }}</p>
-        {%- endif -%}
-        {%- if pc_ex_specialty != blank -%}
-        <span class="pc-kit-badge-clinical mt-3 inline-flex text-[11px]">{{ pc_ex_specialty }}</span>
-        {%- endif -%}
-        {%- if pc_ex_years != blank -%}
-        <p class="text-[11px] text-gray-500 mt-3">{{ pc_ex_years }}+ năm kinh nghiệm</p>
-        {%- endif -%}
-      </div>
-      {% endfor %}
-    </div>
-
-    <div class="text-center mt-10">
-      <a href="/pages/chuyen-gia" class="pc-kit-btn-secondary text-sm px-6 py-3">Xem Tất Cả Chuyên Gia <i class="fas fa-arrow-right"></i></a>
-    </div>
+    {%- if settings.home_expert_subtitle != blank -%}<p class="lead">{{ settings.home_expert_subtitle | escape }}</p>{%- endif -%}
   </div>
-</section>
+  <div class="proof">
+    {% for pc_ex in pc_ex_blog.articles limit: 3 %}
+    {%- include 'expert_fields' -%}
+    <article class="pcase">
+      <div class="imgs">
+        <div class="swiper-slide">
+          <img src="{% if pc_ex.image.src != blank %}{{ pc_ex.image.src | img_url: 'large' }}{% else %}{% include 'placeholder_img_url' %}{% endif %}" alt="{{ pc_ex.title | escape }}" width="540" height="540" loading="lazy">
+        </div>
+      </div>
+      <div class="body">
+        <h3>{{ pc_ex.title | escape }}</h3>
+        {%- if pc_ex_title != blank or pc_ex_specialty != blank -%}
+        <p>{{ pc_ex_title | escape }}{% if pc_ex_title != blank and pc_ex_specialty != blank %} — {% endif %}{{ pc_ex_specialty | escape }}</p>
+        {%- endif -%}
+        <div class="meta">
+          <a href="{% if pc_ex_handle == pc_ex_flagship %}/pages/chuyen-gia-detail{% else %}{{ pc_ex.url }}{% endif %}">Xem hồ sơ</a>
+          {%- if pc_ex_years != blank -%}<b>{{ pc_ex_years }}+ năm kinh nghiệm</b>{%- endif -%}
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  <p class="pc-expert-team__more"><a class="link-more" href="/pages/chuyen-gia">{{ settings.home_expert_viewall | default: 'Xem tất cả chuyên gia' | escape }} →</a></p>
+</div></section>
 {%- endif -%}
