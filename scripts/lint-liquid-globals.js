@@ -145,14 +145,48 @@ const bad = uses.filter((u) => !sapo.has(u.id) && !defined.has(u.id) && !(u.id i
 const byId = {};
 bad.forEach((u) => (byId[u.id] = byId[u.id] || []).push(`${u.file}:${u.line}`));
 
+// Kiểm tra 2 (2026-10-03): mọi settings.X đọc trong Liquid phải được khai báo ở
+// configs/settings_schema.json — nếu không, admin không sửa được trên Sapo (giá trị kẹt ở
+// settings_data hoặc luôn nil). File bỏ qua phải có lý do.
+const SETTINGS_IGNORE_FILES = {
+  'snippets/popup_sapo.bwt': 'popup demo của theme gốc Sapo, mọi cờ use_thongbao* = false',
+  'snippets/section_clinical_banner.bwt': 'snippet không được include ở đâu',
+};
+const schemaIds = new Set();
+JSON.parse(fs.readFileSync(path.join(ROOT, 'configs/settings_schema.json'), 'utf8'))
+  .forEach((sec) => sec.settings.forEach((x) => x.id && schemaIds.add(x.id)));
+const undeclared = {};
+for (const { f, src, tags: ts } of parsed) {
+  const rel = path.relative(ROOT, f).replace(/\\/g, '/');
+  if (rel in SETTINGS_IGNORE_FILES) continue;
+  for (const t of ts) {
+    const code = t.text.replace(/'[^']*'|"[^"]*"/g, ' ');
+    for (const m of code.matchAll(/\bsettings\.([A-Za-z_]\w*)/g)) {
+      if (schemaIds.has(m[1])) continue;
+      const line = src.slice(0, t.index).split('\n').length;
+      (undeclared[m[1]] = undeclared[m[1]] || []).push(`${rel}:${line}`);
+    }
+  }
+}
+
 const ids = Object.keys(byId).sort();
-if (!ids.length) {
-  console.log(`[lint:liquid-globals] PASS — ${files.length} file, không có biến ngoài 38 đối tượng Sapo.`);
+const sids = Object.keys(undeclared).sort();
+if (!ids.length && !sids.length) {
+  console.log(`[lint:liquid-globals] PASS — ${files.length} file, không có biến ngoài 38 đối tượng Sapo, mọi settings.* đã khai báo trong schema.`);
   process.exit(0);
 }
-console.log(`[lint:liquid-globals] FAIL — ${ids.length} biến không có nguồn trên Sapo (nil khi chạy thật):`);
-for (const id of ids) {
-  const locs = [...new Set(byId[id])];
-  console.log(`  ${id}  (${locs.length} chỗ)  ${locs.slice(0, 6).join(', ')}${locs.length > 6 ? ', ...' : ''}`);
+if (ids.length) {
+  console.log(`[lint:liquid-globals] FAIL — ${ids.length} biến không có nguồn trên Sapo (nil khi chạy thật):`);
+  for (const id of ids) {
+    const locs = [...new Set(byId[id])];
+    console.log(`  ${id}  (${locs.length} chỗ)  ${locs.slice(0, 6).join(', ')}${locs.length > 6 ? ', ...' : ''}`);
+  }
+}
+if (sids.length) {
+  console.log(`[lint:liquid-globals] FAIL — ${sids.length} settings.* chưa khai báo trong configs/settings_schema.json (admin không sửa được):`);
+  for (const id of sids) {
+    const locs = [...new Set(undeclared[id])];
+    console.log(`  settings.${id}  ${locs.slice(0, 4).join(', ')}${locs.length > 4 ? ', ...' : ''}`);
+  }
 }
 process.exit(1);

@@ -265,6 +265,15 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
   Liquid không thuộc 38 đối tượng Sapo và không được assign/capture/for/tham số include ở đâu. Ngoại
   lệ phải ghi lý do trong `ALLOW` của `scripts/lint-liquid-globals.js` (hiện có code gốc Bizweb chưa
   xác nhận: `social_login`, `routes`, `{{amount}}`, `articles[handle]`).
+  Lint này cũng FAIL khi template đọc `settings.X` mà X chưa khai báo trong `settings_schema.json`
+  (admin không sửa được) — bỏ qua có lý do: `popup_sapo.bwt` (demo theme gốc, tắt),
+  `section_clinical_banner.bwt` (không được include).
+- **Không bịa dữ liệu hiển thị cho khách (rà 2026-10-03):** đã gỡ khuyến mãi demo "Tặng tinh dầu
+  Moroccanoil…" (`header_search_promo`, `header_search_gg_title`), số điện thoại giả fallback
+  (`0987.654.321`, `1900xxxx` → dùng `settings.store_phone`), hồ sơ sức khoẻ bịa ở
+  `page.patient-portal` (chỉ giữ tên + đơn hàng thật), ca bệnh/số liệu bịa ở `page.clinical-proof`
+  (giới thiệu + 4 chỉ số = `clinical_*` settings, mặc định trống; ca điều trị = blog
+  `clinical_case_blog_handle`, mặc định `truoc-va-sau`, ảnh trước/sau qua tag `anhtruoc:`/`anhsau:`).
   - B2B (`b2b_tier_1..6_*`) và Loyalty (`loyalty_tier_1..6_*`): 6 ô, mặc định TẮT/TRỐNG — không điền
     sẵn % chiết khấu/ngưỡng điểm (cam kết kinh doanh); danh sách quyền lợi phân tách bằng `;`.
   - Handle bài viết lấy bằng `article.url | split: '/' | last`. Preview mô phỏng 2 blog trên trong

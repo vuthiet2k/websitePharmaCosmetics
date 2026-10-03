@@ -29,11 +29,13 @@
           <i class="fas fa-stethoscope" aria-hidden="true"></i>
           {{ settings.col_cta_btn1_text | default: 'Tư vấn miễn phí' }}
         </a>
-        {%- if settings.col_cta_phone or settings.hotline -%}
+        {%- comment -%} 2026-10-03: settings.hotline không tồn tại → dùng hotline cửa hàng; bỏ fallback số giả 1900xxxx. {%- endcomment -%}
+        {%- assign pc_col_cta_phone = settings.col_cta_phone | default: settings.store_phone -%}
+        {%- if pc_col_cta_phone != blank -%}
         <a class="pc-col-cta__btn pc-col-cta__btn--ghost"
-           href="tel:{{ settings.col_cta_phone | default: settings.hotline | default: '1900xxxx' | remove: '.' | remove: ' ' }}">
+           href="tel:{{ pc_col_cta_phone | remove: '.' | remove: ' ' }}">
           <i class="fas fa-phone-alt" aria-hidden="true"></i>
-          {{ settings.col_cta_phone | default: settings.hotline | default: 'Gọi hotline' }}
+          {{ pc_col_cta_phone }}
         </a>
         {%- endif -%}
       </div>
