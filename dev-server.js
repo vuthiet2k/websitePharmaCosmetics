@@ -106,7 +106,8 @@ function normaliseSkinAnalysis(payload, provider) {
 // Preprocessor này chạy trước khi LiquidJS parse template.
 function preprocessBwt(content) {
   // Strip Sapo-specific {% layout 'name' %} — dev-server handles layout routing separately
-  content = content.replace(/\{%-?\s*layout\s+['"][^'"]*['"]\s*-?%\}/g, '');
+  // (gồm cả dạng không nháy {% layout none %} của các alternate template AJAX).
+  content = content.replace(/\{%-?\s*layout\s+(?:['"][^'"]*['"]|none)\s*-?%\}/g, '');
   // Sapo dùng {%elseif%} thay vì {% elsif %} chuẩn Liquid
   content = content.replace(/\{%-?\s*elseif\b/g, '{%- elsif');
   return content.replace(/(\{%-?[\s\S]*?-?%\}|\{\{-?[\s\S]*?-?\}\})/g, (match) => {
@@ -1063,6 +1064,8 @@ function detectLayout(tpl) {
       // comment mô tả dài trước {% layout %}. Cắt ngắn làm preview chọn nhầm
       // layout theme, khiến trang MOPS mất các dependency (Vue/CSS) của nó.
       const source = fs.readFileSync(filepath, { encoding: 'utf8' });
+      // `{% layout none %}` (không nháy) = trả thẳng nội dung template, không bọc layout.
+      if (/\{%-?\s*layout\s+none\s*-?%\}/.test(source)) return 'none';
       const m = source.match(/\{%-?\s*layout\s+['"](\w[\w-]*)['"]\s*-?%\}/);
       return m ? m[1] : 'theme';
     }
@@ -1080,6 +1083,15 @@ async function renderFullPage(tpl = 'index', queryParams = null, routeParams = {
     finalRouteParams.searchType = queryParams.get('type') || 'product';
   }
   const ctx = mockModule.getContext(tpl, finalRouteParams);
+  // Alternate template `?view=<tên>` như Sapo thật: /<alias>?view=viewed → product.viewed.bwt.
+  // Trước đây bị bỏ qua nên section "Sản phẩm đã xem" (snippets/section_product_viewed.bwt) nhận
+  // về NGUYÊN trang (header + dev toolbar) và chèn vào swiper — lỗi preview local 2026-10-03.
+  const viewName = queryParams && queryParams.get('view');
+  if (viewName && /^[\w-]+$/.test(viewName)) {
+    const altTpl = `${tpl}.${viewName}`;
+    const resolvedAlt = resolveTemplatePath(altTpl);
+    if (TEMPLATE_DIRS.some((dir) => fs.existsSync(path.join(dir, resolvedAlt + '.bwt')))) tpl = altTpl;
+  }
   const resolvedTpl = resolveTemplatePath(tpl);
 
   // 1. Render template body → content_for_layout
@@ -1096,6 +1108,7 @@ async function renderFullPage(tpl = 'index', queryParams = null, routeParams = {
 
   // 2. Render full layout (detect từ {% layout %} tag của template)
   const layoutName = detectLayout(tpl);
+  if (layoutName === 'none') return contentForLayout;
   const fullCtx = { ...ctx, content_for_layout: contentForLayout, content_for_header: '' };
   let html;
   try {
