@@ -24,6 +24,7 @@ const summarize = (items, max = 10) => (items.length > max ? `${items.slice(0, m
 const REQUIRED_DIRECTORIES = ['assets', 'configs', 'layouts', 'snippets', 'templates'];
 const ALLOWED_ROOT_DIRECTORIES = new Set([...REQUIRED_DIRECTORIES, 'locales', 'sections']);
 const REQUIRED_FILES = ['layouts/theme.bwt', 'configs/settings_schema.json', 'configs/settings_data.json', 'templates/page.bwt'];
+const SCHEMA_SETTING_TYPES = new Set(['header', 'paragraph', 'color', 'font', 'text', 'textarea', 'image', 'checkbox', 'radio', 'select', 'collection', 'blog', 'page', 'link_list', 'snippet']);
 const JUNK_PATTERN = /(^|\/)(__MACOSX|\.DS_Store|Thumbs\.db|desktop\.ini|\.git|\.gitkeep|\.vercel|node_modules)(\/|$)/i;
 const SOURCE_PATTERN = /\.(scss|sass|ts|tsx|map)$/i;
 const EXTENSION_RULES = { layouts: /\.bwt$/i, templates: /\.bwt$/i, snippets: /\.bwt$/i, sections: /\.bwt$/i, configs: /\.json$/i, locales: /\.json$/i };
@@ -129,7 +130,19 @@ function main() {
 
   let schemaIds = new Set();
   if (data.has('configs/settings_schema.json')) {
-    try { schemaIds = policy.schemaImageFileIds(JSON.parse(data.get('configs/settings_schema.json').toString('utf8'))); } catch (_) { /* đã báo ở trên */ }
+    try {
+      const schema = JSON.parse(data.get('configs/settings_schema.json').toString('utf8'));
+      schemaIds = policy.schemaImageFileIds(schema);
+      // 2026-10-05: Sapo từ chối cả gói khi gặp kiểu field lạ ("setting type không hợp lệ linklist").
+      // Danh mục kiểu hợp lệ theo Rule&HDKTXD.md (15 input types + header/paragraph).
+      const badTypes = [];
+      for (const group of Array.isArray(schema) ? schema : []) {
+        for (const setting of (group && group.settings) || []) {
+          if (!SCHEMA_SETTING_TYPES.has(setting.type)) badTypes.push(`${setting.id || '(không id)'}: "${setting.type}"`);
+        }
+      }
+      if (badTypes.length) errors.push(`settings_schema.json có kiểu field Sapo không hỗ trợ — ${summarize(badTypes)}`);
+    } catch (_) { /* đã báo ở trên */ }
   }
   for (const entry of files.filter((item) => item.name.startsWith('assets/') && policy.isImageFile(item.name))) {
     const result = policy.classifyAssetImage(entry.name, entry.size, schemaIds);
