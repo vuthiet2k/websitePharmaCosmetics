@@ -24,7 +24,20 @@ const summarize = (items, max = 10) => (items.length > max ? `${items.slice(0, m
 const REQUIRED_DIRECTORIES = ['assets', 'configs', 'layouts', 'snippets', 'templates'];
 const ALLOWED_ROOT_DIRECTORIES = new Set([...REQUIRED_DIRECTORIES, 'locales', 'sections']);
 const REQUIRED_FILES = ['layouts/theme.bwt', 'configs/settings_schema.json', 'configs/settings_data.json', 'templates/page.bwt'];
-const SCHEMA_SETTING_TYPES = new Set(['header', 'paragraph', 'color', 'font', 'text', 'textarea', 'image', 'checkbox', 'radio', 'select', 'collection', 'blog', 'page', 'link_list', 'snippet']);
+// Thuộc tính hợp lệ theo từng kiểu field. 2026-10-05: Sapo báo "product_faq_blog_handle các attribute không
+// hợp lệ: default" ⇒ bám đúng bộ thuộc tính schema gốc của theme (bản Sapo đã chấp nhận, commit f31bbd0).
+// radio/font/snippet chưa dùng trong repo — để bộ rộng, kiểm lại khi lần đầu dùng.
+const SCHEMA_SETTING_ATTRS = {
+  header: ['content'], paragraph: ['content'],
+  checkbox: ['id', 'label', 'default', 'info'], color: ['id', 'label', 'default', 'info'],
+  text: ['id', 'label', 'default', 'info'], textarea: ['id', 'label', 'default', 'info'],
+  select: ['id', 'label', 'default', 'options'],
+  image: ['id', 'label', 'info'], page: ['id', 'label', 'info'], link_list: ['id', 'label', 'info'],
+  collection: ['id', 'label', 'info'], blog: ['id', 'label'],
+  radio: ['id', 'label', 'default', 'info', 'options'], font: ['id', 'label', 'default', 'info'],
+  snippet: ['id', 'label', 'info'],
+};
+const SCHEMA_SETTING_TYPES = new Set(Object.keys(SCHEMA_SETTING_ATTRS));
 const JUNK_PATTERN = /(^|\/)(__MACOSX|\.DS_Store|Thumbs\.db|desktop\.ini|\.git|\.gitkeep|\.vercel|node_modules)(\/|$)/i;
 const SOURCE_PATTERN = /\.(scss|sass|ts|tsx|map)$/i;
 const EXTENSION_RULES = { layouts: /\.bwt$/i, templates: /\.bwt$/i, snippets: /\.bwt$/i, sections: /\.bwt$/i, configs: /\.json$/i, locales: /\.json$/i };
@@ -136,12 +149,16 @@ function main() {
       // 2026-10-05: Sapo từ chối cả gói khi gặp kiểu field lạ ("setting type không hợp lệ linklist").
       // Danh mục kiểu hợp lệ theo Rule&HDKTXD.md (15 input types + header/paragraph).
       const badTypes = [];
+      const badAttrs = [];
       for (const group of Array.isArray(schema) ? schema : []) {
         for (const setting of (group && group.settings) || []) {
-          if (!SCHEMA_SETTING_TYPES.has(setting.type)) badTypes.push(`${setting.id || '(không id)'}: "${setting.type}"`);
+          if (!SCHEMA_SETTING_TYPES.has(setting.type)) { badTypes.push(`${setting.id || '(không id)'}: "${setting.type}"`); continue; }
+          const extra = Object.keys(setting).filter((key) => key !== 'type' && !SCHEMA_SETTING_ATTRS[setting.type].includes(key));
+          if (extra.length) badAttrs.push(`${setting.id || setting.type} (${setting.type}): ${extra.join(', ')}`);
         }
       }
       if (badTypes.length) errors.push(`settings_schema.json có kiểu field Sapo không hỗ trợ — ${summarize(badTypes)}`);
+      if (badAttrs.length) errors.push(`settings_schema.json có thuộc tính Sapo không chấp nhận — ${summarize(badAttrs, 30)}`);
     } catch (_) { /* đã báo ở trên */ }
   }
   for (const entry of files.filter((item) => item.name.startsWith('assets/') && policy.isImageFile(item.name))) {
