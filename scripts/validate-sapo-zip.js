@@ -162,6 +162,23 @@ function main() {
   }
   if (missingAssets.size) errors.push(`asset_url tới file không có trong gói — ${summarize([...missingAssets], 20)}`);
 
+  // 2026-10-05: Sapo biên dịch asset .bwt theo lô — 1 file lỗi ⇒ MỌI asset .bwt (jquery.js, global_core.scss.css…)
+  // trả 200 rỗng, cả site mất CSS/JS. Chặn 2 lỗi đã gặp: min()/max() trộn đơn vị (libsass coi là hàm Sass,
+  // báo "Incompatible units") và filter gõ sai kiểu `| assert_url`.
+  const badAssetSyntax = [];
+  for (const [name, content] of data) {
+    if (!/^assets\/.+\.bwt$/i.test(name)) continue;
+    const text = strip(content.toString('utf8'));
+    if (/\.scss\.bwt$/i.test(name)) {
+      for (const match of text.matchAll(/(?<![\w-])(min|max)\(([^()]*)\)/g)) {
+        const units = new Set((match[2].match(/\d(%|px|r?em|v[wh]|ch)\b|\d%/g) || []).map((unit) => unit.slice(1)));
+        if (units.size > 1) badAssetSyntax.push(`${name}: ${match[0]}`);
+      }
+    }
+    for (const match of text.matchAll(/\|\s*(assert_url|aset_url|assets_url)\b/g)) badAssetSyntax.push(`${name}: | ${match[1]}`);
+  }
+  if (badAssetSyntax.length) errors.push(`asset .bwt Sapo không biên dịch được — ${summarize(badAssetSyntax, 20)}`);
+
   for (const [name, content] of data) {
     if (!/\.bwt$/i.test(name) || name.startsWith('assets/')) continue;
     const text = strip(content.toString('utf8'));
