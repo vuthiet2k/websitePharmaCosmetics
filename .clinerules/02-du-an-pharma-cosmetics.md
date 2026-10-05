@@ -394,6 +394,12 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
   (`product_tab2_*`) và Đánh giá (`product_tab3_*`) vẫn đứng sau.
 - Nhãn nút Shopee: `product_shopee_label` (mặc định "ĐẶT HÀNG TẠI SHOPEE MALL"). Dòng phụ dưới "MUA NGAY"
   nằm sẵn trong `product_buynow_title` (span thứ 2).
+- **Kicker trên tên sản phẩm** (PRD mục 3): `product.type` · tối đa 2 tag `hoatchat:<handle>` (bỏ gạch nối,
+  in hoa bằng CSS). Không có cả hai ⇒ không in.
+- **Kê toa — "Thông tin nhanh"** (PRD mục 8): mô tả ngắn `product.summary` (nên soạn gạch đầu dòng) hiện trong
+  khung `.pc-rx-facts`, tiêu đề `product_rx_facts_title`. Trống ⇒ ẩn, không tự sinh nội dung.
+- **Màu CTA** (PRD mục 4/14, tài liệu khách ưu tiên hơn audit T-134): MUA NGAY = `--pc-brand-primary`,
+  THÊM GIỎ HÀNG = Deep Forest solid `--pc-brand-deep` (hover `--pc-brand-dark`).
 - Không dùng `{% continue %}` trong Liquid (chưa kiểm chứng trên Sapo) — dùng `if` lồng.
 
 ## AI Skin Quiz — phân tầng Tier/Case & cờ an toàn (chốt 2026-10-05)
