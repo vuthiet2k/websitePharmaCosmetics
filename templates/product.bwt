@@ -76,7 +76,8 @@
 		<div class="details-product">
 			<div class="margin-bottom-30">
 				<div class="row">
-					<div class="col-xl-4 col-lg-4 col-md-12 col-12 product-detail-left product-images">
+					{%- comment -%} 2026-10-05 (PRD mục 3, người dùng chốt): đầu trang 2 cột 6:6 — bỏ cột 3 (.box_info_right). {%- endcomment -%}
+					<div class="col-lg-6 col-md-12 col-12 product-detail-left product-images">
 						<div class="sticky">
 							<div class="product-image-block relative">
 								{%if product.images.size > 0 %}
@@ -143,7 +144,7 @@
 						</div>
 
 					</div>
-					<div class="col-xl-5 col-lg-5 col-md-12 col-12 details-pro">
+					<div class="col-lg-6 col-md-12 col-12 details-pro">
 						{%- if settings.metafield_show -%}
 						{%- assign metafields_quycach = product.metafields.custom.Quycach -%}
 						{%- assign cleaned_quycach = metafields_quycach | remove: "[" | remove: "]" -%}
@@ -371,7 +372,7 @@
 											<div class="mua_shop">
 												<a href="{{ pc_shopee_url }}" target="_blank" rel="noopener">
 													{%- if settings.product_shopee_icon != blank -%}<img src="{{ settings.product_shopee_icon | img_url: 'master' }}" alt="shopee" width="40" height="40" style="width: 40px;margin-right: 5px;" loading="lazy" />{%- endif -%}
-													Mua hàng tại shopee
+													{{ settings.product_shopee_label | default: 'ĐẶT HÀNG TẠI SHOPEE MALL' }}
 												</a>
 											</div>
 
@@ -413,7 +414,7 @@
 											{% if pc_shopee_url != blank %}
 											<div class="mua_shop">
 												<a href="{{ pc_shopee_url }}" target="_blank" rel="noopener">
-													ĐẶT HÀNG TẠI SHOPEE MALL
+													{{ settings.product_shopee_label | default: 'ĐẶT HÀNG TẠI SHOPEE MALL' }}
 												</a>
 											</div>
 											{% endif %}
@@ -479,29 +480,54 @@
 						{% endunless %}
 						{%endif%}
 
-						{%if settings.product_policy_enable%}
+						{%- comment -%}
+						  2026-10-05 (PRD mục 5, người dùng chốt phương án 1): thay 4 icon chính sách cũ (product_policy_*, ảnh
+						  png) bằng 3 cam kết chữ + dòng "THƯƠNG HIỆU | XUẤT XỨ". Thương hiệu = product.vendor (trống ⇒ tên
+						  cửa hàng); xuất xứ = tag "xuatxu:<tên>" (không có tag ⇒ ẩn phần xuất xứ). Câu chữ cam kết: field product_trust_*.
+						{%- endcomment -%}
+						{%- assign pc_xuatxu = '' -%}
+						{%- for pc_tag in product.tags -%}
+						  {%- assign pc_tag_norm = pc_tag | downcase | remove: ' ' -%}
+						  {%- if pc_tag_norm contains 'xuatxu:' -%}
+						    {%- assign pc_xuatxu = pc_tag | split: ':' | last | strip -%}
+						    {%- break -%}
+						  {%- endif -%}
+						{%- endfor -%}
+						{%- if settings.product_trust_enable != false -%}
 						{% unless product.tags contains "liệu trình" %}
-						<div class="clearfix"></div>
-						<div class="product-policises-wrapper">
-							<ul class="product-policises">
-								{% for i in (1..4) %}
-								{% capture policy_product_use %}product_policy_{{i}}_enable{% endcapture %} {% capture policy_product_title %}product_policy_{{i}}_title{% endcapture %} {% capture policy_product_image %}policy_image_{{i}}.png{% endcapture %}
-								{% if settings[policy_product_use] %}
-								<li class="item_poli">
-									<div class="img_poly">
-										<img width="32" height="32" class="lazyload" src="data:image/png;base64,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"  
-											 data-src="{{ policy_product_image | asset_url}}" alt="{{settings[policy_product_title]}}"/>
-									</div>
-									<div class="content_poli"> 
-										{{settings[policy_product_title]}}
-									</div>
+						<div class="pc-pdp-trust" data-pdp-trust>
+							{%- comment -%} Kê toa không bán trực tuyến ⇒ không hiện cam kết giao hàng, chỉ giữ dòng thương hiệu/xuất xứ. {%- endcomment -%}
+							{%- if pc_pdp_rx != true -%}
+							{%- assign pc_trust_t1 = settings.product_trust_1_title | default: 'Giao hàng toàn quốc' -%}
+							{%- assign pc_trust_d1 = settings.product_trust_1_desc | default: 'Nhanh chóng, an toàn.' -%}
+							{%- assign pc_trust_t2 = settings.product_trust_2_title | default: 'Sản phẩm chính hãng' -%}
+							{%- assign pc_trust_d2 = settings.product_trust_2_desc | default: 'Nguồn gốc rõ ràng.' -%}
+							{%- assign pc_trust_t3 = settings.product_trust_3_title | default: 'Tư vấn chuyên môn' -%}
+							{%- assign pc_trust_d3 = settings.product_trust_3_desc | default: 'Đồng hành cùng làn da của bạn.' -%}
+							<ul class="pc-pdp-trust__list">
+								{%- for i in (1..3) -%}
+								{%- case i -%}
+								{%- when 1 -%}{%- assign pc_trust_t = pc_trust_t1 -%}{%- assign pc_trust_d = pc_trust_d1 -%}
+								{%- when 2 -%}{%- assign pc_trust_t = pc_trust_t2 -%}{%- assign pc_trust_d = pc_trust_d2 -%}
+								{%- else -%}{%- assign pc_trust_t = pc_trust_t3 -%}{%- assign pc_trust_d = pc_trust_d3 -%}
+								{%- endcase -%}
+								<li class="pc-pdp-trust__item">
+									<svg class="pc-pdp-trust__icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5"/></svg>
+									<span><strong>{{ pc_trust_t }}</strong> <span class="pc-pdp-trust__desc">{{ pc_trust_d }}</span></span>
 								</li>
-								{% endif %}
-								{% endfor %}
+								{%- endfor -%}
 							</ul>
-						</div>	
+							{%- endif -%}
+							<p class="pc-pdp-trust__origin">
+								<span>{{ settings.product_brand_label | default: 'THƯƠNG HIỆU' }}: <b class="notranslate" translate="no">{% if product.vendor != blank %}{{ product.vendor | upcase }}{% else %}{{ store.name | upcase }}{% endif %}</b></span>
+								{%- if pc_xuatxu != blank %}
+								<span class="pc-pdp-trust__sep" aria-hidden="true">|</span>
+								<span>{{ settings.product_origin_label | default: 'XUẤT XỨ' }}: <b>{{ pc_xuatxu | upcase }}</b></span>
+								{%- endif %}
+							</p>
+						</div>
 						{% endunless %}
-						{% endif %}
+						{%- endif -%}
 
 						{% if product.tags contains "liệu trình" %}
 						<div class="form-inline-1">
@@ -517,42 +543,11 @@
 						{% endif %}
 
 					</div> 
-					<div class="col-xl-3 col-lg-3 col-md-12 col-12 details-pro">
-						<div class="box_info_right"> 
-							{%if settings.product_info_enable%}
-							<div class="store-folow">
-								<div class="item_store">
-									<div class="item_image_store">
-										<div class="image">
-											<img width="100" height="100" class="lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC"  data-src="{{'img_info_icon.jpg' | asset_url }}" alt="{{settings.product_info_title_2}}"/>
-										</div>
-									</div>
-									<div class="info_store">
-										<p class="text m-0">{{settings.product_info_title}}</p>
-										<p class="name_title">{{settings.product_info_title_2}}</p>
-										<div class="title">
-											<div class="button-group">
-												{%if settings.product_link_1_title.size > 0%}
-												<a class="style-button" href="{{settings.product_link_1_url}}" title="{{settings.product_link_1_title}}">
-													{{settings.product_link_1_title}}
-												</a>
-												{%endif%}
-												{%if settings.product_link_2_title.size > 0%}
-												<a class="style-button" href="{{settings.product_link_2_url}}" title="{{settings.product_link_2_title}}">
-													<svg xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 512 512" height="512" viewBox="0 0 512 512" width="512"><g><g><path d="m474.426 189.681h-436.852c-18.649 0-33.768-15.118-33.768-33.768v-122.145c0-18.65 15.118-33.768 33.768-33.768h436.853c18.649 0 33.768 15.118 33.768 33.768v122.146c-.001 18.649-15.119 33.767-33.769 33.767z" fill="#b3dafe"/><path d="m474.426 0h-30.446c18.649 0 33.768 15.118 33.768 33.768v122.146c0 18.649-15.118 33.768-33.768 33.768h30.446c18.649 0 33.768-15.118 33.768-33.768v-122.146c0-18.65-15.118-33.768-33.768-33.768z" fill="#8ac9fe"/><g fill="#fff"><path d="m448.994 70.173c-3.967-1.377-8.308.72-9.689 4.691l-16.149 46.461-15.869-46.912c-1.818-6.032-11.641-7.542-14.387-.097l-16.701 47.26-15.876-46.589c-1.356-3.978-5.68-6.104-9.66-4.75-3.979 1.357-6.106 5.681-4.75 9.66l22.949 67.348c1.046 3.068 3.92 5.138 7.162 5.157h.044c3.224 0 6.101-2.033 7.176-5.075l16.675-47.185 15.929 47.088c1.042 3.08 3.926 5.159 7.178 5.172h.032c3.239 0 6.125-2.051 7.189-5.113l23.436-67.427c1.382-3.971-.718-8.309-4.689-9.689z"/><path d="m142.441 70.184c-22.513 0-40.828 18.441-40.828 41.108 0 22.668 18.315 41.109 40.828 41.109s40.828-18.441 40.828-41.109c0-22.667-18.316-41.108-40.828-41.108zm0 66.994c-14.119 0-25.605-11.612-25.605-25.886s11.486-25.885 25.605-25.885 25.605 11.611 25.605 25.885-11.487 25.886-25.605 25.886z"/><path d="m300.747 70.184c-22.513 0-40.828 18.441-40.828 41.108 0 22.668 18.315 41.109 40.828 41.109s40.828-18.441 40.828-41.109c0-22.667-18.315-41.108-40.828-41.108zm0 66.994c-14.119 0-25.605-11.612-25.605-25.886s11.486-25.885 25.605-25.885 25.605 11.611 25.605 25.885-11.486 25.886-25.605 25.886z"/><path d="m205.268 37.28c-4.204 0-7.611 3.407-7.611 7.611v99.898c0 4.204 3.408 7.611 7.611 7.611 4.204 0 7.611-3.407 7.611-7.611v-99.897c0-4.204-3.408-7.612-7.611-7.612z"/><path d="m240.234 37.28c-4.204 0-7.611 3.407-7.611 7.611v99.898c0 4.204 3.408 7.611 7.611 7.611s7.611-3.407 7.611-7.611v-99.897c.001-4.204-3.407-7.612-7.611-7.612z"/><path d="m94.456 37.89c-1.144-.268-11.39-2.422-18.781 3.451-2.995 2.38-6.563 6.931-6.563 15.103v15.275h-3.607c-4.204 0-7.611 3.407-7.611 7.611s3.408 7.611 7.611 7.611h3.607v57.848c0 4.204 3.408 7.611 7.611 7.611s7.611-3.407 7.611-7.611v-57.847h7.204c4.204 0 7.611-3.407 7.611-7.611s-3.408-7.611-7.611-7.611h-7.204v-15.276c0-.76.078-2.592.802-3.177 1.132-.917 4.224-.897 5.934-.535 4.077.916 8.136-1.63 9.081-5.708.95-4.095-1.599-8.185-5.695-9.134z"/></g></g><g><path d="m346.189 313.133.004-41.01c.001-9.944 8.062-18.004 18.005-18.004 9.944 0 18.006 8.054 18.006 17.998.002 31.488.002 94.645.002 109.465 0 2.108-.222 4.203-.663 6.265l-17.432 81.551-116.052-9.534-85.088-148.683c-4.586-8.834-3.321-19.571 3.193-27.096 5.548-6.411 15.411-6.651 21.265-.518l42.449 44.475c2.984 3.127 8.257 1.014 8.257-3.308v-134.547c0-9.946 8.063-18.009 18.009-18.009 9.946 0 18.009 8.063 18.009 18.009v122.946z" fill="#ffcebf"/><g fill="#ffb09e"><path d="m166.389 283.851 39.621 41.512c6.257 6.556 16.314 7.685 23.869 2.679l-42.449-44.475c-5.778-6.055-15.455-5.887-21.041.284z"/><path d="m252.841 190.187v112.29c0 5.885 4.771 10.656 10.656 10.656 5.885 0 10.656-4.771 10.656-10.656v-111.853c0-9.4-7.027-17.547-16.39-18.374-4.616-.408-8.889.95-12.275 3.443 4.452 3.279 7.353 8.541 7.353 14.494z"/><path d="m382.205 272.117c-.001-9.944-8.062-17.997-18.006-17.997-3.992 0-7.669 1.315-10.654 3.514 4.449 3.276 7.348 8.533 7.348 14.484.002 35.823.002 112.63.002 112.63l-17.727 82.931 20.944 1.721 17.432-81.551c.441-2.061.663-4.161.663-6.268 0-14.83 0-77.979-.002-109.464z"/></g><path d="m274.154 313.133v-41.005c0-9.946 8.063-18.009 18.009-18.009 9.946 0 18.009 8.063 18.009 18.009v41.005z" fill="#ffcebf"/><path d="m221.946 512c-2.242 0-4.059-1.817-4.059-4.059l-.001-32.549c-.001-13.231 10.727-23.959 23.958-23.96h116.284c13.231-.001 23.95 10.722 23.952 23.953l.001 32.556c0 2.242-1.817 4.06-4.059 4.06h-156.076z" fill="#aee49e"/><path d="m382.079 475.385c-.001-13.231-10.72-23.955-23.952-23.953h-116.284c-.001 0-.003 0-.004 0h85.842c13.231-.001 23.95 10.722 23.952 23.953l.001 32.556c0 2.242-1.817 4.059-4.059 4.059h30.446c2.242 0 4.059-1.818 4.059-4.059z" fill="#8bd8a5"/><path d="m310.171 272.128c0-9.946 8.063-18.009 18.009-18.009 9.946 0 18.009 8.063 18.009 18.009v41.005h-36.018z" fill="#ffcebf"/><g fill="#ffb09e"><path d="m328.18 254.119c-4.021 0-7.722 1.334-10.719 3.561 4.416 3.282 7.29 8.523 7.29 14.447v30.286c0 5.92 4.799 10.719 10.719 10.719s10.719-4.799 10.719-10.719v-30.286c0-9.945-8.063-18.008-18.009-18.008z"/><path d="m292.162 254.119c-4.021 0-7.721 1.334-10.719 3.561 4.416 3.282 7.29 8.523 7.29 14.447v30.286c0 5.92 4.799 10.719 10.719 10.719s10.719-4.799 10.719-10.719v-30.286c0-9.945-8.063-18.008-18.009-18.008z"/></g></g></g></svg>
-													{{settings.product_link_2_title}}
-												</a>{%endif%}
-											</div> 
-										</div>
-									</div>
-								</div>
-
-							</div>
-							{% endif %}
-
-
-						</div>
-					</div>
+					{%- comment -%}
+					  2026-10-05 (PRD mục 3/12, người dùng chốt phương án 1): bỏ khối thông tin cửa hàng .box_info_right
+					  (cột 3 kiểu sàn TMĐT) khỏi trang sản phẩm. Field product_info_* / product_link_* vẫn giữ trong schema,
+					  chỉ không render ở đây.
+					{%- endcomment -%}
 				</div>
 			</div>
 			<div class="row">

@@ -42,7 +42,7 @@ function variant(id, title, price, comparePrice, sku, available = true, qty = 20
 
 function makeProduct({
   id, name, alias, type, tags, price, comparePrice,
-  variants, images, available, metafields, description, votes,
+  variants, images, available, metafields, description, votes, content,
 }) {
   const firstAvailable = variants.find(v => v.available) || variants[0];
   const isAvailable    = available !== false && variants.some(v => v.available);
@@ -52,6 +52,7 @@ function makeProduct({
     alias,
     url:         `/${alias}`,
     description: description || `<p>Sản phẩm <strong>${name}</strong> — chất lượng dược mỹ phẩm chuẩn quốc tế.</p>`,
+    content:     content || '',
     vendor:      'PHARMA COSMETICS',
     type:        type || 'Dược mỹ phẩm',
     available:   isAvailable,
@@ -105,7 +106,12 @@ const products = [
     type: 'Serum', votes: 199,
     description: 'Làm sáng đều màu, xoá thâm & rạng rỡ rõ từ tuần đầu.',
     // 2026-10-05: URL Shopee có dấu "_" — fixture kiểm bug cắt link `split: '_' | last` (PDP V3).
-    tags: ['lam-sang', 'vitamin-c', 'duong-trang', 'serum', 'san-pham-noi-bat', 'quycach_30ml', 'hoatchat:vitamin-c', 'hoatchat:niacinamide', 'shopee_https://shopee.vn/Serum_Vitamin_C_15-i.123456.789'],
+    tags: ['lam-sang', 'vitamin-c', 'duong-trang', 'serum', 'san-pham-noi-bat', 'quycach_30ml', 'hoatchat:vitamin-c', 'hoatchat:niacinamide', 'shopee_https://shopee.vn/Serum_Vitamin_C_15-i.123456.789', 'xuatxu:Việt Nam'],
+    // 2026-10-05 (PDP V3 — PRD mục 10): fixture mô tả chia mục bằng <h2> ⇒ tách thành tab; mục "Lưu ý" rỗng
+    // để kiểm tab trống bị bỏ. Câu chữ minh hoạ preview, không phải dữ liệu lâm sàng.
+    content: '<p>Đoạn mở đầu.</p><h2>Thông tin sản phẩm</h2><p>Serum dạng lỏng nhẹ, chai 30ml.</p>'
+      + '<h2 style="text-align:left">Thành phần</h2><p>Vitamin C, Niacinamide.</p>'
+      + '<h2>Hướng dẫn sử dụng</h2><p>Dùng buổi sáng sau bước làm sạch.</p><h2>Lưu ý</h2><p> </p>',
     variants: [
       variant(10021, '30ml', 650000, 0, 'PC-VTC-30', true, 30),
     ],
