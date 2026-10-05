@@ -1330,28 +1330,37 @@
 {%- endif -%}
 
 {%- comment -%}
-  2026-10-03: đánh giá khách hàng đọc từ Blog Sapo (settings.testimonial_blog_handle) thay biến
-  mock `patient_testimonials` (chỉ có ở preview-mock.js). Tiêu đề bài = tên khách, ảnh bài =
-  avatar, summary (hoặc content) = lời đánh giá, tag "ketqua:..." = kết quả điều trị.
-  Blog trống → ẩn cả section, không hiển thị đánh giá mẫu.
+  2026-10-05 (tinh giản PDP — SẢN PHẨM → THÔNG TIN CẦN THIẾT → HÀNH ĐỘNG): đánh giá & FAQ trước đây
+  lấy CẢ blog chung (settings.testimonial_blog_handle / product_faq_blog_handle) nên hiện GIỐNG NHAU
+  ở mọi sản phẩm — đánh giá không gắn với sản phẩm = không xác thực, FAQ chung = mục gây nhiễu. Nay
+  chỉ hiện bài có tag "sanpham:<alias sản phẩm>" (cùng quy ước khối Ý kiến chuyên gia); không có bài
+  nào khớp → ẩn hẳn khối. Đánh giá: tiêu đề bài = tên khách, ảnh = avatar, summary/content = lời đánh
+  giá, tag "ketqua:..." = kết quả. FAQ: tiêu đề = câu hỏi, content = câu trả lời.
 {%- endcomment -%}
+{%- assign pc_sp_alias = product.alias | downcase -%}
 {%- assign pc_tm_blog_handle = settings.testimonial_blog_handle | default: 'danh-gia-khach-hang' -%}
 {%- assign pc_tm_blog = blogs[pc_tm_blog_handle] -%}
-{%- if pc_tm_blog.articles.size > 0 -%}
-<section class="pc-pdp-reviews-section">
-  <div class="container">
-    <h2 class="pc-section-title pc-pdp-reviews-title">Đánh Giá Từ Bệnh Nhân Đã Điều Trị Thực Tế</h2>
-    <div class="pc-pdp-reviews-grid">
-      {% for pc_tm in pc_tm_blog.articles limit: 3 %}
-      {%- assign pc_tm_quote = pc_tm.summary | default: pc_tm.content | strip_html | strip -%}
-      {%- assign pc_tm_result = '' -%}
-      {%- for pc_tm_tag in pc_tm.tags -%}
-        {%- assign pc_tm_raw_key = pc_tm_tag | split: ':' | first -%}
-        {%- assign pc_tm_key = pc_tm_raw_key | strip | downcase -%}
-        {%- if pc_tm_tag contains ':' and pc_tm_key == 'ketqua' -%}
-          {%- assign pc_tm_result = pc_tm_tag | remove_first: pc_tm_raw_key | remove_first: ':' | strip -%}
-        {%- endif -%}
-      {%- endfor -%}
+{%- assign pc_tm_count = 0 -%}
+{%- capture pc_tm_cards -%}
+{%- for pc_tm in pc_tm_blog.articles -%}
+  {%- if pc_tm_count < 3 -%}
+  {%- assign pc_tm_match = false -%}
+  {%- assign pc_tm_result = '' -%}
+  {%- for pc_tm_tag in pc_tm.tags -%}
+    {%- if pc_tm_tag contains ':' -%}
+      {%- assign pc_tm_raw_key = pc_tm_tag | split: ':' | first -%}
+      {%- assign pc_tm_key = pc_tm_raw_key | strip | downcase -%}
+      {%- assign pc_tm_val = pc_tm_tag | remove_first: pc_tm_raw_key | remove_first: ':' | strip -%}
+      {%- if pc_tm_key == 'ketqua' -%}{%- assign pc_tm_result = pc_tm_val -%}{%- endif -%}
+      {%- if pc_tm_key == 'sanpham' -%}
+        {%- assign pc_tm_val_lc = pc_tm_val | downcase -%}
+        {%- if pc_tm_val_lc == pc_sp_alias -%}{%- assign pc_tm_match = true -%}{%- endif -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- if pc_tm_match -%}
+  {%- assign pc_tm_count = pc_tm_count | plus: 1 -%}
+  {%- assign pc_tm_quote = pc_tm.summary | default: pc_tm.content | strip_html | strip -%}
       <div class="pc-testi-card pc-pdp-review-card">
         <div class="pc-testi-card-inner">
           <div class="pc-testi-author-row">
@@ -1370,30 +1379,50 @@
           <p class="pc-testi-result-desc pc-pdp-review-quote">"{{ pc_tm_quote }}"</p>
         </div>
       </div>
-      {% endfor %}
+  {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- endcapture -%}
+{%- if pc_tm_count > 0 -%}
+<section class="pc-pdp-reviews-section">
+  <div class="container">
+    <h2 class="pc-section-title pc-pdp-reviews-title">Đánh Giá Từ Khách Hàng Đã Sử Dụng</h2>
+    <div class="pc-pdp-reviews-grid">
+      {{ pc_tm_cards }}
     </div>
   </div>
 </section>
 {%- endif -%}
 
-{%- comment -%}
-  2026-10-03: FAQ trang sản phẩm đọc từ Blog Sapo (settings.product_faq_blog_handle) thay biến
-  mock `faqs.product` (chỉ có ở preview-mock.js). Mỗi câu hỏi = 1 bài viết: tiêu đề = câu hỏi,
-  nội dung = câu trả lời. Blog trống → ẩn section.
-{%- endcomment -%}
 {%- assign pc_faq_blog_handle = settings.product_faq_blog_handle | default: 'cau-hoi-san-pham' -%}
 {%- assign pc_faq_blog = blogs[pc_faq_blog_handle] -%}
-{%- if pc_faq_blog.articles.size > 0 -%}
-<section class="pc-booking-faq-section pc-pdp-faq-section">
-  <div class="container">
-    <h2 class="pc-section-title pc-booking-faq-title">Câu Hỏi Thường Gặp</h2>
-    <div class="pc-booking-faq-list">
-      {% for pc_faq in pc_faq_blog.articles %}
+{%- capture pc_faq_items -%}
+{%- for pc_faq in pc_faq_blog.articles -%}
+  {%- assign pc_faq_match = false -%}
+  {%- for pc_faq_tag in pc_faq.tags -%}
+    {%- if pc_faq_tag contains ':' -%}
+      {%- assign pc_faq_raw_key = pc_faq_tag | split: ':' | first -%}
+      {%- assign pc_faq_key = pc_faq_raw_key | strip | downcase -%}
+      {%- if pc_faq_key == 'sanpham' -%}
+        {%- assign pc_faq_val = pc_faq_tag | remove_first: pc_faq_raw_key | remove_first: ':' | strip | downcase -%}
+        {%- if pc_faq_val == pc_sp_alias -%}{%- assign pc_faq_match = true -%}{%- endif -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- if pc_faq_match -%}
       <details class="pc-faq-item">
         <summary class="pc-faq-q">{{ pc_faq.title }}</summary>
         <div class="pc-faq-a">{{ pc_faq.content }}</div>
       </details>
-      {% endfor %}
+  {%- endif -%}
+{%- endfor -%}
+{%- endcapture -%}
+{%- if pc_faq_items != blank -%}
+<section class="pc-booking-faq-section pc-pdp-faq-section">
+  <div class="container">
+    <h2 class="pc-section-title pc-booking-faq-title">Câu Hỏi Thường Gặp</h2>
+    <div class="pc-booking-faq-list">
+      {{ pc_faq_items }}
     </div>
   </div>
 </section>
