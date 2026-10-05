@@ -169,17 +169,21 @@ window.PharmaSkinScanProductLabels = {
 
 {% include 'skin_consent_modal' %}
 
+{%- comment -%} 2026-10-05: engine chấm điểm thuần (Tier/Case/cờ an toàn) — nạp đồng bộ trước script quiz. {%- endcomment -%}
+<script src="{{ 'skin-quiz-engine.js' | asset_url }}"></script>
 <script>
 (function() {
   'use strict';
   var copy = window.PharmaSkinScanCopy || {};
 
-  // 17 Clinical Questions Data
+  // Bộ câu hỏi khảo sát (snippets/quiz_questions_data.bwt)
   // 2026-10-03: quiz_questions/quiz_results là biến mock (không có trên Sapo) → trước đây trên Sapo
   // chỉ chạy bộ dự phòng 5 câu và trang kết quả luôn ra "Da dầu". Câu hỏi + bảng kết quả dùng chung
   // snippets/quiz_questions_data.bwt và snippets/quiz_results_data.bwt (cùng nguồn với trang kết quả).
   var quizQuestions = {% include 'quiz_questions_data' %};
   var quizResults = {% include 'quiz_results_data' %};
+  var safetyCopy = {% include 'quiz_safety_copy' %};
+  var quizEngine = window.PharmaSkinQuizEngine || null;
 
 
   var currentQuestionIndex = -1;
@@ -331,9 +335,16 @@ window.PharmaSkinScanProductLabels = {
 
     addBotMessage(botHtml, function() {
       renderQuickReplies(q.options, function(selectedOpt) {
-        var st = selectedOpt.skin_type || 'normal';
-        quizAnswers.push({ question_id: q.id || index + 1, answer: selectedOpt.text || '', skin_type: st });
-        userScores[st] = (userScores[st] || 0) + 1;
+        // 2026-10-05: lưu kèm mã đáp án (code) cho luật xếp Case; câu "scoring": false (Q10 thói quen,
+        // Q17 kênh liên hệ, Q15/Q16 cờ an toàn, câu dấu hiệu cấp tính) KHÔNG cộng điểm loại da.
+        var st = selectedOpt.skin_type || '';
+        quizAnswers.push({ question_id: q.id || index + 1, answer: selectedOpt.text || '', skin_type: st, code: selectedOpt.code || '' });
+        if (st && q.scoring !== false) userScores[st] = (userScores[st] || 0) + 1;
+        // Tier 1: chọn dấu hiệu cấp tính ⇒ dừng khảo sát ngay, chuyển chuyên gia.
+        if (q.role === 'red_flag' && selectedOpt.code && selectedOpt.code !== 'none') {
+          finishQuiz();
+          return;
+        }
         
         // Conversational encouragement every 4 questions
         if (index === 6) {
@@ -355,47 +366,96 @@ window.PharmaSkinScanProductLabels = {
     updateProgress(quizQuestions.length, quizQuestions.length);
     quickReplies.innerHTML = '';
 
-    // Calculate best score
+    // 2026-10-05: Tier/Case/cờ an toàn từ assets/skin-quiz-engine.js.bwt; thiếu engine ⇒ giữ cách cũ.
+    var evaluation = quizEngine ? quizEngine.evaluate(quizQuestions, quizAnswers) : null;
     var best = 'normal';
-    var maxScore = -1;
-    for (var k in userScores) {
-      if (userScores[k] > maxScore) {
-        maxScore = userScores[k];
-        best = k;
+    if (evaluation) {
+      best = evaluation.top_skin_type;
+    } else {
+      var maxScore = -1;
+      for (var k in userScores) {
+        if (userScores[k] > maxScore) { maxScore = userScores[k]; best = k; }
       }
     }
+    var isRedFlag = Boolean(evaluation && evaluation.tier === 1);
+    var excluded = evaluation ? evaluation.excluded_actives : [];
+    var flags = evaluation ? evaluation.safety_flags : [];
+    var caseData = (!isRedFlag && evaluation && quizResults.cases) ? quizResults.cases[evaluation.case_id] : null;
 
     var res = quizResults[best] || quizResults['normal'] || { skin_type: 'Da Khỏe', recommend: [] };
+    var recommend = (res.recommend || []).filter(function (r) { return !quizEngine || quizEngine.isTextAllowed(r, excluded); });
+    var contactAnswer = quizAnswers.filter(function (a) { return Number(a.question_id) === 17; })[0];
+    var resultTitle = isRedFlag ? (safetyCopy.redFlagTitle || '') : (caseData ? caseData.title : res.skin_type);
+    var summaryParts = [resultTitle];
+    if (evaluation) summaryParts.push('Tier ' + evaluation.tier + ' (' + evaluation.case_id + ')');
+    if (flags.length) summaryParts.push('Cờ an toàn: ' + flags.join(', '));
+    if (contactAnswer) summaryParts.push('Kênh liên hệ: ' + contactAnswer.answer);
+
     latestCrmResult = {
-      skin_type: res.skin_type || '',
+      skin_type: isRedFlag ? resultTitle : (res.skin_type || ''),
       scores: userScores,
-      recommendations: res.recommend || [],
+      recommendations: isRedFlag ? [] : recommend,
       answers: quizAnswers,
-      summary: res.skin_type || ''
+      summary: summaryParts.join(' | '),
+      tier: evaluation ? evaluation.tier : null,
+      case_id: evaluation ? evaluation.case_id : '',
+      safety_flags: flags,
+      contact_channel: contactAnswer ? contactAnswer.answer : ''
     };
 
     // 2026-09-24: chỉ giữ loại da trong tab hiện tại để chuyển sang trang kết quả; điểm chi tiết không cần lưu phía trình duyệt.
-    try { sessionStorage.setItem('pc_quiz_skin_type', best); } catch(e) {}
+    // 2026-10-05: kèm Tier/Case/cờ an toàn (không có thông tin cá nhân) cho trang kết quả.
+    try {
+      sessionStorage.setItem('pc_quiz_skin_type', best);
+      if (evaluation) sessionStorage.setItem('pc_quiz_result', JSON.stringify({
+        tier: evaluation.tier, case_id: evaluation.case_id, red_flag: evaluation.red_flag,
+        top_skin_type: best, safety_flags: flags, excluded_actives: excluded
+      }));
+    } catch(e) {}
     try {
       localStorage.removeItem('pc_quiz_skin_type');
       localStorage.removeItem('pc_quiz_scores');
     } catch(e) {}
 
-    addBotMessage("🎉 <strong>Phân tích hoàn tất!</strong> Dựa trên thông tin bạn vừa cung cấp, Chuyên gia Pharma AI đã tổng hợp kết quả tư vấn da cho bạn:", function() {
-      
+    var notes = [];
+    if (!isRedFlag && evaluation && evaluation.tier === 2 && safetyCopy.tier2Note) notes.push(safetyCopy.tier2Note);
+    if (!isRedFlag && flags.indexOf('pregnancy') !== -1 && safetyCopy.pregnancyNote) notes.push(safetyCopy.pregnancyNote);
+    if (!isRedFlag && flags.indexOf('allergy_severe') !== -1 && safetyCopy.allergyNote) notes.push(safetyCopy.allergyNote);
+    var notesHtml = notes.map(function (n) {
+      return `<p class="result-safety-note"><i class="fas fa-shield-halved" aria-hidden="true"></i> ${escapeHtml(n)}</p>`;
+    }).join('');
+
+    addBotMessage(isRedFlag ? "⚠️ <strong>Cần lưu ý ngay.</strong>" : "🎉 <strong>Phân tích hoàn tất!</strong> Dựa trên thông tin bạn vừa cung cấp, Chuyên gia Pharma AI đã tổng hợp kết quả tư vấn da cho bạn:", function() {
+
       var recTags = '';
-      (res.recommend || []).forEach(function(r) {
+      recommend.forEach(function(r) {
         recTags += `<span class="res-rec-badge"><i class="fas fa-check"></i> ${escapeHtml(r)}</span>`;
       });
 
-      var resultCardHtml = `
-        <div class="diagnostic-result-card">
+      var resultCardHtml = isRedFlag ? `
+        <div class="diagnostic-result-card diagnostic-result-card--alert" data-quiz-red-flag>
           <div class="result-card-header">
             <span class="card-tag">${escapeHtml(copy.quizResultBadge || 'Kết quả tham khảo')}</span>
-            <h2 class="result-skin-title">${escapeHtml(res.skin_type)}</h2>
-            <p class="result-skin-summary">${escapeHtml(copy.quizResultSummary || 'Gợi ý được tổng hợp tự động từ thông tin bạn cung cấp và danh mục hiện có; chỉ mang tính tham khảo.')}</p>
+            <h2 class="result-skin-title">${escapeHtml(resultTitle)}</h2>
+            <p class="result-skin-summary">${escapeHtml(safetyCopy.redFlagText || '')}</p>
           </div>
-          
+          <div class="result-card-actions">
+            <a href="${escapeHtml(safetyCopy.zaloUrl || '/pages/dat-lich-tu-van')}" target="_blank" rel="noopener" class="btn-result-zalo">
+              <i class="fas fa-comment-dots"></i>
+              <span>${escapeHtml(safetyCopy.zaloLabel || 'Liên hệ chuyên gia qua Zalo')}</span>
+            </a>
+            <button type="button" class="btn-result-crm" id="btnSaveAiResult">${escapeHtml(crmUi.openLabel)}</button>
+          </div>
+        </div>
+      ` : `
+        <div class="diagnostic-result-card" data-quiz-case="${escapeHtml(evaluation ? evaluation.case_id : '')}">
+          <div class="result-card-header">
+            <span class="card-tag">${escapeHtml(copy.quizResultBadge || 'Kết quả tham khảo')}</span>
+            <h2 class="result-skin-title">${escapeHtml(resultTitle)}</h2>
+            <p class="result-skin-summary">${escapeHtml(caseData ? res.skin_type : (copy.quizResultSummary || 'Gợi ý được tổng hợp tự động từ thông tin bạn cung cấp và danh mục hiện có; chỉ mang tính tham khảo.'))}</p>
+            ${notesHtml}
+          </div>
+
           <div class="result-card-body">
             <h4 class="rec-title"><i class="fas fa-flask"></i> ${escapeHtml(copy.quizRecommendationLabel || 'Hoạt chất và sản phẩm tham khảo:')}</h4>
             <div class="result-recommend-grid">
@@ -409,7 +469,7 @@ window.PharmaSkinScanProductLabels = {
               <span>${escapeHtml(copy.quizDetailedLinkLabel || 'Xem gợi ý chi tiết')}</span>
               <i class="fas fa-arrow-right"></i>
             </a>
-            <a href="https://zalo.me/{{ settings.contact_zalo | default: settings.store_phone | remove: ' ' | remove: '.' }}" target="_blank" rel="noopener" class="btn-result-zalo">
+            <a href="${escapeHtml(safetyCopy.zaloUrl || '/pages/dat-lich-tu-van')}" target="_blank" rel="noopener" class="btn-result-zalo">
               <i class="fas fa-comment-dots"></i>
               <span>Gửi Kết Quả Cho Chuyên Gia 1:1</span>
             </a>
@@ -418,11 +478,15 @@ window.PharmaSkinScanProductLabels = {
       `;
 
       addBotMessage(resultCardHtml, function() {
-        renderQuickReplies([
+        // 2026-10-05: Tier 1 không mời xem sản phẩm.
+        renderQuickReplies((isRedFlag ? [
+          { text: "🔄 Khám lại từ đầu" },
+          { text: "🏠 Quay lại trang chủ" }
+        ] : [
           { text: "🔄 Khám lại từ đầu" },
           { text: "🛍️ Xem các sản phẩm phù hợp" },
           { text: "🏠 Quay lại trang chủ" }
-        ], function(chosen) {
+        ]), function(chosen) {
           if (chosen.text.includes("Khám lại")) {
             startConversation();
           } else if (chosen.text.includes("sản phẩm")) {
@@ -438,7 +502,7 @@ window.PharmaSkinScanProductLabels = {
   function startConversation() {
     messagesFlow.innerHTML = '';
     quickReplies.innerHTML = '';
-    try { sessionStorage.removeItem('pc_quiz_skin_type'); } catch (error) {}
+    try { sessionStorage.removeItem('pc_quiz_skin_type'); sessionStorage.removeItem('pc_quiz_result'); } catch (error) {}
     currentQuestionIndex = -1;
     userScores = {};
     quizAnswers = [];
@@ -526,6 +590,11 @@ window.PharmaSkinScanProductLabels = {
       scores: latestCrmResult.scores,
       recommendations: latestCrmResult.recommendations,
       answers: latestCrmResult.answers,
+      summary: latestCrmResult.summary,
+      tier: latestCrmResult.tier,
+      case_id: latestCrmResult.case_id,
+      safety_flags: latestCrmResult.safety_flags,
+      contact_channel: latestCrmResult.contact_channel,
       source: 'quiz',
       // 2026-10-05: khách vừa bấm "Đồng ý lưu" — crm-intake.js và GAS đều từ chối request thiếu consent.
       consent: true,

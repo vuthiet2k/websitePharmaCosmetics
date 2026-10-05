@@ -30,7 +30,8 @@ test('soft-disable ẩn camera nhưng giữ khảo sát dùng được', async (
   await expect(page.locator('#aiSkinChatApp')).toBeVisible();
   await expect(page.locator('#quickRepliesContainer button').first()).toBeVisible();
   await page.locator('#quickRepliesContainer button').first().click();
-  await expect(page.locator('.quiz-question-heading').last()).toContainText('Câu hỏi 1/17');
+  // 2026-10-05: 18 câu (thêm câu dấu hiệu cấp tính đứng đầu — đáp án đầu "Không có" nên quiz chạy tiếp).
+  await expect(page.locator('.quiz-question-heading').last()).toContainText('Câu hỏi 1/18');
 });
 
 test('chế độ Cloud/Hybrid chưa tích hợp khóa xử lý ảnh và vẫn cho dùng khảo sát', async ({ page }) => {
@@ -71,8 +72,8 @@ test('kết quả quiz chỉ tồn tại trong tab hiện tại và trang kết 
   await expect(page.locator('#quickRepliesContainer button').first()).toBeVisible();
   await page.locator('#quickRepliesContainer button').first().click();
 
-  for (let question = 1; question <= 17; question += 1) {
-    await expect(page.locator('.quiz-question-heading').last()).toContainText(`Câu hỏi ${question}/17`);
+  for (let question = 1; question <= 18; question += 1) {
+    await expect(page.locator('.quiz-question-heading').last()).toContainText(`Câu hỏi ${question}/18`);
     await expect(page.locator('#quickRepliesContainer button').first()).toBeVisible();
     await page.locator('#quickRepliesContainer button').first().click();
   }
