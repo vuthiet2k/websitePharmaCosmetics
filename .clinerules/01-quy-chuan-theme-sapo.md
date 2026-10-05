@@ -29,9 +29,9 @@
 
 - 5 thư mục cốt lõi: `assets/`, `configs/`, `layouts/`, `snippets/`, `templates/`.
 - `settings_schema.json` + `settings_data.json` phải là JSON hợp lệ (kiểm tra ngay sau khi sửa).
-- Tên thư mục: cẩm nang Sapo ghi `config/` & `layout/`, còn repo này đóng gói `configs/` & `layouts/`
-  (xem `scripts/build-theme.js`, `vercel.json`) — **giữ nguyên theo repo**. Gói nộp Sapo do
-  `npm run build:sapo` tự đổi sang `config/` & `layout/` (mục 2.2).
+- Tên thư mục **`configs/` & `layouts/` (số nhiều)** — cả repo lẫn gói nộp Sapo. Kiểm chứng 2026-10-05: gói
+  dùng `config/` & `layout/` (như cẩm nang cũ ghi) bị trình tải lên Sapo Web báo thiếu
+  `layouts/theme.bwt`, `configs/settings_*.json`. Bắt buộc có `templates/page.bwt` (template trang tĩnh mặc định).
 - Asset dùng biến `settings`: file phải có đuôi `.scss.bwt` hoặc `.js.bwt`, gọi qua
   `{{ 'app.css' | asset_url | stylesheet_tag }}`.
 
@@ -41,7 +41,7 @@
   `compile:sapo` (staging `sapo-dist/`) → `pack:sapo` (`exports/sapo-theme-<version>.zip`) →
   `validate:sapo`. Bước nào fail là dừng, exit 1.
 - Zip **< 5.000.000 bytes** (vượt thì xoá zip + in top 10 file nặng); root zip phẳng
-  `assets/ config/ layout/ snippets/ templates/`, không thư mục bọc, không file rác.
+  `assets/ configs/ layouts/ snippets/ templates/`, không thư mục bọc, không file rác.
 - **Không** nén tay bằng `Compress-Archive` của Windows PowerShell 5.1: nó ghi đường dẫn bằng dấu
   backslash (validator báo lỗi). Luôn dùng `npm run pack:sapo`.
 - Minify giữ nguyên tên file (template gọi asset theo tên); `.scss.bwt` và `.js.bwt` có Liquid được

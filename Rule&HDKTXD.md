@@ -12,7 +12,7 @@ Tài liệu này là cẩm nang toàn diện dành cho các kỹ sư phần mề
 5. **Quy chuẩn Luồng TMĐT & Chức năng Bán hàng (E-commerce Flow)**: Variant Selector chuyển đổi mượt mà (cập nhật chính xác giá, giá so sánh, SKU, trạng thái Còn hàng/Hết hàng và đổi ảnh tương ứng theo biến thể). Giỏ hàng (Cart Page & Mini Cart AJAX) tính toán chính xác tổng tiền, số lượng sản phẩm, hỗ trợ tăng/giảm/xóa sản phẩm và cập nhật tức thì qua AJAX API mà không cần reload trang. Các Form hệ thống (Đăng ký, Đăng nhập, Liên hệ, Đăng ký nhận tin) phải validate chính xác trường dữ liệu và gửi thành công.  
 6. **Tiêu chuẩn SEO Onpage & Tiêu chuẩn Bàn giao Theme**: Mỗi trang chỉ chứa duy nhất 01 thẻ `<h1>` đại diện cho tiêu đề chính. Tất cả hình ảnh phải có thuộc tính `alt` mô tả. Tối ưu đầy đủ thẻ `<title>`, `<meta name="description">` và Open Graph meta tags cho mạng xã hội. File giao diện nộp bàn giao phải nén dưới dạng .zip chuẩn, đầy đủ dữ liệu mẫu cấu hình trong `settings_data.json` để khi cài đặt theme có ngay giao diện hoàn thiện như demo.
 
-# **PHẦN 2: QUY CHUẨN BẮT BUỘC TRONG FILE LAYOUT MASTER (layout/theme.bwt)**
+# **PHẦN 2: QUY CHUẨN BẮT BUỘC TRONG FILE LAYOUT MASTER (layouts/theme.bwt)**
 
 ## **2.1. Hai thẻ Liquid bắt buộc tuyệt đối**
 
@@ -45,15 +45,15 @@ Một theme đạt chuẩn bắt buộc phải tuân thủ nghiêm ngặt cấu 
 &nbsp;
 
 * **assets/**: Chứa tài nguyên tĩnh (style.css, app.js, icon-\*.svg, banner-placeholder.jpg).  
-* **config/**: Chứa `settings_schema.json` (định nghĩa cấu hình) và `settings_data.json` (lưu trữ giá trị cấu hình).  
-* **layout/**: Chứa `theme.bwt` (Layout Master).  
+* **configs/** *(số nhiều — trình tải lên Sapo Web đòi đúng tên này, kiểm chứng 2026-10-05)*: Chứa `settings_schema.json` (định nghĩa cấu hình) và `settings_data.json` (lưu trữ giá trị cấu hình).  
+* **layouts/** *(số nhiều)*: Chứa `theme.bwt` (Layout Master).  
 * **snippets/**: Chứa các đoạn code tái sử dụng (header, footer, product-item, pagination, breadcrumbs).  
-* **templates/**: Chứa các file template tương ứng với từng loại URL (index, product, collection, cart, blog, article, page, list\_collections, search, 404).
+* **templates/**: Chứa các file template tương ứng với từng loại URL (index, product, collection, cart, blog, article, page, list\_collections, search, 404). `templates/page.bwt` là bắt buộc — thiếu thì Sapo từ chối gói.
 
 ## **1.3. Chi tiết vai trò từng thư mục**
 
 1. **assets/**: Khi sử dụng biến cấu hình từ `settings_schema.json` bên trong CSS hoặc JS, bắt buộc đặt tên file có đuôi `.scss.bwt` hoặc `.js.bwt`. Gọi file qua bộ lọc: `{{ 'app.css' | asset_url | stylesheet_tag }}`. Dữ liệu cấu hình trong `settings_data.json` sẽ tự động sinh để lưu trữ các giá trị mà quản trị viên đã thiết lập.  
-2. **layout/**: Chứa layout tổng thể website, mặc định là `theme.bwt`.  
+2. **layouts/**: Chứa layout tổng thể website, mặc định là `theme.bwt`.  
 3. **snippets/**: Nhúng snippet bằng thẻ `{% include 'tên-snippet' %}` (không cần đuôi `.bwt`).  
 4. **templates/**: Hỗ trợ tạo template tùy chọn (Custom Templates). Khi kiểm tra template trong code, luôn dùng toán tử `contains` (ví dụ: `{% if template contains 'product' %}`).
 
