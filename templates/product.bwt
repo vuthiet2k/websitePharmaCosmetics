@@ -167,6 +167,34 @@
 						  notranslate để Google Translate KHÔNG dịch/đổi các con số và thuật ngữ dược —
 						  dịch sai nồng độ là rủi ro an toàn, không chỉ là lỗi hiển thị.
 						{%- endcomment -%}
+						{%- comment -%}
+						  2026-10-05 (PRD mục 3): dòng kicker "Danh mục · Hoạt chất" trên tên sản phẩm. Danh mục = Loại sản phẩm
+						  (product.type); hoạt chất = tối đa 2 tag "hoatchat:<handle>" (cùng quy ước khối Thành phần hoạt chất),
+						  hiển thị handle bỏ gạch nối. Không có cả hai ⇒ không in.
+						{%- endcomment -%}
+						{%- assign pc_kicker_actives = '' -%}
+						{%- assign pc_kicker_n = 0 -%}
+						{%- for pc_tag in product.tags -%}
+						  {%- if pc_tag contains ':' and pc_kicker_n < 2 -%}
+						    {%- assign pc_k_raw = pc_tag | split: ':' | first -%}
+						    {%- assign pc_k_key = pc_k_raw | strip | downcase -%}
+						    {%- if pc_k_key == 'hoatchat' -%}
+						      {%- assign pc_k_val = pc_tag | remove_first: pc_k_raw | remove_first: ':' | strip | replace: '-', ' ' -%}
+						      {%- if pc_k_val != blank -%}
+						        {%- if pc_kicker_actives != blank -%}{%- assign pc_kicker_actives = pc_kicker_actives | append: ', ' -%}{%- endif -%}
+						        {%- assign pc_kicker_actives = pc_kicker_actives | append: pc_k_val -%}
+						        {%- assign pc_kicker_n = pc_kicker_n | plus: 1 -%}
+						      {%- endif -%}
+						    {%- endif -%}
+						  {%- endif -%}
+						{%- endfor -%}
+						{%- if product.type != blank or pc_kicker_actives != blank -%}
+						<p class="pc-pdp-kicker notranslate" translate="no" data-pdp-kicker>
+							{%- if product.type != blank -%}<span>{{ product.type }}</span>{%- endif -%}
+							{%- if product.type != blank and pc_kicker_actives != blank -%}<span class="pc-pdp-kicker__sep" aria-hidden="true">·</span>{%- endif -%}
+							{%- if pc_kicker_actives != blank -%}<span>{{ pc_kicker_actives }}</span>{%- endif -%}
+						</p>
+						{%- endif -%}
 						<h1 class="title-product notranslate" translate="no">{{ product.name | escape}}</h1>
 						<div class="product-top clearfix">
 							{{product.variants[0].barcode}}
@@ -433,7 +461,12 @@
 						{%- endunless -%}
 
 						{%if product.summary != null and product.summary != '' and product.summary !=""%}
-						<div class="product-summary">
+						{%- comment -%}
+						  2026-10-05 (PRD mục 8): sản phẩm kê toa — mô tả ngắn (product.summary, nên soạn dạng gạch đầu dòng)
+						  hiện thành khung "Thông tin nhanh" thay vị trí giá/nút mua. Không tự sinh nội dung.
+						{%- endcomment -%}
+						<div class="product-summary{% if pc_pdp_rx %} pc-rx-facts{% endif %}"{% if pc_pdp_rx %} data-rx-facts{% endif %}>
+							{%- if pc_pdp_rx -%}<p class="pc-rx-facts__title">{{ settings.product_rx_facts_title | default: 'Thông tin nhanh' }}</p>{%- endif -%}
 							<div class="rte">
 								{{product.summary}}
 							</div>

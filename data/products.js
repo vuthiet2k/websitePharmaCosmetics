@@ -42,7 +42,7 @@ function variant(id, title, price, comparePrice, sku, available = true, qty = 20
 
 function makeProduct({
   id, name, alias, type, tags, price, comparePrice,
-  variants, images, available, metafields, description, votes, content,
+  variants, images, available, metafields, description, votes, content, summary,
 }) {
   const firstAvailable = variants.find(v => v.available) || variants[0];
   const isAvailable    = available !== false && variants.some(v => v.available);
@@ -53,6 +53,7 @@ function makeProduct({
     url:         `/${alias}`,
     description: description || `<p>Sản phẩm <strong>${name}</strong> — chất lượng dược mỹ phẩm chuẩn quốc tế.</p>`,
     content:     content || '',
+    summary:     summary || '',
     vendor:      'PHARMA COSMETICS',
     type:        type || 'Dược mỹ phẩm',
     available:   isAvailable,
@@ -327,6 +328,8 @@ const products = [
     type: 'Thuốc kê đơn', votes: 0,
     description: 'Thuốc kê đơn dùng ngoài da — sử dụng theo chỉ định và hướng dẫn của chuyên gia.',
     tags: ['loai:ke-toa', 'tretinoin', 'shopee_https://shopee.vn/Altreno_Test-i.1.2'],
+    // 2026-10-05 (PRD mục 8): mô tả ngắn dạng gạch đầu dòng ⇒ khung Thông tin nhanh. Câu chữ minh hoạ preview.
+    summary: '<ul><li>Thuốc dùng ngoài da dạng lotion.</li><li>Dùng theo chỉ định của chuyên gia.</li></ul>',
     variants: [
       variant(10161, '45g', 1250000, 0, 'PC-ALT-45', true, 10),
     ],

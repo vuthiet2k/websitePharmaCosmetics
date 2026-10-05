@@ -103,3 +103,26 @@ test('Kê toa: khối niềm tin chỉ còn dòng thương hiệu, không có ca
   await expect(page.locator('[data-pdp-trust] .pc-pdp-trust__item')).toHaveCount(0);
   await expect(page.locator('[data-pdp-trust] .pc-pdp-trust__origin')).toContainText('THƯƠNG HIỆU');
 });
+
+// 2026-10-05 (PRD mục 3/4/8/14).
+test('Kicker danh mục · hoạt chất trên tên; MUA NGAY xanh chính, THÊM GIỎ Deep Forest', async ({ page }) => {
+  await page.goto('/serum-vitamin-c-15');
+  const kicker = page.locator('[data-pdp-kicker]');
+  await expect(kicker).toContainText('Serum');
+  await expect(kicker).toContainText('vitamin c, niacinamide');
+  const order = await page.evaluate(() => {
+    const k = document.querySelector('[data-pdp-kicker]');
+    const h1 = document.querySelector('section.layout-product h1.title-product');
+    return k.compareDocumentPosition(h1) & Node.DOCUMENT_POSITION_FOLLOWING;
+  });
+  expect(order).toBeTruthy();
+  const cartBg = await page.locator('.details-pro .btn_add_cart').first().evaluate(el => getComputedStyle(el).backgroundColor);
+  expect(cartBg).toBe('rgb(0, 63, 45)');
+});
+
+test('Kê toa: mô tả ngắn hiện thành khung Thông tin nhanh', async ({ page }) => {
+  await page.goto('/altreno-lotion-0-05-tretinoin');
+  const facts = page.locator('[data-rx-facts]');
+  await expect(facts.locator('.pc-rx-facts__title')).toHaveText('Thông tin nhanh');
+  await expect(facts.locator('li')).toHaveCount(2);
+});
