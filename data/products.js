@@ -104,7 +104,8 @@ const products = [
     id: 1002, name: 'Serum Vitamin C 15% Làm Sáng & Đều Màu Da', alias: 'serum-vitamin-c-15',
     type: 'Serum', votes: 199,
     description: 'Làm sáng đều màu, xoá thâm & rạng rỡ rõ từ tuần đầu.',
-    tags: ['lam-sang', 'vitamin-c', 'duong-trang', 'serum', 'san-pham-noi-bat', 'quycach_30ml', 'hoatchat:vitamin-c', 'hoatchat:niacinamide'],
+    // 2026-10-05: URL Shopee có dấu "_" — fixture kiểm bug cắt link `split: '_' | last` (PDP V3).
+    tags: ['lam-sang', 'vitamin-c', 'duong-trang', 'serum', 'san-pham-noi-bat', 'quycach_30ml', 'hoatchat:vitamin-c', 'hoatchat:niacinamide', 'shopee_https://shopee.vn/Serum_Vitamin_C_15-i.123456.789'],
     variants: [
       variant(10021, '30ml', 650000, 0, 'PC-VTC-30', true, 30),
     ],

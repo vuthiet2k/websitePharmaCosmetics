@@ -52,6 +52,19 @@
 {%- assign preorder = true -%} 
 {%- endif -%}
 {%- endfor -%}
+{%- comment -%}
+  2026-10-05 (PDP V3 — PRD mục 13): link Shopee Mall lấy từ tag "shopee_<url>". Cách cũ
+  `split: '_' | last` cắt mất mọi đoạn trước dấu "_" cuối cùng ⇒ URL Shopee chứa "_" bị hỏng.
+  Không có tag ⇒ pc_shopee_url rỗng ⇒ ẩn nút Shopee.
+{%- endcomment -%}
+{%- assign pc_shopee_url = '' -%}
+{%- for pc_tag in product.tags -%}
+  {%- assign pc_tag_lc = pc_tag | downcase -%}
+  {%- if pc_tag_lc contains 'shopee_' -%}
+    {%- assign pc_shopee_url = pc_tag | remove_first: 'shopee_' | remove_first: 'Shopee_' | remove_first: 'SHOPEE_' | strip -%}
+    {%- break -%}
+  {%- endif -%}
+{%- endfor -%}
 {% include 'breadcrumb' %}   
 <section class="product layout-product">	
 	{%- include 'product_schema' -%}
@@ -170,7 +183,9 @@
 								  từ metafields.bpr.rating làm lớp nền — app Sapo (nếu có) vẫn ghi đè badge như
 								  cũ, không xung đột.
 								{%- endcomment -%}
-								{% if product.metafields.bpr.rating > 0 %}
+								{%- comment -%} 2026-10-05 (PRD mục 2 — người dùng chốt): chỉ in sao khi có đánh giá thật
+								  (votes > 0); rating > 0 mà votes = 0 là số liệu không có căn cứ ⇒ ẩn. {%- endcomment -%}
+								{% if product.metafields.bpr.rating > 0 and product.metafields.bpr.votes > 0 %}
 								{% assign pc_rating = product.metafields.bpr.rating %}
 								{% assign pc_r_floor = pc_rating | floor %}
 								{% assign pc_r_frac = pc_rating | minus: pc_r_floor %}
@@ -340,15 +355,9 @@
 												</button>
 											</div>
 
-											{% assign suffix = '' %}
-											{% for tag in product.tags %}
-											{% if tag contains 'shopee_'%}
-											{% assign suffix = tag | split: '_' | last %}
-											{% endif %}
-											{% endfor %}
-											{% if suffix != '' %}
+											{% if pc_shopee_url != blank %}
 											<div class="mua_shop">
-												<a href="{{suffix}}" target="_blank">
+												<a href="{{ pc_shopee_url }}" target="_blank" rel="noopener">
 													{%- if settings.product_shopee_icon != blank -%}<img src="{{ settings.product_shopee_icon | img_url: 'master' }}" alt="shopee" width="40" height="40" style="width: 40px;margin-right: 5px;" loading="lazy" />{%- endif -%}
 													Mua hàng tại shopee
 												</a>
@@ -378,77 +387,8 @@
 									{% endif %}
 									{%endcomment%}
 									{% include 'buyxgety-module-detail' %}
-									<div class="bottom-product">
-										{%if settings.product_sharing_enable%}
-										<ul class="social-media" role="list">
-											<li class="title">
-												<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-share" viewBox="0 0 16 16">
-													<path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5m-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3"/>
-												</svg>
-												Chia sẻ
-											</li>
-											<li class="social-media__item social-media__item--facebook">
-												<a title="Chia sẻ lên Facebook" href="https://www.facebook.com/sharer.php?u=https://{{store.domain}}{{product.url}}" target="_blank" rel="noopener" aria-label="Chia sẻ lên Facebook" >
-													<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-														 viewBox="0 0 155.139 155.139" style="enable-background:new 0 0 155.139 155.139;" xml:space="preserve">
-														<g>
-															<path id="f_1_" style="fill:#010002;" d="M89.584,155.139V84.378h23.742l3.562-27.585H89.584V39.184
-																									 c0-7.984,2.208-13.425,13.67-13.425l14.595-0.006V1.08C115.325,0.752,106.661,0,96.577,0C75.52,0,61.104,12.853,61.104,36.452
-																									 v20.341H37.29v27.585h23.814v70.761H89.584z"/>
-														</g>
-													</svg>
-												</a>
-											</li>
-											<li class="social-media__item social-media__item--pinterest">
-												<a title="Chia sẻ lên Pinterest" href="https://pinterest.com/pin/create/button/?url=https://{{store.domain}}{{product.url}}&amp;" target="_blank" rel="noopener" aria-label="Pinterest" >
-													<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-														 viewBox="0 0 511.977 511.977" style="enable-background:new 0 0 511.977 511.977;" xml:space="preserve">
-														<g>
-															<g>
-																<path d="M262.948,0C122.628,0,48.004,89.92,48.004,187.968c0,45.472,25.408,102.176,66.08,120.16
-																		 c6.176,2.784,9.536,1.6,10.912-4.128c1.216-4.352,6.56-25.312,9.152-35.2c0.8-3.168,0.384-5.92-2.176-8.896
-																		 c-13.504-15.616-24.224-44.064-24.224-70.752c0-68.384,54.368-134.784,146.88-134.784c80,0,135.968,51.968,135.968,126.304
-																		 c0,84-44.448,142.112-102.208,142.112c-31.968,0-55.776-25.088-48.224-56.128c9.12-36.96,27.008-76.704,27.008-103.36
-																		 c0-23.904-13.504-43.68-41.088-43.68c-32.544,0-58.944,32.224-58.944,75.488c0,27.488,9.728,46.048,9.728,46.048
-																		 S144.676,371.2,138.692,395.488c-10.112,41.12,1.376,107.712,2.368,113.44c0.608,3.168,4.16,4.16,6.144,1.568
-																		 c3.168-4.16,42.08-59.68,52.992-99.808c3.968-14.624,20.256-73.92,20.256-73.92c10.72,19.36,41.664,35.584,74.624,35.584
-																		 c98.048,0,168.896-86.176,168.896-193.12C463.62,76.704,375.876,0,262.948,0z"/>
-															</g>
-														</g>
-													</svg>
-												</a>
-											</li>
-											<li class="social-media__item social-media__item--twitter">
-												<a title="Chia sẻ lên Twitter" href="https://twitter.com/share?url=https://{{store.domain}}{{product.url}}" target="_blank" rel="noopener" aria-label="Tweet on Twitter" >
-													<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-														 viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve">
-														<g>
-															<g>
-																<path d="M512,97.248c-19.04,8.352-39.328,13.888-60.48,16.576c21.76-12.992,38.368-33.408,46.176-58.016
-																		 c-20.288,12.096-42.688,20.64-66.56,25.408C411.872,60.704,384.416,48,354.464,48c-58.112,0-104.896,47.168-104.896,104.992
-																		 c0,8.32,0.704,16.32,2.432,23.936c-87.264-4.256-164.48-46.08-216.352-109.792c-9.056,15.712-14.368,33.696-14.368,53.056
-																		 c0,36.352,18.72,68.576,46.624,87.232c-16.864-0.32-33.408-5.216-47.424-12.928c0,0.32,0,0.736,0,1.152
-																		 c0,51.008,36.384,93.376,84.096,103.136c-8.544,2.336-17.856,3.456-27.52,3.456c-6.72,0-13.504-0.384-19.872-1.792
-																		 c13.6,41.568,52.192,72.128,98.08,73.12c-35.712,27.936-81.056,44.768-130.144,44.768c-8.608,0-16.864-0.384-25.12-1.44
-																		 C46.496,446.88,101.6,464,161.024,464c193.152,0,298.752-160,298.752-298.688c0-4.64-0.16-9.12-0.384-13.568
-																		 C480.224,136.96,497.728,118.496,512,97.248z"/>
-															</g>
-														</g>
-													</svg>
-												</a>
-											</li>
-										</ul>
-										{%endif%}
-
-										{% if settings.iwish_enable %}
-										<div class="product-wish">
-											<a href="javascript:void(0)" class="setWishlist btn-views" data-wish="{{product.alias}}" tabindex="0" title="Thêm vào yêu thích">
-												<img width="25" height="25" src="{{'heart.png' |asset_url}}" alt="Thêm vào yêu thích"/> 
-												Thêm vào yêu thích
-											</a>
-										</div>
-										{% endif %}
-									</div>
+									{%- comment -%} 2026-10-05 (PDP V3 — PRD mục 2): bỏ cụm "Chia sẻ" mạng xã hội và nút
+									  "Thêm vào yêu thích" khỏi trang sản phẩm — yếu tố gây nhiễu cạnh tranh với CTA mua. {%- endcomment -%}
 								</div>
 
 								<div class="boz-form-1 d-none">
@@ -458,17 +398,13 @@
 										<div class="btn-mua button_actions clearfix">
 
 											{% unless product.tags contains "liệu trình" %}
+											{% if pc_shopee_url != blank %}
 											<div class="mua_shop">
-												{% assign suffix = '' %}
-												{% for tag in product.tags %}
-												{% if tag contains 'shopee_'%}
-												{% assign suffix = tag | split: '_' | last %}
-												{% endif %}
-												{% endfor %}														
-												<a href="{% if suffix != '' %}{{suffix}}{% else %}#{% endif %}" target="_blank">
+												<a href="{{ pc_shopee_url }}" target="_blank" rel="noopener">
 													ĐẶT HÀNG TẠI SHOPEE MALL
 												</a>
 											</div>
+											{% endif %}
 											{% endunless %}
 										</div>
 
@@ -479,7 +415,8 @@
 								</div>
 
 							</div>
-							<div class="abps-productdetail ab-hide" ab-data-productid="{{product.id}}"></div></form>
+							{%- comment -%} 2026-10-05 (PRD mục 2): bỏ widget lượt xem/lượt mua .abps-productdetail. {%- endcomment -%}
+						</form>
 
 						{%if product.summary != null and product.summary != '' and product.summary !=""%}
 						<div class="product-summary">
