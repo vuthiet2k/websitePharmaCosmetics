@@ -63,6 +63,13 @@ Mỗi lần tải lên Sapo chỉ báo 1 lỗi đầu tiên ⇒ mọi quy tắc 
   (+ `layouts/theme.bwt` có `content_for_header` trước `</head>` và `content_for_layout`).
 - `{% include %}` / `{% layout %}` phải trỏ tới file có thật; `'<file>' | asset_url` phải có file trong
   gói (`x.scss.css` ← `x.scss.bwt`).
+- **SCSS phải qua được LIBSASS** (`npm run check:libsass`, nằm trong build:sapo; cần `pip install libsass`):
+  Sapo biên dịch mọi asset `.bwt` theo lô — 1 file lỗi ⇒ toàn bộ asset `.bwt` trả rỗng, cả site mất CSS/JS.
+  Preview dùng dart-sass (dễ tính hơn) nên PASS ở preview ≠ PASS trên Sapo. Cấm `min()/max()` trộn đơn vị.
+- **CSS thuần không được có ký tự rác**: clean-css gặp lỗi cú pháp chỉ cảnh báo rồi LẶNG LẼ bỏ các khối phía
+  sau — `compile:sapo` coi mọi cảnh báo clean-css là lỗi (vụ `$C` trong `site-topbar.css`, 2026-10-05).
+- SVG nội tuyến luôn có `width`/`height` theo tỷ lệ viewBox (CSS vẫn ghi đè) — mất CSS thì không bung toàn màn hình.
+- Lưu ý: "có ở theme gốc" KHÔNG chứng minh đúng — theme gốc từng có filter gõ nhầm `assert_url`.
 - Thẻ/bộ lọc Liquid: chỉ dùng thứ có trong tài liệu Sapo hoặc đã có ở theme gốc. Đã đối chiếu 2026-10-05:
   không thẻ mới; bộ lọc mới `alias`, `floor`, `newline_to_br` đều có trong tài liệu. Không dùng `continue`.
 
