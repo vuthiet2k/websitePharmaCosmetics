@@ -284,7 +284,7 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
 - Checkbox: `global_core.scss.bwt` (theme gốc) ẩn MỌI `input[type=checkbox]` (opacity 0, absolute,
   width 100%) cho checkbox tự vẽ bằng label. Ô đồng ý dùng checkbox gốc phải có class
   `pc-checkbox-native` (đã gắn: about-us, đặt lịch, đăng ký) — nếu không khách không thấy ô bắt buộc.
-- AI Skin Quiz: 17 câu hỏi = `snippets/quiz_questions_data.bwt` (nguồn duy nhất; `data/quiz-questions.js`
+- AI Skin Quiz: 18 câu hỏi (từ 2026-10-05) = `snippets/quiz_questions_data.bwt` (nguồn duy nhất; `data/quiz-questions.js`
   đã xoá) — trước đây Sapo chỉ chạy bộ dự phòng 5 câu.
 - `npm run test:portal` (39 test) PASS 2026-10-03. Test bám hook ổn định (`data-result-disclaimer`,
   `data-scan-stage-products`, `data-skin-*`) — không bám class Tailwind/khung. CRM `save_skin_analysis` gửi
@@ -391,6 +391,10 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
   Q17 kênh liên hệ, Q18) không cộng điểm loại da. Đáp án dùng cho luật có `code`. Giữ id cũ (CRM so sánh).
 - Thứ tự luật Case: Q9 mụn viêm → C1 (Tier 2) · Q3 sắc tố rõ / Q8 nám mảng → C2 · Q9 mụn ẩn → C5 · Q8 PIH →
   C6 · Q2 rất nhạy cảm / Q15 dị ứng nặng → C4 · top aging → C3 · top dry → C7 · còn lại → C8 (Tier 5).
+- **Mã `CASE_X` trong code KHÔNG trùng số thứ tự hàng ở Sheet Ma trận lâm sàng** — luôn đối soát theo tên
+  chẩn đoán: C1 Mụn viêm (T2) · C2 Nám mảng/Melasma (T3) · C3 Lão hoá (T4) · C4 Nhạy cảm (T4) · C5 Mụn ẩn (T3) ·
+  C6 Thâm sau mụn PIH (T3) · C7 Da khô/sừng hoá (T4) · C8 Da thường khoẻ mạnh (T5). "Case 8 Thai kỳ/cấp tính" của
+  Sheet **không có Case riêng** trong code: cấp tính = Tier 1 (Q18), thai kỳ/dị ứng nặng = cờ an toàn trực giao.
 - Cờ an toàn: Q16 mang thai/cho con bú/sắp mang thai và Q15 dị ứng nặng ⇒ loại Retinoid/BHA/AHA/Cysteamine
   khỏi routine (bước hiện "cần chuyên gia chỉ định riêng", không tự thay sản phẩm khác), nhãn gợi ý và lưới sản
   phẩm. Ca cần chuyên gia (Tier 1/2, cờ an toàn) → nút Zalo `settings.contact_zalo` (người dùng chốt: chuyên gia

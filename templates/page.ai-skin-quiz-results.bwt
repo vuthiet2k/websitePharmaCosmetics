@@ -16,7 +16,30 @@
   // Dữ liệu sản phẩm và bài viết từ Sapo cung cấp qua Liquid context
   // 2026-10-03: bỏ biến mock `products`/`articles`/`quiz_results` (không có trên Sapo). Bài viết
   // khuyên đọc lấy từ blog settings.quiz_article_blog_handle; bảng kết quả dùng chung với trang quiz.
-  window.PharmaSapoProducts = {{ collections['all'].products | json }};
+  {%- comment -%}
+    2026-10-05 (review hiệu năng): không in nguyên object `collections['all'].products | json` (kèm mô tả
+    HTML, variants, options… → HTML phình hàng trăm KB). Chỉ xuất đúng trường lưới "Sản phẩm đề xuất" dùng,
+    ảnh qua img_url, và bỏ luôn sản phẩm kê toa (loai:ke-toa) ngay tại máy chủ.
+  {%- endcomment %}
+  window.PharmaSapoProducts = [
+    {%- assign pc_qr_first = true -%}
+    {%- for product in collections['all'].products limit: 50 -%}
+    {%- include 'pc_is_rx' -%}
+    {%- unless pc_is_rx -%}
+    {%- unless pc_qr_first %},{% endunless -%}
+    {%- assign pc_qr_first = false %}
+    {
+      "name": {{ product.name | json }},
+      "alias": {{ product.alias | json }},
+      "url": {{ product.url | json }},
+      "tags": {{ product.tags | json }},
+      "price": {{ product.price | default: 0 | json }},
+      "compare_at_price": {{ product.compare_at_price | default: 0 | json }},
+      "featured_image": {% if product.featured_image.src != blank %}{ "src": {{ product.featured_image.src | img_url: 'large' | json }} }{% else %}null{% endif %}
+    }
+    {%- endunless -%}
+    {%- endfor -%}
+  ];
   {%- assign pc_qz_blog_handle = settings.quiz_article_blog_handle | default: 'tin-tuc' -%}
   {%- assign pc_qz_blog = blogs[pc_qz_blog_handle] %}
   window.PharmaSapoArticles = [
