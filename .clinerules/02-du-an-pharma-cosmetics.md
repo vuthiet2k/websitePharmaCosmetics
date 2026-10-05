@@ -380,6 +380,21 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
 - Khối "Đánh giá từ khách hàng" và "Câu hỏi thường gặp" ở PDP **chỉ hiện bài gắn tag
   `sanpham:<alias sản phẩm>`** (cùng quy ước khối Ý kiến chuyên gia); không có bài khớp ⇒ ẩn hẳn khối.
   Không bao giờ đổ cả blog chung vào mọi sản phẩm (đánh giá không gắn sản phẩm = không xác thực).
+- **Bố cục đầu trang 2 cột 6:6** (`col-lg-6` ảnh | `col-lg-6` thông tin, PRD mục 3 — người dùng chốt
+  2026-10-05). Đã bỏ cột 3 `.box_info_right` (thông tin cửa hàng); field `product_info_*`/`product_link_*` giữ
+  trong schema nhưng không render.
+- **Khối niềm tin sau CTA** (PRD mục 5): 3 cam kết `product_trust_{1..3}_title/_desc` + dòng
+  `THƯƠNG HIỆU: product.vendor` (trống ⇒ tên cửa hàng) `| XUẤT XỨ:` từ **tag `xuatxu:<tên>`** (không có ⇒ ẩn
+  phần xuất xứ; tag không hiện trong danh sách thẻ). Kê toa: chỉ dòng thương hiệu/xuất xứ, không cam kết giao
+  hàng. Khối 4 icon `product_policy_*` cũ không còn render ở PDP.
+- **Tab chi tiết tách theo `<h2>` trong `product.content`** (PRD mục 10, `snippets/tab_product.bwt`): mỗi `<h2>`
+  = 1 tab (tên tab = chữ trong `<h2>`, in hoa bằng CSS, đúng thứ tự soạn). Chuẩn nhập liệu 6 tiêu đề: Thông tin
+  sản phẩm · Thành phần · Công dụng · Phù hợp với ai · Hướng dẫn sử dụng · Lưu ý. Mục rỗng ⇒ không có tab; đoạn
+  trước `<h2>` đầu ghép vào tab đầu; không có `<h2>` ⇒ 1 tab `product_tab1_title` như cũ. Tab Chính sách
+  (`product_tab2_*`) và Đánh giá (`product_tab3_*`) vẫn đứng sau.
+- Nhãn nút Shopee: `product_shopee_label` (mặc định "ĐẶT HÀNG TẠI SHOPEE MALL"). Dòng phụ dưới "MUA NGAY"
+  nằm sẵn trong `product_buynow_title` (span thứ 2).
+- Không dùng `{% continue %}` trong Liquid (chưa kiểm chứng trên Sapo) — dùng `if` lồng.
 
 ## AI Skin Quiz — phân tầng Tier/Case & cờ an toàn (chốt 2026-10-05)
 
