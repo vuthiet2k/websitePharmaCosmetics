@@ -357,6 +357,27 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
 chủ (`about_expert_*` hiện chỉ hiển thị ở trang Về chúng tôi, muốn lên trang chủ phải dựng section mới —
 là thêm tính năng, không phải sửa lỗi).
 
+## Trang sản phẩm (PDP V3) — quy ước nhập liệu & phân luồng (chốt 2026-10-05)
+
+Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc của khách).
+- **Sản phẩm kê toa = tag `loai:ke-toa`** (duy nhất 1 quy ước; so khớp sau downcase + bỏ khoảng trắng —
+  `snippets/pc_is_rx.bwt`). KHÔNG suy đoán theo `product.type`/tên. Kê toa ⇒ không render form
+  `/cart/add`, giá, số lượng, Mua ngay/Thêm giỏ/Shopee, đánh giá (sao + tab Đánh giá), khuyến mãi,
+  coupon, combo, "cùng tầm giá", "sản phẩm đã xem"; JSON-LD bỏ `offers`/`aggregateRating`, bỏ
+  `og:price`; thẻ danh mục (`product_grid_office*`) thay giá bằng `product_rx_card_label`, ẩn Xem
+  nhanh/Thêm giỏ; quickview tự chuyển sang trang chi tiết. Hiện khối `snippets/pdp_rx_consult.bwt`
+  (câu chữ `product_rx_*`, Zalo = `settings.contact_zalo`).
+- Trong `templates/product.bwt` và các snippet trang đọc cờ **`pc_pdp_rx`** (chốt ngay đầu trang), không
+  đọc `pc_is_rx`: vòng lặp thẻ sản phẩm bên dưới gán lại `pc_is_rx` theo từng thẻ. So sánh dùng
+  `!= true` (biến chưa gán = nil, `nil == false` là false).
+- Theme chỉ ẩn được luồng mua trên giao diện; chặn `/cart/add` phía máy chủ phải cấu hình ở Sapo Admin.
+- **Shopee Mall = tag `shopee_<url>`**, đọc bằng `remove_first: 'shopee_'` (KHÔNG `split: '_' | last` —
+  cắt hỏng URL có "_"). Không có tag ⇒ ẩn nút. Tag `shopee_`/`loai:` không hiện trong danh sách tag.
+- Sao đánh giá ở đầu trang chỉ in khi `bpr.rating > 0` VÀ `bpr.votes > 0`; tab Đánh giá giữ cho sản
+  phẩm thường (form app review), ẩn 100% với kê toa.
+- Đã bỏ khỏi PDP (PRD mục 2): chia sẻ mạng xã hội, "Thêm vào yêu thích", widget lượt xem/lượt mua
+  `.abps-productdetail`. Field `product_sharing_enable` còn trong schema nhưng không còn dùng ở PDP.
+
 ## 9. Cách đọc báo cáo/spec bên ngoài — luôn xác minh, không copy số liệu
 
 Kiểm chứng 16/09/2026 với báo cáo "Báo Cáo Kiểm Thử UI_UX & Đối Chiếu Snippets Codebase - Hugo Theme

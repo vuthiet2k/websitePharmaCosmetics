@@ -315,6 +315,19 @@ const products = [
     ],
   }),
 
+  // 16 ─ Sản phẩm KÊ TOA (2026-10-05, PDP V3): fixture tag loai:ke-toa — kiểm ẩn giá/nút mua/đánh giá.
+  makeProduct({
+    id: 1016, name: 'Altreno Lotion 0.05% (Tretinoin)', alias: 'altreno-lotion-0-05-tretinoin',
+    type: 'Thuốc kê đơn', votes: 0,
+    description: 'Thuốc kê đơn dùng ngoài da — sử dụng theo chỉ định và hướng dẫn của chuyên gia.',
+    tags: ['loai:ke-toa', 'tretinoin', 'shopee_https://shopee.vn/Altreno_Test-i.1.2'],
+    variants: [
+      variant(10161, '45g', 1250000, 0, 'PC-ALT-45', true, 10),
+    ],
+    images: [
+      img('e6f2ec/003F2D', 'Altreno 0.05%'),
+    ],
+  }),
 ];
 
 // ── Tra nhanh theo id hoặc alias ────────────────────────────────────────────

@@ -1,0 +1,15 @@
+{%- comment -%}
+  2026-10-05 (PDP V3 — PRD mục 6/13, người dùng chốt): nhận diện SẢN PHẨM KÊ TOA bằng đúng 1 quy ước —
+  tag "loai:ke-toa" (so khớp sau downcase + bỏ khoảng trắng: "Loai: Ke-Toa" vẫn nhận). Không suy đoán
+  theo product.type/tên. Gán pc_is_rx cho `product` hiện tại; dùng chung cho trang chi tiết, thẻ danh
+  mục, quickview, JSON-LD. Theme chỉ ẩn được luồng mua trên giao diện — chặn /cart/add phía máy chủ
+  phải cấu hình trong Sapo Admin.
+{%- endcomment -%}
+{%- assign pc_is_rx = false -%}
+{%- for pc_rx_tag in product.tags -%}
+  {%- assign pc_rx_norm = pc_rx_tag | downcase | remove: ' ' -%}
+  {%- if pc_rx_norm == 'loai:ke-toa' -%}
+    {%- assign pc_is_rx = true -%}
+    {%- break -%}
+  {%- endif -%}
+{%- endfor -%}

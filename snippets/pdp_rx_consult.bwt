@@ -1,0 +1,25 @@
+{%- comment -%}
+  2026-10-05 (PDP V3 — PRD mục 7): khối thay thế luồng mua cho sản phẩm kê toa — cảnh báo + 1 CTA duy
+  nhất "Liên hệ tư vấn chuyên môn" qua Zalo (settings.contact_zalo). Không in giá/số lượng/nút mua.
+  Câu chữ cấu hình ở Theme Settings → Trang sản phẩm → "Sản phẩm kê toa".
+{%- endcomment -%}
+{%- assign pc_rx_zalo = settings.contact_zalo | remove: ' ' | remove: '.' | strip -%}
+{%- if pc_rx_zalo != blank -%}
+  {%- assign pc_rx_href = 'https://zalo.me/' | append: pc_rx_zalo -%}
+{%- else -%}
+  {%- assign pc_rx_href = '/pages/dat-lich-tu-van' -%}
+{%- endif -%}
+{%- assign pc_rx_cta_sub = settings.product_rx_cta_sub -%}
+<div class="pc-rx-consult">
+	<div class="pc-rx-consult__alert" role="note">
+		<svg class="pc-rx-consult__icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z"/><path d="M12 8.5v6M9 11.5h6"/></svg>
+		<div>
+			<p class="pc-rx-consult__title">{{ settings.product_rx_title | default: 'SẢN PHẨM KÊ TOA' }}</p>
+			<p class="pc-rx-consult__text">{{ settings.product_rx_warning | default: 'Đây là thuốc kê đơn. Việc sử dụng cần được đánh giá và tư vấn phù hợp bởi chuyên gia/dược sĩ.' }}</p>
+		</div>
+	</div>
+	<a class="pc-rx-consult__cta" href="{{ pc_rx_href }}"{% if pc_rx_zalo != blank %} target="_blank" rel="noopener"{% endif %}>
+		<span class="pc-rx-consult__cta-main">{{ settings.product_rx_cta_title | default: 'LIÊN HỆ TƯ VẤN CHUYÊN MÔN' }}</span>
+		{%- if pc_rx_cta_sub != blank -%}<span class="pc-rx-consult__cta-sub">{{ pc_rx_cta_sub }}</span>{%- endif -%}
+	</a>
+</div>

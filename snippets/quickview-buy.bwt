@@ -299,6 +299,16 @@
 			var producthandle = $(this).data("handle");
 			currentLinkQuickView = $(this);
 			Bizweb.getProduct(producthandle,function(product) {
+				// 2026-10-05 (PDP V3 — PRD mục 6): sản phẩm kê toa (tag loai:ke-toa) không mở xem nhanh có giá/nút
+				// mua — chuyển thẳng sang trang chi tiết (luồng tư vấn). Cùng chốt chặn với assets/quickview.js.bwt.
+				var pcTags = product.tags || [];
+				if (typeof pcTags === 'string') pcTags = pcTags.split(',');
+				for (var pcI = 0; pcI < pcTags.length; pcI++) {
+					if (String(pcTags[pcI]).toLowerCase().replace(/\s+/g, '') === 'loai:ke-toa') {
+						window.location.href = product.url || ('/' + producthandle);
+						return;
+					}
+				}
 				var qvhtml = $("#quickview-modal").html();
 				$(".quick-view-product").html(qvhtml);
 				var quickview= $(".quick-view-product");

@@ -65,6 +65,10 @@
     {%- break -%}
   {%- endif -%}
 {%- endfor -%}
+{%- include 'pc_is_rx' -%}
+{%- comment -%} Chốt riêng cờ của trang: các vòng lặp thẻ sản phẩm phía dưới (include product_grid_office)
+  gán lại pc_is_rx theo từng thẻ ⇒ JS/tab/JSON-LD của trang phải đọc pc_pdp_rx. {%- endcomment -%}
+{%- assign pc_pdp_rx = pc_is_rx -%}
 {% include 'breadcrumb' %}   
 <section class="product layout-product">	
 	{%- include 'product_schema' -%}
@@ -172,7 +176,8 @@
 								<br>
 								<span class="d-none" >Chất liệu: <strong>{% if product.type.size > 0 %}{{ product.type }}{% else %}Đang cập nhật{% endif %}</strong></span>
 							</div>
-							{%if settings.product_tab3_enable%}
+							{%- comment -%} 2026-10-05: sản phẩm kê toa ẩn 100% đánh giá (người dùng chốt). {%- endcomment -%}
+							{%if settings.product_tab3_enable and pc_pdp_rx != true %}
 							<div class="product-review">
 								<div class="sapo-product-reviews-badge " data-id="{{ product.id }}" ></div>
 								{%- comment -%}
@@ -207,6 +212,7 @@
 							{%endif%}
 						</div>
 
+						{%- unless pc_pdp_rx -%}
 						<div class="inventory_quantity">
 
 							<span class="mb-break">
@@ -242,7 +248,8 @@
 								{%endif%}
 							</span>
 						</div>
-						{%- if settings.product_flashsale_enable and settings.home_flashsale_countdown_enable and product.available -%}
+						{%- endunless -%}
+						{%- if settings.product_flashsale_enable and settings.home_flashsale_countdown_enable and product.available and pc_pdp_rx != true -%}
 						{%- for collection in product.collections -%}
 						{%- assign url_text = collection.url | remove: "/" -%}
 						{%- if url_text == settings.home_flashsale_collection -%}
@@ -251,6 +258,11 @@
 						{%- endfor -%}
 						{%- endif -%}
 
+						{%- comment -%}
+						  2026-10-05 (PDP V3 — PRD mục 6): sản phẩm kê toa KHÔNG render form /cart/add, giá, số lượng,
+						  nút Mua ngay/Thêm giỏ/Shopee — khối tư vấn (pdp_rx_consult) in sau mô tả ngắn (PRD mục 12).
+						{%- endcomment -%}
+						{%- unless pc_pdp_rx -%}
 						<form enctype="multipart/form-data" data-cart-form id="add-to-cart-form" action="/cart/add" method="post" class="form-inline">
 							<div class="price-box clearfix">
 								{%if on_var%}
@@ -417,6 +429,7 @@
 							</div>
 							{%- comment -%} 2026-10-05 (PRD mục 2): bỏ widget lượt xem/lượt mua .abps-productdetail. {%- endcomment -%}
 						</form>
+						{%- endunless -%}
 
 						{%if product.summary != null and product.summary != '' and product.summary !=""%}
 						<div class="product-summary">
@@ -425,9 +438,10 @@
 							</div>
 						</div>
 						{%endif%}
+						{%- if pc_pdp_rx -%}{%- include 'pdp_rx_consult' -%}{%- endif -%}
 
 
-						{% if settings.product_promo_enable %}
+						{% if settings.product_promo_enable and pc_pdp_rx != true %}
 						{% unless product.tags contains "liệu trình" %}
 						<div class="khuyen-mai">
 							<h3 class="product-promotion__heading">
@@ -459,7 +473,7 @@
 						</div>
 						{% endunless %}
 						{% endif %}
-						{%if settings.product_coupon_enable%}
+						{%if settings.product_coupon_enable and pc_pdp_rx != true %}
 						{% unless product.tags contains "liệu trình" %}
 						{% include 'coupon_products' %}
 						{% endunless %}
@@ -549,7 +563,9 @@
 					{%- assign cleaned_comma_combo = cleaned_ids_combo | remove: '"' -%}
 					{%- assign product_ids_array_combo = cleaned_comma_combo | split: "," -%}
 					{%- endif -%}
-					{%- if cleaned_comma_combo != null and cleaned_comma_combo != '' and cleaned_comma_combo !="" -%}
+					{%- if pc_pdp_rx -%}
+					{%- comment -%} 2026-10-05: không bán combo cho sản phẩm kê toa. {%- endcomment -%}
+					{%- elsif cleaned_comma_combo != null and cleaned_comma_combo != '' and cleaned_comma_combo !="" -%}
 					{%- include 'combo_pro_metafield' -%}
 					{%- else -%}
 					{%- if tag_combo -%}
@@ -699,7 +715,8 @@
 				</script>
 				{%- endif -%}
 				{%- endif -%}
-				{%if settings.product_same_enable%}
+				{%- comment -%} 2026-10-05: "Cùng tầm giá" in giá sản phẩm hiện tại — không hiện với kê toa. {%- endcomment -%}
+				{%if settings.product_same_enable and pc_pdp_rx != true %}
 				<div class="col-12">
 					{% include 'section_same_price' %}
 				</div>
@@ -941,7 +958,7 @@
 	/*end of variant image*/
 	};
 	jQuery(function($) {
-		{% if  product.variants.size > 1 %}
+		{% if  product.variants.size > 1 and pc_pdp_rx != true %}
 		new Bizweb.OptionSelectors('product-selectors', {
 			product: {{ product | json }},
 			onVariantSelected: selectCallback, 
@@ -1148,7 +1165,8 @@
 		$(this).toggleClass('active');
 		return false;
 	});
-	{% if settings.product_viewed_enable %}
+	{%- comment -%} 2026-10-05: không đưa sản phẩm kê toa (kèm giá trong JSON) vào "Sản phẩm đã xem". {%- endcomment -%}
+	{% if settings.product_viewed_enable and pc_pdp_rx != true %}
 	$(document).ready(function ($){
 		var product = {{ product | json }};
 		var alias_pro = '{{ product.alias }}';

@@ -35,7 +35,6 @@
 	"@context": "https://schema.org",
 	"@type": "Product",
 	"name": {{ product.name | json }},
-	"url": {{ pc_ld_base | append: product.url | json }},
 	{%- if pc_ld_images != blank %}
 	"image": [{{ pc_ld_images | strip }}],
 	{%- endif %}
@@ -58,7 +57,9 @@
 	{%- if pc_ld_variant.barcode != blank %}
 	"gtin": {{ pc_ld_variant.barcode | json }},
 	{%- endif %}
-	{%- if product.metafields.bpr.votes > 0 %}
+	{%- comment -%} 2026-10-05 (PDP V3): sản phẩm kê toa (pc_pdp_rx, gán ở product.bwt) không có Offer/giá
+	  và không có aggregateRating (đánh giá ẩn 100%). "url" chuyển xuống cuối để không dư dấu phẩy. {%- endcomment -%}
+	{%- if product.metafields.bpr.votes > 0 and pc_pdp_rx != true %}
 	"aggregateRating": {
 		"@type": "AggregateRating",
 		"ratingValue": {{ product.metafields.bpr.rating | json }},
@@ -67,6 +68,7 @@
 		"worstRating": 1
 	},
 	{%- endif %}
+	{%- unless pc_pdp_rx %}
 	"offers": {
 		"@type": "Offer",
 		"url": {{ pc_ld_base | append: product.url | json }},
@@ -98,6 +100,8 @@
 		},
 		{%- endif %}
 		"seller": {"@type": "Organization", "name": {{ store.name | json }}, "url": {{ pc_ld_base | json }}}
-	}
+	},
+	{%- endunless %}
+	"url": {{ pc_ld_base | append: product.url | json }}
 }
 </script>
