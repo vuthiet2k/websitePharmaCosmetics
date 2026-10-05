@@ -23,20 +23,26 @@ const summarize = (items, max = 10) => (items.length > max ? `${items.slice(0, m
 // 2026-10-05: Sapo Web đòi configs/ + layouts/ (số nhiều) — xác nhận khi tải gói lên Sapo thật.
 const REQUIRED_DIRECTORIES = ['assets', 'configs', 'layouts', 'snippets', 'templates'];
 const ALLOWED_ROOT_DIRECTORIES = new Set([...REQUIRED_DIRECTORIES, 'locales', 'sections']);
-const REQUIRED_FILES = ['layouts/theme.bwt', 'configs/settings_schema.json', 'configs/settings_data.json', 'templates/page.bwt'];
-// Thuộc tính hợp lệ theo từng kiểu field. 2026-10-05: Sapo báo "product_faq_blog_handle các attribute không
-// hợp lệ: default" ⇒ bám đúng bộ thuộc tính schema gốc của theme (bản Sapo đã chấp nhận, commit f31bbd0).
-// radio/font/snippet chưa dùng trong repo — để bộ rộng, kiểm lại khi lần đầu dùng.
+const REQUIRED_FILES = ['layouts/theme.bwt', 'configs/settings_schema.json', 'configs/settings_data.json'];
+// Thuộc tính hợp lệ theo từng kiểu field — nguồn: https://support.sapo.vn/settings-schema (color, font,
+// collection, blog, page, link_list, snippet, header, paragraph) + schema gốc theme Sapo đã chấp nhận
+// (commit f31bbd0) cho các kiểu trang tài liệu không ghi (text, textarea, image, checkbox, select).
+// 2026-10-05: Sapo báo "product_faq_blog_handle các attribute không hợp lệ: default" ⇒ kiểu chọn dữ liệu
+// (collection/blog/page/link_list/snippet/font) KHÔNG có default.
 const SCHEMA_SETTING_ATTRS = {
-  header: ['content'], paragraph: ['content'],
-  checkbox: ['id', 'label', 'default', 'info'], color: ['id', 'label', 'default', 'info'],
+  header: ['content', 'info'], paragraph: ['content'],
+  color: ['id', 'label', 'default', 'info'], font: ['id', 'label', 'info'],
+  checkbox: ['id', 'label', 'default', 'info'],
   text: ['id', 'label', 'default', 'info'], textarea: ['id', 'label', 'default', 'info'],
   select: ['id', 'label', 'default', 'options'],
-  image: ['id', 'label', 'info'], page: ['id', 'label', 'info'], link_list: ['id', 'label', 'info'],
-  collection: ['id', 'label', 'info'], blog: ['id', 'label'],
-  radio: ['id', 'label', 'default', 'info', 'options'], font: ['id', 'label', 'default', 'info'],
-  snippet: ['id', 'label', 'info'],
+  radio: ['id', 'label', 'default', 'info', 'options'],
+  image: ['id', 'label', 'info'],
+  collection: ['id', 'label', 'info'], blog: ['id', 'label', 'info'], page: ['id', 'label', 'info'],
+  link_list: ['id', 'label', 'info'], snippet: ['id', 'label', 'info'],
 };
+// Template bắt buộc theo https://support.sapo.vn/gioi-thieu-ve-template-liquid.
+const REQUIRED_TEMPLATES = ['index', 'product', 'collection', 'cart', 'blog', 'article', 'page', 'list_collections', 'search', '404']
+  .map((name) => `templates/${name}.bwt`);
 const SCHEMA_SETTING_TYPES = new Set(Object.keys(SCHEMA_SETTING_ATTRS));
 const JUNK_PATTERN = /(^|\/)(__MACOSX|\.DS_Store|Thumbs\.db|desktop\.ini|\.git|\.gitkeep|\.vercel|node_modules)(\/|$)/i;
 const SOURCE_PATTERN = /\.(scss|sass|ts|tsx|map)$/i;
@@ -129,8 +135,42 @@ function main() {
   for (const directory of REQUIRED_DIRECTORIES) {
     if (![...names].some((name) => name.startsWith(`${directory}/`))) errors.push(`thiếu thư mục bắt buộc ${directory}/`);
   }
-  for (const file of REQUIRED_FILES) {
+  for (const file of [...REQUIRED_FILES, ...REQUIRED_TEMPLATES]) {
     if (!names.has(file)) errors.push(`thiếu file bắt buộc ${file} ở root zip`);
+  }
+
+  // theme.bwt: 2 thẻ bắt buộc (https://support.sapo.vn/theme-bwt).
+  if (data.has('layouts/theme.bwt')) {
+    const theme = data.get('layouts/theme.bwt').toString('utf8');
+    const headerAt = theme.indexOf('content_for_header');
+    if (headerAt < 0 || headerAt > theme.toLowerCase().indexOf('</head>')) errors.push('layouts/theme.bwt: thiếu {{ content_for_header }} trước </head>');
+    if (!/content_for_layout|block\s+["']ContentPlaceHolder["']/.test(theme)) errors.push('layouts/theme.bwt: thiếu {{ content_for_layout }} / block "ContentPlaceHolder"');
+  }
+
+  // include/layout trỏ tới file không có ⇒ Sapo in "snippet not found" ngay trên trang.
+  const strip = (text) => text.replace(/\{%-?\s*comment\s*-?%\}[\s\S]*?\{%-?\s*endcomment\s*-?%\}/g, '');
+  // '<file>' | asset_url trỏ tới file không có ⇒ request 404 (checklist Sapo: không lỗi console).
+  // x.scss.css / x.css / x.js do Sapo sinh từ x.scss.bwt / x.css.bwt / x.js.bwt.
+  const hasAsset = (file) => names.has(`assets/${file}`) || names.has(`assets/${file}.bwt`)
+    || (/\.scss\.css$/i.test(file) && names.has(`assets/${file.replace(/\.css$/i, '.bwt')}`));
+  const missingAssets = new Set();
+  for (const [name, content] of data) {
+    if (!/\.bwt$/i.test(name)) continue;
+    for (const match of strip(content.toString('utf8')).matchAll(/['"]([\w.\-]+\.[a-z0-9]+)['"]\s*\|\s*asset_url/gi)) {
+      if (!hasAsset(match[1])) missingAssets.add(`${match[1]} ← ${name}`);
+    }
+  }
+  if (missingAssets.size) errors.push(`asset_url tới file không có trong gói — ${summarize([...missingAssets], 20)}`);
+
+  for (const [name, content] of data) {
+    if (!/\.bwt$/i.test(name) || name.startsWith('assets/')) continue;
+    const text = strip(content.toString('utf8'));
+    for (const match of text.matchAll(/\{%-?\s*include\s+['"]([^'"]+)['"]/g)) {
+      if (!names.has(`snippets/${match[1]}.bwt`)) errors.push(`${name}: include '${match[1]}' — không có snippets/${match[1]}.bwt`);
+    }
+    for (const match of text.matchAll(/\{%-?\s*layout\s+['"]([^'"]+)['"]/g)) {
+      if (!names.has(`layouts/${match[1]}.bwt`)) errors.push(`${name}: layout '${match[1]}' — không có layouts/${match[1]}.bwt`);
+    }
   }
 
   for (const [name, content] of data) {
@@ -147,16 +187,38 @@ function main() {
       const schema = JSON.parse(data.get('configs/settings_schema.json').toString('utf8'));
       schemaIds = policy.schemaImageFileIds(schema);
       // 2026-10-05: Sapo từ chối cả gói khi gặp kiểu field lạ ("setting type không hợp lệ linklist").
-      // Danh mục kiểu hợp lệ theo Rule&HDKTXD.md (15 input types + header/paragraph).
       const badTypes = [];
       const badAttrs = [];
+      const badValues = [];
+      const seenIds = new Set();
+      if (!Array.isArray(schema)) errors.push('settings_schema.json phải là mảng các nhóm { name, settings }');
       for (const group of Array.isArray(schema) ? schema : []) {
-        for (const setting of (group && group.settings) || []) {
+        if (!group || typeof group.name !== 'string' || !Array.isArray(group.settings)) { badValues.push(`nhóm sai cấu trúc: ${JSON.stringify(group).slice(0, 60)}`); continue; }
+        for (const setting of group.settings) {
           if (!SCHEMA_SETTING_TYPES.has(setting.type)) { badTypes.push(`${setting.id || '(không id)'}: "${setting.type}"`); continue; }
           const extra = Object.keys(setting).filter((key) => key !== 'type' && !SCHEMA_SETTING_ATTRS[setting.type].includes(key));
           if (extra.length) badAttrs.push(`${setting.id || setting.type} (${setting.type}): ${extra.join(', ')}`);
+          const label = setting.id || setting.type;
+          if (setting.type === 'header' || setting.type === 'paragraph') {
+            if (typeof setting.content !== 'string') badValues.push(`${label}: thiếu content`);
+            continue;
+          }
+          if (!setting.id) badValues.push(`field ${setting.type} thiếu id`);
+          else if (seenIds.has(setting.id)) badValues.push(`${setting.id}: trùng id`);
+          else seenIds.add(setting.id);
+          if (typeof setting.label !== 'string') badValues.push(`${label}: thiếu label`);
+          if ('default' in setting) {
+            const wanted = setting.type === 'checkbox' ? 'boolean' : 'string';
+            if (typeof setting.default !== wanted) badValues.push(`${label}: default phải là ${wanted}`);
+          }
+          if (setting.type === 'select' || setting.type === 'radio') {
+            const options = Array.isArray(setting.options) ? setting.options : [];
+            if (!options.length || options.some((option) => typeof option.value !== 'string' || typeof option.label !== 'string')) badValues.push(`${label}: options phải là [{ value, label }]`);
+            else if ('default' in setting && !options.some((option) => option.value === setting.default)) badValues.push(`${label}: default không nằm trong options`);
+          }
         }
       }
+      if (badValues.length) errors.push(`settings_schema.json sai giá trị/cấu trúc — ${summarize(badValues, 30)}`);
       if (badTypes.length) errors.push(`settings_schema.json có kiểu field Sapo không hỗ trợ — ${summarize(badTypes)}`);
       if (badAttrs.length) errors.push(`settings_schema.json có thuộc tính Sapo không chấp nhận — ${summarize(badAttrs, 30)}`);
     } catch (_) { /* đã báo ở trên */ }
