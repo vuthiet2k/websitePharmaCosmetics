@@ -30,7 +30,6 @@ Tuỳ chọn: copy `.env.example` → `.env` để nạp `GAS_URL`, `KV_REST_API
 | [`phase/`](./phase) | Nhật ký từng giai đoạn: báo cáo kiểm thử, đối chiếu cấu hình, phạm vi thay đổi |
 | [`mops-gas/docs/`](./mops-gas/docs) | Playbook backend Google Apps Script / MOPS (hiệu năng, ghi chú thiết kế) |
 | [`tests/portal/`](./tests/portal) | Kịch bản Playwright cho Home Portal |
-| [`exports/theme-settings/`](./exports/theme-settings) | Ảnh chụp cấu hình theme theo nhóm (đối chiếu trước/sau khi dọn) |
 
 ## Cấu trúc thư mục
 
