@@ -47,6 +47,25 @@
 - Minify giữ nguyên tên file (template gọi asset theo tên); `.scss.bwt` và `.js.bwt` có Liquid được
   copy nguyên bản.
 
+### 2.2b. Đặc tả Sapo đã kiểm chứng — `validate:sapo` chặn ngay khi build (chốt 2026-10-05)
+
+Nguồn: https://support.sapo.vn/settings-schema, /gioi-thieu-ve-template-liquid, các trang bộ lọc
+/bo-loc-*; kiểu field tài liệu không ghi thì bám schema gốc theme (commit `f31bbd0`, bản Sapo đã nhận).
+Mỗi lần tải lên Sapo chỉ báo 1 lỗi đầu tiên ⇒ mọi quy tắc dưới đây phải nằm trong validator, không đợi Sapo báo.
+- **Thuộc tính theo kiểu field** (ngoài `type`): `header` content, info · `paragraph` content ·
+  `color` id, label, default, info · `text`/`textarea`/`checkbox` id, label, default, info ·
+  `select` id, label, default, options · `image` id, label, info · `collection`/`blog`/`page`/`link_list`/
+  `snippet`/`font` id, label, info — **kiểu chọn dữ liệu KHÔNG có `default`** (giá trị mặc định đặt
+  `| default:` trong Liquid + `settings_data.json`). Kiểu menu là `link_list` (không phải `linklist`).
+- `default` của checkbox là boolean, các kiểu khác là chuỗi; `options` = `[{ "value", "label" }]` và
+  `default` của select phải nằm trong options; `id` không trùng.
+- Template bắt buộc: index, product, collection, cart, blog, article, page, list_collections, search, 404
+  (+ `layouts/theme.bwt` có `content_for_header` trước `</head>` và `content_for_layout`).
+- `{% include %}` / `{% layout %}` phải trỏ tới file có thật; `'<file>' | asset_url` phải có file trong
+  gói (`x.scss.css` ← `x.scss.bwt`).
+- Thẻ/bộ lọc Liquid: chỉ dùng thứ có trong tài liệu Sapo hoặc đã có ở theme gốc. Đã đối chiếu 2026-10-05:
+  không thẻ mới; bộ lọc mới `alias`, `floor`, `newline_to_br` đều có trong tài liệu. Không dùng `continue`.
+
 ### 2.3. Ảnh: `assets/` chỉ chứa ảnh hệ thống — nguồn chuẩn `scripts/lib/sapo-asset-policy.js`
 
 - Sapo **không có** `image_picker` / `section.settings` (đó là Shopify). Input ảnh duy nhất là
