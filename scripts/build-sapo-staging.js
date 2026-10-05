@@ -66,6 +66,13 @@ async function minifyAsset(fileName, source) {
   if (isCss) {
     const result = new CleanCSS({ level: 1 }).minify(source);
     if (result.errors.length) throw new Error(result.errors.join('; '));
+    // 2026-10-05: clean-css gặp ký tự rác ("$C" trong site-topbar.css) chỉ báo warning rồi LẶNG LẼ bỏ các
+    // khối CSS phía sau ⇒ gói Sapo mất CSS mà build vẫn PASS. Coi mọi warning là lỗi.
+    if (result.warnings.length) {
+      const error = new Error(`${fileName}: CSS không hợp lệ — ${result.warnings.slice(0, 3).join('; ')}`);
+      error.fatal = true;
+      throw error;
+    }
     return result.styles;
   }
   return null;
@@ -77,6 +84,7 @@ async function main() {
 
   const schemaIds = policy.loadSchemaImageFileIds(path.join(rootDir, 'configs', 'settings_schema.json'));
   const stats = { copied: 0, minified: 0, skipped: [], bytesIn: 0, bytesOut: 0 };
+  const fatalErrors = [];
 
   for (const [sourceName, targetName] of DIRECTORY_MAP) {
     const sourceDir = path.join(rootDir, sourceName);
@@ -109,6 +117,7 @@ async function main() {
         try {
           output = await minifyAsset(fileName, source);
         } catch (error) {
+          if (error.fatal) { fatalErrors.push(error.message); continue; }
           console.warn(`  ! Không minify được ${label}, copy nguyên bản: ${error.message}`);
         }
         if (output !== null && Buffer.byteLength(output) >= size) output = null;
@@ -130,6 +139,7 @@ async function main() {
   console.log(`[compile:sapo] sapo-dist/: ${stats.copied} file (${stats.minified} file minify), `
     + `${mb(stats.bytesIn)} MB -> ${mb(stats.bytesOut)} MB`);
   for (const skipped of stats.skipped) console.log(`  - bỏ qua ${skipped}`);
+  if (fatalErrors.length) throw new Error(`asset lỗi cú pháp, dừng đóng gói:\n  ✗ ${fatalErrors.join('\n  ✗ ')}`);
 }
 
 main().catch((error) => {
