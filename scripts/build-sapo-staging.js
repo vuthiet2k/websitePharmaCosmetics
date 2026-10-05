@@ -3,9 +3,10 @@
 /*
  * Bước 3 của build:sapo — dựng thư mục staging sapo-dist/ đúng cấu trúc theme Sapo (REQ-BUILD-01).
  *
- * - Đổi tên thư mục theo cẩm nang Sapo: configs/ -> config/, layouts/ -> layout/ (source repo giữ
- *   nguyên tên cũ, xem .clinerules/01 mục 2). Không tạo thư mục rỗng sections/ locales/ vì repo
- *   không dùng.
+ * - GIỮ NGUYÊN tên thư mục configs/ và layouts/ (số nhiều). 2026-10-05: tải gói lên Sapo thật bị báo
+ *   thiếu "layouts/theme.bwt, configs/settings_data.json, configs/settings_schema.json" khi đổi sang
+ *   config/ + layout/ như cẩm nang cũ ghi ⇒ trình tải lên Sapo Web đòi tên số nhiều. Không tạo thư mục
+ *   rỗng sections/ locales/ vì repo không dùng.
  * - Minify .js/.css thuần và .js.bwt KHÔNG chứa Liquid. GIỮ NGUYÊN tên file (không thêm .min) vì
  *   template gọi asset theo tên qua asset_url — đổi tên sẽ vỡ toàn bộ tham chiếu.
  * - .scss.bwt và .js.bwt có Liquid copy nguyên bản: Sapo tự render Liquid/biên dịch SCSS phía server,
@@ -25,16 +26,16 @@ const outputDir = path.join(rootDir, 'sapo-dist');
 // source (repo) -> target (Sapo)
 const DIRECTORY_MAP = [
   ['assets', 'assets'],
-  ['configs', 'config'],
-  ['layouts', 'layout'],
+  ['configs', 'configs'],
+  ['layouts', 'layouts'],
   ['snippets', 'snippets'],
   ['templates', 'templates'],
 ];
 
 // Đuôi file hợp lệ theo từng thư mục đích.
 const ALLOWED_EXTENSIONS = {
-  config: /\.json$/i,
-  layout: /\.bwt$/i,
+  configs: /\.json$/i,
+  layouts: /\.bwt$/i,
   snippets: /\.bwt$/i,
   templates: /\.bwt$/i,
 };

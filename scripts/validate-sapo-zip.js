@@ -20,12 +20,13 @@ const zipPath = path.resolve(process.argv[2] || path.join(rootDir, 'exports', `s
 const SIZE_LIMIT_BYTES = 5000000;
 const MAX_REPORTED_ERRORS = 30;
 const summarize = (items, max = 10) => (items.length > max ? `${items.slice(0, max).join(', ')}, … (+${items.length - max})` : items.join(', '));
-const REQUIRED_DIRECTORIES = ['assets', 'config', 'layout', 'snippets', 'templates'];
+// 2026-10-05: Sapo Web đòi configs/ + layouts/ (số nhiều) — xác nhận khi tải gói lên Sapo thật.
+const REQUIRED_DIRECTORIES = ['assets', 'configs', 'layouts', 'snippets', 'templates'];
 const ALLOWED_ROOT_DIRECTORIES = new Set([...REQUIRED_DIRECTORIES, 'locales', 'sections']);
-const REQUIRED_FILES = ['layout/theme.bwt', 'config/settings_schema.json', 'config/settings_data.json'];
+const REQUIRED_FILES = ['layouts/theme.bwt', 'configs/settings_schema.json', 'configs/settings_data.json', 'templates/page.bwt'];
 const JUNK_PATTERN = /(^|\/)(__MACOSX|\.DS_Store|Thumbs\.db|desktop\.ini|\.git|\.gitkeep|\.vercel|node_modules)(\/|$)/i;
 const SOURCE_PATTERN = /\.(scss|sass|ts|tsx|map)$/i;
-const EXTENSION_RULES = { layout: /\.bwt$/i, templates: /\.bwt$/i, snippets: /\.bwt$/i, sections: /\.bwt$/i, config: /\.json$/i, locales: /\.json$/i };
+const EXTENSION_RULES = { layouts: /\.bwt$/i, templates: /\.bwt$/i, snippets: /\.bwt$/i, sections: /\.bwt$/i, configs: /\.json$/i, locales: /\.json$/i };
 
 /** Đọc central directory của zip (không hỗ trợ ZIP64 — gói theme < 5 MB không cần). */
 function readZipEntries(buffer) {
@@ -127,8 +128,8 @@ function main() {
   }
 
   let schemaIds = new Set();
-  if (data.has('config/settings_schema.json')) {
-    try { schemaIds = policy.schemaImageFileIds(JSON.parse(data.get('config/settings_schema.json').toString('utf8'))); } catch (_) { /* đã báo ở trên */ }
+  if (data.has('configs/settings_schema.json')) {
+    try { schemaIds = policy.schemaImageFileIds(JSON.parse(data.get('configs/settings_schema.json').toString('utf8'))); } catch (_) { /* đã báo ở trên */ }
   }
   for (const entry of files.filter((item) => item.name.startsWith('assets/') && policy.isImageFile(item.name))) {
     const result = policy.classifyAssetImage(entry.name, entry.size, schemaIds);
