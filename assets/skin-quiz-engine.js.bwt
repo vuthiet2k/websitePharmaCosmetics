@@ -1,0 +1,173 @@
+/* skin-quiz-engine (2026-10-05) — engine chấm điểm AI Skin Quiz, hàm thuần (không DOM, không mạng).
+ * Dùng chung: templates/page.ai-skin-quiz.bwt, page.ai-skin-quiz-results.bwt (window.PharmaSkinQuizEngine)
+ * và tests/test_skin_quiz_clinical_matrix.js (require trong Node).
+ *
+ * Thứ tự (người dùng chốt 2026-10-05):
+ *   1. Tier 1 — câu role "red_flag" chọn dấu hiệu cấp tính ⇒ dừng, chuyển chuyên gia, không gợi ý sản phẩm.
+ *   2. Cờ an toàn Q15/Q16 ⇒ loại nhóm hoạt chất chống chỉ định khỏi routine + danh sách sản phẩm.
+ *   3. Điểm loại da — chỉ câu không có "scoring": false (bỏ Q10 thói quen, Q17 kênh liên hệ, Q15/Q16).
+ *   4. Xếp Case 1–8 theo bảng luật RULES (luật đầu tiên khớp thì dừng).
+ * Nội dung lâm sàng là gợi ý tham khảo; ca cần đánh giá chuyên sâu được chuyển chuyên gia qua Zalo.
+ */
+(function (root, factory) {
+  var api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.PharmaSkinQuizEngine = api;
+})(typeof window !== 'undefined' ? window : this, function () {
+  'use strict';
+
+  // Nhận diện nhóm hoạt chất trong tên / alias / tag sản phẩm hoặc nhãn gợi ý (so khớp không dấu, chữ thường).
+  var ACTIVE_KEYWORDS = {
+    retinoid: ['retinol', 'retinoid', 'retinal', 'tretinoin', 'adapalene', 'tazarotene'],
+    bha: ['bha', 'salicylic'],
+    aha: ['aha', 'glycolic', 'lactic acid', 'mandelic', 'peel'],
+    cysteamine: ['cyspera', 'cysteamine']
+  };
+
+  // Cờ an toàn → nhóm hoạt chất loại khỏi gợi ý (theo bảng chống chỉ định trong kế hoạch người dùng duyệt).
+  var SAFETY_EXCLUSIONS = {
+    pregnancy: ['retinoid', 'bha', 'aha', 'cysteamine'],
+    allergy_severe: ['retinoid', 'bha', 'aha', 'cysteamine']
+  };
+
+  var RED_FLAG_CODES = ['red_flag_infection', 'red_flag_allergy', 'red_flag_wound'];
+
+  function has(list, value) { return list.indexOf(value) !== -1; }
+
+  function normalize(text) {
+    return String(text || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd');
+  }
+
+  function codeOf(answers, questionId) {
+    for (var i = 0; i < answers.length; i++) {
+      if (Number(answers[i].question_id) === questionId) return answers[i].code || '';
+    }
+    return '';
+  }
+
+  function questionById(questions, id) {
+    for (var i = 0; i < questions.length; i++) if (Number(questions[i].id) === Number(id)) return questions[i];
+    return null;
+  }
+
+  // Bảng luật xếp Case — giữ đúng thứ tự đã duyệt.
+  var RULES = [
+    { case_id: 'CASE_1', test: function (c) { return c.q9 === 'acne_inflamed'; } },
+    { case_id: 'CASE_2', test: function (c) { return c.q3 === 'pigment_heavy' || c.q8 === 'melasma'; } },
+    { case_id: 'CASE_5', test: function (c) { return c.q9 === 'acne_comedonal'; } },
+    { case_id: 'CASE_6', test: function (c) { return c.q8 === 'pih'; } },
+    { case_id: 'CASE_4', test: function (c) { return c.q2 === 'sens_high' || c.q15 === 'allergy_severe'; } },
+    { case_id: 'CASE_3', test: function (c) { return c.top === 'aging'; } },
+    { case_id: 'CASE_7', test: function (c) { return c.top === 'dry'; } }
+  ];
+  var DEFAULT_CASE = 'CASE_8';
+  var CASE_TIERS = { CASE_1: 2, CASE_2: 3, CASE_5: 3, CASE_6: 3, CASE_4: 4, CASE_3: 4, CASE_7: 4, CASE_8: 5 };
+
+  function isScoring(question) { return !question || question.scoring !== false; }
+
+  function scoreSkinTypes(questions, answers) {
+    var scores = {};
+    answers.forEach(function (a) {
+      if (!a.skin_type || !isScoring(questionById(questions, a.question_id))) return;
+      scores[a.skin_type] = (scores[a.skin_type] || 0) + 1;
+    });
+    return scores;
+  }
+
+  // Loại da điểm cao nhất; hoà điểm ⇒ loại xuất hiện trước (giữ hành vi cũ của trang quiz).
+  function topSkinType(scores) {
+    var best = 'normal';
+    var max = -1;
+    Object.keys(scores).forEach(function (k) {
+      if (scores[k] > max) { max = scores[k]; best = k; }
+    });
+    return best;
+  }
+
+  function safetyFlags(answers) {
+    var flags = [];
+    var q16 = codeOf(answers, 16);
+    if (q16 === 'pregnant_or_breastfeeding' || q16 === 'planning_pregnancy') flags.push('pregnancy');
+    if (codeOf(answers, 15) === 'allergy_severe') flags.push('allergy_severe');
+    return flags;
+  }
+
+  function excludedActives(flags) {
+    var out = [];
+    flags.forEach(function (f) {
+      (SAFETY_EXCLUSIONS[f] || []).forEach(function (a) { if (!has(out, a)) out.push(a); });
+    });
+    return out;
+  }
+
+  function evaluate(questions, answers) {
+    questions = questions || [];
+    answers = answers || [];
+    var redFlag = '';
+    answers.forEach(function (a) {
+      var q = questionById(questions, a.question_id);
+      if (q && q.role === 'red_flag' && has(RED_FLAG_CODES, a.code)) redFlag = a.code;
+    });
+    var flags = safetyFlags(answers);
+    var scores = scoreSkinTypes(questions, answers);
+    var top = topSkinType(scores);
+    if (redFlag) {
+      return { tier: 1, case_id: 'RED_FLAG', red_flag: redFlag, safety_flags: flags, excluded_actives: excludedActives(flags), scores: scores, top_skin_type: top };
+    }
+    var ctx = { q2: codeOf(answers, 2), q3: codeOf(answers, 3), q8: codeOf(answers, 8), q9: codeOf(answers, 9), q15: codeOf(answers, 15), top: top };
+    var caseId = DEFAULT_CASE;
+    for (var i = 0; i < RULES.length; i++) {
+      if (RULES[i].test(ctx)) { caseId = RULES[i].case_id; break; }
+    }
+    return { tier: CASE_TIERS[caseId], case_id: caseId, red_flag: '', safety_flags: flags, excluded_actives: excludedActives(flags), scores: scores, top_skin_type: top };
+  }
+
+  function activesInText(text) {
+    var t = normalize(text);
+    return Object.keys(ACTIVE_KEYWORDS).filter(function (active) {
+      return ACTIVE_KEYWORDS[active].some(function (kw) { return new RegExp('(^|[^a-z0-9])' + kw + '([^a-z0-9]|$)').test(t); });
+    });
+  }
+
+  function isTextAllowed(text, excluded) {
+    if (!excluded || !excluded.length) return true;
+    return !activesInText(text).some(function (a) { return has(excluded, a); });
+  }
+
+  // Sản phẩm Sapo (object JSON: name/alias/tags). Loại sản phẩm kê toa (tag loai:ke-toa — cùng quy ước
+  // snippets/pc_is_rx.bwt) và sản phẩm chứa hoạt chất bị loại (tag hoatchat:<x> hoặc tên/alias).
+  function isProductAllowed(product, excluded) {
+    if (!product) return false;
+    var tags = product.tags || [];
+    if (typeof tags === 'string') tags = tags.split(',');
+    for (var i = 0; i < tags.length; i++) {
+      if (String(tags[i]).toLowerCase().replace(/\s+/g, '') === 'loai:ke-toa') return false;
+    }
+    var haystack = [product.name || product.title || '', String(product.alias || '').replace(/-/g, ' ')]
+      .concat(tags.map(function (t) { return String(t).replace(/^hoatchat:/i, '').replace(/-/g, ' '); })).join(' | ');
+    return isTextAllowed(haystack, excluded);
+  }
+
+  // Đánh dấu bước routine chứa hoạt chất bị loại: giữ tên bước, KHÔNG thay bằng sản phẩm khác tự chọn.
+  function applySafety(caseData, excluded) {
+    if (!caseData) return null;
+    function mark(steps) {
+      return (steps || []).map(function (step) {
+        var blocked = (step.actives || []).some(function (a) { return has(excluded || [], a); });
+        return Object.assign({}, step, { blocked: blocked });
+      });
+    }
+    return Object.assign({}, caseData, { routine_am: mark(caseData.routine_am), routine_pm: mark(caseData.routine_pm) });
+  }
+
+  return {
+    evaluate: evaluate,
+    applySafety: applySafety,
+    isProductAllowed: isProductAllowed,
+    isTextAllowed: isTextAllowed,
+    activesInText: activesInText,
+    RULES: RULES,
+    CASE_TIERS: CASE_TIERS,
+    SAFETY_EXCLUSIONS: SAFETY_EXCLUSIONS
+  };
+});

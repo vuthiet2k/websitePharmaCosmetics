@@ -3,6 +3,10 @@
   Dùng chung cho page.ai-skin-quiz.bwt (chấm điểm) và page.ai-skin-quiz-results.bwt (hiển thị) —
   trước đây 2 trang đọc biến mock quiz_results (không có trên Sapo) nên trang kết quả luôn rơi
   về 1 kết quả mặc định. Nội dung giữ nguyên bản fallback đang chạy ở trang quiz.
+  2026-10-05: thêm khoá `cases` — 8 Case lâm sàng (kế hoạch quiz người dùng duyệt 2026-10-05). Mỗi
+  bước routine KHÔNG ghi tên/giá sản phẩm: `keywords` = từ khoá tìm sản phẩm thật trên Sapo (AJAX
+  /search?view=quizjson, thử lần lượt), `actives`/`note_actives` = nhóm hoạt chất để chặn bước/ghi chú theo cờ an toàn (thai kỳ,
+  dị ứng nặng — assets/skin-quiz-engine.js.bwt). Giữ nguyên các khoá loại da cũ (trang kết quả dùng).
 {%- endcomment -%}
 {
   oily: { skin_type: "Làn Da Dầu / Dễ Nổi Mụn", recommend: ["Salicylic Acid (BHA 2%)", "Niacinamide 10%", "Gel Dưỡng Không Dầu Oil-Free"] },
@@ -11,5 +15,132 @@
   sensitive: { skin_type: "Làn Da Nhạy Cảm / Tổn Thương", recommend: ["Rau Má Centella Asiatica", "Panthenol (Vitamin B5)", "Kem Chống Nắng Vật Lý Dịu Nhẹ"] },
   normal: { skin_type: "Làn Da Thường Khỏe Mạnh", recommend: ["Vitamin C 15% Chống Oxy Hóa", "Kem Dưỡng Phục Hồi", "Chống Nắng Phổ Rộng Broad-Spectrum"] },
   pigmentation: { skin_type: "Làn Da Tăng Sắc Tố & Nám", recommend: ["Tranexamic Acid 3%", "Vitamin C Tinh Khiết", "Retinoid Nồng Độ Kiểm Soát"] },
-  aging: { skin_type: "Làn Da Lão Hóa & Thiếu Săn Chắc", recommend: ["Retinol 0.5% - 1.0%", "Phức Hợp Peptides", "Kem Chống Nắng Phổ Rộng"] }
+  aging: { skin_type: "Làn Da Lão Hóa & Thiếu Săn Chắc", recommend: ["Retinol 0.5% - 1.0%", "Phức Hợp Peptides", "Kem Chống Nắng Phổ Rộng"] },
+  cases: {
+    CASE_1: {
+    title: "Mụn Trứng Cá Viêm Trung Bình đến Nặng", tier: 2, skin_type_key: "oily",
+    note: "",
+    routine_am: [
+      { step: "Làm sạch (BHA)", keywords: ["sữa rửa mặt bha", "salicylic", "sữa rửa mặt"], actives: ["bha"] },
+      { step: "Cân bằng (toner)", keywords: ["toner b5", "toner"], actives: [] },
+      { step: "Niacinamide", keywords: ["niacinamide"], actives: [] },
+      { step: "Chống nắng kiềm dầu", keywords: ["chống nắng kiềm dầu", "chống nắng"], actives: [] }
+    ],
+    routine_pm: [
+      { step: "Làm sạch (BHA)", keywords: ["sữa rửa mặt bha", "salicylic", "sữa rửa mặt"], actives: ["bha"] },
+      { step: "Azelaic Acid", keywords: ["azelaic"], actives: [] },
+      { step: "Kem phục hồi (B5)", keywords: ["kem phục hồi", "phục hồi"], actives: [] },
+      { step: "Chấm mụn", keywords: ["chấm mụn", "trị mụn"], actives: ["bha"] }
+    ]
+  },
+    CASE_2: {
+    title: "Nám Mảng & Tăng Sắc Tố Thượng Bì", tier: 3, skin_type_key: "pigmentation",
+    note: "Cyspera dùng theo cách tiếp xúc ngắn: thoa 15 phút trên da khô rồi rửa sạch bằng sữa rửa mặt dịu nhẹ, sau đó mới dưỡng ẩm.", note_actives: ["cysteamine"],
+    routine_am: [
+      { step: "Làm sạch dịu nhẹ", keywords: ["sữa rửa mặt dịu nhẹ", "sữa rửa mặt"], actives: [] },
+      { step: "Vitamin C chống oxy hoá", keywords: ["vitamin c"], actives: [] },
+      { step: "Cấp ẩm HA + B5", keywords: ["hyaluronic", "cấp ẩm"], actives: [] },
+      { step: "Chống nắng dưỡng ẩm", keywords: ["chống nắng dưỡng ẩm", "chống nắng"], actives: [] }
+    ],
+    routine_pm: [
+      { step: "Cyspera (thoa 15 phút trên da khô rồi rửa sạch)", keywords: ["cyspera"], actives: ["cysteamine"] },
+      { step: "Làm sạch dịu nhẹ", keywords: ["sữa rửa mặt dịu nhẹ", "sữa rửa mặt"], actives: [] },
+      { step: "Cân bằng (toner)", keywords: ["toner b5", "toner"], actives: [] },
+      { step: "Retinol", keywords: ["retinol"], actives: ["retinoid"] },
+      { step: "Kem phục hồi (B5)", keywords: ["kem phục hồi", "phục hồi"], actives: [] }
+    ]
+  },
+    CASE_3: {
+    title: "Lão Hoá & Nếp Nhăn", tier: 4, skin_type_key: "aging",
+    note: "Skin cycling: đêm 1 Retinol, đêm 2 AHA, đêm 3–4 chỉ phục hồi B5/HA.", note_actives: ["retinoid", "aha"],
+    routine_am: [
+      { step: "Làm sạch dịu nhẹ", keywords: ["sữa rửa mặt dịu nhẹ", "sữa rửa mặt"], actives: [] },
+      { step: "Vitamin C chống oxy hoá", keywords: ["vitamin c"], actives: [] },
+      { step: "Cấp ẩm HA + B5", keywords: ["hyaluronic", "cấp ẩm"], actives: [] },
+      { step: "Chống nắng dưỡng ẩm", keywords: ["chống nắng dưỡng ẩm", "chống nắng"], actives: [] }
+    ],
+    routine_pm: [
+      { step: "Làm sạch dịu nhẹ", keywords: ["sữa rửa mặt dịu nhẹ", "sữa rửa mặt"], actives: [] },
+      { step: "Cân bằng (toner)", keywords: ["toner b5", "toner"], actives: [] },
+      { step: "Retinol hoặc AHA theo lịch skin cycling", keywords: ["retinol"], actives: ["retinoid", "aha"] },
+      { step: "Kem phục hồi (B5)", keywords: ["kem phục hồi", "phục hồi"], actives: [] }
+    ]
+  },
+    CASE_4: {
+    title: "Da Nhạy Cảm & Tổn Thương Hàng Rào Lipid", tier: 4, skin_type_key: "sensitive",
+    note: "",
+    routine_am: [
+      { step: "Làm sạch dịu nhẹ", keywords: ["sữa rửa mặt dịu nhẹ", "sữa rửa mặt"], actives: [] },
+      { step: "Cân bằng (toner)", keywords: ["toner b5", "toner"], actives: [] },
+      { step: "Cấp ẩm HA + B5", keywords: ["hyaluronic", "cấp ẩm"], actives: [] },
+      { step: "Chống nắng dưỡng ẩm", keywords: ["chống nắng dưỡng ẩm", "chống nắng"], actives: [] }
+    ],
+    routine_pm: [
+      { step: "Làm sạch dịu nhẹ", keywords: ["sữa rửa mặt dịu nhẹ", "sữa rửa mặt"], actives: [] },
+      { step: "Cân bằng (toner)", keywords: ["toner b5", "toner"], actives: [] },
+      { step: "Cấp ẩm HA + B5", keywords: ["hyaluronic", "cấp ẩm"], actives: [] },
+      { step: "Kem phục hồi (B5)", keywords: ["kem phục hồi", "phục hồi"], actives: [] }
+    ]
+  },
+    CASE_5: {
+    title: "Mụn Ẩn & Bít Tắc Vùng Chữ T", tier: 3, skin_type_key: "oily",
+    note: "",
+    routine_am: [
+      { step: "Làm sạch (BHA)", keywords: ["sữa rửa mặt bha", "salicylic", "sữa rửa mặt"], actives: ["bha"] },
+      { step: "Niacinamide", keywords: ["niacinamide"], actives: [] },
+      { step: "Chống nắng kiềm dầu", keywords: ["chống nắng kiềm dầu", "chống nắng"], actives: [] }
+    ],
+    routine_pm: [
+      { step: "Làm sạch (BHA)", keywords: ["sữa rửa mặt bha", "salicylic", "sữa rửa mặt"], actives: ["bha"] },
+      { step: "Serum BHA 2%", keywords: ["bha", "salicylic"], actives: ["bha"] },
+      { step: "Kem phục hồi (B5)", keywords: ["kem phục hồi", "phục hồi"], actives: [] }
+    ]
+  },
+    CASE_6: {
+    title: "Tăng Sắc Tố Sau Viêm (PIH)", tier: 3, skin_type_key: "pigmentation",
+    note: "",
+    routine_am: [
+      { step: "Làm sạch dịu nhẹ", keywords: ["sữa rửa mặt dịu nhẹ", "sữa rửa mặt"], actives: [] },
+      { step: "Niacinamide", keywords: ["niacinamide"], actives: [] },
+      { step: "Cấp ẩm HA + B5", keywords: ["hyaluronic", "cấp ẩm"], actives: [] },
+      { step: "Chống nắng kiềm dầu", keywords: ["chống nắng kiềm dầu", "chống nắng"], actives: [] }
+    ],
+    routine_pm: [
+      { step: "Làm sạch dịu nhẹ", keywords: ["sữa rửa mặt dịu nhẹ", "sữa rửa mặt"], actives: [] },
+      { step: "Azelaic Acid", keywords: ["azelaic"], actives: [] },
+      { step: "Kem phục hồi (B5)", keywords: ["kem phục hồi", "phục hồi"], actives: [] }
+    ]
+  },
+    CASE_7: {
+    title: "Da Khô Thô Ráp & Tăng Sừng Hoá", tier: 4, skin_type_key: "dry",
+    note: "",
+    routine_am: [
+      { step: "Làm sạch dịu nhẹ", keywords: ["sữa rửa mặt dịu nhẹ", "sữa rửa mặt"], actives: [] },
+      { step: "Cân bằng (toner)", keywords: ["toner b5", "toner"], actives: [] },
+      { step: "Cấp ẩm HA + B5", keywords: ["hyaluronic", "cấp ẩm"], actives: [] },
+      { step: "Chống nắng dưỡng ẩm", keywords: ["chống nắng dưỡng ẩm", "chống nắng"], actives: [] }
+    ],
+    routine_pm: [
+      { step: "Làm sạch dịu nhẹ", keywords: ["sữa rửa mặt dịu nhẹ", "sữa rửa mặt"], actives: [] },
+      { step: "Tẩy da chết AHA (2 lần/tuần)", keywords: ["aha", "tẩy tế bào chết"], actives: ["aha"] },
+      { step: "Cấp ẩm HA + B5", keywords: ["hyaluronic", "cấp ẩm"], actives: [] },
+      { step: "Kem phục hồi (B5)", keywords: ["kem phục hồi", "phục hồi"], actives: [] }
+    ]
+  },
+    CASE_8: {
+    title: "Da Thường Khoẻ Mạnh", tier: 5, skin_type_key: "normal",
+    note: "",
+    routine_am: [
+      { step: "Làm sạch dịu nhẹ", keywords: ["sữa rửa mặt dịu nhẹ", "sữa rửa mặt"], actives: [] },
+      { step: "Vitamin C chống oxy hoá", keywords: ["vitamin c"], actives: [] },
+      { step: "Chống nắng", keywords: ["chống nắng"], actives: [] }
+    ],
+    routine_pm: [
+      { step: "Làm sạch dịu nhẹ", keywords: ["sữa rửa mặt dịu nhẹ", "sữa rửa mặt"], actives: [] },
+      { step: "Cân bằng (toner)", keywords: ["toner b5", "toner"], actives: [] },
+      { step: "Retinol (dùng xen kẽ)", keywords: ["retinol"], actives: ["retinoid"] },
+      { step: "Kem dưỡng ẩm", keywords: ["kem dưỡng ẩm", "kem dưỡng"], actives: [] }
+    ]
+  }
+  }
 }

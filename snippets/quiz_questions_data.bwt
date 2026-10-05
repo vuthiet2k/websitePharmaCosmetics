@@ -1,9 +1,37 @@
 {%- comment -%}
-  quiz_questions_data.bwt (2026-10-03) — bộ 17 câu hỏi AI Skin Quiz, in ra 1 mảng JS. Trước đây
+  quiz_questions_data.bwt (2026-10-03) — bộ câu hỏi AI Skin Quiz, in ra 1 mảng JS. Trước đây
   page.ai-skin-quiz.bwt đọc biến mock quiz_questions (chỉ có ở preview) → trên Sapo rơi về bộ dự
   phòng 5 câu trong khi giao diện ghi "17 câu hỏi". Nội dung chuyển nguyên từ data/quiz-questions.js.
+  2026-10-05: thêm câu id 18 (role "red_flag", đặt đầu bộ) — chọn 1 trong 3 dấu hiệu cấp tính ⇒ Tier 1,
+  dừng quiz, chuyển chuyên gia. "scoring": false = KHÔNG cộng điểm loại da (Q10 thói quen, Q17 kênh
+  liên hệ, Q15/Q16 cờ an toàn). "code" = mã đáp án cho luật xếp Case (assets/skin-quiz-engine.js.bwt).
+  Giữ nguyên id cũ để CRM (answers_json) so được với dữ liệu trước.
 {%- endcomment -%}
 [
+  {
+    "id": 18,
+    "role": "red_flag",
+    "scoring": false,
+    "question": "Hiện da bạn có tình trạng nào sau đây không?",
+    "options": [
+      {
+        "text": "Không có tình trạng nào dưới đây",
+        "code": "none"
+      },
+      {
+        "text": "Sưng đỏ lan nhanh, nóng đau, có mủ hoặc kèm sốt",
+        "code": "red_flag_infection"
+      },
+      {
+        "text": "Nổi mẩn, phù mặt hoặc ngứa rát dữ dội sau khi dùng sản phẩm",
+        "code": "red_flag_allergy"
+      },
+      {
+        "text": "Có vết thương hở hoặc vùng da chảy dịch",
+        "code": "red_flag_wound"
+      }
+    ]
+  },
   {
     "id": 1,
     "question": "Da bạn thường như thế nào vào giữa trưa (chưa rửa mặt từ sáng)?",
@@ -32,19 +60,23 @@
     "options": [
       {
         "text": "Rất dễ, gần như sản phẩm nào cũng phải test trước",
-        "skin_type": "sensitive"
+        "skin_type": "sensitive",
+        "code": "sens_high"
       },
       {
         "text": "Thỉnh thoảng, tuỳ sản phẩm",
-        "skin_type": "combination"
+        "skin_type": "combination",
+        "code": "sens_mid"
       },
       {
         "text": "Hiếm khi",
-        "skin_type": "normal"
+        "skin_type": "normal",
+        "code": "sens_low"
       },
       {
         "text": "Không bao giờ",
-        "skin_type": "oily"
+        "skin_type": "oily",
+        "code": "sens_none"
       }
     ]
   },
@@ -54,19 +86,23 @@
     "options": [
       {
         "text": "Có, khá nhiều và rõ",
-        "skin_type": "pigmentation"
+        "skin_type": "pigmentation",
+        "code": "pigment_heavy"
       },
       {
         "text": "Có nhưng nhẹ",
-        "skin_type": "pigmentation"
+        "skin_type": "pigmentation",
+        "code": "pigment_mild"
       },
       {
         "text": "Không, chỉ lo về mụn/dầu",
-        "skin_type": "oily"
+        "skin_type": "oily",
+        "code": "pigment_none_acne"
       },
       {
         "text": "Không, da khá đều màu",
-        "skin_type": "normal"
+        "skin_type": "normal",
+        "code": "pigment_none"
       }
     ]
   },
@@ -164,19 +200,23 @@
     "options": [
       {
         "text": "Nám mảng đối xứng 2 bên gò má",
-        "skin_type": "pigmentation"
+        "skin_type": "pigmentation",
+        "code": "melasma"
       },
       {
         "text": "Đốm nâu chân sâu, sạm màu sau mụn (PIH)",
-        "skin_type": "pigmentation"
+        "skin_type": "pigmentation",
+        "code": "pih"
       },
       {
         "text": "Tàn nhang rải rác, tăng sắc tố khi tiếp xúc nắng",
-        "skin_type": "pigmentation"
+        "skin_type": "pigmentation",
+        "code": "freckles"
       },
       {
         "text": "Không có sắc tố, chỉ đỏ rát nhạy cảm & mụn",
-        "skin_type": "sensitive"
+        "skin_type": "sensitive",
+        "code": "no_pigment"
       }
     ]
   },
@@ -186,19 +226,23 @@
     "options": [
       {
         "text": "Nhiều mụn viêm đỏ, sưng đau, dễ để lại thâm",
-        "skin_type": "oily"
+        "skin_type": "oily",
+        "code": "acne_inflamed"
       },
       {
         "text": "Mụn ẩn li ti dưới da, ít mụn viêm rõ",
-        "skin_type": "combination"
+        "skin_type": "combination",
+        "code": "acne_comedonal"
       },
       {
         "text": "Thỉnh thoảng nổi 1-2 nốt quanh chu kỳ nội tiết",
-        "skin_type": "normal"
+        "skin_type": "normal",
+        "code": "acne_hormonal_mild"
       },
       {
         "text": "Không nổi mụn, nhưng da dễ đỏ rát khó chịu",
-        "skin_type": "sensitive"
+        "skin_type": "sensitive",
+        "code": "acne_none_red"
       }
     ]
   },
@@ -222,7 +266,9 @@
         "text": "Rất tối giản vì da dễ kích ứng khi thêm sản phẩm mới",
         "skin_type": "sensitive"
       }
-    ]
+    ],
+    "scoring": false,
+    "role": "habit"
   },
   {
     "id": 11,
@@ -318,21 +364,27 @@
     "options": [
       {
         "text": "Có, da rất dễ dị ứng, cần hoạt chất dịu nhẹ tối đa",
-        "skin_type": "sensitive"
+        "skin_type": "sensitive",
+        "code": "allergy_severe"
       },
       {
         "text": "Có nhưng nhẹ, chỉ cần tránh vài thành phần cụ thể",
-        "skin_type": "combination"
+        "skin_type": "combination",
+        "code": "allergy_mild"
       },
       {
         "text": "Không, da dung nạp tốt hầu hết sản phẩm",
-        "skin_type": "normal"
+        "skin_type": "normal",
+        "code": "allergy_none"
       },
       {
         "text": "Không rõ, chưa từng test dị ứng bài bản",
-        "skin_type": "oily"
+        "skin_type": "oily",
+        "code": "allergy_unknown"
       }
-    ]
+    ],
+    "scoring": false,
+    "role": "safety"
   },
   {
     "id": 16,
@@ -340,21 +392,27 @@
     "options": [
       {
         "text": "Có — cần phác đồ an toàn thai kỳ, tránh Retinoid/hoạt chất mạnh",
-        "skin_type": "sensitive"
+        "skin_type": "sensitive",
+        "code": "pregnant_or_breastfeeding"
       },
       {
         "text": "Không",
-        "skin_type": "normal"
+        "skin_type": "normal",
+        "code": "not_pregnant"
       },
       {
         "text": "Không, nhưng đang có kế hoạch mang thai gần đây",
-        "skin_type": "sensitive"
+        "skin_type": "sensitive",
+        "code": "planning_pregnancy"
       },
       {
         "text": "Không áp dụng",
-        "skin_type": "normal"
+        "skin_type": "normal",
+        "code": "not_applicable"
       }
-    ]
+    ],
+    "scoring": false,
+    "role": "safety"
   },
   {
     "id": 17,
@@ -376,6 +434,8 @@
         "text": "Chỉ cần xem online, chưa cần tư vấn thêm",
         "skin_type": "oily"
       }
-    ]
+    ],
+    "scoring": false,
+    "role": "contact"
   }
 ]
