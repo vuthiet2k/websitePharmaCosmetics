@@ -378,6 +378,26 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
 - Đã bỏ khỏi PDP (PRD mục 2): chia sẻ mạng xã hội, "Thêm vào yêu thích", widget lượt xem/lượt mua
   `.abps-productdetail`. Field `product_sharing_enable` còn trong schema nhưng không còn dùng ở PDP.
 
+## AI Skin Quiz — phân tầng Tier/Case & cờ an toàn (chốt 2026-10-05)
+
+- Engine thuần **`assets/skin-quiz-engine.js.bwt`** (`window.PharmaSkinQuizEngine`, `require` được trong Node) là
+  nguồn logic duy nhất cho trang quiz, trang kết quả và `tests/test_skin_quiz_clinical_matrix.js`
+  (`npm run test:quiz`). Không chép lại luật vào template.
+- `snippets/quiz_questions_data.bwt`: 18 câu; câu id 18 (role `red_flag`) đứng đầu — chọn dấu hiệu cấp tính ⇒
+  **Tier 1**, dừng quiz, chỉ hiện cảnh báo + Zalo. `"scoring": false` (Q10 thói quen, Q15/Q16 cờ an toàn,
+  Q17 kênh liên hệ, Q18) không cộng điểm loại da. Đáp án dùng cho luật có `code`. Giữ id cũ (CRM so sánh).
+- Thứ tự luật Case: Q9 mụn viêm → C1 (Tier 2) · Q3 sắc tố rõ / Q8 nám mảng → C2 · Q9 mụn ẩn → C5 · Q8 PIH →
+  C6 · Q2 rất nhạy cảm / Q15 dị ứng nặng → C4 · top aging → C3 · top dry → C7 · còn lại → C8 (Tier 5).
+- Cờ an toàn: Q16 mang thai/cho con bú/sắp mang thai và Q15 dị ứng nặng ⇒ loại Retinoid/BHA/AHA/Cysteamine
+  khỏi routine (bước hiện "cần chuyên gia chỉ định riêng", không tự thay sản phẩm khác), nhãn gợi ý và lưới sản
+  phẩm. Ca cần chuyên gia (Tier 1/2, cờ an toàn) → nút Zalo `settings.contact_zalo` (người dùng chốt: chuyên gia
+  tiếp nhận qua Zalo, không duyệt nội dung trước).
+- `snippets/quiz_results_data.bwt` → khoá `cases`: mỗi bước chỉ có `step`/`keywords`/`actives`, **không ghi
+  tên/giá/SKU sản phẩm**. Sản phẩm lấy THẬT từ Sapo qua AJAX `/search?type=product&view=quizjson&query=`
+  (`templates/search.quizjson.bwt`, đã bỏ sản phẩm `loai:ke-toa`). Snippet này được nhúng làm biểu thức JS
+  (`var x = {% include %}`) — không bọc `<script>`.
+- Câu chữ cảnh báo: `snippets/quiz_safety_copy.bwt` + field `quiz_*` (Theme Settings, nhóm AI Skin).
+
 ## 9. Cách đọc báo cáo/spec bên ngoài — luôn xác minh, không copy số liệu
 
 Kiểm chứng 16/09/2026 với báo cáo "Báo Cáo Kiểm Thử UI_UX & Đối Chiếu Snippets Codebase - Hugo Theme

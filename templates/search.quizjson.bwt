@@ -1,0 +1,30 @@
+{%- layout none -%}
+{%- comment -%}
+  search.quizjson (2026-10-05) — AJAX cho kết quả AI Skin Quiz: /search?query=<từ khoá>&type=product&view=quizjson.
+  Trả sản phẩm THẬT của cửa hàng (không ghi cứng tên/giá trong theme). Bỏ sản phẩm kê toa (tag
+  loai:ke-toa — snippets/pc_is_rx.bwt) ngay tại đây; trình duyệt lọc thêm hoạt chất theo cờ an toàn
+  bằng alias/tags (assets/skin-quiz-engine.js.bwt).
+{%- endcomment -%}
+[
+{%- assign pc_qj_first = true -%}
+{%- for result in search.results limit: 8 -%}
+{%- assign pc_qj_skip = false -%}
+{%- if result.object_type == 'article' or result.object_type == 'page' -%}{%- assign pc_qj_skip = true -%}{%- endif -%}
+{%- assign product = result -%}
+{%- include 'pc_is_rx' -%}
+{%- if pc_is_rx -%}{%- assign pc_qj_skip = true -%}{%- endif -%}
+{%- unless pc_qj_skip -%}
+{%- unless pc_qj_first -%},{%- endunless -%}
+{%- assign pc_qj_first = false -%}
+{
+"name": {{ result.name | json }},
+"alias": {{ result.alias | json }},
+"url": {{ result.url | json }},
+"image": {% if result.featured_image.src != blank %}{{ result.featured_image.src | img_url: 'medium' | json }}{% else %}""{% endif %},
+"price": {% if result.price > 0 %}{{ result.price | money | json }}{% else %}"Liên hệ"{% endif %},
+"available": {% if result.available %}true{% else %}false{% endif %},
+"tags": {{ result.tags | json }}
+}
+{%- endunless -%}
+{%- endfor -%}
+]

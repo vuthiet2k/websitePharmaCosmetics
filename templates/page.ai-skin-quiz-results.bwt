@@ -9,6 +9,8 @@
 {% include 'breadcrumb' %}
 {% include 'customer_context_extractor' %}
 <script src="{{ 'crm-intake.js' | asset_url }}" defer></script>
+{%- comment -%} 2026-10-05: engine Tier/Case/cờ an toàn dùng chung với trang quiz (nạp đồng bộ). {%- endcomment -%}
+<script src="{{ 'skin-quiz-engine.js' | asset_url }}"></script>
 
 <script>
   // Dữ liệu sản phẩm và bài viết từ Sapo cung cấp qua Liquid context
@@ -31,6 +33,7 @@
     {%- endfor -%}
   ];
   window.PharmaQuizResultsData = {% include 'quiz_results_data' %};
+  window.PharmaQuizSafetyCopy = {% include 'quiz_safety_copy' %};
 </script>
 
 <section class="py-6 sm:py-10 bg-slate-50/50 min-h-screen">
@@ -75,7 +78,7 @@
 
           <div class="p-4 rounded-xl bg-gray-50/80 border border-gray-100 space-y-1">
             <span class="text-gray-500 block text-xs">Nguồn phân tích:</span>
-            <strong class="text-gray-900 block font-semibold" data-consultation-source>Khảo sát chuyên sâu 17 câu</strong>
+            <strong class="text-gray-900 block font-semibold" data-consultation-source>Khảo sát chuyên sâu câu</strong>
             <span class="text-[11px] text-gray-500 block" data-consultation-date>Hôm nay</span>
           </div>
 
@@ -147,8 +150,11 @@
         </figure>
         <p class="text-sm text-gray-600" data-scan-age hidden></p>
 
-        <!-- 3 Giai đoạn phác đồ -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2">
+        <div class="pc-quiz-alert" data-quiz-alert hidden></div>
+        <div class="pc-quiz-routine" data-quiz-routine hidden></div>
+
+        <!-- 3 Giai đoạn phác đồ (soi da camera; khảo sát câu hỏi dùng routine theo Case ở trên) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2" data-stage-grid>
           <div class="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 space-y-2">
             <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider block">GIAI ĐOẠN 1</span>
             <h4 class="text-sm font-bold text-gray-900">Làm Dịu &amp; Ổn Định Nền Da</h4>
@@ -277,22 +283,35 @@
   var demoFlag = root.querySelector('[data-result-demo-flag]');
   if (demoFlag) demoFlag.hidden = !isDemo;
 
+  // 2026-10-05: Tier/Case/cờ an toàn do trang quiz lưu (pc_quiz_result, không có thông tin cá nhân).
+  var engine = window.PharmaSkinQuizEngine || null;
+  var safety = window.PharmaQuizSafetyCopy || {};
+  var quizResult = null;
+  try { quizResult = JSON.parse(sessionStorage.getItem('pc_quiz_result') || 'null'); } catch (e) {}
+  if (skinScan || isDemo) quizResult = null;
+  var excluded = (quizResult && quizResult.excluded_actives) || [];
+  var quizCase = (quizResult && resultsData.cases) ? resultsData.cases[quizResult.case_id] : null;
+
   var result = resultsData[skinType] || {
     skin_type: 'Làn Da Dầu / Dễ Nổi Mụn',
     recommend: ['Salicylic Acid (BHA 2%)', 'Niacinamide 10%', 'Gel Dưỡng Không Dầu Oil-Free']
   };
 
   if (!skinScan) {
-    root.querySelector('[data-result-title]').textContent = result.skin_type;
+    root.querySelector('[data-result-title]').textContent = (quizResult && quizResult.tier === 1)
+      ? (safety.redFlagTitle || result.skin_type)
+      : (quizCase ? quizCase.title : result.skin_type);
     root.querySelector('[data-result-summary]').textContent = isDemo
-      ? 'Đây là ví dụ minh hoạ giao diện kết quả — hãy làm bài khảo sát 17 câu hỏi hoặc soi da để nhận gợi ý chuẩn xác nhất cho bạn.'
-      : 'Dựa trên câu trả lời thực tế của bạn ở bài khảo sát 17 câu hỏi lâm sàng.';
+      ? 'Đây là ví dụ minh hoạ giao diện kết quả — hãy làm bài khảo sát câu hỏi hoặc soi da để nhận gợi ý chuẩn xác nhất cho bạn.'
+      : 'Dựa trên câu trả lời thực tế của bạn ở bài khảo sát câu hỏi.';
   }
 
   // Render hoạt chất
   var rec = root.querySelector('[data-result-recommend]');
   rec.innerHTML = '';
-  (result.recommend || []).forEach(function (r) {
+  (result.recommend || []).filter(function (r) {
+    return !engine || engine.isTextAllowed(r, excluded);
+  }).forEach(function (r) {
     var span = document.createElement('span');
     span.className = 'pc-kit-badge-gold px-3 py-1.5 text-xs font-semibold';
     span.textContent = r;
@@ -401,6 +420,157 @@
     });
   }
 
+  // ── 2026-10-05: KẾT QUẢ KHẢO SÁT THEO CASE (assets/skin-quiz-engine.js.bwt + quiz_results_data.cases) ──
+  // Sản phẩm từng bước lấy THẬT từ Sapo qua /search?view=quizjson (không ghi cứng tên/giá); bước có hoạt
+  // chất bị loại theo cờ an toàn (thai kỳ, dị ứng nặng) chỉ hiện nhãn "cần chuyên gia chỉ định riêng".
+  function renderQuizCase() {
+    var alertBox = root.querySelector('[data-quiz-alert]');
+    var routineBox = root.querySelector('[data-quiz-routine]');
+    if (!quizResult || skinScan || !routineBox || !alertBox) return;
+
+    var stageGrid = root.querySelector('[data-stage-grid]');
+    if (stageGrid) stageGrid.hidden = true;
+
+    function addNote(text, modifier) {
+      if (!text) return;
+      var p = document.createElement('p');
+      p.className = 'pc-quiz-alert__note' + (modifier ? ' pc-quiz-alert__note--' + modifier : '');
+      p.textContent = text;
+      alertBox.appendChild(p);
+      alertBox.hidden = false;
+    }
+    function addZalo() {
+      var a = document.createElement('a');
+      a.className = 'pc-quiz-alert__cta';
+      a.href = safety.zaloUrl || '/pages/dat-lich-tu-van';
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = safety.zaloLabel || 'Liên hệ chuyên gia qua Zalo';
+      alertBox.appendChild(a);
+    }
+
+    if (quizResult.tier === 1) {
+      addNote(safety.redFlagText, 'danger');
+      addZalo();
+      var recWrap = rec && rec.parentElement;
+      if (recWrap) recWrap.hidden = true;
+      var productsSection = root.querySelector('[data-result-products-section]');
+      if (productsSection) productsSection.hidden = true;
+      return;
+    }
+
+    var flags = quizResult.safety_flags || [];
+    if (quizResult.tier === 2) addNote(safety.tier2Note, 'warn');
+    if (flags.indexOf('pregnancy') !== -1) addNote(safety.pregnancyNote, 'warn');
+    if (flags.indexOf('allergy_severe') !== -1) addNote(safety.allergyNote, 'warn');
+    if (!alertBox.hidden) addZalo();
+
+    var caseData = quizCase && engine ? engine.applySafety(quizCase, excluded) : quizCase;
+    if (!caseData) return;
+
+    // Ghi chú cách dùng của bước đã bị ẩn (vd Cyspera khi mang thai) cũng ẩn theo.
+    var noteBlocked = (caseData.note_actives || []).some(function (a) { return excluded.indexOf(a) !== -1; });
+    if (caseData.note && !noteBlocked) {
+      var note = document.createElement('p');
+      note.className = 'pc-quiz-routine__note';
+      note.textContent = caseData.note;
+      routineBox.appendChild(note);
+    }
+    [['routine_am', 'Buổi sáng'], ['routine_pm', 'Buổi tối']].forEach(function (pair) {
+      var steps = caseData[pair[0]] || [];
+      if (!steps.length) return;
+      var col = document.createElement('div');
+      col.className = 'pc-quiz-routine__col';
+      var h = document.createElement('h4');
+      h.className = 'pc-quiz-routine__title';
+      h.textContent = pair[1];
+      col.appendChild(h);
+      var list = document.createElement('ol');
+      list.className = 'pc-quiz-routine__list';
+      steps.forEach(function (step) {
+        var li = document.createElement('li');
+        li.className = 'pc-quiz-step' + (step.blocked ? ' pc-quiz-step--blocked' : '');
+        li.setAttribute('data-quiz-step', '');
+        var name = document.createElement('span');
+        name.className = 'pc-quiz-step__name';
+        name.textContent = step.step;
+        li.appendChild(name);
+        var slot = document.createElement('div');
+        slot.className = 'pc-quiz-step__product';
+        li.appendChild(slot);
+        if (step.blocked) {
+          slot.textContent = safety.blockedStepLabel || 'Cần chuyên gia chỉ định riêng';
+          li.setAttribute('data-quiz-step-blocked', '');
+        } else {
+          fillStepProduct(step, slot);
+        }
+        list.appendChild(li);
+      });
+      col.appendChild(list);
+      routineBox.appendChild(col);
+    });
+    routineBox.hidden = false;
+  }
+
+  var quizSearchCache = {};
+  function searchProducts(keyword) {
+    if (!quizSearchCache[keyword]) {
+      quizSearchCache[keyword] = window.fetch('/search?type=product&view=quizjson&query=' + encodeURIComponent(keyword), { credentials: 'same-origin' })
+        .then(function (res) { return res.ok ? res.json() : []; })
+        .catch(function () { return []; });
+    }
+    return quizSearchCache[keyword];
+  }
+
+  function fillStepProduct(step, slot) {
+    var keywords = (step.keywords || []).slice();
+    function next() {
+      if (!keywords.length) {
+        var link = document.createElement('a');
+        link.className = 'pc-quiz-step__search';
+        link.href = '/search?query=' + encodeURIComponent((step.keywords || [step.step])[0]);
+        link.textContent = safety.noProductLabel || 'Tìm sản phẩm phù hợp';
+        slot.appendChild(link);
+        return;
+      }
+      var kw = keywords.shift();
+      searchProducts(kw).then(function (items) {
+        var pick = (items || []).filter(function (p) {
+          return p && p.url && (!engine || engine.isProductAllowed(p, excluded));
+        })[0];
+        if (!pick) { next(); return; }
+        var a = document.createElement('a');
+        a.className = 'pc-quiz-step__link';
+        a.href = pick.url;
+        a.setAttribute('data-quiz-step-product', pick.alias || '');
+        if (pick.image) {
+          var img = document.createElement('img');
+          img.src = pick.image;
+          img.alt = pick.name || '';
+          img.width = 48;
+          img.height = 48;
+          img.loading = 'lazy';
+          a.appendChild(img);
+        }
+        var text = document.createElement('span');
+        text.className = 'pc-quiz-step__text notranslate';
+        text.setAttribute('translate', 'no');
+        text.textContent = pick.name || '';
+        a.appendChild(text);
+        if (pick.price) {
+          var price = document.createElement('span');
+          price.className = 'pc-quiz-step__price';
+          price.textContent = pick.price;
+          a.appendChild(price);
+        }
+        slot.appendChild(a);
+      });
+    }
+    next();
+  }
+
+  renderQuizCase();
+
   // ── ĐỒNG BỘ THÔNG TIN KHÁCH HÀNG TỪ GAS HOẶC CONTEXT ────────────────────
   function syncCustomerInfo() {
     var custNameEl = root.querySelector('[data-customer-name]');
@@ -495,8 +665,12 @@
       keywords = ['ban-chay', 'san-pham-noi-bat', 'duong-am', 'lam-sach-da'];
     }
 
+    // 2026-10-05: bỏ sản phẩm kê toa (loai:ke-toa) và sản phẩm chứa hoạt chất bị loại theo cờ an toàn.
+    var allowedProducts = allProducts.filter(function (p) {
+      return !engine || engine.isProductAllowed(p, excluded);
+    });
     // Lọc sản phẩm phù hợp
-    var matched = allProducts.filter(function (p) {
+    var matched = allowedProducts.filter(function (p) {
       var tags = (p.tags || []).join(' ').toLowerCase();
       var name = (p.name || '').toLowerCase();
       var alias = (p.alias || '').toLowerCase();
@@ -505,7 +679,7 @@
       });
     });
 
-    if (matched.length === 0) matched = allProducts.slice(0, 4);
+    if (matched.length === 0) matched = allowedProducts.slice(0, 4);
     else if (matched.length > 4) matched = matched.slice(0, 4);
 
     matched.forEach(function (prod) {
@@ -658,7 +832,11 @@
         : {
             skin_type: result.skin_type,
             scores: { skin_type: skinType },
-            recommendations: result.recommend || [],
+            recommendations: (result.recommend || []).filter(function (r) { return !engine || engine.isTextAllowed(r, excluded); }),
+            summary: quizResult ? [quizCase ? quizCase.title : result.skin_type, 'Tier ' + quizResult.tier + ' (' + quizResult.case_id + ')'].concat((quizResult.safety_flags || []).length ? ['Cờ an toàn: ' + quizResult.safety_flags.join(', ')] : []).join(' | ') : result.skin_type,
+            tier: quizResult ? quizResult.tier : null,
+            case_id: quizResult ? quizResult.case_id : '',
+            safety_flags: quizResult ? (quizResult.safety_flags || []) : [],
             consent: true,
             consent_at: new Date().toISOString()
           };
@@ -680,17 +858,13 @@
         syncCustomerInfo();
         setTimeout(closeSaveModal, 1500);
       }).catch(function (err) {
+        // 2026-10-05: lưu thất bại thì báo đúng là CHƯA lưu — trước đây báo "Đã lưu…" và ghi record id
+        // giả crm_local_* khiến thẻ khách hàng hiện "đã đồng bộ" dù không có dòng nào trên Sheet.
         accept.disabled = false;
         var statusEl = document.getElementById('aiSkinCrmConsentStatus');
         if (statusEl) {
-          statusEl.textContent = 'Đã lưu phiên kết quả vào bộ nhớ an toàn (Chế độ Safe Mode).';
+          statusEl.textContent = {{ settings.crm_consent_error_message | default: 'Chưa thể lưu kết quả lúc này. Vui lòng thử lại hoặc liên hệ chuyên gia.' | json }};
         }
-        try {
-          sessionStorage.setItem('pc_crm_intake_record_id', 'crm_local_' + Date.now());
-          sessionStorage.setItem('pc_crm_saved_at', new Date().toISOString());
-        } catch (e) {}
-        syncCustomerInfo();
-        setTimeout(closeSaveModal, 1500);
       });
     });
   }
