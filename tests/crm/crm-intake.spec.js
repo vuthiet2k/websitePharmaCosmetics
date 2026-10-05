@@ -32,6 +32,41 @@ test.describe('CRM Intake độc lập', () => {
     expect(crmRequests).toEqual([]);
   });
 
+  test('Quiz gửi save_ai_chat kèm consent khi khách đồng ý lưu (2026-10-05)', async ({ page }) => {
+    // Endpoint giả: chặn request GAS bằng page.route — không ghi dữ liệu lên Sheet thật.
+    await page.addInitScript(() => {
+      window.PharmaCrmIntakeConfig = { enabled: true, endpoint: 'https://script.google.com/macros/s/test-crm/exec', timeout_ms: '10000' };
+    });
+    const bodies = [];
+    await page.route(/script\.google\.com\/macros\//, async route => {
+      const body = JSON.parse(route.request().postData() || '{}');
+      bodies.push(body);
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, record_id: body.submission_id }) });
+    });
+
+    await page.goto('/kham-da-ai');
+    await page.locator('.quick-reply-chip').first().click();
+    for (let index = 0; index < 20; index += 1) {
+      if (await page.locator('#btnSaveAiResult').count()) break;
+      await page.waitForFunction(() => Boolean(
+        document.querySelector('#btnSaveAiResult') || document.querySelector('.quick-reply-chip')
+      ));
+      if (await page.locator('#btnSaveAiResult').count()) break;
+      await page.locator('.quick-reply-chip').first().click();
+    }
+
+    await page.locator('#btnSaveAiResult').click();
+    await expect(page.locator('#aiSkinCrmConsentAccept')).toBeEnabled();
+    await page.locator('#aiSkinCrmConsentAccept').click();
+    await expect.poll(() => bodies.filter(b => b.action === 'save_ai_chat').length).toBe(1);
+    const saved = bodies.find(b => b.action === 'save_ai_chat');
+    expect(saved.consent).toBe(true);
+    expect(saved.consent_at).toBeTruthy();
+    expect(saved.skin_type).toBeTruthy();
+    expect(saved.answers).toBeTruthy();
+    await expect(page.locator('#aiSkinCrmConsentStatus')).not.toHaveText('Đang lưu…');
+  });
+
   test('Trang đặt lịch nạp customer context và client CRM tách riêng', async ({ page }) => {
     await page.goto('/dat-lich-tu-van');
     await expect(page.locator('#mops-customer-phone')).toBeVisible();

@@ -526,10 +526,15 @@ window.PharmaSkinScanProductLabels = {
       scores: latestCrmResult.scores,
       recommendations: latestCrmResult.recommendations,
       answers: latestCrmResult.answers,
-      source: 'quiz'
+      source: 'quiz',
+      // 2026-10-05: khách vừa bấm "Đồng ý lưu" — crm-intake.js và GAS đều từ chối request thiếu consent.
+      consent: true,
+      consent_at: new Date().toISOString()
     };
 
-    window.PharmaCrmIntake.submit(payload).then(function(res) {
+    // 2026-10-05: client chỉ có submitAiChat (save_ai_chat → tab AI_Chat_Results); gọi .submit() cũ
+    // ném TypeError ngay trong click handler nên kết quả quiz chưa bao giờ lên Sheet.
+    window.PharmaCrmIntake.submitAiChat(payload).then(function(res) {
       if (res && res.success) {
         crmConsentStatus.textContent = crmUi.successMessage;
         setTimeout(closeCrmConsent, 1200);
