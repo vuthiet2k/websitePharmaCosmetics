@@ -377,6 +377,9 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
   phẩm thường (form app review), ẩn 100% với kê toa.
 - Đã bỏ khỏi PDP (PRD mục 2): chia sẻ mạng xã hội, "Thêm vào yêu thích", widget lượt xem/lượt mua
   `.abps-productdetail`. Field `product_sharing_enable` còn trong schema nhưng không còn dùng ở PDP.
+- Khối "Đánh giá từ khách hàng" và "Câu hỏi thường gặp" ở PDP **chỉ hiện bài gắn tag
+  `sanpham:<alias sản phẩm>`** (cùng quy ước khối Ý kiến chuyên gia); không có bài khớp ⇒ ẩn hẳn khối.
+  Không bao giờ đổ cả blog chung vào mọi sản phẩm (đánh giá không gắn sản phẩm = không xác thực).
 
 ## AI Skin Quiz — phân tầng Tier/Case & cờ an toàn (chốt 2026-10-05)
 
