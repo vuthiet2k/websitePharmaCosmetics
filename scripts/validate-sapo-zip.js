@@ -165,6 +165,10 @@ function main() {
   // 2026-10-05: Sapo biên dịch asset .bwt theo lô — 1 file lỗi ⇒ MỌI asset .bwt (jquery.js, global_core.scss.css…)
   // trả 200 rỗng, cả site mất CSS/JS. Chặn 2 lỗi đã gặp: min()/max() trộn đơn vị (libsass coi là hàm Sass,
   // báo "Incompatible units") và filter gõ sai kiểu `| assert_url`.
+  // 2026-10-06: Sapo KHÔNG biên dịch asset .bwt khi tải gói (theme 1168431/1168497/1168577 trả rỗng) ⇒ cấm trong gói.
+  const bwtAssets = [...names].filter((name) => /^assets\/.+\.bwt$/i.test(name));
+  if (bwtAssets.length) errors.push(`gói còn asset .bwt (Sapo sẽ trả rỗng) — ${summarize(bwtAssets, 20)}`);
+
   const badAssetSyntax = [];
   for (const [name, content] of data) {
     if (!/^assets\/.+\.bwt$/i.test(name)) continue;

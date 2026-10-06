@@ -12,14 +12,15 @@
  * - .scss.bwt và .js.bwt có Liquid copy nguyên bản: Sapo tự render Liquid/biên dịch SCSS phía server,
  *   minifier không hiểu cú pháp {{ }} / {% %} và SCSS lồng nhau.
  * - Ảnh trong assets/ chỉ copy file đạt chính sách scripts/lib/sapo-asset-policy.js.
- * - 2026-10-06: CHỈ để lại .bwt cho asset thật sự cần Liquid (đọc settings). Hai lần tải lên (theme 1168431,
- *   1168497) Sapo trả RỖNG cả 79 asset .bwt — kể cả jquery.js/swiper.js không có dòng Liquid nào — vì Sapo
- *   biên dịch chung 1 lô. Asset .bwt mà bỏ comment Liquid đi không còn Liquid ⇒ đóng gói thành file thường:
- *     x.js.bwt   → x.js  (cùng URL, template không đổi)
- *     x.scss.bwt → x.css (biên dịch sẵn bằng libsass như Sapo; url({{'a.svg' | asset_url}}) → url(a.svg),
- *                  CSS và ảnh cùng thư mục assets/ trên CDN) và đổi tham chiếu 'x.scss.css' → 'x.css'
- *                  trong layouts/snippets/templates của gói.
- *   Lô .bwt còn lại nhỏ nhất có thể; lô đó có lỗi thì jQuery/Swiper/CSS nền vẫn chạy.
+ * - 2026-10-06: gói Sapo KHÔNG chứa asset .bwt nào. Đo CDN 3 lần tải lên: theme 1168431, 1168497 rỗng cả 79
+ *   asset .bwt; theme 1168577 (đã tách 65 file không Liquid ra file thường) thì 84 file thường đủ, 14 asset .bwt
+ *   còn lại VẪN rỗng ⇒ Sapo không biên dịch asset .bwt lúc tải gói lên. Build render sẵn mọi asset .bwt bằng
+ *   cấu hình trong configs/ (schema default + settings_data current, đúng giá trị Sapo nhận khi tải gói):
+ *     x.js.bwt   → x.js  (cùng URL, template không đổi). JS không được dùng asset_url (không biết URL CDN).
+ *     x.scss.bwt → x.css (biên dịch bằng libsass như Sapo; url({{'a.svg' | asset_url}}) → url(a.svg), CSS và
+ *                  ảnh cùng thư mục assets/ trên CDN) và đổi tham chiếu 'x.scss.css' → 'x.css' trong gói.
+ *   Hệ quả: đổi các cấu hình mà asset đọc (màu chủ đạo, bật/tắt quickview…) trong admin Sapo chỉ có hiệu lực ở
+ *   asset sau khi build + tải gói lại — danh sách in ra cuối bước build.
  */
 
 const fs = require('fs');
@@ -28,6 +29,7 @@ const { minify: terserMinify } = require('terser');
 const CleanCSS = require('clean-css');
 const policy = require('./lib/sapo-asset-policy');
 const { runLibsass } = require('./lib/libsass');
+const { Liquid } = require('liquidjs');
 
 const rootDir = path.resolve(__dirname, '..');
 const outputDir = path.join(rootDir, 'sapo-dist');
@@ -58,6 +60,44 @@ const CSS_ASSET_URL = /\{\{-?\s*['"]([\w.\-]+)['"]\s*\|\s*asset_url\s*-?\}\}/g;
 
 if (!outputDir.startsWith(rootDir + path.sep)) {
   throw new Error(`Thư mục output không hợp lệ: ${outputDir}`);
+}
+
+// Giá trị settings Sapo dùng ngay sau khi tải gói: default trong schema, ghi đè bởi settings_data.current.
+function loadSettings() {
+  const schema = JSON.parse(fs.readFileSync(path.join(rootDir, 'configs', 'settings_schema.json'), 'utf8'));
+  const data = JSON.parse(fs.readFileSync(path.join(rootDir, 'configs', 'settings_data.json'), 'utf8'));
+  const settings = {};
+  for (const group of schema) {
+    for (const setting of group.settings || []) {
+      if (setting.id && 'default' in setting) settings[setting.id] = setting.default;
+    }
+  }
+  return Object.assign(settings, data.current || {});
+}
+
+// handle/handleize của Sapo: bỏ dấu tiếng Việt, chữ thường, ký tự khác chữ-số → '-'.
+function handleize(value) {
+  return String(value ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+// strictFilters: filter lạ ⇒ build lỗi, không lặng lẽ ra kết quả khác Sapo.
+function createAssetEngine(usedSettings) {
+  const engine = new Liquid({ strictFilters: true, strictVariables: false });
+  engine.registerFilter('handle', handleize);
+  engine.registerFilter('handleize', handleize);
+  engine.registerFilter('asset_url', function assetUrl(value) {
+    if (this.context.environments.__assetKind !== 'css') {
+      throw new Error(`asset_url('${value}') trong JS — dùng đường dẫn tính từ document.currentScript (xem index.js.bwt)`);
+    }
+    return String(value);
+  });
+  const settings = loadSettings();
+  // Ghi lại settings asset đã đọc ⇒ in danh sách cấu hình cần build lại khi đổi trong admin.
+  const tracked = new Proxy(settings, {
+    get(target, key) { if (typeof key === 'string' && key in target) usedSettings.add(key); return target[key]; },
+  });
+  return (source, kind) => engine.parseAndRender(source, { settings: tracked, __assetKind: kind });
 }
 
 function walk(dir) {
@@ -97,9 +137,12 @@ async function main() {
   const schemaIds = policy.loadSchemaImageFileIds(path.join(rootDir, 'configs', 'settings_schema.json'));
   const stats = { copied: 0, minified: 0, skipped: [], bytesIn: 0, bytesOut: 0 };
   const fatalErrors = [];
-  const precompile = {}; // đường dẫn .css đích -> SCSS (không Liquid) chờ biên dịch libsass
+  const precompile = {}; // đường dẫn .css đích -> SCSS (đã render Liquid) chờ biên dịch libsass
   const renamedCss = new Map(); // 'x.scss.css' -> 'x.css'
+  const usedSettings = new Set();
+  const renderAsset = createAssetEngine(usedSettings);
   stats.plain = 0;
+  stats.rendered = [];
 
   for (const [sourceName, targetName] of DIRECTORY_MAP) {
     const sourceDir = path.join(rootDir, sourceName);
@@ -126,11 +169,25 @@ async function main() {
       fs.mkdirSync(path.dirname(targetFile), { recursive: true });
       stats.bytesIn += size;
 
-      // Asset .bwt không cần Liquid ⇒ đóng gói thành file thường (xem đầu file).
+      // Asset .bwt ⇒ render sẵn thành file thường (xem đầu file).
+      if (targetName === 'assets' && /\.bwt$/i.test(fileName) && !/\.(js|scss)\.bwt$/i.test(fileName)) {
+        fatalErrors.push(`${label}: asset .bwt loại lạ — Sapo không biên dịch asset .bwt khi tải gói, build chỉ render .js.bwt/.scss.bwt`);
+        continue;
+      }
       if (targetName === 'assets' && /\.(js|scss)\.bwt$/i.test(fileName)) {
+        const isScss = /\.scss\.bwt$/i.test(fileName);
         let plain = fs.readFileSync(sourceFile, 'utf8').replace(LIQUID_COMMENT, '');
-        if (/\.scss\.bwt$/i.test(fileName)) plain = plain.replace(CSS_ASSET_URL, '$1');
-        if (!HAS_LIQUID.test(plain)) {
+        if (isScss) plain = plain.replace(CSS_ASSET_URL, '$1');
+        if (HAS_LIQUID.test(plain)) {
+          try {
+            plain = await renderAsset(plain, isScss ? 'css' : 'js');
+            stats.rendered.push(fileName);
+          } catch (error) {
+            fatalErrors.push(`${label}: Liquid — ${error.message.split('\n')[0]}`);
+            continue;
+          }
+        }
+        {
           const plainName = fileName.replace(/\.scss\.bwt$/i, '.css').replace(/\.js\.bwt$/i, '.js');
           if (fs.existsSync(path.join(sourceDir, path.dirname(relative), plainName))) {
             fatalErrors.push(`${label}: trùng tên với assets/${plainName} có sẵn`);
@@ -142,7 +199,13 @@ async function main() {
             renamedCss.set(fileName.replace(/\.bwt$/i, '.css'), plainName);
             continue;
           }
-          const code = (await terserMinify(plain, { compress: true, mangle: true, format: { comments: false } })).code;
+          let code;
+          try {
+            code = (await terserMinify(plain, { compress: true, mangle: true, format: { comments: false } })).code;
+          } catch (error) {
+            fatalErrors.push(`${label}: JS sau khi render không hợp lệ — ${error.message}`);
+            continue;
+          }
           fs.writeFileSync(path.join(path.dirname(targetFile), plainName), code);
           stats.minified += 1;
           stats.bytesOut += Buffer.byteLength(code);
@@ -204,9 +267,13 @@ async function main() {
 
   const mb = (bytes) => (bytes / (1024 * 1024)).toFixed(2);
   console.log(`[compile:sapo] sapo-dist/: ${stats.copied} file (${stats.minified} file minify), `
-    + `${mb(stats.bytesIn)} MB -> ${mb(stats.bytesOut)} MB; ${stats.plain} asset .bwt không cần Liquid đóng gói thành `
-    + `.js/.css thường, ${renamedCss.size} tham chiếu .scss.css đổi sang .css`);
+    + `${mb(stats.bytesIn)} MB -> ${mb(stats.bytesOut)} MB; ${stats.plain} asset .bwt đóng gói thành .js/.css thường `
+    + `(${stats.rendered.length} file render Liquid lúc build), ${renamedCss.size} tham chiếu .scss.css đổi sang .css`);
   for (const skipped of stats.skipped) console.log(`  - bỏ qua ${skipped}`);
+  if (usedSettings.size) {
+    console.log(`  ⓘ asset đã gắn cứng giá trị của ${usedSettings.size} cấu hình — đổi trong admin Sapo phải build + tải gói lại: `
+      + [...usedSettings].sort().join(', '));
+  }
   if (fatalErrors.length) throw new Error(`asset lỗi cú pháp, dừng đóng gói:\n  ✗ ${fatalErrors.join('\n  ✗ ')}`);
 }
 

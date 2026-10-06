@@ -1,7 +1,7 @@
 'use strict';
 
 /*
- * Bước kiểm tra của build:sapo — biên dịch thử mọi assets/*.scss.bwt trong sapo-dist/ bằng LIBSASS
+ * Bước kiểm tra của build:sapo — biên dịch thử mọi assets/*.scss.bwt của repo bằng LIBSASS
  * (cùng bộ biên dịch Sapo dùng), sau khi render Liquid bằng giá trị thật (schema default + settings_data
  * current) giống Sapo làm trước khi biên dịch.
  *
@@ -18,7 +18,9 @@ const { Liquid } = require('liquidjs');
 const { runLibsass } = require('./lib/libsass');
 
 const rootDir = path.resolve(__dirname, '..');
-const assetsDir = path.join(rootDir, 'sapo-dist', 'assets');
+// 2026-10-06: đọc assets/ của repo — gói sapo-dist không còn asset .bwt (compile:sapo render sẵn). Bước này giữ
+// để SCSS vẫn chịu được admin xoá trắng/bật tắt cấu hình (4 bộ cấu hình bên dưới).
+const assetsDir = path.join(rootDir, 'assets');
 
 function loadSettings() {
   const schema = JSON.parse(fs.readFileSync(path.join(rootDir, 'configs', 'settings_schema.json'), 'utf8'));
@@ -48,7 +50,7 @@ function buildVariants({ settings, types }) {
 }
 
 async function main() {
-  if (!fs.existsSync(assetsDir)) throw new Error('chưa có sapo-dist/assets — chạy compile:sapo trước');
+  if (!fs.existsSync(assetsDir)) throw new Error('không thấy thư mục assets/');
   const engine = new Liquid({ strictFilters: false, strictVariables: false });
   for (const filter of ['asset_url', 'img_url', 'file_url', 'bizweb_asset_url']) engine.registerFilter(filter, (value) => String(value));
   const variants = buildVariants(loadSettings());

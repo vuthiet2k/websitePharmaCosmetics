@@ -66,11 +66,15 @@ Mỗi lần tải lên Sapo chỉ báo 1 lỗi đầu tiên ⇒ mọi quy tắc 
 - **SCSS phải qua được LIBSASS** (`npm run check:libsass`, nằm trong build:sapo; cần `pip install libsass`):
   Sapo biên dịch mọi asset `.bwt` theo lô — 1 file lỗi ⇒ toàn bộ asset `.bwt` trả rỗng, cả site mất CSS/JS.
   Preview dùng dart-sass (dễ tính hơn) nên PASS ở preview ≠ PASS trên Sapo. Cấm `min()/max()` trộn đơn vị.
-- **Gói Sapo chỉ giữ `.bwt` cho asset thật sự đọc Liquid** (2026-10-06: theme 1168431 + 1168497 trả rỗng cả 79
-  asset `.bwt`, kể cả jquery/swiper không có dòng Liquid nào). `compile:sapo` tự đóng gói asset `.bwt` không
-  còn Liquid sau khi bỏ `{% comment %}`: `x.js.bwt` → `x.js` (cùng URL), `x.scss.bwt` → `x.css` biên dịch sẵn
-  bằng libsass (`url({{'a.svg' | asset_url}})` → `url(a.svg)`) và đổi tham chiếu `'x.scss.css'` → `'x.css'`
-  trong gói. Repo vẫn giữ `.scss.bwt`/`.js.bwt`; muốn asset đọc settings thì thêm Liquid như cũ — build tự giữ `.bwt`.
+- **Gói Sapo KHÔNG chứa asset `.bwt`** — Sapo không biên dịch asset `.bwt` khi tải gói lên (đo CDN 2026-10-06:
+  theme 1168431, 1168497 rỗng cả 79 file; theme 1168577 thì 84 file thường đủ còn đúng 14 file `.bwt` rỗng).
+  `compile:sapo` render sẵn mọi asset `.bwt` bằng cấu hình trong `configs/` (schema default + `settings_data`
+  current — kết quả trùng từng byte với DotLiquid): `x.js.bwt` → `x.js` (cùng URL), `x.scss.bwt` → `x.css` biên
+  dịch bằng libsass (`url({{'a.svg' | asset_url}})` → `url(a.svg)`), đổi tham chiếu `'x.scss.css'` → `'x.css'`
+  trong gói; validator FAIL nếu gói còn `assets/*.bwt`. Hệ quả: cấu hình mà asset đọc (build in danh sách, vd
+  `theme_main_color`, `quickview_enable`) đổi trong admin chỉ có hiệu lực ở CSS/JS sau khi build + tải gói lại.
+  JS **không dùng `asset_url`** (không biết URL CDN lúc build) — lấy thư mục từ `document.currentScript.src`
+  (mẫu: `pcAssetBase` trong `index.js.bwt`); filter lạ trong asset ⇒ build lỗi.
 - **CSS thuần không được có ký tự rác**: clean-css gặp lỗi cú pháp chỉ cảnh báo rồi LẶNG LẼ bỏ các khối phía
   sau — `compile:sapo` coi mọi cảnh báo clean-css là lỗi (vụ `$C` trong `site-topbar.css`, 2026-10-05).
 - SVG nội tuyến luôn có `width`/`height` theo tỷ lệ viewBox (CSS vẫn ghi đè) — mất CSS thì không bung toàn màn hình.
