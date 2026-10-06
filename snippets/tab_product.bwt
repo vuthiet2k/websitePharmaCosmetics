@@ -135,7 +135,11 @@
 			<h3>{{settings.product_tab1_title}}</h3>
 		</li>
 		{%- endif -%}																	
-		{%if settings.product_tab2_enable %}
+		{%- comment -%} 2026-10-06 (preview 1168609): tab 2 bật nhưng chưa có tiêu đề/trang ⇒ khách thấy 1 tab trống
+		  chứa lời nhắc admin. Chỉ hiện khi có đủ tiêu đề + trang có nội dung. {%- endcomment -%}
+		{%- assign pc_tab2_on = false -%}
+		{%- if settings.product_tab2_enable and settings.product_tab2_title != blank and settings.product_tab2_page != blank and pages[settings.product_tab2_page].content != blank -%}{%- assign pc_tab2_on = true -%}{%- endif -%}
+		{%if pc_tab2_on %}
 		<li class="tab-link" data-tab="#tab-2">
 			<h3>{{settings.product_tab2_title}}</h3>
 		</li>																	
@@ -249,14 +253,10 @@
 			{{ pc_tab_extra }}
 		</div>
 		{%- endif -%}
-		{%if settings.product_tab2_enable %}
+		{%if pc_tab2_on %}
 		<div id="tab-2" class="tab-content content_extab">
 			<div class="rte">
-				{%- if settings.product_tab2_page != blank and pages[settings.product_tab2_page].content != blank -%}
 				{{ pages[settings.product_tab2_page].content }}
-				{%- else -%}
-				<p>Chưa cấu hình trang nội dung. Vào <strong>Admin → Giao diện → Tùy chỉnh → Tab sản phẩm</strong> để chọn trang.</p>
-				{%- endif -%}
 			</div>
 		</div>	
 		{% endif %}
