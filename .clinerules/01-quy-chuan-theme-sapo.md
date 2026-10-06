@@ -66,6 +66,11 @@ Mỗi lần tải lên Sapo chỉ báo 1 lỗi đầu tiên ⇒ mọi quy tắc 
 - **SCSS phải qua được LIBSASS** (`npm run check:libsass`, nằm trong build:sapo; cần `pip install libsass`):
   Sapo biên dịch mọi asset `.bwt` theo lô — 1 file lỗi ⇒ toàn bộ asset `.bwt` trả rỗng, cả site mất CSS/JS.
   Preview dùng dart-sass (dễ tính hơn) nên PASS ở preview ≠ PASS trên Sapo. Cấm `min()/max()` trộn đơn vị.
+- **Gói Sapo chỉ giữ `.bwt` cho asset thật sự đọc Liquid** (2026-10-06: theme 1168431 + 1168497 trả rỗng cả 79
+  asset `.bwt`, kể cả jquery/swiper không có dòng Liquid nào). `compile:sapo` tự đóng gói asset `.bwt` không
+  còn Liquid sau khi bỏ `{% comment %}`: `x.js.bwt` → `x.js` (cùng URL), `x.scss.bwt` → `x.css` biên dịch sẵn
+  bằng libsass (`url({{'a.svg' | asset_url}})` → `url(a.svg)`) và đổi tham chiếu `'x.scss.css'` → `'x.css'`
+  trong gói. Repo vẫn giữ `.scss.bwt`/`.js.bwt`; muốn asset đọc settings thì thêm Liquid như cũ — build tự giữ `.bwt`.
 - **CSS thuần không được có ký tự rác**: clean-css gặp lỗi cú pháp chỉ cảnh báo rồi LẶNG LẼ bỏ các khối phía
   sau — `compile:sapo` coi mọi cảnh báo clean-css là lỗi (vụ `$C` trong `site-topbar.css`, 2026-10-05).
 - SVG nội tuyến luôn có `width`/`height` theo tỷ lệ viewBox (CSS vẫn ghi đè) — mất CSS thì không bung toàn màn hình.

@@ -14,8 +14,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const { spawnSync } = require('child_process');
 const { Liquid } = require('liquidjs');
+const { runLibsass } = require('./lib/libsass');
 
 const rootDir = path.resolve(__dirname, '..');
 const assetsDir = path.join(rootDir, 'sapo-dist', 'assets');
@@ -47,22 +47,6 @@ function buildVariants({ settings, types }) {
   };
 }
 
-const PYTHON_COMPILER = `
-import json, sys
-try:
-    import sass
-except ImportError:
-    print(json.dumps({"missing": True})); sys.exit(0)
-files = json.load(sys.stdin)
-errors = {}
-for name, source in files.items():
-    try:
-        sass.compile(string=source, output_style="compressed")
-    except sass.CompileError as error:
-        errors[name] = str(error).strip().splitlines()[0][:300]
-print(json.dumps({"errors": errors, "version": sass.libsass_version}))
-`;
-
 async function main() {
   if (!fs.existsSync(assetsDir)) throw new Error('chưa có sapo-dist/assets — chạy compile:sapo trước');
   const engine = new Liquid({ strictFilters: false, strictVariables: false });
@@ -87,33 +71,16 @@ async function main() {
   if (liquidErrors.length) throw new Error(`Liquid lỗi trong asset .bwt:\n  ✗ ${liquidErrors.join('\n  ✗ ')}`);
   const scssCount = assetFiles.filter((name) => name.endsWith('.scss.bwt')).length;
 
-  const input = JSON.stringify(sources);
-  let result = null;
-  const pythonErrors = [];
-  // PYTHONUTF8: Windows mặc định đọc stdin bằng cp1258 ⇒ vỡ với ký tự ngoài bảng mã (→, emoji) trong SCSS.
-  const env = { ...process.env, PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8' };
-  for (const python of ['python', 'python3', 'py']) {
-    const run = spawnSync(python, ['-c', PYTHON_COMPILER], { input, encoding: 'utf8', env, maxBuffer: 64 * 1024 * 1024 });
-    if (run.error || run.status !== 0) {
-      pythonErrors.push(`${python}: ${run.error ? run.error.code : (run.stderr || '').trim().split('\n').pop()}`);
-      continue;
-    }
-    result = JSON.parse(run.stdout.trim().split('\n').pop());
-    break;
-  }
-  if (!result || result.missing) {
-    throw new Error('không chạy được Python + libsass — cài bằng `pip install libsass` rồi chạy lại (bắt buộc: Sapo biên dịch SCSS bằng libsass).'
-      + (pythonErrors.length ? ` Chi tiết: ${pythonErrors.join(' | ')}` : ''));
-  }
+  const result = runLibsass(sources);
 
   const failed = Object.entries(result.errors);
   if (failed.length) {
-    console.error(`[check:libsass] FAIL — ${failed.length} lượt biên dịch SCSS lỗi với libsass ${String(result.version).replace(/"/g, "")}`
+    console.error(`[check:libsass] FAIL — ${failed.length} lượt biên dịch SCSS lỗi với libsass ${result.version}`
       + ' (Sapo sẽ trả RỖNG mọi asset .bwt):');
     for (const [name, message] of failed) console.error(`  ✗ ${name}: ${message}`);
     process.exit(1);
   }
-  console.log(`[check:libsass] PASS — ${scssCount} file .scss.bwt × ${Object.keys(variants).length} bộ cấu hình biên dịch được bằng libsass ${String(result.version).replace(/"/g, "")}`);
+  console.log(`[check:libsass] PASS — ${scssCount} file .scss.bwt × ${Object.keys(variants).length} bộ cấu hình biên dịch được bằng libsass ${result.version}`);
 }
 
 main().catch((error) => {
