@@ -78,6 +78,9 @@ Bổ sung cho `01-quy-chuan-theme-sapo.md` (quy chuẩn nền tảng Sapo). File
 
 ## 7. Việc phải tránh
 
+- **Link trang nội dung Sapo là `/<alias>`, KHÔNG có tiền tố `/pages/`** (người dùng chốt 2026-10-08: Sapo không cho
+  đặt dạng `/pages/...`). Vd `/dat-lich-tu-van`, `/ai-skin-quiz-results`. Áp dụng cả giá trị mặc định trong schema/settings_data.
+
 - Không dựng lại kiến trúc `.project-agent/` (STATE.json / ACCEPTANCE.yaml / FINAL_REPORT.json...) —
   đã bị xoá có chủ ý (commit `58bda23`, `952d950`).
 - Không bịa dữ liệu (% đã bán, đánh giá khách hàng, thống kê) để "trông đẹp hơn".
