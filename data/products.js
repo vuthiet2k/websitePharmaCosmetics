@@ -330,7 +330,9 @@ const products = [
     type: 'Tretinoin', vendor: 'Altreno', votes: 0,
     description: 'Thuốc kê đơn dùng ngoài da — sử dụng theo chỉ định và hướng dẫn của chuyên gia.',
     tags: ['tretinoin', 'xuatxu:Mỹ', 'shopee_https://shopee.vn/Altreno_Test-i.1.2'],
-    collections: [{ name: 'Thuốc kê đơn', alias: 'thuoc-ke-don', url: '/thuoc-ke-don' }],
+    // 2026-10-08: thuộc cả danh mục thật ISOTRETINOIN (settings.product_rx_collection đang chọn trên store) lẫn
+    // danh mục demo thuoc-ke-don ⇒ preview/test nhận kê toa với cả hai cấu hình.
+    collections: [{ name: 'Thuốc kê đơn', alias: 'thuoc-ke-don', url: '/thuoc-ke-don' }, { name: 'ISOTRETINOIN (ĐƯỜNG UỐNG)', alias: 'isotretinoin', url: '/isotretinoin' }],
     // 2026-10-07: mô tả ngắn = đoạn dẫn + gạch đầu dòng "Tiêu đề | dòng phụ" ⇒ 3 ô thông tin. Câu chữ minh hoạ preview.
     summary: '<p>Thuốc bôi ngoài da kê đơn, chứa tretinoin 0.05% dạng lotion. Chỉ định và cách dùng theo nhãn sản phẩm và hướng dẫn của người có chuyên môn.</p>'
       + '<ul><li>Điều trị mụn trứng cá | Theo chỉ định trên nhãn sản phẩm</li><li>Dạng lotion 0.05% | Bôi ngoài da</li><li>Bán theo đơn | Đơn của chuyên gia, dược sĩ duyệt</li></ul>',

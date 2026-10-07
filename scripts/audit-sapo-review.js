@@ -16,12 +16,12 @@ const ROUTES = [
   '/', '/collections/all', '/chong-lao-hoa', '/serum-vitamin-c-15', '/kem-duong-am-hyaluronic-acid',
   '/blogs/tin-tuc', '/blogs/tin-tuc/retinol-thanh-phan-vang-chong-lao-hoa', '/cart', '/search?query=serum',
   '/account/login', '/account/register', '/account',
-  '/pages/about-us', '/pages/ai-skin-quiz', '/ai-skin-quiz-results', '/pages/chuyen-gia',
-  '/pages/chuyen-gia-detail', '/pages/clinical-proof', '/pages/chinh-sach-bao-mat', '/pages/dai-ly-b2b',
-  '/pages/dat-lich-tu-van', '/pages/loyalty', '/pages/order-lookup', '/pages/order-tracking',
-  '/pages/patient-portal', '/pages/payment', '/pages/seo-directory', '/pages/skin-health-beauty',
-  '/pages/skinhealthy-services', '/pages/getglowing-micro-peel-ha-noi', '/pages/spa-services',
-  '/pages/tra-cuu-hoat-chat', '/trang-khong-ton-tai-404',
+  '/about-us', '/ai-skin-quiz', '/ai-skin-quiz-results', '/chuyen-gia',
+  '/chuyen-gia-detail', '/clinical-proof', '/chinh-sach-bao-mat', '/dai-ly-b2b',
+  '/dat-lich-tu-van', '/loyalty', '/order-lookup', '/order-tracking',
+  '/patient-portal', '/payment', '/seo-directory', '/skin-health-beauty',
+  '/skinhealthy-services', '/getglowing-micro-peel-ha-noi', '/spa-services',
+  '/tra-cuu-hoat-chat', '/trang-khong-ton-tai-404',
 ];
 
 (async () => {
