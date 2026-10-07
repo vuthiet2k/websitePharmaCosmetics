@@ -14,7 +14,17 @@
 						  nhất quán; SVG inline kế thừa `currentColor`, nên logo hiển thị trắng trên nền footer.
 						{%- endcomment -%}
 						<a href="/" class="logo-wrapper pc-footer-logo pc-logo-master" title="{{ settings.store_name | default: store.name | escape }}">
+							{%- comment -%}
+							  2026-10-07: footer dùng ảnh "Logo chân trang" tải lên ở Admin (Chân trang › Cột 1, id logo_footer.png)
+							  — tách riêng với logo header vì nền footer xanh, logo chữ đậm của header sẽ chìm.
+							  assets/logo_footer.png mặc định = Logo Master SVG xuất PNG trắng nền trong suốt.
+							{%- endcomment -%}
+							{%- if settings.footer_logo_use_image != false -%}
+							<img class="pc-logo-master-img" src="{{ 'logo_footer.png' | asset_url }}" width="270" height="56"
+								alt="{{ settings.store_name | default: store.name | escape }}" loading="lazy">
+							{%- else -%}
 							{% include 'logo-master-svg' %}
+							{%- endif -%}
 						</a>
 					</div>
 					{% if settings.enable_info_foo %}
