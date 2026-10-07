@@ -474,9 +474,10 @@
 							<div class="pc-cmp-prescription-widget__title">Sản phẩm khuyên dùng theo phác đồ</div>
 							{%for product in pw_col.products limit: 3%}
 							<a href="{{ product.url }}" class="pc-cmp-prescription-widget__item no-underline">
-								<img src="{{ product.featured_image.src | default: 'no-image.jpg' | img_url: '100x100' }}" alt="{{ product.title }}" loading="lazy">
+								{%- comment -%} 2026-10-07: Sapo dùng product.name (product.title rỗng ⇒ widget mất tên sản phẩm). {%- endcomment -%}
+								<img src="{{ product.featured_image.src | default: 'no-image.jpg' | img_url: '100x100' }}" alt="{{ product.featured_image.alt | default: product.name | escape }}" width="44" height="44" loading="lazy">
 								<div class="min-w-0">
-									<div class="pc-cmp-prescription-widget__item-name truncate">{{ product.title }}</div>
+									<div class="pc-cmp-prescription-widget__item-name truncate">{{ product.name }}</div>
 									<div class="pc-cmp-prescription-widget__item-price">{{ product.price | money }}</div>
 								</div>
 							</a>
