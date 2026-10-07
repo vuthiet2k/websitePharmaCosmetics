@@ -35,7 +35,19 @@
 								.box-hearder). aria-label/title vẫn dùng settings.store_name để giữ SEO/tên
 								store thật có thể tuỳ biến qua schema-admin dù logo là ảnh vector cố định.
 							{%- endcomment -%}
+							{%- comment -%}
+								2026-10-07: ảnh Logo tải lên ở Admin (Header & Điều hướng › Logo, id logo.png) trước đây
+								không được dùng — header luôn vẽ SVG cố định nên đổi logo trong Admin không có tác dụng.
+								Sapo lưu ảnh kiểu image vào asset trùng tên id ⇒ đọc bằng 'logo.png' | asset_url.
+								assets/logo.png mặc định = Logo Master SVG xuất PNG màu #003F2D nền trong suốt (người dùng chốt: mặc định là SVG).
+								Tắt "Dùng ảnh Logo tải lên" để quay về Logo Master SVG (T-121).
+							{%- endcomment -%}
+							{%- if settings.header_logo_use_image != false -%}
+							<img class="pc-logo-master-img" src="{{ 'logo.png' | asset_url }}" width="313" height="77"
+								alt="{{ settings.store_name | default: store.name | escape }}" fetchpriority="high">
+							{%- else -%}
 							{% include 'logo-master-svg' %}
+							{%- endif -%}
 						</a>
 					</div>
 					{%- comment -%} Menu dùng chung: nằm trong header chính, tách ra khi cuộn trên desktop. {%- endcomment -%}
@@ -44,8 +56,9 @@
 							<div class="navigation-horizontal">
 								<div class="mb-drawer-topbar md-hidden">
 									<a href="/" class="mb-drawer-logo" title="{{settings.store_name | default: store.name}}">
-										{%- if settings['logo.png'] != blank -%}
-										<img src="{{ settings['logo.png'] | img_url: 'large' }}"
+										{%- comment -%} 2026-10-07: settings['logo.png'] luôn rỗng (ảnh nằm ở asset, không ở settings) ⇒ drawer luôn rơi về icon; dùng chung cờ với logo header. {%- endcomment -%}
+										{%- if settings.header_logo_use_image != false -%}
+										<img src="{{ 'logo.png' | asset_url }}"
 											width="146" height="36"
 											alt="{{settings.store_name | default: store.name}}"
 											onerror="this.onerror=null;this.src='{{ 'logoPC.svg' | asset_url }}'">
