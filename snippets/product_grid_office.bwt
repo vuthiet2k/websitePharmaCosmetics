@@ -181,6 +181,15 @@
 		{%- endif -%}
 	</div>
 	<div class="product-info">
+		{%- comment -%} 2026-10-07: nhãn danh mục (product.type) + nhãn KÊ TOA trên tên — chỉ in khi nơi gọi bật pc_card_kicker (khối "Có thể bạn thích" ở PDP, theo thiết kế mobile). {%- endcomment -%}
+		{%- if pc_card_kicker -%}
+		{%- if product.type != blank or pc_is_rx -%}
+		<p class="pc-card-kicker notranslate" translate="no">
+			{%- if product.type != blank -%}<span>{{ product.type }}</span>{%- endif -%}
+			{%- if pc_is_rx -%}<span class="pc-card-kicker__rx">{{ settings.product_rx_badge_label | default: 'Kê toa' }}</span>{%- endif -%}
+		</p>
+		{%- endif -%}
+		{%- endif -%}
 		{%- comment -%} T-135: RULE-P0-01 — ten san pham chua nong do hoat chat (Retinol 0.3%, SPF50+, Vitamin C 15%) va ten thuong hieu quoc te; gan notranslate de Google Translate KHONG dich sai thanh phan/nong do. {%- endcomment -%}
 		<h3 class="product-name line-clamp-2-new notranslate" translate="no">
 			<a href="{{ product.url }}" title="{{ product.name }}">{{ product.name }}</a>
