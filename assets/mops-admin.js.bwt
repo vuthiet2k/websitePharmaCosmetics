@@ -22,11 +22,11 @@ function bootstrapMopsAdmin() {
   window.__mopsAdminBooted = true;
 
   /* ── Config ── */
-  var GAS_URL   = {{ settings.mops_gas_url | json }};
+  var GAS_URL   = (window.PC_MOPS_CFG || {}).gasUrl || '';
   // Zero-Wait Path (2026-08-10): nếu Vercel Edge proxy đã deploy, dùng nó thay GAS trực tiếp.
   // Edge sẽ tự cache reads + enqueue non-critical writes + rate limit trước khi tới GAS. Để trống
   // → FE gọi thẳng GAS như cũ (fallback không mất chức năng).
-  var EDGE_URL  = {{ settings.mops_edge_url | json }};
+  var EDGE_URL  = (window.PC_MOPS_CFG || {}).edgeUrl || '';
   var API_URL   = EDGE_URL ? (String(EDGE_URL).replace(/\/+$/, '') + '/api/gas') : GAS_URL;
   var TOKEN_KEY = 'mops_token';
   var STAFF_KEY = 'mops_staff';

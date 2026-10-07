@@ -50,11 +50,10 @@ $(document).on('click','.overlay, .close-window, .btn-continue, .fancybox-close'
 	return false;
 })
 var wDWs = $(window).width();
-{%if settings.quickview_enable%}
-if (wDWs < 1199) {
+/* 2026-10-07: đọc cấu hình lúc chạy (window.PC_CFG, snippets/theme_runtime_config.bwt) — Sapo không render Liquid trong asset */
+if ((window.PC_CFG || {}).quickview && wDWs < 1199) {
 	$('.quickview-product').remove();
 }
-{%endif%}
 
 if (wDWs < 767) {
 	$('.footer-click h4').click(function(e){
@@ -416,8 +415,7 @@ $(document).ready(function () {
 	if (document.fonts) document.fonts.ready.then(updateNavigation);
 	updateNavigation();
 });
-{%if settings.header_search_suggest or settings.header_search_smart%}
-$(document).ready(function(){
+if ((window.PC_CFG || {}).searchSuggest || (window.PC_CFG || {}).searchSmart) $(document).ready(function(){
 	$('.header_tim_kiem .search-bar input.input-group-field, .search-mobile .search-bar input.input-group-field').focus(function(eventClick) {
 		eventClick.stopPropagation();
 		$('.search-suggest').addClass('open');
@@ -429,7 +427,6 @@ $(document).ready(function(){
 	});
 
 });
-{%endif%}
 
 $('.show-all-col .view-all-col').click(function(e){
 	$(this).toggleClass('d-none');
@@ -512,12 +509,11 @@ $(document).ready(function(){
 		return false;
 	})
 });
-{%if settings.header_live_enable%}
-$(document).ready(function() {
+if ((window.PC_CFG || {}).liveEnable) $(document).ready(function() {
 	let videos = document.querySelectorAll('.header-box-live .btn-live');
 	let popupVideo = document.querySelector('.modal-live');
 	let close_vd = document.querySelectorAll('.modal-live .box-close');
-	var dataset = '{{settings.header_live_url}}';
+	var dataset = (window.PC_CFG || {}).liveUrl || '';
 	videos.forEach(v => v.addEventListener('click', function(e){
 		e.preventDefault();
 		e.target.dataset.video = dataset;
@@ -533,7 +529,6 @@ $(document).ready(function() {
 	}))
 
 });
-{%endif%}
 $('.product-action .swatches-pro .swatch-elementes').hover(function(e){
 	$('.product-action .swatches-pro .swatch-elementes').removeClass('active');
 	$(this).addClass('active');

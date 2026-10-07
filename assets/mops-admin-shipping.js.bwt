@@ -646,9 +646,9 @@
         else if (paperSize === 'K80') { pageSize = '80mm 297mm'; isK80 = true; }
         else pageSize = 'A5';
 
-        var storeName    = {{ settings.store_name    | default: shop.name          | default: 'PHARMA COSMETICS' | json }};
-        var storeAddress = {{ settings.store_address | default: ''                                              | json }};
-        var storePhone   = {{ settings.store_phone   | default: shop.phone_number  | default: ''                | json }};
+        var storeName    = (window.PC_MOPS_CFG || {}).storeName || 'PHARMA COSMETICS';
+        var storeAddress = (window.PC_MOPS_CFG || {}).storeAddress || '';
+        var storePhone   = (window.PC_MOPS_CFG || {}).storePhone || '';
         var senderName    = (overrides && overrides.senderName    != null) ? overrides.senderName    : storeName;
         var senderAddress = (overrides && overrides.senderAddress != null) ? overrides.senderAddress : storeAddress;
         var senderPhone   = (overrides && overrides.senderPhone   != null) ? overrides.senderPhone   : storePhone;
@@ -878,7 +878,7 @@
           pm.senderAddress = sender.address;
           pm.senderPhone = sender.phone;
           pm.note = self._composeDefaultNote(d);
-          pm.inspectionTag = {{ settings.mops_label_shipper_note | default: '' | json }};
+          pm.inspectionTag = (window.PC_MOPS_CFG || {}).labelShipperNote || '';
           pm.itemsText = self._composeDefaultItemsText(d);
           self.refreshPrintPreview();
         }).catch(function() {
@@ -909,9 +909,9 @@
         return lines.join('\n');
       },
       _printDefaultSender: function() {
-        var storeName    = {{ settings.store_name    | default: shop.name          | default: 'PHARMA COSMETICS' | json }};
-        var storeAddress = {{ settings.store_address | default: ''                                              | json }};
-        var storePhone   = {{ settings.store_phone   | default: shop.phone_number  | default: ''                | json }};
+        var storeName    = (window.PC_MOPS_CFG || {}).storeName || 'PHARMA COSMETICS';
+        var storeAddress = (window.PC_MOPS_CFG || {}).storeAddress || '';
+        var storePhone   = (window.PC_MOPS_CFG || {}).storePhone || '';
         return { name: storeName, address: storeAddress, phone: storePhone };
       },
       // Nguồn "Nội dung hàng" mặc định khi mở modal — liệt kê tên+SL thật từ đơn thành text thô để
@@ -1041,9 +1041,9 @@
         var esc = function(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
           return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
         }); };
-        var storeName    = {{ settings.store_name    | default: shop.name          | default: 'PHARMA COSMETICS' | json }};
-        var storeAddress = {{ settings.store_address | default: ''                                              | json }};
-        var storePhone   = {{ settings.store_phone   | default: shop.phone_number  | default: ''                | json }};
+        var storeName    = (window.PC_MOPS_CFG || {}).storeName || 'PHARMA COSMETICS';
+        var storeAddress = (window.PC_MOPS_CFG || {}).storeAddress || '';
+        var storePhone   = (window.PC_MOPS_CFG || {}).storePhone || '';
         var senderName    = (overrides && overrides.senderName    != null) ? overrides.senderName    : storeName;
         var senderAddress = (overrides && overrides.senderAddress != null) ? overrides.senderAddress : storeAddress;
         var senderPhone   = (overrides && overrides.senderPhone   != null) ? overrides.senderPhone   : storePhone;
@@ -1061,7 +1061,7 @@
         var replacement = String(replacementText || '').trim();
 
         // Chính sách kiểm hàng (shop-wide, mọi đơn) — TÁCH khỏi ghi chú giao hàng theo đơn bên dưới.
-        var shopInspectionTag = {{ settings.mops_label_shipper_note | default: '' | json }};
+        var shopInspectionTag = (window.PC_MOPS_CFG || {}).labelShipperNote || '';
         var inspectionTag = String((overrides && overrides.inspectionTag != null) ? overrides.inspectionTag : shopInspectionTag).trim();
         var policyTagHtml = inspectionTag ? '<div class="policy-tag">' + esc(inspectionTag) + '</div>' : '';
 

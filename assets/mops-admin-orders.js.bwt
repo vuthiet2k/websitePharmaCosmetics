@@ -904,10 +904,10 @@
 
         // Settings shop — resolve qua Liquid khi Sapo compile theme (.bwt). Fallback nhiều tầng để không
         // in blank nếu setting chưa gõ. shop.name / shop.phone_number là object global của Sapo.
-        var storeName    = {{ settings.store_name    | default: shop.name          | default: 'PHARMA COSMETICS' | json }};
-        var storeAddress = {{ settings.store_address | default: ''                                              | json }};
-        var storePhone   = {{ settings.store_phone   | default: shop.phone_number  | default: ''                | json }};
-        var storeEmail   = {{ settings.store_email   | default: ''                                              | json }};
+        var storeName    = (window.PC_MOPS_CFG || {}).storeName || 'PHARMA COSMETICS';
+        var storeAddress = (window.PC_MOPS_CFG || {}).storeAddress || '';
+        var storePhone   = (window.PC_MOPS_CFG || {}).storePhone || '';
+        var storeEmail   = (window.PC_MOPS_CFG || {}).storeEmail || '';
 
         // Map trạng thái đơn → nhãn tiếng Việt in đậm ở header.
         var statusLabel = { PENDING: 'Chờ thanh toán', PAYMENT_REPORTED: 'Chờ đối chiếu',
@@ -1485,7 +1485,7 @@
           // 2026-08-23: fallback prefill từ setting mops_shipping_note_default (Group 19) khi đơn chưa có
           // driver_note/delivery_note. Setting này là mẫu chuẩn shop (VD "CHO XEM HÀNG - KHÔNG CHO THỬ;
           // ĐỒNG KIỂM"), staff sửa được per-đơn trong shipModal. Liquid resolve tại thời điểm render theme.
-          deliveryNote: order.driver_note || order.delivery_note || {{ settings.mops_shipping_note_default | default: '' | json }},
+          deliveryNote: order.driver_note || order.delivery_note || (window.PC_MOPS_CFG || {}).shippingNoteDefault || '',
           // V6.3 pickBranchId auto-resolved ở trên (order.branch_id → default → first option).
           pickBranchId: resolvedPickId,
           // Ẩn dropdown chọn kho mặc định (2026-08-05) — user chỉ thấy địa chỉ auto-resolved từ

@@ -9,6 +9,19 @@
 	<link rel="icon" href="{{ 'favicon.png' | asset_url }}" type="image/x-icon">
 	{%- endif -%}
 
+	{%- comment -%} 2026-10-07: cấu hình cho assets/mops-admin*.js — Sapo không render Liquid trong asset. {%- endcomment -%}
+	<script>
+		window.PC_MOPS_CFG = {
+			storeName: {{ settings.store_name | default: store.name | default: 'PHARMA COSMETICS' | json }},
+			storeAddress: {{ settings.store_address | default: '' | json }},
+			storePhone: {{ settings.store_phone | default: store.phone_number | default: '' | json }},
+			storeEmail: {{ settings.store_email | default: '' | json }},
+			shippingNoteDefault: {{ settings.mops_shipping_note_default | default: '' | json }},
+			labelShipperNote: {{ settings.mops_label_shipper_note | default: '' | json }},
+			gasUrl: {{ settings.mops_gas_url | json }},
+			edgeUrl: {{ settings.mops_edge_url | json }}
+		};
+	</script>
 	{{ 'vue.global.prod.js' | asset_url | script_tag }}
 	<script>
 		/* Fall back to the official Vue 3 CDN when the Sapo asset is unavailable (for example, HTTP 404). */

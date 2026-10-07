@@ -270,9 +270,13 @@ async function main() {
     + `${mb(stats.bytesIn)} MB -> ${mb(stats.bytesOut)} MB; ${stats.plain} asset .bwt đóng gói thành .js/.css thường `
     + `(${stats.rendered.length} file render Liquid lúc build), ${renamedCss.size} tham chiếu .scss.css đổi sang .css`);
   for (const skipped of stats.skipped) console.log(`  - bỏ qua ${skipped}`);
+  // 2026-10-07: asset đọc settings ⇒ giá trị bị gắn cứng lúc build, đổi trong Admin Sapo không có tác dụng.
+  // Chặn đóng gói: CSS dùng var(--…) khai báo ở snippets/design_tokens.bwt; JS đọc window.PC_CFG
+  // (snippets/theme_runtime_config.bwt) hoặc window.PC_MOPS_CFG (layouts/mops-admin.bwt).
   if (usedSettings.size) {
-    console.log(`  ⓘ asset đã gắn cứng giá trị của ${usedSettings.size} cấu hình — đổi trong admin Sapo phải build + tải gói lại: `
-      + [...usedSettings].sort().join(', '));
+    fatalErrors.push(`asset đọc ${usedSettings.size} cấu hình (sẽ bị gắn cứng, Admin đổi không có tác dụng): `
+      + [...usedSettings].sort().join(', ')
+      + ' — chuyển sang biến CSS (design_tokens) hoặc window.PC_CFG / PC_MOPS_CFG');
   }
   if (fatalErrors.length) throw new Error(`asset lỗi cú pháp, dừng đóng gói:\n  ✗ ${fatalErrors.join('\n  ✗ ')}`);
 }

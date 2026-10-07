@@ -64,12 +64,10 @@ function callbackFuncGroup(sectionName) {
 			cache: false
 		});
 	});
-	{% if settings.quickview_enable %}
-	runQuickView();
-	{% endif %}
-	{% if settings.iwish_enable %}
-	favoriBean.Wishlist.activityWishlist();
-	{% endif %}
+	/* 2026-10-07: đọc cấu hình lúc chạy (window.PC_CFG, snippets/theme_runtime_config.bwt) — Sapo không render Liquid trong asset */
+	var pcCfg = window.PC_CFG || {};
+	if (pcCfg.quickview) runQuickView();
+	if (pcCfg.iwish) favoriBean.Wishlist.activityWishlist();
 	if(window.BPR && window.BPR.loadBadges){
 		window.BPR.initDomEls()
 		window.BPR.loadBadges()

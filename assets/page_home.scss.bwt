@@ -348,7 +348,7 @@ SECTION
 			background: #fff;
 			overflow: hidden;
 			border-radius: 10px;
-			aspect-ratio: {{settings.slider_width | default: 900 }}/{{settings.slider_height | default: 342 }};
+			aspect-ratio: var(--pc-ar-slider, 900/342); /* 2026-10-07: biến CSS khai báo ở snippets/design_tokens.bwt — Sapo không render Liquid trong asset, giá trị phải đổi được trong Admin */
 			img {
 				width: 100%;
 			}
@@ -933,7 +933,7 @@ SECTION
 		position: relative;
 		.duration-300 {
 			display: block;
-			aspect-ratio: {{settings.banner4_width | default: 640 }}/{{settings.banner4_height | default: 240 }};
+			aspect-ratio: var(--pc-ar-banner4, 640/240);
 			position: relative;
 			overflow: hidden;
 			border-radius: 10px;
@@ -1036,7 +1036,7 @@ SECTION
 		position: relative;
 		.duration-300 {
 			display: block;
-			aspect-ratio: {{settings.banner2_width | default: 480 }}/{{settings.banner2_height | default: 200 }};
+			aspect-ratio: var(--pc-ar-banner2, 480/200);
 			position: relative;
 			overflow: hidden;
 			border-radius: 10px;
@@ -1065,7 +1065,7 @@ SECTION
 		position: relative;
 		.duration-300 {
 			display: block;
-			aspect-ratio: {{settings.banner1_width | default: 1020 }}/{{settings.banner1_height | default: 360 }};
+			aspect-ratio: var(--pc-ar-banner1, 1020/360);
 			position: relative;
 			overflow: hidden;
 			border-radius: 10px;
@@ -1396,7 +1396,7 @@ SECTION
 		height: 16px;
 		border-radius: 8px;
 		position: relative;
-		background: {{settings.count_down_bg | default: settings.theme_main_color | default: '#3cb371'}};
+		background: var(--pc-countdown-bg, var(--mainColor, #3cb371));
 		z-index: 1;
 
 		&--active  { background: var(--bgBodySub); }
@@ -1680,12 +1680,12 @@ SECTION
 		justify-content: center;
 		align-items: center;
 		margin: 0 auto;
-		width: {{settings.section_about_product_width | default: "900" | append: 'px'}};
+		width: var(--pc-about-product-w, 900px);
 		max-width: 100%;
 		border-radius: 20px 20px 120px 20px;
 		overflow: hidden;
 		position: relative;
-		aspect-ratio: {{settings.section_about_product_width | default: "900"}}/{{settings.section_about_product_height | default: "501"}};
+		aspect-ratio: var(--pc-ar-about-product, 900/501);
 		@media (max-width: 767px) {
 			display: none;
 		}
@@ -3341,7 +3341,7 @@ a.pc-treatment-item:hover .pc-treatment-number { border-color: var(--mainColor);
    (không dùng &:: — SCSS compiler Sapo từng fail). Trang chủ nền xanh →
    chip đảo màu trắng, bỏ lỗ vé.
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-{%if settings.promo_coupon_home_enable%}
+/* Khối CSS của settings.promo_coupon_home_enable — HTML tự ẩn/hiện theo cấu hình nên CSS không cần điều kiện (2026-10-07). */
 .pc-flashsale__coupons { margin-top: 16px; }
 .pc-flashsale__coupons .product-coupon__wrapper { margin-bottom: 0; }
 .pc-flashsale__coupons strong { color: #fff; }
@@ -3586,7 +3586,6 @@ a.pc-treatment-item:hover .pc-treatment-number { border-color: var(--mainColor);
   opacity: .5;
 }
 
-{%endif%}
 
 /* ══════════════════════════════════════════════════════════════════════════
    T-137 (2026-09-12) — Người dùng yêu cầu 4 việc trên màn laptop. Phần này xử

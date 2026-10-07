@@ -1,0 +1,17 @@
+{%- comment -%}
+  2026-10-07: cấu hình cho JS trong assets/ (index.js, main.js, mobile-ui.js). Sapo KHÔNG render Liquid
+  trong asset khi tải gói lên ⇒ trước đây build ghi cứng giá trị vào asset, đổi trong Admin không có tác
+  dụng. Snippet này render mỗi lần tải trang nên giá trị luôn theo Admin. Thêm khoá mới ở đây khi JS cần
+  đọc settings — KHÔNG viết {{ settings.* }} trong assets/*.js.bwt.
+{%- endcomment -%}
+<script>
+	window.PC_CFG = {
+		quickview: {{ settings.quickview_enable | json }},
+		iwish: {{ settings.iwish_enable | json }},
+		searchSuggest: {{ settings.header_search_suggest | json }},
+		searchSmart: {{ settings.header_search_smart | json }},
+		liveEnable: {{ settings.header_live_enable | json }},
+		liveUrl: {{ settings.header_live_url | default: '' | json }},
+		mobileCompact: {{ settings.mobile_header_compact | json }}
+	};
+</script>

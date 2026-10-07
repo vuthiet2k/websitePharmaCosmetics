@@ -305,7 +305,7 @@ body.pc-drawer-open {
 html {
 	/* Rem base — admin chỉnh qua Tùy chỉnh → "Cỡ chữ tổng thể". Mọi --fs-* (rem) co/giãn theo.
 	   87.5% = 1rem 14px (mặc định). LƯU Ý: chữ hardcode px (code cũ) KHÔNG đổi theo núm này. */
-	font-size: {{ settings.theme_font_scale | default: '87.5' }}%;
+	font-size: var(--pc-font-scale, 87.5%); /* 2026-10-07: biến CSS khai báo ở snippets/design_tokens.bwt — Sapo không render Liquid trong asset, giá trị phải đổi được trong Admin */
 }
 @media (max-width: 768px) {
 	html {
@@ -313,7 +313,7 @@ html {
 	}
 }
 body {
-	background: {{settings.theme_body_bg | default: '#fff'}};
+	background: var(--pc-body-bg, #fff);
 	font-size: var(--fs-base);
 	font-family: var(--pc-font-body, var(--font-secondary, 'Montserrat', system-ui, sans-serif));
 	line-height: 1.5;
@@ -4089,12 +4089,11 @@ footer.footer {
 		}
 
 	}
-	$main-color: {{ settings.theme_main_color | default: '#3cb371' }};
 	.copyright {
 		text-align: center;
 		margin-bottom: 0px;
 		position: relative;
-		background: darken($main-color, 5%);
+		background: color-mix(in srgb, var(--mainColor) 90%, #000);
 		// T-126: khối pháp lý NĐ 52/2013 (xem snippets/footer.bwt) — chữ nhỏ hơn copyright,
 		// vẫn giữ tương phản đạt WCAG AA trên nền xanh đậm (không dùng xám mờ).
 		.footer-legal {
@@ -4655,7 +4654,7 @@ PRODUCT GRID ITEM
 					}
 				}
 				.price {
-					/* DEF-A11Y-01 (Báo cáo UI Quality Audit 13/09/2026): var(--price) ({{settings.color_price}})
+					/* DEF-A11Y-01 (Báo cáo UI Quality Audit 13/09/2026): var(--price) (settings.color_price)
 					   đo thực tế trên nền trắng chỉ đạt 2.67:1 — dưới xa chuẩn WCAG 2.2 AA 4.5:1. Đổi sang
 					   var(--price-color) (đã khai báo sẵn ở header_style.bwt, alias --mainColorDark, ghi rõ
 					   "dùng biến này cho code mới — đậm hơn, tạo tin cậy" — chỉ chưa được áp dụng ở đây). */
@@ -4772,7 +4771,7 @@ PRODUCT GRID ITEM
 	content: "\f180";
 }
 
-{%if settings.header_search_smart%}
+/* Khối CSS của settings.header_search_smart — HTML tự ẩn/hiện theo cấu hình nên CSS không cần điều kiện (2026-10-07). */
 .list-search-style {
 	&.list-search {
 		margin-bottom: 15px;
@@ -4885,7 +4884,6 @@ PRODUCT GRID ITEM
 		border-radius: 6px;
 	}
 }
-{% endif %}
 
 @keyframes alert-fade-in-up {
 	0% {
@@ -4944,8 +4942,8 @@ PRODUCT GRID ITEM
 }
 
 
-{% if settings.contact_us_enable %}
-$support-color: {{ settings.contact_us_color | default: '#3CB371' }};
+/* Khối CSS của settings.contact_us_enable — HTML tự ẩn/hiện theo cấu hình nên CSS không cần điều kiện (2026-10-07). */
+$support-color: var(--pc-support-color, #3CB371);
 @keyframes zoomzoom{
 	from {transform: scale(0)}
 	to {transform: scale(1.2)}
@@ -5207,7 +5205,7 @@ $support-color: {{ settings.contact_us_color | default: '#3CB371' }};
 	height: 100%;
 	left: 0;
 	top: 0;
-	background: darken($support-color, 3);
+	background: color-mix(in srgb, var(--pc-support-color, #3CB371) 94%, #000);
 	z-index: -2;
 	border-radius: 100%;
 	opacity: 0.6;
@@ -5227,7 +5225,6 @@ $support-color: {{ settings.contact_us_color | default: '#3CB371' }};
 .def-content .item:hover {
 	background: var(--gray-f1f1f1);
 }
-{% endif %}
 .popup-sapo{
 	position: fixed;
 	bottom: 60px;
@@ -5420,7 +5417,7 @@ $support-color: {{ settings.contact_us_color | default: '#3CB371' }};
 		}
 	}
 }
-{%if settings.header_live_enable%}
+/* Khối CSS của settings.header_live_enable — HTML tự ẩn/hiện theo cấu hình nên CSS không cần điều kiện (2026-10-07). */
 .modal-live {
 	position: fixed;
 	max-width: 45%;
@@ -5471,7 +5468,6 @@ $support-color: {{ settings.contact_us_color | default: '#3CB371' }};
 		opacity: 1; 
 	} 
 }
-{%endif%}
 .mua_shop {
 	background: var(--pc-brand-primary);
 	font-size: var(--fs-base);
@@ -5646,14 +5642,13 @@ $support-color: {{ settings.contact_us_color | default: '#3CB371' }};
 
 @media (max-width: 991px) {
 
-  {% if settings.mobile_header_sticky %}
-  header.header .main-header {
+  /* settings.mobile_header_sticky → class pc-mh-sticky trên <body> (layouts/theme.bwt), 2026-10-07 */
+  body.pc-mh-sticky header.header .main-header {
     position: sticky;
     top: 0;
     z-index: 9980;
     background: var(--bgHeader);
   }
-  {% endif %}
 
   /* Ẩn topbar (promo slider / text chạy) trên mobile */
   header.header .main-header .top-main-header { display: none; }
@@ -5840,10 +5835,9 @@ $support-color: {{ settings.contact_us_color | default: '#3CB371' }};
     padding: 0;
   }
 
-  {% if settings.mobile_header_compact %}
+/* Khối CSS của settings.mobile_header_compact — HTML tự ẩn/hiện theo cấu hình nên CSS không cần điều kiện (2026-10-07). */
   header.header.mb-compact .main-header { padding-top: 6px; padding-bottom: 6px; }
   header.header.mb-compact .main-header .top-main-header { display: none; }
-  {% endif %}
 
 } /* end @media (max-width: 991px) */
 
