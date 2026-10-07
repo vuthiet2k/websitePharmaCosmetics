@@ -9,12 +9,16 @@
         {% capture enabled %}home_solutions_{{ i }}_enable{% endcapture %}
         {% capture label %}home_solutions_{{ i }}_label{% endcapture %}
         {% capture icon %}home_solutions_{{ i }}_icon{% endcapture %}
-        {% capture link %}home_solutions_{{ i }}_link{% endcapture %}
         {% capture query %}home_solutions_{{ i }}_url{% endcapture %}
+        {%- comment -%}
+          2026-10-08: thẻ luôn mở trang tìm kiếm theo "Từ khoá tìm kiếm" (home_solutions_N_url; trống ⇒ tên thẻ) như
+          Admin mô tả. Bỏ đọc home_solutions_N_link: trường này không có trong schema (Admin không thấy/không sửa
+          được) nhưng lại đè lên từ khoá, khiến thẻ nhảy sang các danh mục lệch nội dung (vd "Da nhạy cảm" → /dieu-tri-chuyen-nghiep).
+        {%- endcomment -%}
         {% unless settings[enabled] == false or settings[enabled] == 'false' %}
           {% if settings[label] != blank %}
-          {% capture fallback_url %}/search?query={{ settings[query] | default: settings[label] | url_encode }}&type=product{% endcapture %}
-          <a class="concern" href="{{ settings[link] | default: fallback_url | escape }}"><i class="{{ settings[icon] | default: 'fas fa-spa' | escape }}" aria-hidden="true"></i><span>{{ settings[label] | escape }}</span></a>
+          {% capture search_url %}/search?query={{ settings[query] | default: settings[label] | url_encode }}&type=product{% endcapture %}
+          <a class="concern" href="{{ search_url | escape }}"><i class="{{ settings[icon] | default: 'fas fa-spa' | escape }}" aria-hidden="true"></i><span>{{ settings[label] | escape }}</span></a>
           {% endif %}
         {% endunless %}
       {% endfor %}
