@@ -42,7 +42,7 @@ function variant(id, title, price, comparePrice, sku, available = true, qty = 20
 
 function makeProduct({
   id, name, alias, type, tags, price, comparePrice,
-  variants, images, available, metafields, description, votes, content, summary,
+  variants, images, available, metafields, description, votes, content, summary, collections, vendor,
 }) {
   const firstAvailable = variants.find(v => v.available) || variants[0];
   const isAvailable    = available !== false && variants.some(v => v.available);
@@ -54,7 +54,7 @@ function makeProduct({
     description: description || `<p>Sản phẩm <strong>${name}</strong> — chất lượng dược mỹ phẩm chuẩn quốc tế.</p>`,
     content:     content || '',
     summary:     summary || '',
-    vendor:      'PHARMA COSMETICS',
+    vendor:      vendor || 'PHARMA COSMETICS',
     type:        type || 'Dược mỹ phẩm',
     available:   isAvailable,
     price:       firstAvailable.price,
@@ -66,7 +66,8 @@ function makeProduct({
     featured_image: { src: images[0], alt: name },
     images: images.map((src, i) => ({ src, alt: `${name} — ảnh ${i + 1}` })),
     tags:    tags || [],
-    collections: [],
+    // 2026-10-07: danh mục chứa sản phẩm ({ name, alias, url }) — snippets/pc_is_rx.bwt nhận kê toa theo danh mục.
+    collections: collections || [],
     variants,
     selected_or_first_available_variant: firstAvailable,
     metafields: {
@@ -322,16 +323,19 @@ const products = [
     ],
   }),
 
-  // 16 ─ Sản phẩm KÊ TOA (2026-10-05, PDP V3): fixture tag loai:ke-toa — kiểm ẩn giá/nút mua/đánh giá.
+  // 16 ─ Sản phẩm KÊ TOA (2026-10-05, PDP V3) — kiểm ẩn giá/nút mua/đánh giá.
+  // 2026-10-07: nhận kê toa theo DANH MỤC (settings.product_rx_collection = thuoc-ke-don), không còn tag loai:ke-toa.
   makeProduct({
     id: 1016, name: 'Altreno Lotion 0.05% (Tretinoin)', alias: 'altreno-lotion-0-05-tretinoin',
-    type: 'Thuốc kê đơn', votes: 0,
+    type: 'Tretinoin', vendor: 'Altreno', votes: 0,
     description: 'Thuốc kê đơn dùng ngoài da — sử dụng theo chỉ định và hướng dẫn của chuyên gia.',
-    tags: ['loai:ke-toa', 'tretinoin', 'shopee_https://shopee.vn/Altreno_Test-i.1.2'],
-    // 2026-10-05 (PRD mục 8): mô tả ngắn dạng gạch đầu dòng ⇒ khung Thông tin nhanh. Câu chữ minh hoạ preview.
-    summary: '<ul><li>Thuốc dùng ngoài da dạng lotion.</li><li>Dùng theo chỉ định của chuyên gia.</li></ul>',
+    tags: ['tretinoin', 'xuatxu:Mỹ', 'shopee_https://shopee.vn/Altreno_Test-i.1.2'],
+    collections: [{ name: 'Thuốc kê đơn', alias: 'thuoc-ke-don', url: '/thuoc-ke-don' }],
+    // 2026-10-07: mô tả ngắn = đoạn dẫn + gạch đầu dòng "Tiêu đề | dòng phụ" ⇒ 3 ô thông tin. Câu chữ minh hoạ preview.
+    summary: '<p>Thuốc bôi ngoài da kê đơn, chứa tretinoin 0.05% dạng lotion. Chỉ định và cách dùng theo nhãn sản phẩm và hướng dẫn của người có chuyên môn.</p>'
+      + '<ul><li>Điều trị mụn trứng cá | Theo chỉ định trên nhãn sản phẩm</li><li>Dạng lotion 0.05% | Bôi ngoài da</li><li>Bán theo đơn | Đơn của chuyên gia, dược sĩ duyệt</li></ul>',
     variants: [
-      variant(10161, '45g', 1250000, 0, 'PC-ALT-45', true, 10),
+      variant(10161, '45g', 1250000, 0, 'ALT05', true, 10),
     ],
     images: [
       img('e6f2ec/003F2D', 'Altreno 0.05%'),

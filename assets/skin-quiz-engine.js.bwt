@@ -134,15 +134,15 @@
     return !activesInText(text).some(function (a) { return has(excluded, a); });
   }
 
-  // Sản phẩm Sapo (object JSON: name/alias/tags). Loại sản phẩm kê toa (tag loai:ke-toa — cùng quy ước
-  // snippets/pc_is_rx.bwt) và sản phẩm chứa hoạt chất bị loại (tag hoatchat:<x> hoặc tên/alias).
+  // Sản phẩm Sapo (object JSON: name/alias/tags). Loại sản phẩm kê toa và sản phẩm chứa hoạt chất bị loại
+  // (tag hoatchat:<x> hoặc tên/alias). 2026-10-07: kê toa nhận theo danh mục (window.pcRxAliases — cùng nguồn
+  // snippets/pc_is_rx.bwt), không còn theo tag loai:ke-toa.
   function isProductAllowed(product, excluded) {
     if (!product) return false;
+    var rxAliases = (typeof window !== 'undefined' && window.pcRxAliases) || [];
+    if (product.alias && rxAliases.indexOf(product.alias) !== -1) return false;
     var tags = product.tags || [];
     if (typeof tags === 'string') tags = tags.split(',');
-    for (var i = 0; i < tags.length; i++) {
-      if (String(tags[i]).toLowerCase().replace(/\s+/g, '') === 'loai:ke-toa') return false;
-    }
     var haystack = [product.name || product.title || '', String(product.alias || '').replace(/-/g, ' ')]
       .concat(tags.map(function (t) { return String(t).replace(/^hoatchat:/i, '').replace(/-/g, ' '); })).join(' | ');
     return isTextAllowed(haystack, excluded);

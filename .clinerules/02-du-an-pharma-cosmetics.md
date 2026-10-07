@@ -363,13 +363,18 @@ là thêm tính năng, không phải sửa lỗi).
 ## Trang sản phẩm (PDP V3) — quy ước nhập liệu & phân luồng (chốt 2026-10-05)
 
 Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc của khách).
-- **Sản phẩm kê toa = tag `loai:ke-toa`** (duy nhất 1 quy ước; so khớp sau downcase + bỏ khoảng trắng —
-  `snippets/pc_is_rx.bwt`). KHÔNG suy đoán theo `product.type`/tên. Kê toa ⇒ không render form
+- **Sản phẩm kê toa = sản phẩm thuộc DANH MỤC Sapo chọn ở `settings.product_rx_collection`** (người dùng chốt
+  2026-10-07, thay tag `loai:ke-toa` cũ; so khớp handle `collection.url | remove: '/'` — `snippets/pc_is_rx.bwt`).
+  Phía JS (quickview, skin quiz) đọc `window.pcRxAliases` in ở `layouts/theme.bwt` từ cùng danh mục (Sapo trả
+  tối đa 50 sản phẩm/danh mục). KHÔNG suy đoán theo `product.type`/tên/tag. Kê toa ⇒ không render form
   `/cart/add`, giá, số lượng, Mua ngay/Thêm giỏ/Shopee, đánh giá (sao + tab Đánh giá), khuyến mãi,
   coupon, combo, "cùng tầm giá", "sản phẩm đã xem"; JSON-LD bỏ `offers`/`aggregateRating`, bỏ
   `og:price`; thẻ danh mục (`product_grid_office*`) thay giá bằng `product_rx_card_label`, ẩn Xem
   nhanh/Thêm giỏ; quickview tự chuyển sang trang chi tiết. Hiện khối `snippets/pdp_rx_consult.bwt`
-  (câu chữ `product_rx_*`, Zalo = `settings.contact_zalo`).
+  (câu chữ `product_rx_*`, Zalo = `settings.contact_zalo`): khung cảnh báo + 3 bước `product_rx_step_*`,
+  nút tư vấn, dòng hotline `product_rx_hotline_label`; khối niềm tin dùng `product_rx_trust_*`; kicker có nhãn
+  `product_rx_badge_label`. **Mô tả ngắn của sản phẩm kê toa**: đoạn văn trước danh sách = lời dẫn dưới tên;
+  mỗi gạch đầu dòng `Tiêu đề | dòng phụ` = 1 ô thông tin (tối đa 3).
 - Trong `templates/product.bwt` và các snippet trang đọc cờ **`pc_pdp_rx`** (chốt ngay đầu trang), không
   đọc `pc_is_rx`: vòng lặp thẻ sản phẩm bên dưới gán lại `pc_is_rx` theo từng thẻ. So sánh dùng
   `!= true` (biến chưa gán = nil, `nil == false` là false).
@@ -425,7 +430,7 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
   tiếp nhận qua Zalo, không duyệt nội dung trước).
 - `snippets/quiz_results_data.bwt` → khoá `cases`: mỗi bước chỉ có `step`/`keywords`/`actives`, **không ghi
   tên/giá/SKU sản phẩm**. Sản phẩm lấy THẬT từ Sapo qua AJAX `/search?type=product&view=quizjson&query=`
-  (`templates/search.quizjson.bwt`, đã bỏ sản phẩm `loai:ke-toa`). Snippet này được nhúng làm biểu thức JS
+  (`templates/search.quizjson.bwt`, đã bỏ sản phẩm kê toa — `pc_is_rx`). Snippet này được nhúng làm biểu thức JS
   (`var x = {% include %}`) — không bọc `<script>`.
 - Câu chữ cảnh báo: `snippets/quiz_safety_copy.bwt` + field `quiz_*` (Theme Settings, nhóm AI Skin).
 

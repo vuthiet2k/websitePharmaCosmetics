@@ -69,7 +69,8 @@
 {%- comment -%} Chốt riêng cờ của trang: các vòng lặp thẻ sản phẩm phía dưới (include product_grid_office)
   gán lại pc_is_rx theo từng thẻ ⇒ JS/tab/JSON-LD của trang phải đọc pc_pdp_rx. {%- endcomment -%}
 {%- assign pc_pdp_rx = pc_is_rx -%}
-{% include 'breadcrumb' %}   
+{%- comment -%} 2026-10-07 (thiết kế PDP): breadcrumb trang sản phẩm nền trắng. {%- endcomment -%}
+<div class="pc-bread--white">{% include 'breadcrumb' %}</div>
 <section class="product layout-product">	
 	{%- include 'product_schema' -%}
 	<div class="container">
@@ -144,7 +145,7 @@
 						</div>
 
 					</div>
-					<div class="col-lg-6 col-md-12 col-12 details-pro">
+					<div class="col-lg-6 col-md-12 col-12 details-pro{% if pc_pdp_rx %} pc-pdp--rx{% endif %}">
 						{%- if settings.metafield_show -%}
 						{%- assign metafields_quycach = product.metafields.custom.Quycach -%}
 						{%- assign cleaned_quycach = metafields_quycach | remove: "[" | remove: "]" -%}
@@ -188,14 +189,29 @@
 						    {%- endif -%}
 						  {%- endif -%}
 						{%- endfor -%}
-						{%- if product.type != blank or pc_kicker_actives != blank -%}
+						{%- if product.type != blank or pc_kicker_actives != blank or pc_pdp_rx -%}
 						<p class="pc-pdp-kicker notranslate" translate="no" data-pdp-kicker>
 							{%- if product.type != blank -%}<span>{{ product.type }}</span>{%- endif -%}
 							{%- if product.type != blank and pc_kicker_actives != blank -%}<span class="pc-pdp-kicker__sep" aria-hidden="true">·</span>{%- endif -%}
 							{%- if pc_kicker_actives != blank -%}<span>{{ pc_kicker_actives }}</span>{%- endif -%}
+							{%- comment -%} 2026-10-07 (thiết kế PDP kê toa): nhãn KÊ TOA cạnh danh mục. {%- endcomment -%}
+							{%- if pc_pdp_rx -%}<span class="pc-pdp-kicker__rx">{{ settings.product_rx_badge_label | default: 'Kê toa' }}</span>{%- endif -%}
 						</p>
 						{%- endif -%}
 						<h1 class="title-product notranslate" translate="no">{{ product.name | escape}}</h1>
+						{%- comment -%}
+						  2026-10-07 (thiết kế PDP kê toa): Mô tả ngắn của sản phẩm kê toa tách làm 2 phần — phần trước danh sách
+						  = lời dẫn dưới tên; mỗi <li> dạng "Tiêu đề | dòng phụ" = 1 ô thông tin (tối đa 3, in sau dòng Mã).
+						  Không có mô tả ngắn ⇒ ẩn cả hai. Không tự sinh nội dung.
+						{%- endcomment -%}
+						{%- assign pc_rx_lead = '' -%}
+						{%- assign pc_rx_list = '' -%}
+						{%- if pc_pdp_rx and product.summary != blank -%}
+						  {%- assign pc_rx_parts = product.summary | split: '<ul' -%}
+						  {%- assign pc_rx_lead = pc_rx_parts[0] | strip_html | strip -%}
+						  {%- if pc_rx_parts.size > 1 -%}{%- assign pc_rx_list = pc_rx_parts[1] -%}{%- endif -%}
+						{%- endif -%}
+						{%- if pc_rx_lead != blank -%}<p class="pc-rx-lead">{{ pc_rx_lead }}</p>{%- endif -%}
 						<div class="product-top clearfix">
 							{{product.variants[0].barcode}}
 							{% assign current_variant = product.selected_or_first_available_variant %}
@@ -240,6 +256,32 @@
 							</div>
 							{%endif%}
 						</div>
+
+						{%- if pc_rx_list != blank -%}
+						{%- assign pc_rx_items = pc_rx_list | split: '<li' -%}
+						<div class="pc-rx-facts" data-rx-facts role="group" aria-label="{{ settings.product_rx_facts_title | default: 'Thông tin nhanh' }}">
+							{%- assign pc_rx_n = 0 -%}
+							{%- for pc_rx_item in pc_rx_items offset: 1 -%}
+							{%- assign pc_rx_text = pc_rx_item | prepend: '<li' | strip_html | strip -%}
+							{%- if pc_rx_text != blank and pc_rx_n < 3 -%}
+							{%- assign pc_rx_n = pc_rx_n | plus: 1 -%}
+							{%- assign pc_rx_title = pc_rx_text | split: '|' | first | strip -%}
+							{%- assign pc_rx_sub = '' -%}
+							{%- if pc_rx_text contains '|' -%}{%- assign pc_rx_sub = pc_rx_text | split: '|' | last | strip -%}{%- endif -%}
+							{%- case pc_rx_n -%}
+							{%- when 1 -%}{%- assign pc_rx_icon = 'M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11Z' -%}
+							{%- when 2 -%}{%- assign pc_rx_icon = 'M9 3h6v3l2 3v11a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V9l2-3V3ZM7 12h10' -%}
+							{%- else -%}{%- assign pc_rx_icon = 'M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1ZM14 3v5h5M9 13h6M9 17h4' -%}
+							{%- endcase -%}
+							<div class="pc-rx-facts__item">
+								<svg class="pc-rx-facts__icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="{{ pc_rx_icon }}"/></svg>
+								<p class="pc-rx-facts__title">{{ pc_rx_title }}</p>
+								{%- if pc_rx_sub != blank -%}<p class="pc-rx-facts__sub">{{ pc_rx_sub }}</p>{%- endif -%}
+							</div>
+							{%- endif -%}
+							{%- endfor -%}
+						</div>
+						{%- endif -%}
 
 						{%- unless pc_pdp_rx -%}
 						<div class="inventory_quantity">
@@ -462,13 +504,9 @@
 						</form>
 						{%- endunless -%}
 
-						{%if product.summary != null and product.summary != '' and product.summary !=""%}
-						{%- comment -%}
-						  2026-10-05 (PRD mục 8): sản phẩm kê toa — mô tả ngắn (product.summary, nên soạn dạng gạch đầu dòng)
-						  hiện thành khung "Thông tin nhanh" thay vị trí giá/nút mua. Không tự sinh nội dung.
-						{%- endcomment -%}
-						<div class="product-summary{% if pc_pdp_rx %} pc-rx-facts{% endif %}"{% if pc_pdp_rx %} data-rx-facts{% endif %}>
-							{%- if pc_pdp_rx -%}<p class="pc-rx-facts__title">{{ settings.product_rx_facts_title | default: 'Thông tin nhanh' }}</p>{%- endif -%}
+						{%- comment -%} 2026-10-07: sản phẩm kê toa in mô tả ngắn thành lời dẫn + ô thông tin ngay dưới tên (xem pc_rx_lead). {%- endcomment -%}
+						{%if product.summary != null and product.summary != '' and product.summary !="" and pc_pdp_rx != true %}
+						<div class="product-summary">
 							<div class="rte">
 								{{product.summary}}
 							</div>
@@ -531,14 +569,23 @@
 						{%- if settings.product_trust_enable != false -%}
 						{% unless product.tags contains "liệu trình" %}
 						<div class="pc-pdp-trust" data-pdp-trust>
-							{%- comment -%} Kê toa không bán trực tuyến ⇒ không hiện cam kết giao hàng, chỉ giữ dòng thương hiệu/xuất xứ. {%- endcomment -%}
-							{%- if pc_pdp_rx != true -%}
+							{%- comment -%} Kê toa không bán trực tuyến ⇒ không hiện cam kết giao hàng. 2026-10-07 (thiết kế PDP kê toa): thay bằng
+							  bộ cam kết riêng product_rx_trust_* (tư vấn / chính hãng / đồng hành), icon bong bóng chat / khiên / trái tim. {%- endcomment -%}
+							{%- if pc_pdp_rx -%}
+							{%- assign pc_trust_t1 = settings.product_rx_trust_1_title | default: 'Tư vấn chuyên môn' -%}
+							{%- assign pc_trust_d1 = settings.product_rx_trust_1_desc | default: 'Bởi chuyên gia/dược sĩ' -%}
+							{%- assign pc_trust_t2 = settings.product_rx_trust_2_title | default: 'Sản phẩm chính hãng' -%}
+							{%- assign pc_trust_d2 = settings.product_rx_trust_2_desc | default: 'Nguồn gốc rõ ràng' -%}
+							{%- assign pc_trust_t3 = settings.product_rx_trust_3_title | default: 'Đồng hành suốt liệu trình' -%}
+							{%- assign pc_trust_d3 = settings.product_rx_trust_3_desc | default: 'Theo dõi trong quá trình dùng' -%}
+							{%- else -%}
 							{%- assign pc_trust_t1 = settings.product_trust_1_title | default: 'Giao hàng toàn quốc' -%}
 							{%- assign pc_trust_d1 = settings.product_trust_1_desc | default: 'Nhanh chóng, an toàn.' -%}
 							{%- assign pc_trust_t2 = settings.product_trust_2_title | default: 'Sản phẩm chính hãng' -%}
 							{%- assign pc_trust_d2 = settings.product_trust_2_desc | default: 'Nguồn gốc rõ ràng.' -%}
 							{%- assign pc_trust_t3 = settings.product_trust_3_title | default: 'Tư vấn chuyên môn' -%}
 							{%- assign pc_trust_d3 = settings.product_trust_3_desc | default: 'Đồng hành cùng làn da của bạn.' -%}
+							{%- endif -%}
 							<ul class="pc-pdp-trust__list">
 								{%- for i in (1..3) -%}
 								{%- case i -%}
@@ -548,9 +595,9 @@
 								{%- endcase -%}
 								{%- comment -%} 2026-10-07: theo thiết kế PDP — 3 cột ngang, icon riêng (xe giao hàng / khiên / bong bóng chat), tiêu đề trên mô tả. {%- endcomment -%}
 								{%- case i -%}
-								{%- when 1 -%}{%- assign pc_trust_path = 'M3 6h11v10H3zM14 9h4l3 3v4h-7M7.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z' -%}
+								{%- when 1 -%}{%- if pc_pdp_rx -%}{%- assign pc_trust_path = 'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12ZM8 10h8M8 14h5' -%}{%- else -%}{%- assign pc_trust_path = 'M3 6h11v10H3zM14 9h4l3 3v4h-7M7.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z' -%}{%- endif -%}
 								{%- when 2 -%}{%- assign pc_trust_path = 'M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6l-7-3ZM9 12l2 2 4-4' -%}
-								{%- else -%}{%- assign pc_trust_path = 'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12ZM8 10h8M8 14h5' -%}
+								{%- else -%}{%- if pc_pdp_rx -%}{%- assign pc_trust_path = 'M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z' -%}{%- else -%}{%- assign pc_trust_path = 'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12ZM8 10h8M8 14h5' -%}{%- endif -%}
 								{%- endcase -%}
 								<li class="pc-pdp-trust__item">
 									<svg class="pc-pdp-trust__icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="{{ pc_trust_path }}"/></svg>
@@ -558,7 +605,6 @@
 								</li>
 								{%- endfor -%}
 							</ul>
-							{%- endif -%}
 							<p class="pc-pdp-trust__origin">
 								<span><b>{{ settings.product_brand_label | default: 'THƯƠNG HIỆU' }}:</b> <span class="notranslate" translate="no">{% if product.vendor != blank %}{{ product.vendor }}{% else %}{{ store.name }}{% endif %}</span></span>
 								{%- if pc_xuatxu != blank %}

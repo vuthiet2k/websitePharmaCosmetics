@@ -2,7 +2,8 @@ const { test, expect } = require('@playwright/test');
 
 // 2026-10-05 (PDP V3 — PRD "Tinh giản trang sản phẩm"): 2 phễu trên trang chi tiết.
 // Fixture ở data/products.js: serum-vitamin-c-15 (thường, tag shopee_ có dấu "_"),
-// kem-chong-nang-mineral-spf50 (thường, không Shopee), altreno-lotion-0-05-tretinoin (tag loai:ke-toa).
+// kem-chong-nang-mineral-spf50 (thường, không Shopee), altreno-lotion-0-05-tretinoin (kê toa — 2026-10-07: nằm trong
+// danh mục settings.product_rx_collection = thuoc-ke-don, không còn theo tag loai:ke-toa).
 
 async function productJsonLd(page) {
   const blocks = await page.locator('script[type="application/ld+json"]').allTextContents();
@@ -39,7 +40,10 @@ test('Sản phẩm kê toa: không form/giá/số lượng/Shopee/đánh giá, c
   await expect(page.locator('form[action="/cart/add"]#add-to-cart-form')).toHaveCount(0);
   await expect(page.locator('section.layout-product .details-pro .product-price, #qtym, section.layout-product .btn-buyNow, .mua_shop')).toHaveCount(0);
   await expect(page.locator('.product-review, #tab-3, [data-tab="#tab-3"]')).toHaveCount(0);
-  await expect(page.locator('.pc-rx-consult__title')).toHaveText(/SẢN PHẨM KÊ TOA/);
+  await expect(page.locator('.pc-rx-consult__title')).toHaveText(/THUỐC KÊ ĐƠN/);
+  await expect(page.locator('.pc-rx-consult__steps li')).toHaveCount(3);
+  await expect(page.locator('.pc-rx-consult__hotline')).toContainText('0967194063');
+  await expect(page.locator('[data-pdp-kicker] .pc-pdp-kicker__rx')).toBeVisible();
   await expect(page.locator('.pc-rx-consult__cta')).toHaveAttribute('href', /^https:\/\/zalo\.me\/\d+$/);
   await expect(page.locator('meta[property="og:price:amount"]')).toHaveCount(0);
 
@@ -72,7 +76,7 @@ test('Đầu trang 2 cột, không còn khối cửa hàng; khối niềm tin + 
   const trust = page.locator('[data-pdp-trust]');
   await expect(trust.locator('.pc-pdp-trust__item')).toHaveCount(3);
   await expect(trust.locator('.pc-pdp-trust__origin')).toContainText('THƯƠNG HIỆU: PHARMA COSMETICS');
-  await expect(trust.locator('.pc-pdp-trust__origin')).toContainText('XUẤT XỨ: VIỆT NAM');
+  await expect(trust.locator('.pc-pdp-trust__origin')).toContainText(/XUẤT XỨ:\s*Việt Nam/i);
   await expect(page.locator('.boz-form .mua_shop a')).toContainText('ĐẶT HÀNG TẠI SHOPEE MALL');
   await expect(page.locator('section.layout-product .details-product')).not.toContainText('xuatxu');
 });
@@ -98,9 +102,10 @@ test('Tab chi tiết tách theo <h2>, bỏ mục rỗng; không có <h2> thì gi
   await expect(page.locator('[id^="tab-c"]')).toHaveCount(0);
 });
 
-test('Kê toa: khối niềm tin chỉ còn dòng thương hiệu, không có cam kết giao hàng', async ({ page }) => {
+test('Kê toa: khối niềm tin dùng bộ cam kết riêng, không có cam kết giao hàng', async ({ page }) => {
   await page.goto('/altreno-lotion-0-05-tretinoin');
-  await expect(page.locator('[data-pdp-trust] .pc-pdp-trust__item')).toHaveCount(0);
+  await expect(page.locator('[data-pdp-trust] .pc-pdp-trust__item')).toHaveCount(3);
+  await expect(page.locator('[data-pdp-trust]')).not.toContainText('Giao hàng');
   await expect(page.locator('[data-pdp-trust] .pc-pdp-trust__origin')).toContainText('THƯƠNG HIỆU');
 });
 
@@ -120,9 +125,12 @@ test('Kicker danh mục · hoạt chất trên tên; MUA NGAY xanh chính, THÊM
   expect(cartBg).toBe('rgb(0, 63, 45)');
 });
 
-test('Kê toa: mô tả ngắn hiện thành khung Thông tin nhanh', async ({ page }) => {
+test('Kê toa: mô tả ngắn tách thành lời dẫn + ô thông tin "Tiêu đề | dòng phụ"', async ({ page }) => {
   await page.goto('/altreno-lotion-0-05-tretinoin');
+  await expect(page.locator('.pc-rx-lead')).toContainText('Thuốc bôi ngoài da kê đơn');
   const facts = page.locator('[data-rx-facts]');
-  await expect(facts.locator('.pc-rx-facts__title')).toHaveText('Thông tin nhanh');
-  await expect(facts.locator('li')).toHaveCount(2);
+  await expect(facts).toHaveAttribute('aria-label', 'Thông tin nhanh');
+  await expect(facts.locator('.pc-rx-facts__item')).toHaveCount(3);
+  await expect(facts.locator('.pc-rx-facts__title').first()).toHaveText('Điều trị mụn trứng cá');
+  await expect(facts.locator('.pc-rx-facts__sub').first()).toHaveText('Theo chỉ định trên nhãn sản phẩm');
 });

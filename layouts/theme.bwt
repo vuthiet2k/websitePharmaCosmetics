@@ -126,6 +126,9 @@
 		{% if template contains 'customer' %}{{ 'bizweb-api.js'  | bizweb_asset_url | script_tag }}{{ 'common.js' | bizweb_asset_url | script_tag }}{{ 'customer.js'  | bizweb_asset_url | script_tag }}{% endif %}
 		{% if template contains 'product' %}<script>var ProductReviewsAppUtil=ProductReviewsAppUtil || {};{% if customer %}ProductReviewsAppUtil.customer={id: '{{customer.id}}',name: '{{customer.name}}',email: '{{customer.email}}', phone: '{{customer.phone}}'};{% endif %}ProductReviewsAppUtil.store={name: '{{store.name}}'};</script>{%endif%}
 		{% include 'schema' %}
+		{%- comment -%} 2026-10-07: danh sách alias sản phẩm KÊ TOA (danh mục settings.product_rx_collection) cho JS
+		  quickview/skin quiz — cùng nguồn với snippets/pc_is_rx.bwt. Sapo trả tối đa 50 sản phẩm/danh mục khi không paginate. {%- endcomment -%}
+		<script>window.pcRxAliases = [{%- if settings.product_rx_collection != blank -%}{%- for pc_rx_p in collections[settings.product_rx_collection].products -%}"{{ pc_rx_p.alias }}"{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}{%- endif -%}];</script>
 		{%- comment -%}
 		  T-134 (2026-09-12) — báo cáo audit: "Lỗi ảnh vỡ (Broken Image) tại mục Sản phẩm xem nhiều
 		  nhất: URL ảnh chết của TRETINOIN CREAM". Đo thật trên trang chủ: ĐÚNG 4 ảnh có

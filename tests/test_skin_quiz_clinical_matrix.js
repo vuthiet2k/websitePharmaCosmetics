@@ -116,9 +116,11 @@ test('dị ứng nặng: cờ allergy_severe, loại hoạt chất mạnh, xếp
   assert.deepEqual(r.excluded_actives.sort(), ['aha', 'bha', 'cysteamine', 'retinoid']);
 });
 
-test('lọc sản phẩm: bỏ kê toa (loai:ke-toa) và sản phẩm chứa hoạt chất bị loại', () => {
+test('lọc sản phẩm: bỏ kê toa (danh mục kê toa — window.pcRxAliases) và sản phẩm chứa hoạt chất bị loại', () => {
   const ex = evaluate({ 16: 0 }).excluded_actives;
-  assert.equal(engine.isProductAllowed({ name: 'Altreno Lotion 0.05%', tags: ['Loai: Ke-Toa'] }, []), false);
+  global.window = global.window || {};
+  window.pcRxAliases = ['altreno-lotion-0-05-tretinoin'];
+  assert.equal(engine.isProductAllowed({ name: 'Altreno Lotion 0.05%', alias: 'altreno-lotion-0-05-tretinoin', tags: [] }, []), false);
   assert.equal(engine.isProductAllowed({ name: 'Kem Dưỡng Retinol 0.3%', alias: 'kem-duong-retinol-0-3', tags: [] }, ex), false);
   assert.equal(engine.isProductAllowed({ name: 'Serum Đêm', alias: 'serum-dem', tags: ['hoatchat:retinol'] }, ex), false);
   assert.equal(engine.isProductAllowed({ name: 'Kem Dưỡng Retinol 0.3%', tags: [] }, []), true);

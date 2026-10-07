@@ -2,6 +2,8 @@
   2026-10-05 (PDP V3 — PRD mục 7): khối thay thế luồng mua cho sản phẩm kê toa — cảnh báo + 1 CTA duy
   nhất "Liên hệ tư vấn chuyên môn" qua Zalo (settings.contact_zalo). Không in giá/số lượng/nút mua.
   Câu chữ cấu hình ở Theme Settings → Trang sản phẩm → "Sản phẩm kê toa".
+  2026-10-07 (thiết kế PDP kê toa): khung cảnh báo nền cam nhạt + 3 bước đánh số (product_rx_step_*, trống cả 3
+  ⇒ ẩn dãy bước); nút tư vấn có icon chat; dòng "Hotline/Zalo" (product_rx_hotline_label + contact_zalo).
 {%- endcomment -%}
 {%- assign pc_rx_zalo = settings.contact_zalo | remove: ' ' | remove: '.' | strip -%}
 {%- if pc_rx_zalo != blank -%}
@@ -10,16 +12,32 @@
   {%- assign pc_rx_href = '/pages/dat-lich-tu-van' -%}
 {%- endif -%}
 {%- assign pc_rx_cta_sub = settings.product_rx_cta_sub -%}
+{%- assign pc_rx_hotline_label = settings.product_rx_hotline_label -%}
 <div class="pc-rx-consult">
 	<div class="pc-rx-consult__alert" role="note">
-		<svg class="pc-rx-consult__icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z"/><path d="M12 8.5v6M9 11.5h6"/></svg>
-		<div>
-			<p class="pc-rx-consult__title">{{ settings.product_rx_title | default: 'SẢN PHẨM KÊ TOA' }}</p>
-			<p class="pc-rx-consult__text">{{ settings.product_rx_warning | default: 'Đây là thuốc kê đơn. Việc sử dụng cần được đánh giá và tư vấn phù hợp bởi chuyên gia/dược sĩ.' }}</p>
+		<div class="pc-rx-consult__head">
+			<svg class="pc-rx-consult__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>
+			<div>
+				<p class="pc-rx-consult__title">{{ settings.product_rx_title | default: 'THUỐC KÊ ĐƠN · CẦN TƯ VẤN TRƯỚC KHI DÙNG' }}</p>
+				<p class="pc-rx-consult__text">{{ settings.product_rx_warning | default: 'Đây là thuốc kê đơn. Việc sử dụng cần được đánh giá và tư vấn phù hợp bởi chuyên gia/dược sĩ.' }}</p>
+			</div>
 		</div>
+		{%- if settings.product_rx_step_1 != blank or settings.product_rx_step_2 != blank or settings.product_rx_step_3 != blank -%}
+		<ol class="pc-rx-consult__steps">
+			{%- for i in (1..3) -%}
+			{%- capture pc_rx_step_key -%}product_rx_step_{{ i }}{%- endcapture -%}
+			{%- if settings[pc_rx_step_key] != blank -%}
+			<li><span class="pc-rx-consult__step-no" aria-hidden="true">{{ i }}</span><span>{{ settings[pc_rx_step_key] }}</span></li>
+			{%- endif -%}
+			{%- endfor -%}
+		</ol>
+		{%- endif -%}
 	</div>
 	<a class="pc-rx-consult__cta" href="{{ pc_rx_href }}"{% if pc_rx_zalo != blank %} target="_blank" rel="noopener"{% endif %}>
-		<span class="pc-rx-consult__cta-main">{{ settings.product_rx_cta_title | default: 'LIÊN HỆ TƯ VẤN CHUYÊN MÔN' }}</span>
+		<span class="pc-rx-consult__cta-main"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/><path d="M8 10h8M8 14h5"/></svg>{{ settings.product_rx_cta_title | default: 'LIÊN HỆ TƯ VẤN CHUYÊN MÔN' }}</span>
 		{%- if pc_rx_cta_sub != blank -%}<span class="pc-rx-consult__cta-sub">{{ pc_rx_cta_sub }}</span>{%- endif -%}
 	</a>
+	{%- if pc_rx_hotline_label != blank and pc_rx_zalo != blank -%}
+	<p class="pc-rx-consult__hotline">{{ pc_rx_hotline_label }}: <a href="tel:{{ pc_rx_zalo }}"><b>{{ settings.contact_zalo }}</b></a></p>
+	{%- endif -%}
 </div>

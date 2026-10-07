@@ -83,6 +83,13 @@ const collectionsData = {
     { products_count: 9 }
   ),
 
+  // 2026-10-07: danh mục kê toa demo — settings.product_rx_collection trỏ vào đây (snippets/pc_is_rx.bwt).
+  'thuoc-ke-don': makeCollection(
+    'Thuốc kê đơn', 'thuoc-ke-don', 4299001, '',
+    pick(1016),
+    { products_count: 1 }
+  ),
+
   'da-mun-dau': makeCollection(
     'Da Mụn & Dầu', 'da-mun-dau', 4295298, '',
     pick(1005, 1007, 1013, 1003, 1004, 1006),
