@@ -138,7 +138,12 @@ const beautyTipsArticles = [
     handle:        'double-cleansing-rua-mat-2-buoc-sach-sau',
     url:           '/blogs/bi-quyet/double-cleansing-rua-mat-2-buoc-sach-sau',
     excerpt:       'Dầu tẩy trang + sữa rửa mặt là công thức vàng để loại bỏ hoàn toàn kem chống nắng, bụi mịn và bã nhờn tích tụ trong ngày — bí quyết của làn da Hàn/Nhật.',
-    content:       '<p>Double cleansing (làm sạch kép) là bước đầu tiên và quan trọng nhất trong mọi routine skincare hiệu quả...</p>',
+    // 2026-10-07: nội dung mẫu có H2/danh sách đánh số/blockquote để preview kiểu nội dung bài theo thiết kế.
+    content:       '<p>Double cleansing (làm sạch kép) là bước đầu tiên và quan trọng nhất trong mọi routine skincare hiệu quả...</p>'
+      + '<h2>1. Double Cleansing là gì?</h2><p>Double cleansing là quy trình rửa mặt 2 bước, thường bao gồm:</p>'
+      + '<ol><li><strong>Bước 1:</strong> Tẩy trang (dầu/sáp tẩy trang) để loại bỏ lớp trang điểm, kem chống nắng, dầu thừa.</li>'
+      + '<li><strong>Bước 2:</strong> Rửa mặt với sữa rửa mặt dịu nhẹ để làm sạch bụi bẩn còn sót lại.</li></ol>'
+      + '<blockquote><p>Làn da sạch không chỉ là bề mặt, mà là nền tảng cho làn da khoẻ đẹp lâu dài.</p></blockquote>',
     image:         { src: img('ffb4a2/333333', 'Double Cleansing'), alt: 'Bí quyết double cleansing' },
     featured_image:{ src: img('ffb4a2/333333', 'Double Cleansing'), alt: 'Bí quyết double cleansing' },
     author:        'Chuyên gia Thanh Hằng',

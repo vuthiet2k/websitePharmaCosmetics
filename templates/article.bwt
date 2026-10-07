@@ -45,123 +45,172 @@
 			</script>
 			<article class="article-main">
 				<div class="row">
-					<div class="right-content {%if settings.right_asideblog_enable%}col-lg-9 {%else%} col-lg-12 {%endif%} col-12">
+					<div class="right-content {%if settings.right_asideblog_enable%}col-lg-8 {%else%} col-lg-12 {%endif%} col-12">
 						{%- comment -%}
-						  REOPEN 2026-09-10 (ADR-007/T-74) — CMP-02 Sticky TOC: cột phụ 240px, chỉ hiện
-						  desktop (>=1200px, class .pc-cmp-sticky-toc tự ẩn <1200px qua CSS), tái dùng
-						  ĐÚNG tocbot.init() đã có (không thêm thư viện scrollspy mới) — xem <script>
-						  cuối file, target selector .pc-cmp-toc-list.
+						  2026-10-07 (thiết kế chi tiết bài viết): 2 thẻ trắng — thẻ đầu bài (tiêu đề, byline chuyên gia, thanh
+						  ngày/tác giả nền mint, thẻ, chia sẻ) và thẻ nội dung. Bỏ cột mục lục sticky bên trái nội dung và công tắc
+						  "Kích thước chữ" (không có trong thiết kế); mục lục vẫn còn dạng thu gọn trong thẻ nội dung + nút nổi.
 						{%- endcomment -%}
-						<div class="lg:flex lg:items-start lg:gap-8">
-						{%if mucluc == true%}
-						<aside class="pc-cmp-sticky-toc">
-							<div class="pc-cmp-sticky-toc__title">Nội dung bài viết</div>
-							<div class="pc-cmp-toc-list toc-list"></div>
-						</aside>
-						{%endif%}
-						<div class="article-details bg-shadow clearfix flex-1 min-w-0">
-							<h1 class="article-title">{{ article.title }}</h1>
-							<div class="size-content-detail">
-								<div class="posts">
-									<div class="time-post f">
-										{%assign thu = article.published_on | date:'%a' %}
-										<svg width="16" height="16" aria-hidden="true" focusable="false" data-prefix="fal" data-icon="clock" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="svg-inline--fa fa-clock fa-w-16"><path fill="currentColor" d="M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm216 248c0 118.7-96.1 216-216 216-118.7 0-216-96.1-216-216 0-118.7 96.1-216 216-216 118.7 0 216 96.1 216 216zm-148.9 88.3l-81.2-59c-3.1-2.3-4.9-5.9-4.9-9.7V116c0-6.6 5.4-12 12-12h14c6.6 0 12 5.4 12 12v146.3l70.5 51.3c5.4 3.9 6.5 11.4 2.6 16.8l-8.2 11.3c-3.9 5.3-11.4 6.5-16.8 2.6z" class=""></path></svg>
-										{%if thu == 'Mon'%}
-										Thứ Hai,
-										{%elsif thu == 'Tue'%}
-										Thứ Ba,
-										{%elsif thu == 'Wed'%}
-										Thứ Tư,
-										{%elsif thu == 'Thu'%}
-										Thứ Năm,
-										{%elsif thu == 'Fri'%}
-										Thứ Sáu,
-										{%elsif thu == 'Sat'%}
-										Thứ Bảy,
-										{%elsif thu == 'Sun'%}
-										Chủ Nhật,
-										{%else%}
-										Thứ {{ article.published_on | date:'%a' }}
-										{%endif%}{{ article.published_on | date:'dd/MM/yyy' }}
-									</div>
-									<div class="time-post">
-										<svg width="14" height="16" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="user" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" class="svg-inline--fa fa-user fa-w-14"><path fill="currentColor" d="M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48v-41.6c0-74.2-60.2-134.4-134.4-134.4z" class=""></path></svg>
-										<span>{{article.author}}</span>
-									</div>
-								</div>
-								{%- comment -%}
-								  T-41 author byline block — tìm doctors record trùng article.author (so sánh
-								  chuỗi chính xác, KHÔNG ép mọi bài viết về 1 chuyên gia). Nếu khớp: hiện avatar +
-								  chức danh + badge + link sang page.chuyen-gia-detail.bwt (chỉ đúng khi khớp
-								  flagship doctor alias 'chuyen-gia-thanh-hang' — T-114 2026-09-12, đổi từ alias
-								  cũ (gắn tên "Minh Anh") sau khi hợp nhất 2 hồ sơ trùng tên — vì đó là trang
-								  duy nhất tồn tại — các chuyên gia khác trong data/doctors.js chưa có trang detail riêng).
-								  pc-kit-* class xem snippets/pharma_ui_kit.bwt (tiền tố bắt buộc, tránh trùng
-								  .badge-clinical/.nav-link đã có sẵn ở assets/page_blog.scss.bwt).
-								{%- endcomment -%}
-								{%- comment -%}
-								  2026-10-03 (Bước 3): ghép byline qua tag "chuyengia:<handle bài hồ sơ>" trên bài viết, tra
-								  trong Blog chuyên gia (settings.expert_blog_handle) — thay biến mock `doctors` (không tồn
-								  tại trên Sapo) và cách so tên tác giả (dễ lệch chuỗi). Không có tag → byline thường.
-								{%- endcomment -%}
-								{%- assign article_author_doctor = false -%}
-								{%- assign pc_by_handle = '' -%}
-								{%- for pc_by_tag in article.tags -%}
-								  {%- assign pc_by_key = pc_by_tag | split: ':' | first | strip | downcase -%}
-								  {%- if pc_by_tag contains ':' and pc_by_key == 'chuyengia' -%}
-								    {%- assign pc_by_handle = pc_by_tag | split: ':' | last | strip -%}
-								  {%- endif -%}
-								{%- endfor -%}
-								{%- if pc_by_handle != blank -%}
-								  {%- assign pc_ex_blog_handle = settings.expert_blog_handle | default: 'chuyen-gia' -%}
-								  {%- assign pc_ex_blog = blogs[pc_ex_blog_handle] -%}
-								  {%- assign pc_ex_flagship = settings.expert_flagship_handle | default: '' | strip -%}
-								  {%- assign pc_ex_first = pc_ex_blog.articles | first -%}
-								  {%- if pc_ex_flagship == blank and pc_ex_first -%}{%- assign pc_ex_flagship = pc_ex_first.url | split: '/' | last -%}{%- endif -%}
-								  {%- for pc_by_item in pc_ex_blog.articles -%}
-								    {%- assign pc_by_item_handle = pc_by_item.url | split: '/' | last -%}
-								    {%- if pc_by_item_handle == pc_by_handle -%}{%- assign article_author_doctor = pc_by_item -%}{%- endif -%}
-								  {%- endfor -%}
-								  {%- if article_author_doctor -%}{%- assign pc_ex = article_author_doctor -%}{%- include 'expert_fields' -%}{%- endif -%}
-								{%- endif -%}
-								<div class="pc41-author-byline flex items-center gap-3 py-4 my-2 border-y border-gray-100">
-								  {%- if article_author_doctor -%}
-								  {%- if article_author_doctor.image.src != blank -%}
-								  <img src="{{ article_author_doctor.image.src | img_url: 'medium' }}" alt="{{ article_author_doctor.title | escape }}" width="48" height="48" loading="lazy"
-								    class="w-12 h-12 rounded-full object-cover border-2 border-emerald-100 flex-shrink-0">
-								  {%- endif -%}
-								  <div class="min-w-0">
-								    <div class="flex items-center gap-2 flex-wrap">
-								      <span class="text-sm font-bold text-forest-900 font-heading">{{ article_author_doctor.title }}</span>
-								      {%- if pc_ex_handle == pc_ex_flagship -%}
-								      <span class="pc-kit-badge-clinical text-[10px]">✓ Hội đồng Chuyên môn</span>
-								      {%- endif -%}
-								    </div>
-								    {%- if pc_ex_title != blank -%}<p class="text-xs text-gray-500">{{ pc_ex_title }}</p>{%- endif -%}
-								    <a href="{% if pc_ex_handle == pc_ex_flagship %}/pages/chuyen-gia-detail{% else %}{{ article_author_doctor.url }}{% endif %}" class="text-xs font-semibold text-emerald-700 hover:underline">Xem hồ sơ đầy đủ →</a>
-								  </div>
-								  {%- else -%}
-								  <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center flex-shrink-0">
-								    <i class="fas fa-user-md"></i>
-								  </div>
-								  <div>
-								    <span class="text-sm font-bold text-forest-900 font-heading">{{ article.author }}</span>
-								    <p class="text-xs text-gray-500">Đội ngũ biên tập Pharma Cosmetics</p>
-								  </div>
-								  {%- endif -%}
-								</div>
-								<div class="lc-switch-size">
-									<p class="size-text">Kích thước chữ</p>
-									<div class="lc-option-box-size">
-										<div class="cursor-pointer active">
-											<p class="css-osuj7x ">Mặc định </p>
-										</div><div class="cursor-pointer">
-										<p class="css-osuj7x">Lớn hơn</p>
-										</div>
-									</div>
-								</div>
+						<header class="pc-art-card pc-art-head">
+							<h1 class="article-title pc-art-title">{{ article.title }}</h1>
+							{%- comment -%}
+							  T-41 author byline block — tìm doctors record trùng article.author (so sánh
+							  chuỗi chính xác, KHÔNG ép mọi bài viết về 1 chuyên gia). Nếu khớp: hiện avatar +
+							  chức danh + badge + link sang page.chuyen-gia-detail.bwt (chỉ đúng khi khớp
+							  flagship doctor alias 'chuyen-gia-thanh-hang' — T-114 2026-09-12, đổi từ alias
+							  cũ (gắn tên "Minh Anh") sau khi hợp nhất 2 hồ sơ trùng tên — vì đó là trang
+							  duy nhất tồn tại — các chuyên gia khác trong data/doctors.js chưa có trang detail riêng).
+							  pc-kit-* class xem snippets/pharma_ui_kit.bwt (tiền tố bắt buộc, tránh trùng
+							  .badge-clinical/.nav-link đã có sẵn ở assets/page_blog.scss.bwt).
+							{%- endcomment -%}
+							{%- comment -%}
+							  2026-10-03 (Bước 3): ghép byline qua tag "chuyengia:<handle bài hồ sơ>" trên bài viết, tra
+							  trong Blog chuyên gia (settings.expert_blog_handle) — thay biến mock `doctors` (không tồn
+							  tại trên Sapo) và cách so tên tác giả (dễ lệch chuỗi). Không có tag → byline thường.
+							{%- endcomment -%}
+							{%- assign article_author_doctor = false -%}
+							{%- assign pc_by_handle = '' -%}
+							{%- for pc_by_tag in article.tags -%}
+							  {%- assign pc_by_key = pc_by_tag | split: ':' | first | strip | downcase -%}
+							  {%- if pc_by_tag contains ':' and pc_by_key == 'chuyengia' -%}
+							    {%- assign pc_by_handle = pc_by_tag | split: ':' | last | strip -%}
+							  {%- endif -%}
+							{%- endfor -%}
+							{%- if pc_by_handle != blank -%}
+							  {%- assign pc_ex_blog_handle = settings.expert_blog_handle | default: 'chuyen-gia' -%}
+							  {%- assign pc_ex_blog = blogs[pc_ex_blog_handle] -%}
+							  {%- assign pc_ex_flagship = settings.expert_flagship_handle | default: '' | strip -%}
+							  {%- assign pc_ex_first = pc_ex_blog.articles | first -%}
+							  {%- if pc_ex_flagship == blank and pc_ex_first -%}{%- assign pc_ex_flagship = pc_ex_first.url | split: '/' | last -%}{%- endif -%}
+							  {%- for pc_by_item in pc_ex_blog.articles -%}
+							    {%- assign pc_by_item_handle = pc_by_item.url | split: '/' | last -%}
+							    {%- if pc_by_item_handle == pc_by_handle -%}{%- assign article_author_doctor = pc_by_item -%}{%- endif -%}
+							  {%- endfor -%}
+							  {%- if article_author_doctor -%}{%- assign pc_ex = article_author_doctor -%}{%- include 'expert_fields' -%}{%- endif -%}
+							{%- endif -%}
+							<div class="pc41-author-byline pc-art-byline flex items-center gap-3">
+							  {%- if article_author_doctor -%}
+							  {%- if article_author_doctor.image.src != blank -%}
+							  <img src="{{ article_author_doctor.image.src | img_url: 'medium' }}" alt="{{ article_author_doctor.title | escape }}" width="48" height="48" loading="lazy"
+							    class="w-10 h-10 rounded-full object-cover border-2 border-emerald-100 flex-shrink-0">
+							  {%- endif -%}
+							  <div class="min-w-0">
+							    <div class="flex items-center gap-2 flex-wrap">
+							      <span class="text-sm font-bold text-forest-900 font-heading">{{ article_author_doctor.title }}</span>
+							      {%- if pc_ex_handle == pc_ex_flagship -%}
+							      <span class="pc-kit-badge-clinical text-[10px]">✓ Hội đồng Chuyên môn</span>
+							      {%- endif -%}
+							    </div>
+							    {%- if pc_ex_title != blank -%}<p class="text-xs text-gray-500">{{ pc_ex_title }}</p>{%- endif -%}
+							    <a href="{% if pc_ex_handle == pc_ex_flagship %}/pages/chuyen-gia-detail{% else %}{{ article_author_doctor.url }}{% endif %}" class="text-xs font-semibold text-emerald-700 hover:underline">Xem hồ sơ đầy đủ →</a>
+							  </div>
+							  {%- else -%}
+							  <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center flex-shrink-0">
+							    <i class="fas fa-user-md"></i>
+							  </div>
+							  <div>
+							    <span class="text-sm font-bold text-forest-900 font-heading">{{ article.author }}</span>
+							    <p class="text-xs text-gray-500">Đội ngũ biên tập Pharma Cosmetics</p>
+							  </div>
+							  {%- endif -%}
 							</div>
-
+							{%- comment -%} 2026-10-07: ngày đăng kiểu "Thứ Bảy, 12/04/2026" — thứ không nhận ra thì chỉ in ngày (trước đây in lặp "Thứ 12/4/2026 12/4/2026"). {%- endcomment -%}
+							{%- assign pc_art_wd = article.published_on | date: '%a' -%}
+							{%- case pc_art_wd -%}
+							{%- when 'Mon' -%}{%- assign pc_art_wd = 'Thứ Hai, ' -%}
+							{%- when 'Tue' -%}{%- assign pc_art_wd = 'Thứ Ba, ' -%}
+							{%- when 'Wed' -%}{%- assign pc_art_wd = 'Thứ Tư, ' -%}
+							{%- when 'Thu' -%}{%- assign pc_art_wd = 'Thứ Năm, ' -%}
+							{%- when 'Fri' -%}{%- assign pc_art_wd = 'Thứ Sáu, ' -%}
+							{%- when 'Sat' -%}{%- assign pc_art_wd = 'Thứ Bảy, ' -%}
+							{%- when 'Sun' -%}{%- assign pc_art_wd = 'Chủ Nhật, ' -%}
+							{%- else -%}{%- assign pc_art_wd = '' -%}
+							{%- endcase -%}
+							<div class="pc-art-meta">
+								<span class="pc-art-meta__leaf" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M20 4c-8.5 0-14 4-14 11 0 1.4.3 2.7.8 3.8L4 21.6 5.4 23l2.7-2.7c1.2.5 2.5.7 3.9.7 7 0 9-6.5 8-17Zm-8 15c-.9 0-1.8-.2-2.6-.5l6-6-1.4-1.4-6 6A6 6 0 0 1 8 15c0-5.3 3.9-8.6 10-9-.1 7.6-2 13-6 13Z"/></svg></span>
+								<span class="pc-art-meta__item"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>{{ pc_art_wd }}{{ article.published_on | date: 'dd/MM/yyyy' }}</span>
+								{%- if article.author != blank -%}
+								<span class="pc-art-meta__item"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5Z"/></svg>{{ article.author }}</span>
+								{%- endif -%}
+							</div>
+							{%- comment -%}
+							  2026-10-07 (thiết kế chi tiết bài viết): thẻ dạng viên bo tròn trong thẻ đầu bài. Bỏ tag hệ thống
+							  khoá:giá trị (chuyengia:, sanpham:, anhtruoc:...) và duocsi_/video — chỉ là dữ liệu nội bộ.
+							{%- endcomment -%}
+							{%- if article.tags.size > 0 and settings.article_tags_enable -%}
+							{%- capture pc_art_tags -%}
+							{%- for tag in article.tags -%}
+							{%- unless tag contains ':' or tag contains 'duocsi_' or tag contains 'video' -%}
+							<a class="pc-art-tag" href="/blogs/all/tagged/(({{ tag | replace: ' ', '%20' }}))" title="{{ tag }}">{{ tag }}</a>
+							{%- endunless -%}
+							{%- endfor -%}
+							{%- endcapture -%}
+							{%- if pc_art_tags != blank -%}<div class="pc-art-tags">{{ pc_art_tags }}</div>{%- endif -%}
+							{%- endif -%}
+							{%if settings.article_social_enable%}
+							<div class="social-sharing">
+								<ul class="social-media" role="list">
+									<li class="title">
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-share" viewBox="0 0 16 16">
+											<path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5m-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3"/>
+										</svg>
+										Chia sẻ
+									</li>
+									<li class="social-media__item social-media__item--facebook">
+										<a title="Chia sẻ lên Facebook" href="https://www.facebook.com/sharer.php?u=https://{{store.domain}}{{article.url}}" target="_blank" rel="noopener" aria-label="Chia sẻ lên Facebook" >
+											<svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+												 viewBox="0 0 155.139 155.139" style="enable-background:new 0 0 155.139 155.139;" xml:space="preserve">
+												<g>
+													<path id="f_1_" style="fill:#010002;" d="M89.584,155.139V84.378h23.742l3.562-27.585H89.584V39.184
+																							 c0-7.984,2.208-13.425,13.67-13.425l14.595-0.006V1.08C115.325,0.752,106.661,0,96.577,0C75.52,0,61.104,12.853,61.104,36.452
+																							 v20.341H37.29v27.585h23.814v70.761H89.584z"/>
+												</g>
+											</svg>
+										</a>
+									</li>
+									<li class="social-media__item social-media__item--pinterest">
+										<a title="Chia sẻ lên Pinterest" href="https://pinterest.com/pin/create/button/?url=https://{{store.domain}}{{article.url}}&amp;" target="_blank" rel="noopener" aria-label="Pinterest" >
+											<svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+												 viewBox="0 0 511.977 511.977" style="enable-background:new 0 0 511.977 511.977;" xml:space="preserve">
+												<g>
+													<g>
+														<path d="M262.948,0C122.628,0,48.004,89.92,48.004,187.968c0,45.472,25.408,102.176,66.08,120.16
+																 c6.176,2.784,9.536,1.6,10.912-4.128c1.216-4.352,6.56-25.312,9.152-35.2c0.8-3.168,0.384-5.92-2.176-8.896
+																 c-13.504-15.616-24.224-44.064-24.224-70.752c0-68.384,54.368-134.784,146.88-134.784c80,0,135.968,51.968,135.968,126.304
+																 c0,84-44.448,142.112-102.208,142.112c-31.968,0-55.776-25.088-48.224-56.128c9.12-36.96,27.008-76.704,27.008-103.36
+																 c0-23.904-13.504-43.68-41.088-43.68c-32.544,0-58.944,32.224-58.944,75.488c0,27.488,9.728,46.048,9.728,46.048
+																 S144.676,371.2,138.692,395.488c-10.112,41.12,1.376,107.712,2.368,113.44c0.608,3.168,4.16,4.16,6.144,1.568
+																 c3.168-4.16,42.08-59.68,52.992-99.808c3.968-14.624,20.256-73.92,20.256-73.92c10.72,19.36,41.664,35.584,74.624,35.584
+																 c98.048,0,168.896-86.176,168.896-193.12C463.62,76.704,375.876,0,262.948,0z"/>
+													</g>
+												</g>
+											</svg>
+										</a>
+									</li>
+									<li class="social-media__item social-media__item--twitter">
+										<a title="Chia sẻ lên Twitter" href="https://twitter.com/share?url=https://{{store.domain}}{{article.url}}" target="_blank" rel="noopener" aria-label="Tweet on Twitter" >
+											<svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+												 viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve">
+												<g>
+													<g>
+														<path d="M512,97.248c-19.04,8.352-39.328,13.888-60.48,16.576c21.76-12.992,38.368-33.408,46.176-58.016
+																 c-20.288,12.096-42.688,20.64-66.56,25.408C411.872,60.704,384.416,48,354.464,48c-58.112,0-104.896,47.168-104.896,104.992
+																 c0,8.32,0.704,16.32,2.432,23.936c-87.264-4.256-164.48-46.08-216.352-109.792c-9.056,15.712-14.368,33.696-14.368,53.056
+																 c0,36.352,18.72,68.576,46.624,87.232c-16.864-0.32-33.408-5.216-47.424-12.928c0,0.32,0,0.736,0,1.152
+																 c0,51.008,36.384,93.376,84.096,103.136c-8.544,2.336-17.856,3.456-27.52,3.456c-6.72,0-13.504-0.384-19.872-1.792
+																 c13.6,41.568,52.192,72.128,98.08,73.12c-35.712,27.936-81.056,44.768-130.144,44.768c-8.608,0-16.864-0.384-25.12-1.44
+																 C46.496,446.88,101.6,464,161.024,464c193.152,0,298.752-160,298.752-298.688c0-4.64-0.16-9.12-0.384-13.568
+																 C480.224,136.96,497.728,118.496,512,97.248z"/>
+													</g>
+												</g>
+											</svg>
+										</a>
+									</li>
+								</ul>
+							</div>
+							{%endif%}
+						</header>
+						<div class="article-details pc-art-card pc-art-body clearfix">
 							{%if mucluc == true%}
 							<div class="goto-wrapper ftoc-head">
 								<a class="title-goto-wrapper" href="javascript:;">
@@ -234,95 +283,6 @@
 							</div>
 							{% endif %}
 							{% endif %}
-							{% if article.tags.size > 0 and settings.article_tags_enable %}
-							{%- assign valid_tags = "" -%}
-							{%- for tag in article.tags -%}
-							{%- unless tag contains 'duocsi_' or tag contains 'video' -%}
-							{%- assign valid_tags = valid_tags | append: tag | append: "||" -%}
-							{%- endunless -%}
-							{%- endfor -%}
-
-							{%- assign valid_tags_array = valid_tags | split: "||" -%}
-
-							{%- assign final_tags_array = "" -%}
-							{%- for tag in valid_tags_array -%}
-							{%- if tag != "" -%}
-							{%- assign final_tags_array = final_tags_array | append: tag | append: "|" -%}
-							{%- endif -%}
-							{%- endfor -%}
-							{%- assign final_tags_array = final_tags_array | split: "|" -%}
-							{%- if final_tags_array.size > 0 and final_tags_array[0] != "" -%}
-							<div class="box_cate_pro">
-								<span>Thẻ:</span> 
-								{%- for tag in final_tags_array -%}
-								{% assign current_index = forloop.index0  | plus: 3%}
-								<a href="/blogs/all/tagged/(({{ tag | replace: ' ', '%20'}}))" title="{{ tag }}">{{ tag }}{% unless forloop.last or current_index > forloop.length %},{% endunless %}</a>
-								{%- endfor -%}
-							</div>
-							{%- endif -%}
-							{%endif%}
-							{%if settings.article_social_enable%}
-							<div class="social-sharing">
-								<ul class="social-media" role="list">
-									<li class="title">
-										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-share" viewBox="0 0 16 16">
-											<path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5m-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3"/>
-										</svg>
-										Chia sẻ
-									</li>
-									<li class="social-media__item social-media__item--facebook">
-										<a title="Chia sẻ lên Facebook" href="https://www.facebook.com/sharer.php?u=https://{{store.domain}}{{article.url}}" target="_blank" rel="noopener" aria-label="Chia sẻ lên Facebook" >
-											<svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-												 viewBox="0 0 155.139 155.139" style="enable-background:new 0 0 155.139 155.139;" xml:space="preserve">
-												<g>
-													<path id="f_1_" style="fill:#010002;" d="M89.584,155.139V84.378h23.742l3.562-27.585H89.584V39.184
-																							 c0-7.984,2.208-13.425,13.67-13.425l14.595-0.006V1.08C115.325,0.752,106.661,0,96.577,0C75.52,0,61.104,12.853,61.104,36.452
-																							 v20.341H37.29v27.585h23.814v70.761H89.584z"/>
-												</g>
-											</svg>
-										</a>
-									</li>
-									<li class="social-media__item social-media__item--pinterest">
-										<a title="Chia sẻ lên Pinterest" href="https://pinterest.com/pin/create/button/?url=https://{{store.domain}}{{article.url}}&amp;" target="_blank" rel="noopener" aria-label="Pinterest" >
-											<svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-												 viewBox="0 0 511.977 511.977" style="enable-background:new 0 0 511.977 511.977;" xml:space="preserve">
-												<g>
-													<g>
-														<path d="M262.948,0C122.628,0,48.004,89.92,48.004,187.968c0,45.472,25.408,102.176,66.08,120.16
-																 c6.176,2.784,9.536,1.6,10.912-4.128c1.216-4.352,6.56-25.312,9.152-35.2c0.8-3.168,0.384-5.92-2.176-8.896
-																 c-13.504-15.616-24.224-44.064-24.224-70.752c0-68.384,54.368-134.784,146.88-134.784c80,0,135.968,51.968,135.968,126.304
-																 c0,84-44.448,142.112-102.208,142.112c-31.968,0-55.776-25.088-48.224-56.128c9.12-36.96,27.008-76.704,27.008-103.36
-																 c0-23.904-13.504-43.68-41.088-43.68c-32.544,0-58.944,32.224-58.944,75.488c0,27.488,9.728,46.048,9.728,46.048
-																 S144.676,371.2,138.692,395.488c-10.112,41.12,1.376,107.712,2.368,113.44c0.608,3.168,4.16,4.16,6.144,1.568
-																 c3.168-4.16,42.08-59.68,52.992-99.808c3.968-14.624,20.256-73.92,20.256-73.92c10.72,19.36,41.664,35.584,74.624,35.584
-																 c98.048,0,168.896-86.176,168.896-193.12C463.62,76.704,375.876,0,262.948,0z"/>
-													</g>
-												</g>
-											</svg>
-										</a>
-									</li>
-									<li class="social-media__item social-media__item--twitter">
-										<a title="Chia sẻ lên Twitter" href="https://twitter.com/share?url=https://{{store.domain}}{{article.url}}" target="_blank" rel="noopener" aria-label="Tweet on Twitter" >
-											<svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-												 viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve">
-												<g>
-													<g>
-														<path d="M512,97.248c-19.04,8.352-39.328,13.888-60.48,16.576c21.76-12.992,38.368-33.408,46.176-58.016
-																 c-20.288,12.096-42.688,20.64-66.56,25.408C411.872,60.704,384.416,48,354.464,48c-58.112,0-104.896,47.168-104.896,104.992
-																 c0,8.32,0.704,16.32,2.432,23.936c-87.264-4.256-164.48-46.08-216.352-109.792c-9.056,15.712-14.368,33.696-14.368,53.056
-																 c0,36.352,18.72,68.576,46.624,87.232c-16.864-0.32-33.408-5.216-47.424-12.928c0,0.32,0,0.736,0,1.152
-																 c0,51.008,36.384,93.376,84.096,103.136c-8.544,2.336-17.856,3.456-27.52,3.456c-6.72,0-13.504-0.384-19.872-1.792
-																 c13.6,41.568,52.192,72.128,98.08,73.12c-35.712,27.936-81.056,44.768-130.144,44.768c-8.608,0-16.864-0.384-25.12-1.44
-																 C46.496,446.88,101.6,464,161.024,464c193.152,0,298.752-160,298.752-298.688c0-4.64-0.16-9.12-0.384-13.568
-																 C480.224,136.96,497.728,118.496,512,97.248z"/>
-													</g>
-												</g>
-											</svg>
-										</a>
-									</li>
-								</ul>
-							</div>
-							{%endif%}
 							{% if blog.comments_enabled %}
 							<form method="post" action="{{ article.url }}#article_comments" id="article_comments" accept-charset="UTF-8">
 							<div class="form-coment">
@@ -406,7 +366,6 @@
 							{% endif %}
 							{% endif %}
 						</div>
-						</div>
 						{%if settings.blog_lq_enable%}
 						<div class="blog_related">
 							<div class="title">{{settings.title_blog_relate}}</div>
@@ -462,12 +421,80 @@
 						{% endif %}
 					</div>
 					{%if settings.right_asideblog_enable%}
-					<div class="blog_left_base col-lg-3 col-12">
+					<div class="blog_left_base pc-art-side col-lg-4 col-12">
 						{%- comment -%}
 						  REOPEN 2026-09-10 (ADR-007/T-74) — CMP-05 Sticky Prescription Widget: sản phẩm
 						  khuyên dùng theo bài viết, tái dùng collections[settings.product_related_collection]
 						  (đã có sẵn ở templates/product.bwt) thay vì tạo setting mới.
 						{%- endcomment -%}
+						{%- comment -%}
+						  2026-10-07 (thiết kế chi tiết bài viết): sidebar = "Bài viết liên quan" (4 bài cùng blog, bỏ bài đang xem)
+						  + "Chủ đề phổ biến" (tag xuất hiện nhiều nhất trong 50 bài mới của blog, bỏ tag hệ thống khoá:giá trị;
+						  tag của bài đang xem tô đậm). Thay khối aside-blog (danh mục/tin nổi bật) ở trang chi tiết; trang danh
+						  sách blog vẫn dùng aside-blog. Widget sản phẩm khuyên dùng giữ bên dưới.
+						{%- endcomment -%}
+						{%- capture pc_side_rel -%}
+						{%- assign pc_side_n = 0 -%}
+						{%- for pc_rel in blog.articles limit: 6 -%}
+						{%- if pc_rel.url != article.url and pc_side_n < 4 -%}
+						{%- assign pc_side_n = pc_side_n | plus: 1 -%}
+						{%- assign pc_rel_tag = '' -%}
+						{%- for pc_t in pc_rel.tags -%}{%- unless pc_t contains ':' or pc_t contains 'duocsi_' or pc_t contains 'video' -%}{%- assign pc_rel_tag = pc_t -%}{%- break -%}{%- endunless -%}{%- endfor -%}
+						<a class="pc-art-rel" href="{{ pc_rel.url }}">
+							<span class="pc-art-rel__img">{%- if pc_rel.image.src != blank -%}<img src="{{ pc_rel.image.src | img_url: 'small' }}" alt="{{ pc_rel.image.alt | default: pc_rel.title | escape }}" width="80" height="64" loading="lazy">{%- endif -%}</span>
+							<span class="pc-art-rel__body">
+								{%- if pc_rel_tag != blank -%}<span class="pc-art-rel__tag">{{ pc_rel_tag }}</span>{%- endif -%}
+								<span class="pc-art-rel__title">{{ pc_rel.title }}</span>
+								<span class="pc-art-rel__date"><svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>{{ pc_rel.published_on | date: 'dd/MM/yyyy' }}</span>
+							</span>
+						</a>
+						{%- endif -%}
+						{%- endfor -%}
+						{%- endcapture -%}
+						{%- if pc_side_rel != blank -%}
+						<section class="pc-art-card pc-art-widget">
+							<div class="pc-art-widget__head">
+								<h2 class="pc-art-widget__title"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M6 3h9l4 4v14H6zM9 9h6M9 13h6M9 17h4"/></svg>{{ settings.article_related_title | default: 'Bài viết liên quan' }}</h2>
+								<a class="pc-art-widget__more" href="{{ blog.url }}">Xem tất cả ›</a>
+							</div>
+							{{ pc_side_rel }}
+						</section>
+						{%- endif -%}
+
+						{%- assign pc_topic_all = '' -%}
+						{%- for pc_a in blog.articles limit: 50 -%}
+						{%- for pc_t in pc_a.tags -%}
+						{%- unless pc_t contains ':' or pc_t contains 'duocsi_' or pc_t contains 'video' or pc_t contains '|' -%}
+						{%- assign pc_topic_all = pc_topic_all | append: '|' | append: pc_t | append: '|' -%}
+						{%- endunless -%}
+						{%- endfor -%}
+						{%- endfor -%}
+						{%- if pc_topic_all != blank -%}
+						{%- assign pc_topic_list = pc_topic_all | split: '|' | uniq -%}
+						{%- assign pc_topic_max = 1 -%}
+						{%- for pc_t in pc_topic_list -%}{%- if pc_t != blank -%}{%- assign pc_t_key = '|' | append: pc_t | append: '|' -%}{%- assign pc_t_cnt = pc_topic_all | split: pc_t_key | size | minus: 1 -%}{%- if pc_t_cnt > pc_topic_max -%}{%- assign pc_topic_max = pc_t_cnt -%}{%- endif -%}{%- endif -%}{%- endfor -%}
+						<section class="pc-art-card pc-art-widget">
+							<div class="pc-art-widget__head">
+								<h2 class="pc-art-widget__title"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M12 3a6 6 0 0 0-3.5 10.9V17h7v-3.1A6 6 0 0 0 12 3ZM9.5 20h5"/></svg>{{ settings.article_topics_title | default: 'Chủ đề phổ biến' }}</h2>
+							</div>
+							<div class="pc-art-topics">
+								{%- assign pc_topic_n = 0 -%}
+								{%- for pc_lvl in (1..pc_topic_max) reversed -%}
+								{%- for pc_t in pc_topic_list -%}
+								{%- if pc_t != blank and pc_topic_n < 10 -%}
+								{%- assign pc_t_key = '|' | append: pc_t | append: '|' -%}
+								{%- assign pc_t_cnt = pc_topic_all | split: pc_t_key | size | minus: 1 -%}
+								{%- if pc_t_cnt == pc_lvl -%}
+								{%- assign pc_topic_n = pc_topic_n | plus: 1 -%}
+								<a class="pc-art-topic{% if article.tags contains pc_t %} is-active{% endif %}" href="/blogs/all/tagged/(({{ pc_t | replace: ' ', '%20' }}))">{{ pc_t }}</a>
+								{%- endif -%}
+								{%- endif -%}
+								{%- endfor -%}
+								{%- endfor -%}
+							</div>
+						</section>
+						{%- endif -%}
+
 						{%- assign pw_col = collections[settings.product_related_collection] -%}
 						{%if pw_col.products_count > 0%}
 						<div class="pc-cmp-prescription-widget mb-4">
@@ -484,7 +511,6 @@
 							{%endfor%}
 						</div>
 						{%endif%}
-						{%include 'aside-blog'%}
 					</div>
 					{% endif %}
 				</div>
@@ -572,13 +598,6 @@
 			contentSelector: '.article-content-main',
 			headingSelector: 'h2,h3'
 		});
-		{%- comment -%} REOPEN 2026-09-10 (ADR-007/T-74) — CMP-02: TOC sticky desktop, dùng chung tocbot đã load ở trên {%- endcomment -%}
-		tocbot.init({
-			tocSelector: '.pc-cmp-toc-list',
-			contentSelector: '.article-content-main',
-			headingSelector: 'h2,h3',
-			scrollSmooth: true
-		});
 	});
 </script>
 {%endif%}
@@ -621,17 +640,5 @@
 				spaceBetween: 20
 			}
 		}
-	});
-	$(document).ready(function () {
-		$('.lc-option-box-size .cursor-pointer').click(function () {
-			$('.lc-option-box-size .cursor-pointer').removeClass('active');
-			$(this).addClass('active');
-			const selectedText = $(this).text().trim();
-			if (selectedText === 'Lớn hơn') {
-				$('.article-content-main').addClass('font-large');
-			} else {
-				$('.article-content-main').removeClass('font-large');
-			}
-		});
 	});
 </script>
