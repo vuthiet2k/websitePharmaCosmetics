@@ -15,7 +15,9 @@ from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.utils import get_column_letter
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'exports', 'cau-hinh-theme.xlsx')
+CHECK = '--check' in sys.argv
+ARGS = [a for a in sys.argv[1:] if a != '--check']
+OUT = ARGS[0] if ARGS else os.path.join(ROOT, 'exports', 'cau-hinh-theme.xlsx')
 SCAN_DIRS = ['templates', 'snippets', 'layouts', 'assets']
 
 schema = json.load(open(os.path.join(ROOT, 'configs/settings_schema.json'), encoding='utf-8'))
@@ -31,18 +33,22 @@ STATUS = ['Chưa xử lý', 'Đang xử lý', 'Đã áp dụng', 'Cần trao đ�
 
 # --- Tìm file đang dùng mỗi trường (để agent biết sửa ở đâu) ---
 texts = {}
+# Bỏ comment Liquid/HTML/CSS: trường chỉ được nhắc trong comment KHÔNG tính là đang dùng
+COMMENT = re.compile(r'\{%-?\s*comment\s*-?%\}.*?\{%-?\s*endcomment\s*-?%\}|<!--.*?-->|/\*.*?\*/', re.S)
 for d in SCAN_DIRS:
     for base, _, files in os.walk(os.path.join(ROOT, d)):
         for f in files:
             if f.endswith(('.bwt', '.liquid', '.js', '.scss', '.css')) and not f.endswith('.min.js'):
                 p = os.path.join(base, f)
                 try:
-                    texts[os.path.relpath(p, ROOT).replace('\\', '/')] = open(p, encoding='utf-8').read()
+                    texts[os.path.relpath(p, ROOT).replace('\\', '/')] = COMMENT.sub('', open(p, encoding='utf-8').read())
                 except (UnicodeDecodeError, OSError):
                     pass
 
 # Lập chỉ mục token 1 lần (quét regex cho từng trường quá chậm với ~1.400 trường)
-TOKEN = re.compile(r'[A-Za-z0-9_][A-Za-z0-9_-]*(?:\.(?:png|jpe?g|gif|svg|webp|ico))?', re.I)
+# Token không được kết thúc bằng "-": `settings.footer_qr_enable-%}` phải ra footer_qr_enable
+# (2026-10-07: lỗi này từng làm trường đang dùng bị ghi "không tìm thấy" và bị đánh dấu xoá).
+TOKEN = re.compile(r'[A-Za-z0-9_](?:[A-Za-z0-9_-]*[A-Za-z0-9_])?(?:\.(?:png|jpe?g|gif|svg|webp|ico))?', re.I)
 where = {}
 for p, t in texts.items():
     for tok in set(TOKEN.findall(t)):
@@ -52,7 +58,7 @@ def used_in(fid):
     hits, note = sorted(where.get(fid, [])), ''
     if not hits:
         # Trường đánh số thường được ghép tên động: 'promo_coupon_' | append: i | append: '_code'
-        m = re.match(r'(.*?_)\d+', fid)
+        m = re.match(r'(.*?[_-])\d+', fid)
         if m and where.get(m.group(1)):
             hits, note = sorted(where[m.group(1)]), f"(ghép động từ '{m.group(1)}')\n"
     if not hits:
@@ -84,6 +90,17 @@ def header_row(ws, cols, widths):
         ws.column_dimensions[c.column_letter].width = w
     ws.row_dimensions[ws.max_row].height = 32
     ws.freeze_panes = ws.cell(row=ws.max_row + 1, column=4)
+
+# --check: mọi trường cấu hình phải được code thật đọc (2026-10-07: tránh lặp lại lỗi logo — trường có
+# trong Admin nhưng theme vẽ cứng nên đổi cấu hình không có tác dụng). Chạy qua `npm run lint:config`.
+if CHECK:
+    unused = [(sec['name'], f['id']) for sec in schema for f in sec.get('settings', [])
+              if f.get('id') and used_in(f['id']) == '(không tìm thấy trong code)']
+    for name, fid in unused:
+        print(f'  x {fid}  ({name})')
+    print(f'lint:config: {len(unused)} trường cấu hình không được code đọc' if unused
+          else 'lint:config: OK, mọi trường cấu hình đều được code đọc')
+    sys.exit(1 if unused else 0)
 
 wb = Workbook()
 
