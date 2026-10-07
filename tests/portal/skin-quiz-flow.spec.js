@@ -42,7 +42,7 @@ test('Nám + mang thai: Case 2, ẩn bước Cyspera/Retinol, sản phẩm thậ
   await expect(page.locator('[data-quiz-case="CASE_2"]')).toBeVisible();
   await expect(page.locator('.result-safety-note')).toContainText('mang thai');
 
-  await page.goto('/pages/ai-skin-quiz-results');
+  await page.goto('/ai-skin-quiz-results');
   await expect(page.locator('[data-result-title]')).toHaveText('Nám Mảng & Tăng Sắc Tố Thượng Bì');
   await expect(page.locator('[data-quiz-routine]')).toBeVisible();
   await expect(page.locator('[data-stage-grid]')).toBeHidden();
@@ -63,7 +63,7 @@ test('Da thường: Case 8, không chặn bước nào, routine có sản phẩm
   await startQuiz(page);
   await answer(page, {});
   await expect(page.locator('[data-quiz-case="CASE_8"]')).toBeVisible();
-  await page.goto('/pages/ai-skin-quiz-results');
+  await page.goto('/ai-skin-quiz-results');
   await expect(page.locator('[data-result-title]')).toHaveText('Da Thường Khoẻ Mạnh');
   await expect(page.locator('[data-quiz-step-blocked]')).toHaveCount(0);
   await expect(page.locator('[data-quiz-alert]')).toBeHidden();

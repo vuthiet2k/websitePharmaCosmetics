@@ -16,7 +16,7 @@ const ROUTES = [
   '/', '/collections/all', '/chong-lao-hoa', '/serum-vitamin-c-15', '/kem-duong-am-hyaluronic-acid',
   '/blogs/tin-tuc', '/blogs/tin-tuc/retinol-thanh-phan-vang-chong-lao-hoa', '/cart', '/search?query=serum',
   '/account/login', '/account/register', '/account',
-  '/pages/about-us', '/pages/ai-skin-quiz', '/pages/ai-skin-quiz-results', '/pages/chuyen-gia',
+  '/pages/about-us', '/pages/ai-skin-quiz', '/ai-skin-quiz-results', '/pages/chuyen-gia',
   '/pages/chuyen-gia-detail', '/pages/clinical-proof', '/pages/chinh-sach-bao-mat', '/pages/dai-ly-b2b',
   '/pages/dat-lich-tu-van', '/pages/loyalty', '/pages/order-lookup', '/pages/order-tracking',
   '/pages/patient-portal', '/pages/payment', '/pages/seo-directory', '/pages/skin-health-beauty',

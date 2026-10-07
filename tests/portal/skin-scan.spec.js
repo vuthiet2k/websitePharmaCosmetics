@@ -91,7 +91,7 @@ test('kết quả quiz chỉ tồn tại trong tab hiện tại và trang kết 
   expect(stored.localKeys).not.toContain('pc_quiz_scores');
 
   await page.locator('#messagesFlow .btn-result-cta').click();
-  await expect(page).toHaveURL(/\/pages\/ai-skin-quiz-results$/);
+  await expect(page).toHaveURL(/\/ai-skin-quiz-results$/);
   await expect(page.locator('#pcQuizResultsRoot')).toHaveAttribute('data-demo', 'false');
 });
 
@@ -165,7 +165,7 @@ test('màn soi da không sử dụng danh xưng y tế bị cấm', async ({ pag
   expect(guideCopy).not.toMatch(/Dr\.|chẩn đoán|phác đồ y khoa/i);
   expect(guideCopy).toContain('kết quả tham khảo');
 
-  await page.goto('/pages/ai-skin-quiz-results');
+  await page.goto('/ai-skin-quiz-results');
   // 2026-10-03: banner đổi class sang bg-amber-50/90 → dùng hook ổn định data-result-disclaimer.
   await expect(page.locator('[data-result-disclaimer]')).toContainText('Lưu ý về kết quả');
   await expect(page.locator('[data-result-disclaimer]')).not.toContainText(/kê phác đồ chính xác|chẩn đoán y khoa chính thức/i);
@@ -334,7 +334,7 @@ test('báo cáo vẽ radar từ raw_score và công bố đủ năm giá trị c
     };
     sessionStorage.setItem('pc_skin_scan_result', JSON.stringify({ scores, regimen: [], recommended_products: [] }));
   });
-  await page.goto('/pages/ai-skin-quiz-results');
+  await page.goto('/ai-skin-quiz-results');
   await expect(page.locator('[data-scan-radar]')).toBeVisible();
   const points = await page.locator('[data-scan-radar-shape]').getAttribute('points');
   expect(points.trim().split(/\s+/)).toHaveLength(5);
@@ -451,7 +451,7 @@ test('routine xuất ba giai đoạn, ingredient IDs hợp lệ và sản phẩm
     expect(product.label).toBe(byAlias[product.handle].name);
     for (const ingredientId of product.ingredient_ids) expect(ingredients.some(item => item.id === ingredientId)).toBe(true);
   }
-  await page.goto('/pages/ai-skin-quiz-results');
+  await page.goto('/ai-skin-quiz-results');
   for (const stage of [1, 2, 3]) {
     const links = page.locator(`[data-scan-stage-products="${stage}"] a`);
     await expect(links).toHaveCount(1);
@@ -463,7 +463,7 @@ test('CRM yêu cầu consent và chỉ gửi dữ liệu định lượng, khôn
   await page.addInitScript(() => {
     window.PharmaCrmIntakeConfig = { enabled: true, endpoint: 'https://script.google.com/macros/s/test/exec', timeout_ms: '10000' };
   });
-  await page.goto('/pages/ai-skin-quiz-results');
+  await page.goto('/ai-skin-quiz-results');
   const result = await page.evaluate(async () => {
     const sent = [];
     window.fetch = async (url, options) => {
