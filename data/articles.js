@@ -458,12 +458,13 @@ const beforeAfterArticles = [
   const baBefore = img('D5DDD8/5F7A6D', '[ẢNH TRƯỚC]', '600x600');
   const baAfter  = img('CBE6D6/2F6B4F', '[ẢNH SAU]', '600x600');
   const baTags = {
+    // Tên nhóm theo artboard thiết kế (4 nhóm vấn đề da).
     211: ['nhom:Mụn', 'tuoi:24', 'tuan:8', 'phacdo:BHA + Niacinamide'],
-    215: ['nhom:Mụn', 'tuoi:27', 'tuan:5', 'phacdo:Alpha Arbutin + Tranexamic Acid'],
-    212: ['nhom:Nám & sắc tố', 'tuoi:38', 'tuan:12', 'phacdo:Tranexamic Acid + chống nắng'],
-    216: ['nhom:Nám & sắc tố', 'tuan:12'],
-    213: ['nhom:Da nhạy cảm', 'tuan:6', 'phacdo:Ceramide + Centella Asiatica'],
-    214: ['nhom:Lỗ chân lông', 'tuan:10', 'phacdo:AHA/BHA + Retinol liều thấp'],
+    214: ['nhom:Mụn', 'tuan:10', 'phacdo:AHA/BHA + Retinol liều thấp'],
+    215: ['nhom:Thâm, nám, tăng sắc tố', 'tuoi:27', 'tuan:5', 'phacdo:Alpha Arbutin + Tranexamic Acid'],
+    212: ['nhom:Thâm, nám, tăng sắc tố', 'tuoi:38', 'tuan:12', 'phacdo:Tranexamic Acid + chống nắng'],
+    213: ['nhom:Đỏ da, nhạy cảm', 'tuan:6', 'phacdo:Ceramide + Centella Asiatica'],
+    216: ['nhom:Lão hóa, tiền mãn kinh', 'tuan:12'],
   };
   beforeAfterArticles.forEach((a) => {
     if (baTags[a.id]) a.tags.push(`anhtruoc:${baBefore}`, `anhsau:${baAfter}`, ...baTags[a.id]);
