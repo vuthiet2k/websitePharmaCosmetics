@@ -452,6 +452,24 @@ const beforeAfterArticles = [
   },
 ];
 
+// 2026-10-07: tag khoá:giá trị cho trang Trước & Sau (templates/page.clinical-proof.bwt) — CHỈ để preview bố cục.
+// Ảnh là khung placeholder ghi rõ [ẢNH TRƯỚC]/[ẢNH SAU], không phải ảnh khách hàng; tuổi/số tuần lấy từ excerpt mock.
+{
+  const baBefore = img('D5DDD8/5F7A6D', '[ẢNH TRƯỚC]', '600x600');
+  const baAfter  = img('CBE6D6/2F6B4F', '[ẢNH SAU]', '600x600');
+  const baTags = {
+    211: ['nhom:Mụn', 'tuoi:24', 'tuan:8', 'phacdo:BHA + Niacinamide'],
+    215: ['nhom:Mụn', 'tuoi:27', 'tuan:5', 'phacdo:Alpha Arbutin + Tranexamic Acid'],
+    212: ['nhom:Nám & sắc tố', 'tuoi:38', 'tuan:12', 'phacdo:Tranexamic Acid + chống nắng'],
+    216: ['nhom:Nám & sắc tố', 'tuan:12'],
+    213: ['nhom:Da nhạy cảm', 'tuan:6', 'phacdo:Ceramide + Centella Asiatica'],
+    214: ['nhom:Lỗ chân lông', 'tuan:10', 'phacdo:AHA/BHA + Retinol liều thấp'],
+  };
+  beforeAfterArticles.forEach((a) => {
+    if (baTags[a.id]) a.tags.push(`anhtruoc:${baBefore}`, `anhsau:${baAfter}`, ...baTags[a.id]);
+  });
+}
+
 // T-109 (2026-09-11): BUG THẬT phát hiện khi chuẩn bị demo data — templates/blog.bwt dùng
 // {{blog.name}} (không phải .title) và {% if blog.articles_count > 0 %} (không phải
 // .articles.size) để quyết định render tiêu đề trang + toàn bộ lưới bài viết. Object blogs{}

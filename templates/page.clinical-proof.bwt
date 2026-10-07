@@ -1,136 +1,277 @@
 {%- comment -%}
-  page.clinical-proof.bwt (T-34, CREATE) — Minh chứng lâm sàng trước/sau.
-  Nguồn: Pharma_Cosmetics_Figma_Project/clinical-proof.html (chỉ có 1 case study chi tiết
-  #PC-4410 trong bản Figma — bổ sung thêm 2 case tóm tắt (không nêu danh tính cụ thể) để trang
-  "minh chứng" (số nhiều) không chỉ có 1 ca, và 1 dải thống kê tổng hợp dùng đúng số liệu đã
-  nêu trong bản Figma (15.200+ ca, không tự bịa thêm số liệu mới).
-  Ảnh trước/sau dùng stock photo (Unsplash) — mock content theo POLICY.yaml mock_policy,
-  KHÔNG khẳng định là bệnh nhân thật đã đồng ý dùng hình ảnh.
+  page.clinical-proof.bwt (T-34) — trang "Trước & Sau · Chăm sóc da từ xa".
+  2026-10-07: dựng lại theo thiết kế người dùng gửi (hero + ảnh trước/sau, dải điểm mạnh, 4 bước chăm sóc từ xa,
+  mốc thời gian, kết quả khách hàng theo nhóm vấn đề da có điều hướng từng ca, khối CTA cuối). Header/footer dùng
+  layout chung của theme (không dựng header/footer riêng như bản thiết kế).
+
+  Nguồn dữ liệu:
+  - Câu chữ, link, ảnh hero: Theme Settings → "Trang Minh chứng lâm sàng" (field clinical_*). Ảnh hero trống ⇒ lấy
+    cặp ảnh của ca đầu tiên có đủ ảnh; không có ca nào ⇒ hero chỉ còn chữ.
+  - Ca khách hàng = bài viết trong blog settings.clinical_case_blog_handle (mặc định truoc-va-sau), tag dạng
+    khoá:giá trị — anhtruoc:<link ảnh>, anhsau:<link ảnh> (BẮT BUỘC đủ 2 ảnh, thiếu ⇒ không hiện ca),
+    nhom:<vấn đề da> (gom nhóm; không có ⇒ nhóm clinical_group_other), tuoi:<số>, tinh:<tỉnh/thành>,
+    tuan:<số tuần theo dõi>, phacdo:<tên phác đồ/sản phẩm chính>. Thiếu tag nào ⇒ ẩn phần đó.
+    Chỉ đăng ca thật đã được khách đồng ý công bố — theme không tự sinh ca/số liệu.
+  - Nút tư vấn từng ca: Zalo settings.contact_zalo.
 {%- endcomment -%}
+{%- assign pc_ba_blog_handle = settings.clinical_case_blog_handle | default: 'truoc-va-sau' -%}
+{%- assign pc_ba_blog = blogs[pc_ba_blog_handle] -%}
+{%- assign pc_ba_zalo = settings.contact_zalo | remove: ' ' | remove: '.' | strip -%}
+{%- assign pc_ba_cta_link = settings.clinical_hero_cta_link | default: '/pages/ai-skin-quiz' -%}
+{%- assign pc_ba_group_other = settings.clinical_group_other | default: 'Kết quả khác' -%}
+
+{%- comment -%} Lượt 1: gom tên nhóm (giữ thứ tự xuất hiện) + tìm cặp ảnh dự phòng cho hero. {%- endcomment -%}
+{%- assign pc_ba_groups = '' -%}
+{%- assign pc_ba_first_before = '' -%}
+{%- assign pc_ba_first_after = '' -%}
+{%- assign pc_ba_first_title = '' -%}
+{%- for pc_ba in pc_ba_blog.articles limit: 50 -%}
+  {%- assign pc_ba_before = '' -%}{%- assign pc_ba_after = '' -%}{%- assign pc_ba_group = '' -%}
+  {%- for pc_ba_tag in pc_ba.tags -%}
+    {%- if pc_ba_tag contains ':' -%}
+      {%- assign pc_ba_raw = pc_ba_tag | split: ':' | first -%}
+      {%- assign pc_ba_key = pc_ba_raw | strip | downcase -%}
+      {%- assign pc_ba_val = pc_ba_tag | remove_first: pc_ba_raw | remove_first: ':' | strip -%}
+      {%- if pc_ba_key == 'anhtruoc' -%}{%- assign pc_ba_before = pc_ba_val -%}{%- endif -%}
+      {%- if pc_ba_key == 'anhsau' -%}{%- assign pc_ba_after = pc_ba_val -%}{%- endif -%}
+      {%- if pc_ba_key == 'nhom' -%}{%- assign pc_ba_group = pc_ba_val -%}{%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- if pc_ba_before != blank and pc_ba_after != blank -%}
+    {%- if pc_ba_group == blank -%}{%- assign pc_ba_group = pc_ba_group_other -%}{%- endif -%}
+    {%- assign pc_ba_wrapped = '|' | append: pc_ba_group | append: '|' -%}
+    {%- unless pc_ba_groups contains pc_ba_wrapped -%}{%- assign pc_ba_groups = pc_ba_groups | append: pc_ba_wrapped -%}{%- endunless -%}
+    {%- if pc_ba_first_before == blank -%}
+      {%- assign pc_ba_first_before = pc_ba_before -%}{%- assign pc_ba_first_after = pc_ba_after -%}{%- assign pc_ba_first_title = pc_ba.title -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- assign pc_ba_group_list = pc_ba_groups | split: '|' -%}
+
+{%- if settings.clinical_hero_before != blank and settings.clinical_hero_after != blank -%}
+  {%- assign pc_ba_hero_before = settings.clinical_hero_before | img_url: 'large' -%}
+  {%- assign pc_ba_hero_after = settings.clinical_hero_after | img_url: 'large' -%}
+{%- else -%}
+  {%- assign pc_ba_hero_before = pc_ba_first_before -%}
+  {%- assign pc_ba_hero_after = pc_ba_first_after -%}
+{%- endif -%}
+
 {% include 'breadcrumb' %}
-
-<main class="flex-grow bg-gray-50 py-10">
-  {%- comment -%} 2026-10-03: khung ngoài dùng .container SSOT (Rule 01 §2.1) để thẳng mép với header/footer, thay cho max-w-7xl/px-* riêng. {%- endcomment -%}
-  <div class="container">
-
-    <div class="text-center max-w-3xl mx-auto mb-10">
-      <span class="pc-kit-badge-clinical text-xs font-bold">🔬 MINH CHỨNG LÂM SÀNG THẬT &bull; GIÁ TRỊ THẬT TỪ Y KHOA</span>
-      <h1 class="text-3xl sm:text-4xl font-extrabold text-forest-900 font-heading mt-3">
-        Minh Chứng Điều Trị Thực Tế — Trước &amp; Sau
-      </h1>
-      {%- comment -%}
-        2026-10-03: bỏ số liệu/ca bệnh bịa (15.200+ ca, 98.6%, "bệnh nhân xác thực" có tên + ảnh
-        stock Unsplash gắn nhãn Trước/Sau, "100% không chỉnh sửa" — lấy từ bản Figma mock). Giới
-        thiệu + 4 chỉ số đọc settings.clinical_* (trống → ẩn); ca điều trị đọc blog
-        settings.clinical_case_blog_handle (mặc định truoc-va-sau): bài đầu = ca nổi bật, các bài
-        sau = thẻ tóm tắt. Ảnh trước/sau chỉ hiện khi bài có tag anhtruoc:<url> + anhsau:<url>;
-        trích dẫn chuyên gia = mô tả ngắn (summary). Chỉ đăng ca thật đã được khách đồng ý.
-      {%- endcomment -%}
-      {%- if settings.clinical_intro != blank -%}
-      <p class="text-xs sm:text-sm text-gray-600 mt-2">{{ settings.clinical_intro }}</p>
-      {%- endif -%}
+<main class="pc-ba">
+  <section class="container pc-ba-hero{% if pc_ba_hero_before == blank %} pc-ba-hero--text{% endif %}">
+    <div class="pc-ba-hero__text">
+      <p class="pc-ba-kicker">{{ settings.clinical_hero_kicker | default: 'TRƯỚC & SAU · CHĂM SÓC DA TỪ XA' }}</p>
+      <h1 class="pc-ba-hero__title">{{ settings.clinical_hero_title | default: page.title }}</h1>
+      {%- if settings.clinical_intro != blank -%}<p class="pc-ba-hero__lead">{{ settings.clinical_intro }}</p>{%- endif -%}
+      <div class="pc-ba-actions">
+        <a href="{{ pc_ba_cta_link }}" class="pc-ba-btn pc-ba-btn--primary">{{ settings.clinical_hero_cta_label | default: 'Nhận phân tích da miễn phí' }}</a>
+        {%- if pc_ba_group_list.size > 0 -%}
+        <a href="#pc-ba-results" class="pc-ba-btn pc-ba-btn--outline">{{ settings.clinical_hero_cta2_label | default: 'Xem kết quả khách hàng' }}</a>
+        {%- endif -%}
+      </div>
     </div>
+    {%- if pc_ba_hero_before != blank -%}
+    <div class="pc-ba-pair pc-ba-pair--hero">
+      <figure class="pc-ba-frame pc-ba-frame--before">
+        <img src="{{ pc_ba_hero_before }}" alt="{{ pc_ba_first_title | default: page.title | escape }} — trước" width="420" height="420" fetchpriority="high">
+        <figcaption class="pc-ba-badge">TRƯỚC</figcaption>
+      </figure>
+      <figure class="pc-ba-frame pc-ba-frame--after">
+        <img src="{{ pc_ba_hero_after }}" alt="{{ pc_ba_first_title | default: page.title | escape }} — sau" width="420" height="420" fetchpriority="high">
+        <figcaption class="pc-ba-badge pc-ba-badge--after">SAU</figcaption>
+      </figure>
+    </div>
+    {%- endif -%}
+  </section>
 
-    {%- assign pc_cp_stats = 0 -%}
-    {%- for i in (1..4) -%}
-      {%- capture pc_k_val -%}clinical_stat_{{ i }}_value{%- endcapture -%}
-      {%- if settings[pc_k_val] != blank -%}{%- assign pc_cp_stats = pc_cp_stats | plus: 1 -%}{%- endif -%}
-    {%- endfor -%}
-    {%- if pc_cp_stats > 0 -%}
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-12 text-center">
+  {%- assign pc_ba_strip = settings.clinical_strip | default: 'Dược mỹ phẩm toàn cầu;Giao hàng toàn quốc;Phân tích da;Phác đồ cá nhân hóa;Trị liệu da 1:1 tại Hà Nội' | split: ';' -%}
+  <section class="pc-ba-strip">
+    <div class="container pc-ba-strip__inner">
+      {%- for pc_ba_item in pc_ba_strip -%}{%- assign pc_ba_item_s = pc_ba_item | strip -%}{%- if pc_ba_item_s != blank -%}<span>{{ pc_ba_item_s }}</span>{%- endif -%}{%- endfor -%}
+    </div>
+  </section>
+
+  <section class="container pc-ba-section">
+    <h2 class="pc-ba-h2">{{ settings.clinical_steps_title | default: 'Chăm sóc từ xa hoạt động như thế nào' }}</h2>
+    {%- if settings.clinical_steps_sub != blank -%}<p class="pc-ba-sub">{{ settings.clinical_steps_sub }}</p>{%- endif -%}
+    <div class="pc-ba-steps">
       {%- for i in (1..4) -%}
-      {%- capture pc_k_val -%}clinical_stat_{{ i }}_value{%- endcapture -%}
-      {%- capture pc_k_lbl -%}clinical_stat_{{ i }}_label{%- endcapture -%}
-      {%- if settings[pc_k_val] != blank -%}
-      <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-        <div class="text-2xl font-bold text-forest-900 font-heading">{{ settings[pc_k_val] }}</div>
-        <div class="text-xs text-gray-500 mt-1">{{ settings[pc_k_lbl] }}</div>
+      {%- capture pc_ba_k_t -%}clinical_step_{{ i }}_title{%- endcapture -%}
+      {%- capture pc_ba_k_d -%}clinical_step_{{ i }}_desc{%- endcapture -%}
+      {%- if settings[pc_ba_k_t] != blank -%}
+      <div class="pc-ba-card pc-ba-step">
+        <div class="pc-ba-step__no">0{{ i }}</div>
+        <h3 class="pc-ba-step__title">{{ settings[pc_ba_k_t] }}</h3>
+        {%- if settings[pc_ba_k_d] != blank -%}<p class="pc-ba-step__desc">{{ settings[pc_ba_k_d] }}</p>{%- endif -%}
       </div>
       {%- endif -%}
       {%- endfor -%}
     </div>
-    {%- endif -%}
+  </section>
 
-    {%- assign pc_cp_blog_handle = settings.clinical_case_blog_handle | default: 'truoc-va-sau' -%}
-    {%- assign pc_cp_blog = blogs[pc_cp_blog_handle] -%}
-    {%- if pc_cp_blog.articles.size > 0 -%}
-    {%- for pc_cp in pc_cp_blog.articles limit: 7 -%}
-    {%- assign pc_cp_before = '' -%}
-    {%- assign pc_cp_after = '' -%}
-    {%- for pc_cp_tag in pc_cp.tags -%}
-      {%- if pc_cp_tag contains ':' -%}
-        {%- assign pc_cp_raw_key = pc_cp_tag | split: ':' | first -%}
-        {%- assign pc_cp_key = pc_cp_raw_key | strip | downcase -%}
-        {%- assign pc_cp_val = pc_cp_tag | remove_first: pc_cp_raw_key | remove_first: ':' | strip -%}
-        {%- if pc_cp_key == 'anhtruoc' -%}{%- assign pc_cp_before = pc_cp_val -%}{%- endif -%}
-        {%- if pc_cp_key == 'anhsau' -%}{%- assign pc_cp_after = pc_cp_val -%}{%- endif -%}
+  <section class="container pc-ba-section">
+    <div class="pc-ba-card pc-ba-time">
+      <h2 class="pc-ba-h2 pc-ba-h2--sm">{{ settings.clinical_time_title | default: 'Hãy cho làn da một khoảng thời gian thực tế' }}</h2>
+      {%- if settings.clinical_time_sub != blank -%}<p class="pc-ba-time__sub">{{ settings.clinical_time_sub }}</p>{%- endif -%}
+      <div class="pc-ba-time__grid">
+        {%- for i in (1..3) -%}
+        {%- capture pc_ba_k_t -%}clinical_time_{{ i }}_title{%- endcapture -%}
+        {%- capture pc_ba_k_d -%}clinical_time_{{ i }}_desc{%- endcapture -%}
+        {%- if settings[pc_ba_k_t] != blank -%}
+        <div class="pc-ba-time__item">
+          <div class="pc-ba-time__title">{{ settings[pc_ba_k_t] }}</div>
+          {%- if settings[pc_ba_k_d] != blank -%}<div class="pc-ba-time__desc">{{ settings[pc_ba_k_d] }}</div>{%- endif -%}
+        </div>
+        {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </section>
+
+  {%- comment -%} 2026-10-03: 4 ô chỉ số chỉ hiện khi nhập số liệu thật (clinical_stat_*), trống cả 4 ⇒ ẩn. {%- endcomment -%}
+  {%- assign pc_cp_stats = 0 -%}
+  {%- for i in (1..4) -%}
+    {%- capture pc_k_val -%}clinical_stat_{{ i }}_value{%- endcapture -%}
+    {%- if settings[pc_k_val] != blank -%}{%- assign pc_cp_stats = pc_cp_stats | plus: 1 -%}{%- endif -%}
+  {%- endfor -%}
+  {%- if pc_cp_stats > 0 -%}
+  <section class="container pc-ba-section">
+    <div class="pc-ba-stats">
+      {%- for i in (1..4) -%}
+      {%- capture pc_k_val -%}clinical_stat_{{ i }}_value{%- endcapture -%}
+      {%- capture pc_k_lbl -%}clinical_stat_{{ i }}_label{%- endcapture -%}
+      {%- if settings[pc_k_val] != blank -%}
+      <div class="pc-ba-card pc-ba-stat"><div class="pc-ba-stat__value">{{ settings[pc_k_val] }}</div><div class="pc-ba-stat__label">{{ settings[pc_k_lbl] }}</div></div>
       {%- endif -%}
-    {%- endfor -%}
-    {%- if forloop.first -%}
-    <div class="bg-white rounded-3xl p-8 sm:p-10 shadow-sm border border-gray-200 mb-8">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-        <div class="lg:col-span-6">
-          {%- if pc_cp_before != blank and pc_cp_after != blank -%}
-          <div class="pc-cmp-visia">
-            <div>
-              <div class="pc-cmp-visia__frame">
-                <span class="pc-cmp-visia__badge pc-cmp-visia__badge--before">Trước</span>
-                <img src="{{ pc_cp_before }}" alt="{{ pc_cp.title | escape }} — trước điều trị" width="400" height="400" loading="lazy">
-              </div>
+      {%- endfor -%}
+    </div>
+  </section>
+  {%- endif -%}
+
+  {%- if pc_ba_group_list.size > 0 -%}
+  <section class="container pc-ba-section" id="pc-ba-results">
+    <h2 class="pc-ba-h2">{{ settings.clinical_results_title | default: 'Kết quả của khách hàng' }}</h2>
+    {%- if settings.clinical_results_sub != blank -%}<p class="pc-ba-sub">{{ settings.clinical_results_sub }}</p>{%- endif -%}
+    <div class="pc-ba-groups">
+      {%- for pc_ba_group_name in pc_ba_group_list -%}
+      {%- if pc_ba_group_name != blank -%}
+      {%- comment -%} Lượt 2: in các ca của nhóm (đủ 2 ảnh). {%- endcomment -%}
+      {%- assign pc_ba_pairs = '' -%}
+      {%- assign pc_ba_infos = '' -%}
+      {%- assign pc_ba_n = 0 -%}
+        {%- for pc_ba in pc_ba_blog.articles limit: 50 -%}
+          {%- assign pc_ba_before = '' -%}{%- assign pc_ba_after = '' -%}{%- assign pc_ba_group = '' -%}
+          {%- assign pc_ba_age = '' -%}{%- assign pc_ba_city = '' -%}{%- assign pc_ba_weeks = '' -%}{%- assign pc_ba_plan = '' -%}
+          {%- for pc_ba_tag in pc_ba.tags -%}
+            {%- if pc_ba_tag contains ':' -%}
+              {%- assign pc_ba_raw = pc_ba_tag | split: ':' | first -%}
+              {%- assign pc_ba_key = pc_ba_raw | strip | downcase -%}
+              {%- assign pc_ba_val = pc_ba_tag | remove_first: pc_ba_raw | remove_first: ':' | strip -%}
+              {%- case pc_ba_key -%}
+              {%- when 'anhtruoc' -%}{%- assign pc_ba_before = pc_ba_val -%}
+              {%- when 'anhsau' -%}{%- assign pc_ba_after = pc_ba_val -%}
+              {%- when 'nhom' -%}{%- assign pc_ba_group = pc_ba_val -%}
+              {%- when 'tuoi' -%}{%- assign pc_ba_age = pc_ba_val -%}
+              {%- when 'tinh' -%}{%- assign pc_ba_city = pc_ba_val -%}
+              {%- when 'tuan' -%}{%- assign pc_ba_weeks = pc_ba_val -%}
+              {%- when 'phacdo' -%}{%- assign pc_ba_plan = pc_ba_val -%}
+              {%- endcase -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {%- if pc_ba_group == blank -%}{%- assign pc_ba_group = pc_ba_group_other -%}{%- endif -%}
+          {%- if pc_ba_before != blank and pc_ba_after != blank and pc_ba_group == pc_ba_group_name -%}
+          {%- assign pc_ba_n = pc_ba_n | plus: 1 -%}
+          {%- comment -%} Ảnh và thông tin ca in thành 2 dãy riêng để nút điều hướng nằm giữa (đúng thiết kế); JS bật cùng chỉ số. {%- endcomment -%}
+          {%- capture pc_ba_one -%}
+            <div class="pc-ba-pair" data-ba-case{% if pc_ba_n > 1 %} hidden{% endif %}>
+              <figure class="pc-ba-frame pc-ba-frame--before">
+                <img src="{{ pc_ba_before }}" alt="{{ pc_ba.title | escape }} — trước" width="280" height="280" loading="lazy">
+                <figcaption class="pc-ba-badge">TRƯỚC</figcaption>
+              </figure>
+              <figure class="pc-ba-frame pc-ba-frame--after">
+                <img src="{{ pc_ba_after }}" alt="{{ pc_ba.title | escape }} — sau" width="280" height="280" loading="lazy">
+                <figcaption class="pc-ba-badge pc-ba-badge--after">SAU</figcaption>
+              </figure>
             </div>
-            <div>
-              <div class="pc-cmp-visia__frame">
-                <span class="pc-cmp-visia__badge pc-cmp-visia__badge--after">Sau</span>
-                <img src="{{ pc_cp_after }}" alt="{{ pc_cp.title | escape }} — sau điều trị" width="400" height="400" loading="lazy">
-              </div>
+          {%- endcapture -%}
+          {%- assign pc_ba_pairs = pc_ba_pairs | append: pc_ba_one -%}
+          {%- capture pc_ba_one -%}
+            <div class="pc-ba-case__info" data-ba-info{% if pc_ba_n > 1 %} hidden{% endif %}>
+              {%- capture pc_ba_meta -%}
+                {%- if pc_ba_age != blank -%}<span>{{ pc_ba_age }} tuổi</span>{%- endif -%}
+                {%- if pc_ba_city != blank -%}<span>{{ pc_ba_city }}</span>{%- endif -%}
+                {%- if pc_ba_weeks != blank -%}<span>Theo dõi {{ pc_ba_weeks }} tuần</span>{%- endif -%}
+              {%- endcapture -%}
+              {%- if pc_ba_meta != blank -%}<p class="pc-ba-case__meta">{{ pc_ba_meta }}</p>{%- endif -%}
+              {%- if pc_ba_plan != blank -%}<p class="pc-ba-case__plan">Phác đồ: {{ pc_ba_plan }}</p>{%- endif -%}
             </div>
-          </div>
-          {%- elsif pc_cp.image.src != blank -%}
-          <img src="{{ pc_cp.image.src | img_url: 'large' }}" alt="{{ pc_cp.title | escape }}" width="600" height="400" loading="lazy" class="w-full rounded-2xl object-cover">
+          {%- endcapture -%}
+          {%- assign pc_ba_infos = pc_ba_infos | append: pc_ba_one -%}
           {%- endif -%}
+        {%- endfor -%}
+      {%- assign pc_ba_total = pc_ba_n -%}
+      <div class="pc-ba-card pc-ba-group" data-ba-group>
+        <div class="pc-ba-group__head">
+          <p class="pc-ba-group__title">{{ pc_ba_group_name | upcase }}</p>
+          <p class="pc-ba-group__counter" aria-live="polite"><span data-ba-current>1</span>/{{ pc_ba_total }}</p>
         </div>
-        <div class="lg:col-span-6 space-y-4">
-          <span class="pc-kit-badge-clinical text-xs">CA ĐIỀU TRỊ NỔI BẬT</span>
-          <h2 class="text-xl font-bold text-forest-900 font-heading">{{ pc_cp.title }}</h2>
-          <div class="text-xs sm:text-sm text-gray-600 leading-relaxed">{{ pc_cp.content | strip_html | truncatewords: 60 }}</div>
-          {%- if pc_cp.summary != blank -%}
-          <div class="pc-cmp-expert-callout">
-            "{{ pc_cp.summary | strip_html }}"
-            {%- if pc_cp.author != blank -%}<span class="pc-cmp-expert-callout__signature">— {{ pc_cp.author }}</span>{%- endif -%}
+        {{ pc_ba_pairs }}
+        {%- if pc_ba_total > 1 -%}
+        <div class="pc-ba-nav">
+          <button type="button" class="pc-ba-nav__btn" data-ba-prev aria-label="Ca trước">‹</button>
+          <div class="pc-ba-nav__dots">
+            {%- for i in (1..pc_ba_total) -%}
+            <button type="button" class="pc-ba-nav__dot" data-ba-dot="{{ i }}" aria-label="Xem ca {{ i }}"{% if i == 1 %} aria-current="true"{% endif %}><span></span></button>
+            {%- endfor -%}
           </div>
-          {%- endif -%}
-          <div class="pt-2 flex flex-wrap gap-3">
-            <a href="{{ pc_cp.url }}" class="pc-kit-btn-primary text-xs py-3 px-5">Xem Chi Tiết Ca Này &rarr;</a>
-            <a href="/pages/dat-lich-tu-van" class="pc-kit-btn-secondary text-xs py-3 px-5">Soi Da Nhận Phác Đồ Tương Tự</a>
-          </div>
+          <button type="button" class="pc-ba-nav__btn pc-ba-nav__btn--solid" data-ba-next aria-label="Ca sau">›</button>
         </div>
+        {%- endif -%}
+        {{ pc_ba_infos }}
+        {%- if pc_ba_zalo != blank -%}
+        <a href="https://zalo.me/{{ pc_ba_zalo }}" target="_blank" rel="noopener" class="pc-ba-btn pc-ba-btn--primary pc-ba-group__cta">{{ settings.clinical_case_cta_label | default: 'TƯ VẤN PHÁC ĐỒ QUA ZALO' }}</a>
+        {%- endif -%}
+      </div>
+      {%- endif -%}
+      {%- endfor -%}
+    </div>
+    {%- if settings.clinical_note != blank -%}<p class="pc-ba-note">{{ settings.clinical_note }}</p>{%- endif -%}
+  </section>
+  {%- endif -%}
+
+  <section class="container pc-ba-section pc-ba-section--last">
+    <div class="pc-ba-final">
+      <div class="pc-ba-final__text">
+        <h2 class="pc-ba-final__title">{{ settings.clinical_final_title | default: 'Bắt đầu hành trình làn da của bạn' }}</h2>
+        {%- if settings.clinical_final_text != blank -%}<p class="pc-ba-final__desc">{{ settings.clinical_final_text }}</p>{%- endif -%}
+      </div>
+      <div class="pc-ba-actions">
+        <a href="{{ pc_ba_cta_link }}" class="pc-ba-btn pc-ba-btn--light">{{ settings.clinical_final_cta_label | default: 'Phân tích da miễn phí' }}</a>
+        {%- if settings.clinical_final_cta2_label != blank -%}
+        <a href="{{ settings.clinical_final_cta2_link | default: '/pages/dat-lich-tu-van' }}" class="pc-ba-btn pc-ba-btn--ghost">{{ settings.clinical_final_cta2_label }}</a>
+        {%- endif -%}
       </div>
     </div>
-    {%- if pc_cp_blog.articles.size > 1 -%}<div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">{%- endif -%}
-    {%- else -%}
-      <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-        <h3 class="text-base font-bold text-forest-900 font-heading mb-1">{{ pc_cp.title }}</h3>
-        <p class="text-xs text-gray-600 leading-relaxed mb-3">{{ pc_cp.summary | default: pc_cp.content | strip_html | truncatewords: 40 }}</p>
-        <a href="{{ pc_cp.url }}" class="text-xs font-semibold text-clinical-700 hover:underline">Xem chi tiết &rarr;</a>
-      </div>
-    {%- endif -%}
-    {%- if forloop.last and pc_cp_blog.articles.size > 1 -%}</div>{%- endif -%}
-    {%- endfor -%}
-    {%- else -%}
-    <p class="text-sm text-gray-500 py-10 text-center">Hồ sơ ca điều trị đang được cập nhật.</p>
-    {%- endif -%}
-
-    <!-- Medical disclaimer bắt buộc cho nội dung claim lâm sàng -->
-    <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 text-xs text-amber-900 leading-relaxed">
-      <p class="font-bold mb-1">⚠️ Lưu ý y khoa:</p>
-      <p>
-        Hình ảnh và số liệu trên mang tính chất minh hoạ cho hồ sơ theo dõi lâm sàng nội bộ, không
-        thay thế cho việc thăm khám trực tiếp. Kết quả điều trị có thể khác nhau tuỳ cơ địa, tình
-        trạng da và mức độ tuân thủ phác đồ của từng người, không cam kết hiệu quả tuyệt đối cho
-        mọi trường hợp. Vui lòng đặt lịch soi da trực tiếp để được Chuyên gia Da liễu đánh giá và xây
-        dựng phác đồ phù hợp riêng cho bạn.
-      </p>
-    </div>
-
-  </div>
+  </section>
 </main>
+<script>
+  /* 2026-10-07: điều hướng từng ca trong mỗi nhóm kết quả (nút ‹ › + chấm). */
+  document.querySelectorAll('[data-ba-group]').forEach(function (group) {
+    var cases = group.querySelectorAll('[data-ba-case]');
+    var infos = group.querySelectorAll('[data-ba-info]');
+    if (cases.length < 2) return;
+    var dots = group.querySelectorAll('[data-ba-dot]');
+    var current = group.querySelector('[data-ba-current]');
+    var index = 0;
+    function show(i) {
+      index = (i + cases.length) % cases.length;
+      cases.forEach(function (c, k) { c.hidden = k !== index; });
+      infos.forEach(function (c, k) { c.hidden = k !== index; });
+      dots.forEach(function (d, k) { if (k === index) { d.setAttribute('aria-current', 'true'); } else { d.removeAttribute('aria-current'); } });
+      if (current) current.textContent = index + 1;
+    }
+    group.querySelector('[data-ba-prev]').addEventListener('click', function () { show(index - 1); });
+    group.querySelector('[data-ba-next]').addEventListener('click', function () { show(index + 1); });
+    dots.forEach(function (d, k) { d.addEventListener('click', function () { show(k); }); });
+  });
+</script>

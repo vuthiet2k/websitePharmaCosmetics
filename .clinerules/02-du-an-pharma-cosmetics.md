@@ -410,6 +410,15 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
   THÊM GIỎ HÀNG = Deep Forest solid `--pc-brand-deep` (hover `--pc-brand-dark`).
 - Không dùng `{% continue %}` trong Liquid (chưa kiểm chứng trên Sapo) — dùng `if` lồng.
 
+## Trang Trước & Sau (`templates/page.clinical-proof.bwt`, dựng lại theo thiết kế 2026-10-07)
+
+- Câu chữ/link/ảnh hero: field `clinical_*` (Theme Settings → "Trang Trước & Sau"); header/footer dùng layout chung.
+- Ca khách hàng = bài trong blog `clinical_case_blog_handle`, tag khoá:giá trị: `anhtruoc:`/`anhsau:` (bắt buộc
+  đủ 2 ảnh, thiếu ⇒ không hiện ca), `nhom:` (gom nhóm có điều hướng ‹ • ›; thiếu ⇒ `clinical_group_other`),
+  `tuoi:`, `tinh:`, `tuan:`, `phacdo:` (thiếu ⇒ ẩn phần đó). Ảnh hero trống ⇒ dùng cặp ảnh ca đầu tiên.
+  Chỉ đăng ca thật khách đã đồng ý; theme không tự sinh ca/số liệu. Ảnh trong `data/articles.js` chỉ là khung
+  placeholder để preview.
+
 ## AI Skin Quiz — phân tầng Tier/Case & cờ an toàn (chốt 2026-10-05)
 
 - Engine thuần **`assets/skin-quiz-engine.js.bwt`** (`window.PharmaSkinQuizEngine`, `require` được trong Node) là
