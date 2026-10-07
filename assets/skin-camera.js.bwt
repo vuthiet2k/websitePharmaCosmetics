@@ -455,7 +455,8 @@
       var avgScore = Math.round(scKeys.reduce(function (sum, k) { return sum + (report.scores[k].ui_score || 75); }, 0) / Math.max(1, scKeys.length));
       if (overallScoreEl) overallScoreEl.textContent = avgScore + '/100';
       if (overallStatusEl) {
-        overallStatusEl.textContent = avgScore >= 85 ? '(Rất khỏe mạnh)' : avgScore >= 72 ? '(Khá tốt, cần cân bằng)' : '(Cần chăm sóc phục hồi)';
+        // 2026-10-08 (thiết kế kết quả): trạng thái in to trong thẻ tổng quan, không còn ngoặc.
+        overallStatusEl.textContent = avgScore >= 85 ? 'Rất khỏe mạnh' : avgScore >= 72 ? 'Khá ổn định' : 'Cần chăm sóc phục hồi';
       }
 
       var skinTypeName = 'Làn da hỗn hợp thiên dầu';
@@ -509,32 +510,27 @@
         redness: 'Vùng đỏ & Nhạy cảm',
         pores: 'Lỗ chân lông'
       };
-      var colorClasses = {
-        acne: 'pc-metric--acne',
-        pigmentation: 'pc-metric--pigment',
-        wrinkles: 'pc-metric--wrinkle',
-        redness: 'pc-metric--redness',
-        pores: 'pc-metric--pores'
+      // 2026-10-08 (thiết kế kết quả): mỗi chỉ số là 1 hàng — icon, tên, điểm, nhãn mức, thanh tiến độ.
+      var icons = {
+        acne: '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/>',
+        pigmentation: '<path d="M12 3a9 9 0 1 0 9 9c-5 0-9-4-9-9Z"/>',
+        wrinkles: '<path d="M3 8c3-2 6 2 9 0s6-2 9 0M3 14c3-2 6 2 9 0s6-2 9 0"/>',
+        redness: '<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11Z"/>',
+        pores: '<circle cx="7" cy="8" r="1.5"/><circle cx="16" cy="7" r="1.5"/><circle cx="11" cy="14" r="1.5"/><circle cx="17" cy="16" r="1.5"/><circle cx="6" cy="17" r="1.5"/>'
       };
       Object.keys(report.scores).forEach(function (key) {
         var sc = report.scores[key];
-        var card = document.createElement('div');
-        card.className = 'pc-inline-score-card ' + (colorClasses[key] || '');
+        var row = document.createElement('div');
         var levelClass = sc.ui_score >= 85 ? 'is-good' : sc.ui_score >= 70 ? 'is-fair' : 'is-attention';
-        card.innerHTML = `
-          <div class="pc-score-card-header">
-            <span class="pc-score-name">${names[key] || key}</span>
-            <span class="pc-score-badge ${levelClass}">${sc.level || ''}</span>
-          </div>
-          <div class="pc-score-main">
-            <span class="pc-score-number">${sc.ui_score || '—'}</span>
-            <span class="pc-score-unit">/100</span>
-          </div>
-          <div class="pc-score-bar-track">
-            <div class="pc-score-bar-fill ${levelClass}" style="width: ${Math.min(100, sc.ui_score || 0)}%"></div>
-          </div>
+        row.className = 'pc-sr-score ' + levelClass;
+        row.innerHTML = `
+          <span class="pc-sr-score__icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${icons[key] || ''}</svg></span>
+          <span class="pc-sr-score__name">${names[key] || key}</span>
+          <span class="pc-sr-score__value"><b>${sc.ui_score || '—'}</b>/100</span>
+          <span class="pc-sr-score__pill">${sc.level || ''}</span>
+          <span class="pc-sr-score__bar"><span style="width: ${Math.min(100, sc.ui_score || 0)}%"></span></span>
         `;
-        scoreGrid.appendChild(card);
+        scoreGrid.appendChild(row);
       });
     }
 
@@ -590,32 +586,28 @@
         { num: 3, title: 'Điều Trị Chuyên Sâu', desc: 'Định hướng can thiệp hoạt chất mục tiêu (AHA/BHA/Retinol/Vitamin C) theo dung nạp của da.' }
       ];
 
+      // 2026-10-08 (thiết kế kết quả): 3 giai đoạn là danh sách đánh số trong thẻ "Gợi ý chăm sóc";
+      // sản phẩm tham khảo tách sang thẻ riêng bên phải (data-inline-products), không lặp trong từng giai đoạn.
+      var productsCard = scan.querySelector('[data-inline-products-card]');
+      var productsList = scan.querySelector('[data-inline-products]');
+      if (productsCard && productsList) {
+        productsList.innerHTML = '';
+        (routine.products || []).forEach(function (prod) {
+          if (!prod || !prod.label) return;
+          var li = document.createElement('li');
+          li.innerHTML = `<a href="${prod.url || '/collections/all'}" target="_blank" rel="noopener"><span class="pc-sr-products__stage">Giai đoạn ${prod.stage || ''}</span><span class="pc-sr-products__name">${prod.label}</span></a>`;
+          productsList.appendChild(li);
+        });
+        productsCard.hidden = !productsList.children.length;
+      }
       stages.forEach(function (stg, idx) {
-        var col = document.createElement('div');
-        col.className = 'pc-regimen-stage-card';
+        var col = document.createElement('li');
+        col.className = 'pc-sr-stage';
         var stageRoutineText = (routine.stages && routine.stages[idx]) ? routine.stages[idx] : stg.desc;
         
-        var productHtml = '';
-        if (routine.products && routine.products.length) {
-          var matchedProd = routine.products.find(function (p) { return p.stage === stg.num; }) || routine.products[idx];
-          if (matchedProd && matchedProd.label) {
-            productHtml = `
-              <div class="pc-regimen-product-box">
-                <span class="pc-regimen-prod-label"><i class="fas fa-prescription-bottle-medical"></i> Sản phẩm tham khảo:</span>
-                <a href="${matchedProd.url || '/collections/all'}" target="_blank" rel="noopener" class="pc-regimen-prod-link">
-                  <span>${matchedProd.label}</span>
-                  <i class="fas fa-arrow-up-right-from-square"></i>
-                </a>
-              </div>
-            `;
-          }
-        }
-
         col.innerHTML = `
-          <div class="pc-stage-badge">GIAI ĐOẠN ${stg.num}</div>
-          <h5 class="pc-stage-title">${stg.title}</h5>
-          <p class="pc-stage-desc">${stageRoutineText}</p>
-          ${productHtml}
+          <span class="pc-sr-stage__no" aria-hidden="true">${stg.num}</span>
+          <span class="pc-sr-stage__body"><b>${stg.title}</b><span>${stageRoutineText}</span></span>
         `;
         regimenGrid.appendChild(col);
       });
