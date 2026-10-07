@@ -4318,43 +4318,91 @@ a.product-recommend-link {
 .pc-rx-consult__cta-main { font-weight: 700; font-size: 15px; letter-spacing: .04em; }
 .pc-rx-consult__cta-sub { margin-top: 2px; font-size: 12px; font-weight: 500; opacity: .9; }
 
-/* 2026-10-05 (PDP V3 — PRD mục 5): khối niềm tin sau CTA (3 cam kết chữ + THƯƠNG HIỆU | XUẤT XỨ), thay 4 icon png. */
-.pc-pdp-trust {
-  margin: 16px 0 8px;
-  padding: 14px 16px;
-  border: 1px solid var(--color-mint-subtle);
-  border-radius: 8px;
-  background: white;
-}
+/* 2026-10-05 (PDP V3 — PRD mục 5): khối niềm tin sau CTA (3 cam kết chữ + THƯƠNG HIỆU | XUẤT XỨ), thay 4 icon png.
+   2026-10-07: dựng lại theo thiết kế PDP — 3 cam kết xếp 3 cột ngang (không khung), dòng thương hiệu/xuất xứ
+   nằm trong ô nền xám nhạt riêng. */
+.pc-pdp-trust { margin: 20px 0 8px; }
 .pc-pdp-trust__list {
-  margin: 0 0 10px;
+  margin: 0 0 14px;
   padding: 0;
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
 }
 .pc-pdp-trust__item {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  font-size: 14px;
-  line-height: 1.45;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.4;
   color: var(--pc-brand-dark);
-  strong { font-weight: 700; }
 }
+.pc-pdp-trust__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pc-pdp-trust__text strong { font-weight: 700; }
 .pc-pdp-trust__icon { flex-shrink: 0; margin-top: 1px; color: var(--pc-brand-primary); }
-.pc-pdp-trust__desc { color: var(--color-text-muted); }
+.pc-pdp-trust__desc { color: var(--color-text-muted); font-size: 12px; }
 .pc-pdp-trust__origin {
   margin: 0;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: var(--color-mint-subtle, #f0f4f1);
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 10px;
-  font-size: 12px;
-  letter-spacing: .06em;
-  color: var(--color-text-muted);
-  b { color: var(--pc-brand-deep); font-weight: 700; }
+  gap: 4px 28px;
+  font-size: 13px;
+  color: var(--pc-brand-dark);
+  b { color: var(--pc-brand-deep); font-weight: 700; text-transform: uppercase; letter-spacing: .02em; }
 }
+@media (max-width: 575px) {
+  .pc-pdp-trust__list { grid-template-columns: 1fr; }
+}
+
+/* 2026-10-07: cặp CTA theo thiết kế PDP — nội dung CANH GIỮA; MUA NGAY = icon + tiêu đề cùng dòng,
+   dòng phụ xuống dưới (flex-wrap + display:contents để icon chỉ đứng cạnh dòng tiêu đề). */
+.product-detail,
+.details-product {
+  .btn-mua .box_btn_acc {
+    .buynow {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      justify-content: center !important;
+      align-content: center;
+      align-items: center;
+      column-gap: 8px;
+      row-gap: 2px;
+      padding: 8px 16px;
+      .buynow-text { display: contents; }
+      .buynow-text span:first-child { font-weight: 700 !important; font-size: var(--fs-md); }
+      .buynow-text span + span { flex-basis: 100%; text-align: center; }
+    }
+    .btn_add_cart { justify-content: center !important; font-weight: 700; }
+  }
+  .pc-shopee-btn {
+    height: auto;
+    margin: 10px 0 0;
+    padding: 0;
+    background: white;
+    border: 1px solid #ee4d2d;
+    border-radius: 10px;
+    a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 8px 16px;
+      color: #ee4d2d;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      img { width: 18px; height: 18px; object-fit: contain; }
+      svg { flex-shrink: 0; }
+    }
+    &:hover { background: #fff5f2; }
+  }
+}
+
 /* 2026-10-05 (PRD mục 10): tên tab lấy từ <h2> trong mô tả — in hoa theo PRD. */
 .product-tab .tabs-title { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
 .product-tab .tab-link { flex-shrink: 0; }

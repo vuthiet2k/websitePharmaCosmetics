@@ -391,16 +391,18 @@
 													<div class="buynow-text">{{settings.product_buynow_title}}</div>
 												</a>
 												<button type="submit" class="btn btn_base normal_button btn_add_cart add_to_cart btn-cart">
-													<i class="fas fa-cart-shopping" aria-hidden="true"></i>
+													<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 4h2l2.4 11h10.2L20 8H6.2M10 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2ZM17 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"/></svg>
 													<span class="txt-main text_1">Thêm vào giỏ hàng</span>
 												</button>
 											</div>
 
 											{% if pc_shopee_url != blank %}
-											<div class="mua_shop">
+											{%- comment -%} 2026-10-07: nút Shopee theo thiết kế PDP — viền đỏ cam, icon túi + icon mở tab mới. {%- endcomment -%}
+											<div class="mua_shop pc-shopee-btn">
 												<a href="{{ pc_shopee_url }}" target="_blank" rel="noopener">
-													{%- if settings.product_shopee_icon != blank -%}<img src="{{ settings.product_shopee_icon | img_url: 'master' }}" alt="shopee" width="40" height="40" style="width: 40px;margin-right: 5px;" loading="lazy" />{%- endif -%}
-													{{ settings.product_shopee_label | default: 'ĐẶT HÀNG TẠI SHOPEE MALL' }}
+													{%- if settings.product_shopee_icon != blank -%}<img src="{{ settings.product_shopee_icon | img_url: 'small' }}" alt="" width="18" height="18" loading="lazy" />{%- else -%}<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 8h14l-1 12H6L5 8Zm4 0V6a3 3 0 0 1 6 0v2"/></svg>{%- endif -%}
+													<span>{{ settings.product_shopee_label | default: 'ĐẶT HÀNG TẠI SHOPEE MALL' }}</span>
+													<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
 												</a>
 											</div>
 
@@ -544,18 +546,23 @@
 								{%- when 2 -%}{%- assign pc_trust_t = pc_trust_t2 -%}{%- assign pc_trust_d = pc_trust_d2 -%}
 								{%- else -%}{%- assign pc_trust_t = pc_trust_t3 -%}{%- assign pc_trust_d = pc_trust_d3 -%}
 								{%- endcase -%}
+								{%- comment -%} 2026-10-07: theo thiết kế PDP — 3 cột ngang, icon riêng (xe giao hàng / khiên / bong bóng chat), tiêu đề trên mô tả. {%- endcomment -%}
+								{%- case i -%}
+								{%- when 1 -%}{%- assign pc_trust_path = 'M3 6h11v10H3zM14 9h4l3 3v4h-7M7.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z' -%}
+								{%- when 2 -%}{%- assign pc_trust_path = 'M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6l-7-3ZM9 12l2 2 4-4' -%}
+								{%- else -%}{%- assign pc_trust_path = 'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12ZM8 10h8M8 14h5' -%}
+								{%- endcase -%}
 								<li class="pc-pdp-trust__item">
-									<svg class="pc-pdp-trust__icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M20 6 9 17l-5-5"/></svg>
-									<span><strong>{{ pc_trust_t }}</strong> <span class="pc-pdp-trust__desc">{{ pc_trust_d }}</span></span>
+									<svg class="pc-pdp-trust__icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="{{ pc_trust_path }}"/></svg>
+									<span class="pc-pdp-trust__text"><strong>{{ pc_trust_t }}</strong><span class="pc-pdp-trust__desc">{{ pc_trust_d }}</span></span>
 								</li>
 								{%- endfor -%}
 							</ul>
 							{%- endif -%}
 							<p class="pc-pdp-trust__origin">
-								<span>{{ settings.product_brand_label | default: 'THƯƠNG HIỆU' }}: <b class="notranslate" translate="no">{% if product.vendor != blank %}{{ product.vendor | upcase }}{% else %}{{ store.name | upcase }}{% endif %}</b></span>
+								<span><b>{{ settings.product_brand_label | default: 'THƯƠNG HIỆU' }}:</b> <span class="notranslate" translate="no">{% if product.vendor != blank %}{{ product.vendor }}{% else %}{{ store.name }}{% endif %}</span></span>
 								{%- if pc_xuatxu != blank %}
-								<span class="pc-pdp-trust__sep" aria-hidden="true">|</span>
-								<span>{{ settings.product_origin_label | default: 'XUẤT XỨ' }}: <b>{{ pc_xuatxu | upcase }}</b></span>
+								<span><b>{{ settings.product_origin_label | default: 'XUẤT XỨ' }}:</b> {{ pc_xuatxu }}</span>
 								{%- endif %}
 							</p>
 						</div>
@@ -885,7 +892,7 @@
 				qty.html('<span class="a-stock">Còn hàng</span>');
 			}
 			FastAddToCart.removeClass('d-none');
-			addToCart.html('<span class="txt-main">Thêm vào giỏ hàng</span>').removeAttr('disabled');	
+			addToCart.html('<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 4h2l2.4 11h10.2L20 8H6.2M10 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2ZM17 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"/></svg><span class="txt-main">Thêm vào giỏ hàng</span>').removeAttr('disabled');	
 			BtnSold.removeClass('btnsold');
 			qtyBtn.removeClass('d-none');
 			if(variant.price == 0){
@@ -1227,18 +1234,6 @@
 	$('.close-popup-video').on('click', function(e){
 		$('.popup-video').removeClass('active');
 		$('.popup-video .body-popup').html(' ');
-	});
-	$(document).ready(function () {
-		$('.lc-option-box-size .cursor-pointer').click(function () {
-			$('.lc-option-box-size .cursor-pointer').removeClass('active');
-			$(this).addClass('active');
-			const selectedText = $(this).text().trim();
-			if (selectedText === 'Lớn hơn') {
-				$('.ba-text-fpt').addClass('font-large');
-			} else {
-				$('.ba-text-fpt').removeClass('font-large');
-			}
-		});
 	});
 </script>
 {% include 'product-recommend' %}
