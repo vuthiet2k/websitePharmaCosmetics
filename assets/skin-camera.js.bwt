@@ -450,6 +450,7 @@
     var zoneAgingEl = scan.querySelector('[data-zone-aging]');
     var adviceEl = scan.querySelector('[data-assessment-advice]');
 
+    var basicResult = null;
     if (report && report.scores) {
       var scKeys = Object.keys(report.scores);
       var avgScore = Math.round(scKeys.reduce(function (sum, k) { return sum + (report.scores[k].ui_score || 75); }, 0) / Math.max(1, scKeys.length));
@@ -497,6 +498,12 @@
           : 'Chưa xuất hiện nếp nhăn tĩnh sâu, cấu trúc mô liên kết duy trì độ săn chắc và đàn hồi tự nhiên rất tốt.';
       }
       if (adviceEl) adviceEl.textContent = adviceText;
+      basicResult = {
+        skin_type: skinTypeName,
+        overall_score: avgScore,
+        overall_status: overallStatusEl ? overallStatusEl.textContent : '',
+        advice: adviceText
+      };
     }
 
     // 1. Điền 5 thẻ điểm số
@@ -612,6 +619,7 @@
         regimenGrid.appendChild(col);
       });
     }
+    return basicResult;
   }
 
   function analyzeLocal() {
@@ -711,14 +719,18 @@
       };
       var report = window.PharmaSkinScoring.make(raw);
       var routine = window.PharmaSkinRoutine.match(report.scores);
-      var payload = { scores: report.scores, skin_age: report.skin_age, monk_skin_tone: tone.available ? tone.monk_skin_tone : null, primary_concern: routine.primary_concern, regimen: routine.stages, recommended_products: routine.products, tech_neck: wrinkle.tech_neck_detected, source: 'ai_skin_scan_camera', inference: detectionCount ? 'onnx_local' : 'canvas_local' };
+      var payload = { saved_at: Date.now(), scores: report.scores, skin_age: report.skin_age, monk_skin_tone: tone.available ? tone.monk_skin_tone : null, primary_concern: routine.primary_concern, regimen: routine.stages, recommended_products: routine.products, tech_neck: wrinkle.tech_neck_detected, source: 'ai_skin_scan_camera', inference: detectionCount ? 'onnx_local' : 'canvas_local' };
       try { sessionStorage.setItem('pc_skin_scan_result', JSON.stringify(payload)); } catch (error) {}
 
       // Hoàn tất quét sau thời gian deliberate
       setTimeout(function () {
         if (scanningOverlay) scanningOverlay.hidden = true;
         isAnalyzing = false;
-        renderInlineDashboard(report, routine, tone, wrinkle, surface, redness);
+        var basic = renderInlineDashboard(report, routine, tone, wrinkle, surface, redness);
+        // 2026-10-08: lưu thêm kết quả cơ bản vừa hiển thị để trang kết quả chi tiết dùng đúng nội dung này.
+        if (basic) {
+          try { sessionStorage.setItem('pc_skin_scan_result', JSON.stringify(Object.assign(payload, basic))); } catch (error) {}
+        }
         // PHÂN TÁCH RẠCH RÒI 2 TRẠNG THÁI:
         if (sessionView) sessionView.hidden = true;
         inlineReport.hidden = false;

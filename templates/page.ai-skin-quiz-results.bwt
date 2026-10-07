@@ -1,7 +1,7 @@
 {%- comment -%}
   page.ai-skin-quiz-results.bwt — Trang kết quả tư vấn lâm sàng AI Skin Diagnostic
   Chuẩn hóa thiết kế hệ thống theo tiêu chuẩn Astra Workflow:
-  - Bố cục container chuẩn max-w-5xl mx-auto px-4 sm:px-6, triệt tiêu hoàn toàn thò thụt spacing.
+  - Khung ngoài dùng .container SSOT (2026-10-08: trước đây max-w-5xl hẹp hơn header nên bị thụt vào).
   - Tích hợp Thẻ Khách Hàng & Trạng Thái Đồng Bộ GAS Google Sheets CRM.
   - Bổ sung 2 Section Sapo: Sản phẩm đề xuất theo phác đồ & Bài viết chuyên gia khuyên đọc.
 {%- endcomment -%}
@@ -60,9 +60,9 @@
 </script>
 
 <section class="py-6 sm:py-10 bg-slate-50/50 min-h-screen">
-  <div class="max-w-5xl mx-auto px-4 sm:px-6 space-y-6">
+  <div class="container space-y-6">
 
-    <!-- 1. Disclaimer Banner (Căn lề chuẩn max-w-5xl) -->
+    <!-- 1. Disclaimer Banner -->
     <div data-result-disclaimer class="bg-amber-50/90 border border-amber-200/90 text-amber-900 text-xs sm:text-sm rounded-2xl p-4 sm:p-5 flex items-start gap-3.5 shadow-sm">
       <i class="fas fa-triangle-exclamation text-amber-500 text-base mt-0.5 shrink-0" aria-hidden="true"></i>
       <div class="leading-relaxed">
@@ -213,6 +213,7 @@
         <p class="text-xs sm:text-sm text-gray-600 leading-relaxed">
           Các sản phẩm được chọn lọc chuẩn khoa học từ hệ thống Pharma Cosmetics, chứa hoạt chất tương thích với phác đồ chăm sóc làn da của bạn.
         </p>
+        <p class="inline-flex flex-wrap items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200" data-products-basis hidden></p>
 
         <!-- Product Grid Dynamic Container -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6" data-sapo-products-grid>
@@ -291,8 +292,19 @@
     if (skinType) isDemo = false;
     skinScan = JSON.parse(sessionStorage.getItem('pc_skin_scan_result') || 'null');
     if (skinScan && skinScan.scores) isDemo = false;
+    // 2026-10-08: phiên có cả soi da AI lẫn khảo sát chat ⇒ dùng kết quả làm SAU CÙNG (theo saved_at).
+    var quizSavedAt = Number(sessionStorage.getItem('pc_quiz_saved_at') || 0);
+    var scanSavedAt = skinScan ? Number(skinScan.saved_at || 0) : 0;
+    if (skinScan && skinType && quizSavedAt && scanSavedAt && quizSavedAt > scanSavedAt) skinScan = null;
   } catch (e) {
     /* Safe fallback if storage blocked */
+  }
+  // Vấn đề trọng tâm của soi da → nhóm loại da dùng để lọc sản phẩm/bài viết (cùng bảng từ khoá bên dưới).
+  var scanConcernSkin = { acne: 'oily', pores: 'oily', pigmentation: 'pigmentation', wrinkles: 'aging', redness: 'sensitive' };
+  var scanConcernNames = { acne: 'Mụn & bít tắc', pores: 'Lỗ chân lông & dầu thừa', pigmentation: 'Sắc tố & thâm sạm', wrinkles: 'Nếp nhăn & lão hóa', redness: 'Da đỏ & nhạy cảm' };
+  function basisSkin() {
+    if (skinScan && skinScan.scores) return scanConcernSkin[skinScan.primary_concern] || 'normal';
+    return skinType || 'oily';
   }
 
   if (!skinType || !resultsData[skinType]) {
@@ -351,7 +363,12 @@
     isDemo = false;
     root.dataset.demo = 'false';
     root.querySelector('[data-result-title]').textContent = skinScan.skin_type || 'Báo cáo soi da quang học';
-    root.querySelector('[data-result-summary]').textContent = 'Các chỉ số quang học đã được tính toán tại thiết bị từ 3 góc mặt. Ảnh khuôn mặt được bảo mật cục bộ, không gửi về máy chủ.';
+    // 2026-10-08: tóm tắt đúng kết quả cơ bản vừa hiển thị ở bước soi da (trạng thái + điểm + lời khuyên).
+    var scanSummary = [];
+    if (skinScan.overall_status) scanSummary.push('Trạng thái da: ' + skinScan.overall_status + (skinScan.overall_score ? ' (' + skinScan.overall_score + '/100).' : '.'));
+    if (skinScan.advice) scanSummary.push(skinScan.advice);
+    scanSummary.push('Các chỉ số được tính tại thiết bị từ 3 góc mặt; ảnh khuôn mặt không gửi về máy chủ.');
+    root.querySelector('[data-result-summary]').textContent = scanSummary.join(' ');
     if (demoFlag) demoFlag.hidden = true;
 
     var scoreList = root.querySelector('[data-scan-scores]');
@@ -595,6 +612,7 @@
   renderQuizCase();
 
   // ── ĐỒNG BỘ THÔNG TIN KHÁCH HÀNG TỪ GAS HOẶC CONTEXT ────────────────────
+  var sessionSourceText = (skinScan && skinScan.scores) ? 'Soi da AI 3 góc' : (!isDemo ? 'Khảo sát dạng chat 17 câu' : '');
   function syncCustomerInfo() {
     var custNameEl = root.querySelector('[data-customer-name]');
     var custContactEl = root.querySelector('[data-customer-contact]');
@@ -625,7 +643,8 @@
       if (custContactEl) custContactEl.textContent = contactInfo;
       if (custTierEl) custTierEl.textContent = customer.logged_in ? 'Thành viên chính thức' : 'Khách vãng lai';
 
-      var sourceText = info.source === 'ai_skin_scan_camera' ? 'Soi da quang học 3 góc' : (info.source === 'ai_skin_quiz' ? 'Khảo sát lâm sàng 17 câu' : 'Bản xem trước mẫu');
+      // 2026-10-08: ưu tiên nguồn của phiên đang xem (soi da / khảo sát chat), CRM chỉ là dự phòng.
+      var sourceText = sessionSourceText || (info.source === 'ai_skin_scan_camera' ? 'Soi da AI 3 góc' : (info.source === 'ai_skin_quiz' ? 'Khảo sát dạng chat 17 câu' : 'Bản xem trước mẫu'));
       if (consultSourceEl) consultSourceEl.textContent = sourceText;
       if (consultDateEl) {
         var d = info.saved_at ? new Date(info.saved_at) : new Date();
@@ -654,7 +673,7 @@
       if (custNameEl) custNameEl.textContent = ctx.name || 'Khách Hàng Tư Vấn';
       if (custContactEl) custContactEl.textContent = ctx.phone || ctx.email || 'Chưa đăng nhập';
       if (custTierEl) custTierEl.textContent = ctx.logged_in ? 'Thành viên' : 'Khách vãng lai';
-      if (consultSourceEl) consultSourceEl.textContent = skinScan ? 'Soi da quang học 3 góc' : 'Khảo sát lâm sàng 17 câu';
+      if (consultSourceEl) consultSourceEl.textContent = sessionSourceText || 'Bản xem trước mẫu';
       if (crmStatusBadge) {
         crmStatusBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300';
         crmStatusBadge.innerHTML = '<i class="fas fa-clock-rotate-left text-amber-600"></i> Bản ghi phiên hiện tại';
@@ -671,10 +690,25 @@
     if (!grid) return;
     grid.innerHTML = '';
 
-    var activeSkin = (skinType || 'oily').toLowerCase();
+    var activeSkin = basisSkin().toLowerCase();
     var keywords = [];
 
-    if (activeSkin.includes('oily') || activeSkin.includes('dau') || activeSkin.includes('mun')) {
+    // 2026-10-08: ghi rõ gợi ý dựa trên kết quả nào (soi da AI vừa làm / khảo sát chat / minh hoạ).
+    var basisEl = root.querySelector('[data-products-basis]');
+    if (basisEl) {
+      if (skinScan && skinScan.scores) {
+        basisEl.textContent = 'Theo kết quả soi da AI vừa thực hiện — vấn đề trọng tâm: ' + (scanConcernNames[skinScan.primary_concern] || 'chăm sóc nền da');
+      } else if (!isDemo) {
+        basisEl.textContent = 'Theo kết quả khảo sát dạng chat — ' + ((quizCase && quizCase.title) || (resultsData[skinType] && resultsData[skinType].skin_type) || 'loại da của bạn');
+      } else {
+        basisEl.textContent = 'Gợi ý minh hoạ — hãy soi da AI hoặc làm khảo sát để nhận sản phẩm theo làn da của bạn';
+      }
+      basisEl.hidden = false;
+    }
+
+    if (activeSkin.includes('combination')) {
+      keywords = ['kiem-soat-dau', 'niacinamide', 'duong-am', 'amino-acid', 'chong-nang'];
+    } else if (activeSkin.includes('oily') || activeSkin.includes('dau') || activeSkin.includes('mun')) {
       keywords = ['tri-mun', 'kiem-soat-dau', 'bha', 'aha', 'niacinamide', 'amino-acid', 'spf50'];
     } else if (activeSkin.includes('dry') || activeSkin.includes('kho')) {
       keywords = ['duong-am', 'hyaluronic', 'ceramide', 'phuc-hoi', 'amino-acid'];
@@ -701,6 +735,17 @@
         return tags.includes(k) || name.includes(k) || alias.includes(k);
       });
     });
+
+    // Soi da: đưa đúng các sản phẩm phác đồ vừa chọn (recommended_products) lên đầu, rồi bổ sung theo từ khoá.
+    if (skinScan && skinScan.recommended_products) {
+      var routinePicks = [];
+      skinScan.recommended_products.forEach(function (rp) {
+        var handle = rp && (rp.handle || String(rp.url || '').replace(/^\//, ''));
+        var hit = allowedProducts.filter(function (p) { return p.alias === handle; })[0];
+        if (hit && routinePicks.indexOf(hit) === -1) routinePicks.push(hit);
+      });
+      matched = routinePicks.concat(matched.filter(function (p) { return routinePicks.indexOf(p) === -1; }));
+    }
 
     if (matched.length === 0) matched = allowedProducts.slice(0, 4);
     else if (matched.length > 4) matched = matched.slice(0, 4);
@@ -751,7 +796,7 @@
     if (!grid) return;
     grid.innerHTML = '';
 
-    var activeSkin = (skinType || 'oily').toLowerCase();
+    var activeSkin = basisSkin().toLowerCase();
     var topicKeywords = [];
 
     if (activeSkin.includes('oily') || activeSkin.includes('dau') || activeSkin.includes('mun')) {
