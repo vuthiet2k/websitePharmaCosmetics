@@ -1,9 +1,9 @@
+{%- comment -%} 2026-10-07: bỏ megamenu theo tên mục (megamenu_items) trên thanh menu chính — theo sheet cấu hình,
+  megamenu chỉ còn ở nút "Danh mục" (header_nav_cate, bật/tắt bằng display_megamenu) để nav và nút Danh mục không dùng chung. {%- endcomment -%}
 <ul id="nav" class="nav">
-	{% assign i = 0 %}
 	{% for link in linklists[settings.main_menu].links %}
-	{% if settings.display_megamenu %}{% assign items_list = settings.megamenu_items | split:"," %}{% endif %}{% assign mega-title = link.title | downcase %}
 	{% if linklists[link.alias] and linklists[link.alias].links.size > 0 %}
-	<li class="nav-item has-childs {% if link.active %}active{% endif %} {% if settings.display_megamenu and items_list contains mega-title %} has-mega has-mega-{{i | plus: 1}}{%endif%}{%if linklists[settings.main_menu].links.size >= 6 %} hover-left{% endif %}" data-section="header_nav">
+	<li class="nav-item has-childs {% if link.active %}active{% endif %}{%if linklists[settings.main_menu].links.size >= 6 %} hover-left{% endif %}" data-section="header_nav">
 		<a href="{{ link.url }}" class="nav-link {%if link.title == settings.titel_cus_order%}acti-order{% endif %}" title="{{ link.title }}">{{ link.title }} {%if link.title == settings.titel_cus_order%}<img width="64" height="22" class="icon_order" src="{{'icon_menu_order.png' | asset_url}}" alt="{{ link.title }}">{% endif %}
 			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-right" viewBox="0 0 16 16">
 				<path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708"/>
@@ -11,9 +11,6 @@
 		</a>
 		<i class="open_mnu down_icon"></i>
 		<script type="text/x-custom-template" data-template="header_nav">
-		{% if settings.display_megamenu and items_list contains mega-title %}{% assign i = i | plus: 1 %}
-		{% include 'mega-menu' %}
-		{% else %}
 		<ul class="dropdown-menu">
 			{% for childlink in linklists[link.alias].links %}
 			{% if linklists[childlink.alias] %}
@@ -38,7 +35,6 @@
 				<a class="nav-link" href="{{ link.url }}" title="Xem tất cả {{ link.title }}">Xem tất cả →</a>
 			</li>
 			</ul>
-			{% endif %}
 		</script>
 	</li>
 	{%else%}

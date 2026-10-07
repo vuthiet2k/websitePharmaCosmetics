@@ -26,7 +26,7 @@ Bổ sung cho `01-quy-chuan-theme-sapo.md` (quy chuẩn nền tảng Sapo). File
 | Test portal | `npm run test:portal` (Playwright, `playwright.portal.config.js`, `tests/portal/`) |
 | Kiểm tra JSON | `node -e "JSON.parse(require('fs').readFileSync('configs/settings_schema.json','utf8'))"` |
 | Deploy production | `npx vercel --prod --yes` (**cần auth** — xem mục 5) |
-| Kiểm tra trường cấu hình | `npm run lint:config` — FAIL nếu có trường trong schema mà code thật (bỏ comment) không đọc. Thêm trường mới phải dùng ngay trong code; bỏ chỗ dùng thì xoá trường (hỏi trước) |
+| Kiểm tra trường cấu hình | `npm run lint:config` — FAIL nếu có trường trong schema mà code thật (bỏ comment) không đọc; đã gắn vào `build:sapo`. Thêm trường mới phải dùng ngay trong code; bỏ chỗ dùng thì xoá trường (hỏi trước) |
 | Mẫu Google Sheet cấu hình | `npm run sheet:config` (= `python scripts/export-config-sheet.py`) → `exports/cau-hinh-theme.xlsx` (sinh từ schema/data; chạy lại mỗi khi schema đổi). Khách điền các cột ★ (Hành động / Giá trị mới / Ghi chú / Trạng thái); agent áp thay đổi theo cột **ID**, đổi cấu trúc (nhãn, ẩn/xoá/di chuyển, trường mới) vẫn phải hỏi trước |
 
 ## 3. Quy ước code
