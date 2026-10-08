@@ -169,10 +169,28 @@ for (const { f, src, tags: ts } of parsed) {
   }
 }
 
+// Kiểm tra 3 (2026-10-08): img_url chỉ được dùng size mà CDN Sapo (bizweb.dktcdn.net/thumb/<size>/) phục vụ —
+// đo thật: size tự đặt ('1920x', '800x', '600x600'...) và 'master' đều 404 ⇒ ảnh Hero trang chủ bị thay ô xám.
+const IMG_SIZES = new Set(['pico', 'icon', 'thumb', 'small', 'compact', 'medium', 'large', 'grande', '1024x1024', '2048x2048']);
+const badSizes = [];
+for (const { f, src, tags: ts } of parsed) {
+  const rel = path.relative(ROOT, f).replace(/\\/g, '/');
+  for (const t of ts) {
+    for (const m of t.text.matchAll(/img_url\s*:\s*(['"])([^'"]*)\1/g)) {
+      if (IMG_SIZES.has(m[2])) continue;
+      badSizes.push(`${rel}:${src.slice(0, t.index).split('\n').length} '${m[2]}'`);
+    }
+  }
+}
+
 const ids = Object.keys(byId).sort();
 const sids = Object.keys(undeclared).sort();
-if (!ids.length && !sids.length) {
-  console.log(`[lint:liquid-globals] PASS — ${files.length} file, không có biến ngoài 38 đối tượng Sapo, mọi settings.* đã khai báo trong schema.`);
+if (badSizes.length) {
+  console.log(`[lint:liquid-globals] FAIL — ${badSizes.length} img_url dùng size CDN Sapo không phục vụ (404). Chỉ dùng: ${[...IMG_SIZES].join(', ')}`);
+  badSizes.forEach((x) => console.log(`  ${x}`));
+}
+if (!ids.length && !sids.length && !badSizes.length) {
+  console.log(`[lint:liquid-globals] PASS — ${files.length} file, không có biến ngoài 38 đối tượng Sapo, mọi settings.* đã khai báo trong schema, img_url đúng size CDN.`);
   process.exit(0);
 }
 if (ids.length) {

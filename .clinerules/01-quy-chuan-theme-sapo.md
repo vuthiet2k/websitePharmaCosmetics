@@ -169,6 +169,10 @@ Mỗi lần tải lên Sapo chỉ báo 1 lỗi đầu tiên ⇒ mọi quy tắc 
 
 - Mọi ảnh sản phẩm/banner **bắt buộc** đi qua `img_url` với size phù hợp (`thumb`, `small`, `compact`,
   `medium`, `large`, `grande`, `1024x1024`) + `loading="lazy"`.
+  **CHỈ** các size: `pico`, `icon`, `thumb`, `small`, `compact`, `medium`, `large`, `grande`, `1024x1024`,
+  `2048x2048` (đo thật trên CDN `bizweb.dktcdn.net/thumb/<size>/` ngày 08/10/2026). Size tự đặt như `1920x`,
+  `800x`, `600x600`, `240x240` và cả `master` (`thumb/master/`) đều **404** ⇒ script fallback ở `layouts/theme.bwt`
+  thay ảnh bằng ô xám (đã gây lỗi "ảnh Hero trang chủ không hiện"). Banner lớn dùng `2048x2048`.
 - Ảnh Hero/LCP: **KHÔNG** `loading="lazy"`, phải thêm `<link rel="preload" as="image" href="...">`.
 - Mọi `<img>` phải có `width` + `height` (hoặc CSS `aspect-ratio`) để chống CLS.
 - Không để lỗi JS/Uncaught trong Console; script không thiết yếu dùng `defer`/`async`; Critical CSS
