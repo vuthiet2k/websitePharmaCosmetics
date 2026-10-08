@@ -194,6 +194,17 @@
 		<h3 class="product-name line-clamp-2-new notranslate" translate="no">
 			<a href="{{ product.url }}" title="{{ product.name }}">{{ product.name }}</a>
 		</h3>
+		{%- comment -%}
+		  2026-10-08 (thiết kế trang danh mục): sao đánh giá trên thẻ — CHỈ khi nơi gọi bật pc_card_rating và sản phẩm có
+		  đánh giá thật từ app Sapo Product Reviews (metafields.bpr). Không có lượt đánh giá ⇒ không in gì (không bịa số).
+		{%- endcomment -%}
+		{%- if pc_card_rating and product.metafields.bpr.votes > 0 -%}
+		{%- assign pc_rating_pct = product.metafields.bpr.rating | times: 20 -%}
+		<div class="pc-card-rating" title="{{ product.metafields.bpr.rating }}/5">
+			<span class="pc-card-rating__stars" style="--pc-rating: {{ pc_rating_pct }}%" aria-label="Đánh giá {{ product.metafields.bpr.rating }} trên 5"></span>
+			<span class="pc-card-rating__count">({{ product.metafields.bpr.votes }})</span>
+		</div>
+		{%- endif -%}
 		<div class="product-price-cart">
 			{%- if pc_is_rx -%}
 			<span class="price pc-price--rx">{{ settings.product_rx_card_label | default: 'Liên hệ tư vấn' }}</span>

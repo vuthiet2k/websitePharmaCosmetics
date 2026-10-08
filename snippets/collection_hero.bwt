@@ -1,0 +1,59 @@
+{%- comment -%}
+  snippets/collection_hero.bwt — 2026-10-08: banner đầu trang danh mục theo thiết kế người dùng gửi
+  (tiêu đề + mô tả + 4 cam kết, ảnh sản phẩm bên phải). Mọi chữ/ảnh lấy từ Admin › Trang danh mục ›
+  "Banner đầu trang danh mục". Tiêu đề banner KHÔNG phải <h1> — H1 của trang vẫn là tên danh mục.
+  Chưa tải ảnh ⇒ chỉ còn nền xanh nhạt + hoạ tiết lá vẽ bằng SVG (không dùng ảnh mẫu/stock).
+{%- endcomment -%}
+{%- if settings.collection_hero_enable != false -%}
+<section class="pc-col-hero" aria-label="{{ settings.collection_hero_title | default: 'Sản phẩm chăm sóc da chính hãng' | escape }}">
+	<svg class="pc-col-hero__leaf pc-col-hero__leaf--left" width="180" height="200" viewBox="0 0 180 200" fill="none" aria-hidden="true" focusable="false">
+		<path d="M20 196C52 150 78 104 98 30" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+		<path d="M98 30c-26 2-42 22-36 46 24-4 38-22 36-46Z" fill="currentColor" opacity=".55"/>
+		<path d="M86 66c-30-6-52 8-56 34 26 6 48-8 56-34Z" fill="currentColor" opacity=".45"/>
+		<path d="M74 104c28-16 54-10 66 14-26 12-52 6-66-14Z" fill="currentColor" opacity=".4"/>
+		<path d="M58 136c-28-4-48 12-50 36 26 2 44-12 50-36Z" fill="currentColor" opacity=".35"/>
+		<path d="M48 160c24-14 48-8 58 14-24 10-46 4-58-14Z" fill="currentColor" opacity=".3"/>
+	</svg>
+	<div class="pc-col-hero__body">
+		<p class="pc-col-hero__title">{{ settings.collection_hero_title | default: 'Sản phẩm chăm sóc da chính hãng' }}</p>
+		{%- if settings.collection_hero_subtitle != blank -%}
+		<p class="pc-col-hero__sub">{{ settings.collection_hero_subtitle }}</p>
+		{%- endif -%}
+		<ul class="pc-col-hero__usps">
+			{%- for i in (1..4) -%}
+			{%- capture usp_t -%}collection_hero_usp_{{ i }}_title{%- endcapture -%}
+			{%- capture usp_d -%}collection_hero_usp_{{ i }}_desc{%- endcapture -%}
+			{%- if settings[usp_t] != blank -%}
+			<li class="pc-col-hero__usp">
+				<span class="pc-col-hero__usp-ico" aria-hidden="true">
+					{%- case i -%}
+					{%- when 1 -%}<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6L12 3Z"/><path d="m8.8 12 2.2 2.2 4.2-4.4"/></svg>
+					{%- when 2 -%}<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a8 8 0 0 1-11.6 7.1L4 20l1.4-4.2A8 8 0 1 1 20 11.5Z"/><path d="M9 11.5h.01M12.5 11.5h.01M16 11.5h.01"/></svg>
+					{%- when 3 -%}<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v10H3zM14 9h4l3 3.5V16h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17.5" cy="17.5" r="1.8"/></svg>
+					{%- else -%}<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11h16v9H4zM3 7h18v4H3zM12 7v13"/><path d="M12 7C10.5 4 7 4 7 6s3 1 5 1c2 0 5 1 5-1s-3.5-2-5 1Z"/></svg>
+					{%- endcase -%}
+				</span>
+				<span class="pc-col-hero__usp-text">
+					<strong>{{ settings[usp_t] }}</strong>
+					{%- if settings[usp_d] != blank -%}<small>{{ settings[usp_d] }}</small>{%- endif -%}
+				</span>
+			</li>
+			{%- endif -%}
+			{%- endfor -%}
+		</ul>
+	</div>
+	{%- if settings.collection_hero_image != blank -%}
+	<div class="pc-col-hero__media">
+		<img src="{{ settings.collection_hero_image | img_url: 'master' }}" width="560" height="280" alt="{{ settings.collection_hero_title | default: 'Sản phẩm chăm sóc da chính hãng' | escape }}" fetchpriority="high">
+	</div>
+	{%- else -%}
+	<svg class="pc-col-hero__leaf pc-col-hero__leaf--right" width="180" height="200" viewBox="0 0 180 200" fill="none" aria-hidden="true" focusable="false">
+		<path d="M160 196C128 150 102 104 82 30" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+		<path d="M82 30c26 2 42 22 36 46-24-4-38-22-36-46Z" fill="currentColor" opacity=".5"/>
+		<path d="M94 66c30-6 52 8 56 34-26 6-48-8-56-34Z" fill="currentColor" opacity=".4"/>
+		<path d="M106 104c-28-16-54-10-66 14 26 12 52 6 66-14Z" fill="currentColor" opacity=".35"/>
+		<path d="M122 136c28-4 48 12 50 36-26 2-44-12-50-36Z" fill="currentColor" opacity=".3"/>
+	</svg>
+	{%- endif -%}
+</section>
+{%- endif -%}

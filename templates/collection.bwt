@@ -10,9 +10,49 @@
 <div class="layout-collection">
 	{% include 'breadcrumb' %}  
 	<div class="container">
+		{%- include 'collection_hero' -%}
 		<div class="row">
-			{%if settings.aside_coupon_enable%}
+			{%if settings.aside_category_enable_bot%}
 			<div class="col-12">
+				<div class="col-list-cate">
+					{%include 'menu-col-cate'%}
+				</div>
+			</div>
+			{%endif%}
+			<aside class="dqdt-sidebar left-content  col-lg-3 col-12">
+				<div class="close-filters d-lg-none d-xl-none" title="Đóng bộ lọc">
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+						<path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
+					</svg>
+				</div>
+				<div class="section-box-bg">
+					{%- include 'sidebar-collection' -%}
+				{%- comment -%} 2026-10-08: câu trang trí cuối cột lọc theo thiết kế (Admin › Trang danh mục › Câu trang trí cuối cột lọc). {%- endcomment -%}
+				{%- if settings.collection_sidebar_quote != blank -%}
+				<div class="pc-col-aside-quote" aria-hidden="true">
+					<svg class="pc-col-aside-quote__leaf" width="120" height="120" viewBox="0 0 180 200" fill="none" focusable="false"><path d="M20 196C52 150 78 104 98 30" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M98 30c-26 2-42 22-36 46 24-4 38-22 36-46Z" fill="currentColor" opacity=".55"/><path d="M86 66c-30-6-52 8-56 34 26 6 48-8 56-34Z" fill="currentColor" opacity=".45"/><path d="M74 104c28-16 54-10 66 14-26 12-52 6-66-14Z" fill="currentColor" opacity=".4"/><path d="M58 136c-28-4-48 12-50 36 26 2 44-12 50-36Z" fill="currentColor" opacity=".35"/></svg>
+					<p>{{ settings.collection_sidebar_quote }} <span>&#9825;</span></p>
+				</div>
+				{%- endif -%}
+				</div>
+			</aside>
+			<div class="block-collection col-lg-9 col-12">
+				{%- comment -%}
+					2026-10-08 (thiết kế trang danh mục): hàng đầu cột phải = thẻ giới thiệu danh mục + các Mã giảm giá
+					(trước đây Mã giảm giá trải full-width phía trên cả cột lọc). Thẻ giới thiệu lấy đoạn đầu mô tả danh mục
+					thật; danh mục chưa có mô tả thì dùng settings.collection_intro_text. Không phải heading — H1 nằm ở thẻ dưới.
+				{%- endcomment -%}
+				{%- assign pc_col_label = collection.name -%}
+				{%- if collection.name == 'All' or collection.name == blank -%}{%- assign pc_col_label = 'Tất cả sản phẩm' -%}{%- endif -%}
+				{%- assign pc_col_intro = collection.description | split: '<h5>' | first | strip_html | strip_newlines | truncatewords: 26 -%}
+				{%- if pc_col_intro == blank -%}{%- assign pc_col_intro = settings.collection_intro_text -%}{%- endif -%}
+				<div class="pc-col-top{% if settings.aside_coupon_enable %} has-coupons{% endif %}">
+					<div class="pc-col-intro">
+						<p class="pc-col-intro__title">{{ pc_col_label }}</p>
+						{%- if pc_col_intro != blank -%}<p class="pc-col-intro__text">{{ pc_col_intro }}</p>{%- endif -%}
+					</div>
+					{%if settings.aside_coupon_enable%}
+					<div class="pc-col-coupons">
 				<div class="section_coupons">
 					<div class="swiper_coupons swiper-container">
 						<div class="swiper-wrapper">
@@ -88,27 +128,12 @@
 						</ul>
 					</div>
 				</div>
-			</div>
-			{%endif%}
-			{%if settings.aside_category_enable_bot%}
-			<div class="col-12">
-				<div class="col-list-cate">
-					{%include 'menu-col-cate'%}
+					</div>
+					{%endif%}
 				</div>
-			</div>
-			{%endif%}
-			<aside class="dqdt-sidebar left-content  col-lg-3 col-12">
-				<div class="close-filters d-lg-none d-xl-none" title="Đóng bộ lọc">
-					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
-						<path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
-					</svg>
-				</div>
-				<div class="section-box-bg">
-					{%- include 'sidebar-collection' -%}
-				</div>
-			</aside>
-			<div class="block-collection col-lg-9 col-12">
+				<div class="pc-col-main">
 				<h1 class="title-page">
+					<svg class="title-page__leaf" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M20.5 3.5C11 3.5 4.5 8.6 4.5 15.4c0 1.6.4 3 1 4.2.4-3.6 3.2-7.4 7.8-9.7-3.7 2.8-6 6.4-6.6 10.4 1.1.5 2.4.7 3.7.7 6.8 0 10.1-7.5 10.1-17.5Z"/></svg>
 					<span>{%if collection.name == 'All'%}Tất cả sản phẩm{%else%}{{ collection.name }}{%endif%}</span></h1>
 
 				{%- comment -%}
@@ -143,6 +168,7 @@
 						Sản phẩm đang được cập nhật.
 					</div>
 					{% endif %}
+				</div>
 				</div>
 				</div>
 				<div class="col-box-content">
@@ -211,8 +237,9 @@
 	var swiper_coupons = null;
 	function initSwiperCoupons() {
 		swiper_coupons = new Swiper('.swiper_coupons', {
-			slidesPerView: 4,
-			spaceBetween: 16,
+			/* 2026-10-08: mã giảm giá nằm cạnh thẻ giới thiệu trong cột phải ⇒ tối đa 3 thẻ/hàng. */
+			slidesPerView: 3,
+			spaceBetween: 12,
 			watchOverflow: true,
 			slidesPerGroup: 1,
 			navigation: {
@@ -229,16 +256,12 @@
 					spaceBetween: 14
 				},
 				992: {
-					slidesPerView: 2.5,
-					spaceBetween: 20
-				},
-				1024: {
-					slidesPerView: 3,
-					spaceBetween: 16
+					slidesPerView: 2,
+					spaceBetween: 12
 				},
 				1200: {
-					slidesPerView: 4,
-					spaceBetween: 16
+					slidesPerView: 3,
+					spaceBetween: 12
 				}
 			}
 		});

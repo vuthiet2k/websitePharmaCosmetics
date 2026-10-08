@@ -1,10 +1,40 @@
 <div class="sort-cate clearfix">
+	{%- comment -%}
+	  2026-10-08 (thiết kế trang danh mục): hàng công cụ = số sản phẩm | ô chọn sắp xếp + nút lưới/danh sách;
+	  các nút sắp xếp nhanh (pill) ở hàng dưới. Ô chọn và pill gọi cùng sortby() trong col.js.
+	  Chế độ lưới/danh sách lưu theo từng trình duyệt (localStorage) qua thuộc tính html[data-pc-view],
+	  nằm ngoài #ajax-result nên không mất khi lọc AJAX.
+	{%- endcomment -%}
 	{%- assign _result_count = paginate.items | default: collection.products_count | default: search.results_count -%}
+	<div class="sort-cate-bar">
 	{%- if _result_count > 0 -%}
 	<div class="sort-cate-count">
 		<span class="sort-count-num">{{ _result_count }}</span> sản phẩm
 	</div>
 	{%- endif -%}
+	<div class="sort-cate-tools">
+		<label class="sort-cate-select">
+			<span class="sr-only">Sắp xếp</span>
+			<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M3.5 2.5a.5.5 0 0 0-1 0v9.8l-1.15-1.15a.5.5 0 0 0-.7.7l2 2a.5.5 0 0 0 .7 0l2-2a.5.5 0 0 0-.7-.7L3.5 12.3V2.5ZM7 3.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5Zm0 3a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5Zm0 3a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5Z"/></svg>
+			<select class="sort-cate-select__input" onchange="sortby(this.value)" aria-label="Sắp xếp">
+				<option value="default">Sắp xếp</option>
+				<option value="alpha-asc">Tên A-Z</option>
+				<option value="alpha-desc">Tên Z-A</option>
+				<option value="created-desc">Hàng mới</option>
+				<option value="price-asc">Giá thấp đến cao</option>
+				<option value="price-desc">Giá cao xuống thấp</option>
+			</select>
+		</label>
+		<div class="pc-view-toggle" role="group" aria-label="Kiểu hiển thị">
+			<button type="button" class="pc-view-toggle__btn" data-pc-view="grid" aria-pressed="true" title="Dạng lưới">
+				<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg>
+			</button>
+			<button type="button" class="pc-view-toggle__btn" data-pc-view="list" aria-pressed="false" title="Dạng danh sách">
+				<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><rect x="1" y="2" width="3" height="3" rx="1"/><rect x="6" y="2.5" width="9" height="2" rx="1"/><rect x="1" y="6.5" width="3" height="3" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="1" y="11" width="3" height="3" rx="1"/><rect x="6" y="11.5" width="9" height="2" rx="1"/></svg>
+			</button>
+		</div>
+	</div>
+	</div>
 	<div class="sort-cate-right">
 		<h3>
 			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-sort-alpha-down" viewBox="0 0 16 16">
@@ -55,6 +85,33 @@
 	document.querySelectorAll('.btn-quick-sort[data-sort]').forEach(function (li) {
 		li.classList.toggle('active', li.dataset.sort === _sv);
 	});
+	document.querySelectorAll('.sort-cate-select__input').forEach(function (sel) { sel.value = _sv; });
+
+	/* 2026-10-08: nút lưới/danh sách — trạng thái ở html[data-pc-view], nhớ theo trình duyệt. */
+	var root = document.documentElement;
+	if (!root.hasAttribute('data-pc-view')) {
+		var saved = 'grid';
+		try { saved = localStorage.getItem('pc_collection_view') === 'list' ? 'list' : 'grid'; } catch (e) {}
+		root.setAttribute('data-pc-view', saved);
+	}
+	function syncViewButtons() {
+		var cur = root.getAttribute('data-pc-view');
+		document.querySelectorAll('.pc-view-toggle__btn').forEach(function (b) {
+			b.setAttribute('aria-pressed', b.getAttribute('data-pc-view') === cur ? 'true' : 'false');
+		});
+	}
+	syncViewButtons();
+	if (!window.__pcViewToggleBound) {
+		window.__pcViewToggleBound = true;
+		document.addEventListener('click', function (ev) {
+			var btn = ev.target.closest && ev.target.closest('.pc-view-toggle__btn');
+			if (!btn) return;
+			var v = btn.getAttribute('data-pc-view') === 'list' ? 'list' : 'grid';
+			root.setAttribute('data-pc-view', v);
+			try { localStorage.setItem('pc_collection_view', v); } catch (e) {}
+			syncViewButtons();
+		});
+	}
 })();
 
 function countFilterItem() {

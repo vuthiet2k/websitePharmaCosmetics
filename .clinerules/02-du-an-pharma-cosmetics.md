@@ -416,6 +416,18 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
   THÊM GIỎ HÀNG = Deep Forest solid `--pc-brand-deep` (hover `--pc-brand-dark`).
 - Không dùng `{% continue %}` trong Liquid (chưa kiểm chứng trên Sapo) — dùng `if` lồng.
 
+## Trang danh mục (`templates/collection.bwt`, dựng theo thiết kế 2026-10-08)
+
+- Thứ tự: breadcrumb → banner `snippets/collection_hero.bwt` (`collection_hero_*`: tiêu đề, mô tả, ảnh phải,
+  4 cam kết; tiêu đề banner là `<p>`, H1 vẫn là tên danh mục) → hàng 2 cột.
+- Cột trái: thẻ trắng chứa bộ lọc + câu trang trí `collection_sidebar_quote` (ẩn ở mobile).
+- Cột phải: `.pc-col-top` = thẻ giới thiệu (đoạn đầu mô tả danh mục, rỗng thì `collection_intro_text`) + swiper Mã
+  giảm giá (tối đa 3 thẻ/hàng, không in HSD trên thẻ) → thẻ `.pc-col-main`: H1 có lá → `collection_subnav` →
+  `collection-sortby` (số SP | ô chọn sắp xếp + nút lưới/danh sách; hàng pill) → lưới SP.
+- Thẻ SP ở danh mục/kết quả lọc bật `pc_card_rating` ⇒ sao chỉ hiện khi `product.metafields.bpr.votes > 0`.
+- Chế độ danh sách: `html[data-pc-view]` + localStorage `pc_collection_view`, chỉ từ 768px; mobile luôn lưới.
+- CSS ở cuối `assets/page_collection.scss.bwt` (khối "2026-10-08 — Trang danh mục theo thiết kế").
+
 ## Trang Trước & Sau (`templates/page.clinical-proof.bwt`, dựng lại theo thiết kế 2026-10-07)
 
 - Câu chữ/link/ảnh hero: field `clinical_*` (Theme Settings → "Trang Trước & Sau"); header/footer dùng layout chung.
