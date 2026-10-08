@@ -349,7 +349,10 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
   (không lặp lại chính màu nền).
 - Topbar: thông báo phân tách bằng `;`, chuyển dọc 600ms mỗi 4s, dừng khi hover và tắt autoplay theo
   `prefers-reduced-motion`; icon phone/user/chevron dùng SVG inline, kế thừa `currentColor` (trắng).
-- Footer dùng Logo Master SVG chung với header, kế thừa `currentColor` (trắng) qua `.pc-footer-logo`.
+- **Logo gốc của dự án = `assets/PharmaCosmetics.svg`** (chốt 2026-10-08): header, drawer mobile và footer
+  đều dùng file này khi tắt cờ `header_logo_use_image`/`footer_logo_use_image` (mặc định tắt). Footer nền
+  xanh đổi logo sang trắng bằng `.pc-logo-root--inverse` (CSS filter). `snippets/logo-master-svg.bwt` không còn
+  là logo mặc định.
 - Khi đổi một màu nền/chữ theo yêu cầu mới, chỉ đổi đúng giá trị được yêu cầu — không tự suy ra và đổi
   thêm màu khác "cho đủ AA" nếu không được hỏi trước (xem mục 7); nếu phát hiện contrast dưới AA thì
   báo cho người dùng biết, không tự ý sửa.
