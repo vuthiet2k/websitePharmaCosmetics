@@ -47,6 +47,7 @@ const UI_ICON_WHITELIST = new Set([
   'tiktok.svg',
   'whatsapp.svg',
   'logoPC.svg',
+  'PharmaCosmetics.svg',
 ]);
 
 // Trần dung lượng cho mỗi ảnh được phép nằm trong assets/.
