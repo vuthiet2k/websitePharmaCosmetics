@@ -150,6 +150,9 @@ Mỗi lần tải lên Sapo chỉ báo 1 lỗi đầu tiên ⇒ mọi quy tắc 
 - 3 thành phần: Tag `{% ... %}`, Object `{{ ... }}`, Filter `{{ x | filter }}`.
 - **Chuỗi rỗng `""` vẫn là TRUE**; chỉ `false`/`null` là false ⇒ luôn dùng `{% if x != blank %}`,
   `{% unless settings.k == blank %}` thay vì `{% if x %}` khi xét nội dung.
+- `blank`/`empty` **chỉ dùng để so sánh** (`== blank`, `!= blank`). Không gán làm giá trị (`assign x = blank`),
+  không truyền vào filter hay `linklists[...]`: DotLiquid của Sapo báo lỗi "Đối tượng 'DotLiquid.Util.Symbol' không
+  hợp lệ". Cần khởi tạo rỗng thì dùng `assign x = ''`.
 - Nhúng snippet: `{% include 'ten-snippet' %}` (không đuôi `.bwt`). Kiểm tra template bằng `contains`
   (`{% if template contains 'product' %}`).
 - Alias/Handle: kebab-case không dấu (`handleize`).
