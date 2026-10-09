@@ -20,6 +20,8 @@ nên phạm vi rộng hơn: gom cả sản phẩm ghi công dụng ("trị mụn
 
 - Tối đa **5 điều kiện** mỗi danh mục.
 - Chế độ **"Một trong các điều kiện"**, mọi dòng là **Tên sản phẩm** + **chứa từ**.
+- **"Chứa từ" không phân biệt hoa/thường.** Đã đối chiếu ngày 10/10/2026 trên 8 danh mục phác đồ đã tạo: số sản phẩm thực tế
+  khớp cách đếm không phân biệt hoa/thường. Vì vậy `Mụn` cũng bắt được tên viết hoa "MỤN".
 - Ở chế độ này Sapo **không cho** thêm điều kiện "không chứa từ" để loại trừ. Vì vậy mỗi danh mục vẫn còn một ít sản phẩm
   lạc nhóm (viên uống, sữa tắm, dầu gội…), số lượng ghi ở cột "Lạc nhóm" từng danh mục.
 - **Alias không được trùng.** Cửa hàng đã có sẵn các danh mục `mun-trung-ca-acne`, `nam-va-tan-nhang-melasma-freckles`,
