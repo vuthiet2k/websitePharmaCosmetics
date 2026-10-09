@@ -10,15 +10,31 @@
         {% capture label %}home_solutions_{{ i }}_label{% endcapture %}
         {% capture icon %}home_solutions_{{ i }}_icon{% endcapture %}
         {% capture query %}home_solutions_{{ i }}_url{% endcapture %}
+        {% capture image %}home_solutions_{{ i }}_image{% endcapture %}
+        {% capture col_key %}home_solutions_{{ i }}_collection{% endcapture %}
         {%- comment -%}
           2026-10-08: thẻ luôn mở trang tìm kiếm theo "Từ khoá tìm kiếm" (home_solutions_N_url; trống ⇒ tên thẻ) như
           Admin mô tả. Bỏ đọc home_solutions_N_link: trường này không có trong schema (Admin không thấy/không sửa
           được) nhưng lại đè lên từ khoá, khiến thẻ nhảy sang các danh mục lệch nội dung (vd "Da nhạy cảm" → /dieu-tri-chuyen-nghiep).
+          2026-10-09: ưu tiên danh mục tự động theo vấn đề da (home_solutions_N_collection, đặc tả docs/Đặc tả Danh mục
+          Vấn đề Da Trang chủ…) — danh mục chưa tạo/trống thì quay về trang tìm kiếm theo từ khoá như cũ. Có ảnh tải
+          lên (home_solutions_N_image) thì hiện ảnh thay icon; không có ảnh mới dùng icon (home_solutions_N_icon).
         {%- endcomment -%}
         {% unless settings[enabled] == false or settings[enabled] == 'false' %}
           {% if settings[label] != blank %}
-          {% capture search_url %}/search?query={{ settings[query] | default: settings[label] | url_encode }}&type=product{% endcapture %}
-          <a class="concern" href="{{ search_url | escape }}"><i class="{{ settings[icon] | default: 'fas fa-spa' | escape }}" aria-hidden="true"></i><span>{{ settings[label] | escape }}</span></a>
+          {% capture sol_url %}/search?query={{ settings[query] | default: settings[label] | url_encode }}&type=product{% endcapture %}
+          {% if settings[col_key] != blank %}
+            {% assign sol_col = collections[settings[col_key]] %}
+            {% if sol_col.products_count > 0 %}{% assign sol_url = sol_col.url %}{% endif %}
+          {% endif %}
+          <a class="concern" href="{{ sol_url | escape }}">
+            {%- if settings[image] != blank -%}
+            <img class="concern-img" src="{{ settings[image] | img_url: 'compact' }}" alt="{{ settings[label] | escape }}" width="48" height="48" loading="lazy">
+            {%- else -%}
+            <i class="{{ settings[icon] | default: 'fas fa-spa' | escape }}" aria-hidden="true"></i>
+            {%- endif -%}
+            <span>{{ settings[label] | escape }}</span>
+          </a>
           {% endif %}
         {% endunless %}
       {% endfor %}

@@ -242,6 +242,14 @@ const collectionsData = {
   'retinol-chong-lao-hoa':           makeShell(4365309, 'Điều Trị Chuyên Sâu Retinoid & Chống Lão Hóa', 'retinol-chong-lao-hoa', 514),
   'tri-nam-sang-da-tranexamic-vitc': makeShell(null, 'Mờ Thâm Nám & Hoạt Chất Sáng Da', 'tri-nam-sang-da-tranexamic-vitc', 293),
   'kem-chong-nang-pho-rong':         makeShell(4365311, 'Chống Nắng Phổ Rộng & Bảo Vệ Toàn Diện', 'kem-chong-nang-pho-rong', 260),
+  // 2026-10-09: 6 danh mục theo vấn đề da cho khối "Giải pháp" trang chủ (settings.home_solutions_N_collection) —
+  // CHƯA tạo trên Sapo; trên web thật thẻ tự quay về tìm kiếm tới khi tạo. Số SP ước lượng từ đặc tả.
+  'giai-phap-mun-trung-ca':          makeShell(null, 'Giải Pháp Mụn Trứng Cá', 'giai-phap-mun-trung-ca', 774),
+  'giai-phap-nam-tan-nhang':         makeShell(null, 'Giải Pháp Nám & Tàn Nhang', 'giai-phap-nam-tan-nhang', 423),
+  'giai-phap-da-kho-thieu-am':       makeShell(null, 'Giải Pháp Da Khô, Thiếu Ẩm', 'giai-phap-da-kho-thieu-am', 296),
+  'giai-phap-lao-hoa-da':            makeShell(null, 'Giải Pháp Lão Hóa Da', 'giai-phap-lao-hoa-da', 908),
+  'giai-phap-kiem-soat-dau-thua':    makeShell(null, 'Giải Pháp Kiểm Soát Dầu Thừa', 'giai-phap-kiem-soat-dau-thua', 292),
+  'giai-phap-da-nhay-cam':           makeShell(null, 'Giải Pháp Da Nhạy Cảm', 'giai-phap-da-nhay-cam', 459),
   'sesderma':              makeShell(4239895, 'SESDERMA', 'sesderma', 47,
     { image: 'https://bizweb.dktcdn.net/100/415/053/collections/images.png?v=1760084339353' }),
 
