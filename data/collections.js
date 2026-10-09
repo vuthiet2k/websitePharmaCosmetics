@@ -243,13 +243,13 @@ const collectionsData = {
   'tri-nam-sang-da-tranexamic-vitc': makeShell(4365310, 'Mờ Thâm Nám & Hoạt Chất Sáng Da', 'tri-nam-sang-da-tranexamic-vitc', 310),
   'kem-chong-nang-pho-rong':         makeShell(4365311, 'Chống Nắng Phổ Rộng & Bảo Vệ Toàn Diện', 'kem-chong-nang-pho-rong', 377),
   // 2026-10-09: 6 danh mục theo vấn đề da cho khối "Giải pháp" trang chủ (settings.home_solutions_N_collection) —
-  // CHƯA tạo trên Sapo; trên web thật thẻ tự quay về tìm kiếm tới khi tạo. Số SP ước lượng từ đặc tả.
-  'giai-phap-mun-trung-ca':          makeShell(null, 'Giải Pháp Mụn Trứng Cá', 'giai-phap-mun-trung-ca', 774),
-  'giai-phap-nam-tan-nhang':         makeShell(null, 'Giải Pháp Nám & Tàn Nhang', 'giai-phap-nam-tan-nhang', 423),
-  'giai-phap-da-kho-thieu-am':       makeShell(null, 'Giải Pháp Da Khô, Thiếu Ẩm', 'giai-phap-da-kho-thieu-am', 296),
-  'giai-phap-lao-hoa-da':            makeShell(null, 'Giải Pháp Lão Hóa Da', 'giai-phap-lao-hoa-da', 908),
-  'giai-phap-kiem-soat-dau-thua':    makeShell(null, 'Giải Pháp Kiểm Soát Dầu Thừa', 'giai-phap-kiem-soat-dau-thua', 292),
-  'giai-phap-da-nhay-cam':           makeShell(null, 'Giải Pháp Da Nhạy Cảm', 'giai-phap-da-nhay-cam', 459),
+  // tạo trên Sapo 10/10/2026; ID theo nhật ký, số SP đếm trên web 10/10/2026.
+  'giai-phap-mun-trung-ca':          makeShell(4365331, 'Giải Pháp Mụn Trứng Cá', 'giai-phap-mun-trung-ca', 794),
+  'giai-phap-nam-tan-nhang':         makeShell(4365315, 'Giải Pháp Nám & Tàn Nhang', 'giai-phap-nam-tan-nhang', 441),
+  'giai-phap-da-kho-thieu-am':       makeShell(4365316, 'Giải Pháp Da Khô, Thiếu Ẩm', 'giai-phap-da-kho-thieu-am', 317),
+  'giai-phap-lao-hoa-da':            makeShell(4365327, 'Giải Pháp Lão Hóa Da', 'giai-phap-lao-hoa-da', 933),
+  'giai-phap-kiem-soat-dau-thua':    makeShell(4365332, 'Giải Pháp Kiểm Soát Dầu Thừa', 'giai-phap-kiem-soat-dau-thua', 311),
+  'giai-phap-da-nhay-cam':           makeShell(4365329, 'Giải Pháp Da Nhạy Cảm', 'giai-phap-da-nhay-cam', 487),
   'sesderma':              makeShell(4239895, 'SESDERMA', 'sesderma', 47,
     { image: 'https://bizweb.dktcdn.net/100/415/053/collections/images.png?v=1760084339353' }),
 
