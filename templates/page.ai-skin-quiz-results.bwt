@@ -82,7 +82,20 @@
     {%- if pc_rc.products_count > 0 -%}
     {%- unless pc_rc_first %},{% endunless -%}
     {%- assign pc_rc_first = false %}
-    {{ pc_rc_kv.first | json }}: { "url": {{ pc_rc.url | json }}, "title": {{ pc_rc.name | json }}, "count": {{ pc_rc.products_count | json }} }
+    {{ pc_rc_kv.first | json }}: { "url": {{ pc_rc.url | json }}, "title": {{ pc_rc.name | json }}, "count": {{ pc_rc.products_count | json }}, "products": [
+      {%- comment -%} 2026-10-10: tối đa 8 SP (bỏ kê toa) mỗi danh mục làm nguồn "Sản phẩm đề xuất" theo đúng hoạt chất/giai đoạn. {%- endcomment -%}
+      {%- assign pc_rcp_n = 0 -%}
+      {%- for product in pc_rc.products limit: 16 -%}
+      {%- if pc_rcp_n < 8 -%}
+      {%- include 'pc_is_rx' -%}
+      {%- unless pc_is_rx -%}
+      {%- if pc_rcp_n > 0 %},{% endif -%}
+      {%- assign pc_rcp_n = pc_rcp_n | plus: 1 %}
+      { "name": {{ product.name | json }}, "alias": {{ product.alias | json }}, "url": {{ product.url | json }}, "tags": {{ product.tags | json }}, "price": {{ product.price | default: 0 | json }}, "compare_at_price": {{ product.compare_at_price | default: 0 | json }}, "featured_image": {% if product.featured_image.src != blank %}{ "src": {{ product.featured_image.src | img_url: 'large' | json }} }{% else %}null{% endif %} }
+      {%- endunless -%}
+      {%- endif -%}
+      {%- endfor %}
+    ] }
     {%- endif -%}
     {%- endfor %}
   };
@@ -116,7 +129,7 @@
       </div>
 
       <!-- 2. Thẻ Thông Tin Khách Hàng & Trạng Thái Đồng Bộ GAS CRM -->
-      <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200/90" data-customer-card>
+      <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200/90" data-customer-card data-result-section>
         <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-5 mb-5 border-b border-gray-100 gap-3">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg font-bold">
@@ -158,8 +171,8 @@
         </div>
       </div>
 
-      <!-- 3. Hồ Sơ Da Tổng Quan -->
-      <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200/90">
+      <!-- 3. Hồ Sơ Da Tổng Quan (2026-10-10: chưa có dữ liệu ⇒ khối này hiện trạng thái "chưa có hồ sơ", giữ h1 duy nhất) -->
+      <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200/90" data-result-profile>
         <div class="flex items-center gap-3 mb-4">
           <span class="pc-kit-badge-clinical text-xs font-semibold" data-result-demo-flag hidden>Bản xem trước minh hoạ</span>
           <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200" data-result-verified-badge>
@@ -170,10 +183,18 @@
           Hồ Sơ Da Của Bạn: <span data-result-title>—</span>
         </h1>
         <p class="text-sm text-gray-600 leading-relaxed" data-result-summary>Đang tải kết quả…</p>
+        <div class="pt-5 flex flex-col sm:flex-row gap-3" data-result-empty hidden>
+          <a href="/ai-skin-quiz" class="pc-kit-btn-primary px-6 py-3.5 text-sm font-bold justify-center" data-result-empty-quiz>
+            <i class="fas fa-comments" aria-hidden="true"></i> {{ settings.skin_result_empty_quiz_label | default: 'Khảo sát da qua chat' | escape }}
+          </a>
+          <a href="/ai-skin-quiz?tab=camera" class="pc-kit-btn-secondary px-6 py-3.5 text-sm font-bold justify-center" data-result-empty-scan>
+            <i class="fas fa-camera" aria-hidden="true"></i> {{ settings.skin_result_empty_scan_label | default: 'Soi da AI bằng camera' | escape }}
+          </a>
+        </div>
       </div>
 
       <!-- 4. Hoạt Chất Đề Xuất & Định Hướng Phác Đồ -->
-      <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200/90 space-y-6">
+      <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200/90 space-y-6" data-result-section>
         <div class="flex items-center justify-between pb-4 border-b border-gray-100">
           <div>
             <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider block">HOẠT CHẤT ĐƯỢC ĐỀ XUẤT</span>
@@ -243,13 +264,13 @@
       </div>
 
       <!-- 5. BỔ SUNG SECTION 1: Sản Phẩm Sapo Phù Hợp Nền Da -->
-      <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200/90 space-y-6" data-result-products-section>
+      <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200/90 space-y-6" data-result-products-section data-result-section>
         <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-2">
           <div>
             <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider block">DƯỢC MỸ PHẨM CHÍNH HÃNG</span>
             <h3 class="text-lg font-bold text-forest-900 font-heading">Sản Phẩm Đề Xuất Phù Hợp Nền Da</h3>
           </div>
-          <a href="/collections/all" class="text-xs font-bold text-emerald-700 hover:text-emerald-800 inline-flex items-center gap-1">
+          <a href="/collections/all" class="text-xs font-bold text-emerald-700 hover:text-emerald-800 inline-flex items-center gap-1" data-products-all-link>
             Xem tất cả sản phẩm <i class="fas fa-chevron-right text-[10px]"></i>
           </a>
         </div>
@@ -265,7 +286,7 @@
       </div>
 
       <!-- 6. BỔ SUNG SECTION 2: Bài Viết Chuyên Gia Khuyên Đọc Từ Sapo Blog -->
-      <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200/90 space-y-6" data-result-blogs-section>
+      <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200/90 space-y-6" data-result-blogs-section data-result-section>
         <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-2">
           <div>
             <span class="text-xs font-bold text-teal-700 uppercase tracking-wider block">GÓC CHUYÊN GIA PHARMA COSMETICS</span>
@@ -286,7 +307,7 @@
       </div>
 
       <!-- 7. Hành Động Tiếp Theo -->
-      <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200/90 space-y-5">
+      <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200/90 space-y-5" data-result-section>
         <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider">Hành Động Khuyên Dùng</h3>
         <div class="flex flex-col sm:flex-row gap-4">
           <a class="flex-1 pc-kit-btn-primary py-3.5 text-center justify-center font-bold shadow-sm" data-result-search-link href="/search">
@@ -388,10 +409,31 @@
     root.querySelector('[data-result-title]').textContent = (quizResult && quizResult.tier === 1)
       ? (safety.redFlagTitle || result.skin_type)
       : (quizCase ? quizCase.title : result.skin_type);
-    root.querySelector('[data-result-summary]').textContent = isDemo
-      ? 'Đây là ví dụ minh hoạ giao diện kết quả — hãy làm bài khảo sát câu hỏi hoặc soi da để nhận gợi ý chuẩn xác nhất cho bạn.'
-      : 'Dựa trên câu trả lời thực tế của bạn ở bài khảo sát câu hỏi.';
+    root.querySelector('[data-result-summary]').textContent = 'Dựa trên câu trả lời thực tế của bạn ở bài khảo sát câu hỏi.';
   }
+
+  // ── 2026-10-10: CHƯA CÓ DỮ LIỆU ⇒ "chưa có hồ sơ" + mời khảo sát chat / soi da (thay bản minh hoạ cũ) ──
+  // Người dùng yêu cầu: trang kết quả không có dữ liệu thì phải báo chưa có hồ sơ và mời tạo ngay; có dữ liệu
+  // (trên thiết bị hoặc hồ sơ CRM khớp mã của thiết bị) mới hiện thông tin hồ sơ + gợi ý sản phẩm.
+  var emptyCopy = {
+    title: {{ settings.skin_result_empty_title | default: 'Bạn chưa có hồ sơ chăm sóc da' | json }},
+    text: {{ settings.skin_result_empty_text | default: 'Làm khảo sát qua chat hoặc soi da AI bằng camera để nhận phác đồ và gợi ý sản phẩm đúng với làn da của bạn.' | json }},
+    existsText: {{ settings.skin_result_empty_exists_text | default: 'Tài khoản của bạn đã có hồ sơ chăm sóc da, nhưng thiết bị này chưa có kết quả để hiển thị. Làm lại khảo sát hoặc soi da để xem phác đồ và gợi ý sản phẩm mới nhất.' | json }}
+  };
+  function showEmptyState() {
+    root.querySelectorAll('[data-result-section]').forEach(function (s) { s.hidden = true; });
+    var profile = root.querySelector('[data-result-profile]');
+    if (profile) {
+      var h1 = profile.querySelector('h1');
+      if (h1) h1.textContent = emptyCopy.title;
+      var verified = profile.querySelector('[data-result-verified-badge]');
+      if (verified) verified.hidden = true;
+      profile.querySelector('[data-result-summary]').textContent = emptyCopy.text;
+      profile.querySelector('[data-result-empty]').hidden = false;
+    }
+    if (demoFlag) demoFlag.hidden = true;
+  }
+  if (isDemo) showEmptyState();
 
   // ── 2026-10-09: badge hoạt chất / thẻ giai đoạn → danh mục tự động trên Sapo (window.PharmaResultCollections).
   // Thứ tự quy tắc có chủ ý: "Kem Chống Nắng Vật Lý Dịu Nhẹ" phải ra chống nắng, "Panthenol (Vitamin B5)" ra
@@ -742,6 +784,12 @@
       window.PharmaCrmIntake.getCustomerInfo().then(function (info) {
         renderCustomerState(info);
         updateProfilePrompt(!!info.stored_in_gas, !!info.profile_exists);
+        if (isDemo) {
+          // Thiết bị chưa có kết quả: hồ sơ CRM đầy đủ (khớp mã của thiết bị) ⇒ dựng lại kết quả; tài khoản đã có
+          // hồ sơ nhưng GAS không trả dữ liệu (tra theo tài khoản) ⇒ chỉ đổi lời nhắn.
+          if (info.stored_in_gas && info.consultation && hydrateFromCrm(info)) return;
+          if (info.profile_exists) root.querySelector('[data-result-summary]').textContent = emptyCopy.existsText;
+        }
       }).catch(function () {
         renderFallbackCustomerState();
         updateProfilePrompt(false, false);
@@ -799,6 +847,43 @@
     }
   }
 
+  // 2026-10-10: dựng lại kết quả từ bản ghi CRM (GAS chỉ trả đủ khi khớp submission_id/session_id của thiết bị) rồi
+  // tải lại trang. Cờ sessionStorage chặn vòng lặp tải lại nếu bản ghi không đủ dữ liệu.
+  function hydrateFromCrm(info) {
+    var store = window.PharmaResultStore;
+    if (!store) return false;
+    try {
+      if (sessionStorage.getItem('pc_crm_hydrated')) return false;
+      sessionStorage.setItem('pc_crm_hydrated', '1');
+    } catch (e) { return false; }
+    var rec = info.consultation || {};
+    var savedAt = Date.parse(rec.created_at) || Date.now();
+    var sc = (rec.scores && typeof rec.scores === 'object') ? rec.scores : {};
+    if (info.source === 'ai_skin_scan_camera' && sc.acne) {
+      store.set('pc_skin_scan_result', JSON.stringify({
+        saved_at: savedAt, scores: sc, skin_type: rec.skin_type, skin_age: rec.skin_age, primary_concern: rec.primary_concern,
+        regimen: rec.regimen || [], recommended_products: rec.recommended_products || [], source: 'crm'
+      }));
+    } else {
+      // Khảo sát: scores = { skin_type: 'oily' } (lưu từ trang kết quả) hoặc số điểm theo từng loại da (lưu từ trang chat).
+      var key = (typeof sc.skin_type === 'string' && sc.skin_type !== 'cases' && resultsData[sc.skin_type]) ? sc.skin_type : null;
+      if (!key) {
+        Object.keys(sc).forEach(function (k) {
+          if (k !== 'cases' && resultsData[k] && typeof sc[k] === 'number' && (key === null || sc[k] > sc[key])) key = k;
+        });
+      }
+      if (!key) return false;
+      store.set('pc_quiz_skin_type', key);
+      store.set('pc_quiz_saved_at', String(savedAt));
+    }
+    if (info.record_id) {
+      store.set('pc_crm_intake_record_id', String(info.record_id));
+      store.set('pc_crm_saved_at', new Date(savedAt).toISOString());
+    }
+    window.location.reload();
+    return true;
+  }
+
   // ── 2026-10-10: MỜI TẠO HỒ SƠ (sau khi tra GAS) ─────────────────────────
   var isLoggedIn = !!(window.PharmaCrmCustomerContext && window.PharmaCrmCustomerContext.logged_in);
   var profileCopy = {
@@ -840,7 +925,10 @@
     });
   }
 
-  syncCustomerInfo();
+  // 2026-10-10: crm-intake.js nạp defer ⇒ lúc script nội tuyến này chạy window.PharmaCrmIntake CHƯA có, nên trước đây
+  // trang kết quả không bao giờ tra GAS khi mở (chỉ tra lại sau khi bấm lưu). Chờ DOMContentLoaded (sau script defer).
+  if (window.PharmaCrmIntake || document.readyState !== 'loading') syncCustomerInfo();
+  else document.addEventListener('DOMContentLoaded', syncCustomerInfo);
 
   // ── RENDER SECTION 1: SẢN PHẨM SAPO PHÙ HỢP ─────────────────────────────
   function renderMatchedSapoProducts() {
@@ -903,6 +991,39 @@
         if (hit && routinePicks.indexOf(hit) === -1) routinePicks.push(hit);
       });
       matched = routinePicks.concat(matched.filter(function (p) { return routinePicks.indexOf(p) === -1; }));
+    }
+
+    // 2026-10-10: ưu tiên sản phẩm thật trong các danh mục tự động khớp badge hoạt chất / 3 giai đoạn (lần lượt mỗi
+    // danh mục 1 SP để đủ nhóm) — trước đây chỉ dò tag trong 50 SP đầu của toàn cửa hàng nên gợi ý dễ lệch.
+    var collectionKeys = [];
+    root.querySelectorAll('[data-result-recommend] a[data-result-collection]').forEach(function (a) {
+      collectionKeys.push(a.getAttribute('data-result-collection'));
+    });
+    collectionKeys.push(stageCollectionKey(3));
+    // Nhóm chính = danh mục của badge + giai đoạn 3 (đặc trị); giai đoạn 1–2 (làm dịu / phục hồi) chỉ để bù chỗ trống.
+    var pools = [];
+    function addPool(k, filler) {
+      var c = collectionFor(k);
+      if (c && c.products && c.products.length && pools.every(function (p) { return p.key !== k; })) {
+        pools.push({ key: k, url: c.url, filler: filler, items: c.products.filter(function (p) { return !engine || engine.isProductAllowed(p, excluded); }) });
+      }
+    }
+    collectionKeys.forEach(function (k) { addPool(k, false); });
+    [2, 1].forEach(function (st) { addPool(stageCollectionKey(st), true); });
+    var picked = [];
+    [false, true].forEach(function (fillerPass) {
+      for (var round = 0; picked.length < 4 && round < 8; round++) {
+        pools.forEach(function (pool) {
+          if (pool.filler !== fillerPass) return;
+          var p = pool.items[round];
+          if (p && picked.length < 4 && picked.every(function (x) { return x.alias !== p.alias; })) picked.push(p);
+        });
+      }
+    });
+    var allLink = root.querySelector('[data-products-all-link]');
+    if (picked.length) {
+      matched = picked;
+      if (allLink && pools[0]) allLink.href = pools[0].url;
     }
 
     if (matched.length === 0) matched = allowedProducts.slice(0, 4);

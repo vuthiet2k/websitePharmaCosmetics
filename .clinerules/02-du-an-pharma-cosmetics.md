@@ -306,6 +306,12 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
   `[data-profile-prompt]` mời lưu. **Khách vãng lai bắt buộc đăng nhập** mới tạo hồ sơ (`goLoginToSave` → `/account/login`
   → `customers/account.bwt` đọc `pc_login_return` đưa về trang kết quả và tự mở hộp đồng ý). Kết quả vẫn hiện ngay,
   không khoá sau bước lưu.
+- Trang kết quả KHÔNG còn "bản minh hoạ": thiết bị không có kết quả ⇒ khối `[data-result-profile]` (giữ h1 duy nhất)
+  báo "chưa có hồ sơ" + 2 nút khảo sát chat / soi da, ẩn mọi `[data-result-section]`. GAS trả hồ sơ đầy đủ ⇒ dựng lại
+  kết quả vào PharmaResultStore rồi tải lại 1 lần (cờ `pc_crm_hydrated`). `crm-intake.js` nạp `defer` ⇒ gọi
+  `syncCustomerInfo` sau DOMContentLoaded (trước 2026-10-10 trang không tra GAS khi mở).
+- "Sản phẩm đề xuất" lấy từ SP của danh mục tự động (`PharmaResultCollections[*].products`, tối đa 8/danh mục, đã bỏ
+  kê toa): ưu tiên danh mục của badge + giai đoạn 3, giai đoạn 1–2 chỉ bù chỗ trống; không có thì quay về dò tag cũ.
 - GAS CRM ≥ 1.3.0: `get_customer_info` chỉ trả **đủ hồ sơ** khi khớp `submission_id`/`session_id` (mã ngẫu nhiên trên
   thiết bị); khớp customer_id/SĐT/email chỉ trả `found + limited` (không dữ liệu) — endpoint công khai, không được
   trả hồ sơ theo SĐT/email.
