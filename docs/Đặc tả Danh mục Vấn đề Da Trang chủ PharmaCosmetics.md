@@ -176,7 +176,14 @@ nhẹ; hãy lấy số của Sapo làm chuẩn.
 
 ## 5. Gắn danh mục vào 6 thẻ trang chủ
 
-Làm sau khi đã tạo xong cả 6 danh mục. Có 2 cách:
+**Đã chọn cách A (09/10/2026, commit `8053173`).** Mỗi thẻ ở Theme › Trang chủ › "Giải pháp theo vấn đề da" có:
+- **Danh mục sản phẩm:** đã gán sẵn 6 alias `giai-phap-*`.
+- **Từ khoá tìm kiếm (dự phòng):** dùng khi danh mục chưa tạo hoặc chưa có sản phẩm.
+- **Hình ảnh:** có ảnh thì hiện ảnh thay icon.
+- **Icon:** dùng khi không có ảnh.
+
+Vì vậy ngay sau khi tạo 6 danh mục trên Sapo, các thẻ tự mở đúng danh mục, không cần thao tác thêm. Bảng dưới giữ lại để
+tham khảo 2 phương án đã cân nhắc:
 
 | Cách | Thao tác | Ưu / nhược |
 | :-- | :-- | :-- |
