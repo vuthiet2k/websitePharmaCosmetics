@@ -295,7 +295,20 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
 - `npm run test:portal` (39 test) PASS 2026-10-03. Test bám hook ổn định (`data-result-disclaimer`,
   `data-scan-stage-products`, `data-skin-*`) — không bám class Tailwind/khung. CRM `save_skin_analysis` gửi
   `analysis_result` gồm `scores`, `monk_skin_tone`, `tech_neck`, `skin_type`, `skin_age`, `primary_concern`,
-  `regimen`, `recommended_products` (KHÔNG ảnh); trang kết quả đổ `recommended_products` vào 3 giai đoạn.
+  `regimen`, `recommended_products` (KHÔNG ảnh). Từ 2026-10-09 trang kết quả đổ **danh mục tự động**
+  (`settings.skin_result_col_*`) vào 3 thẻ giai đoạn + badge hoạt chất; handle trong `recommended_products` của
+  skin-routine-matcher không có trên Sapo nên không dùng làm link.
+- Kết quả soi da / khảo sát lưu qua `window.PharmaResultStore` (`snippets/pc_result_store.bwt`, include TRƯỚC mọi script
+  dùng nó): localStorage khoá `pcr:<key>` có hạn `settings.skin_result_retention_days` ngày (mặc định 7) + mirror
+  sessionStorage. Trang kết quả có nút "Xoá kết quả trên thiết bị này". Không ghi thẳng `sessionStorage` cho các khoá
+  `pc_skin_scan_result`, `pc_quiz_*`, `pc_crm_*` nữa.
+- Hồ sơ CRM (quyết định 2026-10-10): trang kết quả tra GAS trước; chưa có hồ sơ mà còn kết quả trên máy ⇒ thanh
+  `[data-profile-prompt]` mời lưu. **Khách vãng lai bắt buộc đăng nhập** mới tạo hồ sơ (`goLoginToSave` → `/account/login`
+  → `customers/account.bwt` đọc `pc_login_return` đưa về trang kết quả và tự mở hộp đồng ý). Kết quả vẫn hiện ngay,
+  không khoá sau bước lưu.
+- GAS CRM ≥ 1.3.0: `get_customer_info` chỉ trả **đủ hồ sơ** khi khớp `submission_id`/`session_id` (mã ngẫu nhiên trên
+  thiết bị); khớp customer_id/SĐT/email chỉ trả `found + limited` (không dữ liệu) — endpoint công khai, không được
+  trả hồ sơ theo SĐT/email.
   - B2B (`b2b_tier_1..6_*`) và Loyalty (`loyalty_tier_1..6_*`): 6 ô, mặc định TẮT/TRỐNG — không điền
     sẵn % chiết khấu/ngưỡng điểm (cam kết kinh doanh); danh sách quyền lợi phân tách bằng `;`.
   - Handle bài viết lấy bằng `article.url | split: '/' | last`. Preview mô phỏng 2 blog trên trong

@@ -1,3 +1,20 @@
+{%- comment -%}
+  2026-10-10: khách đăng nhập từ nút "Đăng nhập để lưu hồ sơ" (trang kết quả soi da/khảo sát) ⇒ Sapo đưa về /account;
+  đọc cờ pc_login_return (snippets/pc_result_store.bwt, hạn 30 phút) để quay lại trang kết quả và mở hộp đồng ý lưu.
+{%- endcomment -%}
+<script>
+(function () {
+  try {
+    var raw = window.localStorage.getItem('pc_login_return');
+    if (!raw) return;
+    window.localStorage.removeItem('pc_login_return');
+    var ret = JSON.parse(raw);
+    if (!ret || !/^\/[^\/]/.test(ret.path || '') || !(Date.now() - Number(ret.at) < 30 * 60 * 1000)) return;
+    window.sessionStorage.setItem('pc_open_save_after_login', '1');
+    window.location.replace(ret.path);
+  } catch (e) {}
+})();
+</script>
 {% include 'breadcrumb' %}
 
 {%- comment -%} ═══════════════════════════════════════════════════════════════

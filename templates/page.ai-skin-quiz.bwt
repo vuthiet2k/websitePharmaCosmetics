@@ -1,6 +1,7 @@
 {% layout 'theme' %}
 {{ 'page_ai_skin_quiz.scss.css' | asset_url | stylesheet_tag }}
 {% include 'customer_context_extractor' %}
+{% include 'pc_result_store' %}
 <script src="{{ 'crm-intake.js' | asset_url }}" defer></script>
 {% if settings.ai_skin_scan_enable != false %}
 <script>
@@ -174,6 +175,11 @@ window.PharmaSkinScanProductLabels = {
 <script>
 (function() {
   'use strict';
+  // 2026-10-10: kho kết quả trên thiết bị (snippets/pc_result_store.bwt); thiếu thì quay về sessionStorage.
+  var resultStore = window.PharmaResultStore || {
+    set: function (k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} },
+    remove: function (k) { try { sessionStorage.removeItem(k); } catch (e) {} }
+  };
   var copy = window.PharmaSkinScanCopy || {};
 
   // Bộ câu hỏi khảo sát (snippets/quiz_questions_data.bwt)
@@ -195,8 +201,12 @@ window.PharmaSkinScanProductLabels = {
     acceptLabel: {{ settings.crm_consent_accept_label | default: 'Đồng ý lưu kết quả' | json }},
     successMessage: {{ settings.crm_consent_success_message | default: 'Kết quả đã được lưu.' | json }},
     safeModeMessage: {{ settings.crm_consent_safe_mode_message | default: 'Tính năng lưu kết quả đang tạm thời chưa được cấu hình. Vui lòng liên hệ chuyên gia nếu cần hỗ trợ.' | json }},
-    errorMessage: {{ settings.crm_consent_error_message | default: 'Chưa thể lưu kết quả lúc này. Vui lòng thử lại hoặc liên hệ chuyên gia.' | json }}
+    errorMessage: {{ settings.crm_consent_error_message | default: 'Chưa thể lưu kết quả lúc này. Vui lòng thử lại hoặc liên hệ chuyên gia.' | json }},
+    loginLabel: {{ settings.skin_profile_login_label | default: 'Đăng nhập để lưu hồ sơ' | json }}
   };
+  // 2026-10-10: khách vãng lai phải đăng nhập mới tạo hồ sơ CRM (kết quả vẫn giữ trên máy để lưu sau khi đăng nhập).
+  var crmLoggedIn = !!(window.PharmaCrmCustomerContext && window.PharmaCrmCustomerContext.logged_in);
+  var crmOpenLabel = crmLoggedIn ? crmUi.openLabel : crmUi.loginLabel;
   var isTyping = false;
 
   var messagesFlow = document.getElementById('messagesFlow');
@@ -405,11 +415,13 @@ window.PharmaSkinScanProductLabels = {
 
     // 2026-09-24: chỉ giữ loại da trong tab hiện tại để chuyển sang trang kết quả; điểm chi tiết không cần lưu phía trình duyệt.
     // 2026-10-05: kèm Tier/Case/cờ an toàn (không có thông tin cá nhân) cho trang kết quả.
+    // 2026-10-10: lưu qua PharmaResultStore (localStorage hạn settings.skin_result_retention_days ngày, có nút xoá ở
+    // trang kết quả) — người dùng yêu cầu giữ kết quả để quay lại trang kết quả còn gợi ý tạo hồ sơ CRM.
     try {
-      sessionStorage.setItem('pc_quiz_skin_type', best);
+      resultStore.set('pc_quiz_skin_type', best);
       // 2026-10-08: mốc thời gian để trang kết quả lấy kết quả MỚI NHẤT giữa khảo sát chat và soi da AI.
-      sessionStorage.setItem('pc_quiz_saved_at', String(Date.now()));
-      if (evaluation) sessionStorage.setItem('pc_quiz_result', JSON.stringify({
+      resultStore.set('pc_quiz_saved_at', String(Date.now()));
+      if (evaluation) resultStore.set('pc_quiz_result', JSON.stringify({
         tier: evaluation.tier, case_id: evaluation.case_id, red_flag: evaluation.red_flag,
         top_skin_type: best, safety_flags: flags, excluded_actives: excluded
       }));
@@ -446,7 +458,7 @@ window.PharmaSkinScanProductLabels = {
               <i class="fas fa-comment-dots"></i>
               <span>${escapeHtml(safetyCopy.zaloLabel || 'Liên hệ chuyên gia qua Zalo')}</span>
             </a>
-            <button type="button" class="btn-result-crm" id="btnSaveAiResult">${escapeHtml(crmUi.openLabel)}</button>
+            <button type="button" class="btn-result-crm" id="btnSaveAiResult">${escapeHtml(crmOpenLabel)}</button>
           </div>
         </div>
       ` : `
@@ -466,7 +478,7 @@ window.PharmaSkinScanProductLabels = {
           </div>
 
           <div class="result-card-actions">
-            <button type="button" class="btn-result-crm" id="btnSaveAiResult">${escapeHtml(crmUi.openLabel)}</button>
+            <button type="button" class="btn-result-crm" id="btnSaveAiResult">${escapeHtml(crmOpenLabel)}</button>
             <a href="/ai-skin-quiz-results" class="btn-result-cta">
               <span>${escapeHtml(copy.quizDetailedLinkLabel || 'Xem gợi ý chi tiết')}</span>
               <i class="fas fa-arrow-right"></i>
@@ -504,7 +516,7 @@ window.PharmaSkinScanProductLabels = {
   function startConversation() {
     messagesFlow.innerHTML = '';
     quickReplies.innerHTML = '';
-    try { sessionStorage.removeItem('pc_quiz_skin_type'); sessionStorage.removeItem('pc_quiz_result'); } catch (error) {}
+    resultStore.remove('pc_quiz_skin_type'); resultStore.remove('pc_quiz_result');
     currentQuestionIndex = -1;
     userScores = {};
     quizAnswers = [];
@@ -562,6 +574,7 @@ window.PharmaSkinScanProductLabels = {
 
   function openCrmConsent() {
     if (!latestCrmResult) return;
+    if (!crmLoggedIn && window.PharmaResultStore) { window.PharmaResultStore.goLoginToSave('/ai-skin-quiz-results'); return; }
     crmSubmissionId = (window.PharmaCrmIntake && window.PharmaCrmIntake.createSubmissionId)
       ? window.PharmaCrmIntake.createSubmissionId() : '';
     crmConsentStatus.textContent = '';

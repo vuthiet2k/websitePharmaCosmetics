@@ -64,6 +64,11 @@
   var isAnalyzing = false;
 
   function message(text) { status.textContent = text; }
+  function saveScanResult(data) {
+    var value = JSON.stringify(data);
+    if (window.PharmaResultStore) { window.PharmaResultStore.set('pc_skin_scan_result', value); return; }
+    try { sessionStorage.setItem('pc_skin_scan_result', value); } catch (error) {}
+  }
 
   // 2026-09-25: phản hồi ngay trên thẻ upload — #skinCameraStatus nằm trên đầu khung camera nên người dùng
   // đang thao tác ở 3 ô upload không nhìn thấy thông báo. Ảnh hợp lệ được hiển thị làm nền thẻ (object URL
@@ -720,7 +725,9 @@
       var report = window.PharmaSkinScoring.make(raw);
       var routine = window.PharmaSkinRoutine.match(report.scores);
       var payload = { saved_at: Date.now(), scores: report.scores, skin_age: report.skin_age, monk_skin_tone: tone.available ? tone.monk_skin_tone : null, primary_concern: routine.primary_concern, regimen: routine.stages, recommended_products: routine.products, tech_neck: wrinkle.tech_neck_detected, source: 'ai_skin_scan_camera', inference: detectionCount ? 'onnx_local' : 'canvas_local' };
-      try { sessionStorage.setItem('pc_skin_scan_result', JSON.stringify(payload)); } catch (error) {}
+      // 2026-10-10: lưu qua PharmaResultStore (localStorage có hạn dùng, snippets/pc_result_store.bwt) để trang kết
+      // quả còn dữ liệu khi khách quay lại và gợi ý tạo hồ sơ CRM; không có store thì giữ sessionStorage như cũ.
+      saveScanResult(payload);
 
       // Hoàn tất quét sau thời gian deliberate
       setTimeout(function () {
@@ -729,7 +736,7 @@
         var basic = renderInlineDashboard(report, routine, tone, wrinkle, surface, redness);
         // 2026-10-08: lưu thêm kết quả cơ bản vừa hiển thị để trang kết quả chi tiết dùng đúng nội dung này.
         if (basic) {
-          try { sessionStorage.setItem('pc_skin_scan_result', JSON.stringify(Object.assign(payload, basic))); } catch (error) {}
+          saveScanResult(Object.assign(payload, basic));
         }
         // PHÂN TÁCH RẠCH RÒI 2 TRẠNG THÁI:
         if (sessionView) sessionView.hidden = true;

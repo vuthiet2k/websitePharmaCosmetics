@@ -1,0 +1,75 @@
+{%- comment -%}
+  pc_result_store.bwt (2026-10-10) — lưu kết quả soi da AI / khảo sát chat trên thiết bị (localStorage) có hạn dùng.
+  Lý do: trước đây chỉ giữ trong sessionStorage (đóng tab là mất) nên khi khách quay lại trang kết quả không còn gì
+  để gợi ý tạo hồ sơ CRM. Nay giữ settings.skin_result_retention_days ngày (mặc định 7), có nút xoá trên trang kết quả.
+  - Khoá localStorage có tiền tố "pcr:" (không đụng khoá cũ pc_quiz_skin_type mà trang quiz vẫn xoá vì lý do cũ).
+  - Vẫn ghi/đọc sessionStorage để tương thích (test và phiên cũ đặt thẳng sessionStorage).
+  - Không bao giờ lưu ảnh khuôn mặt — chỉ điểm số/kết quả như trước.
+  Script nội tuyến, include TRƯỚC mọi script dùng window.PharmaResultStore (trang quiz, trang kết quả).
+{%- endcomment -%}
+<script>
+(function (window) {
+  'use strict';
+  if (window.PharmaResultStore) return;
+  var days = parseInt({{ settings.skin_result_retention_days | default: '7' | json }}, 10);
+  if (!(days > 0)) days = 7;
+  var TTL = days * 24 * 60 * 60 * 1000;
+  var PREFIX = 'pcr:';
+  var KEYS = ['pc_skin_scan_result', 'pc_quiz_skin_type', 'pc_quiz_saved_at', 'pc_quiz_result',
+    'pc_crm_intake_record_id', 'pc_crm_saved_at', 'pc_crm_intake_session_id'];
+
+  function readLocal(key) {
+    try {
+      var raw = window.localStorage.getItem(PREFIX + key);
+      if (!raw) return null;
+      var box = JSON.parse(raw);
+      if (!box || typeof box.v !== 'string' || !(box.exp > Date.now())) {
+        window.localStorage.removeItem(PREFIX + key);
+        return null;
+      }
+      return box.v;
+    } catch (e) { return null; }
+  }
+
+  window.PharmaResultStore = {
+    retentionDays: days,
+    get: function (key) {
+      var v = readLocal(key);
+      if (v !== null) return v;
+      try { return window.sessionStorage.getItem(key); } catch (e) { return null; }
+    },
+    set: function (key, value) {
+      value = String(value);
+      try { window.localStorage.setItem(PREFIX + key, JSON.stringify({ v: value, exp: Date.now() + TTL })); } catch (e) {}
+      try { window.sessionStorage.setItem(key, value); } catch (e) {}
+    },
+    remove: function (key) {
+      try { window.localStorage.removeItem(PREFIX + key); } catch (e) {}
+      try { window.sessionStorage.removeItem(key); } catch (e) {}
+    },
+    // Có kết quả soi da/khảo sát (chưa hết hạn) trên thiết bị này không.
+    hasResult: function () {
+      return !!(this.get('pc_skin_scan_result') || this.get('pc_quiz_skin_type'));
+    },
+    clearAll: function () {
+      var self = this;
+      KEYS.forEach(function (k) { self.remove(k); });
+    },
+    // 2026-10-10: khách vãng lai phải đăng nhập mới tạo hồ sơ CRM (quyết định người dùng). Ghi đường quay lại rồi
+    // chuyển tới /account/login; templates/customers/account.bwt đọc cờ này để đưa khách về trang kết quả và
+    // trang kết quả tự mở hộp đồng ý lưu (openSaveRequested).
+    goLoginToSave: function (returnPath) {
+      var path = /^\/[^\/]/.test(returnPath || '') ? returnPath : '/ai-skin-quiz-results';
+      try { window.localStorage.setItem('pc_login_return', JSON.stringify({ path: path, at: Date.now() })); } catch (e) {}
+      window.location.href = '/account/login';
+    },
+    openSaveRequested: function () {
+      try {
+        if (window.sessionStorage.getItem('pc_open_save_after_login') !== '1') return false;
+        window.sessionStorage.removeItem('pc_open_save_after_login');
+        return true;
+      } catch (e) { return false; }
+    }
+  };
+})(window);
+</script>

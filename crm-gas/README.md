@@ -8,3 +8,12 @@
 Không dùng lại project, Spreadsheet ID, Script Property hay URL thuộc `mops-gas/`. Không đặt token bí mật vào Theme Settings: giá trị setting được render cho trình duyệt, không phải nơi lưu secret.
 
 Kiểm tra thủ công trước bàn giao: gửi một `save_ai_chat` với `consent: true`, một `submit_contact` với số `0xxxxxxxxx`, xác nhận mỗi tab tăng đúng một hàng; gửi request không consent phải thất bại và không có hàng dữ liệu mới.
+
+## Cập nhật 1.3.0 (10/10/2026) — bắt buộc deploy lại
+
+`get_customer_info` / `lookup_customer` không còn trả dữ liệu hồ sơ khi tra theo SĐT, email hoặc customer_id (endpoint
+công khai nên ai cũng gửi được thông tin của người khác). Hồ sơ đầy đủ chỉ trả khi khớp `submission_id` hoặc
+`session_id`, là các mã ngẫu nhiên mà trình duyệt của khách tự giữ. Tra theo định danh chỉ trả `found: true, limited: true`.
+
+Cách cập nhật: dán lại toàn bộ `crm_intake_service.js` vào dự án GAS › **Deploy › Manage deployments › Edit › Version:
+New version › Deploy**. Giữ nguyên URL `/exec`, không tạo deployment mới.

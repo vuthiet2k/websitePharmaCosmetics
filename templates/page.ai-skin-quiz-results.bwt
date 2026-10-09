@@ -8,6 +8,7 @@
 {{ 'page_ai_skin_quiz.scss.css' | asset_url | stylesheet_tag }}
 {% include 'breadcrumb' %}
 {% include 'customer_context_extractor' %}
+{% include 'pc_result_store' %}
 <script src="{{ 'crm-intake.js' | asset_url }}" defer></script>
 {%- comment -%} 2026-10-05: engine Tier/Case/cờ an toàn dùng chung với trang quiz (nạp đồng bộ). {%- endcomment -%}
 <script src="{{ 'skin-quiz-engine.js' | asset_url }}"></script>
@@ -100,6 +101,19 @@
     </div>
 
     <div id="pcQuizResultsRoot" data-demo="true" class="space-y-6">
+
+      <!-- 2026-10-10: Mời tạo hồ sơ CRM — chỉ hiện khi CÓ kết quả trên thiết bị nhưng GAS chưa có hồ sơ của kết quả này.
+           Đã đăng nhập ⇒ nút mở hộp đồng ý lưu; khách vãng lai ⇒ nút đăng nhập (bắt buộc đăng nhập mới tạo hồ sơ). -->
+      <div class="pc-profile-prompt bg-emerald-50 border border-emerald-200 rounded-2xl sm:rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4" data-profile-prompt hidden>
+        <div class="w-11 h-11 rounded-full bg-emerald-600 text-white flex items-center justify-center text-lg shrink-0" aria-hidden="true">
+          <i class="fas fa-file-medical"></i>
+        </div>
+        <div class="flex-1 space-y-1">
+          <p class="text-sm sm:text-base font-bold text-forest-900">{{ settings.skin_profile_prompt_title | default: 'Bạn đã có kết quả phân tích da' | escape }}</p>
+          <p class="text-xs sm:text-sm text-gray-700 leading-relaxed" data-profile-prompt-text></p>
+        </div>
+        <button type="button" class="pc-kit-btn-primary px-5 py-3 text-sm font-bold justify-center shrink-0" data-profile-prompt-action></button>
+      </div>
 
       <!-- 2. Thẻ Thông Tin Khách Hàng & Trạng Thái Đồng Bộ GAS CRM -->
       <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200/90" data-customer-card>
@@ -292,6 +306,9 @@
           <button type="button" class="font-semibold text-gray-600 hover:text-emerald-700" data-skin-save-result>
             <i class="fas fa-cloud-arrow-up"></i> Lưu kết quả tư vấn vào CRM
           </button>
+          <button type="button" class="font-semibold text-gray-500 hover:text-red-700" data-result-clear hidden>
+            <i class="fas fa-trash-can"></i> {{ settings.skin_result_clear_label | default: 'Xoá kết quả trên thiết bị này' | escape }}
+          </button>
         </div>
       </div>
 
@@ -315,14 +332,20 @@
   var skinType = null;
   var isDemo = true;
   var skinScan = null;
+  // 2026-10-10: đọc kết quả qua PharmaResultStore (localStorage có hạn dùng + sessionStorage) — khách quay lại trang
+  // kết quả trong thời hạn vẫn thấy đúng kết quả của mình và được mời tạo hồ sơ.
+  var resultStore = window.PharmaResultStore || {
+    get: function (k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } },
+    clearAll: function () {}
+  };
 
   try {
-    skinType = sessionStorage.getItem('pc_quiz_skin_type');
+    skinType = resultStore.get('pc_quiz_skin_type');
     if (skinType) isDemo = false;
-    skinScan = JSON.parse(sessionStorage.getItem('pc_skin_scan_result') || 'null');
+    skinScan = JSON.parse(resultStore.get('pc_skin_scan_result') || 'null');
     if (skinScan && skinScan.scores) isDemo = false;
     // 2026-10-08: phiên có cả soi da AI lẫn khảo sát chat ⇒ dùng kết quả làm SAU CÙNG (theo saved_at).
-    var quizSavedAt = Number(sessionStorage.getItem('pc_quiz_saved_at') || 0);
+    var quizSavedAt = Number(resultStore.get('pc_quiz_saved_at') || 0);
     var scanSavedAt = skinScan ? Number(skinScan.saved_at || 0) : 0;
     if (skinScan && skinType && quizSavedAt && scanSavedAt && quizSavedAt > scanSavedAt) skinScan = null;
   } catch (e) {
@@ -351,7 +374,7 @@
   var engine = window.PharmaSkinQuizEngine || null;
   var safety = window.PharmaQuizSafetyCopy || {};
   var quizResult = null;
-  try { quizResult = JSON.parse(sessionStorage.getItem('pc_quiz_result') || 'null'); } catch (e) {}
+  try { quizResult = JSON.parse(resultStore.get('pc_quiz_result') || 'null'); } catch (e) {}
   if (skinScan || isDemo) quizResult = null;
   var excluded = (quizResult && quizResult.excluded_actives) || [];
   var quizCase = (quizResult && resultsData.cases) ? resultsData.cases[quizResult.case_id] : null;
@@ -718,11 +741,14 @@
     if (window.PharmaCrmIntake && typeof window.PharmaCrmIntake.getCustomerInfo === 'function') {
       window.PharmaCrmIntake.getCustomerInfo().then(function (info) {
         renderCustomerState(info);
+        updateProfilePrompt(!!info.stored_in_gas, !!info.profile_exists);
       }).catch(function () {
         renderFallbackCustomerState();
+        updateProfilePrompt(false, false);
       });
     } else {
       renderFallbackCustomerState();
+      updateProfilePrompt(false, false);
     }
 
     function renderCustomerState(info) {
@@ -771,6 +797,47 @@
       }
       if (crmStorageState) crmStorageState.textContent = 'Chưa lưu CRM';
     }
+  }
+
+  // ── 2026-10-10: MỜI TẠO HỒ SƠ (sau khi tra GAS) ─────────────────────────
+  var isLoggedIn = !!(window.PharmaCrmCustomerContext && window.PharmaCrmCustomerContext.logged_in);
+  var profileCopy = {
+    text: {{ settings.skin_profile_prompt_text | default: 'Tạo hồ sơ để lưu kết quả này, chuyên gia theo dõi tiến triển và tư vấn 1:1 đúng với làn da của bạn.' | json }},
+    existsText: {{ settings.skin_profile_prompt_exists_text | default: 'Tài khoản của bạn đã có hồ sơ chăm sóc da. Lưu thêm kết quả lần này để chuyên gia so sánh tiến triển.' | json }},
+    loginText: {{ settings.skin_profile_prompt_login_text | default: 'Đăng nhập hoặc đăng ký tài khoản để tạo hồ sơ — kết quả vẫn được giữ trên thiết bị này để lưu ngay sau khi đăng nhập.' | json }},
+    saveLabel: {{ settings.skin_profile_save_label | default: 'Lưu hồ sơ ngay' | json }},
+    loginLabel: {{ settings.skin_profile_login_label | default: 'Đăng nhập để lưu hồ sơ' | json }},
+    clearConfirm: {{ settings.skin_result_clear_confirm | default: 'Xoá kết quả soi da / khảo sát đang lưu trên thiết bị này?' | json }}
+  };
+  function requestSave() {
+    // Khách vãng lai phải đăng nhập mới tạo hồ sơ (kết quả đã nằm trong PharmaResultStore nên không mất).
+    if (!isLoggedIn) {
+      if (window.PharmaResultStore) window.PharmaResultStore.goLoginToSave(window.location.pathname);
+      else window.location.href = '/account/login';
+      return;
+    }
+    openSaveModal();
+  }
+  function updateProfilePrompt(storedInGas, profileExists) {
+    var box = root.querySelector('[data-profile-prompt]');
+    if (!box) return;
+    if (isDemo || storedInGas) { box.hidden = true; return; }
+    box.querySelector('[data-profile-prompt-text]').textContent = !isLoggedIn ? profileCopy.loginText : (profileExists ? profileCopy.existsText : profileCopy.text);
+    box.querySelector('[data-profile-prompt-action]').textContent = isLoggedIn ? profileCopy.saveLabel : profileCopy.loginLabel;
+    box.hidden = false;
+  }
+  var promptAction = root.querySelector('[data-profile-prompt-action]');
+  if (promptAction) promptAction.addEventListener('click', requestSave);
+
+  // Xoá kết quả trên thiết bị (máy dùng chung) — chỉ hiện khi đang xem kết quả thật.
+  var clearBtn = root.querySelector('[data-result-clear]');
+  if (clearBtn && !isDemo) {
+    clearBtn.hidden = false;
+    clearBtn.addEventListener('click', function () {
+      if (!window.confirm(profileCopy.clearConfirm)) return;
+      resultStore.clearAll();
+      window.location.reload();
+    });
   }
 
   syncCustomerInfo();
@@ -976,8 +1043,10 @@
     if (trigger) trigger.focus();
   }
 
-  if (trigger) trigger.addEventListener('click', openSaveModal);
-  if (quickSaveTrigger) quickSaveTrigger.addEventListener('click', openSaveModal);
+  if (trigger) trigger.addEventListener('click', requestSave);
+  if (quickSaveTrigger) quickSaveTrigger.addEventListener('click', requestSave);
+  // Vừa đăng nhập từ nút "Đăng nhập để lưu hồ sơ" ⇒ mở luôn hộp đồng ý (khách vẫn phải bấm đồng ý).
+  if (isLoggedIn && !isDemo && window.PharmaResultStore && window.PharmaResultStore.openSaveRequested()) openSaveModal();
 
   document.querySelectorAll('[data-crm-consent-close]').forEach(function (button) {
     button.addEventListener('click', closeSaveModal);
@@ -1009,11 +1078,7 @@
       savePromise.then(function (res) {
         var statusEl = document.getElementById('aiSkinCrmConsentStatus');
         if (statusEl) statusEl.textContent = 'Kết quả đã được lưu thành công vào CRM Google Sheets!';
-        try {
-          var recId = (res && res.record_id) || 'crm_' + Date.now();
-          sessionStorage.setItem('pc_crm_intake_record_id', String(recId));
-          sessionStorage.setItem('pc_crm_saved_at', new Date().toISOString());
-        } catch (e) {}
+        // 2026-10-10: mã bản ghi do crm-intake.js lưu vào PharmaResultStore (bỏ mã giả 'crm_' + Date.now()).
         syncCustomerInfo();
         setTimeout(closeSaveModal, 1500);
       }).catch(function (err) {

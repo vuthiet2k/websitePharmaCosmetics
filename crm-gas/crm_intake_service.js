@@ -9,7 +9,7 @@
  */
 
 var CRM = {
-  VERSION: '1.2.0',
+  VERSION: '1.3.0',
   SHEETS: {
     AI: 'AI_Chat_Results',
     SKIN: 'Skin_Analysis_Results',
@@ -188,36 +188,24 @@ function handleGetCustomerInfo(query, requestId) {
     return crmRespondError_(requestId, 'get_customer_info', 400, 'Thiếu thông tin tra cứu (cần id, phone, email, session_id hoặc submission_id).');
   }
 
-  var foundRecord = null;
-  var foundSource = '';
-
-  // 1. Tìm trong Skin_Analysis_Results
-  try {
-    var skinSheet = crmSheet_(CRM.SHEETS.SKIN);
-    foundRecord = crmSearchSheetInReverse_(skinSheet, {
-      subId: submissionId, id: id, phone: phone, email: email, sessionId: sessionId
-    }, 'skin');
-    if (foundRecord) foundSource = 'ai_skin_scan_camera';
-  } catch (e) { /* bỏ qua nếu sheet chưa tạo */ }
-
-  // 2. Nếu chưa thấy, tìm trong AI_Chat_Results
-  if (!foundRecord) {
-    try {
-      var aiSheet = crmSheet_(CRM.SHEETS.AI);
-      foundRecord = crmSearchSheetInReverse_(aiSheet, {
-        subId: submissionId, id: id, phone: phone, email: email, sessionId: sessionId
-      }, 'quiz');
-      if (foundRecord) foundSource = 'ai_skin_quiz';
-    } catch (e) { /* bỏ qua nếu sheet chưa tạo */ }
+  // 1.3.0 (2026-10-10) — vá lộ dữ liệu: endpoint công khai nên ai cũng gửi được SĐT/email/customer_id của người
+  // khác. Chỉ trả ĐẦY ĐỦ hồ sơ khi khớp mã bí mật mà thiết bị của khách đang giữ (submission_id / session_id ngẫu
+  // nhiên do trình duyệt tạo). Khớp theo id/SĐT/email chỉ trả found + limited (có hồ sơ), KHÔNG kèm dữ liệu.
+  var secret = { subId: submissionId, sessionId: sessionId };
+  var identity = { id: id, phone: phone, email: email };
+  var full = (submissionId || sessionId) ? crmFindRecord_(secret) : null;
+  if (full) {
+    return crmJson_({ success: true, found: true, request_id: requestId, source: full.source, record: full.record });
   }
-
-  if (foundRecord) {
+  var known = (id || phone || email) ? crmFindRecord_(identity) : null;
+  if (known) {
     return crmJson_({
       success: true,
       found: true,
+      limited: true,
       request_id: requestId,
-      source: foundSource,
-      record: foundRecord
+      source: known.source,
+      message: 'Đã có hồ sơ với thông tin này.'
     });
   }
 
@@ -227,6 +215,18 @@ function handleGetCustomerInfo(query, requestId) {
     request_id: requestId,
     message: 'Chưa có thông tin tư vấn nào được lưu trên hệ thống CRM với thông tin này.'
   });
+}
+
+/** Tìm bản ghi mới nhất (Skin_Analysis_Results trước, rồi AI_Chat_Results) khớp tiêu chí. */
+function crmFindRecord_(criteria) {
+  var targets = [[CRM.SHEETS.SKIN, 'skin', 'ai_skin_scan_camera'], [CRM.SHEETS.AI, 'quiz', 'ai_skin_quiz']];
+  for (var i = 0; i < targets.length; i++) {
+    try {
+      var record = crmSearchSheetInReverse_(crmSheet_(targets[i][0]), criteria, targets[i][1]);
+      if (record) return { record: record, source: targets[i][2] };
+    } catch (e) { /* bỏ qua nếu sheet chưa tạo */ }
+  }
+  return null;
 }
 
 function crmSearchSheetInReverse_(sheet, criteria, type) {
