@@ -57,6 +57,9 @@ test('Nám + mang thai: Case 2, ẩn bước Cyspera/Retinol, sản phẩm thậ
   const gridLinks = await page.locator('[data-sapo-products-grid] a').evaluateAll(els => els.map(e => e.getAttribute('href')));
   for (const href of gridLinks) expect(href).not.toMatch(/retinol|altreno|aha-10-bha/);
   await expect(page.locator('[data-result-recommend]')).not.toContainText('Retinoid');
+  // 2026-10-09: badge bấm được mở danh mục — không bao giờ dẫn tới danh mục Retinoid khi mang thai.
+  await expect(page.locator('[data-result-recommend] a[data-result-collection]').first()).toHaveAttribute('href', '/tri-nam-sang-da-tranexamic-vitc');
+  await expect(page.locator('[data-result-recommend] a[href="/retinol-chong-lao-hoa"]')).toHaveCount(0);
 });
 
 test('Da thường: Case 8, không chặn bước nào, routine có sản phẩm thật', async ({ page }) => {

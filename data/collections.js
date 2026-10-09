@@ -231,6 +231,17 @@ const collectionsData = {
   'vagisil':               makeShell(4245613, 'Vagisil', 'vagisil', 6,
     { image: 'https://bizweb.dktcdn.net/100/415/053/collections/vagisil-logo-1400x371.png?v=1761360747710' }),
   're-perfect':            makeShell(4244216, 'RE-PERFECT', 're-perfect', 3),
+  // 2026-10-09: 8 danh mục tự động theo phác đồ soi da (tạo trên Sapo 09/10/2026) — trang kết quả
+  // soi da/khảo sát link tới đây (settings.skin_result_col_*). ID null = chưa có ID trong nhật ký;
+  // số sản phẩm là ước lượng từ tên SP thật, chỉ để dev-server hiện link.
+  'hoat-chat-bha-salicylic':         makeShell(4365305, 'Hoạt Chất Làm Sạch & Kiềm Dầu BHA', 'hoat-chat-bha-salicylic', 93),
+  'tinh-chat-niacinamide':           makeShell(4365306, 'Tinh Chất Niacinamide & Kiểm Soát Dầu Nhờn', 'tinh-chat-niacinamide', 145),
+  'phuc-hoi-hang-rao-bao-ve-da':     makeShell(null, 'Phục Hồi Hàng Rào Bảo Vệ Da', 'phuc-hoi-hang-rao-bao-ve-da', 84),
+  'duong-am-phuc-hoi-b5-ha':         makeShell(4365307, 'Cấp Ẩm Chuyên Sâu & Phục Hồi B5 / HA', 'duong-am-phuc-hoi-b5-ha', 260),
+  'lam-diu-on-dinh-nen-da':          makeShell(null, 'Làm Dịu & Ổn Định Nền Da', 'lam-diu-on-dinh-nen-da', 748),
+  'retinol-chong-lao-hoa':           makeShell(4365309, 'Điều Trị Chuyên Sâu Retinoid & Chống Lão Hóa', 'retinol-chong-lao-hoa', 514),
+  'tri-nam-sang-da-tranexamic-vitc': makeShell(null, 'Mờ Thâm Nám & Hoạt Chất Sáng Da', 'tri-nam-sang-da-tranexamic-vitc', 293),
+  'kem-chong-nang-pho-rong':         makeShell(4365311, 'Chống Nắng Phổ Rộng & Bảo Vệ Toàn Diện', 'kem-chong-nang-pho-rong', 260),
   'sesderma':              makeShell(4239895, 'SESDERMA', 'sesderma', 47,
     { image: 'https://bizweb.dktcdn.net/100/415/053/collections/images.png?v=1760084339353' }),
 

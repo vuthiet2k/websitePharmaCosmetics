@@ -452,11 +452,14 @@ test('routine xuất ba giai đoạn, ingredient IDs hợp lệ và sản phẩm
     for (const ingredientId of product.ingredient_ids) expect(ingredients.some(item => item.id === ingredientId)).toBe(true);
   }
   await page.goto('/ai-skin-quiz-results');
+  // 2026-10-09: mỗi giai đoạn mở danh mục tự động (mụn ⇒ giai đoạn 3 = BHA); badge regimen cũng bấm được.
+  const stageCollections = { 1: '/lam-diu-on-dinh-nen-da', 2: '/phuc-hoi-hang-rao-bao-ve-da', 3: '/hoat-chat-bha-salicylic' };
   for (const stage of [1, 2, 3]) {
     const links = page.locator(`[data-scan-stage-products="${stage}"] a`);
     await expect(links).toHaveCount(1);
-    await expect(links.first()).toHaveAttribute('href', /^\/[a-z0-9-]+$/);
+    await expect(links.first()).toHaveAttribute('href', stageCollections[stage]);
   }
+  await expect(page.locator('[data-result-recommend] a[data-result-collection]')).toHaveCount(3);
 });
 
 test('CRM yêu cầu consent và chỉ gửi dữ liệu định lượng, không gửi ảnh kể cả khi caller đính kèm', async ({ page }) => {

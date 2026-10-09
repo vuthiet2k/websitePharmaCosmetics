@@ -57,6 +57,34 @@
   ];
   window.PharmaQuizResultsData = {% include 'quiz_results_data' %};
   window.PharmaQuizSafetyCopy = {% include 'quiz_safety_copy' %};
+  {%- comment -%}
+    2026-10-09: 8 danh mục tự động theo phác đồ (tạo trên Sapo 09/10/2026) — badge hoạt chất và 3 thẻ giai
+    đoạn bấm được để xem sản phẩm. Chỉ xuất danh mục có sản phẩm ⇒ danh mục chưa tạo/trống thì link tự ẩn.
+  {%- endcomment %}
+  window.PharmaResultCollections = {
+    {%- assign pc_rc_first = true -%}
+    {%- capture pc_rc_list -%}
+      bha:{{ settings.skin_result_col_bha | default: 'hoat-chat-bha-salicylic' }},
+      niacinamide:{{ settings.skin_result_col_niacinamide | default: 'tinh-chat-niacinamide' }},
+      barrier:{{ settings.skin_result_col_barrier | default: 'phuc-hoi-hang-rao-bao-ve-da' }},
+      hydration:{{ settings.skin_result_col_hydration | default: 'duong-am-phuc-hoi-b5-ha' }},
+      soothing:{{ settings.skin_result_col_soothing | default: 'lam-diu-on-dinh-nen-da' }},
+      retinoid:{{ settings.skin_result_col_retinoid | default: 'retinol-chong-lao-hoa' }},
+      brightening:{{ settings.skin_result_col_brightening | default: 'tri-nam-sang-da-tranexamic-vitc' }},
+      sunscreen:{{ settings.skin_result_col_sunscreen | default: 'kem-chong-nang-pho-rong' }}
+    {%- endcapture -%}
+    {%- assign pc_rc_pairs = pc_rc_list | strip_newlines | remove: ' ' | split: ',' -%}
+    {%- for pc_rc_pair in pc_rc_pairs -%}
+    {%- assign pc_rc_kv = pc_rc_pair | split: ':' -%}
+    {%- assign pc_rc_handle = pc_rc_kv.last -%}
+    {%- assign pc_rc = collections[pc_rc_handle] -%}
+    {%- if pc_rc.products_count > 0 -%}
+    {%- unless pc_rc_first %},{% endunless -%}
+    {%- assign pc_rc_first = false %}
+    {{ pc_rc_kv.first | json }}: { "url": {{ pc_rc.url | json }}, "title": {{ pc_rc.name | json }}, "count": {{ pc_rc.products_count | json }} }
+    {%- endif -%}
+    {%- endfor %}
+  };
 </script>
 
 <section class="py-6 sm:py-10 bg-slate-50/50 min-h-screen">
@@ -176,7 +204,8 @@
         <div class="pc-quiz-alert" data-quiz-alert hidden></div>
         <div class="pc-quiz-routine" data-quiz-routine hidden></div>
 
-        <!-- 3 Giai đoạn phác đồ (soi da camera; khảo sát câu hỏi dùng routine theo Case ở trên) -->
+        <!-- 3 Giai đoạn phác đồ (soi da camera; khảo sát câu hỏi dùng routine theo Case ở trên).
+             2026-10-09: mỗi thẻ có nút mở danh mục tự động của giai đoạn (JS điền vào [data-scan-stage-products]). -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2" data-stage-grid>
           <div class="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 space-y-2">
             <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider block">GIAI ĐOẠN 1</span>
@@ -341,21 +370,80 @@
       : 'Dựa trên câu trả lời thực tế của bạn ở bài khảo sát câu hỏi.';
   }
 
+  // ── 2026-10-09: badge hoạt chất / thẻ giai đoạn → danh mục tự động trên Sapo (window.PharmaResultCollections).
+  // Thứ tự quy tắc có chủ ý: "Kem Chống Nắng Vật Lý Dịu Nhẹ" phải ra chống nắng, "Panthenol (Vitamin B5)" ra
+  // phục hồi hàng rào, "Serum Cấp Nước B5" ra cấp ẩm.
+  var resultCollections = window.PharmaResultCollections || {};
+  var collectionRules = [
+    ['sunscreen', /chống nắng|spf|broad-spectrum/i],
+    ['bha', /salicylic|bha|azela/i],
+    ['niacinamide', /niacinamide|oil-free|dầu nước|kiềm dầu/i],
+    ['hydration', /hyaluronic|cấp nước|cấp ẩm|khóa ẩm|khoá ẩm/i],
+    ['barrier', /ceramide|centella|rau má|panthenol|phục hồi/i],
+    ['brightening', /tranexamic|vitamin c|nám|sáng da|sắc tố/i],
+    ['retinoid', /retin|peptide|lão hóa|lão hoá/i],
+    ['soothing', /làm dịu|dịu nhẹ|nhạy cảm/i]
+  ];
+  // Danh mục chứa hoạt chất có thể bị loại theo cờ an toàn (thai kỳ, dị ứng nặng) ⇒ không đưa link.
+  var collectionActive = { bha: 'bha', retinoid: 'retinoid' };
+  function collectionFor(key) {
+    var c = key && resultCollections[key];
+    if (!c || !c.url) return null;
+    if (collectionActive[key] && excluded.indexOf(collectionActive[key]) !== -1) return null;
+    return c;
+  }
+  function collectionKeyForText(text) {
+    for (var i = 0; i < collectionRules.length; i++) {
+      if (collectionRules[i][1].test(text || '')) return collectionRules[i][0];
+    }
+    return null;
+  }
+  // Giai đoạn 1 = làm dịu, 2 = phục hồi hàng rào, 3 = đặc trị theo vấn đề trọng tâm (soi da) hoặc loại da (khảo sát).
+  var stage3BySkin = { oily: 'bha', combination: 'niacinamide', dry: 'hydration', sensitive: 'sunscreen', normal: 'brightening', pigmentation: 'brightening', aging: 'retinoid' };
+  var stage3ByConcern = { acne: 'bha', pores: 'niacinamide', pigmentation: 'brightening', wrinkles: 'retinoid', redness: 'sunscreen' };
+  function stageCollectionKey(stage) {
+    if (stage === 1) return 'soothing';
+    if (stage === 2) return 'barrier';
+    if (skinScan && skinScan.scores) {
+      // Bản lưu cũ có thể thiếu primary_concern ⇒ lấy chỉ số raw_score cao nhất (cùng cách skin-routine-matcher).
+      var concern = skinScan.primary_concern || Object.keys(skinScan.scores).sort(function (a, b) {
+        return Number(skinScan.scores[b] && skinScan.scores[b].raw_score || 0) - Number(skinScan.scores[a] && skinScan.scores[a].raw_score || 0);
+      })[0];
+      return stage3ByConcern[concern] || 'barrier';
+    }
+    return stage3BySkin[skinType] || 'barrier';
+  }
+  function renderBadge(text, key) {
+    var c = collectionFor(key);
+    var el = document.createElement(c ? 'a' : 'span');
+    el.className = 'pc-kit-badge-gold px-3 py-1.5 text-xs font-semibold' + (c ? ' inline-flex items-center gap-1.5 hover:underline' : '');
+    el.textContent = text;
+    if (c) {
+      el.href = c.url;
+      el.title = 'Xem ' + c.count + ' sản phẩm: ' + c.title;
+      el.setAttribute('data-result-collection', key);
+      var icon = document.createElement('i');
+      icon.className = 'fas fa-arrow-right text-[10px]';
+      icon.setAttribute('aria-hidden', 'true');
+      el.appendChild(icon);
+    }
+    rec.appendChild(el);
+  }
+
   // Render hoạt chất
   var rec = root.querySelector('[data-result-recommend]');
   rec.innerHTML = '';
   (result.recommend || []).filter(function (r) {
     return !engine || engine.isTextAllowed(r, excluded);
   }).forEach(function (r) {
-    var span = document.createElement('span');
-    span.className = 'pc-kit-badge-gold px-3 py-1.5 text-xs font-semibold';
-    span.textContent = r;
-    rec.appendChild(span);
+    renderBadge(r, collectionKeyForText(r));
   });
 
   var searchLink = root.querySelector('[data-result-search-link]');
   if (searchLink && result.recommend && result.recommend[0]) {
-    searchLink.href = '/search?query=' + encodeURIComponent(result.recommend[0]);
+    // 2026-10-09: ưu tiên danh mục tự động của hoạt chất đầu tiên, chưa có thì tìm kiếm như cũ.
+    var firstCollection = collectionFor(collectionKeyForText(result.recommend[0]));
+    searchLink.href = firstCollection ? firstCollection.url : '/search?query=' + encodeURIComponent(result.recommend[0]);
   }
 
   // Soi da camera chi tiết nếu có
@@ -437,28 +525,31 @@
 
     if (skinScan.regimen && skinScan.regimen.length) {
       rec.innerHTML = '';
-      skinScan.regimen.forEach(function (stage) {
-        var tag = document.createElement('span');
-        tag.className = 'pc-kit-badge-gold px-3 py-1.5 text-xs font-semibold';
-        tag.textContent = stage;
-        rec.appendChild(tag);
+      // regimen = 3 câu mô tả giai đoạn theo thứ tự ⇒ badge thứ i mở danh mục của giai đoạn i+1.
+      skinScan.regimen.forEach(function (stage, index) {
+        renderBadge(stage, stageCollectionKey(index + 1));
       });
     }
-
-    // 2026-10-03: khôi phục link sản phẩm theo từng giai đoạn routine — commit 017e220 viết lại trang
-    // và bỏ đoạn này nên 3 khung [data-scan-stage-products] luôn trống (test skin-scan "routine" bắt được).
-    (skinScan.recommended_products || []).forEach(function (product) {
-      if (!product || !/^\/[a-z0-9-]+$/.test(product.url || '')) return;
-      var stageProducts = root.querySelector('[data-scan-stage-products="' + Number(product.stage) + '"]');
-      if (!stageProducts) return;
-      var link = document.createElement('a');
-      link.className = 'pc-kit-btn-secondary px-4 py-2 text-xs';
-      link.href = product.url;
-      link.textContent = product.label || {{ settings.skin_scan_product_link_label | default: 'Xem sản phẩm tham khảo' | json }};
-      stageProducts.appendChild(link);
-      stageProducts.hidden = false;
-    });
   }
+
+  // 2026-10-09: nút mỗi thẻ giai đoạn mở danh mục tự động. Thay link sản phẩm cũ theo recommended_products
+  // (skin-routine-matcher.js) — các handle đó (sua-rua-mat-amino-acid, serum-vitamin-c-15…) không có trên
+  // Sapo nên link bị chuyển về trang chủ.
+  [1, 2, 3].forEach(function (stage) {
+    var slot = root.querySelector('[data-scan-stage-products="' + stage + '"]');
+    var key = stageCollectionKey(stage);
+    var c = collectionFor(key);
+    if (!slot || !c) return;
+    var link = document.createElement('a');
+    link.className = 'pc-kit-btn-secondary px-4 py-2 text-xs inline-flex items-center gap-1.5';
+    link.href = c.url;
+    link.title = c.title;
+    link.setAttribute('data-result-collection', key);
+    link.textContent = {{ settings.skin_result_stage_cta_label | default: 'Xem sản phẩm giai đoạn này' | json }} + ' (' + c.count + ')';
+    slot.innerHTML = '';
+    slot.appendChild(link);
+    slot.hidden = false;
+  });
 
   // ── 2026-10-05: KẾT QUẢ KHẢO SÁT THEO CASE (assets/skin-quiz-engine.js.bwt + quiz_results_data.cases) ──
   // Sản phẩm từng bước lấy THẬT từ Sapo qua /search?view=quizjson (không ghi cứng tên/giá); bước có hoạt
