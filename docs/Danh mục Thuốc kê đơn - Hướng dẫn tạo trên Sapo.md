@@ -120,9 +120,21 @@ Ngày lập: 10/10/2026 · Cửa hàng: PHARMA COSMETICS (pharmacosmetics-vn.mys
 | 7 | AZELDERM 20% KREM AZELAIC AICD 30g / KEM TRỊ MỤN, LÀM SÁNG VÀ ĐỀU MÀU DA | Azelaic acid 15–20% đăng ký thuốc — dược sĩ quyết định | `/azelderm-20-krem-azelaic-aicd-30g-kem-tri-mun` |
 | 8 | Skinoren Acidum Azelaicum: Kem Trị Mụn, Mờ Thâm & Điều Trị Rosacea Chuyên Sâu | Azelaic acid 15–20% đăng ký thuốc — dược sĩ quyết định | `/skinoren-acidum-azelaicum-kem-tri-mun-mo-tham-dieu-tri-rosacea-chuyen-sau` |
 
-## 6. Nhật ký
+## 6. Kết quả triển khai (10/10/2026)
+
+- Đã tạo danh mục **Thuốc kê đơn** · ID **4365471** · [Quản trị](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365471) · `/thuoc-ke-don` (Thủ công).
+- Hồ sơ dược sĩ chốt **73 sản phẩm**, chia 9 nhóm: isotretinoin uống 17, tretinoin bôi 18, adapalene/retinoid 10, tazarotene 3,
+  kháng sinh bôi + dapsone 10, hydroquinone 5, metronidazole/tacrolimus 3, kháng sinh uống + kháng nấm 2, azelaic/MartiDerm 5.
+  So với danh sách ứng viên ở mục 3–5: dược sĩ thêm Acnotin 20, Altreno, Klena Forte/Duo/BPO, Adapex, Aldocont B, Dapsone
+  (Klenadap, Acnedap) và đưa cả 3 MartiDerm Pigment Zero, 2 peel Radiance Beauva, 3 azelaic acid vào danh mục.
+- ⚠️ Đếm trên web 10/10/2026: danh mục hiện **72 SP** — thiếu **Roza 0,75% Metronidazol** (ID 71766172, trang SP vẫn mở được).
+  Cần thêm lại vào danh mục; nếu không, sản phẩm này vẫn hiện giá + nút mua.
+- Theme: `configs/settings_data.json` → `product_rx_collection` = `thuoc-ke-don` (trước là `isotretinoin`).
+
+## 7. Nhật ký
 
 | Ngày | Việc | Người làm |
 | :-- | :-- | :-- |
-| | Tạo danh mục `thuoc-ke-don` (ID: …) | |
-| | Đổi "Sản phẩm kê toa" trong Tuỳ chỉnh giao diện sang `thuoc-ke-don` | |
+| 10/10/2026 | Tạo danh mục `thuoc-ke-don` (ID 4365471), nạp 73 SP theo hồ sơ dược sĩ (web hiện 72 — thiếu Roza) | Quản trị viên |
+| 10/10/2026 | Đổi "Sản phẩm kê toa" trong gói theme sang `thuoc-ke-don` | Dev |
+| | Đổi "Sản phẩm kê toa" trong Tuỳ chỉnh giao diện **trên Sapo** sang `thuoc-ke-don` | |
