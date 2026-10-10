@@ -103,7 +103,7 @@
   };
 </script>
 
-<section class="py-6 sm:py-10 bg-slate-50/50 min-h-screen">
+<section class="pc-result-page py-6 sm:py-10 bg-slate-50/50 min-h-screen">
   <div class="container space-y-6">
 
     <!-- 1. Disclaimer Banner -->
@@ -168,73 +168,76 @@
       </div>
 
       <!-- 2026-10-10: Mời tạo hồ sơ CRM — chỉ hiện khi CÓ kết quả trên thiết bị nhưng GAS chưa có hồ sơ của kết quả này.
-           Đã đăng nhập ⇒ nút mở hộp đồng ý lưu; khách vãng lai ⇒ nút đăng nhập (bắt buộc đăng nhập mới tạo hồ sơ). -->
-      <div class="pc-profile-prompt bg-emerald-50 border border-emerald-200 rounded-2xl sm:rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4" data-profile-prompt hidden>
-        <div class="w-11 h-11 rounded-full bg-emerald-600 text-white flex items-center justify-center text-lg shrink-0" aria-hidden="true">
-          <i class="fas fa-file-medical"></i>
+           Đã đăng nhập ⇒ nút mở hộp đồng ý lưu; khách vãng lai ⇒ nút đăng nhập (bắt buộc đăng nhập mới tạo hồ sơ).
+           2026-10-11: bố cục theo thiết kế (icon tròn lớn, nút có mũi tên) — class pc-profile-prompt* ở page_ai_skin_quiz.scss.bwt. -->
+      <div class="pc-profile-prompt" data-profile-prompt hidden>
+        <div class="pc-profile-prompt__icon" aria-hidden="true"><i class="fas fa-file-medical"></i></div>
+        <div class="pc-profile-prompt__body">
+          <p class="pc-profile-prompt__title">{{ settings.skin_profile_prompt_title | default: 'Bạn đã có kết quả phân tích da' | escape }}</p>
+          <p class="pc-profile-prompt__text" data-profile-prompt-text></p>
         </div>
-        <div class="flex-1 space-y-1">
-          <p class="text-sm sm:text-base font-bold text-forest-900">{{ settings.skin_profile_prompt_title | default: 'Bạn đã có kết quả phân tích da' | escape }}</p>
-          <p class="text-xs sm:text-sm text-gray-700 leading-relaxed" data-profile-prompt-text></p>
-        </div>
-        <button type="button" class="pc-kit-btn-primary px-5 py-3 text-sm font-bold justify-center shrink-0" data-profile-prompt-action></button>
+        <button type="button" class="pc-kit-btn-primary pc-profile-prompt__btn" data-profile-prompt-action></button>
       </div>
 
-      <!-- 2. Thẻ Thông Tin Khách Hàng & Trạng Thái Đồng Bộ GAS CRM -->
-      <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200/90" data-customer-card data-result-section>
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-5 mb-5 border-b border-gray-100 gap-3">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg font-bold">
-              <i class="fas fa-user-check"></i>
+      <!-- 2. + 3. (2026-10-11, theo thiết kế) Một thẻ 2 cột: trái = hồ sơ khách hàng & trạng thái lưu CRM,
+           phải = hồ sơ da (h1 + tóm tắt). Trước đây là 2 thẻ to riêng, nhiều khoảng trống ít thông tin.
+           Chưa có kết quả ⇒ cả thẻ ẩn (data-result-section), h1 đổi thành h2 (showEmptyState). -->
+      <div class="pc-result-overview" data-result-section>
+        <div class="pc-result-overview__customer" data-customer-card>
+          <div class="pc-result-overview__head">
+            <div class="pc-result-overview__avatar" aria-hidden="true"><i class="fas fa-user-check"></i></div>
+            <div class="pc-result-overview__who">
+              <span class="pc-result-overview__eyebrow">HỒ SƠ KHÁCH HÀNG</span>
+              <h2 class="pc-result-overview__name" data-customer-name>Khách Hàng Tư Vấn</h2>
             </div>
-            <div>
-              <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider block">HỒ SƠ KHÁCH HÀNG</span>
-              <h2 class="text-base sm:text-lg font-bold text-gray-900 font-heading" data-customer-name>Khách Hàng Tư Vấn</h2>
+            <div class="pc-result-overview__status" data-crm-sync-container>
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200" data-crm-status-badge>
+                <i class="fas fa-circle-notch fa-spin text-emerald-600"></i> Đang đối soát CRM...
+              </span>
             </div>
           </div>
-          <div class="flex items-center gap-2" data-crm-sync-container>
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200" data-crm-status-badge>
-              <i class="fas fa-circle-notch fa-spin text-emerald-600"></i> Đang đối soát CRM...
+          <div class="pc-result-overview__cells">
+            <div class="pc-result-overview__cell">
+              <span class="pc-result-overview__cell-icon" aria-hidden="true"><i class="fas fa-phone"></i></span>
+              <div class="pc-result-overview__cell-body">
+                <span class="pc-result-overview__label">Liên hệ</span>
+                <strong class="pc-result-overview__value" data-customer-contact>Chưa đăng nhập</strong>
+                <span class="pc-result-overview__note pc-result-overview__note--brand" data-customer-tier>Khách vãng lai</span>
+              </div>
+            </div>
+            <div class="pc-result-overview__cell">
+              <span class="pc-result-overview__cell-icon" aria-hidden="true"><i class="fas fa-chart-simple"></i></span>
+              <div class="pc-result-overview__cell-body">
+                <span class="pc-result-overview__label">Nguồn phân tích</span>
+                <strong class="pc-result-overview__value" data-consultation-source>Khảo sát chuyên sâu câu</strong>
+                <span class="pc-result-overview__note" data-consultation-date>Hôm nay</span>
+              </div>
+            </div>
+            <div class="pc-result-overview__cell pc-result-overview__cell--wide">
+              <span class="pc-result-overview__cell-icon" aria-hidden="true"><i class="fas fa-database"></i></span>
+              <div class="pc-result-overview__cell-body">
+                <span class="pc-result-overview__label">Trạng thái lưu trữ GAS</span>
+                <strong class="pc-result-overview__value" data-crm-storage-state>Phiên hiện tại</strong>
+                <span class="pc-result-overview__note" data-crm-submission-id>Chưa cấp mã lưu</span>
+              </div>
+              <button type="button" class="pc-result-overview__save" data-trigger-crm-save>Lưu ngay</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hồ Sơ Da Tổng Quan (h1 duy nhất của trang khi có kết quả) -->
+        <div class="pc-result-overview__profile" data-result-profile>
+          <div class="pc-result-overview__badges">
+            <span class="pc-kit-badge-clinical text-xs font-semibold" data-result-demo-flag hidden>Bản xem trước minh hoạ</span>
+            <span class="pc-result-overview__verified" data-result-verified-badge>
+              <i class="fas fa-flask" aria-hidden="true"></i> Đã phân tích quang học
             </span>
           </div>
+          <h1 class="pc-result-overview__title">
+            Hồ Sơ Da Của Bạn: <span data-result-title>—</span>
+          </h1>
+          <p class="pc-result-overview__summary" data-result-summary>Đang tải kết quả…</p>
         </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-xs sm:text-sm">
-          <div class="p-4 rounded-xl bg-gray-50/80 border border-gray-100 space-y-1">
-            <span class="text-gray-500 block text-xs">Liên hệ:</span>
-            <strong class="text-gray-900 block font-semibold" data-customer-contact>Chưa đăng nhập</strong>
-            <span class="text-[11px] text-emerald-700 block font-medium" data-customer-tier>Khách vãng lai</span>
-          </div>
-
-          <div class="p-4 rounded-xl bg-gray-50/80 border border-gray-100 space-y-1">
-            <span class="text-gray-500 block text-xs">Nguồn phân tích:</span>
-            <strong class="text-gray-900 block font-semibold" data-consultation-source>Khảo sát chuyên sâu câu</strong>
-            <span class="text-[11px] text-gray-500 block" data-consultation-date>Hôm nay</span>
-          </div>
-
-          <div class="p-4 rounded-xl bg-gray-50/80 border border-gray-100 space-y-1">
-            <span class="text-gray-500 block text-xs">Trạng thái lưu trữ GAS:</span>
-            <div class="flex items-center justify-between">
-              <strong class="text-gray-900 block font-semibold" data-crm-storage-state>Phiên hiện tại</strong>
-              <button type="button" class="text-xs font-bold text-emerald-700 hover:text-emerald-800 underline ml-2" data-trigger-crm-save>Lưu ngay</button>
-            </div>
-            <span class="text-[11px] text-gray-500 block truncate" data-crm-submission-id>Chưa cấp mã lưu</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 3. Hồ Sơ Da Tổng Quan (2026-10-10: chưa có dữ liệu ⇒ khối này hiện trạng thái "chưa có hồ sơ", giữ h1 duy nhất) -->
-      <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200/90" data-result-profile>
-        <div class="flex items-center gap-3 mb-4">
-          <span class="pc-kit-badge-clinical text-xs font-semibold" data-result-demo-flag hidden>Bản xem trước minh hoạ</span>
-          <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200" data-result-verified-badge>
-            <i class="fas fa-microscope text-[10px]"></i> Đã phân tích quang học
-          </span>
-        </div>
-        <h1 class="text-xl sm:text-2xl font-extrabold text-forest-900 font-heading mb-2">
-          Hồ Sơ Da Của Bạn: <span data-result-title>—</span>
-        </h1>
-        <p class="text-sm text-gray-600 leading-relaxed" data-result-summary>Đang tải kết quả…</p>
       </div>
 
       <!-- 4. Hoạt Chất Đề Xuất & Định Hướng Phác Đồ — 2026-10-10: bố cục theo design/ket-qua-da/dinh-huong-phac-do.png:
