@@ -31,6 +31,11 @@
     } catch (e) { return null; }
   }
 
+  // 2026-10-10: báo thay đổi để thanh "đã có hồ sơ" (snippets/skin_profile_notice.bwt) tự cập nhật khi vừa làm xong.
+  function changed(key) {
+    try { window.dispatchEvent(new CustomEvent('pc:result-store', { detail: { key: key } })); } catch (e) {}
+  }
+
   window.PharmaResultStore = {
     retentionDays: days,
     get: function (key) {
@@ -42,14 +47,29 @@
       value = String(value);
       try { window.localStorage.setItem(PREFIX + key, JSON.stringify({ v: value, exp: Date.now() + TTL })); } catch (e) {}
       try { window.sessionStorage.setItem(key, value); } catch (e) {}
+      changed(key);
     },
     remove: function (key) {
       try { window.localStorage.removeItem(PREFIX + key); } catch (e) {}
       try { window.sessionStorage.removeItem(key); } catch (e) {}
+      changed(key);
     },
     // Có kết quả soi da/khảo sát (chưa hết hạn) trên thiết bị này không.
     hasResult: function () {
       return !!(this.get('pc_skin_scan_result') || this.get('pc_quiz_skin_type'));
+    },
+    // Kết quả mới nhất trên thiết bị: { source: 'camera'|'quiz', saved_at: ms, saved: đã lưu hồ sơ CRM } hoặc null.
+    latestResult: function () {
+      var scan = null;
+      try { scan = JSON.parse(this.get('pc_skin_scan_result') || 'null'); } catch (e) {}
+      var scanAt = scan && scan.scores ? Number(scan.saved_at) || 0 : -1;
+      var quizAt = this.get('pc_quiz_skin_type') ? Number(this.get('pc_quiz_saved_at')) || 0 : -1;
+      if (scanAt < 0 && quizAt < 0) return null;
+      return {
+        source: scanAt >= quizAt ? 'camera' : 'quiz',
+        saved_at: Math.max(scanAt, quizAt),
+        saved: !!this.get('pc_crm_intake_record_id')
+      };
     },
     clearAll: function () {
       var self = this;

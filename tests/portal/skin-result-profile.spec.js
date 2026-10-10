@@ -157,3 +157,41 @@ test('nút "Bắt đầu ngay" ở trang kết quả mở đúng tab soi da AI; 
   await page.goto('/ai-skin-quiz');
   await expect(page.locator('[data-skin-mode="quiz"]')).toHaveAttribute('aria-selected', 'true');
 });
+
+// 2026-10-10: trang khảo sát / soi da — đã có hồ sơ thì có thanh nhắc + nút xem lại kết quả.
+test('trang khảo sát: chưa có kết quả ⇒ không có thanh; có kết quả soi da ⇒ thanh "đã có hồ sơ" + xem lại; đóng thì ẩn', async ({ page }) => {
+  await page.goto('/ai-skin-quiz');
+  await expect(page.locator('[data-skin-profile-notice]')).toBeHidden();
+
+  await page.evaluate(() => window.PharmaResultStore.set('pc_skin_scan_result', JSON.stringify({
+    saved_at: new Date(2026, 9, 9, 9, 0).getTime(), primary_concern: 'acne',
+    scores: { acne: { raw_score: 0.9 }, pigmentation: { raw_score: 0.1 }, wrinkles: { raw_score: 0.1 }, redness: { raw_score: 0.1 }, pores: { raw_score: 0.1 } }
+  })));
+  const notice = page.locator('[data-skin-profile-notice]');
+  await expect(notice).toBeVisible(); // tự hiện ngay nhờ sự kiện pc:result-store
+  await expect(notice).toContainText('Bạn đã có hồ sơ chăm sóc da');
+  await expect(notice).toContainText('Kết quả soi da AI ngày 09/10/2026');
+  await expect(notice.locator('[data-skin-profile-notice-link]')).toHaveAttribute('href', '/ai-skin-quiz-results');
+
+  await page.reload();
+  await expect(notice).toBeVisible();
+  await notice.locator('[data-skin-profile-notice-close]').click();
+  await expect(notice).toBeHidden();
+  await page.reload();
+  await expect(notice).toBeHidden(); // đóng rồi thì ẩn tới khi có kết quả mới hơn
+  await page.evaluate(() => window.PharmaResultStore.clearAll());
+});
+
+test('trang khảo sát: làm xong khảo sát chat ⇒ thanh hiện "khảo sát chat" ngay', async ({ page }) => {
+  const fs = require('fs'); const path = require('path');
+  const raw = fs.readFileSync(path.join(__dirname, '../../snippets/quiz_questions_data.bwt'), 'utf8');
+  const questions = JSON.parse(raw.slice(raw.indexOf('{%- endcomment -%}') + '{%- endcomment -%}'.length));
+  const BASELINE = { 18: 0, 1: 3, 2: 2, 3: 3, 4: 1, 5: 3, 6: 3, 7: 2, 8: 3, 9: 2, 10: 0, 11: 3, 12: 1, 13: 3, 14: 0, 15: 2, 16: 1, 17: 3 };
+  await page.addInitScript(() => { window.PharmaCrmIntakeConfig = { enabled: false, endpoint: '', timeout_ms: '10000' }; });
+  await page.goto('/ai-skin-quiz?tab=quiz');
+  await expect(page.locator('[data-skin-profile-notice]')).toBeHidden();
+  await page.locator('.quick-reply-chip').first().click();
+  for (const q of questions) await page.locator('.quick-reply-chip', { hasText: q.options[BASELINE[q.id]].text }).first().click();
+  await expect(page.locator('[data-skin-profile-notice]')).toContainText('Kết quả khảo sát chat ngày');
+  await page.evaluate(() => window.PharmaResultStore.clearAll());
+});

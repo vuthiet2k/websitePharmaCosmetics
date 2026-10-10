@@ -1,0 +1,76 @@
+{%- comment -%}
+  skin_profile_notice.bwt (2026-10-10) — thanh "Bạn đã có hồ sơ chăm sóc da" ở trang khảo sát / soi da.
+  Người dùng yêu cầu: vào trang khảo sát mà đã có hồ sơ thì phải báo, kèm lối xem lại kết quả.
+  - Có kết quả trên thiết bị (PharmaResultStore.latestResult) ⇒ nêu nguồn + ngày (+ "đã lưu hồ sơ"), nút "Xem hồ sơ & gợi ý".
+  - Không có kết quả trên máy nhưng tài khoản đã có hồ sơ CRM (GAS limited/found) ⇒ chỉ nhắc, không có nút
+    (trang kết quả cũng chưa có gì để xem trên thiết bị này).
+  - Tự cập nhật khi vừa làm xong khảo sát / soi da (sự kiện pc:result-store). Đóng ⇒ ẩn tới khi có kết quả mới hơn.
+  Cần include SAU snippets/pc_result_store.bwt. Chữ lấy từ settings.skin_quiz_profile_*.
+{%- endcomment -%}
+<div class="container">
+  <div class="pc-skin-notice" role="status" data-skin-profile-notice hidden>
+    <i class="fas fa-circle-check pc-skin-notice__icon" aria-hidden="true"></i>
+    <div class="pc-skin-notice__text">
+      <strong>{{ settings.skin_quiz_profile_title | default: 'Bạn đã có hồ sơ chăm sóc da' | escape }}</strong>
+      <span data-skin-profile-notice-text></span>
+    </div>
+    <a class="pc-skin-notice__link" href="/ai-skin-quiz-results" data-skin-profile-notice-link>{{ settings.skin_quiz_profile_link_label | default: 'Xem hồ sơ & gợi ý' | escape }} <i class="fas fa-chevron-right" aria-hidden="true"></i></a>
+    <button type="button" class="pc-skin-notice__close" aria-label="Đóng thông báo" data-skin-profile-notice-close><i class="fas fa-xmark" aria-hidden="true"></i></button>
+  </div>
+</div>
+<script>
+(function () {
+  'use strict';
+  var box = document.querySelector('[data-skin-profile-notice]');
+  var store = window.PharmaResultStore;
+  if (!box || !store) return;
+  var copy = {
+    text: {{ settings.skin_quiz_profile_text | default: 'Kết quả {nguon} ngày {ngay} vẫn đang được lưu trên thiết bị này. Xem lại phác đồ và sản phẩm gợi ý, hoặc làm lại bên dưới để cập nhật tình trạng da hiện tại.' | json }},
+    savedNote: {{ settings.skin_quiz_profile_saved_note | default: 'Kết quả đã được lưu vào hồ sơ của bạn.' | json }},
+    existsText: {{ settings.skin_quiz_profile_exists_text | default: 'Tài khoản của bạn đã có hồ sơ chăm sóc da. Làm lại khảo sát hoặc soi da bên dưới để xem phác đồ và gợi ý sản phẩm mới nhất trên thiết bị này.' | json }},
+    camera: {{ settings.skin_quiz_profile_source_camera | default: 'soi da AI' | json }},
+    quiz: {{ settings.skin_quiz_profile_source_quiz | default: 'khảo sát chat' | json }}
+  };
+  var textEl = box.querySelector('[data-skin-profile-notice-text]');
+  var linkEl = box.querySelector('[data-skin-profile-notice-link]');
+  var accountHasProfile = false;
+  var CLOSED_KEY = 'pc_profile_notice_closed';
+
+  function signature(r) { return r ? r.source + ':' + r.saved_at : 'account'; }
+  function render() {
+    var r = store.latestResult();
+    var closed = null;
+    try { closed = sessionStorage.getItem(CLOSED_KEY); } catch (e) {}
+    if ((!r && !accountHasProfile) || closed === signature(r)) { box.hidden = true; return; }
+    if (r) {
+      var date = r.saved_at ? new Date(r.saved_at).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+      var text = copy.text.replace('{nguon}', r.source === 'camera' ? copy.camera : copy.quiz).replace(' ngày {ngay}', date ? ' ngày ' + date : '').replace('{ngay}', date);
+      textEl.textContent = text + (r.saved ? ' ' + copy.savedNote : '');
+      linkEl.hidden = false;
+    } else {
+      textEl.textContent = copy.existsText;
+      linkEl.hidden = true;
+    }
+    box.hidden = false;
+  }
+
+  box.querySelector('[data-skin-profile-notice-close]').addEventListener('click', function () {
+    try { sessionStorage.setItem(CLOSED_KEY, signature(store.latestResult())); } catch (e) {}
+    box.hidden = true;
+  });
+  window.addEventListener('pc:result-store', render);
+  render();
+
+  // Không có kết quả trên máy + đã đăng nhập ⇒ hỏi GAS tài khoản đã có hồ sơ chưa (crm-intake.js nạp defer).
+  var ctx = window.PharmaCrmCustomerContext || {};
+  if (!store.latestResult() && ctx.logged_in) {
+    document.addEventListener('DOMContentLoaded', function () {
+      var crm = window.PharmaCrmIntake;
+      if (!crm || !crm.isReady || !crm.isReady() || typeof crm.getCustomerInfo !== 'function') return;
+      crm.getCustomerInfo().then(function (info) {
+        if (info && (info.profile_exists || (info.stored_in_gas && info.consultation))) { accountHasProfile = true; render(); }
+      }).catch(function () {});
+    });
+  }
+})();
+</script>

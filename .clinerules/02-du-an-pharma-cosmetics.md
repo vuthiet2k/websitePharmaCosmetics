@@ -309,7 +309,10 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
 - Trang kết quả KHÔNG còn "bản minh hoạ": thiết bị không có kết quả ⇒ `[data-result-empty-view]` theo thiết kế
   `design/ket-qua-da/chua-co-ho-so.png` (thanh cảnh báo "chưa có hồ sơ" ở trên; khối giới thiệu + thẻ soi da/khảo sát ở
   dưới; chữ/ảnh từ `settings.skin_result_empty_*`), ẩn hồ sơ + mọi `[data-result-section]` + lưu ý kết quả. Đúng 1 h1:
-  JS đổi h1 của khối hồ sơ thành h2 và tiêu đề khối giới thiệu thành h1. GAS trả hồ sơ đầy đủ ⇒ dựng lại
+  JS đổi h1 của khối hồ sơ thành h2 và tiêu đề khối giới thiệu thành h1.
+- Trang khảo sát / soi da: `snippets/skin_profile_notice.bwt` (include SAU pc_result_store) — còn kết quả trên máy ⇒ thanh
+  xanh "Bạn đã có hồ sơ chăm sóc da" (nguồn + ngày + đã lưu CRM) + nút về trang kết quả; chỉ tài khoản có hồ sơ (GAS) ⇒
+  nhắc, không nút. Tự cập nhật qua sự kiện `pc:result-store` (PharmaResultStore.set/remove phát ra). `?tab=camera|quiz` chọn tab. GAS trả hồ sơ đầy đủ ⇒ dựng lại
   kết quả vào PharmaResultStore rồi tải lại 1 lần (cờ `pc_crm_hydrated`). `crm-intake.js` nạp `defer` ⇒ gọi
   `syncCustomerInfo` sau DOMContentLoaded (trước 2026-10-10 trang không tra GAS khi mở).
 - "Sản phẩm đề xuất" lấy từ SP của danh mục tự động (`PharmaResultCollections[*].products`, tối đa 8/danh mục, đã bỏ
