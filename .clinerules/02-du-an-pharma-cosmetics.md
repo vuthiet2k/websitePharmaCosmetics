@@ -315,6 +315,12 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
   nhắc, không nút. Tự cập nhật qua sự kiện `pc:result-store` (PharmaResultStore.set/remove phát ra). `?tab=camera|quiz` chọn tab. GAS trả hồ sơ đầy đủ ⇒ dựng lại
   kết quả vào PharmaResultStore rồi tải lại 1 lần (cờ `pc_crm_hydrated`). `crm-intake.js` nạp `defer` ⇒ gọi
   `syncCustomerInfo` sau DOMContentLoaded (trước 2026-10-10 trang không tra GAS khi mở).
+- Khối "Định hướng phác đồ tham khảo" (2026-10-10, `design/ket-qua-da/dinh-huong-phac-do.png`): 5 thẻ chỉ số (soi da) →
+  `[data-plan-stages]` 3 giai đoạn, mỗi giai đoạn dải SP thật của danh mục giai đoạn (thẻ có tim = cookie
+  `sudes_wishlist_products` của theme, nút "Thêm vào phác đồ" = POST `/cart/add.js` khi SP 1 phiên bản còn hàng, ngược lại
+  "Xem chi tiết") + cột phải radar / gợi ý chuyên gia / lưu ý → 3 thẻ giai đoạn. Có dải giai đoạn ⇒ ẩn khối "Sản phẩm đề
+  xuất" riêng; khảo sát theo Case giữ routine sáng/tối + khối "Sản phẩm đề xuất". Chữ: `settings.skin_plan_*`; màu giai
+  đoạn 02/03: token `--pc-stage-2-*`/`--pc-stage-3-*`.
 - "Sản phẩm đề xuất" lấy từ SP của danh mục tự động (`PharmaResultCollections[*].products`, tối đa 8/danh mục, đã bỏ
   kê toa): ưu tiên danh mục của badge + giai đoạn 3, giai đoạn 1–2 chỉ bù chỗ trống; không có thì quay về dò tag cũ.
 - GAS CRM ≥ 1.3.0: `get_customer_info` chỉ trả **đủ hồ sơ** khi khớp `submission_id`/`session_id` (mã ngẫu nhiên trên

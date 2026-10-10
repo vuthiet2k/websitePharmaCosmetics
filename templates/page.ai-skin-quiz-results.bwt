@@ -91,7 +91,9 @@
       {%- unless pc_is_rx -%}
       {%- if pc_rcp_n > 0 %},{% endif -%}
       {%- assign pc_rcp_n = pc_rcp_n | plus: 1 %}
-      { "name": {{ product.name | json }}, "alias": {{ product.alias | json }}, "url": {{ product.url | json }}, "tags": {{ product.tags | json }}, "price": {{ product.price | default: 0 | json }}, "compare_at_price": {{ product.compare_at_price | default: 0 | json }}, "featured_image": {% if product.featured_image.src != blank %}{ "src": {{ product.featured_image.src | img_url: 'large' | json }} }{% else %}null{% endif %} }
+      {%- assign pc_rcp_vid = '' -%}
+      {%- if product.available and product.variants.size == 1 -%}{%- assign pc_rcp_vid = product.variants.first.id -%}{%- endif %}
+      { "name": {{ product.name | json }}, "alias": {{ product.alias | json }}, "url": {{ product.url | json }}, "vendor": {{ product.vendor | json }}, "variant_id": {{ pc_rcp_vid | json }}, "tags": {{ product.tags | json }}, "price": {{ product.price | default: 0 | json }}, "compare_at_price": {{ product.compare_at_price | default: 0 | json }}, "featured_image": {% if product.featured_image.src != blank %}{ "src": {{ product.featured_image.src | img_url: 'large' | json }} }{% else %}null{% endif %} }
       {%- endunless -%}
       {%- endif -%}
       {%- endfor %}
@@ -235,54 +237,86 @@
         <p class="text-sm text-gray-600 leading-relaxed" data-result-summary>Đang tải kết quả…</p>
       </div>
 
-      <!-- 4. Hoạt Chất Đề Xuất & Định Hướng Phác Đồ -->
-      <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200/90 space-y-6" data-result-section>
-        <div class="flex items-center justify-between pb-4 border-b border-gray-100">
+      <!-- 4. Hoạt Chất Đề Xuất & Định Hướng Phác Đồ — 2026-10-10: bố cục theo design/ket-qua-da/dinh-huong-phac-do.png:
+           5 thẻ chỉ số → 3 giai đoạn (mỗi giai đoạn 1 dải sản phẩm thật từ danh mục tự động) + cột phải (radar, gợi ý
+           chuyên gia, lưu ý) → 3 thẻ "Giai đoạn điều trị khuyến nghị". Chữ lấy từ settings.skin_plan_*. -->
+      <div class="pc-plan bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-sm border border-gray-200/90" data-result-section>
+        <div class="pc-plan__head">
           <div>
-            <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider block">HOẠT CHẤT ĐƯỢC ĐỀ XUẤT</span>
-            <h3 class="text-lg font-bold text-forest-900 font-heading">Định Hướng Phác Đồ Tham Khảo</h3>
+            <span class="pc-plan__eyebrow">HOẠT CHẤT ĐƯỢC ĐỀ XUẤT</span>
+            <h3 class="pc-plan__title">Định Hướng Phác Đồ Tham Khảo</h3>
+            <p class="pc-plan__subtitle">{{ settings.skin_plan_subtitle | default: 'Dựa trên kết quả phân tích làn da, chúng tôi gợi ý các nhóm hoạt chất phù hợp và sản phẩm tiêu biểu giúp bạn xây dựng phác đồ chăm sóc da hiệu quả hơn.' | escape }}</p>
           </div>
-          <span class="pc-kit-badge-clinical text-xs font-semibold">{{ settings.skin_scan_recommendation_badge | default: 'Gợi ý tham khảo' | escape }}</span>
+          <span class="pc-kit-badge-clinical text-xs font-semibold pc-plan__badge"><i class="fas fa-shield-heart" aria-hidden="true"></i> {{ settings.skin_scan_recommendation_badge | default: 'Gợi ý tham khảo' | escape }}</span>
         </div>
 
-        <div>
-          <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2.5">Nhóm thành phần hoạt tính ưu tiên:</h4>
+        <div class="pc-plan__actives">
+          <h4 class="pc-plan__actives-label">Nhóm thành phần hoạt tính ưu tiên:</h4>
           <div class="flex flex-wrap gap-2.5" data-result-recommend></div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3" data-scan-scores hidden></div>
-
-        <figure class="pc-skin-radar" data-scan-radar hidden>
-          <h3>{{ settings.skin_scan_radar_title | default: 'Biểu đồ 5 chỉ số soi da' | escape }}</h3>
-          <svg width="360" height="320" viewBox="0 0 360 320" role="img" aria-labelledby="skinRadarSvgTitle" aria-describedby="skinRadarData">
-            <title id="skinRadarSvgTitle">{{ settings.skin_scan_radar_title | default: 'Biểu đồ 5 chỉ số soi da' | escape }}</title>
-            <g class="pc-skin-radar__grid" aria-hidden="true">
-              <polygon points="180,139 200,153 192,176 168,176 160,153"></polygon>
-              <polygon points="180,118 220,147 205,192 155,192 140,147"></polygon>
-              <polygon points="180,97 240,140 218,208 142,208 120,140"></polygon>
-              <polygon points="180,76 260,133 230,224 130,224 100,133"></polygon>
-              <polygon points="180,55 280,127 242,245 118,245 80,127"></polygon>
-              <path d="M180 160V55 M180 160L280 127 M180 160L242 245 M180 160L118 245 M180 160L80 127"></path>
-            </g>
-            <polygon class="pc-skin-radar__area" data-scan-radar-shape points="180,160 180,160 180,160 180,160 180,160"></polygon>
-            <g class="pc-skin-radar__labels" aria-hidden="true">
-              <text x="180" y="34" text-anchor="middle">{{ settings.skin_scan_score_acne | default: 'Mụn' | escape }}</text>
-              <text x="300" y="121" text-anchor="start">{{ settings.skin_scan_score_pigmentation | default: 'Sắc tố' | escape }}</text>
-              <text x="256" y="273" text-anchor="middle">{{ settings.skin_scan_score_wrinkles | default: 'Nếp nhăn' | escape }}</text>
-              <text x="104" y="273" text-anchor="middle">{{ settings.skin_scan_score_redness | default: 'Độ đỏ' | escape }}</text>
-              <text x="60" y="121" text-anchor="end">{{ settings.skin_scan_score_pores | default: 'Lỗ chân lông' | escape }}</text>
-            </g>
-          </svg>
-          <figcaption>{{ settings.skin_scan_radar_description | default: 'Vùng tô đậm biểu thị raw_score chuẩn hóa (0–1); giá trị cao hơn nghĩa là chỉ số concern cao hơn, không phải điểm sức khỏe.' | escape }}</figcaption>
-          <ul class="sr-only" id="skinRadarData" data-scan-radar-values></ul>
-        </figure>
+        <div class="pc-plan__scores" data-scan-scores hidden></div>
         <p class="text-sm text-gray-600" data-scan-age hidden></p>
 
         <div class="pc-quiz-alert" data-quiz-alert hidden></div>
         <div class="pc-quiz-routine" data-quiz-routine hidden></div>
 
-        <!-- 3 Giai đoạn phác đồ (soi da camera; khảo sát câu hỏi dùng routine theo Case ở trên).
-             2026-10-09: mỗi thẻ có nút mở danh mục tự động của giai đoạn (JS điền vào [data-scan-stage-products]). -->
+        <div class="pc-plan__layout">
+          <div class="pc-plan__stages" data-plan-stages hidden></div>
+          <aside class="pc-plan__aside">
+            <figure class="pc-skin-radar" data-scan-radar hidden>
+              <h3>{{ settings.skin_scan_radar_title | default: 'Biểu đồ 5 chỉ số soi da' | escape }}</h3>
+              <svg width="360" height="320" viewBox="0 0 360 320" role="img" aria-labelledby="skinRadarSvgTitle" aria-describedby="skinRadarData">
+                <title id="skinRadarSvgTitle">{{ settings.skin_scan_radar_title | default: 'Biểu đồ 5 chỉ số soi da' | escape }}</title>
+                <g class="pc-skin-radar__grid" aria-hidden="true">
+                  <polygon points="180,139 200,153 192,176 168,176 160,153"></polygon>
+                  <polygon points="180,118 220,147 205,192 155,192 140,147"></polygon>
+                  <polygon points="180,97 240,140 218,208 142,208 120,140"></polygon>
+                  <polygon points="180,76 260,133 230,224 130,224 100,133"></polygon>
+                  <polygon points="180,55 280,127 242,245 118,245 80,127"></polygon>
+                  <path d="M180 160V55 M180 160L280 127 M180 160L242 245 M180 160L118 245 M180 160L80 127"></path>
+                </g>
+                <polygon class="pc-skin-radar__area" data-scan-radar-shape points="180,160 180,160 180,160 180,160 180,160"></polygon>
+                <g class="pc-skin-radar__labels" aria-hidden="true">
+                  <text x="180" y="34" text-anchor="middle">{{ settings.skin_scan_score_acne | default: 'Mụn' | escape }}</text>
+                  <text x="300" y="121" text-anchor="start">{{ settings.skin_scan_score_pigmentation | default: 'Sắc tố' | escape }}</text>
+                  <text x="256" y="273" text-anchor="middle">{{ settings.skin_scan_score_wrinkles | default: 'Nếp nhăn' | escape }}</text>
+                  <text x="104" y="273" text-anchor="middle">{{ settings.skin_scan_score_redness | default: 'Độ đỏ' | escape }}</text>
+                  <text x="60" y="121" text-anchor="end">{{ settings.skin_scan_score_pores | default: 'Lỗ chân lông' | escape }}</text>
+                </g>
+              </svg>
+              <figcaption>{{ settings.skin_scan_radar_description | default: 'Vùng tô đậm biểu thị raw_score chuẩn hóa (0–1); giá trị cao hơn nghĩa là chỉ số concern cao hơn, không phải điểm sức khỏe.' | escape }}</figcaption>
+              <ul class="sr-only" id="skinRadarData" data-scan-radar-values></ul>
+            </figure>
+            <div class="pc-plan__box">
+              <h4 class="pc-plan__box-title"><i class="fas fa-user-doctor" aria-hidden="true"></i> {{ settings.skin_plan_expert_title | default: 'Gợi ý từ chuyên gia' | escape }}</h4>
+              <div class="pc-plan__expert">
+                <p>{{ settings.skin_plan_expert_text | default: 'Các sản phẩm trên được gợi ý dựa trên kết quả phân tích làn da của bạn. Để xây dựng phác đồ chi tiết và phù hợp nhất, bạn nên tham khảo ý kiến chuyên gia.' | escape }}</p>
+                <a class="pc-plan__expert-btn" href="{{ settings.skin_plan_expert_url | default: '/dat-lich-tu-van' | escape }}">{{ settings.skin_plan_expert_label | default: 'Đặt lịch tư vấn ngay' | escape }} <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+              </div>
+            </div>
+            {%- comment -%} Lưu ý: mỗi dòng của settings.skin_plan_notes là 1 mục (trống ⇒ 3 lưu ý mặc định). {%- endcomment -%}
+            {%- capture pc_plan_notes_raw -%}{{ settings.skin_plan_notes | newline_to_br }}{%- endcapture -%}
+            {%- if settings.skin_plan_notes == blank -%}
+              {%- assign pc_plan_notes_raw = 'Ưu tiên thử sản phẩm ở vùng da nhỏ trước khi sử dụng toàn mặt.<br />Kết hợp chống nắng hằng ngày để bảo vệ da tốt hơn.<br />Tham khảo ý kiến chuyên gia nếu có dấu hiệu kích ứng kéo dài.' -%}
+            {%- endif -%}
+            {%- assign pc_plan_notes = pc_plan_notes_raw | split: '<br />' %}
+            <div class="pc-plan__box">
+              <h4 class="pc-plan__box-title"><i class="far fa-file-lines" aria-hidden="true"></i> {{ settings.skin_plan_notes_title | default: 'Lưu ý khi sử dụng' | escape }}</h4>
+              <ul class="pc-plan__notes">
+                {%- for pc_note in pc_plan_notes -%}
+                {%- assign pc_note_text = pc_note | strip_newlines | strip -%}
+                {%- if pc_note_text != blank %}
+                <li><i class="fas fa-circle-check" aria-hidden="true"></i> {{ pc_note_text | escape }}</li>
+                {%- endif -%}
+                {%- endfor %}
+              </ul>
+            </div>
+          </aside>
+        </div>
+
+        <div class="pc-plan__stage-cards" data-stage-section>
+          <h4 class="pc-plan__section-title"><i class="far fa-lightbulb" aria-hidden="true"></i> {{ settings.skin_plan_stages_heading | default: 'Giai đoạn điều trị khuyến nghị' | escape }}</h4>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2" data-stage-grid>
           <div class="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 space-y-2">
             <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider block">GIAI ĐOẠN 1</span>
@@ -302,6 +336,7 @@
             <p class="text-xs text-gray-600 leading-relaxed">Hoạt chất đặc trị nồng độ chuẩn y khoa (BHA, Tranexamic, Retinol) theo hướng dẫn chuyên gia 1:1.</p>
             <div class="flex flex-wrap gap-2 pt-1" data-scan-stage-products="3" hidden></div>
           </div>
+        </div>
         </div>
       </div>
 
@@ -608,22 +643,31 @@
 
     if (scoreList) {
       scoreList.innerHTML = '';
+      // 2026-10-10: thẻ chỉ số theo thiết kế (icon tròn + tên + điểm + mức do skin-scoring-engine tính).
+      var scoreIcons = { acne: 'fa-virus', pigmentation: 'fa-wand-magic-sparkles', wrinkles: 'fa-water', redness: 'fa-sun', pores: 'fa-droplet' };
       radarKeys.forEach(function (key) {
         if (!skinScan.scores[key]) return;
         var item = document.createElement('div');
-        item.className = 'rounded-xl border border-emerald-100 bg-emerald-50/70 p-3 text-center';
+        item.className = 'pc-plan-score';
+        item.setAttribute('data-scan-score', key);
+        var icon = document.createElement('span');
+        icon.className = 'pc-plan-score__icon';
+        icon.innerHTML = '<i class="fas ' + scoreIcons[key] + '" aria-hidden="true"></i>';
+        var body = document.createElement('div');
         var name = document.createElement('strong');
-        name.className = 'block text-xs font-bold text-emerald-900 mb-1';
+        name.className = 'pc-plan-score__name';
         name.textContent = names[key] || key;
         var score = document.createElement('span');
-        score.className = 'text-xl sm:text-2xl font-extrabold text-emerald-700 block';
+        score.className = 'pc-plan-score__value';
         score.textContent = String(skinScan.scores[key].ui_score || '—');
         var level = document.createElement('small');
-        level.className = 'block text-[11px] text-gray-600 mt-1';
+        level.className = 'pc-plan-score__level';
         level.textContent = skinScan.scores[key].level || '';
-        item.appendChild(name);
-        item.appendChild(score);
-        item.appendChild(level);
+        body.appendChild(name);
+        body.appendChild(score);
+        body.appendChild(level);
+        item.appendChild(icon);
+        item.appendChild(body);
         scoreList.appendChild(item);
       });
       scoreList.hidden = false;
@@ -673,7 +717,7 @@
     var routineBox = root.querySelector('[data-quiz-routine]');
     if (!quizResult || skinScan || !routineBox || !alertBox) return;
 
-    var stageGrid = root.querySelector('[data-stage-grid]');
+    var stageGrid = root.querySelector('[data-stage-section]');
     if (stageGrid) stageGrid.hidden = true;
 
     function addNote(text, modifier) {
@@ -815,6 +859,222 @@
   }
 
   renderQuizCase();
+
+  // ── 2026-10-10: 3 GIAI ĐOẠN PHÁC ĐỒ + DẢI SẢN PHẨM (thiết kế design/ket-qua-da/dinh-huong-phac-do.png) ──
+  // Mỗi giai đoạn: số 01–03, tiêu đề (câu giai đoạn của soi da; khảo sát dùng tiêu đề cấu hình), mô tả, dải SP thật của
+  // danh mục giai đoạn (bỏ kê toa + hoạt chất bị loại theo cờ an toàn), "Xem tất cả" → danh mục.
+  var planCopy = {
+    titles: [
+      {{ settings.skin_plan_stage_1_title | default: 'Làm dịu: làm sạch dịu nhẹ' | json }},
+      {{ settings.skin_plan_stage_2_title | default: 'Phục hồi: củng cố hàng rào da' | json }},
+      {{ settings.skin_plan_stage_3_title | default: 'Chăm sóc chuyên sâu: cân nhắc hoạt chất cùng chuyên gia' | json }}
+    ],
+    descs: [
+      {{ settings.skin_plan_stage_1_desc | default: 'Làm sạch nhẹ nhàng, giảm kích ứng, đưa da về trạng thái cân bằng.' | json }},
+      {{ settings.skin_plan_stage_2_desc | default: 'Tăng cường hàng rào bảo vệ da, cấp ẩm sâu và hỗ trợ phục hồi da khỏe mạnh.' | json }},
+      {{ settings.skin_plan_stage_3_desc | default: 'Các hoạt chất đặc trị giúp cải thiện mụn, sắc tố, lỗ chân lông… nên được tư vấn bởi chuyên gia để phù hợp với tình trạng da của bạn.' | json }}
+    ],
+    viewAll: {{ settings.skin_plan_view_all_label | default: 'Xem tất cả' | json }},
+    addLabel: {{ settings.skin_plan_add_label | default: 'Thêm vào phác đồ' | json }},
+    addedLabel: {{ settings.skin_plan_added_label | default: 'Đã thêm vào giỏ' | json }},
+    detailLabel: {{ settings.skin_plan_detail_label | default: 'Xem chi tiết' | json }}
+  };
+  function planTags(p) {
+    // Nhãn ngắn từ tag SP (bỏ tag kỹ thuật dạng khoá:giá trị / có "_"), tối đa 2.
+    return (p.tags || []).filter(function (t) {
+      return t && t.indexOf(':') === -1 && t.indexOf('_') === -1 && t.length <= 24 && !/^(ban-chay|khuyen-mai|san-pham-noi-bat|serum|chuyen-nghiep)$/.test(t);
+    }).slice(0, 2).map(function (t) { var s = t.replace(/-/g, ' '); return s.charAt(0).toUpperCase() + s.slice(1); });
+  }
+  function readWishlist() {
+    try { return (window.Cookies && window.Cookies.getJSON('sudes_wishlist_products')) || []; } catch (e) { return []; }
+  }
+  function toggleWish(handle, btn) {
+    if (!window.Cookies) { window.location.href = '/' + handle; return; }
+    var list = readWishlist();
+    if (list.indexOf(handle) !== -1) {
+      if (window.favoriBean && favoriBean.Wishlist && favoriBean.Wishlist.removeWishlist) favoriBean.Wishlist.removeWishlist(handle);
+      else window.Cookies.set('sudes_wishlist_products', list.filter(function (h) { return h !== handle; }), { expires: 15, sameSite: 'None', secure: true });
+      btn.classList.remove('is-active');
+      btn.setAttribute('aria-pressed', 'false');
+    } else {
+      list.unshift(handle);
+      window.Cookies.set('sudes_wishlist_products', list.slice(0, 100), { expires: 15, sameSite: 'None', secure: true });
+      if (window.favoriBean && favoriBean.Wishlist && favoriBean.Wishlist.wishlistProduct) favoriBean.Wishlist.wishlistProduct();
+      if (window.theme && theme.alert && theme.alert.new) theme.alert.new('Thêm vào danh sách yêu thích', 'Bạn đã thêm sản phẩm vào danh sách yêu thích.', 3000, 'alert-success');
+      btn.classList.add('is-active');
+      btn.setAttribute('aria-pressed', 'true');
+    }
+  }
+  function addToPlan(p, btn) {
+    // Thêm vào giỏ giống luồng thẻ SP của theme (/cart/add.js → ajaxCart.load + toast giỏ hàng).
+    btn.disabled = true;
+    window.fetch('/cart/add.js', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'quantity=1&variantId=' + encodeURIComponent(p.variant_id)
+    }).then(function (res) { if (!res.ok) throw new Error('cart'); return res.json(); }).then(function (item) {
+      if (window.ajaxCart && typeof ajaxCart.load === 'function') ajaxCart.load();
+      if (typeof window.AddCartMobile === 'function') window.AddCartMobile(item);
+      document.querySelectorAll('.popup-cart-mobile').forEach(function (el) { el.classList.add('active'); });
+      btn.querySelector('span').textContent = planCopy.addedLabel;
+      btn.classList.add('is-added');
+    }).catch(function () { window.location.href = p.url; }).then(function () { btn.disabled = false; });
+  }
+  function planCard(p, wish) {
+    var card = document.createElement('article');
+    card.className = 'pc-plan-card';
+    card.setAttribute('data-plan-product', p.alias || '');
+    var media = document.createElement('a');
+    media.className = 'pc-plan-card__media';
+    media.href = p.url;
+    var img = document.createElement('img');
+    img.src = (p.featured_image && p.featured_image.src) || '{% include 'placeholder_img_url' %}';
+    img.alt = p.name || '';
+    img.width = 240; img.height = 240; img.loading = 'lazy';
+    media.appendChild(img);
+    card.appendChild(media);
+    var heart = document.createElement('button');
+    heart.type = 'button';
+    heart.className = 'pc-plan-card__wish' + (wish.indexOf(p.alias) !== -1 ? ' is-active' : '');
+    heart.setAttribute('aria-label', 'Yêu thích ' + (p.name || ''));
+    heart.setAttribute('aria-pressed', String(wish.indexOf(p.alias) !== -1));
+    heart.innerHTML = '<i class="far fa-heart" aria-hidden="true"></i><i class="fas fa-heart" aria-hidden="true"></i>';
+    heart.addEventListener('click', function () { toggleWish(p.alias, heart); });
+    card.appendChild(heart);
+    var body = document.createElement('div');
+    body.className = 'pc-plan-card__body';
+    if (p.vendor) {
+      var brand = document.createElement('span');
+      brand.className = 'pc-plan-card__brand notranslate';
+      brand.setAttribute('translate', 'no');
+      brand.textContent = p.vendor;
+      body.appendChild(brand);
+    }
+    var name = document.createElement('a');
+    name.className = 'pc-plan-card__name notranslate';
+    name.setAttribute('translate', 'no');
+    name.href = p.url;
+    name.textContent = p.name || '';
+    body.appendChild(name);
+    var tags = planTags(p);
+    if (tags.length) {
+      var chips = document.createElement('div');
+      chips.className = 'pc-plan-card__chips';
+      tags.forEach(function (t) { var c = document.createElement('span'); c.textContent = t; chips.appendChild(c); });
+      body.appendChild(chips);
+    }
+    var price = document.createElement('div');
+    price.className = 'pc-plan-card__price';
+    price.textContent = p.price ? new Intl.NumberFormat('vi-VN').format(p.price) + '₫' : 'Liên hệ';
+    if (p.compare_at_price && p.compare_at_price > p.price) {
+      var old = document.createElement('s');
+      old.textContent = new Intl.NumberFormat('vi-VN').format(p.compare_at_price) + '₫';
+      price.appendChild(old);
+    }
+    body.appendChild(price);
+    var btn;
+    if (p.variant_id) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.innerHTML = '<i class="fas fa-cart-shopping" aria-hidden="true"></i> <span></span>';
+      btn.querySelector('span').textContent = planCopy.addLabel;
+      btn.addEventListener('click', function () { addToPlan(p, btn); });
+    } else {
+      btn = document.createElement('a');
+      btn.href = p.url;
+      btn.textContent = planCopy.detailLabel;
+    }
+    btn.className = 'pc-plan-card__btn';
+    btn.setAttribute('data-plan-add', '');
+    body.appendChild(btn);
+    card.appendChild(body);
+    return card;
+  }
+  function bindCarousel(row) {
+    var track = row.querySelector('.pc-plan-stage__track');
+    var dots = row.querySelector('.pc-plan-stage__dots');
+    var prev = row.querySelector('[data-plan-prev]');
+    var next = row.querySelector('[data-plan-next]');
+    function pages() { return Math.max(1, Math.ceil((track.scrollWidth - 4) / track.clientWidth)); }
+    function current() { return Math.round(track.scrollLeft / Math.max(1, track.clientWidth)); }
+    function sync() {
+      var n = pages();
+      if (dots.children.length !== n) {
+        dots.innerHTML = '';
+        for (var i = 0; i < n; i++) dots.appendChild(document.createElement('span'));
+      }
+      var c = current();
+      Array.prototype.forEach.call(dots.children, function (d, i) { d.classList.toggle('is-active', i === c); });
+      var many = n > 1;
+      prev.hidden = next.hidden = dots.hidden = !many;
+      prev.disabled = c <= 0;
+      next.disabled = c >= n - 1;
+    }
+    prev.addEventListener('click', function () { track.scrollBy({ left: -track.clientWidth, behavior: 'smooth' }); });
+    next.addEventListener('click', function () { track.scrollBy({ left: track.clientWidth, behavior: 'smooth' }); });
+    track.addEventListener('scroll', function () { window.requestAnimationFrame(sync); }, { passive: true });
+    window.addEventListener('resize', sync);
+    window.addEventListener('load', sync); // ảnh/phông tải xong có thể đổi bề rộng
+    sync();
+  }
+  var planStagesRendered = 0;
+  function renderPlanStages() {
+    var wrap = root.querySelector('[data-plan-stages]');
+    if (!wrap || quizCase || (quizResult && quizResult.tier === 1)) {
+      // Không có dải giai đoạn (khảo sát theo Case dùng routine sáng/tối) ⇒ cột phải trải ngang, 2 hộp đứng cạnh nhau.
+      var layout = root.querySelector('.pc-plan__layout');
+      if (layout) layout.classList.add('pc-plan__layout--compact');
+      return;
+    }
+    var wish = readWishlist();
+    var regimen = (skinScan && skinScan.regimen) || [];
+    wrap.hidden = false; // hiện trước khi đo carousel (đang ẩn thì clientWidth = 0 ⇒ không tính được số trang)
+    [1, 2, 3].forEach(function (stage) {
+      var key = stageCollectionKey(stage);
+      var c = collectionFor(key);
+      var items = (c && c.products ? c.products : []).filter(function (p) { return !engine || engine.isProductAllowed(p, excluded); });
+      var row = document.createElement('section');
+      row.className = 'pc-plan-stage pc-plan-stage--' + stage;
+      row.setAttribute('data-plan-stage', String(stage));
+      var intro = document.createElement('div');
+      intro.className = 'pc-plan-stage__intro';
+      var num = document.createElement('span');
+      num.className = 'pc-plan-stage__num';
+      num.textContent = '0' + stage;
+      var title = document.createElement('h4');
+      title.className = 'pc-plan-stage__title';
+      title.textContent = regimen[stage - 1] || planCopy.titles[stage - 1];
+      var desc = document.createElement('p');
+      desc.className = 'pc-plan-stage__desc';
+      desc.textContent = planCopy.descs[stage - 1];
+      intro.appendChild(num); intro.appendChild(title); intro.appendChild(desc);
+      row.appendChild(intro);
+      var shelf = document.createElement('div');
+      shelf.className = 'pc-plan-stage__shelf';
+      if (c) {
+        var all = document.createElement('a');
+        all.className = 'pc-plan-stage__all';
+        all.href = c.url;
+        all.setAttribute('data-plan-view-all', key);
+        all.innerHTML = '<span></span> <i class="fas fa-arrow-right" aria-hidden="true"></i>';
+        all.querySelector('span').textContent = planCopy.viewAll;
+        shelf.appendChild(all);
+      }
+      if (items.length) {
+        shelf.insertAdjacentHTML('beforeend', '<button type="button" class="pc-plan-stage__nav pc-plan-stage__nav--prev" data-plan-prev aria-label="Sản phẩm trước"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>' +
+          '<div class="pc-plan-stage__track"></div>' +
+          '<button type="button" class="pc-plan-stage__nav pc-plan-stage__nav--next" data-plan-next aria-label="Sản phẩm sau"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>' +
+          '<div class="pc-plan-stage__dots" aria-hidden="true"></div>');
+        var track = shelf.querySelector('.pc-plan-stage__track');
+        items.forEach(function (p) { track.appendChild(planCard(p, wish)); });
+      }
+      row.appendChild(shelf);
+      wrap.appendChild(row);
+      if (items.length) { bindCarousel(row); planStagesRendered++; }
+    });
+  }
+  renderPlanStages();
 
   // ── ĐỒNG BỘ THÔNG TIN KHÁCH HÀNG TỪ GAS HOẶC CONTEXT ────────────────────
   var sessionSourceText = (skinScan && skinScan.scores) ? 'Soi da AI 3 góc' : (!isDemo ? 'Khảo sát dạng chat 17 câu' : '');
@@ -1117,6 +1377,13 @@
   }
 
   renderMatchedSapoProducts();
+  // Soi da: hàng badge chỉ lặp lại 3 câu giai đoạn (đã là tiêu đề 3 giai đoạn) ⇒ ẩn hàng hiển thị, giữ link trong DOM.
+  var activesRow = root.querySelector('.pc-plan__actives');
+  if (activesRow && skinScan && skinScan.scores && planStagesRendered) activesRow.hidden = true;
+  if (planStagesRendered) {
+    var productsSectionEl = root.querySelector('[data-result-products-section]');
+    if (productsSectionEl) productsSectionEl.hidden = true;
+  }
 
   // ── RENDER SECTION 2: BÀI VIẾT CHUYÊN GIA TỪ SAPO BLOG ──────────────────
   function renderMatchedSapoArticles() {

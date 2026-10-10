@@ -110,21 +110,20 @@ test('thiết bị trống nhưng GAS trả hồ sơ khớp mã phiên ⇒ dựn
   expect(lookups).toBeLessThanOrEqual(2); // tải lại đúng 1 lần, không lặp
 });
 
-test('gợi ý sản phẩm lấy từ danh mục khớp hoạt chất, không có thuốc kê toa', async ({ page }) => {
+// 2026-10-10: soi da ⇒ gợi ý nằm trong dải SP của 3 giai đoạn (khối "Sản phẩm đề xuất" riêng được ẩn để không lặp).
+test('gợi ý sản phẩm theo giai đoạn lấy đúng danh mục, không có thuốc kê toa', async ({ page }) => {
   await seed(page, 60 * 60 * 1000); // soi da: mụn cao nhất
   await page.goto('/ai-skin-quiz-results');
-  const grid = page.locator('[data-sapo-products-grid] h4 a');
-  await expect(grid.first()).toBeVisible();
-  const hrefs = await grid.evaluateAll(els => els.map(e => e.getAttribute('href')));
-  const allowed = await page.evaluate(() => {
-    const c = window.PharmaResultCollections;
-    return ['lam-diu', 'phuc-hoi', 'bha'].flatMap(() => []).concat(
-      ...['soothing', 'barrier', 'bha'].map(k => (c[k] ? c[k].products.map(p => p.url) : [])));
-  });
-  expect(hrefs.length).toBeGreaterThan(0);
-  for (const h of hrefs) expect(allowed).toContain(h);
-  expect(hrefs.join(' ')).not.toMatch(/altreno|tretinoin/);
-  await expect(page.locator('[data-products-all-link]')).toHaveAttribute('href', /^\/(lam-diu-on-dinh-nen-da|phuc-hoi-hang-rao-bao-ve-da|hoat-chat-bha-salicylic)$/);
+  const expected = { 1: 'soothing', 2: 'barrier', 3: 'bha' };
+  for (const [stage, key] of Object.entries(expected)) {
+    const cards = page.locator(`[data-plan-stage="${stage}"] .pc-plan-card__name`);
+    await expect(cards.first()).toBeVisible();
+    const hrefs = await cards.evaluateAll(els => els.map(e => e.getAttribute('href')));
+    const allowed = await page.evaluate(k => window.PharmaResultCollections[k].products.map(p => p.url), key);
+    for (const h of hrefs) expect(allowed).toContain(h);
+    expect(hrefs.join(' ')).not.toMatch(/altreno|tretinoin/);
+  }
+  await expect(page.locator('[data-result-products-section]')).toBeHidden();
 });
 
 test('nút xoá kết quả trên thiết bị xoá sạch và trang trở về minh hoạ', async ({ page }) => {
@@ -194,4 +193,49 @@ test('trang khảo sát: làm xong khảo sát chat ⇒ thanh hiện "khảo sá
   for (const q of questions) await page.locator('.quick-reply-chip', { hasText: q.options[BASELINE[q.id]].text }).first().click();
   await expect(page.locator('[data-skin-profile-notice]')).toContainText('Kết quả khảo sát chat ngày');
   await page.evaluate(() => window.PharmaResultStore.clearAll());
+});
+
+
+// 2026-10-10: khối "Định hướng phác đồ tham khảo" theo design/ket-qua-da/dinh-huong-phac-do.png.
+test('phác đồ: 5 thẻ chỉ số, 3 giai đoạn có dải SP đúng danh mục, thêm vào giỏ, yêu thích, carousel', async ({ page }) => {
+  // dev-server mỗi danh mục chỉ 2–3 SP ⇒ nhân giai đoạn 1 lên 8 SP để thử nút trượt/chấm.
+  await page.addInitScript(() => {
+    let value;
+    Object.defineProperty(window, 'PharmaResultCollections', { configurable: true, get: () => value, set: v => {
+      if (v && v.soothing && v.soothing.products.length) {
+        const base = v.soothing.products;
+        v.soothing.products = Array.from({ length: 8 }, (_, i) => Object.assign({}, base[i % base.length], { alias: base[i % base.length].alias + (i >= base.length ? '-' + i : '') }));
+      }
+      value = v;
+    } });
+  });
+  await seed(page, 60 * 60 * 1000);
+  await page.goto('/ai-skin-quiz-results');
+  await expect(page.locator('[data-scan-score]')).toHaveCount(5);
+  await expect(page.locator('[data-plan-stage]')).toHaveCount(3);
+  await expect(page.locator('[data-plan-stage="1"] .pc-plan-stage__title')).toHaveText(/Làm dịu/);
+  await expect(page.locator('[data-plan-stage="3"] [data-plan-view-all]')).toHaveAttribute('href', '/hoat-chat-bha-salicylic');
+  await expect(page.locator('[data-result-products-section]')).toBeHidden(); // không lặp với dải SP giai đoạn
+  await expect(page.locator('.pc-plan-card')).not.toHaveCount(0);
+  expect((await page.locator('.pc-plan-card').evaluateAll(e => e.map(x => x.getAttribute('data-plan-product')))).join(' ')).not.toMatch(/altreno|tretinoin/);
+
+  // Carousel: giai đoạn 1 có 8 SP ⇒ có nút sau + chấm; bấm sau thì dải trượt.
+  const s1 = page.locator('[data-plan-stage="1"]');
+  await expect(s1.locator('[data-plan-next]')).toBeVisible();
+  const before = await s1.locator('.pc-plan-stage__track').evaluate(t => t.scrollLeft);
+  await s1.locator('[data-plan-next]').click();
+  await expect.poll(() => s1.locator('.pc-plan-stage__track').evaluate(t => t.scrollLeft)).toBeGreaterThan(before);
+
+  // Thêm vào giỏ (SP 1 phiên bản còn hàng) ⇒ POST /cart/add.js, nút đổi nhãn.
+  const addBtn = page.locator('[data-plan-stage="3"] button[data-plan-add]').first();
+  const req = page.waitForRequest(r => r.url().endsWith('/cart/add.js') && r.method() === 'POST');
+  await addBtn.click();
+  expect((await req).postData()).toMatch(/variantId=[0-9]+/);
+  await expect(addBtn).toHaveText(/Đã thêm vào giỏ/);
+
+  // Yêu thích: bấm tim ⇒ is-active + lưu cookie danh sách yêu thích của theme.
+  const heart = page.locator('[data-plan-stage="3"] .pc-plan-card__wish').first();
+  await heart.click();
+  await expect(heart).toHaveClass(/is-active/);
+  expect((await page.context().cookies()).some(c => c.name === 'sudes_wishlist_products')).toBe(true);
 });
