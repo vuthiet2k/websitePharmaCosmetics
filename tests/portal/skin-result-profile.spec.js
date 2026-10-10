@@ -136,3 +136,24 @@ test('nút xoá kết quả trên thiết bị xoá sạch và trang trở về 
   await expect(page.locator('#pcQuizResultsRoot')).toHaveAttribute('data-demo', 'true');
   expect(await page.evaluate(() => Object.keys(localStorage).filter(k => k.startsWith('pcr:pc_skin')))).toEqual([]);
 });
+
+// 2026-10-10: /ai-skin-quiz?tab=camera phải mở tab soi da AI (trước đây luôn rơi vào tab khảo sát chat).
+test('nút "Bắt đầu ngay" ở trang kết quả mở đúng tab soi da AI; ?tab=quiz mở khảo sát; bấm tab cập nhật URL', async ({ page }) => {
+  await page.goto('/ai-skin-quiz-results');
+  await page.locator('[data-result-empty-scan]').click();
+  await page.waitForURL(/\/ai-skin-quiz\?tab=camera$/);
+  await expect(page.locator('[data-skin-mode="camera"]')).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('[data-skin-scan]')).toBeVisible();
+  await expect(page.locator('#aiSkinChatApp')).toBeHidden();
+
+  await page.goto('/ai-skin-quiz?tab=quiz');
+  await expect(page.locator('[data-skin-mode="quiz"]')).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('#aiSkinChatApp')).toBeVisible();
+  await page.locator('[data-skin-mode="camera"]').click();
+  await expect(page).toHaveURL(/\?tab=camera$/);
+  await page.reload();
+  await expect(page.locator('[data-skin-mode="camera"]')).toHaveAttribute('aria-selected', 'true');
+
+  await page.goto('/ai-skin-quiz');
+  await expect(page.locator('[data-skin-mode="quiz"]')).toHaveAttribute('aria-selected', 'true');
+});

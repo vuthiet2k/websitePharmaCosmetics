@@ -22,7 +22,15 @@
   }
 
   document.querySelectorAll('[data-skin-mode]').forEach(function (button) {
-    button.addEventListener('click', function () { selectMode(button.dataset.skinMode); });
+    button.addEventListener('click', function () {
+      selectMode(button.dataset.skinMode);
+      // 2026-10-10: ghi ?tab= vào URL để tải lại / chia sẻ link vẫn giữ đúng tab.
+      try {
+        var url = new URL(window.location.href);
+        url.searchParams.set('tab', button.dataset.skinMode);
+        window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+      } catch (e) {}
+    });
   });
 
   var video = document.getElementById('skinCameraStream');
@@ -810,6 +818,14 @@
     analyze.disabled = true;
   }
 
-  selectMode(window.location.pathname === '/soi-da' ? 'camera' : 'quiz');
+  // 2026-10-10: mở đúng tab theo ?tab=camera|quiz (trang kết quả và nút "Soi da lại" trỏ /ai-skin-quiz?tab=camera —
+  // trước đây chỉ xét đường dẫn /soi-da nên link này luôn rơi vào tab khảo sát chat).
+  function initialMode() {
+    var tab = '';
+    try { tab = new URLSearchParams(window.location.search).get('tab') || ''; } catch (e) {}
+    if (tab === 'camera' || tab === 'quiz') return tab;
+    return window.location.pathname === '/soi-da' ? 'camera' : 'quiz';
+  }
+  selectMode(initialMode());
   update();
 })(window, document);
