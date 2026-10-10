@@ -23,10 +23,21 @@
         {% unless settings[enabled] == false or settings[enabled] == 'false' %}
           {% if settings[label] != blank %}
           {% capture sol_url %}/search?query={{ settings[query] | default: settings[label] | url_encode }}&type=product{% endcapture %}
-          {% if settings[col_key] != blank %}
-            {% assign sol_col = collections[settings[col_key]] %}
-            {% if sol_col.products_count > 0 %}{% assign sol_url = sol_col.url %}{% endif %}
-          {% endif %}
+          {%- comment -%}
+            2026-10-10: ô "Danh mục sản phẩm" để trống (vd theme đã cài trước khi có trường này, Admin giữ giá trị cũ)
+            ⇒ dùng mặc định 6 danh mục giai-phap-* đã tạo trên Sapo; danh mục không có SP thì vẫn về tìm kiếm.
+          {%- endcomment -%}
+          {%- case i -%}
+            {%- when 1 -%}{%- assign sol_default = 'giai-phap-mun-trung-ca' -%}
+            {%- when 2 -%}{%- assign sol_default = 'giai-phap-nam-tan-nhang' -%}
+            {%- when 3 -%}{%- assign sol_default = 'giai-phap-da-kho-thieu-am' -%}
+            {%- when 4 -%}{%- assign sol_default = 'giai-phap-lao-hoa-da' -%}
+            {%- when 5 -%}{%- assign sol_default = 'giai-phap-kiem-soat-dau-thua' -%}
+            {%- else -%}{%- assign sol_default = 'giai-phap-da-nhay-cam' -%}
+          {%- endcase -%}
+          {%- assign sol_handle = settings[col_key] | default: sol_default -%}
+          {% assign sol_col = collections[sol_handle] %}
+          {% if sol_col.products_count > 0 %}{% assign sol_url = sol_col.url %}{% endif %}
           <a class="concern" href="{{ sol_url | escape }}">
             {%- if settings[image] != blank -%}
             <img class="concern-img" src="{{ settings[image] | img_url: 'compact' }}" alt="{{ settings[label] | escape }}" width="48" height="48" loading="lazy">

@@ -295,6 +295,15 @@ function getContext(templateName = 'index', routeParams = {}) {
     ? (byAlias[routeParams.productAlias] || products[0])
     : (byAlias[templateName] || products[0]);
 
+  // 2026-10-10: SP demo không khai báo collections ⇒ gán các danh mục demo chứa SP đó (trừ 'all', như Sapo
+  // trả product.collections) để khối "Sản phẩm liên quan" (product.collections.first) hiện được trên dev.
+  if (currentProduct && !(currentProduct.collections || []).length) {
+    // Chỉ lấy trường cơ bản (không kèm products) — tránh vòng lặp khi template dùng `product | json`.
+    currentProduct.collections = Object.values(collectionsData)
+      .filter(c => c.alias !== 'all' && (c.products || []).some(p => p.id === currentProduct.id))
+      .map(({ id, name, alias, url, products_count }) => ({ id, name, alias, url, products_count }));
+  }
+
   // `collection` chỉ có giá trị khi đang xem trang /collection — đúng hành vi Sapo thực.
   // Trên index / product / blog / ... → null.
   const collectionTemplates = ['collection', 'collection.skinhealthy'];

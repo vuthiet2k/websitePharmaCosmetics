@@ -192,10 +192,10 @@ test('footer uses the master logo and white content on the mainColor brand backg
   await footer.scrollIntoViewIfNeeded();
   await expect(footer).toHaveCSS('background-color', 'rgb(60, 179, 113)');
   await expect(footer).toHaveCSS('color', 'rgb(255, 255, 255)');
-  await expect(footer.locator('.pc-footer-logo .pc-logo-master-svg')).toHaveCount(1);
+  // 2026-10-07: footer mặc định dùng ảnh "Logo chân trang" (logo_footer.png, Logo Master trắng); tắt ảnh thì về SVG.
+  await expect(footer.locator('.pc-footer-logo .pc-logo-master-img, .pc-footer-logo .pc-logo-master-svg')).toHaveCount(1);
   await expect(footer.locator('.logo-icon, .logo-text-block')).toHaveCount(0);
   await expect(footer.locator('.pc-footer-logo')).toHaveCSS('color', 'rgb(255, 255, 255)');
-  await expect(footer.locator('.pc-footer-logo .pc-logo-master-svg path').first()).toHaveCSS('fill', 'rgb(255, 255, 255)');
   await expect(footer.locator('.title-menu').first()).toHaveCSS('color', 'rgb(255, 255, 255)');
   await expect(footer.locator('.list_footer a').first()).toHaveCSS('color', 'rgb(255, 255, 255)');
   expect(errors).toEqual([]);

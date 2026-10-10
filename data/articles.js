@@ -43,7 +43,7 @@ const articles = [
     author:        'Chuyên gia Trần Thu Hương',
     published_on:  '2026-04-05T09:00:00',
     created_at:    '2026-04-03T11:00:00',
-    tags:          ['vitamin-c', 'lam-sang', 'skincare-101'],
+    tags:          ['vitamin-c', 'lam-sang', 'skincare-101', 'sanpham:serum-vitamin-c-15', 'hoatchat:vitamin-c'],
     comments_count: 9,
     blog: { handle: 'tin-tuc', title: 'Tin tức & Kiến thức' },
   },

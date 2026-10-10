@@ -430,6 +430,13 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
 - Khối "Đánh giá từ khách hàng" và "Câu hỏi thường gặp" ở PDP **chỉ hiện bài gắn tag
   `sanpham:<alias sản phẩm>`** (cùng quy ước khối Ý kiến chuyên gia); không có bài khớp ⇒ ẩn hẳn khối.
   Không bao giờ đổ cả blog chung vào mọi sản phẩm (đánh giá không gắn sản phẩm = không xác thực).
+- **"Bài viết liên quan" ở PDP** (`snippets/product_related_articles.bwt`, blog `product_article_blog_handle`): tối đa 3
+  bài, ưu tiên tag `sanpham:<alias>` → `danhmuc:<handle danh mục của SP>` / trùng tag `hoatchat:<x>` với SP. Không
+  bài nào khớp ⇒ hiện bài mới nhất với tiêu đề `product_article_fallback_title` (không gọi là "liên quan").
+- **Không lặp sản phẩm giữa 2 khối gợi ý PDP:** "Có thể bạn thích" ghi alias đã hiện vào `pc_pdp_seen`;
+  "Sản phẩm liên quan" (danh mục đầu của SP) bỏ alias đã có + bỏ chính SP đang xem (vòng lặp dùng `unless`, không `continue`).
+- **Thẻ "Giải pháp cho từng vấn đề" (trang chủ)** mở danh mục `home_solutions_N_collection`; ô trống ⇒ mặc định
+  6 danh mục `giai-phap-*` đã tạo trên Sapo; danh mục không tồn tại/0 SP mới về `/search?query=`.
 - **Bố cục đầu trang 2 cột 6:6** (`col-lg-6` ảnh | `col-lg-6` thông tin, PRD mục 3 — người dùng chốt
   2026-10-05). Đã bỏ cột 3 `.box_info_right` (thông tin cửa hàng); field `product_info_*`/`product_link_*` giữ
   trong schema nhưng không render.

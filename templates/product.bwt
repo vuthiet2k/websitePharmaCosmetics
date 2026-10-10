@@ -69,6 +69,9 @@
 {%- comment -%} Chốt riêng cờ của trang: các vòng lặp thẻ sản phẩm phía dưới (include product_grid_office)
   gán lại pc_is_rx theo từng thẻ ⇒ JS/tab/JSON-LD của trang phải đọc pc_pdp_rx. {%- endcomment -%}
 {%- assign pc_pdp_rx = pc_is_rx -%}
+{%- comment -%} 2026-10-10: alias SP đang xem + danh sách SP đã hiện — để các khối gợi ý bên dưới không lặp lại. {%- endcomment -%}
+{%- assign pc_pdp_alias = product.alias -%}
+{%- assign pc_pdp_seen = '' -%}
 {%- comment -%} 2026-10-07 (thiết kế PDP): breadcrumb trang sản phẩm nền trắng. {%- endcomment -%}
 <div class="pc-bread--white">{% include 'breadcrumb' %}</div>
 <section class="product layout-product">	
@@ -692,7 +695,13 @@
 									{%- if pc_rel.products.size == 0 -%}{%- assign pc_rel = collections['all'] -%}{%- endif -%}
 									<div class="row">
 										{%- if pc_rel.products.size > 0 -%}
-										{%- for product in pc_rel.products limit: settings.product_related_limit -%}
+										{%- comment -%} 2026-10-10: bỏ chính SP đang xem; ghi alias đã hiện (pc_pdp_seen) để "Sản phẩm liên quan" không lặp lại. {%- endcomment -%}
+										{%- assign pc_rel_limit = settings.product_related_limit | plus: 0 -%}
+										{%- assign pc_rel_n = 0 -%}
+										{%- for product in pc_rel.products limit: 24 -%}
+										{%- unless product.alias == pc_pdp_alias or pc_rel_n >= pc_rel_limit -%}
+										{%- assign pc_rel_n = pc_rel_n | plus: 1 -%}
+										{%- assign pc_pdp_seen = pc_pdp_seen | append: '|' | append: product.alias | append: '|' -%}
 										<div class="col-xl-6 col-lg-3 col-md-4 col-xs-6 col-6">
 											<div class="item_product_main">
 												{%- assign pc_card_kicker = true -%}
@@ -700,6 +709,7 @@
 												{%- assign pc_card_kicker = false -%}
 											</div>
 										</div>
+										{%- endunless -%}
 										{% endfor %}
 										{%else%}
 										<div class="alert alert-warning alert-warning2 alert-dismissible margin-top-15 section" role="alert">
@@ -735,12 +745,19 @@
 
 						<div class="swiper_product_related swiper-container">
 							<div class="swiper-wrapper">
-								{% for product in collections[productRelate].products limit: settings.product_same_cate_limit %}
+								{%- comment -%} 2026-10-10: bỏ SP đang xem và SP đã có ở "Có thể bạn thích" (trước đây lặp lại 2 lần). {%- endcomment -%}
+								{%- assign pc_same_limit = settings.product_same_cate_limit | plus: 0 -%}
+								{%- assign pc_same_n = 0 -%}
+								{% for product in collections[productRelate].products limit: 40 %}
+								{%- assign pc_same_key = '|' | append: product.alias | append: '|' -%}
+								{%- unless product.alias == pc_pdp_alias or pc_pdp_seen contains pc_same_key or pc_same_n >= pc_same_limit -%}
+								{%- assign pc_same_n = pc_same_n | plus: 1 -%}
 								<div class="swiper-slide">
 									<div class="item_product_main">
 										{%include 'product_grid_office'%}
 									</div>
 								</div>
+								{%- endunless -%}
 								{% endfor %}
 							</div>
 							<div class="swiper-button-prev">
@@ -809,6 +826,7 @@
 	</div>
 
 </section>
+{%- include 'product_related_articles' -%}
 {% if settings.product_viewed_enable %}
 {% include 'section_product_viewed' %}
 {% endif %}

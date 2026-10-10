@@ -1,0 +1,73 @@
+{%- comment -%}
+  product_related_articles.bwt (2026-10-10) — "Bài viết liên quan" ở trang chi tiết sản phẩm.
+  Người dùng báo: xem sản phẩm không có bài blog liên quan. Chọn bài trong 50 bài mới nhất của blog
+  settings.product_article_blog_handle (trống ⇒ blog khuyên đọc của trang kết quả soi da), tối đa 3 bài, theo thứ tự:
+    1. bài gắn tag  sanpham:<alias sản phẩm>            (gắn tay, chính xác nhất)
+    2. bài gắn tag  danhmuc:<handle danh mục của SP>     (vd danhmuc:giai-phap-nam-tan-nhang)
+       hoặc trùng tag hoạt chất với SP                    (vd cùng hoatchat:vitamin-c)
+  Không bài nào khớp ⇒ hiện bài mới nhất nhưng đổi tiêu đề thành "Kiến thức chăm sóc da" (không gọi là "liên quan").
+  Blog trống ⇒ không hiện khối.
+{%- endcomment -%}
+{%- assign pc_ra_handle = settings.product_article_blog_handle | default: settings.quiz_article_blog_handle | default: 'tin-tuc' -%}
+{%- assign pc_ra_blog = blogs[pc_ra_handle] -%}
+{%- if pc_ra_blog.articles.size > 0 -%}
+	{%- comment -%} Khoá so khớp của SP: |danhmuc:<handle>| cho mỗi danh mục + |hoatchat:...| từ tag SP. {%- endcomment -%}
+	{%- assign pc_ra_keys = '' -%}
+	{%- for pc_ra_c in product.collections -%}
+		{%- assign pc_ra_ch = pc_ra_c.url | remove: '/' -%}
+		{%- assign pc_ra_keys = pc_ra_keys | append: '|danhmuc:' | append: pc_ra_ch | append: '|' -%}
+	{%- endfor -%}
+	{%- for pc_ra_t in product.tags -%}
+		{%- assign pc_ra_t9 = pc_ra_t | slice: 0, 9 | downcase -%}
+		{%- if pc_ra_t9 == 'hoatchat:' -%}{%- assign pc_ra_keys = pc_ra_keys | append: '|' | append: pc_ra_t | downcase | append: '|' -%}{%- endif -%}
+	{%- endfor -%}
+	{%- assign pc_ra_own = 'sanpham:' | append: product.alias -%}
+	{%- assign pc_ra_picked = '' -%}
+	{%- assign pc_ra_n = 0 -%}
+	{%- capture pc_ra_html -%}
+		{%- comment -%} Lượt 1: tag sanpham:<alias>. {%- endcomment -%}
+		{%- for article in pc_ra_blog.articles limit: 50 -%}
+			{%- if pc_ra_n < 3 and article.tags contains pc_ra_own -%}
+				{%- assign pc_ra_n = pc_ra_n | plus: 1 -%}
+				{%- assign pc_ra_picked = pc_ra_picked | append: '|' | append: article.url | append: '|' -%}
+				<div class="pc-pdp-articles__item">{% include 'blog_item' %}</div>
+			{%- endif -%}
+		{%- endfor -%}
+		{%- comment -%} Lượt 2: danh mục / hoạt chất trùng. {%- endcomment -%}
+		{%- for article in pc_ra_blog.articles limit: 50 -%}
+			{%- assign pc_ra_url_key = '|' | append: article.url | append: '|' -%}
+			{%- if pc_ra_n < 3 and pc_ra_keys != blank -%}
+				{%- unless pc_ra_picked contains pc_ra_url_key -%}
+					{%- assign pc_ra_hit = false -%}
+					{%- for pc_ra_at in article.tags -%}
+						{%- assign pc_ra_ak = '|' | append: pc_ra_at | downcase | append: '|' -%}
+						{%- if pc_ra_keys contains pc_ra_ak -%}{%- assign pc_ra_hit = true -%}{%- endif -%}
+					{%- endfor -%}
+					{%- if pc_ra_hit -%}
+						{%- assign pc_ra_n = pc_ra_n | plus: 1 -%}
+						{%- assign pc_ra_picked = pc_ra_picked | append: pc_ra_url_key -%}
+						<div class="pc-pdp-articles__item">{% include 'blog_item' %}</div>
+					{%- endif -%}
+				{%- endunless -%}
+			{%- endif -%}
+		{%- endfor -%}
+	{%- endcapture -%}
+	{%- assign pc_ra_title = settings.product_article_title | default: 'Bài viết liên quan' -%}
+	{%- if pc_ra_n == 0 -%}
+		{%- assign pc_ra_title = settings.product_article_fallback_title | default: 'Kiến thức chăm sóc da' -%}
+		{%- capture pc_ra_html -%}
+			{%- for article in pc_ra_blog.articles limit: 3 -%}
+				<div class="pc-pdp-articles__item">{% include 'blog_item' %}</div>
+			{%- endfor -%}
+		{%- endcapture -%}
+	{%- endif -%}
+<section class="pc-pdp-articles" data-pdp-articles data-pdp-articles-matched="{{ pc_ra_n }}">
+	<div class="container">
+		<div class="pc-pdp-articles__head">
+			<h2 class="pc-section-title">{{ pc_ra_title | escape }}</h2>
+			<a class="pc-pdp-articles__more" href="{{ pc_ra_blog.url }}">{{ settings.product_article_more_label | default: 'Xem tất cả' | escape }} <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+		</div>
+		<div class="pc-pdp-articles__grid">{{ pc_ra_html }}</div>
+	</div>
+</section>
+{%- endif -%}
