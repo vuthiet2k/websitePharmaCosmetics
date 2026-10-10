@@ -10,7 +10,12 @@
 <div class="layout-collection">
 	{% include 'breadcrumb' %}  
 	<div class="container">
+		{%- comment -%}
+			2026-10-10 (thiết kế design/danh-muc/danh-muc-san-pham.png): banner (h1 = tên danh mục) → dải voucher riêng →
+			cột lọc | cột sản phẩm (bộ lọc nhanh → số SP + sắp xếp → lưới thẻ mới product_card_collection → phân trang).
+		{%- endcomment -%}
 		{%- include 'collection_hero' -%}
+		{%- include 'collection_vouchers' -%}
 		<div class="row">
 			{%if settings.aside_category_enable_bot%}
 			<div class="col-12">
@@ -37,110 +42,13 @@
 				</div>
 			</aside>
 			<div class="block-collection col-lg-9 col-12">
-				{%- comment -%}
-					2026-10-08 (thiết kế trang danh mục): hàng đầu cột phải = thẻ giới thiệu danh mục + các Mã giảm giá
-					(trước đây Mã giảm giá trải full-width phía trên cả cột lọc). Thẻ giới thiệu lấy đoạn đầu mô tả danh mục
-					thật; danh mục chưa có mô tả thì dùng settings.collection_intro_text. Không phải heading — H1 nằm ở thẻ dưới.
-				{%- endcomment -%}
-				{%- assign pc_col_label = collection.name -%}
-				{%- if collection.name == 'All' or collection.name == blank -%}{%- assign pc_col_label = 'Tất cả sản phẩm' -%}{%- endif -%}
-				{%- assign pc_col_intro = collection.description | split: '<h5>' | first | strip_html | strip_newlines | truncatewords: 26 -%}
-				{%- if pc_col_intro == blank -%}{%- assign pc_col_intro = settings.collection_intro_text -%}{%- endif -%}
-				<div class="pc-col-top{% if settings.aside_coupon_enable %} has-coupons{% endif %}">
-					<div class="pc-col-intro">
-						<p class="pc-col-intro__title">{{ pc_col_label }}</p>
-						{%- if pc_col_intro != blank -%}<p class="pc-col-intro__text">{{ pc_col_intro }}</p>{%- endif -%}
-					</div>
-					{%if settings.aside_coupon_enable%}
-					<div class="pc-col-coupons">
-				<div class="section_coupons">
-					<div class="swiper_coupons swiper-container">
-						<div class="swiper-wrapper">
-							{%- for i in (1..6) -%}
-							{%- capture enable_slide -%}promo_coupon_{{i}}_enable{%- endcapture -%}
-							{%- capture code -%}promo_coupon_{{i}}_code{%- endcapture -%}
-							{%- capture time -%}promo_coupon_{{i}}_expires{%- endcapture -%}
-							{%- capture giatri -%}promo_coupon_{{i}}_value{%- endcapture -%}
-							{%- capture dieukien -%}promo_coupon_{{i}}_condition{%- endcapture -%}
-							{%- capture image -%}promo_coupon_{{i}}_image{%- endcapture -%}
-							{%if settings[enable_slide]%}
-							<div class="swiper-slide">
-								<div class="box-coupon">
-									<div class="image">
-										{%- if settings[image] != blank -%}<img  width="128" height="128" class="lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC" data-src="{{ settings[image] | img_url: 'compact' }}" alt="{{settings[code]}}">{%- endif -%}
-									</div>
-									<div class="content_wrap">
-										<a title="Chi tiết" href="javascript:void(0)" class="info-button" data-coupon="{{settings[code]}}" data-time="{{settings[time] | remove: "Ngày hết hạn: "}}" data-content="{{settings[dieukien]}}">
-											<svg width="6" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512">
-												<path d="M144 80c0 26.5-21.5 48-48 48s-48-21.5-48-48s21.5-48 48-48s48 21.5 48 48zM0 224c0-17.7 14.3-32 32-32H96c17.7 0 32 14.3 32 32V448h32c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H64V256H32c-17.7 0-32-14.3-32-32z"></path>
-											</svg>
-										</a>
-										<div class="content-top">
-											{{settings[code]}}
-											<span class="line-clamp line-clamp-1">{{settings[giatri]}}</span>
-										</div>
-										<div class="content-bottom">
-											<span>HSD: {{settings[time]}}</span>
-											<div class="coupon-code js-copy" data-copy="{{settings[code]}}" title="Sao chép">Lấy mã</div>
-										</div>
-									</div>
-								</div>
-							</div>
-							{%- endif -%}
-							{%- endfor -%}
-						</div>
-						<div class="swiper-button-prev">
-							<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-								<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-								<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-							</svg>
-						</div>
-						<div class="swiper-button-next">
-							<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-								<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-								<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-							</svg>
-						</div>
-					</div>
-				</div>
-				<div class="popup-coupon">
-					<div class="content">
-						<div class="title">
-							Thông tin voucher
-						</div>
-						<div class="close-popup-coupon" title="Đóng" >
-							<svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 512.001 512.001" style="enable-background:new 0 0 512.001 512.001;" xml:space="preserve"> <g> <g> <path d="M284.286,256.002L506.143,34.144c7.811-7.811,7.811-20.475,0-28.285c-7.811-7.81-20.475-7.811-28.285,0L256,227.717    L34.143,5.859c-7.811-7.811-20.475-7.811-28.285,0c-7.81,7.811-7.811,20.475,0,28.285l221.857,221.857L5.858,477.859    c-7.811,7.811-7.811,20.475,0,28.285c3.905,3.905,9.024,5.857,14.143,5.857c5.119,0,10.237-1.952,14.143-5.857L256,284.287    l221.857,221.857c3.905,3.905,9.024,5.857,14.143,5.857s10.237-1.952,14.143-5.857c7.811-7.811,7.811-20.475,0-28.285    L284.286,256.002z"></path> </g> </g> </svg>		
-						</div>
-						<ul> 
-							<li>
-								<span>Mã giảm giá:</span>
-								<span class="code"></span>
-							</li>
-							<li>
-								<span>Ngày hết hạn:</span>
-								<span class="time"></span>
-							</li>
-							<li>
-								<span>Điều kiện:</span>
-								<span class="dieukien">
-								</span>
-							</li>
-						</ul>
-					</div>
-				</div>
-					</div>
-					{%endif%}
-				</div>
 				<div class="pc-col-main">
-				<h1 class="title-page">
-					<svg class="title-page__leaf" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M20.5 3.5C11 3.5 4.5 8.6 4.5 15.4c0 1.6.4 3 1 4.2.4-3.6 3.2-7.4 7.8-9.7-3.7 2.8-6 6.4-6.6 10.4 1.1.5 2.4.7 3.7.7 6.8 0 10.1-7.5 10.1-17.5Z"/></svg>
-					<span>{%if collection.name == 'All'%}Tất cả sản phẩm{%else%}{{ collection.name }}{%endif%}</span></h1>
-
 				{%- comment -%}
-					F02 (phase home-shopping-ux): ô danh mục con — ngay dưới H1, trước bộ lọc/sort, đúng
-					thứ tự breadcrumb → tiêu đề → ô danh mục con → bộ lọc nhanh → sort → sản phẩm → phân trang.
+					F02 (phase home-shopping-ux): ô danh mục con — trước bộ lọc/sort. 2026-10-10: h1 đã chuyển vào banner,
+					thẻ giới thiệu + mã giảm giá cũ thay bằng dải voucher dưới banner (collection_vouchers).
 				{%- endcomment -%}
 				{%- include 'collection_subnav' -%}
+				{%- include 'collection_quick_filters' -%}
 
 				{%- comment -%} ─── "Bạn chọn" — Active filter bar (desktop + mobile) ─── {%- endcomment -%}
 				<div id="afw-active-bar" class="afw-bar" hidden>
@@ -233,57 +141,40 @@
 	var colId = 0;
 	{%endif%}
 	var selectedViewData = "{% if template contains '.list' %}data_list{% else %}data{% endif %}";
-	{%if settings.aside_coupon_enable%}
-	var swiper_coupons = null;
-	function initSwiperCoupons() {
-		swiper_coupons = new Swiper('.swiper_coupons', {
-			/* 2026-10-08: mã giảm giá nằm cạnh thẻ giới thiệu trong cột phải ⇒ tối đa 3 thẻ/hàng. */
-			slidesPerView: 3,
-			spaceBetween: 12,
-			watchOverflow: true,
-			slidesPerGroup: 1,
-			navigation: {
-				nextEl: '.swiper_coupons .swiper-button-next',
-				prevEl: '.swiper_coupons .swiper-button-prev',
-			},
-			breakpoints: {
-				640: {
-					slidesPerView: 2,
-					spaceBetween: 14
-				},
-				768: {
-					slidesPerView: 2.3,
-					spaceBetween: 14
-				},
-				992: {
-					slidesPerView: 2,
-					spaceBetween: 12
-				},
-				1200: {
-					slidesPerView: 3,
-					spaceBetween: 12
-				}
+	/* 2026-10-10: tim yêu thích trên thẻ product_card_collection — dùng chung cookie danh sách yêu thích của theme
+	   (sudes_wishlist_products, snippets/favorite_js.bwt); bắt sự kiện ở document để chạy cả với kết quả lọc AJAX. */
+	(function () {
+		var KEY = 'sudes_wishlist_products';
+		function list() { try { return (window.Cookies && Cookies.getJSON(KEY)) || []; } catch (e) { return []; } }
+		function paint(root) {
+			var l = list();
+			(root || document).querySelectorAll('[data-pc-wish]').forEach(function (b) {
+				var on = l.indexOf(b.getAttribute('data-pc-wish')) !== -1;
+				b.classList.toggle('is-active', on);
+				b.setAttribute('aria-pressed', String(on));
+			});
+		}
+		document.addEventListener('click', function (e) {
+			var b = e.target.closest && e.target.closest('[data-pc-wish]');
+			if (!b || !window.Cookies) return;
+			e.preventDefault();
+			var h = b.getAttribute('data-pc-wish');
+			var l = list();
+			if (l.indexOf(h) !== -1) {
+				if (window.favoriBean && favoriBean.Wishlist && favoriBean.Wishlist.removeWishlist) favoriBean.Wishlist.removeWishlist(h);
+				else Cookies.set(KEY, l.filter(function (x) { return x !== h; }), { expires: 15, sameSite: 'None', secure: true });
+			} else {
+				l.unshift(h);
+				Cookies.set(KEY, l.slice(0, 100), { expires: 15, sameSite: 'None', secure: true });
+				if (window.favoriBean && favoriBean.Wishlist && favoriBean.Wishlist.wishlistProduct) favoriBean.Wishlist.wishlistProduct();
+				if (window.theme && theme.alert && theme.alert.new) theme.alert.new('Thêm vào danh sách yêu thích', 'Bạn đã thêm sản phẩm vào danh sách yêu thích.', 3000, 'alert-success');
 			}
+			paint();
 		});
-	}
-	function destroySwiperCoupons() {
-		if (swiper_coupons) {
-			swiper_coupons.destroy(true, true);
-			swiper_coupons = null;
-		}
-	}
-	function toggleSwiperCoupons() {
-		if ($(window).width() <= 767 && swiper_coupons) {
-			destroySwiperCoupons();
-		} else if ($(window).width() > 767 && !swiper_coupons) {
-			initSwiperCoupons();
-		}
-	}
-	toggleSwiperCoupons();
-	$(window).on('resize', function() {
-		toggleSwiperCoupons();
-	});
-	{%endif%}
+		paint();
+		var ajax = document.getElementById('ajax-result');
+		if (ajax && window.MutationObserver) new MutationObserver(function () { paint(ajax); }).observe(ajax, { childList: true, subtree: true });
+	})();
 	$('.view_mores a.one').click(function() {
 		$(this).addClass('active');
 		$('.view_mores a.two').removeClass('active');

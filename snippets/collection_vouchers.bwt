@@ -1,0 +1,93 @@
+{%- comment -%}
+  collection_vouchers.bwt (2026-10-10) — dải voucher riêng dưới banner trang danh mục (thiết kế design/danh-muc/danh-muc-san-pham.png).
+  Người dùng yêu cầu: voucher tách riêng phía trên; ô màu bên trái hiện theo loại giảm — số tiền ("-50K"), phần trăm ("-10%")
+  hoặc icon freeship. Dữ liệu = 6 mã promo_coupon_N_* (Admin › Mã giảm giá): N_min_order = mức giảm ("50K", "10%"),
+  N_type = loại (để trống ⇒ có "%" là phần trăm, còn lại là số tiền; "freeship" phải chọn tay).
+  Giữ lớp .js-copy / .info-button / .popup-coupon để main.js xử lý "Lấy mã" và popup điều kiện như cũ.
+{%- endcomment -%}
+{%- assign pc_v_count = 0 -%}
+{%- for i in (1..6) -%}
+  {%- capture pc_v_en -%}promo_coupon_{{ i }}_enable{%- endcapture -%}
+  {%- capture pc_v_code -%}promo_coupon_{{ i }}_code{%- endcapture -%}
+  {%- if settings[pc_v_en] and settings[pc_v_code] != blank -%}{%- assign pc_v_count = pc_v_count | plus: 1 -%}{%- endif -%}
+{%- endfor -%}
+{%- if settings.aside_coupon_enable and pc_v_count > 0 -%}
+<section class="pc-vouchers" aria-label="{{ settings.collection_voucher_title | default: 'Voucher cho danh mục này' | escape }}" data-pc-vouchers>
+	<div class="pc-vouchers__head">
+		<span class="pc-vouchers__head-icon" aria-hidden="true"><i class="fas fa-ticket"></i></span>
+		<div>
+			<p class="pc-vouchers__title">{{ settings.collection_voucher_title | default: 'Voucher cho danh mục này' | escape }}</p>
+			<p class="pc-vouchers__sub">{{ settings.collection_voucher_subtitle | default: 'Tiết kiệm ngay khi mua sản phẩm' | escape }}</p>
+		</div>
+	</div>
+	<div class="pc-vouchers__track" data-pc-vouchers-track>
+		{%- for i in (1..6) -%}
+		{%- capture pc_v_en -%}promo_coupon_{{ i }}_enable{%- endcapture -%}
+		{%- capture pc_v_code -%}promo_coupon_{{ i }}_code{%- endcapture -%}
+		{%- capture pc_v_amount -%}promo_coupon_{{ i }}_min_order{%- endcapture -%}
+		{%- capture pc_v_value -%}promo_coupon_{{ i }}_value{%- endcapture -%}
+		{%- capture pc_v_cond -%}promo_coupon_{{ i }}_condition{%- endcapture -%}
+		{%- capture pc_v_time -%}promo_coupon_{{ i }}_expires{%- endcapture -%}
+		{%- capture pc_v_type_key -%}promo_coupon_{{ i }}_type{%- endcapture -%}
+		{%- if settings[pc_v_en] and settings[pc_v_code] != blank -%}
+		{%- assign pc_v_type = settings[pc_v_type_key] -%}
+		{%- if pc_v_type == blank or pc_v_type == 'auto' -%}
+			{%- if settings[pc_v_amount] contains '%' -%}{%- assign pc_v_type = 'percent' -%}{%- else -%}{%- assign pc_v_type = 'amount' -%}{%- endif -%}
+		{%- endif -%}
+		<article class="pc-voucher pc-voucher--{{ pc_v_type }}">
+			<div class="pc-voucher__badge" aria-hidden="true">
+				{%- if pc_v_type == 'freeship' -%}
+				<i class="fas fa-truck-fast"></i><span>{{ settings.collection_voucher_freeship_label | default: 'FREESHIP' | escape }}</span>
+				{%- elsif settings[pc_v_amount] != blank -%}
+				<strong>-{{ settings[pc_v_amount] | remove: '-' | upcase | escape }}</strong>
+				{%- else -%}
+				<i class="fas fa-ticket"></i>
+				{%- endif -%}
+			</div>
+			<div class="pc-voucher__body">
+				<p class="pc-voucher__code notranslate" translate="no">{{ settings[pc_v_code] | escape }}</p>
+				{%- if settings[pc_v_value] != blank -%}<p class="pc-voucher__desc">{{ settings[pc_v_value] | escape }}</p>{%- endif -%}
+				<div class="pc-voucher__actions">
+					<button type="button" class="pc-voucher__take coupon-code js-copy" data-copy="{{ settings[pc_v_code] | escape }}" title="Sao chép mã {{ settings[pc_v_code] | escape }}">{{ settings.collection_voucher_take_label | default: 'Lấy mã' | escape }}</button>
+					<a href="javascript:void(0)" class="pc-voucher__info info-button" title="Điều kiện áp dụng" aria-label="Điều kiện áp dụng mã {{ settings[pc_v_code] | escape }}" data-coupon="{{ settings[pc_v_code] | escape }}" data-time="{{ settings[pc_v_time] | remove: 'Ngày hết hạn: ' | escape }}" data-content="{{ settings[pc_v_cond] | escape }}"><i class="fas fa-circle-info" aria-hidden="true"></i></a>
+				</div>
+			</div>
+		</article>
+		{%- endif -%}
+		{%- endfor -%}
+	</div>
+	<button type="button" class="pc-vouchers__nav pc-vouchers__nav--prev" data-pc-vouchers-prev aria-label="Voucher trước" hidden><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
+	<button type="button" class="pc-vouchers__nav pc-vouchers__nav--next" data-pc-vouchers-next aria-label="Voucher sau" hidden><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+</section>
+<div class="popup-coupon">
+	<div class="content">
+		<div class="title">Thông tin voucher</div>
+		<div class="close-popup-coupon" title="Đóng"><i class="fas fa-xmark" aria-hidden="true"></i></div>
+		<ul>
+			<li><span>Mã giảm giá:</span> <span class="code"></span></li>
+			<li><span>Ngày hết hạn:</span> <span class="time"></span></li>
+			<li><span>Điều kiện:</span> <span class="dieukien"></span></li>
+		</ul>
+	</div>
+</div>
+<script>
+(function () {
+	var box = document.querySelector('[data-pc-vouchers]');
+	if (!box) return;
+	var track = box.querySelector('[data-pc-vouchers-track]');
+	var prev = box.querySelector('[data-pc-vouchers-prev]');
+	var next = box.querySelector('[data-pc-vouchers-next]');
+	function sync() {
+		var max = track.scrollWidth - track.clientWidth;
+		prev.hidden = track.scrollLeft <= 2;
+		next.hidden = track.scrollLeft >= max - 2;
+	}
+	prev.addEventListener('click', function () { track.scrollBy({ left: -track.clientWidth * 0.8, behavior: 'smooth' }); });
+	next.addEventListener('click', function () { track.scrollBy({ left: track.clientWidth * 0.8, behavior: 'smooth' }); });
+	track.addEventListener('scroll', function () { window.requestAnimationFrame(sync); }, { passive: true });
+	window.addEventListener('resize', sync);
+	window.addEventListener('load', sync);
+	sync();
+})();
+</script>
+{%- endif -%}

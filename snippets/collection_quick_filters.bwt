@@ -1,0 +1,21 @@
+{%- comment -%}
+  collection_quick_filters.bwt (2026-10-10) — hàng "Bộ lọc nhanh" trên lưới sản phẩm (thiết kế design/danh-muc/danh-muc-san-pham.png).
+  Chip = các link của menu chọn ở Admin › Trang danh mục › "Menu bộ lọc nhanh" (vd danh mục Cấp ẩm sâu, Da nhạy cảm,
+  Hàng mới…) — không tự gán. Chip đầu "Mặc định" = danh mục đang xem (bỏ lọc). Chip trùng danh mục đang xem được tô đậm.
+  Menu trống / chưa tạo ⇒ không hiện hàng này.
+{%- endcomment -%}
+{%- assign pc_qf_menu = settings.collection_quick_filter_menu | default: '' -%}
+{%- if pc_qf_menu != blank -%}{%- assign pc_qf_ll = linklists[pc_qf_menu] -%}{%- endif -%}
+{%- if pc_qf_menu != blank and pc_qf_ll.links.size > 0 -%}
+{%- assign pc_qf_current_in_menu = false -%}
+{%- for link in pc_qf_ll.links -%}{%- if link.url == collection.url -%}{%- assign pc_qf_current_in_menu = true -%}{%- endif -%}{%- endfor -%}
+<nav class="pc-quick-filters" aria-label="{{ settings.collection_quick_filter_title | default: 'Bộ lọc nhanh' | escape }}">
+	<p class="pc-quick-filters__title">{{ settings.collection_quick_filter_title | default: 'Bộ lọc nhanh' | escape }}</p>
+	<div class="pc-quick-filters__chips">
+		<a class="pc-quick-filters__chip{% unless pc_qf_current_in_menu %} is-active{% endunless %}" href="{{ collection.url }}"{% unless pc_qf_current_in_menu %} aria-current="page"{% endunless %}>{{ settings.collection_quick_filter_default_label | default: 'Mặc định' | escape }}</a>
+		{%- for link in pc_qf_ll.links -%}
+		<a class="pc-quick-filters__chip{% if link.url == collection.url %} is-active{% endif %}" href="{{ link.url | escape }}"{% if link.url == collection.url %} aria-current="page"{% endif %}>{{ link.title | escape }}</a>
+		{%- endfor -%}
+	</div>
+</nav>
+{%- endif -%}

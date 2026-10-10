@@ -105,6 +105,20 @@ const linklists = {
     ],
   },
 
+  // 2026-10-10: menu "Bộ lọc nhanh" trang danh mục (settings.collection_quick_filter_menu) — trỏ danh mục tự động thật.
+  'bo-loc-nhanh': {
+    title:  'Bộ lọc nhanh',
+    handle: 'bo-loc-nhanh',
+    links: [
+      link('Phục hồi da sau treatment', '/phuc-hoi-hang-rao-bao-ve-da', 'phuc-hoi-hang-rao-bao-ve-da'),
+      link('Cấp ẩm sâu', '/duong-am-phuc-hoi-b5-ha', 'duong-am-phuc-hoi-b5-ha'),
+      link('Giảm kích ứng', '/lam-diu-on-dinh-nen-da', 'lam-diu-on-dinh-nen-da'),
+      link('Da nhạy cảm', '/giai-phap-da-nhay-cam', 'giai-phap-da-nhay-cam'),
+      link('Da khô, bong tróc', '/giai-phap-da-kho-thieu-am', 'giai-phap-da-kho-thieu-am'),
+      link('Chống nắng', '/kem-chong-nang-pho-rong', 'kem-chong-nang-pho-rong'),
+    ],
+  },
+
   // ── Skin Healthy — nhóm dịch vụ (cho page.skinhealthy-services.bwt) ────────
   'skinhealthy-services': {
     title:  'Nhóm dịch vụ Skin Healthy',

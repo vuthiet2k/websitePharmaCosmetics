@@ -903,6 +903,13 @@ function resolvePrettyPath(pathname, searchParams) {
     }
   }
 
+  // /products/:alias — Sapo thật phục vụ cả /products/<alias> (vd snippets/favorite_js.bwt tải
+  // /products/<alias>?view=favorite). 2026-10-10: thiếu route này dev-server trả 404 ⇒ favorite_js tưởng SP
+  // không tồn tại và xoá khỏi danh sách yêu thích ngay sau khi bấm tim.
+  if (parts[0] === 'products' && parts.length === 2 && mockModule.byAlias[parts[1]]) {
+    return { tpl: 'product', routeParams: { productAlias: parts[1] } };
+  }
+
   // /collections (danh sách toàn bộ danh mục) và /collections/:handle
   if (parts[0] === 'collections') {
     if (parts.length === 1) return { tpl: 'list_collections', routeParams: {} };

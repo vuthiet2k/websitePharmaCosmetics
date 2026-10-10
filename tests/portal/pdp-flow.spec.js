@@ -55,7 +55,8 @@ test('Sản phẩm kê toa: không form/giá/số lượng/Shopee/đánh giá, c
 
 test('Thẻ danh mục của sản phẩm kê toa: không giá, không Xem nhanh/Thêm giỏ', async ({ page }) => {
   await page.goto('/collections/all');
-  const card = page.locator('form.product-action').filter({ has: page.locator('a[href="/altreno-lotion-0-05-tretinoin"]') }).first();
+  // 2026-10-10: lưới danh mục dùng thẻ mới product_card_collection (form.pc-pcard).
+  const card = page.locator('form.pc-pcard').filter({ has: page.locator('a[href="/altreno-lotion-0-05-tretinoin"]') }).first();
   await expect(card).toHaveCount(1);
   await expect(card.locator('.pc-price--rx')).toBeVisible();
   await expect(card.locator('.quick-view, .add_to_cart')).toHaveCount(0);

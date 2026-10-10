@@ -144,7 +144,7 @@ const products = [
     id: 1004, name: 'Sữa Rửa Mặt Tạo Bọt Amino Acid Dịu Nhẹ', alias: 'sua-rua-mat-amino-acid',
     type: 'Làm sạch', votes: 187,
     description: 'Làm sạch dịu nhẹ, giữ ẩm tự nhiên cho da nhạy cảm.',
-    tags: ['ban-chay', 'lam-sach-da', 'khuyen-mai'],
+    tags: ['nhan:Bán chạy', 'voucher:-10%', 'ban-chay', 'lam-sach-da', 'khuyen-mai'],
     variants: [
       variant(10041, '100ml', 280000, 320000, 'PC-SRM-100', true, 50),
       variant(10042, '200ml', 480000, 540000, 'PC-SRM-200', true, 35),
@@ -175,7 +175,7 @@ const products = [
     id: 1006, name: 'Kem Dưỡng Ẩm Hyaluronic Acid 3 Tầng Căng Mướt Suốt Ngày', alias: 'kem-duong-am-hyaluronic-acid',
     type: 'Kem dưỡng', votes: 165,
     description: 'Cấp ẩm 3 tầng, da căng mướt và mềm mịn cả ngày dài.',
-    tags: ['duong-am', 'hyaluronic', 'ban-chay', 'san-pham-noi-bat', 'khuyen-mai', 'hoatchat:hyaluronic-acid', 'hoatchat:centella'],
+    tags: ['nhan:Hàng mới', 'voucher:-10%', 'freeship', 'duong-am', 'hyaluronic', 'ban-chay', 'san-pham-noi-bat', 'khuyen-mai', 'hoatchat:hyaluronic-acid', 'hoatchat:centella'],
     variants: [
       variant(10061, '50ml', 580000, 720000, 'PC-HAC-50', true, 22),
     ],
@@ -205,7 +205,7 @@ const products = [
     id: 1008, name: 'Mặt Nạ Dưỡng Phục Hồi Centella Asiatica (Hộp 5 Miếng)', alias: 'mat-na-centella-asiatica',
     type: 'Mặt nạ', votes: 30, available: false,
     description: 'Phục hồi da kích ứng — dịu mát, tái tạo hàng rào bảo vệ da.',
-    tags: ['phuc-hoi', 'centella', 'duong-am'],
+    tags: ['nhan:Đề xuất', 'freeship', 'phuc-hoi', 'centella', 'duong-am'],
     variants: [
       variant(10081, 'Hộp 5 miếng', 180000, 0, 'PC-CTL-5', false, 0),
     ],
@@ -298,7 +298,7 @@ const products = [
     id: 1014, name: 'Kem Phục Hồi Hàng Rào Da Ceramide + Niacinamide Chuyên Sâu', alias: 'kem-phuc-hoi-ceramide-niacinamide',
     type: 'Kem dưỡng', votes: 124,
     description: 'Củng cố hàng rào da, nuôi dưỡng chuyên sâu cho da khô & nhạy cảm.',
-    tags: ['phuc-hoi', 'ceramide', 'duong-am', 'chuyen-nghiep', 'san-pham-noi-bat'],
+    tags: ['nhan:Yêu thích', 'phuc-hoi', 'ceramide', 'duong-am', 'chuyen-nghiep', 'san-pham-noi-bat'],
     variants: [
       variant(10141, '50ml', 760000, 0, 'PC-CRM-50', true, 17),
     ],

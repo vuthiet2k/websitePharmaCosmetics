@@ -6,10 +6,13 @@
 	  nằm ngoài #ajax-result nên không mất khi lọc AJAX.
 	{%- endcomment -%}
 	{%- assign _result_count = paginate.items | default: collection.products_count | default: search.results_count -%}
+	{%- comment -%} 2026-10-10: paginate.items = 0 (không phải nil) thì default không thay ⇒ lấy số SP của danh mục. {%- endcomment -%}
+	{%- if _result_count == 0 and collection.products_count > 0 -%}{%- assign _result_count = collection.products_count -%}{%- endif -%}
 	<div class="sort-cate-bar">
 	{%- if _result_count > 0 -%}
 	<div class="sort-cate-count">
-		<span class="sort-count-num">{{ _result_count }}</span> sản phẩm
+		{%- comment -%} 2026-10-10: "Sản phẩm (36)" theo thiết kế design/danh-muc/danh-muc-san-pham.png. {%- endcomment -%}
+		<span class="sort-cate-count__label">{{ settings.collection_products_label | default: 'Sản phẩm' | escape }}</span> (<span class="sort-count-num">{{ _result_count }}</span>)
 	</div>
 	{%- endif -%}
 	<div class="sort-cate-tools">

@@ -1,0 +1,86 @@
+{%- comment -%}
+  product_card_collection.bwt (2026-10-10) — thẻ sản phẩm lưới trang danh mục + kết quả lọc AJAX (search.data / data_list),
+  theo thiết kế design/danh-muc/danh-muc-san-pham.png. Thẻ cũ product_grid_office giữ nguyên cho các khối khác.
+  - Nhãn góc trái: đang giảm giá ⇒ "Giảm X%"; không thì tag dạng nhan:<chữ> (vd nhan:Bán chạy, nhan:Hàng mới, nhan:Đề xuất).
+  - Chip dưới giá: tag voucher:<mức> (vd voucher:-10%) ⇒ "Voucher -10%"; tag freeship ⇒ "Freeship". Không tag ⇒ không chip.
+  - Sao đánh giá CHỈ khi có đánh giá thật (app Sapo Product Reviews, metafields.bpr) — không bịa số.
+  - Kê toa (pc_is_rx): không giá, không giỏ, chỉ "Liên hệ tư vấn" + xem chi tiết (RULE kê toa như thẻ cũ).
+  - Giỏ hàng: form /cart/add + nút .add_to_cart như thẻ cũ (ajaxCart của theme xử lý). Nhiều phiên bản ⇒ nút mở trang SP.
+{%- endcomment -%}
+{%- assign pcc_variant = product.selected_or_first_available_variant | default: product.variants.first -%}
+{%- assign pcc_price = pcc_variant.price -%}
+{%- assign pcc_compare = pcc_variant.compare_at_price -%}
+{%- assign pcc_sold_out = true -%}{%- if product.available -%}{%- assign pcc_sold_out = false -%}{%- endif -%}
+{%- assign pcc_multi = false -%}{%- if product.variants.size > 1 -%}{%- assign pcc_multi = true -%}{%- endif -%}
+{%- assign pcc_badge = '' -%}{%- assign pcc_voucher = '' -%}{%- assign pcc_freeship = false -%}{%- assign pcc_preorder = false -%}
+{%- for tag in product.tags -%}
+	{%- assign pcc_t5 = tag | slice: 0, 5 | downcase -%}
+	{%- assign pcc_t8 = tag | slice: 0, 8 | downcase -%}
+	{%- if pcc_t5 == 'nhan:' and pcc_badge == blank -%}{%- assign pcc_badge = tag | slice: 5, 40 | strip -%}{%- endif -%}
+	{%- if pcc_t8 == 'voucher:' -%}{%- assign pcc_voucher = tag | slice: 8, 20 | strip -%}{%- endif -%}
+	{%- assign pcc_tl = tag | downcase -%}
+	{%- if pcc_tl == 'freeship' or pcc_t8 == 'freeship' -%}{%- assign pcc_freeship = true -%}{%- endif -%}
+	{%- if pcc_tl contains 'pre-order' -%}{%- assign pcc_preorder = true -%}{%- endif -%}
+{%- endfor -%}
+{%- include 'pc_is_rx' -%}
+{%- assign pcc_discount = 0 -%}
+{%- if pcc_compare > pcc_price and pcc_price > 0 and pc_is_rx != true -%}
+	{%- assign pcc_discount = pcc_compare | minus: pcc_price | times: 100 | divided_by: pcc_compare | round -%}
+	{%- if pcc_discount < 1 -%}{%- assign pcc_discount = 1 -%}{%- endif -%}
+{%- endif -%}
+<form action="/cart/add" method="post" class="pc-pcard variants" data-cart-form data-id="product-actions-{{ product.id }}" enctype="multipart/form-data">
+	<div class="pc-pcard__media">
+		{%- if pcc_discount > 0 -%}
+		<span class="pc-pcard__badge pc-pcard__badge--sale">{{ settings.collection_card_sale_label | default: 'Giảm' | escape }} {{ pcc_discount }}%</span>
+		{%- elsif pcc_badge != blank -%}
+		{%- comment -%} Màu nhãn theo từ khoá (không phụ thuộc handleize): bán chạy = đỏ, đề xuất = tím xanh, yêu thích = cam, còn lại = xanh. {%- endcomment -%}
+		{%- assign pcc_bl = pcc_badge | downcase -%}
+		{%- assign pcc_bc = 'default' -%}
+		{%- if pcc_bl contains 'bán chạy' or pcc_bl contains 'hot' -%}{%- assign pcc_bc = 'hot' -%}{%- elsif pcc_bl contains 'đề xuất' -%}{%- assign pcc_bc = 'pick' -%}{%- elsif pcc_bl contains 'yêu thích' -%}{%- assign pcc_bc = 'love' -%}{%- endif -%}
+		<span class="pc-pcard__badge pc-pcard__badge--{{ pcc_bc }}">{{ pcc_badge | escape }}</span>
+		{%- endif -%}
+		<button type="button" class="pc-pcard__wish" data-pc-wish="{{ product.alias }}" aria-label="Yêu thích {{ product.name | escape }}" aria-pressed="false"><i class="far fa-heart" aria-hidden="true"></i><i class="fas fa-heart" aria-hidden="true"></i></button>
+		<a class="pc-pcard__img" href="{{ product.url }}" title="{{ product.name | escape }}">
+			<img width="480" height="480" class="lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC" data-src="{% if product.featured_image.src != blank %}{{ product.featured_image.src | img_url: 'large' }}{% else %}{% include 'placeholder_img_url' %}{% endif %}" alt="{{ product.featured_image.alt | default: product.name | escape }}">
+		</a>
+	</div>
+	<div class="pc-pcard__body">
+		{%- if product.vendor != blank -%}<p class="pc-pcard__brand notranslate" translate="no">{{ product.vendor | escape }}</p>{%- endif -%}
+		{%- comment -%} RULE-P0-01: tên SP chứa nồng độ hoạt chất/thương hiệu quốc tế ⇒ notranslate. {%- endcomment -%}
+		<h3 class="pc-pcard__name notranslate" translate="no"><a href="{{ product.url }}" title="{{ product.name | escape }}">{{ product.name }}</a></h3>
+		{%- if product.summary != blank -%}<p class="pc-pcard__desc">{{ product.summary | strip_html | strip_newlines | truncatewords: 12 }}</p>{%- endif -%}
+		<div class="pc-pcard__price">
+			{%- if pc_is_rx -%}
+			<span class="pc-pcard__price-now pc-price--rx">{{ settings.product_rx_card_label | default: 'Liên hệ tư vấn' }}</span>
+			{%- elsif pcc_price == 0 -%}
+			<span class="pc-pcard__price-now">Liên hệ</span>
+			{%- else -%}
+			<span class="pc-pcard__price-now">{{ pcc_price | money }}</span>
+			{%- if pcc_compare > pcc_price -%}<s class="pc-pcard__price-old">{{ pcc_compare | money }}</s>{%- endif -%}
+			{%- endif -%}
+		</div>
+		<div class="pc-pcard__foot">
+			{%- if product.metafields.bpr.votes > 0 -%}
+			<span class="pc-pcard__rating" title="{{ product.metafields.bpr.rating }}/5" aria-label="Đánh giá {{ product.metafields.bpr.rating }} trên 5, {{ product.metafields.bpr.votes }} lượt">
+				<i class="fas fa-star" aria-hidden="true"></i> {{ product.metafields.bpr.rating }} <span>({{ product.metafields.bpr.votes }})</span>
+			</span>
+			{%- else -%}<span></span>{%- endif -%}
+			{%- if pc_is_rx or pcc_price == 0 or pcc_preorder -%}
+			<a class="pc-pcard__cart pc-pcard__cart--view" href="{{ product.url }}" title="Xem chi tiết" aria-label="Xem chi tiết {{ product.name | escape }}"><i class="fas fa-eye" aria-hidden="true"></i></a>
+			{%- elsif pcc_sold_out -%}
+			<button type="button" class="pc-pcard__cart" disabled title="Hết hàng" aria-label="Hết hàng"><i class="fas fa-ban" aria-hidden="true"></i></button>
+			{%- elsif pcc_multi -%}
+			<a class="pc-pcard__cart" href="{{ product.url }}" title="Chọn phiên bản" aria-label="Chọn phiên bản {{ product.name | escape }}"><i class="fas fa-cart-shopping" aria-hidden="true"></i></a>
+			{%- else -%}
+			<input type="hidden" name="variantId" value="{{ pcc_variant.id }}" />
+			<button type="submit" class="pc-pcard__cart add_to_cart" title="Thêm vào giỏ" aria-label="Thêm {{ product.name | escape }} vào giỏ"><i class="fas fa-cart-shopping" aria-hidden="true"></i></button>
+			{%- endif -%}
+		</div>
+		{%- if pcc_voucher != blank or pcc_freeship -%}
+		<div class="pc-pcard__chips">
+			{%- if pcc_voucher != blank -%}<span class="pc-pcard__chip pc-pcard__chip--voucher"><i class="fas fa-ticket" aria-hidden="true"></i> {{ settings.collection_card_voucher_label | default: 'Voucher' | escape }} {{ pcc_voucher | escape }}</span>{%- endif -%}
+			{%- if pcc_freeship -%}<span class="pc-pcard__chip pc-pcard__chip--freeship"><i class="fas fa-truck-fast" aria-hidden="true"></i> {{ settings.collection_card_freeship_label | default: 'Freeship' | escape }}</span>{%- endif -%}
+		</div>
+		{%- endif -%}
+	</div>
+</form>

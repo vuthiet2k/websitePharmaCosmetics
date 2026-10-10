@@ -315,6 +315,12 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
   nhắc, không nút. Tự cập nhật qua sự kiện `pc:result-store` (PharmaResultStore.set/remove phát ra). `?tab=camera|quiz` chọn tab. GAS trả hồ sơ đầy đủ ⇒ dựng lại
   kết quả vào PharmaResultStore rồi tải lại 1 lần (cờ `pc_crm_hydrated`). `crm-intake.js` nạp `defer` ⇒ gọi
   `syncCustomerInfo` sau DOMContentLoaded (trước 2026-10-10 trang không tra GAS khi mở).
+- Trang danh mục (2026-10-10, `design/danh-muc/danh-muc-san-pham.png`): banner `collection_hero` chứa h1 = tên danh mục →
+  dải voucher riêng `collection_vouchers` (promo_coupon_N_*, ô màu theo `promo_coupon_N_type`: auto/amount/percent/freeship) →
+  cột lọc (đầu "Bộ lọc sản phẩm / Xóa tất cả") | `collection_quick_filters` (menu `settings.collection_quick_filter_menu`) →
+  "Sản phẩm (N)" + sắp xếp → thẻ `product_card_collection` (cả kết quả lọc AJAX `search.data`/`data_list`). Thẻ: nhãn = giảm %
+  hoặc tag `nhan:<chữ>`; chip = tag `voucher:<mức>` / `freeship`; sao CHỈ từ `metafields.bpr` thật. Thẻ cũ
+  `product_grid_office` vẫn dùng ở trang chủ/PDP/khối khác.
 - Khối "Định hướng phác đồ tham khảo" (2026-10-10, `design/ket-qua-da/dinh-huong-phac-do.png`): 5 thẻ chỉ số (soi da) →
   `[data-plan-stages]` 3 giai đoạn, mỗi giai đoạn dải SP thật của danh mục giai đoạn (thẻ có tim = cookie
   `sudes_wishlist_products` của theme, nút "Thêm vào phác đồ" = POST `/cart/add.js` khi SP 1 phiên bản còn hàng, ngược lại

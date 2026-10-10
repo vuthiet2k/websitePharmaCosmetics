@@ -1,11 +1,19 @@
 {%- comment -%}
-  snippets/collection_hero.bwt — 2026-10-08: banner đầu trang danh mục theo thiết kế người dùng gửi
-  (tiêu đề + mô tả + 4 cam kết, ảnh sản phẩm bên phải). Mọi chữ/ảnh lấy từ Admin › Trang danh mục ›
-  "Banner đầu trang danh mục". Tiêu đề banner KHÔNG phải <h1> — H1 của trang vẫn là tên danh mục.
-  Chưa tải ảnh ⇒ chỉ còn nền xanh nhạt + hoạ tiết lá vẽ bằng SVG (không dùng ảnh mẫu/stock).
+  snippets/collection_hero.bwt — banner đầu trang danh mục.
+  2026-10-08: tiêu đề + mô tả + 4 cam kết, ảnh sản phẩm bên phải (Admin › Trang danh mục › "Banner đầu trang danh mục").
+  2026-10-10 (thiết kế design/danh-muc/danh-muc-san-pham.png): tiêu đề banner = TÊN DANH MỤC và là <h1> duy nhất của trang
+  (bỏ h1 riêng phía trên lưới sản phẩm); nhãn nhỏ phía trên = settings.collection_hero_eyebrow; mô tả = đoạn đầu mô tả danh
+  mục (chưa có ⇒ settings.collection_hero_subtitle); ảnh = ảnh danh mục, chưa có ⇒ settings.collection_hero_image.
+  Không có ảnh ⇒ nền xanh nhạt + hoạ tiết lá SVG (không dùng ảnh mẫu/stock).
 {%- endcomment -%}
+{%- assign pc_hero_name = collection.name -%}
+{%- if collection.name == 'All' or collection.name == blank -%}{%- assign pc_hero_name = settings.collection_hero_title | default: 'Tất cả sản phẩm' -%}{%- endif -%}
+{%- assign pc_hero_sub = collection.description | split: '<h5>' | first | strip_html | strip_newlines | truncatewords: 26 -%}
+{%- if pc_hero_sub == blank -%}{%- assign pc_hero_sub = settings.collection_hero_subtitle | default: settings.collection_intro_text -%}{%- endif -%}
+{%- assign pc_hero_img = settings.collection_hero_image -%}
+{%- if collection.image.src != blank -%}{%- assign pc_hero_img = collection.image.src -%}{%- endif -%}
 {%- if settings.collection_hero_enable != false -%}
-<section class="pc-col-hero" aria-label="{{ settings.collection_hero_title | default: 'Sản phẩm chăm sóc da chính hãng' | escape }}">
+<section class="pc-col-hero{% if pc_hero_img != blank %} has-image{% endif %}" aria-label="{{ pc_hero_name | escape }}">
 	<svg class="pc-col-hero__leaf pc-col-hero__leaf--left" width="180" height="200" viewBox="0 0 180 200" fill="none" aria-hidden="true" focusable="false">
 		<path d="M20 196C52 150 78 104 98 30" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
 		<path d="M98 30c-26 2-42 22-36 46 24-4 38-22 36-46Z" fill="currentColor" opacity=".55"/>
@@ -15,10 +23,9 @@
 		<path d="M48 160c24-14 48-8 58 14-24 10-46 4-58-14Z" fill="currentColor" opacity=".3"/>
 	</svg>
 	<div class="pc-col-hero__body">
-		<p class="pc-col-hero__title">{{ settings.collection_hero_title | default: 'Sản phẩm chăm sóc da chính hãng' }}</p>
-		{%- if settings.collection_hero_subtitle != blank -%}
-		<p class="pc-col-hero__sub">{{ settings.collection_hero_subtitle }}</p>
-		{%- endif -%}
+		{%- if settings.collection_hero_eyebrow != blank -%}<p class="pc-col-hero__eyebrow">{{ settings.collection_hero_eyebrow | escape }}</p>{%- endif -%}
+		<h1 class="pc-col-hero__title">{{ pc_hero_name | escape }}</h1>
+		{%- if pc_hero_sub != blank -%}<p class="pc-col-hero__sub">{{ pc_hero_sub }}</p>{%- endif -%}
 		<ul class="pc-col-hero__usps">
 			{%- for i in (1..4) -%}
 			{%- capture usp_t -%}collection_hero_usp_{{ i }}_title{%- endcapture -%}
@@ -42,9 +49,9 @@
 			{%- endfor -%}
 		</ul>
 	</div>
-	{%- if settings.collection_hero_image != blank -%}
+	{%- if pc_hero_img != blank -%}
 	<div class="pc-col-hero__media">
-		<img src="{{ settings.collection_hero_image | img_url: '1024x1024' }}" width="560" height="280" alt="{{ settings.collection_hero_title | default: 'Sản phẩm chăm sóc da chính hãng' | escape }}" fetchpriority="high">
+		<img src="{{ pc_hero_img | img_url: '1024x1024' }}" width="560" height="280" alt="{{ collection.image.alt | default: pc_hero_name | escape }}" fetchpriority="high">
 	</div>
 	{%- else -%}
 	<svg class="pc-col-hero__leaf pc-col-hero__leaf--right" width="180" height="200" viewBox="0 0 180 200" fill="none" aria-hidden="true" focusable="false">
@@ -56,4 +63,6 @@
 	</svg>
 	{%- endif -%}
 </section>
+{%- else -%}
+<h1 class="title-page">{{ pc_hero_name | escape }}</h1>
 {%- endif -%}
