@@ -138,7 +138,7 @@ phẩm điều kiện đó bắt thêm, chưa có ở các dòng phía trên. S�
 - **Tổng ước tính:** khoảng 908 SP · **Lạc nhóm:** khoảng 21 (viên uống chống lão hóa và 1 tinh chất dưỡng tóc có Peptide).
 - **Mẫu sản phẩm:** IMAGE Skincare AGELESS+ Retinol Treatment Crème 1.2% · ANGIOPHARM Liposomal Retinol Tonic 200ml · ANGIOPHARM Copper Peptide Serum 30ml
 - **Ghi chú về `Lão h`:** tên sản phẩm có 2 kiểu viết, "lão hóa" (501 SP) và "lão hoá" (65 SP); `Lão h` bắt được cả hai.
-  **Đã xác nhận 10/10/2026:** Sapo chấp nhận từ khoá cụt này (danh mục trên web có 933 SP).
+  **Đã xác nhận 10/10/2026:** Sapo chấp nhận từ khoá cụt này (danh mục trên web có 918 SP).
 - **SEO Meta**
   - Meta Title: Sản Phẩm Chống Lão Hóa, Mờ Nếp Nhăn Chính Hãng | PharmaCosmetics
   - Meta Description: Dược mỹ phẩm chống lão hóa với Retinol, Peptide giúp mờ nếp nhăn, tăng độ săn chắc và cải thiện cấu trúc da. Chính hãng tại PharmaCosmetics.
@@ -347,13 +347,13 @@ Allow: /
 ## 7. Nhật ký khởi tạo và bàn giao
 
 Cột **"Số SP thực tế trên web"** được đếm ngày 10/10/2026 bằng cách duyệt hết các trang của từng danh mục trên
-pharmacosmetics-vn.com. Con số "260 SP" trong admin chỉ là giới hạn của ô xem trước, không phải số thật.
+pharmacosmetics-vn.com, chỉ tính sản phẩm trong lưới danh mục (bỏ khối gợi ý / đã xem). Con số "260 SP" trong admin chỉ là giới hạn của ô xem trước, không phải số thật.
 
 | STT | Tên danh mục | Alias | ID Sapo | Số SP thực tế trên web | Ngày tạo | Người tạo | Trạng thái |
 | :-- | :-- | :-- | :-- | --: | :-- | :-- | :-- |
-| 1 | Giải Pháp Mụn Trứng Cá | `giai-phap-mun-trung-ca` | [4365331](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365331) | 794 | 10/10/2026 | Gemini Spark (Astra Workflow) | Đã tạo thành công |
-| 2 | Giải Pháp Nám & Tàn Nhang | `giai-phap-nam-tan-nhang` | [4365315](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365315) | 441 | 10/10/2026 | Person | Đã tạo thành công |
-| 3 | Giải Pháp Da Khô, Thiếu Ẩm | `giai-phap-da-kho-thieu-am` | [4365316](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365316) | 317 | 10/10/2026 | Gemini Spark (Astra Workflow) | ⚠️ Thiếu Meta Title |
-| 4 | Giải Pháp Lão Hóa Da | `giai-phap-lao-hoa-da` | [4365327](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365327) | 933 | 10/10/2026 | Person | Đã tạo thành công |
-| 5 | Giải Pháp Kiểm Soát Dầu Thừa | `giai-phap-kiem-soat-dau-thua` | [4365332](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365332) | 311 | 10/10/2026 | Gemini Spark (Astra Workflow) | Đã tạo thành công |
-| 6 | Giải Pháp Da Nhạy Cảm | `giai-phap-da-nhay-cam` | [4365329](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365329) | 487 | 10/10/2026 | Person | Đã tạo thành công |
+| 1 | Giải Pháp Mụn Trứng Cá | `giai-phap-mun-trung-ca` | [4365331](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365331) | 781 | 10/10/2026 | Gemini Spark (Astra Workflow) | Đã tạo thành công |
+| 2 | Giải Pháp Nám & Tàn Nhang | `giai-phap-nam-tan-nhang` | [4365315](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365315) | 424 | 10/10/2026 | Person | Đã tạo thành công |
+| 3 | Giải Pháp Da Khô, Thiếu Ẩm | `giai-phap-da-kho-thieu-am` | [4365316](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365316) | 301 | 10/10/2026 | Gemini Spark (Astra Workflow) | ⚠️ Thiếu Meta Title |
+| 4 | Giải Pháp Lão Hóa Da | `giai-phap-lao-hoa-da` | [4365327](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365327) | 918 | 10/10/2026 | Person | Đã tạo thành công |
+| 5 | Giải Pháp Kiểm Soát Dầu Thừa | `giai-phap-kiem-soat-dau-thua` | [4365332](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365332) | 294 | 10/10/2026 | Gemini Spark (Astra Workflow) | Đã tạo thành công |
+| 6 | Giải Pháp Da Nhạy Cảm | `giai-phap-da-nhay-cam` | [4365329](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365329) | 472 | 10/10/2026 | Person | Đã tạo thành công |

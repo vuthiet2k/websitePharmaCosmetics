@@ -234,22 +234,22 @@ const collectionsData = {
   // 2026-10-09: 8 danh mục tự động theo phác đồ soi da (tạo trên Sapo 09/10/2026) — trang kết quả
   // soi da/khảo sát link tới đây (settings.skin_result_col_*). ID theo nhật ký Sapo; SP demo để thử "Sản phẩm đề xuất";
   // số sản phẩm đếm trên web 09/10/2026.
-  'hoat-chat-bha-salicylic':         makeCollection('Hoạt Chất Làm Sạch & Kiềm Dầu BHA', 'hoat-chat-bha-salicylic', 4365305, '', pick(1007, 1013, 1005), { products_count: 100 }),
-  'tinh-chat-niacinamide':           makeCollection('Tinh Chất Niacinamide & Kiểm Soát Dầu Nhờn', 'tinh-chat-niacinamide', 4365306, '', pick(1005, 1014, 1015), { products_count: 162 }),
-  'phuc-hoi-hang-rao-bao-ve-da':     makeCollection('Phục Hồi Hàng Rào Bảo Vệ Da', 'phuc-hoi-hang-rao-bao-ve-da', 4365314, '', pick(1014, 1008, 1006), { products_count: 101 }),
-  'duong-am-phuc-hoi-b5-ha':         makeCollection('Cấp Ẩm Chuyên Sâu & Phục Hồi B5 / HA', 'duong-am-phuc-hoi-b5-ha', 4365307, '', pick(1006, 1008), { products_count: 927 }),
-  'lam-diu-on-dinh-nen-da':          makeCollection('Làm Dịu & Ổn Định Nền Da', 'lam-diu-on-dinh-nen-da', 4365308, '', pick(1004, 1008), { products_count: 360 }),
-  'retinol-chong-lao-hoa':           makeCollection('Điều Trị Chuyên Sâu Retinoid & Chống Lão Hóa', 'retinol-chong-lao-hoa', 4365309, '', pick(1001, 1011, 1012, 1016), { products_count: 531 }),
-  'tri-nam-sang-da-tranexamic-vitc': makeCollection('Mờ Thâm Nám & Hoạt Chất Sáng Da', 'tri-nam-sang-da-tranexamic-vitc', 4365310, '', pick(1002, 1015, 1009), { products_count: 310 }),
-  'kem-chong-nang-pho-rong':         makeCollection('Chống Nắng Phổ Rộng & Bảo Vệ Toàn Diện', 'kem-chong-nang-pho-rong', 4365311, '', pick(1003), { products_count: 377 }),
+  'hoat-chat-bha-salicylic':         makeCollection('Hoạt Chất Làm Sạch & Kiềm Dầu BHA', 'hoat-chat-bha-salicylic', 4365305, '', pick(1007, 1013, 1005), { products_count: 83 }),
+  'tinh-chat-niacinamide':           makeCollection('Tinh Chất Niacinamide & Kiểm Soát Dầu Nhờn', 'tinh-chat-niacinamide', 4365306, '', pick(1005, 1014, 1015), { products_count: 145 }),
+  'phuc-hoi-hang-rao-bao-ve-da':     makeCollection('Phục Hồi Hàng Rào Bảo Vệ Da', 'phuc-hoi-hang-rao-bao-ve-da', 4365314, '', pick(1014, 1008, 1006), { products_count: 84 }),
+  'duong-am-phuc-hoi-b5-ha':         makeCollection('Cấp Ẩm Chuyên Sâu & Phục Hồi B5 / HA', 'duong-am-phuc-hoi-b5-ha', 4365307, '', pick(1006, 1008), { products_count: 912 }),
+  'lam-diu-on-dinh-nen-da':          makeCollection('Làm Dịu & Ổn Định Nền Da', 'lam-diu-on-dinh-nen-da', 4365308, '', pick(1004, 1008), { products_count: 347 }),
+  'retinol-chong-lao-hoa':           makeCollection('Điều Trị Chuyên Sâu Retinoid & Chống Lão Hóa', 'retinol-chong-lao-hoa', 4365309, '', pick(1001, 1011, 1012, 1016), { products_count: 516 }),
+  'tri-nam-sang-da-tranexamic-vitc': makeCollection('Mờ Thâm Nám & Hoạt Chất Sáng Da', 'tri-nam-sang-da-tranexamic-vitc', 4365310, '', pick(1002, 1015, 1009), { products_count: 293 }),
+  'kem-chong-nang-pho-rong':         makeCollection('Chống Nắng Phổ Rộng & Bảo Vệ Toàn Diện', 'kem-chong-nang-pho-rong', 4365311, '', pick(1003), { products_count: 362 }),
   // 2026-10-09: 6 danh mục theo vấn đề da cho khối "Giải pháp" trang chủ (settings.home_solutions_N_collection) —
   // tạo trên Sapo 10/10/2026; ID theo nhật ký, số SP đếm trên web 10/10/2026.
-  'giai-phap-mun-trung-ca':          makeCollection('Giải Pháp Mụn Trứng Cá', 'giai-phap-mun-trung-ca', 4365331, '', pick(1013, 1005, 1007), { products_count: 794 }),
-  'giai-phap-nam-tan-nhang':         makeCollection('Giải Pháp Nám & Tàn Nhang', 'giai-phap-nam-tan-nhang', 4365315, '', pick(1009, 1015, 1002), { products_count: 441 }),
-  'giai-phap-da-kho-thieu-am':       makeCollection('Giải Pháp Da Khô, Thiếu Ẩm', 'giai-phap-da-kho-thieu-am', 4365316, '', pick(1006, 1014), { products_count: 317 }),
-  'giai-phap-lao-hoa-da':            makeCollection('Giải Pháp Lão Hóa Da', 'giai-phap-lao-hoa-da', 4365327, '', pick(1001, 1011, 1010, 1012), { products_count: 933 }),
-  'giai-phap-kiem-soat-dau-thua':    makeCollection('Giải Pháp Kiểm Soát Dầu Thừa', 'giai-phap-kiem-soat-dau-thua', 4365332, '', pick(1005, 1013), { products_count: 311 }),
-  'giai-phap-da-nhay-cam':           makeCollection('Giải Pháp Da Nhạy Cảm', 'giai-phap-da-nhay-cam', 4365329, '', pick(1004, 1008, 1014), { products_count: 487 }),
+  'giai-phap-mun-trung-ca':          makeCollection('Giải Pháp Mụn Trứng Cá', 'giai-phap-mun-trung-ca', 4365331, '', pick(1013, 1005, 1007), { products_count: 781 }),
+  'giai-phap-nam-tan-nhang':         makeCollection('Giải Pháp Nám & Tàn Nhang', 'giai-phap-nam-tan-nhang', 4365315, '', pick(1009, 1015, 1002), { products_count: 424 }),
+  'giai-phap-da-kho-thieu-am':       makeCollection('Giải Pháp Da Khô, Thiếu Ẩm', 'giai-phap-da-kho-thieu-am', 4365316, '', pick(1006, 1014), { products_count: 301 }),
+  'giai-phap-lao-hoa-da':            makeCollection('Giải Pháp Lão Hóa Da', 'giai-phap-lao-hoa-da', 4365327, '', pick(1001, 1011, 1010, 1012), { products_count: 918 }),
+  'giai-phap-kiem-soat-dau-thua':    makeCollection('Giải Pháp Kiểm Soát Dầu Thừa', 'giai-phap-kiem-soat-dau-thua', 4365332, '', pick(1005, 1013), { products_count: 294 }),
+  'giai-phap-da-nhay-cam':           makeCollection('Giải Pháp Da Nhạy Cảm', 'giai-phap-da-nhay-cam', 4365329, '', pick(1004, 1008, 1014), { products_count: 472 }),
   'sesderma':              makeShell(4239895, 'SESDERMA', 'sesderma', 47,
     { image: 'https://bizweb.dktcdn.net/100/415/053/collections/images.png?v=1760084339353' }),
 

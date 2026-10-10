@@ -139,7 +139,7 @@ Mọi danh mục: **Phương thức lọc** = Tự động (Một trong các đi
 | 5 | `Moisture` |
 
 - **Mẫu sản phẩm thực tế:** Geek & Gorgeous 101 HA 5 Light · Bioelements Moisture x10 · ANGIOPHARM Spray Aloe-Chitosan
-- ⚠️ **Đối chiếu 09/10/2026:** danh mục đang có **927 sản phẩm** (gần 16% toàn kho), gồm cả sữa tắm, dầu gội, sản phẩm vùng
+- ⚠️ **Đối chiếu 09/10/2026:** danh mục đang có **912 sản phẩm** (gần 16% toàn kho), gồm cả sữa tắm, dầu gội, sản phẩm vùng
   kín và viên uống, do 2 điều kiện quá rộng `Dưỡng ẩm` (526 SP) và `Cấp ẩm` (323 SP). Đề xuất thay bằng:
   `Hyaluron` · `B5` · `Cấp ẩm` · `Cấp nước` · `Moisture` (khoảng 465 SP).
 
@@ -168,8 +168,8 @@ Mọi danh mục: **Phương thức lọc** = Tự động (Một trong các đi
 | 5 | `Da nhạy cảm` |
 
 - **Mẫu sản phẩm thực tế:** ANGIOPHARM Anti Couperose Tonic 150ml · ANGIOPHARM Anti Couperose Mask 75ml · Sữa rửa mặt Amino Acid
-- ⚠️ **Đối chiếu 09/10/2026:** web đang có **360 sản phẩm**, trong khi đủ 5 điều kiện ở bảng trên sẽ cho khoảng 750 SP.
-  Con số 360 khớp với chỉ 3 điều kiện `Làm dịu` + `Anti Couperose` + `Amino Acid` ⇒ nhiều khả năng 2 dòng `Dịu nhẹ` và
+- ⚠️ **Đối chiếu 09/10/2026:** web đang có **347 sản phẩm**, trong khi đủ 5 điều kiện ở bảng trên sẽ cho khoảng 750 SP.
+  Con số 347 khớp với chỉ 3 điều kiện `Làm dịu` + `Anti Couperose` + `Amino Acid` ⇒ nhiều khả năng 2 dòng `Dịu nhẹ` và
   `Da nhạy cảm` **chưa được lưu** trên Sapo. Cần mở admin kiểm tra lại. Đề xuất bộ điều kiện:
   `Làm dịu` · `Anti Couperose` · `Rosacea` · `Giãn mao mạch` · `Soothing` (khoảng 405 SP, ít sữa tắm hơn).
   - Mẫu "Sữa rửa mặt Amino Acid" chưa có trong kho; sản phẩm duy nhất chứa "Amino Acid" là 1 toner (Synergy Therm In Balance Toner).
@@ -282,19 +282,19 @@ Mọi danh mục: **Phương thức lọc** = Tự động (Một trong các đi
 ### Bảng Nhật Ký Khởi Tạo & Theo Dõi Danh Mục Sapo (Tracking Log)
 
 Cột **"Số SP thực tế trên web"** được đếm ngày 09/10/2026 bằng cách duyệt hết các trang của từng danh mục trên
-pharmacosmetics-vn.com (`/<alias>?page=1,2,…`). Con số này thay cho số ghi tay trước đó (~3 SP / 260 SP), vì ô xem trước
+pharmacosmetics-vn.com (`/<alias>?page=1,2,…`), chỉ tính sản phẩm trong lưới danh mục (bỏ khối gợi ý / đã xem — lần đếm đầu lẫn các khối này nên dư ~15 SP mỗi danh mục). Con số này thay cho số ghi tay trước đó (~3 SP / 260 SP), vì ô xem trước
 trong admin Sapo chỉ hiện một phần danh sách.
 
 | STT | Tên danh mục | ID Sapo | Handle / Alias | Số SP thực tế trên web | Trạng thái | Ngày tạo / cập nhật |
 | :-- | :-- | :-- | :-- | --: | :-- | :-- |
-| 1 | Hoạt Chất Làm Sạch & Kiềm Dầu BHA | [4365305](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365305) | `hoat-chat-bha-salicylic` | 100 | Đã tạo thành công | 09/10/2026 |
-| 2 | Tinh Chất Niacinamide & Kiểm Soát Dầu Nhờn | [4365306](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365306) | `tinh-chat-niacinamide` | 162 | Đã tạo thành công | 09/10/2026 |
-| 3 | Phục Hồi Hàng Rào Bảo Vệ Da | [4365314](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365314) | `phuc-hoi-hang-rao-bao-ve-da` | 101 | Đã tạo thành công — cần sửa lỗi chính tả Meta Title ("Hàng Ro") | 09/10/2026 |
-| 4 | Cấp Ẩm Chuyên Sâu & Phục Hồi B5 / HA | [4365307](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365307) | `duong-am-phuc-hoi-b5-ha` | 927 | Cần tinh chỉnh điều kiện lọc | 09/10/2026 |
-| 5 | Làm Dịu & Ổn Định Nền Da | [4365308](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365308) | `lam-diu-on-dinh-nen-da` | 360 | Cần kiểm tra: có thể thiếu 2 dòng điều kiện | 09/10/2026 |
-| 6 | Điều Trị Chuyên Sâu Retinoid & Chống Lão Hóa | [4365309](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365309) | `retinol-chong-lao-hoa` | 531 | Đã tạo thành công | 09/10/2026 |
-| 7 | Mờ Thâm Nám & Hoạt Chất Sáng Da | [4365310](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365310) | `tri-nam-sang-da-tranexamic-vitc` | 310 | Đã tạo thành công | 09/10/2026 |
-| 8 | Chống Nắng Phổ Rộng & Bảo Vệ Toàn Diện | [4365311](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365311) | `kem-chong-nang-pho-rong` | 377 | Đã tạo thành công | 09/10/2026 |
+| 1 | Hoạt Chất Làm Sạch & Kiềm Dầu BHA | [4365305](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365305) | `hoat-chat-bha-salicylic` | 83 | Đã tạo thành công | 09/10/2026 |
+| 2 | Tinh Chất Niacinamide & Kiểm Soát Dầu Nhờn | [4365306](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365306) | `tinh-chat-niacinamide` | 145 | Đã tạo thành công | 09/10/2026 |
+| 3 | Phục Hồi Hàng Rào Bảo Vệ Da | [4365314](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365314) | `phuc-hoi-hang-rao-bao-ve-da` | 84 | Đã tạo thành công — cần sửa lỗi chính tả Meta Title ("Hàng Ro") | 09/10/2026 |
+| 4 | Cấp Ẩm Chuyên Sâu & Phục Hồi B5 / HA | [4365307](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365307) | `duong-am-phuc-hoi-b5-ha` | 912 | Cần tinh chỉnh điều kiện lọc | 09/10/2026 |
+| 5 | Làm Dịu & Ổn Định Nền Da | [4365308](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365308) | `lam-diu-on-dinh-nen-da` | 347 | Cần kiểm tra: có thể thiếu 2 dòng điều kiện | 09/10/2026 |
+| 6 | Điều Trị Chuyên Sâu Retinoid & Chống Lão Hóa | [4365309](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365309) | `retinol-chong-lao-hoa` | 516 | Đã tạo thành công | 09/10/2026 |
+| 7 | Mờ Thâm Nám & Hoạt Chất Sáng Da | [4365310](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365310) | `tri-nam-sang-da-tranexamic-vitc` | 293 | Đã tạo thành công | 09/10/2026 |
+| 8 | Chống Nắng Phổ Rộng & Bảo Vệ Toàn Diện | [4365311](https://pharmacosmetics-vn.mysapo.net/admin/collections/4365311) | `kem-chong-nang-pho-rong` | 362 | Đã tạo thành công | 09/10/2026 |
 
 ---
 
