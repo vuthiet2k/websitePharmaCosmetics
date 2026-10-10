@@ -10,7 +10,13 @@
 {%- assign pc_qf_current_in_menu = false -%}
 {%- for link in pc_qf_ll.links -%}{%- if link.url == collection.url -%}{%- assign pc_qf_current_in_menu = true -%}{%- endif -%}{%- endfor -%}
 <nav class="pc-quick-filters" aria-label="{{ settings.collection_quick_filter_title | default: 'Bộ lọc nhanh' | escape }}">
-	<p class="pc-quick-filters__title">{{ settings.collection_quick_filter_title | default: 'Bộ lọc nhanh' | escape }}</p>
+	{%- comment -%} 2026-10-11: điện thoại — nút "Bộ lọc" lên cùng dòng tiêu đề (nút ở thanh sắp xếp ẩn trên mobile, xem page_collection.scss.bwt); cùng class .btn-filter-mobile nên dùng chung JS mở bảng lọc (col.js). {%- endcomment -%}
+	<div class="pc-quick-filters__head">
+		<p class="pc-quick-filters__title">{{ settings.collection_quick_filter_title | default: 'Bộ lọc nhanh' | escape }}</p>
+		{%- if settings.aside_filter_enable -%}
+		<button type="button" class="btn-filter-mobile pc-quick-filters__filter-btn" aria-label="Mở bộ lọc"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z"/></svg>Bộ lọc<span class="count-filter-val"></span></button>
+		{%- endif -%}
+	</div>
 	<div class="pc-quick-filters__chips">
 		<a class="pc-quick-filters__chip{% unless pc_qf_current_in_menu %} is-active{% endunless %}" href="{{ collection.url }}"{% unless pc_qf_current_in_menu %} aria-current="page"{% endunless %}>{{ settings.collection_quick_filter_default_label | default: 'Mặc định' | escape }}</a>
 		{%- for link in pc_qf_ll.links -%}
