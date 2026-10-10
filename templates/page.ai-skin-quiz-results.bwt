@@ -115,6 +115,56 @@
 
     <div id="pcQuizResultsRoot" data-demo="true" class="space-y-6">
 
+      {%- comment -%}
+        2026-10-10: trạng thái CHƯA CÓ HỒ SƠ theo thiết kế design/ket-qua-da/chua-co-ho-so.png — thanh cảnh báo ở trên,
+        bên dưới là khối giới thiệu + thẻ "Soi da bằng AI qua camera". Mọi chữ/ảnh lấy từ settings.skin_result_empty_*;
+        ảnh để trống thì bố cục chỉ còn chữ. Ảnh dùng loading="lazy" vì khối này chỉ hiện khi KHÔNG có kết quả
+        (ẩn sẵn ở máy chủ) — tải sẵn/preload sẽ lãng phí với khách đã có kết quả.
+      {%- endcomment %}
+      <div class="pc-result-empty" data-result-empty-view hidden>
+        <div class="pc-result-empty__warning" role="status" data-result-empty-warning>
+          <i class="fas fa-triangle-exclamation pc-result-empty__warning-icon" aria-hidden="true"></i>
+          <div class="pc-result-empty__warning-text">
+            <strong data-result-empty-title>{{ settings.skin_result_empty_title | default: 'Bạn chưa có hồ sơ chăm sóc da' | escape }}</strong>
+            <span data-result-empty-text>{{ settings.skin_result_empty_text | default: 'Hãy khảo sát da để nhận phác đồ và gợi ý sản phẩm phù hợp với tình trạng da hiện tại của bạn.' | escape }}</span>
+          </div>
+          {%- if settings.skin_result_empty_learn_url != blank %}
+          <a class="pc-result-empty__learn" href="{{ settings.skin_result_empty_learn_url | escape }}">{{ settings.skin_result_empty_learn_label | default: 'Tìm hiểu thêm' | escape }} <i class="fas fa-chevron-right" aria-hidden="true"></i></a>
+          {%- endif %}
+          <button type="button" class="pc-result-empty__close" aria-label="Đóng thông báo" data-result-empty-close><i class="fas fa-xmark" aria-hidden="true"></i></button>
+        </div>
+
+        <div class="pc-result-empty__hero{% if settings.skin_result_empty_hero_image != blank %} has-image{% endif %}">
+          <div class="pc-result-empty__intro">
+            <p class="pc-result-empty__eyebrow">{{ settings.skin_result_empty_eyebrow | default: 'PHARMA COSMETICS' | escape }}</p>
+            <p class="pc-result-empty__headline" data-result-empty-headline>{{ settings.skin_result_empty_headline | default: 'Hiểu làn da để chăm đúng cách' | escape }}</p>
+            <p class="pc-result-empty__lead">{{ settings.skin_result_empty_lead | default: 'Khảo sát da bằng AI, nhận phân tích chi tiết và gợi ý chăm sóc cá nhân hoá.' | escape }}</p>
+            <span class="pc-result-empty__rule" aria-hidden="true"></span>
+          </div>
+          {%- if settings.skin_result_empty_hero_image != blank %}
+          <img class="pc-result-empty__hero-img" src="{{ settings.skin_result_empty_hero_image | img_url: '1024x1024' }}" alt="{{ settings.skin_result_empty_hero_alt | default: settings.skin_result_empty_headline | escape }}" width="1024" height="576" loading="lazy">
+          {%- endif %}
+        </div>
+
+        <div class="pc-result-empty__card">
+          {%- if settings.skin_result_empty_card_image != blank %}
+          <img class="pc-result-empty__thumb" src="{{ settings.skin_result_empty_card_image | img_url: 'large' }}" alt="{{ settings.skin_result_empty_card_alt | default: settings.skin_result_empty_card_title | escape }}" width="480" height="340" loading="lazy">
+          {%- endif %}
+          <div class="pc-result-empty__card-body">
+            <h2 class="pc-result-empty__card-title">{{ settings.skin_result_empty_card_title | default: 'Soi da bằng AI qua camera' | escape }}</h2>
+            <p class="pc-result-empty__card-text">{{ settings.skin_result_empty_card_text | default: 'Phân tích tình trạng da, nhận biết vấn đề và gợi ý sản phẩm phù hợp chỉ trong vài phút.' | escape }}</p>
+            <div class="pc-result-empty__actions">
+              <a href="/ai-skin-quiz?tab=camera" class="pc-result-empty__btn pc-result-empty__btn--primary" data-result-empty-scan>
+                <i class="fas fa-camera" aria-hidden="true"></i> {{ settings.skin_result_empty_scan_label | default: 'Bắt đầu ngay' | escape }} <i class="fas fa-chevron-right" aria-hidden="true"></i>
+              </a>
+              <a href="/ai-skin-quiz" class="pc-result-empty__btn pc-result-empty__btn--secondary" data-result-empty-quiz>
+                <i class="far fa-comment-dots" aria-hidden="true"></i> {{ settings.skin_result_empty_quiz_label | default: 'Khảo sát da chat' | escape }}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 2026-10-10: Mời tạo hồ sơ CRM — chỉ hiện khi CÓ kết quả trên thiết bị nhưng GAS chưa có hồ sơ của kết quả này.
            Đã đăng nhập ⇒ nút mở hộp đồng ý lưu; khách vãng lai ⇒ nút đăng nhập (bắt buộc đăng nhập mới tạo hồ sơ). -->
       <div class="pc-profile-prompt bg-emerald-50 border border-emerald-200 rounded-2xl sm:rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4" data-profile-prompt hidden>
@@ -183,14 +233,6 @@
           Hồ Sơ Da Của Bạn: <span data-result-title>—</span>
         </h1>
         <p class="text-sm text-gray-600 leading-relaxed" data-result-summary>Đang tải kết quả…</p>
-        <div class="pt-5 flex flex-col sm:flex-row gap-3" data-result-empty hidden>
-          <a href="/ai-skin-quiz" class="pc-kit-btn-primary px-6 py-3.5 text-sm font-bold justify-center" data-result-empty-quiz>
-            <i class="fas fa-comments" aria-hidden="true"></i> {{ settings.skin_result_empty_quiz_label | default: 'Khảo sát da qua chat' | escape }}
-          </a>
-          <a href="/ai-skin-quiz?tab=camera" class="pc-kit-btn-secondary px-6 py-3.5 text-sm font-bold justify-center" data-result-empty-scan>
-            <i class="fas fa-camera" aria-hidden="true"></i> {{ settings.skin_result_empty_scan_label | default: 'Soi da AI bằng camera' | escape }}
-          </a>
-        </div>
       </div>
 
       <!-- 4. Hoạt Chất Đề Xuất & Định Hướng Phác Đồ -->
@@ -416,21 +458,28 @@
   // Người dùng yêu cầu: trang kết quả không có dữ liệu thì phải báo chưa có hồ sơ và mời tạo ngay; có dữ liệu
   // (trên thiết bị hoặc hồ sơ CRM khớp mã của thiết bị) mới hiện thông tin hồ sơ + gợi ý sản phẩm.
   var emptyCopy = {
-    title: {{ settings.skin_result_empty_title | default: 'Bạn chưa có hồ sơ chăm sóc da' | json }},
-    text: {{ settings.skin_result_empty_text | default: 'Làm khảo sát qua chat hoặc soi da AI bằng camera để nhận phác đồ và gợi ý sản phẩm đúng với làn da của bạn.' | json }},
     existsText: {{ settings.skin_result_empty_exists_text | default: 'Tài khoản của bạn đã có hồ sơ chăm sóc da, nhưng thiết bị này chưa có kết quả để hiển thị. Làm lại khảo sát hoặc soi da để xem phác đồ và gợi ý sản phẩm mới nhất.' | json }}
   };
+  function swapTag(el, tag) {
+    if (!el) return null;
+    var n = document.createElement(tag);
+    Array.prototype.forEach.call(el.attributes, function (a) { n.setAttribute(a.name, a.value); });
+    n.innerHTML = el.innerHTML;
+    el.parentNode.replaceChild(n, el);
+    return n;
+  }
   function showEmptyState() {
     root.querySelectorAll('[data-result-section]').forEach(function (s) { s.hidden = true; });
     var profile = root.querySelector('[data-result-profile]');
-    if (profile) {
-      var h1 = profile.querySelector('h1');
-      if (h1) h1.textContent = emptyCopy.title;
-      var verified = profile.querySelector('[data-result-verified-badge]');
-      if (verified) verified.hidden = true;
-      profile.querySelector('[data-result-summary]').textContent = emptyCopy.text;
-      profile.querySelector('[data-result-empty]').hidden = false;
-    }
+    if (profile) { profile.hidden = true; swapTag(profile.querySelector('h1'), 'h2'); }
+    var disclaimer = document.querySelector('[data-result-disclaimer]');
+    if (disclaimer) disclaimer.hidden = true; // chưa có kết quả thì chưa cần lưu ý về kết quả
+    var view = root.querySelector('[data-result-empty-view]');
+    if (!view) return;
+    swapTag(view.querySelector('[data-result-empty-headline]'), 'h1');
+    view.hidden = false;
+    var closeBtn = view.querySelector('[data-result-empty-close]');
+    if (closeBtn) closeBtn.addEventListener('click', function () { view.querySelector('[data-result-empty-warning]').hidden = true; });
     if (demoFlag) demoFlag.hidden = true;
   }
   if (isDemo) showEmptyState();
@@ -788,7 +837,7 @@
           // Thiết bị chưa có kết quả: hồ sơ CRM đầy đủ (khớp mã của thiết bị) ⇒ dựng lại kết quả; tài khoản đã có
           // hồ sơ nhưng GAS không trả dữ liệu (tra theo tài khoản) ⇒ chỉ đổi lời nhắn.
           if (info.stored_in_gas && info.consultation && hydrateFromCrm(info)) return;
-          if (info.profile_exists) root.querySelector('[data-result-summary]').textContent = emptyCopy.existsText;
+          if (info.profile_exists) root.querySelector('[data-result-empty-text]').textContent = emptyCopy.existsText;
         }
       }).catch(function () {
         renderFallbackCustomerState();

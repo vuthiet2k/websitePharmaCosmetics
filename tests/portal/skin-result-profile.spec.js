@@ -63,15 +63,21 @@ test('kết quả hết hạn bị bỏ qua ⇒ "chưa có hồ sơ" + 2 nút t�
   expect(await page.evaluate(() => localStorage.getItem('pcr:pc_skin_scan_result'))).toBeNull();
 });
 
+// 2026-10-10: giao diện chưa có hồ sơ theo design/ket-qua-da/chua-co-ho-so.png — cảnh báo ở trên, khối giới thiệu (h1) ở dưới.
 async function expectEmptyState(page) {
+  await expect(page.locator('[data-result-empty-view]')).toBeVisible();
+  await expect(page.locator('[data-result-empty-title]')).toHaveText('Bạn chưa có hồ sơ chăm sóc da');
   await expect(page.locator('h1')).toHaveCount(1);
-  await expect(page.locator('h1')).toHaveText('Bạn chưa có hồ sơ chăm sóc da');
-  await expect(page.locator('[data-result-empty-quiz]')).toHaveAttribute('href', '/ai-skin-quiz');
+  await expect(page.locator('h1')).toHaveText('Hiểu làn da để chăm đúng cách');
   await expect(page.locator('[data-result-empty-scan]')).toHaveAttribute('href', '/ai-skin-quiz?tab=camera');
-  await expect(page.locator('[data-result-empty]')).toBeVisible();
-  for (const sel of ['[data-customer-card]', '[data-result-recommend]', '[data-result-products-section]', '[data-result-blogs-section]']) {
+  await expect(page.locator('[data-result-empty-quiz]')).toHaveAttribute('href', '/ai-skin-quiz');
+  for (const sel of ['[data-result-disclaimer]', '[data-result-profile]', '[data-customer-card]', '[data-result-recommend]', '[data-result-products-section]', '[data-result-blogs-section]']) {
     await expect(page.locator(sel)).toBeHidden();
   }
+  // Nút đóng chỉ ẩn thanh cảnh báo, giữ phần mời soi da / khảo sát.
+  await page.locator('[data-result-empty-close]').click();
+  await expect(page.locator('[data-result-empty-warning]')).toBeHidden();
+  await expect(page.locator('[data-result-empty-scan]')).toBeVisible();
 }
 
 test('chưa từng soi da / chat ⇒ trạng thái chưa có hồ sơ', async ({ page }) => {
