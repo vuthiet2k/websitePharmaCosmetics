@@ -5,6 +5,7 @@
     1. bài gắn tag  sanpham:<alias sản phẩm>            (gắn tay, chính xác nhất)
     2. bài gắn tag  danhmuc:<handle danh mục của SP>     (vd danhmuc:giai-phap-nam-tan-nhang)
        hoặc trùng tag hoạt chất với SP                    (vd cùng hoatchat:vitamin-c)
+  Có bài khớp nhưng chưa đủ 3 ⇒ thêm bài mới nhất cho đủ 3 thẻ (bài khớp đứng trước).
   Không bài nào khớp ⇒ hiện bài mới nhất nhưng đổi tiêu đề thành "Kiến thức chăm sóc da" (không gọi là "liên quan").
   Blog trống ⇒ không hiện khối.
 {%- endcomment -%}
@@ -23,6 +24,9 @@
 	{%- endfor -%}
 	{%- assign pc_ra_own = 'sanpham:' | append: product.alias -%}
 	{%- assign pc_ra_picked = '' -%}
+	{%- assign pc_card_i = -1 -%}
+	{%- assign pc_card_ex_blog_handle = settings.expert_blog_handle | default: 'chuyen-gia' -%}
+	{%- assign pc_card_ex_blog = blogs[pc_card_ex_blog_handle] -%}
 	{%- assign pc_ra_n = 0 -%}
 	{%- capture pc_ra_html -%}
 		{%- comment -%} Lượt 1: tag sanpham:<alias>. {%- endcomment -%}
@@ -30,7 +34,7 @@
 			{%- if pc_ra_n < 3 and article.tags contains pc_ra_own -%}
 				{%- assign pc_ra_n = pc_ra_n | plus: 1 -%}
 				{%- assign pc_ra_picked = pc_ra_picked | append: '|' | append: article.url | append: '|' -%}
-				<div class="pc-pdp-articles__item">{% include 'blog_item' %}</div>
+				{%- assign pc_card_i = pc_card_i | plus: 1 -%}{% include 'pc_article_card' %}
 			{%- endif -%}
 		{%- endfor -%}
 		{%- comment -%} Lượt 2: danh mục / hoạt chất trùng. {%- endcomment -%}
@@ -46,26 +50,44 @@
 					{%- if pc_ra_hit -%}
 						{%- assign pc_ra_n = pc_ra_n | plus: 1 -%}
 						{%- assign pc_ra_picked = pc_ra_picked | append: pc_ra_url_key -%}
-						<div class="pc-pdp-articles__item">{% include 'blog_item' %}</div>
+						{%- assign pc_card_i = pc_card_i | plus: 1 -%}{% include 'pc_article_card' %}
 					{%- endif -%}
 				{%- endunless -%}
 			{%- endif -%}
 		{%- endfor -%}
+		{%- comment -%} Lượt 3 (2026-10-10, thiết kế luôn 3 thẻ): có bài khớp nhưng chưa đủ 3 ⇒ thêm bài mới nhất chưa hiện. {%- endcomment -%}
+		{%- if pc_ra_n > 0 -%}
+		{%- assign pc_ra_total = pc_ra_n -%}
+		{%- for article in pc_ra_blog.articles limit: 10 -%}
+			{%- assign pc_ra_url_key = '|' | append: article.url | append: '|' -%}
+			{%- if pc_ra_total < 3 -%}
+				{%- unless pc_ra_picked contains pc_ra_url_key -%}
+					{%- assign pc_ra_total = pc_ra_total | plus: 1 -%}
+					{%- assign pc_card_i = pc_card_i | plus: 1 -%}{% include 'pc_article_card' %}
+				{%- endunless -%}
+			{%- endif -%}
+		{%- endfor -%}
+		{%- endif -%}
 	{%- endcapture -%}
 	{%- assign pc_ra_title = settings.product_article_title | default: 'Bài viết liên quan' -%}
 	{%- if pc_ra_n == 0 -%}
 		{%- assign pc_ra_title = settings.product_article_fallback_title | default: 'Kiến thức chăm sóc da' -%}
+		{%- assign pc_card_i = -1 -%}
 		{%- capture pc_ra_html -%}
 			{%- for article in pc_ra_blog.articles limit: 3 -%}
-				<div class="pc-pdp-articles__item">{% include 'blog_item' %}</div>
+				{%- assign pc_card_i = pc_card_i | plus: 1 -%}{% include 'pc_article_card' %}
 			{%- endfor -%}
 		{%- endcapture -%}
 	{%- endif -%}
+{%- comment -%} 2026-10-10: tiêu đề theo thiết kế — eyebrow + h2 dùng chung .pc-section-header (font/cỡ chữ heading của theme). {%- endcomment -%}
 <section class="pc-pdp-articles" data-pdp-articles data-pdp-articles-matched="{{ pc_ra_n }}">
 	<div class="container">
 		<div class="pc-pdp-articles__head">
-			<h2 class="pc-section-title">{{ pc_ra_title | escape }}</h2>
-			<a class="pc-pdp-articles__more" href="{{ pc_ra_blog.url }}">{{ settings.product_article_more_label | default: 'Xem tất cả' | escape }} <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+			<div class="pc-section-header pc-section-header--left">
+				{%- if settings.product_article_eyebrow != blank -%}<p class="pc-section-eyebrow">{{ settings.product_article_eyebrow | escape }}</p>{%- endif -%}
+				<h2 class="pc-section-title">{{ pc_ra_title | escape }}</h2>
+			</div>
+			<a class="pc-pdp-articles__more" href="{{ pc_ra_blog.url }}">{{ settings.product_article_more_label | default: 'Xem tất cả' | escape }} <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg></a>
 		</div>
 		<div class="pc-pdp-articles__grid">{{ pc_ra_html }}</div>
 	</div>

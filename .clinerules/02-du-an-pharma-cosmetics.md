@@ -432,7 +432,9 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
   Không bao giờ đổ cả blog chung vào mọi sản phẩm (đánh giá không gắn sản phẩm = không xác thực).
 - **"Bài viết liên quan" ở PDP** (`snippets/product_related_articles.bwt`, blog `product_article_blog_handle`): tối đa 3
   bài, ưu tiên tag `sanpham:<alias>` → `danhmuc:<handle danh mục của SP>` / trùng tag `hoatchat:<x>` với SP. Không
-  bài nào khớp ⇒ hiện bài mới nhất với tiêu đề `product_article_fallback_title` (không gọi là "liên quan").
+  bài nào khớp ⇒ hiện bài mới nhất với tiêu đề `product_article_fallback_title` (không gọi là "liên quan");
+  có khớp nhưng < 3 ⇒ thêm bài mới nhất cho đủ 3. Thẻ bài = `snippets/pc_article_card.bwt`: nhãn chủ đề từ tag
+  `chude:<Nhãn hiển thị>` (không có ⇒ tag thường đầu tiên), byline chuyên gia từ tag `chuyengia:<handle>`.
 - **Không lặp sản phẩm giữa 2 khối gợi ý PDP:** "Có thể bạn thích" ghi alias đã hiện vào `pc_pdp_seen`;
   "Sản phẩm liên quan" (danh mục đầu của SP) bỏ alias đã có + bỏ chính SP đang xem (vòng lặp dùng `unless`, không `continue`).
 - **Thẻ "Giải pháp cho từng vấn đề" (trang chủ)** mở danh mục `home_solutions_N_collection`; ô trống ⇒ mặc định

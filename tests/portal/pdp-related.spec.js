@@ -9,7 +9,11 @@ test('trang SP: "Bài viết liên quan" ưu tiên bài gắn tag sanpham:<alias
   await expect(box).toBeVisible();
   await expect(box.locator('h2')).toHaveText('Bài viết liên quan');
   expect(Number(await box.getAttribute('data-pdp-articles-matched'))).toBeGreaterThan(0);
-  const first = await box.locator('.pc-pdp-articles__item h3 a').first().textContent();
+  await expect(box.locator('.pc-section-eyebrow')).toHaveText('Kiến thức chăm sóc da');
+  await expect(box.locator('.pc-acard')).toHaveCount(3); // thiết kế luôn 3 thẻ: bài khớp trước, thiếu thì thêm bài mới nhất
+  await expect(box.locator('.pc-acard__cat').first()).toHaveText('Làm sáng da'); // tag chude:<Nhãn>
+  await expect(box.locator('.pc-acard__name').first()).toHaveText(/^Chuyên gia /); // tag chuyengia:<handle>
+  const first = await box.locator('.pc-acard__title a').first().textContent();
   expect(first).toMatch(/Vitamin C/i); // bài gắn sanpham:serum-vitamin-c-15 đứng đầu
 });
 
