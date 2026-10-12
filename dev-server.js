@@ -305,12 +305,16 @@ engine.registerFilter('date',         (v, fmt) => {
   } catch { return String(v || ''); }
 });
 engine.registerFilter('json', (v) => JSON.stringify(v));
-engine.registerFilter('alias', (v) => String(v || '')
+const toAlias = (v) => String(v || '')
   .normalize('NFD').replace(/[̀-ͯ]/g, '')
   .replace(/đ/gi, 'd')
   .toLowerCase()
   .replace(/[^a-z0-9]+/g, '-')
-  .replace(/^-+|-+$/g, ''));
+  .replace(/^-+|-+$/g, '');
+engine.registerFilter('alias', toAlias);
+// 2026-10-12: Sapo có `handleize` (cùng kết quả alias) — thiếu thì LiquidJS trả nguyên chuỗi có dấu cách, bộ lọc
+// chủ đề ở blog.video.bwt (token tách bằng dấu cách) không khớp trên preview.
+engine.registerFilter('handleize', toAlias);
 
 // ── Load mock context (reload khi settings thay đổi) ──────────────────────
 let mockModule = null;
@@ -895,11 +899,16 @@ function resolvePrettyPath(pathname, searchParams) {
   }
 
   // /blogs/:blogHandle và /blogs/:blogHandle/:articleHandle
+  // 2026-10-12: Sapo cho chọn giao diện riêng từng blog/bài (blog.video, article.video) — mock khai báo bằng
+  // template_suffix trong data/articles.js; chỉ dùng khi file templates/<loại>.<suffix>.bwt có thật.
   if (parts[0] === 'blogs') {
+    const withSuffix = (base, suffix) => (suffix && fs.existsSync(path.join(ROOT, 'templates', `${base}.${suffix}.bwt`)) ? `${base}.${suffix}` : base);
+    const blogData = parts[1] ? (mockModule.blogsObj || {})[parts[1]] : null;
     if (parts.length === 1) return { tpl: 'blog', routeParams: {} };
-    if (parts.length === 2) return { tpl: 'blog', routeParams: { blogHandle: parts[1] } };
+    if (parts.length === 2) return { tpl: withSuffix('blog', blogData && blogData.template_suffix), routeParams: { blogHandle: parts[1] } };
     if (parts.length === 3) {
-      return { tpl: 'article', routeParams: { blogHandle: parts[1], articleHandle: parts[2] } };
+      const art = blogData && (blogData.articles || []).find((a) => a.handle === parts[2]);
+      return { tpl: withSuffix('article', art && art.template_suffix), routeParams: { blogHandle: parts[1], articleHandle: parts[2] } };
     }
   }
 

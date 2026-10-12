@@ -1,0 +1,68 @@
+{%- comment -%}
+  video_embed.bwt (2026-10-12, danh mục bài viết Video) — khung phát video 16:9 kiểu "facade": ban đầu chỉ có ảnh bìa +
+  nút Play, bấm mới chèn iframe YouTube/Facebook thật (mỗi iframe tải ~0,5–1MB script — trang nhiều video vẫn nhẹ).
+  Đầu vào: pc_ve_src ('youtube' | 'facebook'), pc_ve_id, pc_ve_fb, pc_ve_title, pc_ve_thumb (URL ảnh bìa),
+  pc_ve_priority (true = video đầu trang/LCP ⇒ ảnh không lazy, ưu tiên tải), pc_ve_uid (id DOM, tuỳ chọn — để
+  danh sách video bổ trợ đổi video trong khung này). Không có nguồn ⇒ chỉ hiện ảnh bìa.
+{%- endcomment -%}
+{%- assign pc_ve_play_label = settings.video_play_label | default: 'Phát video' -%}
+<div class="pc-vplayer"{% if pc_ve_uid != blank %} id="{{ pc_ve_uid }}"{% endif %} data-pc-video="{{ pc_ve_src }}" data-pc-video-id="{{ pc_ve_id }}" data-pc-video-fb="{{ pc_ve_fb | escape }}" data-pc-video-title="{{ pc_ve_title | escape }}">
+	{%- if pc_ve_src != blank -%}
+	<button type="button" class="pc-vplayer__facade" aria-label="{{ pc_ve_play_label | escape }}: {{ pc_ve_title | escape }}">
+	{%- else -%}
+	<div class="pc-vplayer__facade pc-vplayer__facade--static">
+	{%- endif -%}
+		<img class="pc-vplayer__thumb" src="{{ pc_ve_thumb }}" alt="{{ pc_ve_title | escape }}" width="1280" height="720"{% if pc_ve_priority %} fetchpriority="high"{% else %} loading="lazy"{% endif %}{% if pc_ve_thumb contains 'ytimg.com' and pc_ve_thumb contains 'sddefault' %} onerror="this.onerror=null;this.src=this.src.replace('sddefault','hqdefault')"{% endif %}>
+		{%- if pc_ve_src != blank -%}
+		<span class="pc-vplayer__play pc-vplayer__play--{{ pc_ve_src }}" aria-hidden="true"><svg viewBox="0 0 68 48" width="68" height="48"><path class="pc-vplayer__play-bg" d="M66.5 7.7a8.5 8.5 0 0 0-6-6C55.2.3 34 .3 34 .3s-21.2 0-26.5 1.4a8.5 8.5 0 0 0-6 6C.1 13 .1 24 .1 24s0 11 1.4 16.3a8.5 8.5 0 0 0 6 6c5.3 1.4 26.5 1.4 26.5 1.4s21.2 0 26.5-1.4a8.5 8.5 0 0 0 6-6C67.9 35 67.9 24 67.9 24s0-11-1.4-16.3z"/><path class="pc-vplayer__play-icon" fill="currentColor" d="M45 24 27 14v20z"/></svg></span>
+		{%- endif -%}
+	{%- if pc_ve_src != blank -%}
+	</button>
+	{%- else -%}
+	</div>
+	{%- endif -%}
+</div>
+{%- unless pc_ve_js_done -%}
+{%- assign pc_ve_js_done = true -%}
+<script>
+/* Facade video (video_embed.bwt): ủy quyền sự kiện 1 lần cho mọi khung .pc-vplayer trên trang.
+   [data-pc-video-switch] (danh sách video bổ trợ) nạp video khác vào khung có id = data-pc-video-target. */
+(function () {
+	if (window.pcVideoFacade) return;
+	function src(p) {
+		var t = p.getAttribute('data-pc-video'), id = p.getAttribute('data-pc-video-id'), fb = p.getAttribute('data-pc-video-fb');
+		if (t === 'youtube' && id) return 'https://www.youtube.com/embed/' + encodeURIComponent(id) + '?autoplay=1&rel=0&playsinline=1';
+		if (t === 'facebook' && fb) return 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(fb) + '&show_text=false&autoplay=true&width=1280';
+		return '';
+	}
+	function play(p) {
+		var url = src(p); if (!url) return;
+		var f = document.createElement('iframe');
+		f.className = 'pc-vplayer__frame';
+		f.src = url;
+		f.title = p.getAttribute('data-pc-video-title') || '';
+		f.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+		f.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+		f.setAttribute('allowfullscreen', '');
+		p.innerHTML = '';
+		p.appendChild(f);
+		p.classList.add('is-playing');
+	}
+	window.pcVideoFacade = { play: play };
+	document.addEventListener('click', function (e) {
+		var btn = e.target.closest && e.target.closest('.pc-vplayer__facade');
+		if (btn && btn.tagName === 'BUTTON') { play(btn.parentNode); return; }
+		var sw = e.target.closest && e.target.closest('[data-pc-video-switch]');
+		if (!sw) return;
+		var p = document.getElementById(sw.getAttribute('data-pc-video-target'));
+		if (!p) return;
+		e.preventDefault();
+		['data-pc-video', 'data-pc-video-id', 'data-pc-video-fb', 'data-pc-video-title'].forEach(function (a) { p.setAttribute(a, sw.getAttribute(a) || ''); });
+		var group = sw.closest('[data-pc-video-group]');
+		if (group) group.querySelectorAll('[data-pc-video-switch]').forEach(function (b) { b.setAttribute('aria-current', b === sw ? 'true' : 'false'); });
+		play(p);
+		if (p.getBoundingClientRect().top < 0) p.scrollIntoView({ behavior: 'smooth', block: 'start' });
+	});
+})();
+</script>
+{%- endunless -%}

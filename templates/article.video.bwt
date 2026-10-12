@@ -1,0 +1,166 @@
+{% layout 'theme' %}
+{%- comment -%}
+  article.video.bwt (2026-10-12) — trang xem 1 bài video kiểu YouTube Watch Page (Sapo Admin → bài viết → Giao diện:
+  article.video). Theo tài liệu docs/Danh sách Link Iframe YouTube - Trang Blogs Bí Quyết (Pharma Cosmetics).md mục 7:
+  cột chính = khung phát 16:9 (facade, bấm mới tải iframe) → nhãn chủ đề/nguồn/thời lượng → H1 → thanh kênh (YouTube/
+  Fanpage) → hộp mô tả nền xám (ngày đăng, tóm tắt, nội dung bài, chia sẻ); cột phải = "Video đề xuất" cùng blog + khối
+  đặt lịch tư vấn (bật/tắt video_cta_enable). JSON-LD VideoObject cho Video Rich Results; BreadcrumbList do snippets/schema.bwt.
+{%- endcomment -%}
+{% include 'breadcrumb' %}
+{%- assign pc_vs_article = article -%}
+{%- include 'video_source' -%}
+{%- assign pc_vw_src = pc_vs_src -%}{%- assign pc_vw_id = pc_vs_id -%}{%- assign pc_vw_fb = pc_vs_fb -%}
+{%- assign pc_vw_dur = pc_vs_dur -%}{%- assign pc_vw_topic = pc_vs_topic -%}{%- assign pc_vw_thumb = pc_vs_thumb_big -%}
+
+{%- comment -%} Chuyên gia (tag chuyengia:<handle>, tra trong blog settings.expert_blog_handle — như pc_article_card). {%- endcomment -%}
+{%- assign pc_vw_expert = false -%}
+{%- if pc_vs_expert != blank and settings.expert_blog_handle != blank -%}
+	{%- for pc_vw_ex in blogs[settings.expert_blog_handle].articles -%}
+		{%- assign pc_vw_ex_handle = pc_vw_ex.url | split: '/' | last -%}
+		{%- if pc_vw_ex_handle == pc_vs_expert -%}{%- assign pc_vw_expert = pc_vw_ex -%}{%- endif -%}
+	{%- endfor -%}
+{%- endif -%}
+
+{%- comment -%} Thời lượng "MM:SS" / "HH:MM:SS" ⇒ ISO 8601 (PT1M23S) cho JSON-LD; định dạng khác ⇒ bỏ trường duration. {%- endcomment -%}
+{%- assign pc_vw_iso = '' -%}
+{%- if pc_vw_dur != blank -%}
+	{%- assign pc_vw_dp = pc_vw_dur | split: ':' -%}
+	{%- if pc_vw_dp.size == 2 -%}
+		{%- capture pc_vw_iso -%}PT{{ pc_vw_dp[0] | plus: 0 }}M{{ pc_vw_dp[1] | plus: 0 }}S{%- endcapture -%}
+	{%- elsif pc_vw_dp.size == 3 -%}
+		{%- capture pc_vw_iso -%}PT{{ pc_vw_dp[0] | plus: 0 }}H{{ pc_vw_dp[1] | plus: 0 }}M{{ pc_vw_dp[2] | plus: 0 }}S{%- endcapture -%}
+	{%- endif -%}
+{%- endif -%}
+
+{%- if pc_vw_src != '' -%}
+{%- assign pc_ld_base = store.url | remove: 'https:' | remove: 'http:' | prepend: 'https:' -%}
+{%- assign pc_vw_ld_thumb = pc_vw_thumb | remove: 'https:' | remove: 'http:' | prepend: 'https:' -%}
+{%- assign pc_vw_ld_desc = article.summary | default: article.excerpt | default: article.content | strip_html | strip_newlines | strip | truncate: 300 -%}
+{%- if pc_vw_ld_desc == blank -%}{%- assign pc_vw_ld_desc = article.title -%}{%- endif -%}
+<script type="application/ld+json">
+{
+	"@context": "https://schema.org",
+	"@type": "VideoObject",
+	"name": {{ article.title | json }},
+	"description": {{ pc_vw_ld_desc | json }},
+	"thumbnailUrl": [{{ pc_vw_ld_thumb | json }}],
+	"uploadDate": {{ article.published_on | date: '%Y-%m-%dT%H:%M:%S+07:00' | json }},
+	{%- if pc_vw_iso != blank %}
+	"duration": {{ pc_vw_iso | json }},
+	{%- endif %}
+	{%- if pc_vw_src == 'youtube' %}
+	"embedUrl": {{ 'https://www.youtube.com/embed/' | append: pc_vw_id | json }},
+	"contentUrl": {{ 'https://www.youtube.com/watch?v=' | append: pc_vw_id | json }},
+	{%- else %}
+	"embedUrl": {{ 'https://www.facebook.com/plugins/video.php?href=' | append: pc_vw_fb | url_encode | json }},
+	"contentUrl": {{ pc_vw_fb | json }},
+	{%- endif %}
+	"url": {{ pc_ld_base | append: article.url | json }},
+	"publisher": {"@type": "Organization", "name": {{ store.name | json }}, "logo": {"@type": "ImageObject", "url": {{ 'logo.png' | asset_url | remove: 'https:' | remove: 'http:' | prepend: 'https:' | json }}}}
+}
+</script>
+{%- endif -%}
+
+<section class="pc-vwatch">
+	<div class="container">
+		<div class="pc-vwatch__grid">
+			<div class="pc-vwatch__main">
+				{%- assign pc_ve_src = pc_vw_src -%}{%- assign pc_ve_id = pc_vw_id -%}{%- assign pc_ve_fb = pc_vw_fb -%}
+				{%- assign pc_ve_title = article.title -%}{%- assign pc_ve_thumb = pc_vw_thumb -%}
+				{%- assign pc_ve_priority = true -%}{%- assign pc_ve_uid = 'pc-vwatch-player' -%}
+				{% include 'video_embed' %}
+
+				<div class="pc-vwatch__tags">
+					{%- if pc_vw_topic != blank -%}<span class="pc-vcard__topic">{{ pc_vw_topic | escape }}</span>{%- endif -%}
+					{%- if pc_vw_src == 'youtube' -%}<span class="pc-vcard__src pc-vcard__src--youtube">{{ settings.video_src_youtube_label | default: 'YouTube' | escape }}</span>{%- endif -%}
+					{%- if pc_vw_src == 'facebook' -%}<span class="pc-vcard__src pc-vcard__src--facebook">{{ settings.video_src_facebook_label | default: 'Facebook' | escape }}</span>{%- endif -%}
+					{%- if pc_vw_dur != blank -%}<span class="pc-vwatch__dur">{{ settings.video_duration_label | default: 'Thời lượng' | escape }} {{ pc_vw_dur | escape }}</span>{%- endif -%}
+				</div>
+				<h1 class="pc-vwatch__title">{{ article.title | escape }}</h1>
+
+				<div class="pc-vchannelbar">
+					<div class="pc-vchannelbar__who">
+						{%- if pc_vw_expert and pc_vw_expert.image.src != blank -%}
+						<img class="pc-vchannelbar__avatar" src="{{ pc_vw_expert.image.src | img_url: 'thumb' }}" alt="{{ pc_vw_expert.title | escape }}" width="48" height="48" loading="lazy">
+						{%- else -%}
+						<span class="pc-vchannelbar__avatar pc-vchannelbar__avatar--logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M8 5.5v13l11-6.5z"/></svg></span>
+						{%- endif -%}
+						<div>
+							<div class="pc-vchannelbar__name">{% if pc_vw_expert %}{{ pc_vw_expert.title | escape }}{% else %}{{ settings.video_channel_name | default: store.name | escape }}{% endif %}</div>
+							{%- if settings.video_channel_sub != blank -%}<div class="pc-vchannelbar__sub">{{ settings.video_channel_sub | escape }}</div>{%- endif -%}
+						</div>
+					</div>
+					<div class="pc-vchannelbar__actions">
+						{%- if settings.video_youtube_url != blank -%}
+						{%- assign pc_vw_sub_url = settings.video_youtube_url -%}
+						{%- if pc_vw_sub_url contains 'youtube.com' -%}{%- unless pc_vw_sub_url contains '?' -%}{%- assign pc_vw_sub_url = pc_vw_sub_url | append: '?sub_confirmation=1' -%}{%- endunless -%}{%- endif -%}
+						<a class="pc-vchannel pc-vchannel--youtube" href="{{ pc_vw_sub_url }}" target="_blank" rel="noopener">
+							<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1c.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8zM9.6 15.6V8.4l6.2 3.6-6.2 3.6z"/></svg>
+							{{ settings.video_subscribe_label | default: 'Đăng ký kênh' | escape }}
+						</a>
+						{%- endif -%}
+						{%- if settings.video_facebook_url != blank -%}
+						<a class="pc-vchannel pc-vchannel--facebook" href="{{ settings.video_facebook_url }}" target="_blank" rel="noopener">
+							<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M24 12.1C24 5.4 18.6 0 12 0S0 5.4 0 12.1c0 6 4.4 11 10.1 11.9v-8.4h-3v-3.5h3V9.4c0-3 1.8-4.7 4.5-4.7 1.3 0 2.7.2 2.7.2v3h-1.5c-1.5 0-2 .9-2 1.9v2.3h3.3l-.5 3.5h-2.8V24C19.6 23 24 18 24 12.1z"/></svg>
+							{{ settings.video_facebook_label | default: 'Fanpage Facebook' | escape }}
+						</a>
+						{%- endif -%}
+					</div>
+				</div>
+
+				<div class="pc-vdesc">
+					<div class="pc-vdesc__meta">
+						<span>{{ settings.video_published_label | default: 'Đăng ngày' | escape }} <time datetime="{{ article.published_on | date: 'yyyy-MM-dd' }}">{{ article.published_on | date: 'dd/MM/yyyy' }}</time></span>
+						{%- if pc_vw_src == 'youtube' and settings.video_open_youtube_label != blank -%}
+						<a href="https://www.youtube.com/watch?v={{ pc_vw_id }}" target="_blank" rel="noopener">{{ settings.video_open_youtube_label | escape }}</a>
+						{%- elsif pc_vw_src == 'facebook' and settings.video_open_facebook_label != blank -%}
+						<a href="{{ pc_vw_fb }}" target="_blank" rel="noopener">{{ settings.video_open_facebook_label | escape }}</a>
+						{%- endif -%}
+					</div>
+					{%- assign pc_vw_sum = article.summary | strip_html | strip -%}
+					{%- if pc_vw_sum != blank -%}<p class="pc-vdesc__sum">{{ pc_vw_sum }}</p>{%- endif -%}
+					{%- if article.content != blank -%}
+					<div class="pc-vdesc__content rte">{{ article.content }}</div>
+					{%- endif -%}
+					{%- if settings.video_share_label != blank -%}
+					{%- assign pc_vw_share = store.url | remove: 'https:' | remove: 'http:' | prepend: 'https:' | append: article.url -%}
+					<div class="pc-vdesc__share">
+						<span>{{ settings.video_share_label | escape }}</span>
+						<a href="https://www.facebook.com/sharer/sharer.php?u={{ pc_vw_share | url_encode }}" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M24 12.1C24 5.4 18.6 0 12 0S0 5.4 0 12.1c0 6 4.4 11 10.1 11.9v-8.4h-3v-3.5h3V9.4c0-3 1.8-4.7 4.5-4.7 1.3 0 2.7.2 2.7.2v3h-1.5c-1.5 0-2 .9-2 1.9v2.3h3.3l-.5 3.5h-2.8V24C19.6 23 24 18 24 12.1z"/></svg></a>
+					</div>
+					{%- endif -%}
+				</div>
+			</div>
+
+			<aside class="pc-vwatch__side">
+				<div class="pc-vside">
+					<div class="pc-vside__head">
+						<h2 class="pc-vside__title">{{ settings.video_related_title | default: 'Video đề xuất' | escape }}</h2>
+						<a href="{{ blog.url }}">{{ settings.video_related_more_label | default: 'Xem tất cả' | escape }}</a>
+					</div>
+					{%- assign pc_vw_limit = settings.video_related_limit | default: 8 | plus: 0 -%}
+					{%- assign pc_vw_count = 0 -%}
+					{%- assign pc_vc_layout = 'row' -%}{%- assign pc_vc_heading = 'h3' -%}
+					<div class="pc-vside__list">
+						{%- for pc_vw_rel in blog.articles -%}
+						{%- if pc_vw_rel.id != article.id and pc_vw_count < pc_vw_limit -%}
+						{%- assign pc_vw_count = pc_vw_count | plus: 1 -%}
+						{%- assign pc_vc_article = pc_vw_rel -%}
+						{% include 'video_card' %}
+						{%- endif -%}
+						{%- endfor -%}
+					</div>
+					{%- if pc_vw_count == 0 -%}<p class="pc-vside__empty">{{ settings.video_empty_text | default: 'Chuyên mục đang cập nhật video.' | escape }}</p>{%- endif -%}
+				</div>
+				{%- if settings.video_cta_enable and settings.video_cta_title != blank -%}
+				<div class="pc-vcta">
+					{%- if settings.video_cta_eyebrow != blank -%}<span class="pc-vcta__eyebrow">{{ settings.video_cta_eyebrow | escape }}</span>{%- endif -%}
+					<p class="pc-vcta__title">{{ settings.video_cta_title | escape }}</p>
+					{%- if settings.video_cta_text != blank -%}<p class="pc-vcta__text">{{ settings.video_cta_text | escape }}</p>{%- endif -%}
+					{%- if settings.video_cta_url != blank -%}<a class="pc-vcta__btn" href="{{ settings.video_cta_url }}">{{ settings.video_cta_label | default: 'Đặt lịch tư vấn' | escape }}</a>{%- endif -%}
+				</div>
+				{%- endif -%}
+			</aside>
+		</div>
+	</div>
+</section>

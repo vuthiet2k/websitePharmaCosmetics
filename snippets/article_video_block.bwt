@@ -1,0 +1,56 @@
+{%- comment -%}
+  article_video_block.bwt (2026-10-12) — khối "Video hướng dẫn" trong bài viết thường (templates/article.bwt), vd blog
+  Bí Quyết: bài gắn tag youtube:<ID> / facebook:<link> (tag đầu = video chính, các tag sau = video bổ trợ). Khung phát
+  facade dùng chung snippets/video_embed.bwt; danh sách bổ trợ bấm vào thì phát ngay trong khung chính.
+  Tên video bổ trợ: lấy tiêu đề bài trong blog Video (settings.video_blog_handle) có cùng mã video; không có ⇒ "Video N".
+  Không có tag video ⇒ không in gì (bài dán iframe trong nội dung vẫn hiển thị như cũ).
+{%- endcomment -%}
+{%- assign pc_vs_article = article -%}
+{%- include 'video_source' -%}
+{%- if pc_vs_list != '' -%}
+{%- assign pc_avb_items = pc_vs_list | split: '||' -%}
+{%- assign pc_avb_blog = settings.video_blog_handle | default: 'video' -%}
+<section class="pc-avideo" aria-label="{{ settings.video_inline_title | default: 'Video hướng dẫn' | escape }}">
+	{%- if settings.video_inline_title != blank -%}<p class="pc-avideo__title">{{ settings.video_inline_title | escape }}</p>{%- endif -%}
+	{%- assign pc_ve_src = pc_vs_src -%}{%- assign pc_ve_id = pc_vs_id -%}{%- assign pc_ve_fb = pc_vs_fb -%}
+	{%- assign pc_ve_title = article.title -%}{%- assign pc_ve_priority = false -%}{%- assign pc_ve_uid = 'pc-avideo-player' -%}
+	{%- if pc_vs_src == 'youtube' -%}
+		{%- assign pc_ve_thumb = 'https://i.ytimg.com/vi/' | append: pc_vs_id | append: '/sddefault.jpg' -%}
+	{%- else -%}
+		{%- assign pc_ve_thumb = pc_vs_thumb_big -%}
+	{%- endif -%}
+	{% include 'video_embed' %}
+	{%- if pc_avb_items.size > 1 -%}
+	<ol class="pc-avideo__list" data-pc-video-group>
+		{%- for pc_avb_item in pc_avb_items -%}
+		{%- assign pc_avb_p = pc_avb_item | split: '~' -%}
+		{%- assign pc_avb_src = pc_avb_p[0] -%}{%- assign pc_avb_id = pc_avb_p[1] -%}{%- assign pc_avb_fb = pc_avb_p[2] -%}
+		{%- assign pc_avb_title = '' -%}
+		{%- for pc_avb_v in blogs[pc_avb_blog].articles -%}
+			{%- if pc_avb_title == '' -%}
+				{%- assign pc_avb_hit = false -%}
+				{%- for pc_avb_tag in pc_avb_v.tags -%}
+					{%- if pc_avb_src == 'youtube' and pc_avb_id != blank and pc_avb_tag contains pc_avb_id -%}{%- assign pc_avb_hit = true -%}{%- endif -%}
+					{%- if pc_avb_src == 'facebook' and pc_avb_fb != blank and pc_avb_tag contains pc_avb_fb -%}{%- assign pc_avb_hit = true -%}{%- endif -%}
+				{%- endfor -%}
+				{%- if pc_avb_hit -%}{%- assign pc_avb_title = pc_avb_v.title -%}{%- endif -%}
+			{%- endif -%}
+		{%- endfor -%}
+		{%- if pc_avb_title == '' -%}{%- assign pc_avb_title = settings.video_inline_item_label | default: 'Video' | append: ' ' | append: forloop.index -%}{%- endif -%}
+		<li>
+			<button type="button" class="pc-avideo__item" data-pc-video-switch data-pc-video-target="pc-avideo-player" data-pc-video="{{ pc_avb_src }}" data-pc-video-id="{{ pc_avb_id }}" data-pc-video-fb="{{ pc_avb_fb | escape }}" data-pc-video-title="{{ pc_avb_title | escape }}" aria-current="{% if forloop.first %}true{% else %}false{% endif %}">
+				<span class="pc-avideo__thumb">
+					{%- if pc_avb_src == 'youtube' -%}
+					<img src="https://i.ytimg.com/vi/{{ pc_avb_id }}/mqdefault.jpg" alt="{{ pc_avb_title | escape }}" width="160" height="90" loading="lazy">
+					{%- else -%}
+					<span class="pc-vcard__src pc-vcard__src--facebook">{{ settings.video_src_facebook_label | default: 'Facebook' | escape }}</span>
+					{%- endif -%}
+				</span>
+				<span class="pc-avideo__name">{{ pc_avb_title | escape }}</span>
+			</button>
+		</li>
+		{%- endfor -%}
+	</ol>
+	{%- endif -%}
+</section>
+{%- endif -%}

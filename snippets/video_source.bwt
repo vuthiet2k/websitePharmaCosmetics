@@ -1,0 +1,83 @@
+{%- comment -%}
+  video_source.bwt (2026-10-12, danh mục bài viết Video) — đọc dữ liệu video của 1 bài viết Sapo.
+  Đầu vào: pc_vs_article. Thứ tự ưu tiên nguồn video (bài nào nhập kiểu nào cũng nhận):
+    1. Tag khoá:giá trị — youtube:<ID|link> (hoặc yt:), facebook:<link> (hoặc fb:). Nhiều tag ⇒ tag đầu là video
+       chính, các tag sau là video bổ trợ (dùng ở khối video trong bài thường — templates/article.bwt).
+    2. Metafield custom.video_url (link YouTube/Facebook).
+    3. Link/iframe YouTube hoặc Facebook dán trong nội dung bài.
+  Tag phụ: thoiluong:<MM:SS>, chude:<Nhãn chủ đề>, chuyengia:<handle> (cùng quy ước pc_article_card).
+  Đầu ra: pc_vs_src / pc_vs_id / pc_vs_fb (video chính, xem video_parse), pc_vs_list (mọi video từ tag:
+  "nguồn~mã~link" nối bằng "||"), pc_vs_dur, pc_vs_topic, pc_vs_expert, pc_vs_thumb_card, pc_vs_thumb_big.
+{%- endcomment -%}
+{%- assign pc_vs_src = '' -%}
+{%- assign pc_vs_id = '' -%}
+{%- assign pc_vs_fb = '' -%}
+{%- assign pc_vs_list = '' -%}
+{%- assign pc_vs_dur = '' -%}
+{%- assign pc_vs_topic = '' -%}
+{%- assign pc_vs_expert = '' -%}
+{%- for pc_vs_tag in pc_vs_article.tags -%}
+	{%- if pc_vs_tag contains ':' -%}
+		{%- assign pc_vs_key_raw = pc_vs_tag | split: ':' | first -%}
+		{%- assign pc_vs_key = pc_vs_key_raw | strip | downcase -%}
+		{%- comment -%} Cắt đúng phần sau "khoá:" (KHÔNG split ':' | last — làm hỏng link https:// và thời lượng 01:23). {%- endcomment -%}
+		{%- assign pc_vs_val = pc_vs_tag | remove_first: pc_vs_key_raw | remove_first: ':' | strip -%}
+		{%- assign pc_vp_hint = '' -%}
+		{%- if pc_vs_key == 'youtube' or pc_vs_key == 'yt' -%}{%- assign pc_vp_hint = 'youtube' -%}{%- endif -%}
+		{%- if pc_vs_key == 'facebook' or pc_vs_key == 'fb' -%}{%- assign pc_vp_hint = 'facebook' -%}{%- endif -%}
+		{%- if pc_vp_hint != '' -%}
+			{%- assign pc_vp_raw = pc_vs_val -%}
+			{%- include 'video_parse' -%}
+			{%- if pc_vp_src != '' -%}
+				{%- if pc_vs_src == '' -%}
+					{%- assign pc_vs_src = pc_vp_src -%}{%- assign pc_vs_id = pc_vp_id -%}{%- assign pc_vs_fb = pc_vp_fb -%}
+				{%- endif -%}
+				{%- if pc_vs_list != '' -%}{%- assign pc_vs_list = pc_vs_list | append: '||' -%}{%- endif -%}
+				{%- assign pc_vs_list = pc_vs_list | append: pc_vp_src | append: '~' | append: pc_vp_id | append: '~' | append: pc_vp_fb -%}
+			{%- endif -%}
+		{%- endif -%}
+		{%- if pc_vs_key == 'thoiluong' -%}{%- assign pc_vs_dur = pc_vs_val -%}{%- endif -%}
+		{%- if pc_vs_key == 'chude' -%}{%- assign pc_vs_topic = pc_vs_val -%}{%- endif -%}
+		{%- if pc_vs_key == 'chuyengia' -%}{%- assign pc_vs_expert = pc_vs_val -%}{%- endif -%}
+	{%- endif -%}
+{%- endfor -%}
+{%- if pc_vs_src == '' and pc_vs_article.metafields.custom.video_url != blank -%}
+	{%- assign pc_vp_raw = pc_vs_article.metafields.custom.video_url -%}
+	{%- assign pc_vp_hint = '' -%}
+	{%- include 'video_parse' -%}
+	{%- assign pc_vs_src = pc_vp_src -%}{%- assign pc_vs_id = pc_vp_id -%}{%- assign pc_vs_fb = pc_vp_fb -%}
+{%- endif -%}
+{%- if pc_vs_src == '' and pc_vs_article.content != blank -%}
+	{%- assign pc_vs_html = pc_vs_article.content -%}
+	{%- assign pc_vp_raw = '' -%}
+	{%- if pc_vs_html contains 'youtube.com/embed/' -%}
+		{%- assign pc_vp_raw = pc_vs_html | split: 'youtube.com/embed/' | last | prepend: 'youtube.com/embed/' -%}
+	{%- elsif pc_vs_html contains 'youtube.com/watch?v=' -%}
+		{%- assign pc_vp_raw = pc_vs_html | split: 'youtube.com/watch?v=' | last | prepend: 'youtube.com/watch?v=' -%}
+	{%- elsif pc_vs_html contains 'youtu.be/' -%}
+		{%- assign pc_vp_raw = pc_vs_html | split: 'youtu.be/' | last | prepend: 'youtu.be/' -%}
+	{%- elsif pc_vs_html contains 'facebook.com/plugins/video.php' -%}
+		{%- comment -%} iframe plugin: href đã mã hoá URL — lấy tham số href rồi giải mã các ký tự của link. {%- endcomment -%}
+		{%- assign pc_vp_raw = pc_vs_html | split: 'facebook.com/plugins/video.php' | last | split: 'href=' | last | split: '&' | first | split: '"' | first | replace: '%3A', ':' | replace: '%2F', '/' | replace: '%3F', '?' | replace: '%3D', '=' -%}
+	{%- elsif pc_vs_html contains 'facebook.com' and pc_vs_html contains '/videos/' -%}
+		{%- assign pc_vs_fb_page = pc_vs_html | split: '/videos/' | first | split: 'facebook.com' | last -%}
+		{%- assign pc_vs_fb_tail = pc_vs_html | split: '/videos/' | last | split: '"' | first | split: '<' | first | split: ' ' | first -%}
+		{%- assign pc_vp_raw = 'https://www.facebook.com' | append: pc_vs_fb_page | append: '/videos/' | append: pc_vs_fb_tail -%}
+	{%- endif -%}
+	{%- if pc_vp_raw != '' -%}
+		{%- assign pc_vp_hint = '' -%}
+		{%- include 'video_parse' -%}
+		{%- assign pc_vs_src = pc_vp_src -%}{%- assign pc_vs_id = pc_vp_id -%}{%- assign pc_vs_fb = pc_vp_fb -%}
+	{%- endif -%}
+{%- endif -%}
+{%- comment -%} Ảnh bìa: ảnh đại diện bài (qua img_url) ⇒ ảnh bìa YouTube ⇒ ảnh dự phòng của theme. {%- endcomment -%}
+{%- if pc_vs_article.image.src != blank -%}
+	{%- assign pc_vs_thumb_card = pc_vs_article.image.src | img_url: 'grande' -%}
+	{%- assign pc_vs_thumb_big = pc_vs_article.image.src | img_url: '1024x1024' -%}
+{%- elsif pc_vs_src == 'youtube' -%}
+	{%- assign pc_vs_thumb_card = 'https://i.ytimg.com/vi/' | append: pc_vs_id | append: '/hqdefault.jpg' -%}
+	{%- assign pc_vs_thumb_big = 'https://i.ytimg.com/vi/' | append: pc_vs_id | append: '/sddefault.jpg' -%}
+{%- else -%}
+	{%- capture pc_vs_thumb_card -%}{% include 'placeholder_img_url' %}{%- endcapture -%}
+	{%- assign pc_vs_thumb_big = pc_vs_thumb_card -%}
+{%- endif -%}

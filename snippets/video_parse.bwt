@@ -1,0 +1,34 @@
+{%- comment -%}
+  video_parse.bwt (2026-10-12, danh mục bài viết Video) — chuẩn hoá 1 giá trị video thành nguồn + mã.
+  Đầu vào: pc_vp_raw (ID YouTube / link YouTube / link Facebook), pc_vp_hint ('youtube' | 'facebook' | '' —
+  biết trước nguồn từ khoá tag; '' = tự nhận theo link, link lạ như .mp4 ⇒ bỏ qua).
+  Đầu ra: pc_vp_src ('youtube' | 'facebook' | ''), pc_vp_id (mã YouTube 11 ký tự), pc_vp_fb (link video Facebook).
+  Nhận các dạng: ID trần, watch?v=, youtu.be/, /embed/, /shorts/, /live/; Facebook: link /videos/, /watch, /reel/, fb.watch.
+{%- endcomment -%}
+{%- assign pc_vp_src = '' -%}
+{%- assign pc_vp_id = '' -%}
+{%- assign pc_vp_fb = '' -%}
+{%- assign pc_vp_val = pc_vp_raw | strip -%}
+{%- if pc_vp_val != blank -%}
+	{%- if pc_vp_val contains 'facebook.com' or pc_vp_val contains 'fb.watch' or pc_vp_hint == 'facebook' -%}
+		{%- assign pc_vp_src = 'facebook' -%}
+		{%- assign pc_vp_fb = pc_vp_val | split: '"' | first | strip -%}
+	{%- elsif pc_vp_val contains 'youtube.com' or pc_vp_val contains 'youtu.be' or pc_vp_hint == 'youtube' -%}
+		{%- assign pc_vp_id = pc_vp_val -%}
+		{%- if pc_vp_id contains 'v=' -%}
+			{%- assign pc_vp_id = pc_vp_id | split: 'v=' | last -%}
+		{%- elsif pc_vp_id contains 'youtu.be/' -%}
+			{%- assign pc_vp_id = pc_vp_id | split: 'youtu.be/' | last -%}
+		{%- elsif pc_vp_id contains '/embed/' -%}
+			{%- assign pc_vp_id = pc_vp_id | split: '/embed/' | last -%}
+		{%- elsif pc_vp_id contains '/shorts/' -%}
+			{%- assign pc_vp_id = pc_vp_id | split: '/shorts/' | last -%}
+		{%- elsif pc_vp_id contains '/live/' -%}
+			{%- assign pc_vp_id = pc_vp_id | split: '/live/' | last -%}
+		{%- endif -%}
+		{%- assign pc_vp_id = pc_vp_id | split: '&' | first | split: '?' | first | split: '#' | first | split: '/' | first | split: '"' | first | split: "'" | first | split: ' ' | first | strip -%}
+		{%- comment -%} Mã YouTube luôn 11 ký tự — sai độ dài nghĩa là link hỏng, không nhúng để tránh khung lỗi. {%- endcomment -%}
+		{%- assign pc_vp_len = pc_vp_id | size -%}
+		{%- if pc_vp_len == 11 -%}{%- assign pc_vp_src = 'youtube' -%}{%- else -%}{%- assign pc_vp_id = '' -%}{%- endif -%}
+	{%- endif -%}
+{%- endif -%}

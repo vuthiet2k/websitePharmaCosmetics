@@ -482,6 +482,21 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
   Chỉ đăng ca thật khách đã đồng ý; theme không tự sinh ca/số liệu. Ảnh trong `data/articles.js` chỉ là khung
   placeholder để preview.
 
+## Danh mục bài viết Video (`/blogs/video`, dựng 2026-10-12)
+
+- Blog Sapo "Video" chọn giao diện `blog.video`; từng bài chọn `article.video`. Câu chữ/link: field `video_*` (nhóm
+  "Blog & Bài viết"). Dev-server chọn template theo `template_suffix` của blog/bài trong `data/articles.js`.
+- Nguồn video đọc DUY NHẤT qua `snippets/video_source.bwt` (+ `video_parse.bwt`): tag `youtube:<mã|link>` / `yt:`,
+  `facebook:<link>` / `fb:` ⇒ metafield `custom.video_url` ⇒ link/iframe YouTube/Facebook trong nội dung. Tag phụ:
+  `thoiluong:<MM:SS>` (cắt bằng `remove_first`, không `split: ':' | last`), `chude:<Nhãn>`, `chuyengia:<handle>`.
+- Khung phát luôn là facade (`snippets/video_embed.bwt`): ảnh bìa + nút Play, bấm mới chèn iframe. Không nhúng iframe
+  YouTube/Facebook trực tiếp trong template. Ảnh bìa: ảnh đại diện bài ⇒ `i.ytimg.com/vi/<mã>/…` ⇒ placeholder.
+- Bài viết thường gắn tag `youtube:`/`facebook:` ⇒ khối "Video hướng dẫn" trước nội dung (`article_video_block.bwt`):
+  tag đầu = video chính, tag sau = video bổ trợ (tên lấy từ bài cùng mã trong blog `video_blog_handle`).
+- Khối Video ở `templates/blog.bwt` (.pc-vhub) = 4 bài mới nhất của blog `video_blog_handle`; blog trống ⇒ ẩn khối.
+- JSON-LD `VideoObject` ở `article.video.bwt` (duration ISO từ `thoiluong:`). Không có link video Facebook thật ⇒ demo
+  chỉ có YouTube; không bịa link Facebook.
+
 ## AI Skin Quiz — phân tầng Tier/Case & cờ an toàn (chốt 2026-10-05)
 
 - Engine thuần **`assets/skin-quiz-engine.js.bwt`** (`window.PharmaSkinQuizEngine`, `require` được trong Node) là

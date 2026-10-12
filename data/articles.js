@@ -476,6 +476,82 @@ const beforeAfterArticles = [
   });
 }
 
+// 2026-10-12: blog "video" (giao diện blog.video / article.video) — 14 video THẬT của kênh YouTube Pharma Cosmetics
+// theo docs/Danh sách Link Iframe YouTube - Trang Blogs Bí Quyết (Pharma Cosmetics).md (mã video, tiêu đề, thời
+// lượng lấy nguyên từ tài liệu). Ảnh đại diện để trống ⇒ theme tự lấy ảnh bìa YouTube (snippets/video_source.bwt).
+// Mỗi bài trỏ về bài Bí Quyết liên quan trong nội dung. Ngày đăng chỉ là dữ liệu preview.
+const videoDefs = [
+  ['4B9RN_wcl_I', '3 sai lầm nghiêm trọng khi dùng dầu tẩy trang khiến da bị mụn', '01:23', 'Làm sạch da', 'double-cleansing-rua-mat-2-buoc-sach-sau',
+    'Hướng dẫn nhũ hoá dầu tẩy trang đúng cách và chỉ ra những sai lầm khi dùng dầu tẩy trang gây bít tắc lỗ chân lông.'],
+  ['lWOH7jyT97c', 'Hướng dẫn sử dụng toner đúng cách', '01:24', 'Làm sạch da', 'double-cleansing-rua-mat-2-buoc-sach-sau',
+    'Cách dùng toner để cân bằng da sau bước làm sạch, chuẩn bị cho các bước dưỡng tiếp theo.'],
+  ['nBlNtLT5n88', 'Cận cảnh kem dưỡng đêm GiGi New Age G4', '01:17', 'Dưỡng ẩm & phục hồi', 'duong-am-ban-dem-dung-cach',
+    'Phân tích kết cấu kem dưỡng ẩm ban đêm chứa peptide tái tạo và cơ chế khoá ẩm trong lúc ngủ.'],
+  ['SiYXKgJw__Q', 'Mặt nạ giảm stress cho da — Christina Unstress Optimal Hydration Mask', '01:20', 'Dưỡng ẩm & phục hồi', '5-bi-quyet-cham-da-mua-hanh-kho',
+    'Cấp ẩm khẩn cấp cho làn da mất nước, đỏ rát, bong tróc trong mùa hanh khô.'],
+  ['owJAHSiHkpI', 'Da mụn viêm nên dùng sữa rửa mặt nào?', '01:13', 'Làm sạch da', 'double-cleansing-rua-mat-2-buoc-sach-sau',
+    'Gợi ý cách chọn sữa rửa mặt cho da mụn viêm — bước 2 của quy trình làm sạch kép.'],
+  ['G3GtdkB7Src', 'Kem dưỡng phục hồi dành cho da đang điều trị mụn (treatment)', '01:14', 'Dưỡng ẩm & phục hồi', 'duong-am-ban-dem-dung-cach',
+    'Chọn kem dưỡng phục hồi phù hợp cho làn da đang trong liệu trình điều trị mụn.'],
+  ['dl1TfHMgSF0', 'Bôi serum liều lượng bao nhiêu là đủ?', '01:04', 'Serum & hoạt chất', 'tay-te-bao-chet-dung-tan-suat',
+    'Lượng serum nên dùng cho mỗi lần thoa và thứ tự thoa trước bước khoá ẩm.'],
+  ['bEZ_f-RkUoc', 'Nên đắp mặt nạ khi nào?', '01:22', 'Dưỡng ẩm & phục hồi', '5-bi-quyet-cham-da-mua-hanh-kho',
+    'Thời điểm đắp mặt nạ cấp ẩm trong routine để da hấp thu tốt nhất.'],
+  ['MbKvzlYKsDg', 'Couperose là gì? Cách chăm sóc da bị couperose', '02:06', 'Da nhạy cảm', '5-bi-quyet-cham-da-mua-hanh-kho',
+    'Nhận biết tình trạng giãn mao mạch (couperose) và cách chăm sóc làn da nhạy cảm, khô.'],
+  ['QkNOHb_aWPE', 'Cận cảnh cushion Renoderm Daylong BB Cream', '01:36', 'Chống nắng & trang điểm', 'chon-kem-nen-khong-gay-bi-da-mun',
+    'Giới thiệu cushion/BB cream mỏng nhẹ, thông thoáng, không chứa thành phần gây bít tắc (non-comedogenic).'],
+  ['-TdXxYfFqb0', 'Kem chống nắng Shadow SPF 30 Gel có nâng tone không?', '01:24', 'Chống nắng & trang điểm', 'chon-kem-nen-khong-gay-bi-da-mun',
+    'Kem chống nắng dạng gel có hiệu ứng nâng tone — lựa chọn thay kem nền cho da dầu mụn.'],
+  ['4YYquUKj4gk', 'Cách thoa lại kem chống nắng đúng cách cho da không trang điểm', '01:31', 'Chống nắng & trang điểm', 'chon-kem-nen-khong-gay-bi-da-mun',
+    'Kỹ thuật thoa lại kem chống nắng giữa ngày cho da không trang điểm.'],
+  ['GwHODtAvPBQ', 'Niacinamide — thành phần "must-have" trong mọi skincare routine', '01:07', 'Serum & hoạt chất', 'tay-te-bao-chet-dung-tan-suat',
+    'Phục hồi màng ẩm, làm dịu và kiềm dầu sau các đợt peel/tẩy da chết BHA/AHA.'],
+  ['lIdqImbX_h4', 'Serum Lacabine 2% Tranexamic Acid có tốt không?', '01:33', 'Serum & hoạt chất', 'tay-te-bao-chet-dung-tan-suat',
+    'Cách kết hợp serum Tranexamic Acid 2% vào routine điều trị thâm sạm.'],
+];
+function videoHandle(title) {
+  return title.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+const videoArticles = videoDefs.map(([id, title, dur, topic, tipHandle, summary], i) => {
+  const handle = videoHandle(title);
+  const day = new Date(Date.UTC(2026, 9, 10 - i * 2, 1, 0, 0)).toISOString().slice(0, 19);
+  const tip = beautyTipsArticles.find((a) => a.handle === tipHandle);
+  return {
+    id: 1001 + i,
+    title,
+    alias: handle,
+    handle,
+    url: `/blogs/video/${handle}`,
+    summary,
+    excerpt: summary,
+    content: tip ? `<p>Video thuộc chủ đề ${topic.toLowerCase()} trên kênh YouTube Pharma Cosmetics.</p><p>Đọc bài viết chi tiết: <a href="${tip.url}">${tip.title}</a></p>` : '',
+    image: null,
+    featured_image: null,
+    author: 'Pharma Cosmetics',
+    published_on: day,
+    created_at: day,
+    tags: [`youtube:${id}`, `thoiluong:${dur}`, `chude:${topic}`],
+    template_suffix: 'video',
+    comments_count: 0,
+    blog: { handle: 'video', title: 'Video Tư Vấn Skincare' },
+  };
+});
+
+// 2026-10-12: gắn 3 video (chính + 2 bổ trợ) cho 5 bài Bí Quyết đúng danh sách mục 3 của tài liệu video ⇒ khối
+// "Video hướng dẫn" (snippets/article_video_block.bwt) trong trang chi tiết bài.
+const tipVideos = {
+  221: ['4B9RN_wcl_I', 'owJAHSiHkpI', 'lWOH7jyT97c'],
+  222: ['nBlNtLT5n88', 'G3GtdkB7Src', 'dl1TfHMgSF0'],
+  223: ['SiYXKgJw__Q', 'bEZ_f-RkUoc', 'MbKvzlYKsDg'],
+  224: ['QkNOHb_aWPE', '-TdXxYfFqb0', '4YYquUKj4gk'],
+  225: ['GwHODtAvPBQ', 'lIdqImbX_h4', 'dl1TfHMgSF0'],
+};
+beautyTipsArticles.forEach((a) => {
+  (tipVideos[a.id] || []).forEach((id) => a.tags.push(`youtube:${id}`));
+});
+
 // T-109 (2026-09-11): BUG THẬT phát hiện khi chuẩn bị demo data — templates/blog.bwt dùng
 // {{blog.name}} (không phải .title) và {% if blog.articles_count > 0 %} (không phải
 // .articles.size) để quyết định render tiêu đề trang + toàn bộ lưới bài viết. Object blogs{}
@@ -560,6 +636,14 @@ const blogs = {
     handle:  'y-kien-chuyen-gia',
     url:     '/blogs/y-kien-chuyen-gia',
     articles: expertOpinionArticles,
+  }),
+  video: withBlogMeta({
+    id:      312,
+    title:   'Video Tư Vấn Skincare',
+    handle:  'video',
+    url:     '/blogs/video',
+    template_suffix: 'video',
+    articles: videoArticles,
   }),
   'giai-phap-skin-health': withBlogMeta({
     id:      311,

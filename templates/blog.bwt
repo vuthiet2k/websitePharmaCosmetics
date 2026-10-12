@@ -96,39 +96,26 @@
 				</div>
 
 				{%- comment -%}
-				  REOPEN 2026-09-10 (ADR-007/T-74) — CMP-06 Multimedia Hub: 4 video tư vấn (bài viết
-				  gắn tag 'video', quy ước đã có sẵn — xem templates/article.bwt tag check) + audio
-				  placeholder (mock_policy#frontend_theme, minh hoạ định dạng podcast chuyên đề).
+				  CMP-06 Multimedia Hub — 2026-10-12: lấy 4 bài mới nhất của blog Video (settings.video_blog_handle, giao diện
+				  blog.video) thay cho thẻ <video> mp4 từ metafield cũ (không phát được link YouTube/Facebook). Thẻ dùng chung
+				  snippets/video_card.bwt, bấm mở trang xem video. Blog Video trống ⇒ ẩn cả khối (không in lời nhắc nhập liệu).
 				{%- endcomment -%}
-				{%- assign pc_video_count = 0 -%}
-				<div class="pc-cmp-multimedia-hub mb-10">
-					<div class="pc-cmp-multimedia-hub__videos">
-						{%- for article in blog.articles limit: 20 -%}
-						{%- if pc_video_count < 4 -%}
-						{%- for tag in article.tags -%}
-						{%- if tag contains 'video' and pc_video_count < 4 -%}
-						{%- assign pc_video_count = pc_video_count | plus: 1 -%}
-						<figure class="pc-cmp-multimedia-hub__video-card">
-							<video controls preload="none" poster="{{ article.image.src | default: 'no-image.jpg' | img_url: 'grande' }}">
-								<source src="{{ article.metafields.custom.video_url }}" type="video/mp4">
-							</video>
-							<figcaption>{{ article.title | truncate: 60 }}</figcaption>
-						</figure>
-						{%- endif -%}
-						{%- endfor -%}
-						{%- endif -%}
-						{%- endfor -%}
-						{%- if pc_video_count == 0 -%}
-						<div class="col-span-2 text-xs text-gray-500 p-4 border border-dashed rounded-xl">
-							Video tư vấn chuyên sâu đang được cập nhật — gắn tag "video" cho bài viết trong Sapo blog admin để hiển thị tại đây.
-						</div>
-						{%- endif -%}
+				{%- assign pc_hub_blog = settings.video_blog_handle | default: 'video' -%}
+				{%- if blogs[pc_hub_blog].articles.size > 0 -%}
+				<section class="pc-vhub mb-10">
+					<div class="pc-vhub__head">
+						<h2 class="pc-vhub__title">{{ settings.video_hub_title | default: 'Video tư vấn' | escape }}</h2>
+						<a class="pc-vhub__more" href="{{ blogs[pc_hub_blog].url }}">{{ settings.video_hub_more_label | default: 'Xem tất cả video' | escape }}</a>
 					</div>
-					{%- comment -%}
-					  2026-10-05: bỏ khối "Podcast Chuyên Đề Da Liễu" — 2 tập ghi cứng trỏ tới podcast-ep1/2.mp3 chưa từng
-					  tồn tại (request 404, nội dung không có thật). Có podcast thật thì làm lại từ dữ liệu Sapo.
-					{%- endcomment -%}
-				</div>
+					<div class="pc-vhub__grid">
+						{%- assign pc_vc_layout = 'grid' -%}{%- assign pc_vc_heading = 'h3' -%}
+						{%- for pc_hub_item in blogs[pc_hub_blog].articles limit: 4 -%}
+						{%- assign pc_vc_article = pc_hub_item -%}
+						{% include 'video_card' %}
+						{%- endfor -%}
+					</div>
+				</section>
+				{%- endif -%}
 
 				{%- comment -%}
 				  REOPEN 2026-09-11 — CMP: Consultation CTA Banner, khớp gap blog.html SECTION 8
