@@ -1629,6 +1629,32 @@ async function requestHandler(req, res) {
   // ── Route: / — render preview
   if (pathname === '/' || pathname === '') {
     const tpl = url.searchParams.get('tpl') || 'index';
+    // 2026-10-13: ?tpl=<tên> không có file templates/<tên>.bwt ⇒ trước đây lỗi ENOENT thô. Sapo chọn template theo
+    // dữ liệu chứ không theo tên blog: ?tpl=blog.<handle> → /blogs/<handle>; còn lại báo rõ template không tồn tại.
+    // Template theo suffix (blog.video, article.video) cần đúng blog/bài có template_suffix đó — ?tpl= sẽ lấy nhầm blog tin-tuc.
+    {
+      const m = /^(blog|article)\.(.+)$/.exec(tpl);
+      if (m) {
+        const blogsList = Object.values(mockModule.blogsObj || {});
+        const hit = m[1] === 'blog'
+          ? blogsList.find((b) => b.template_suffix === m[2])
+          : blogsList.flatMap((b) => b.articles || []).find((a) => a.template_suffix === m[2]);
+        if (hit && hit.url) { res.writeHead(302, { Location: hit.url }); res.end(); return; }
+      }
+    }
+    const tplFile = resolveTemplatePath(tpl) + '.bwt';
+    if (!TEMPLATE_DIRS.some((dir) => fs.existsSync(path.join(dir, tplFile)))) {
+      const [base, handle] = tpl.split(/\.(.+)/);
+      const blogsObj = mockModule.blogsObj || {};
+      if (base === 'blog' && handle && blogsObj[handle]) { res.writeHead(302, { Location: `/blogs/${handle}` }); res.end(); return; }
+      if (base === 'page' && handle && PAGE_HANDLE_MAP[handle]) { res.writeHead(302, { Location: `/${handle}` }); res.end(); return; }
+      res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(`<meta charset="utf-8"><div style="font:15px/1.6 system-ui;max-width:640px;margin:48px auto;padding:0 16px">`
+        + `<h1 style="font-size:20px">Không có template <code>${tpl.replace(/[<>&"]/g, '')}.bwt</code></h1>`
+        + `<p>Trang tổng tin tức: <a href="/tin-tuc">/tin-tuc</a> (page.tin-tuc) · Danh mục bài viết: <a href="/blogs/tin-tuc">/blogs/tin-tuc</a> (blog.bwt)`
+        + ` · Video: <a href="/blogs/video">/blogs/video</a> (blog.video).</p><p><a href="/">← Trang chủ</a></p></div>`);
+      return;
+    }
     try {
       const html = await renderFullPage(tpl, url.searchParams, { cartOverride: buildCartFromLines(readCartLines(req)) });
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
