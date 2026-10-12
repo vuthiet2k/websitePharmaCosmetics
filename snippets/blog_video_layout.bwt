@@ -1,0 +1,173 @@
+{% include 'breadcrumb' %}
+
+<div class="pc-video-catalog-wrapper bg-slate-50 py-8 min-h-screen">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    {%- comment -%} ── 1. HEADER CHUYÊN MỤC VIDEO ── {%- endcomment -%}
+    <div class="text-center max-w-3xl mx-auto mb-10">
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 uppercase tracking-widest mb-3">
+        <span>🎥 Kho Video Chuyên Gia Da Liễu</span>
+      </span>
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-forest-900 font-heading">
+        {{ blog.name | default: 'Video Chuyên Gia &amp; Tư Vấn' }}
+      </h1>
+      <p class="mt-3 text-sm sm:text-base text-gray-600 leading-relaxed">
+        {{ blog.description | default: 'Tổng hợp video phân tích hoạt chất, cận cảnh sản phẩm và hướng dẫn thực hành skincare chuẩn y khoa từ Pharma Cosmetics.' }}
+      </p>
+
+      {%- comment -%} Kênh mạng xã hội chính thức {%- endcomment -%}
+      <div class="flex items-center justify-center gap-3 mt-5 flex-wrap">
+        <a href="https://www.youtube.com/@pharmacosmetics" target="_blank" rel="noopener noreferrer"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          <span>Kênh YouTube (@pharmacosmetics)</span>
+        </a>
+        <a href="https://www.facebook.com/pharmacosmeticsvn" target="_blank" rel="noopener noreferrer"
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          <span>Fanpage Facebook</span>
+        </a>
+      </div>
+    </div>
+
+    {%- comment -%} ── 2. FEATURED VIDEO HERO (VIDEO NỔI BẬT ĐẦU TRANG) ── {%- endcomment -%}
+    {%- if blog.articles_count > 0 -%}
+      {%- assign featured_video = blog.articles.first -%}
+      <div class="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200 shadow-sm mb-12">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div class="lg:col-span-7 col-span-12">
+            <a href="{{ featured_video.url }}" class="block relative aspect-video bg-black rounded-2xl overflow-hidden shadow-lg group">
+              {%- if featured_video.image != null -%}
+                <img src="{{ featured_video.image.src | img_url: '1024x1024' }}" alt="{{ featured_video.title | escape }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+              {%- else -%}
+                <div class="w-full h-full flex items-center justify-center bg-slate-900 text-white text-5xl">🎬</div>
+              {%- endif -%}
+              <div class="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                <div class="w-16 h-16 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+                  <svg class="w-8 h-8 translate-x-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+              </div>
+              <span class="absolute top-3 left-3 px-2.5 py-1 rounded-md text-[11px] font-extrabold bg-red-600 text-white shadow">
+                ★ Video Nổi Bật
+              </span>
+            </a>
+          </div>
+
+          <div class="lg:col-span-5 col-span-12 space-y-4">
+            <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">
+              Chuyên mục: {{ blog.name }}
+            </span>
+            <h2 class="text-xl sm:text-2xl font-extrabold text-forest-900 font-heading leading-snug">
+              <a href="{{ featured_video.url }}" class="hover:text-emerald-700 transition-colors">
+                {{ featured_video.title }}
+              </a>
+            </h2>
+            <p class="text-xs sm:text-sm text-gray-600 leading-relaxed line-clamp-3">
+              {{ featured_video.summary | default: featured_video.excerpt | strip_html }}
+            </p>
+            <div class="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+              <span class="font-semibold text-gray-800">{{ featured_video.author | default: 'Pharma Cosmetics' }}</span>
+              <span>{{ featured_video.published_on | date: 'dd/MM/yyyy' }}</span>
+            </div>
+            <a href="{{ featured_video.url }}" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 transition-colors shadow-sm">
+              <span>Xem Video Chi Tiết →</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    {%- endif -%}
+
+    {%- comment -%} ── 3. LƯỚI DANH SÁCH VIDEO (VIDEO GRID) ── {%- endcomment -%}
+    {% paginate blog.articles by 12 %}
+      <div class="space-y-6">
+        <div class="flex items-center justify-between flex-wrap gap-4 border-b border-gray-200 pb-4">
+          <h2 class="text-lg font-bold font-heading text-forest-900 flex items-center gap-2">
+            <span>Danh Sách Video</span>
+            <span class="text-xs font-medium text-gray-500">({{ blog.articles_count }} video)</span>
+          </h2>
+          <div class="flex items-center gap-2 text-xs">
+            <span class="text-gray-500">Nền tảng hỗ trợ:</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded bg-red-50 text-red-700 font-bold border border-red-200">YouTube</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold border border-blue-200">Facebook</span>
+          </div>
+        </div>
+
+        {%- if blog.articles_count > 0 -%}
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {%- for article in blog.articles -%}
+              {%- assign is_yt = false -%}
+              {%- assign is_fb = false -%}
+              {%- assign v_dur = '' -%}
+              {%- for tag in article.tags -%}
+                {%- if tag contains 'youtube:' or tag contains 'yt:' -%}{%- assign is_yt = true -%}{%- endif -%}
+                {%- if tag contains 'facebook:' or tag contains 'fb:' -%}{%- assign is_fb = true -%}{%- endif -%}
+                {%- if tag contains 'thoiluong:' -%}{%- assign v_dur = tag | remove: 'thoiluong:' -%}{%- endif -%}
+              {%- endfor -%}
+
+              <article class="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow flex flex-col group">
+                <a href="{{ article.url }}" class="block relative aspect-video bg-black overflow-hidden">
+                  {%- if article.image != null -%}
+                    <img src="{{ article.image.src | img_url: 'grande' }}" alt="{{ article.title | escape }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                  {%- else -%}
+                    <div class="w-full h-full flex items-center justify-center bg-slate-900 text-white text-3xl">🎬</div>
+                  {%- endif -%}
+                  
+                  <div class="absolute inset-0 bg-black/20 group-hover:bg-black/10 flex items-center justify-center transition-colors">
+                    <div class="w-12 h-12 rounded-full bg-black/60 group-hover:bg-red-600 text-white flex items-center justify-center transition-colors shadow">
+                      <svg class="w-6 h-6 translate-x-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
+                  </div>
+
+                  {%- if is_yt -%}
+                    <span class="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[10px] font-black bg-red-600 text-white shadow">
+                      YouTube
+                    </span>
+                  {%- elsif is_fb -%}
+                    <span class="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[10px] font-black bg-blue-600 text-white shadow">
+                      Facebook
+                    </span>
+                  {%- endif -%}
+
+                  {%- if v_dur != '' -%}
+                    <span class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-black/80 text-white shadow">
+                      {{ v_dur }}
+                    </span>
+                  {%- endif -%}
+                </a>
+
+                <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
+                  <div>
+                    <h3 class="text-sm font-bold text-forest-900 font-heading line-clamp-2 leading-snug group-hover:text-emerald-700 transition-colors">
+                      <a href="{{ article.url }}">{{ article.title }}</a>
+                    </h3>
+                    <p class="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">
+                      {{ article.summary | default: article.excerpt | strip_html }}
+                    </p>
+                  </div>
+
+                  <div class="pt-3 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400">
+                    <span class="font-medium text-gray-700 truncate max-w-[140px]">{{ article.author | default: 'Pharma Cosmetics' }}</span>
+                    <span>{{ article.published_on | date: 'dd/MM/yyyy' }}</span>
+                  </div>
+                </div>
+              </article>
+            {%- endfor -%}
+          </div>
+
+          <div class="flex justify-center mt-8">
+            {% if paginate.pages > 1 %}
+              {% include 'paginate-pages' %}
+            {% endif %}
+          </div>
+        {%- else -%}
+          <div class="bg-white rounded-2xl p-12 text-center border border-dashed border-gray-300">
+            <span class="text-4xl">🎬</span>
+            <h3 class="text-base font-bold text-gray-800 mt-3">Chuyên mục đang cập nhật video</h3>
+            <p class="text-xs text-gray-500 mt-1">Các video tư vấn da liễu mới nhất sẽ sớm được đăng tải tại đây.</p>
+          </div>
+        {%- endif -%}
+      </div>
+    {% endpaginate %}
+
+  </div>
+</div>
