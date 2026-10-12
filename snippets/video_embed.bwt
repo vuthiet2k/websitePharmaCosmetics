@@ -1,0 +1,117 @@
+{%- comment -%}
+  snippets/video_embed.bwt — Trình nhúng Video responsive (YouTube & Facebook) chuẩn giao diện rạp chiếu.
+  Hỗ trợ tự động trích xuất Video ID / URL từ:
+    1. Tags bài viết: 'youtube:<id|url>', 'yt:<id|url>', 'facebook:<url>', 'fb:<url>'
+    2. Metafield: article.metafields.custom.video_url
+    3. Nội dung bài viết: link youtube / youtu.be / facebook watch trong article.content
+{%- endcomment -%}
+
+{%- assign v_source = '' -%}
+{%- assign v_yt_id = '' -%}
+{%- assign v_fb_url = '' -%}
+{%- assign v_duration = '' -%}
+
+{%- comment -%} 1. Đọc từ tags {%- endcomment -%}
+{%- for tag in article.tags -%}
+  {%- assign tag_lower = tag | downcase -%}
+  {%- if tag_lower contains 'youtube:' -%}
+    {%- assign v_source = 'youtube' -%}
+    {%- assign v_yt_id = tag | split: ':' | last | strip -%}
+  {%- elsif tag_lower contains 'yt:' -%}
+    {%- assign v_source = 'youtube' -%}
+    {%- assign v_yt_id = tag | split: ':' | last | strip -%}
+  {%- elsif tag_lower contains 'facebook:' -%}
+    {%- assign v_source = 'facebook' -%}
+    {%- assign v_fb_url = tag | remove_first: 'facebook:' | strip -%}
+  {%- elsif tag_lower contains 'fb:' -%}
+    {%- assign v_source = 'facebook' -%}
+    {%- assign v_fb_url = tag | remove_first: 'fb:' | strip -%}
+  {%- elsif tag_lower contains 'thoiluong:' -%}
+    {%- assign v_duration = tag | split: ':' | last | strip -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{%- comment -%} 2. Đọc từ metafield nếu có {%- endcomment -%}
+{%- if v_source == '' and article.metafields.custom.video_url != blank -%}
+  {%- assign meta_url = article.metafields.custom.video_url -%}
+  {%- if meta_url contains 'youtube.com' or meta_url contains 'youtu.be' -%}
+    {%- assign v_source = 'youtube' -%}
+    {%- assign v_yt_id = meta_url -%}
+  {%- elsif meta_url contains 'facebook.com' or meta_url contains 'fb.watch' -%}
+    {%- assign v_source = 'facebook' -%}
+    {%- assign v_fb_url = meta_url -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- comment -%} 3. Chuẩn hóa YouTube Video ID {%- endcomment -%}
+{%- if v_source == 'youtube' and v_yt_id != '' -%}
+  {%- if v_yt_id contains 'v=' -%}
+    {%- assign v_yt_id = v_yt_id | split: 'v=' | last | split: '&' | first -%}
+  {%- elsif v_yt_id contains 'youtu.be/' -%}
+    {%- assign v_yt_id = v_yt_id | split: 'youtu.be/' | last | split: '?' | first -%}
+  {%- elsif v_yt_id contains 'embed/' -%}
+    {%- assign v_yt_id = v_yt_id | split: 'embed/' | last | split: '?' | first -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- comment -%} 4. Fallback tự dò trong content nếu chưa có {%- endcomment -%}
+{%- if v_source == '' -%}
+  {%- if article.content contains 'youtube.com/embed/' -%}
+    {%- assign v_source = 'youtube' -%}
+    {%- assign v_yt_id = article.content | split: 'youtube.com/embed/' | last | split: '"' | first | split: "'" | first | split: '?' | first -%}
+  {%- elsif article.content contains 'youtube.com/watch?v=' -%}
+    {%- assign v_source = 'youtube' -%}
+    {%- assign v_yt_id = article.content | split: 'watch?v=' | last | split: '"' | first | split: "'" | first | split: '&' | first | split: ' ' | first -%}
+  {%- elsif article.content contains 'youtu.be/' -%}
+    {%- assign v_source = 'youtube' -%}
+    {%- assign v_yt_id = article.content | split: 'youtu.be/' | last | split: '"' | first | split: "'" | first | split: '?' | first | split: ' ' | first -%}
+  {%- elsif article.content contains 'facebook.com/plugins/video.php' -%}
+    {%- assign v_source = 'facebook_raw' -%}
+  {%- elsif article.content contains 'facebook.com' and article.content contains '/videos/' -%}
+    {%- assign v_source = 'facebook' -%}
+    {%- assign v_fb_url = article.content | split: 'href="' | last | split: '"' | first -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- comment -%} Render Video Player Container {%- endcomment -%}
+<div class="pc-video-theater-wrapper w-full mb-6">
+  <div class="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-gray-900 flex items-center justify-center">
+    {%- if v_source == 'youtube' and v_yt_id != '' -%}
+      <iframe 
+        class="w-full h-full absolute inset-0 border-0" 
+        src="https://www.youtube.com/embed/{{ v_yt_id | strip }}?autoplay=0&rel=0&modestbranding=1" 
+        title="{{ article.title | escape }}" 
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+        referrerpolicy="strict-origin-when-cross-origin" 
+        allowfullscreen>
+      </iframe>
+    {%- elsif v_source == 'facebook' and v_fb_url != '' -%}
+      <iframe 
+        class="w-full h-full absolute inset-0 border-0" 
+        src="https://www.facebook.com/plugins/video.php?height=314&href={{ v_fb_url | url_encode }}&show_text=false&width=560&t=0" 
+        scrolling="no" 
+        allowfullscreen="true" 
+        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
+      </iframe>
+    {%- elsif v_source == 'facebook_raw' -%}
+      <div class="w-full h-full absolute inset-0">
+        {{ article.content }}
+      </div>
+    {%- else -%}
+      <div class="w-full h-full relative group">
+        {%- if article.image != null -%}
+          <img class="w-full h-full object-cover" src="{{ article.image.src | img_url: '1024x1024' }}" alt="{{ article.title | escape }}">
+        {%- else -%}
+          <div class="w-full h-full bg-gradient-to-br from-emerald-950 to-slate-900 flex items-center justify-center">
+            <span class="text-white text-5xl">🎬</span>
+          </div>
+        {%- endif -%}
+        <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+          <div class="w-16 h-16 rounded-full bg-emerald-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+            <svg class="w-8 h-8 translate-x-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+      </div>
+    {%- endif -%}
+  </div>
+</div>
