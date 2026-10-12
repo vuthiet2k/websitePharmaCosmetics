@@ -29,13 +29,16 @@
 		{%- if pc_nh_mb.articles.size > 0 -%}
 		{%- assign pc_nh_lead_n = settings.news_lead_count | default: 3 | plus: 0 -%}
 		{%- assign pc_nh_grid_n = settings.news_grid_count | default: 6 | plus: 0 -%}
+		{%- assign pc_nh_feat_max = settings.news_featured_count | default: 9 | plus: 0 -%}
+		{%- assign pc_nh_feat_per = settings.news_featured_per_page | default: 3 | plus: 0 -%}
+		{%- if pc_nh_feat_per < 1 -%}{%- assign pc_nh_feat_per = 3 -%}{%- endif -%}
 		{%- comment -%} Cột "Tin nổi bật": bài gắn tag nổi bật trong các danh mục; không có ⇒ bài mới của danh mục thứ 2. {%- endcomment -%}
 		{%- assign pc_nh_fc = 0 -%}
 		{%- capture pc_nh_feat -%}
 			{%- for pc_nh_h in pc_nh_list -%}
 				{%- assign pc_nh_hs = pc_nh_h | strip -%}
 				{%- for pc_nh_a in blogs[pc_nh_hs].articles -%}
-					{%- if pc_nh_fc < 9 and pc_nh_a.tags contains pc_nh_ftag -%}
+					{%- if pc_nh_fc < pc_nh_feat_max and pc_nh_a.tags contains pc_nh_ftag -%}
 						{%- assign pc_nh_fc = pc_nh_fc | plus: 1 -%}
 						{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'rank' -%}{%- assign pc_ni_rank = pc_nh_fc -%}{% include 'news_item' %}
 					{%- endif -%}
@@ -48,7 +51,7 @@
 			{%- assign pc_nh_feat_title = blogs[pc_nh_second].name | default: blogs[pc_nh_second].title -%}
 			{%- assign pc_nh_feat_url = blogs[pc_nh_second].url -%}
 			{%- capture pc_nh_feat -%}
-				{%- for pc_nh_a in blogs[pc_nh_second].articles limit: 9 -%}
+				{%- for pc_nh_a in blogs[pc_nh_second].articles limit: pc_nh_feat_max -%}
 					{%- assign pc_nh_fc = forloop.index -%}
 					{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'rank' -%}{%- assign pc_ni_rank = forloop.index -%}{% include 'news_item' %}
 				{%- endfor -%}
@@ -86,13 +89,13 @@
 				{%- if pc_nh_feat != blank -%}
 				<div class="pc-nside">
 					<div class="pc-nhead"><h2 class="pc-nhead__title">{{ pc_nh_feat_title | escape }}</h2>{% if pc_nh_feat_url != '' %}<a class="pc-nhead__more" href="{{ pc_nh_feat_url }}">{{ pc_nh_more | escape }}</a>{% endif %}</div>
-					<div class="pc-nslider" data-pc-nslider data-per="3">
+					<div class="pc-nslider" data-pc-nslider data-per="{{ pc_nh_feat_per }}">
 						<ol class="pc-nranks pc-nslider__track">{{ pc_nh_feat }}</ol>
-						{%- if pc_nh_fc > 3 -%}{{ pc_nh_nav }}{%- endif -%}
+						{%- if pc_nh_fc > pc_nh_feat_per -%}{{ pc_nh_nav }}{%- endif -%}
 					</div>
 				</div>
 				{%- endif -%}
-				<div class="pc-nside" data-pc-nmine hidden>
+				<div class="pc-nside" data-pc-nmine data-max="{{ settings.news_mine_count | default: 5 | plus: 0 }}" hidden>
 					<div class="pc-nhead"><h2 class="pc-nhead__title">{{ settings.news_mine_title | default: 'Tin quan tâm của tôi' | escape }}</h2></div>
 					<ol class="pc-nranks"></ol>
 				</div>
@@ -127,6 +130,7 @@
 		</section>
 
 		{%- comment -%} ── Khối từng chuyên mục (mockup SECTION 3): tin lớn + 2 ô | danh sách 4 tin. Bỏ danh mục đầu (đã ở hero). ── {%- endcomment -%}
+		{%- assign pc_nh_sec_n = settings.news_section_list_count | default: 4 | plus: 0 -%}
 		{%- for pc_nh_h in pc_nh_list offset: 1 -%}
 		{%- assign pc_nh_hs = pc_nh_h | strip -%}
 		{%- assign pc_nh_b = blogs[pc_nh_hs] -%}
@@ -147,9 +151,9 @@
 					</div>
 					{%- endif -%}
 				</div>
-				{%- if pc_nh_b.articles.size > 3 -%}
+				{%- if pc_nh_b.articles.size > 3 and pc_nh_sec_n > 0 -%}
 				<div class="pc-nbox pc-news-thumblist">
-					{%- for pc_nh_a in pc_nh_b.articles offset: 3 limit: 4 -%}
+					{%- for pc_nh_a in pc_nh_b.articles offset: 3 limit: pc_nh_sec_n -%}
 					{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'thumb' -%}{% include 'news_item' %}
 					{%- endfor -%}
 				</div>
@@ -160,7 +164,8 @@
 		{%- endfor -%}
 
 		{%- comment -%} ── Video (mockup SECTION 4, phần video): 4 bài mới nhất của blog Video, thẻ video_card. ── {%- endcomment -%}
-		{%- if blogs[pc_nh_vblog].articles.size > 0 -%}
+		{%- assign pc_nh_vcount = settings.video_hub_count | default: 4 | plus: 0 -%}
+		{%- if blogs[pc_nh_vblog].articles.size > 0 and pc_nh_vcount > 0 -%}
 		<section class="pc-nsec pc-vhub">
 			<div class="pc-nsec__head">
 				<h2 class="pc-nsec__title">{{ settings.video_hub_title | default: 'Video tư vấn' | escape }}</h2>
@@ -168,7 +173,7 @@
 			</div>
 			<div class="pc-nvideo">
 				{%- assign pc_vc_layout = 'grid' -%}{%- assign pc_vc_heading = 'h3' -%}
-				{%- for pc_nh_a in blogs[pc_nh_vblog].articles limit: 4 -%}
+				{%- for pc_nh_a in blogs[pc_nh_vblog].articles limit: pc_nh_vcount -%}
 				{%- assign pc_vc_article = pc_nh_a -%}{% include 'video_card' %}
 				{%- endfor -%}
 			</div>
@@ -203,7 +208,7 @@
 		try { list = JSON.parse(localStorage.getItem('pc_read_articles') || '[]'); } catch (e) { list = []; }
 		if (!Array.isArray(list)) return;
 		var ol = mine.querySelector('ol');
-		list.filter(function (a) { return a && a.url && a.title; }).slice(0, 5).forEach(function (a, i) {
+		list.filter(function (a) { return a && a.url && a.title; }).slice(0, parseInt(mine.getAttribute('data-max') || '5', 10) || 5).forEach(function (a, i) {
 			var li = document.createElement('li'); li.className = 'pc-news-rank';
 			var no = document.createElement('span'); no.className = 'pc-news-rank__no'; no.textContent = i + 1;
 			var body = document.createElement('div'); body.className = 'pc-news-rank__body';

@@ -89,7 +89,8 @@
 				{% endpaginate %}
 
 				{%- comment -%} Khối Video tư vấn (2026-10-12): 4 bài mới nhất của blog Video, blog trống ⇒ ẩn. {%- endcomment -%}
-				{%- if blogs[pc_nb_vblog].articles.size > 0 -%}
+				{%- assign pc_nb_vcount = settings.video_hub_count | default: 4 | plus: 0 -%}
+				{%- if blogs[pc_nb_vblog].articles.size > 0 and pc_nb_vcount > 0 -%}
 				<section class="pc-nsec pc-vhub">
 					<div class="pc-nsec__head">
 						<h2 class="pc-nsec__title">{{ settings.video_hub_title | default: 'Video tư vấn' | escape }}</h2>
@@ -97,7 +98,7 @@
 					</div>
 					<div class="pc-nvideo">
 						{%- assign pc_vc_layout = 'grid' -%}{%- assign pc_vc_heading = 'h3' -%}
-						{%- for pc_hub_item in blogs[pc_nb_vblog].articles limit: 4 -%}
+						{%- for pc_hub_item in blogs[pc_nb_vblog].articles limit: pc_nb_vcount -%}
 						{%- assign pc_vc_article = pc_hub_item -%}{% include 'video_card' %}
 						{%- endfor -%}
 					</div>

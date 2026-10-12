@@ -29,6 +29,7 @@ Bổ sung cho `01-quy-chuan-theme-sapo.md` (quy chuẩn nền tảng Sapo). File
 | Kiểm tra trường cấu hình | `npm run lint:config` — FAIL nếu có trường trong schema mà code thật (bỏ comment) không đọc; đã gắn vào `build:sapo`. Thêm trường mới phải dùng ngay trong code; bỏ chỗ dùng thì xoá trường (hỏi trước) |
 | Cấu hình trong asset | **Cấm** `settings.*` trong `assets/*.bwt` — Sapo không render Liquid trong asset nên build phải gắn cứng giá trị, Admin đổi không có tác dụng (`compile:sapo` FAIL). CSS: `var(--…, mặc định)` + khai báo ở `snippets/design_tokens.bwt`; bật/tắt CSS: class trên `<body>` (layouts/theme.bwt) hoặc để HTML tự ẩn; JS: `window.PC_CFG` (`snippets/theme_runtime_config.bwt`), MOPS: `window.PC_MOPS_CFG` (`layouts/mops-admin.bwt`) |
 | Mẫu Google Sheet cấu hình | `npm run sheet:config` (= `python scripts/export-config-sheet.py`) → `exports/cau-hinh-theme.xlsx` (sinh từ schema/data; chạy lại mỗi khi schema đổi). Khách điền các cột ★ (Hành động / Giá trị mới / Ghi chú / Trạng thái); agent áp thay đổi theo cột **ID**, đổi cấu trúc (nhãn, ẩn/xoá/di chuyển, trường mới) vẫn phải hỏi trước |
+| Sheet quản lý blog | `npm run sheet:blog` (= `python scripts/export-blog-sheet.py`) → `exports/quan-ly-blog.xlsx`: Hướng dẫn tag · Danh mục (giao diện, cấu hình đang trỏ tới) · Bài viết (cột tag tách riêng, cột "Tag dán vào Sapo" tự ghép bằng công thức). Nguồn bài = `data/articles.js`. Giá trị tag KHÔNG được chứa dấu phẩy (Sapo tách tag theo dấu phẩy) |
 
 ## 3. Quy ước code
 
