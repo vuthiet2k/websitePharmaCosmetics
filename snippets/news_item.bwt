@@ -1,10 +1,13 @@
 {%- comment -%}
-  news_item.bwt (2026-10-13) — 1 bài viết ở trang tổng tin tức (templates/page.tin-tuc.bwt), theo design/blog.html view 1.
+  news_item.bwt (2026-10-13) — 1 bài viết ở trang tổng tin tức (templates/page.tin-tuc.bwt).
   Đầu vào: pc_ni_article, pc_ni_style:
-    'text'  = dòng tiêu đề + ngày (cột "Tin mới nhất")       'thumb' = ảnh nhỏ + tiêu đề + ngày (cột "Tin nổi bật")
-    'mini'  = ô màu: nhãn chủ đề + tiêu đề + ngày (3 ô dưới tin lớn)
-    'big'   = ảnh lớn + chú thích tiêu đề/ngày; pc_ni_priority = true cho tin đầu trang (ảnh LCP, không lazy)
-    'sub'   = ảnh vừa + tiêu đề + ngày (2 ô dưới tin lớn của từng chuyên mục)
+    'lead'  = tin tiêu điểm trong slider "Tin mới nhất": tiêu đề + tóm tắt + giờ/ngày + nhãn chủ đề, ảnh bên phải;
+              pc_ni_priority = true cho slide đầu (ảnh LCP, không lazy)
+    'card'  = ô lưới 2 cột dưới slider: tiêu đề, tóm tắt + ảnh nhỏ bên phải, giờ/ngày + nhãn
+    'rank'  = dòng đánh số (cột "Tin nổi bật"): pc_ni_rank + tiêu đề + giờ/ngày + nhãn
+    'thumb' = ảnh nhỏ + tiêu đề + ngày (danh sách cạnh khối chuyên mục)
+    'big'   = ảnh lớn + chú thích tiêu đề/ngày        'sub' = ảnh vừa + tiêu đề + ngày (khối từng chuyên mục)
+  2026-10-13: bố cục đầu trang đổi theo mẫu cổng tin (khách gửi) ⇒ bỏ kiểu 'text'/'mini' của hero 3 cột cũ.
   Nhãn chủ đề: tag chude:<Nhãn> (cùng quy ước pc_article_card), không có thì tag thường đầu tiên.
 {%- endcomment -%}
 {%- assign pc_ni_topic = '' -%}
@@ -19,14 +22,39 @@
 {%- endfor -%}
 {%- if pc_ni_topic == '' -%}{%- assign pc_ni_topic = pc_ni_first -%}{%- endif -%}
 {%- capture pc_ni_date -%}<time datetime="{{ pc_ni_article.published_on | date: 'yyyy-MM-dd' }}">{{ pc_ni_article.published_on | date: 'dd/MM/yyyy' }}</time>{%- endcapture -%}
-{%- if pc_ni_style == 'text' -%}
-<li class="pc-news-text"><a href="{{ pc_ni_article.url }}">{{ pc_ni_article.title | escape }}</a>{{ pc_ni_date }}</li>
-{%- elsif pc_ni_style == 'mini' -%}
-<a class="pc-news-mini" href="{{ pc_ni_article.url }}">
-	{%- if pc_ni_topic != blank -%}<span class="pc-news-mini__pill">{{ pc_ni_topic | escape }}</span>{%- endif -%}
-	<span class="pc-news-mini__title">{{ pc_ni_article.title | escape }}</span>
-	{{ pc_ni_date }}
-</a>
+{%- capture pc_ni_meta -%}
+<span class="pc-news-meta"><time datetime="{{ pc_ni_article.published_on | date: 'yyyy-MM-dd' }}">{{ pc_ni_article.published_on | date: 'HH:mm dd/MM/yyyy' }}</time>{%- if pc_ni_topic != blank -%}<span class="pc-news-chip">{{ pc_ni_topic | escape }}</span>{%- endif -%}</span>
+{%- endcapture -%}
+{%- if pc_ni_style == 'rank' -%}
+<li class="pc-news-rank">
+	<span class="pc-news-rank__no">{{ pc_ni_rank }}</span>
+	<div class="pc-news-rank__body">
+		<h3 class="pc-news-rank__title"><a href="{{ pc_ni_article.url }}">{{ pc_ni_article.title | escape }}</a></h3>
+		{{ pc_ni_meta }}
+	</div>
+</li>
+{%- elsif pc_ni_style == 'lead' or pc_ni_style == 'card' -%}
+	{%- if pc_ni_style == 'lead' -%}{%- assign pc_ni_size = 'large' -%}{%- assign pc_ni_words = 60 -%}{%- else -%}{%- assign pc_ni_size = 'medium' -%}{%- assign pc_ni_words = 32 -%}{%- endif -%}
+	{%- if pc_ni_article.image.src != blank -%}
+		{%- assign pc_ni_img = pc_ni_article.image.src | img_url: pc_ni_size -%}
+	{%- else -%}
+		{%- capture pc_ni_img -%}{% include 'placeholder_img_url' %}{%- endcapture -%}
+	{%- endif -%}
+	{%- assign pc_ni_sum = pc_ni_article.summary | default: pc_ni_article.content | strip_html | strip | truncatewords: pc_ni_words -%}
+<article class="pc-news-{{ pc_ni_style }}">
+	<h3 class="pc-news-{{ pc_ni_style }}__title"><a href="{{ pc_ni_article.url }}">
+		{%- if pc_ni_style == 'lead' -%}<svg class="pc-news-lead__star" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>{%- endif -%}
+		{{ pc_ni_article.title | escape }}</a></h3>
+	<div class="pc-news-{{ pc_ni_style }}__row">
+		<div class="pc-news-{{ pc_ni_style }}__text">
+			{%- if pc_ni_sum != blank -%}<p class="pc-news-{{ pc_ni_style }}__excerpt">{{ pc_ni_sum }}</p>{%- endif -%}
+			{{ pc_ni_meta }}
+		</div>
+		<a class="pc-news-{{ pc_ni_style }}__img" href="{{ pc_ni_article.url }}" tabindex="-1" aria-hidden="true">
+			<img src="{{ pc_ni_img }}" alt="{{ pc_ni_article.title | escape }}"{% if pc_ni_style == 'lead' %} width="480" height="320"{% else %} width="240" height="160"{% endif %}{% if pc_ni_priority %} fetchpriority="high"{% else %} loading="lazy"{% endif %}>
+		</a>
+	</div>
+</article>
 {%- else -%}
 	{%- if pc_ni_style == 'big' -%}{%- assign pc_ni_size = '1024x1024' -%}{%- elsif pc_ni_style == 'sub' -%}{%- assign pc_ni_size = 'large' -%}{%- else -%}{%- assign pc_ni_size = 'small' -%}{%- endif -%}
 	{%- if pc_ni_article.image.src != blank -%}

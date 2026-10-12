@@ -644,3 +644,30 @@
 		}
 	});
 </script>
+{%- comment -%}
+  2026-10-13: lưu bài khách vừa đọc (tối đa 10, mới nhất lên đầu) vào localStorage pc_read_articles — nguồn của khối
+  "Tin quan tâm của tôi" ở trang tổng tin tức (templates/page.tin-tuc.bwt). Nhãn chủ đề cùng quy ước snippets/news_item.bwt.
+{%- endcomment -%}
+{%- assign pc_ra_topic = '' -%}
+{%- assign pc_ra_first = '' -%}
+{%- for pc_ra_tag in article.tags -%}
+	{%- if pc_ra_tag contains ':' -%}
+		{%- assign pc_ra_key = pc_ra_tag | split: ':' | first | strip | downcase -%}
+		{%- if pc_ra_key == 'chude' -%}{%- assign pc_ra_topic = pc_ra_tag | remove_first: 'chude:' | strip -%}{%- endif -%}
+	{%- elsif pc_ra_first == '' -%}
+		{%- unless pc_ra_tag contains 'duocsi_' or pc_ra_tag == settings.news_featured_tag -%}{%- assign pc_ra_first = pc_ra_tag | replace: '-', ' ' -%}{%- endunless -%}
+	{%- endif -%}
+{%- endfor -%}
+{%- if pc_ra_topic == '' -%}{%- assign pc_ra_topic = pc_ra_first -%}{%- endif -%}
+<script>
+	(function () {
+		var item = { url: {{ article.url | json }}, title: {{ article.title | json }}, date: {{ article.published_on | date: 'HH:mm dd/MM/yyyy' | json }}, topic: {{ pc_ra_topic | json }} };
+		try {
+			var list = JSON.parse(localStorage.getItem('pc_read_articles') || '[]');
+			if (!Array.isArray(list)) list = [];
+			list = list.filter(function (a) { return a && a.url !== item.url; });
+			list.unshift(item);
+			localStorage.setItem('pc_read_articles', JSON.stringify(list.slice(0, 10)));
+		} catch (e) {}
+	})();
+</script>

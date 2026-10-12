@@ -486,9 +486,14 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
 
 - `design/blog.html` view 1 là **trang tổng** (gom nhiều danh mục), KHÔNG phải trang 1 danh mục. Trang tổng =
   Trang nội dung alias `tin-tuc`, giao diện `templates/page.tin-tuc.bwt` (`/tin-tuc`, menu BLOG trỏ về đây).
-  Danh mục hiển thị = `settings.news_hub_blogs` (handle, phẩy); danh mục đầu là nguồn hero; cột "Tin nổi bật" = bài gắn
-  tag `news_featured_tag` (mặc định `noibat`), không có ⇒ bài mới của danh mục thứ 2. Bỏ khối Audio/Spotlight của
-  mockup cho tới khi có dữ liệu thật — không dựng lại bằng chữ ghi cứng.
+  Danh mục hiển thị = `settings.news_hub_blogs` (handle, phẩy). Đầu trang (2026-10-13, theo mẫu cổng tin khách gửi) =
+  `.pc-nportal` 2 cột: "Tin mới nhất" của danh mục đầu (slider `news_lead_count` tin tiêu điểm + lưới 2 cột
+  `news_grid_count` tin) | "Tin nổi bật" đánh số 3 tin/trang = bài gắn tag `news_featured_tag` (mặc định `noibat`),
+  không có ⇒ bài mới của danh mục thứ 2 + "Tin quan tâm của tôi" = bài khách đã đọc (localStorage `pc_read_articles`,
+  ghi ở cuối `templates/article.bwt`; trống thì ẩn). Phần dưới (Chuyên mục, khối từng chuyên mục, Video) giữ theo
+  `design/blog.html`. Bỏ khối Audio/Spotlight của mockup cho tới khi có dữ liệu thật — không dựng lại bằng chữ ghi cứng.
+- Dev: route `/tin-tuc` khai báo trong `PAGE_HANDLE_MAP` của `dev-server.js`; file này KHÔNG được watch ⇒ sửa route xong
+  phải khởi động lại `npm run dev`, nếu không server cũ trả 404.
 - `templates/blog.bwt` chỉ hiện bài của chính danh mục đang xem (không lấy `section_blog_url`): nút chuyển danh mục,
   bài nổi bật trang 1, lưới `pc_article_card`, khối Video, `snippets/news_cta.bwt`. Cột phải `aside-blog` chỉ hiện khi
   có nội dung. CSS thẻ `.pc-acard` nằm ở `assets/comp_article_card.scss.bwt` (dùng chung PDP/blog/trang tổng).
