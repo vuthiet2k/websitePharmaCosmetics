@@ -5,10 +5,9 @@
   mọi khối lấy dữ liệu THẬT từ các blog khai báo ở settings.news_hub_blogs — trước đây bố cục này bị chép thẳng vào
   templates/blog.bwt với chuyên đề/ca lâm sàng/tác giả ghi cứng. Không có khối Audio/Podcast và "Spotlight ca lâm sàng"
   của mockup vì chưa có dữ liệu thật.
-  Thứ tự: đầu trang → khối cổng tin (Tin mới nhất: slider + lưới 2 cột | Tin nổi bật + Tin quan tâm của tôi) → Chuyên mục → khối từng chuyên mục → Video
+  Thứ tự: (không breadcrumb, tiêu đề h1 ẩn) → khối cổng tin (Tin mới nhất: slider + lưới 2 cột | Tin nổi bật + Tin quan tâm của tôi) → Chuyên mục → khối từng chuyên mục → Video
   → khung đặt lịch. Danh mục đầu tiên trong danh sách là nguồn của cột Tin mới nhất.
 {%- endcomment -%}
-{% include 'breadcrumb' %}
 {%- assign pc_nh_list = settings.news_hub_blogs | default: 'tin-tuc' | split: ',' -%}
 {%- assign pc_nh_main = pc_nh_list.first | strip -%}
 {%- assign pc_nh_second = '' -%}
@@ -17,11 +16,8 @@
 {%- assign pc_nh_count_label = settings.news_count_suffix | default: 'bài viết' -%}
 <section class="pc-nhub">
 	<div class="container">
-		<header class="pc-vblog__head">
-			{%- if settings.news_hub_eyebrow != blank -%}<span class="pc-vblog__eyebrow">{{ settings.news_hub_eyebrow | escape }}</span>{%- endif -%}
-			<h1 class="pc-vblog__title">{{ page.title | default: settings.news_hub_title | escape }}</h1>
-			{%- if settings.news_hub_intro != blank -%}<p class="pc-vblog__intro">{{ settings.news_hub_intro | escape }}</p>{%- endif -%}
-		</header>
+		{%- comment -%} 2026-10-13: theo yêu cầu bỏ breadcrumb + khối tiêu đề/giới thiệu ở đầu trang tổng; giữ 1 <h1> ẩn cho SEO/trình đọc màn hình. {%- endcomment -%}
+		<h1 class="sr-only">{{ page.title | default: settings.news_hub_title | escape }}</h1>
 
 		{%- comment -%}
 			── Đầu trang kiểu cổng tin (2026-10-13, theo mẫu khách gửi): cột trái "Tin mới nhất" = slider tin tiêu điểm
