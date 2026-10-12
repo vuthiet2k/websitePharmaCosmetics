@@ -585,6 +585,16 @@ function devToolbarHtml(tpl) {
       ['page.order-tracking','MOPS · Theo dõi đơn'],
       ['page.mops-admin',    'MOPS · Admin'],
     ]},
+    // 2026-10-13: mục có phần tử thứ 3 = URL thật (mở đúng blog/bài như Sapo chọn template theo dữ liệu), thay vì
+    // /?tpl=<tên> — với blog.video/article.video, ?tpl= sẽ lấy nhầm blog mặc định tin-tuc.
+    { label: 'Tin tức & Video', items: [
+      ['page.tin-tuc',  'Tin tức · Trang tổng (/tin-tuc)',              '/tin-tuc'],
+      ['blog',          'Tin tức · 1 danh mục (/blogs/tin-tuc)',        '/blogs/tin-tuc'],
+      ['blog',          'Tin tức · 1 danh mục (/blogs/bi-quyet)',       '/blogs/bi-quyet'],
+      ['article',       'Bài viết có khối video (Bí Quyết)',            '/blogs/bi-quyet/double-cleansing-rua-mat-2-buoc-sach-sau'],
+      ['blog.video',    'Video · Danh mục (/blogs/video)',              '/blogs/video'],
+      ['article.video', 'Video · Trang xem video',                      '/blogs/video/3-sai-lam-nghiem-trong-khi-dung-dau-tay-trang-khien-da-bi-mun'],
+    ]},
     { label: 'Trang mới (Figma)', items: [
       ['page.chuyen-gia',    'Trang chuyên gia'],
       ['page.loyalty',       'Loyalty Rewards'],
@@ -597,8 +607,8 @@ function devToolbarHtml(tpl) {
     ]},
   ];
   const options = groups.map(({ label, items }) =>
-    `<optgroup label="${label}">${items.map(([v, l]) =>
-      `<option value="${v}"${tpl===v?' selected':''}>${l}</option>`).join('')}</optgroup>`
+    `<optgroup label="${label}">${items.map(([v, l, u]) =>
+      `<option value="${v}"${u ? ` data-url="${u}"` : ''}${tpl===v?' selected':''}>${l}</option>`).join('')}</optgroup>`
   ).join('');
   return `<!-- ░░ DEV TOOLBAR ░░ -->
 <div id="dev-toolbar">
@@ -609,10 +619,19 @@ function devToolbarHtml(tpl) {
   </div>
   <div style="display:flex;align-items:center;gap:12px;">
     <span>Template:</span>
-    <select id="tpl-select" onchange="var v=this.value;location.href=(v==='page.mops-admin'?'/mops-admin':'/?tpl='+v)">${options}</select>
+    <select id="tpl-select" onchange="var o=this.options[this.selectedIndex],v=this.value;location.href=(o.getAttribute('data-url')||(v==='page.mops-admin'?'/mops-admin':'/?tpl='+v))">${options}</select>
     <span class="tpl-badge">localhost:${PORT}</span>
   </div>
 </div>
+<script>
+/* Nhiều mục chung 1 template (vd blog) ⇒ chọn đúng mục theo URL đang xem. */
+(function () {
+  var sel = document.getElementById('tpl-select'); if (!sel) return;
+  for (var i = 0; i < sel.options.length; i++) {
+    if (sel.options[i].getAttribute('data-url') === location.pathname) { sel.selectedIndex = i; break; }
+  }
+})();
+</script>
 <script>
 (function() {
   const dot   = document.getElementById('ws-dot');
