@@ -1,0 +1,48 @@
+{%- comment -%}
+  news_item.bwt (2026-10-13) — 1 bài viết ở trang tổng tin tức (templates/page.tin-tuc.bwt), theo design/blog.html view 1.
+  Đầu vào: pc_ni_article, pc_ni_style:
+    'text'  = dòng tiêu đề + ngày (cột "Tin mới nhất")       'thumb' = ảnh nhỏ + tiêu đề + ngày (cột "Tin nổi bật")
+    'mini'  = ô màu: nhãn chủ đề + tiêu đề + ngày (3 ô dưới tin lớn)
+    'big'   = ảnh lớn + chú thích tiêu đề/ngày; pc_ni_priority = true cho tin đầu trang (ảnh LCP, không lazy)
+    'sub'   = ảnh vừa + tiêu đề + ngày (2 ô dưới tin lớn của từng chuyên mục)
+  Nhãn chủ đề: tag chude:<Nhãn> (cùng quy ước pc_article_card), không có thì tag thường đầu tiên.
+{%- endcomment -%}
+{%- assign pc_ni_topic = '' -%}
+{%- assign pc_ni_first = '' -%}
+{%- for pc_ni_tag in pc_ni_article.tags -%}
+	{%- if pc_ni_tag contains ':' -%}
+		{%- assign pc_ni_key = pc_ni_tag | split: ':' | first | strip | downcase -%}
+		{%- if pc_ni_key == 'chude' -%}{%- assign pc_ni_topic = pc_ni_tag | remove_first: 'chude:' | strip -%}{%- endif -%}
+	{%- elsif pc_ni_first == '' -%}
+		{%- unless pc_ni_tag contains 'duocsi_' or pc_ni_tag == settings.news_featured_tag -%}{%- assign pc_ni_first = pc_ni_tag | replace: '-', ' ' -%}{%- endunless -%}
+	{%- endif -%}
+{%- endfor -%}
+{%- if pc_ni_topic == '' -%}{%- assign pc_ni_topic = pc_ni_first -%}{%- endif -%}
+{%- capture pc_ni_date -%}<time datetime="{{ pc_ni_article.published_on | date: 'yyyy-MM-dd' }}">{{ pc_ni_article.published_on | date: 'dd/MM/yyyy' }}</time>{%- endcapture -%}
+{%- if pc_ni_style == 'text' -%}
+<li class="pc-news-text"><a href="{{ pc_ni_article.url }}">{{ pc_ni_article.title | escape }}</a>{{ pc_ni_date }}</li>
+{%- elsif pc_ni_style == 'mini' -%}
+<a class="pc-news-mini" href="{{ pc_ni_article.url }}">
+	{%- if pc_ni_topic != blank -%}<span class="pc-news-mini__pill">{{ pc_ni_topic | escape }}</span>{%- endif -%}
+	<span class="pc-news-mini__title">{{ pc_ni_article.title | escape }}</span>
+	{{ pc_ni_date }}
+</a>
+{%- else -%}
+	{%- if pc_ni_style == 'big' -%}{%- assign pc_ni_size = '1024x1024' -%}{%- elsif pc_ni_style == 'sub' -%}{%- assign pc_ni_size = 'large' -%}{%- else -%}{%- assign pc_ni_size = 'small' -%}{%- endif -%}
+	{%- if pc_ni_article.image.src != blank -%}
+		{%- assign pc_ni_img = pc_ni_article.image.src | img_url: pc_ni_size -%}
+	{%- else -%}
+		{%- capture pc_ni_img -%}{% include 'placeholder_img_url' %}{%- endcapture -%}
+	{%- endif -%}
+	<a class="pc-news-{{ pc_ni_style }}" href="{{ pc_ni_article.url }}">
+		<span class="pc-news-{{ pc_ni_style }}__img">
+			<img src="{{ pc_ni_img }}" alt="{{ pc_ni_article.title | escape }}"{% if pc_ni_style == 'big' %} width="1024" height="576"{% elsif pc_ni_style == 'sub' %} width="480" height="300"{% else %} width="160" height="100"{% endif %}{% if pc_ni_priority %} fetchpriority="high"{% else %} loading="lazy"{% endif %}>
+		</span>
+		<span class="pc-news-{{ pc_ni_style }}__body">
+			{%- if pc_ni_style == 'big' and pc_ni_topic != blank -%}<span class="pc-news-mini__pill">{{ pc_ni_topic | escape }}</span>{%- endif -%}
+			<span class="pc-news-{{ pc_ni_style }}__title">{{ pc_ni_article.title | escape }}</span>
+			{{ pc_ni_date }}
+		</span>
+	</a>
+{%- endif -%}
+{%- assign pc_ni_priority = false -%}

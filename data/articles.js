@@ -654,6 +654,17 @@ const blogs = {
   }),
 };
 
+// 2026-10-13: tag noibat (biên tập chọn) cho cột "Tin nổi bật" ở trang tổng /tin-tuc (templates/page.tin-tuc.bwt).
+// 2026-10-13: nhãn chủ đề (tag chude:) cho bài demo — thiếu thì thẻ bài lấy tag handle không dấu ("bi quyet").
+const demoTopics = { 204: 'Điều trị nám', 205: 'Chống nắng', 206: 'Thành phần', 221: 'Làm sạch da', 222: 'Dưỡng ẩm & phục hồi', 223: 'Dưỡng ẩm & phục hồi', 224: 'Chống nắng & trang điểm', 225: 'Tẩy da chết' };
+[...articles, ...beautyTipsArticles].forEach((a) => {
+  if (demoTopics[a.id] && !a.tags.some((t) => t.startsWith('chude:'))) a.tags.push(`chude:${demoTopics[a.id]}`);
+});
+[204, 206, 223, 225].forEach((id) => {
+  const a = [...articles, ...beautyTipsArticles].find((x) => x.id === id);
+  if (a) a.tags.push('noibat');
+});
+
 // Article đơn lẻ (dùng cho template article.bwt)
 const currentArticle = articles[0];
 

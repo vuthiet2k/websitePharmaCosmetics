@@ -337,6 +337,7 @@ function getContext(templateName = 'index', routeParams = {}) {
     'page.order-lookup':             'Tra cứu đơn hàng',
     'page.order-tracking':           'Theo dõi đơn hàng',
     'page.mops-admin':               'MOPS Admin',
+    'page.tin-tuc':                  'Tin tức & Kiến thức',
   };
   const currentPage = (templateName === 'page' || templateName.startsWith('page.'))
     ? {

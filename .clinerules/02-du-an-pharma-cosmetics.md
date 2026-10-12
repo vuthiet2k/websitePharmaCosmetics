@@ -482,6 +482,17 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
   Chỉ đăng ca thật khách đã đồng ý; theme không tự sinh ca/số liệu. Ảnh trong `data/articles.js` chỉ là khung
   placeholder để preview.
 
+## Trang tổng tin tức & trang 1 danh mục bài viết (chốt 2026-10-13)
+
+- `design/blog.html` view 1 là **trang tổng** (gom nhiều danh mục), KHÔNG phải trang 1 danh mục. Trang tổng =
+  Trang nội dung alias `tin-tuc`, giao diện `templates/page.tin-tuc.bwt` (`/tin-tuc`, menu BLOG trỏ về đây).
+  Danh mục hiển thị = `settings.news_hub_blogs` (handle, phẩy); danh mục đầu là nguồn hero; cột "Tin nổi bật" = bài gắn
+  tag `news_featured_tag` (mặc định `noibat`), không có ⇒ bài mới của danh mục thứ 2. Bỏ khối Audio/Spotlight của
+  mockup cho tới khi có dữ liệu thật — không dựng lại bằng chữ ghi cứng.
+- `templates/blog.bwt` chỉ hiện bài của chính danh mục đang xem (không lấy `section_blog_url`): nút chuyển danh mục,
+  bài nổi bật trang 1, lưới `pc_article_card`, khối Video, `snippets/news_cta.bwt`. Cột phải `aside-blog` chỉ hiện khi
+  có nội dung. CSS thẻ `.pc-acard` nằm ở `assets/comp_article_card.scss.bwt` (dùng chung PDP/blog/trang tổng).
+
 ## Danh mục bài viết Video (`/blogs/video`, dựng 2026-10-12)
 
 - Blog Sapo "Video" chọn giao diện `blog.video`; từng bài chọn `article.video`. Câu chữ/link: field `video_*` (nhóm

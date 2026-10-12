@@ -1,0 +1,160 @@
+{% layout 'theme' %}
+{%- comment -%}
+  page.tin-tuc.bwt (2026-10-13) — TRANG TỔNG TIN TỨC: trang chủ của mọi danh mục bài viết (Sapo: Trang nội dung đường dẫn
+  tin-tuc, giao diện page.tin-tuc). Bố cục theo design/blog.html view 1 ("trang danh sách bài viết" kiểu tạp chí), nhưng
+  mọi khối lấy dữ liệu THẬT từ các blog khai báo ở settings.news_hub_blogs — trước đây bố cục này bị chép thẳng vào
+  templates/blog.bwt với chuyên đề/ca lâm sàng/tác giả ghi cứng. Không có khối Audio/Podcast và "Spotlight ca lâm sàng"
+  của mockup vì chưa có dữ liệu thật.
+  Thứ tự: đầu trang → hero 3 cột (Tin mới nhất | tin lớn + 3 ô | Tin nổi bật) → Chuyên mục → khối từng chuyên mục → Video
+  → khung đặt lịch. Danh mục đầu tiên trong danh sách là nguồn của hero.
+{%- endcomment -%}
+{% include 'breadcrumb' %}
+{%- assign pc_nh_list = settings.news_hub_blogs | default: 'tin-tuc' | split: ',' -%}
+{%- assign pc_nh_main = pc_nh_list.first | strip -%}
+{%- assign pc_nh_second = '' -%}
+{%- if pc_nh_list.size > 1 -%}{%- assign pc_nh_second = pc_nh_list[1] | strip -%}{%- endif -%}
+{%- assign pc_nh_ftag = settings.news_featured_tag | default: 'noibat' -%}
+{%- assign pc_nh_count_label = settings.news_count_suffix | default: 'bài viết' -%}
+<section class="pc-nhub">
+	<div class="container">
+		<header class="pc-vblog__head">
+			{%- if settings.news_hub_eyebrow != blank -%}<span class="pc-vblog__eyebrow">{{ settings.news_hub_eyebrow | escape }}</span>{%- endif -%}
+			<h1 class="pc-vblog__title">{{ page.title | default: settings.news_hub_title | escape }}</h1>
+			{%- if settings.news_hub_intro != blank -%}<p class="pc-vblog__intro">{{ settings.news_hub_intro | escape }}</p>{%- endif -%}
+		</header>
+
+		{%- comment -%} ── Hero 3 cột (mockup SECTION 1) ── {%- endcomment -%}
+		{%- assign pc_nh_mb = blogs[pc_nh_main] -%}
+		{%- if pc_nh_mb.articles.size > 0 -%}
+		{%- comment -%} Cột "Tin nổi bật": bài gắn tag nổi bật trong các danh mục; không có ⇒ bài mới của danh mục thứ 2. {%- endcomment -%}
+		{%- assign pc_nh_fc = 0 -%}
+		{%- capture pc_nh_feat -%}
+			{%- for pc_nh_h in pc_nh_list -%}
+				{%- assign pc_nh_hs = pc_nh_h | strip -%}
+				{%- for pc_nh_a in blogs[pc_nh_hs].articles -%}
+					{%- if pc_nh_fc < 5 and pc_nh_a.tags contains pc_nh_ftag -%}
+						{%- assign pc_nh_fc = pc_nh_fc | plus: 1 -%}
+						{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'thumb' -%}{% include 'news_item' %}
+					{%- endif -%}
+				{%- endfor -%}
+			{%- endfor -%}
+		{%- endcapture -%}
+		{%- assign pc_nh_feat_title = settings.news_featured_title | default: 'Tin nổi bật' -%}
+		{%- assign pc_nh_feat_url = '' -%}
+		{%- if pc_nh_fc == 0 and pc_nh_second != '' and blogs[pc_nh_second].articles.size > 0 -%}
+			{%- assign pc_nh_feat_title = blogs[pc_nh_second].name | default: blogs[pc_nh_second].title -%}
+			{%- assign pc_nh_feat_url = blogs[pc_nh_second].url -%}
+			{%- capture pc_nh_feat -%}
+				{%- for pc_nh_a in blogs[pc_nh_second].articles limit: 5 -%}
+					{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'thumb' -%}{% include 'news_item' %}
+				{%- endfor -%}
+			{%- endcapture -%}
+		{%- endif -%}
+		<div class="pc-nhero">
+			{%- if pc_nh_mb.articles.size > 4 -%}
+			<div class="pc-nbox pc-nhero__left">
+				<div class="pc-nbox__head"><h2 class="pc-nbox__title">{{ settings.news_latest_title | default: 'Tin mới nhất' | escape }}</h2><a href="{{ pc_nh_mb.url }}">{{ pc_nh_mb.name | default: pc_nh_mb.title | escape }}</a></div>
+				<ul class="pc-news-textlist">
+					{%- for pc_nh_a in pc_nh_mb.articles offset: 4 limit: 6 -%}
+					{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'text' -%}{% include 'news_item' %}
+					{%- endfor -%}
+				</ul>
+			</div>
+			{%- endif -%}
+			<div class="pc-nhero__center">
+				{%- assign pc_ni_article = pc_nh_mb.articles.first -%}{%- assign pc_ni_style = 'big' -%}{%- assign pc_ni_priority = true -%}{% include 'news_item' %}
+				{%- if pc_nh_mb.articles.size > 1 -%}
+				<div class="pc-nhero__minis">
+					{%- for pc_nh_a in pc_nh_mb.articles offset: 1 limit: 3 -%}
+					{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'mini' -%}{% include 'news_item' %}
+					{%- endfor -%}
+				</div>
+				{%- endif -%}
+			</div>
+			{%- if pc_nh_feat != blank -%}
+			<div class="pc-nbox pc-nhero__right">
+				<div class="pc-nbox__head"><h2 class="pc-nbox__title">{{ pc_nh_feat_title | escape }}</h2>{% if pc_nh_feat_url != '' %}<a href="{{ pc_nh_feat_url }}">{{ settings.news_more_label | default: 'Xem tất cả' | escape }}</a>{% endif %}</div>
+				<div class="pc-news-thumblist">{{ pc_nh_feat }}</div>
+			</div>
+			{%- endif -%}
+		</div>
+		{%- endif -%}
+
+		{%- comment -%} ── Chuyên mục (thay "Topic Matrix" mockup SECTION 2): mỗi ô = 1 danh mục thật, số bài, bài mới nhất. ── {%- endcomment -%}
+		{%- assign pc_nh_vblog = settings.video_blog_handle | default: 'video' -%}
+		<section class="pc-nsec">
+			<div class="pc-nsec__head"><h2 class="pc-nsec__title">{{ settings.news_cats_title | default: 'Chuyên mục' | escape }}</h2></div>
+			<div class="pc-ncats">
+				{%- for pc_nh_h in pc_nh_list -%}
+				{%- assign pc_nh_hs = pc_nh_h | strip -%}
+				{%- assign pc_nh_b = blogs[pc_nh_hs] -%}
+				{%- if pc_nh_b.articles.size > 0 -%}
+				<a class="pc-ncat" href="{{ pc_nh_b.url }}">
+					<span class="pc-ncat__name">{{ pc_nh_b.name | default: pc_nh_b.title | escape }}</span>
+					<span class="pc-ncat__count">{{ pc_nh_b.articles_count }} {{ pc_nh_count_label | escape }}</span>
+					<span class="pc-ncat__latest">{{ pc_nh_b.articles.first.title | escape }}</span>
+				</a>
+				{%- endif -%}
+				{%- endfor -%}
+				{%- if blogs[pc_nh_vblog].articles.size > 0 -%}
+				<a class="pc-ncat pc-ncat--video" href="{{ blogs[pc_nh_vblog].url }}">
+					<span class="pc-ncat__name">{{ blogs[pc_nh_vblog].name | default: blogs[pc_nh_vblog].title | escape }}</span>
+					<span class="pc-ncat__count">{{ blogs[pc_nh_vblog].articles_count }} {{ pc_nh_count_label | escape }}</span>
+					<span class="pc-ncat__latest">{{ blogs[pc_nh_vblog].articles.first.title | escape }}</span>
+				</a>
+				{%- endif -%}
+			</div>
+		</section>
+
+		{%- comment -%} ── Khối từng chuyên mục (mockup SECTION 3): tin lớn + 2 ô | danh sách 4 tin. Bỏ danh mục đầu (đã ở hero). ── {%- endcomment -%}
+		{%- for pc_nh_h in pc_nh_list offset: 1 -%}
+		{%- assign pc_nh_hs = pc_nh_h | strip -%}
+		{%- assign pc_nh_b = blogs[pc_nh_hs] -%}
+		{%- if pc_nh_b.articles.size > 0 -%}
+		<section class="pc-nsec">
+			<div class="pc-nsec__head">
+				<h2 class="pc-nsec__title">{{ pc_nh_b.name | default: pc_nh_b.title | escape }}</h2>
+				<a class="pc-nsec__more" href="{{ pc_nh_b.url }}">{{ settings.news_more_label | default: 'Xem tất cả' | escape }} ({{ pc_nh_b.articles_count }})</a>
+			</div>
+			<div class="pc-nmag">
+				<div class="pc-nmag__main">
+					{%- assign pc_ni_article = pc_nh_b.articles.first -%}{%- assign pc_ni_style = 'big' -%}{% include 'news_item' %}
+					{%- if pc_nh_b.articles.size > 1 -%}
+					<div class="pc-nmag__subs">
+						{%- for pc_nh_a in pc_nh_b.articles offset: 1 limit: 2 -%}
+						{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'sub' -%}{% include 'news_item' %}
+						{%- endfor -%}
+					</div>
+					{%- endif -%}
+				</div>
+				{%- if pc_nh_b.articles.size > 3 -%}
+				<div class="pc-nbox pc-news-thumblist">
+					{%- for pc_nh_a in pc_nh_b.articles offset: 3 limit: 4 -%}
+					{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'thumb' -%}{% include 'news_item' %}
+					{%- endfor -%}
+				</div>
+				{%- endif -%}
+			</div>
+		</section>
+		{%- endif -%}
+		{%- endfor -%}
+
+		{%- comment -%} ── Video (mockup SECTION 4, phần video): 4 bài mới nhất của blog Video, thẻ video_card. ── {%- endcomment -%}
+		{%- if blogs[pc_nh_vblog].articles.size > 0 -%}
+		<section class="pc-nsec pc-vhub">
+			<div class="pc-nsec__head">
+				<h2 class="pc-nsec__title">{{ settings.video_hub_title | default: 'Video tư vấn' | escape }}</h2>
+				<a class="pc-nsec__more" href="{{ blogs[pc_nh_vblog].url }}">{{ settings.video_hub_more_label | default: 'Xem tất cả video' | escape }}</a>
+			</div>
+			<div class="pc-nvideo">
+				{%- assign pc_vc_layout = 'grid' -%}{%- assign pc_vc_heading = 'h3' -%}
+				{%- for pc_nh_a in blogs[pc_nh_vblog].articles limit: 4 -%}
+				{%- assign pc_vc_article = pc_nh_a -%}{% include 'video_card' %}
+				{%- endfor -%}
+			</div>
+		</section>
+		{%- endif -%}
+
+		{% include 'news_cta' %}
+	</div>
+</section>

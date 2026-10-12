@@ -1,227 +1,114 @@
+{%- comment -%}
+  blog.bwt — TRANG 1 DANH MỤC BÀI VIẾT (/blogs/<handle>). Dựng lại 2026-10-13: bản cũ chép bố cục "trang tổng tạp chí"
+  của design/blog.html với chuyên đề, ca lâm sàng, tác giả ghi cứng, tin đầu trang lấy từ blog khác
+  (settings.section_blog_url) và bộ lọc checkbox không hoạt động. Bố cục tổng đó nay ở templates/page.tin-tuc.bwt (/tin-tuc).
+  Trang này chỉ hiện bài của CHÍNH danh mục đang xem:
+  đầu trang (eyebrow + H1 tên danh mục) → nút chuyển danh mục (Tất cả = trang tổng, các danh mục ở news_hub_blogs) →
+  bài mới nhất dạng nổi bật (trang 1) → lưới thẻ pc_article_card 3 cột + phân trang → khối Video → khung đặt lịch.
+  Cột phải aside-blog giữ theo settings.right_asideblog_enable.
+{%- endcomment -%}
 {% include 'breadcrumb' %}
-<div class="blog_wrapper layout-blog" itemscope itemtype="https://schema.org/Blog">
-	<meta itemprop="name" content="{{ blog.name }}">
-	<meta itemprop="description" content="{{ blog.description | default: store.description }}">
+{%- assign pc_nb_list = settings.news_hub_blogs | split: ',' -%}
+{%- assign pc_nb_vblog = settings.video_blog_handle | default: 'video' -%}
+{%- assign pc_card_ex_blog = blogs[settings.expert_blog_handle] -%}
+{%- comment -%} Cột phải chỉ hiện khi aside-blog thật sự có nội dung (các khối con đều có công tắc riêng, tắt hết thì ẩn cột). {%- endcomment -%}
+{%- assign pc_nb_aside = '' -%}
+{%- if settings.right_asideblog_enable -%}{%- capture pc_nb_aside -%}{% include 'aside-blog' %}{%- endcapture -%}{%- endif -%}
+{%- assign pc_nb_aside_txt = pc_nb_aside | strip_html | strip -%}
+{%- assign pc_nb_per = settings.blogs_number_perpage | default: 12 | plus: 0 -%}
+{%- if pc_nb_per < 1 or pc_nb_per > 50 -%}{%- assign pc_nb_per = 12 -%}{%- endif -%}
+<section class="pc-nblog">
+	<div class="container">
+		<header class="pc-vblog__head">
+			{%- if settings.news_blog_eyebrow != blank -%}<span class="pc-vblog__eyebrow">{{ settings.news_blog_eyebrow | escape }}</span>{%- endif -%}
+			<h1 class="pc-vblog__title">{{ blog.name | escape }}</h1>
+			{%- assign pc_nb_desc = blog.description | strip_html | strip -%}
+			{%- if pc_nb_desc != blank -%}<p class="pc-vblog__intro">{{ pc_nb_desc }}</p>{%- endif -%}
+		</header>
 
-	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-		<div class="text-center max-w-3xl mx-auto mb-10">
-			<span class="text-xs font-bold text-clinical-700 uppercase tracking-widest">
-				📰 Tạp Chí &amp; Bản Tin Chuyên Khoa Da Liễu
-			</span>
-			<h1 class="btxt_blog text-3xl sm:text-4xl font-extrabold text-forest-900 font-heading mt-2">
-				{{ blog.name }}
-			</h1>
-		</div>
-
-		{%- comment -%}
-		  REOPEN 2026-09-11 — CMP: Clinical Topic Matrix (3 cột x 5 dòng = 15 ô), khớp gap phát
-		  hiện khi đối chiếu blog.html SECTION 2 (dòng 2238-2317 file gốc). 5 chuyên đề thật lặp
-		  lại theo đúng bố cục mockup (không phải 15 chuyên đề khác nhau — mockup gốc cũng lặp
-		  lại y hệt). Danh xưng giữ theo ĐÚNG title đã dùng trong data/doctors.js (nhất quán với
-		  15 cảnh báo RULE-P0-02 đang chờ người dùng quyết định ở T-95, không tạo thêm mâu thuẫn
-		  danh xưng mới cho cùng 1 người).
-		{%- endcomment -%}
-		{%- assign pc_topics = "Retinol Chống Lão Hoá|Chuyên đề cùng Chuyên gia Thanh Hằng||Điều Trị Nám Da|Chuyên đề cùng Chuyên gia Hoàng Thu Trang||Vitamin C Làm Sáng Da|Chuyên đề cùng Chuyên gia Đặng Thị Hương||Giải Mã SPF/PA|Chuyên đề cùng Chuyên gia Thanh Hằng||Routine Skincare Sáng|Chuyên đề cùng Chuyên gia Thanh Hằng" | split: "||" -%}
-		<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-			{%- for col in (1..3) -%}
-			<div>
-				{%- for t in pc_topics -%}
-				{%- assign parts = t | split: "|" -%}
-				<div class="pb-2 mb-2 border-b border-gray-100 last:border-0 last:mb-0 last:pb-0 cursor-pointer group">
-					<div class="text-[13px] font-bold text-text-main group-hover:text-brand-green">{{ parts[0] }}</div>
-					<div class="text-[11px] italic text-text-muted">{{ parts[1] }}</div>
-				</div>
-				{%- endfor -%}
-			</div>
+		<nav class="pc-vfilter pc-nblog__cats" aria-label="{{ settings.news_cats_title | default: 'Chuyên mục' | escape }}">
+			{%- if settings.news_hub_url != blank -%}
+			<a class="pc-vfilter__btn" href="{{ settings.news_hub_url }}">{{ settings.news_all_label | default: 'Tất cả' | escape }}</a>
+			{%- endif -%}
+			{%- for pc_nb_h in pc_nb_list -%}
+			{%- assign pc_nb_hs = pc_nb_h | strip -%}
+			{%- assign pc_nb_b = blogs[pc_nb_hs] -%}
+			{%- if pc_nb_b.articles.size > 0 or pc_nb_b.url == blog.url -%}
+			<a class="pc-vfilter__btn" href="{{ pc_nb_b.url }}"{% if pc_nb_b.url == blog.url %} aria-current="page"{% endif %}>{{ pc_nb_b.name | default: pc_nb_b.title | escape }}</a>
+			{%- endif -%}
 			{%- endfor -%}
-		</div>
+			{%- if blogs[pc_nb_vblog].articles.size > 0 -%}
+			<a class="pc-vfilter__btn" href="{{ blogs[pc_nb_vblog].url }}">{{ blogs[pc_nb_vblog].name | default: blogs[pc_nb_vblog].title | escape }}</a>
+			{%- endif -%}
+		</nav>
 
-		{%- comment -%}
-		  REOPEN 2026-09-11 — CMP: Spotlight Clinical Case Study, khớp gap blog.html SECTION 5
-		  (dòng 2523-2550 file gốc). Danh xưng cập nhật theo data/doctors.js (T-114: Chuyên gia
-		  Thanh Hằng / Chuyên gia Trần Phương Linh) — cùng lý do trên.
-		{%- endcomment -%}
-		<div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 sm:p-7 mb-10 grid grid-cols-1 md:grid-cols-[280px_1fr] gap-7 items-center">
-			<div class="aspect-[4/3] rounded-lg flex items-center justify-center text-5xl" style="background: var(--color-peach-light,#F6E3D8); border:1px solid rgba(223,186,115,0.3);">🧪</div>
-			<div>
-				<span class="pc-cmp-verified-badge mb-2">🔬 PHÁC ĐỒ ĐIỀU TRỊ LÂM SÀNG &bull; DA LIỄU Y KHOA</span>
-				<h2 class="text-xl sm:text-2xl font-extrabold font-heading text-forest-900 mb-2.5">
-					Phác Đồ Đa Tầng Phục Hồi Màng Lipid &amp; Tái Sinh Da Nhiễm Corticoid Sau 6 Tuần
-				</h2>
-				<p class="text-[13px] text-text-body leading-relaxed mb-3.5">
-					Hướng dẫn chi tiết từ Chuyên gia Thanh Hằng về cách ứng dụng hoạt chất B5, Ceramide NP và Peptides sinh học để làm dịu da đỏ rát, phục hồi màng mỡ sau tổn thương nặng.
-				</p>
-				<div class="flex items-center justify-between flex-wrap gap-3 pt-3 border-t border-gray-100 text-xs">
-					<span class="text-text-muted">ThS. BS Trần Phương Linh &bull; 15/08/2026 &bull; 8 phút đọc</span>
-					<a href="/blogs/all" class="pc-kit-btn-primary text-xs py-2 px-4">Đọc Tiếp Bài Viết →</a>
-				</div>
-			</div>
-		</div>
-
-		<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-			<div class="{% if settings.right_asideblog_enable %}lg:col-span-9{% else %}lg:col-span-12{% endif %} col-span-12">
-
-				{%- comment -%}
-				  Featured post hero (Figma blog.html) — bọc bên ngoài include có sẵn, không sửa
-				  cấu trúc bên trong blog_item_big.bwt (giữ nguyên lazyload/data binding của nó).
-				{%- endcomment -%}
-				<div class="bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-gray-200 mb-10 pc-blog-featured">
-					{%for article in blogs[settings.section_blog_url].articles limit: 1 %}
-					{%include 'blog_item_big'%}
-					{%endfor%}
-				</div>
-
-				<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-					{%for article in blogs[settings.section_blog_url].articles offset:1 limit:3 %}
-					<div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 pc-blog-small-item">
-						<div class="item_small_blog clearfix">
-							<div class="post-thumb">
-								<a class="image-blog scale_hover" href="{{ article.url }}" title="{{ article.title }}">
-									{% if article.image != null %}
-									<img width="800" height="500" class="img_blog lazyload rounded-xl" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC" data-src="{{ article.image.src | img_url}}"  alt="{{ article.title }}">
-									{%else%}
-									<img width="800" height="500" class="img_blog lazyload rounded-xl" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC" data-src="{% include 'placeholder_img_url' %}" alt="{{ article.title }}"/>
-									{% endif %}
-								</a>
+		<div class="pc-nblog__layout{% if pc_nb_aside_txt != blank %} has-aside{% endif %}">
+			<div class="pc-nblog__main">
+				{% paginate blog.articles by pc_nb_per %}
+				{%- if blog.articles.size > 0 -%}
+					{%- assign pc_nb_feat = false -%}
+					{%- if paginate.current_page == 1 or paginate.current_page == blank -%}
+						{%- assign pc_nb_feat = blog.articles.first -%}
+						{%- assign pc_nb_topic = '' -%}
+						{%- for pc_nb_tag in pc_nb_feat.tags -%}
+							{%- if pc_nb_tag contains 'chude:' -%}{%- assign pc_nb_topic = pc_nb_tag | remove_first: 'chude:' | strip -%}{%- endif -%}
+						{%- endfor -%}
+						<article class="pc-vfeat pc-nfeat">
+							<a class="pc-nfeat__img" href="{{ pc_nb_feat.url }}" tabindex="-1" aria-hidden="true">
+								<img src="{% if pc_nb_feat.image.src != blank %}{{ pc_nb_feat.image.src | img_url: '1024x1024' }}{% else %}{% include 'placeholder_img_url' %}{% endif %}" alt="{{ pc_nb_feat.title | escape }}" width="1024" height="576" fetchpriority="high">
+							</a>
+							<div class="pc-vfeat__body">
+								{%- if pc_nb_topic != blank -%}<div class="pc-vfeat__tags"><span class="pc-vcard__topic">{{ pc_nb_topic | escape }}</span></div>{%- endif -%}
+								<h2 class="pc-vfeat__title"><a href="{{ pc_nb_feat.url }}">{{ pc_nb_feat.title | escape }}</a></h2>
+								{%- assign pc_nb_sum = pc_nb_feat.summary | default: pc_nb_feat.excerpt | default: pc_nb_feat.content | strip_html | strip -%}
+								{%- if pc_nb_sum != blank -%}<p class="pc-vfeat__sum">{{ pc_nb_sum | truncatewords: 40 }}</p>{%- endif -%}
+								<div class="pc-vfeat__meta">
+									{%- if pc_nb_feat.author != blank -%}<span>{{ pc_nb_feat.author | escape }}</span>{%- endif -%}
+									<time datetime="{{ pc_nb_feat.published_on | date: 'yyyy-MM-dd' }}">{{ pc_nb_feat.published_on | date: 'dd/MM/yyyy' }}</time>
+								</div>
+								<a class="pc-vfeat__cta" href="{{ pc_nb_feat.url }}">{{ settings.product_article_read_label | default: 'Đọc tiếp' | escape }} <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg></a>
 							</div>
-							<div class="contentright pt-3">
-								<h3 class="text-sm font-bold text-gray-900 leading-snug"><a title="{{ article.title }}" href="{{ article.url }}">{{ article.title }}</a></h3>
-								<p class="time-post text-[11px] text-gray-500 mt-1">
-									<span>{{ article.published_on | date:'dd/MM/yyy' }}</span>
-								</p>
-							</div>
-						</div>
+						</article>
+					{%- endif -%}
+					{%- if blog.articles.size > 1 or pc_nb_feat == false -%}
+					<div class="pc-ngrid">
+						{%- for article in blog.articles -%}
+						{%- unless pc_nb_feat and forloop.first -%}
+						{%- assign pc_card_i = forloop.index0 -%}
+						{% include 'pc_article_card' %}
+						{%- endunless -%}
+						{%- endfor -%}
 					</div>
-					{%endfor%}
-				</div>
+					{%- endif -%}
+					{%- if paginate.pages > 1 -%}
+					<div class="pc-vblog__pagi">{% include 'paginate-pages' %}</div>
+					{%- endif -%}
+				{%- else -%}
+					<p class="pc-vblog__empty">{{ settings.news_empty_text | default: 'Chuyên mục đang cập nhật bài viết.' | escape }}</p>
+				{%- endif -%}
+				{% endpaginate %}
 
-				{%- comment -%}
-				  CMP-06 Multimedia Hub — 2026-10-12: lấy 4 bài mới nhất của blog Video (settings.video_blog_handle, giao diện
-				  blog.video) thay cho thẻ <video> mp4 từ metafield cũ (không phát được link YouTube/Facebook). Thẻ dùng chung
-				  snippets/video_card.bwt, bấm mở trang xem video. Blog Video trống ⇒ ẩn cả khối (không in lời nhắc nhập liệu).
-				{%- endcomment -%}
-				{%- assign pc_hub_blog = settings.video_blog_handle | default: 'video' -%}
-				{%- if blogs[pc_hub_blog].articles.size > 0 -%}
-				<section class="pc-vhub mb-10">
-					<div class="pc-vhub__head">
-						<h2 class="pc-vhub__title">{{ settings.video_hub_title | default: 'Video tư vấn' | escape }}</h2>
-						<a class="pc-vhub__more" href="{{ blogs[pc_hub_blog].url }}">{{ settings.video_hub_more_label | default: 'Xem tất cả video' | escape }}</a>
+				{%- comment -%} Khối Video tư vấn (2026-10-12): 4 bài mới nhất của blog Video, blog trống ⇒ ẩn. {%- endcomment -%}
+				{%- if blogs[pc_nb_vblog].articles.size > 0 -%}
+				<section class="pc-nsec pc-vhub">
+					<div class="pc-nsec__head">
+						<h2 class="pc-nsec__title">{{ settings.video_hub_title | default: 'Video tư vấn' | escape }}</h2>
+						<a class="pc-nsec__more" href="{{ blogs[pc_nb_vblog].url }}">{{ settings.video_hub_more_label | default: 'Xem tất cả video' | escape }}</a>
 					</div>
-					<div class="pc-vhub__grid">
+					<div class="pc-nvideo">
 						{%- assign pc_vc_layout = 'grid' -%}{%- assign pc_vc_heading = 'h3' -%}
-						{%- for pc_hub_item in blogs[pc_hub_blog].articles limit: 4 -%}
-						{%- assign pc_vc_article = pc_hub_item -%}
-						{% include 'video_card' %}
+						{%- for pc_hub_item in blogs[pc_nb_vblog].articles limit: 4 -%}
+						{%- assign pc_vc_article = pc_hub_item -%}{% include 'video_card' %}
 						{%- endfor -%}
 					</div>
 				</section>
 				{%- endif -%}
 
-				{%- comment -%}
-				  REOPEN 2026-09-11 — CMP: Consultation CTA Banner, khớp gap blog.html SECTION 8
-				  (dòng 2663-2679 file gốc). Đây là claim CHUNG (không gắn tên riêng) nên đổi
-				  "Bác Sĩ Da Liễu" → "Chuyên Gia Da Liễu" theo RULE-P0-02. Link thẳng tới trang
-				  đặt lịch tư vấn THẬT đã có (không gọi mops-gas riêng, tránh thêm 1 bề mặt backend
-				  mới ngoài phạm vi đã thống nhất với người dùng phiên này).
-				{%- endcomment -%}
-				<div class="rounded-2xl p-7 sm:p-9 mb-10 text-white" style="background: var(--color-brand-deep,#0F2318);">
-					<div class="flex items-center justify-between flex-wrap gap-8">
-						<div>
-							<h3 class="text-lg sm:text-xl font-bold font-heading mb-1.5">Nhận Tư Vấn Phác Đồ Trực Tiếp Từ Chuyên Gia Da Liễu</h3>
-							<p class="text-[13px]" style="color:rgba(255,255,255,0.75);">Gửi hình ảnh da và nhận phác đồ điều trị cá nhân hóa hoàn toàn miễn phí trong 24 giờ.</p>
-						</div>
-						<a href="/dat-lich-tu-van" class="inline-flex items-center justify-center text-xs font-bold py-3 px-6 rounded-md flex-shrink-0" style="background:#10B981; white-space:nowrap;">
-							Đăng Ký Tư Vấn Ngay
-						</a>
-					</div>
-				</div>
-
-				{% paginate blog.articles by settings.blogs_number_perpage %}
-				<div class="box_blog_list">
-					<div class="row list-news grid grid-cols-1 md:grid-cols-3 gap-6">
-						{% if blog.articles_count > 0 %}
-						{% for article in blog.articles %}
-						<div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 space-y-1 pc-blog-card">
-							{%include 'blog_item_all'%}
-						</div>
-						{% endfor %}
-						<div class="pagi-div col-span-full flex justify-center mt-4">
-							{% if paginate.pages > 1 %}
-							{% include 'paginate-pages' %}
-							{% endif %}
-						</div>
-						{%else%}
-						<div class="col-span-full">
-							<div class="pc-kit-badge-gold text-sm !inline-flex" role="alert">
-								Danh mục này đang cập nhật bài viết
-							</div>
-						</div>
-						{%endif%}
-					</div>
-				</div>
-				{% endpaginate %}
+				{% include 'news_cta' %}
 			</div>
-			{%if settings.right_asideblog_enable%}
-			<div class="lg:col-span-3 col-span-12">
-				{%- comment -%}
-				  REOPEN 2026-09-10 (ADR-007/T-74) — CMP-07 Taxonomy & Metadata filter bar. Dùng
-				  ĐÚNG settings.filter_tag1_list/filter_tag2_list đã cấu hình sẵn (configs/
-				  settings_data.json) thay vì bịa danh sách mới — tránh lặp lại lệch tag vocabulary
-				  đã ghi nhận ở known_gaps_m2_m3 (section_solutions.bwt vs filter_tag2_list thật).
-				{%- endcomment -%}
-				<div class="pc-cmp-taxonomy-filter mb-4">
-					<div class="pc-cmp-taxonomy-filter__title">Lọc theo chuyên khoa</div>
-					<div class="pc-cmp-taxonomy-filter__list">
-						{%- assign pc_tax_list = settings.filter_tag2_list | split: ';' -%}
-						{%- for item in pc_tax_list limit: 6 -%}
-						<label><input type="checkbox" disabled>{{ item | strip }}</label>
-						{%- endfor -%}
-					</div>
-					<div class="pc-cmp-taxonomy-filter__title">Tag phổ biến</div>
-					<div class="pc-cmp-taxonomy-filter__tags">
-						{%- assign pc_tag_cloud = settings.filter_tag1_list | split: ';' -%}
-						{%- for item in pc_tag_cloud limit: 8 -%}
-						<a href="/blogs/all/tagged/{{ item | strip | handleize }}" class="pc-cmp-taxonomy-filter__tag">#{{ item | strip }}</a>
-						{%- endfor -%}
-					</div>
-				</div>
-				<div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200">
-					{%include 'aside-blog'%}
-				</div>
-			</div>
-			{%endif%}
+			{%- if pc_nb_aside_txt != blank -%}
+			<aside class="pc-nblog__aside">{{ pc_nb_aside }}</aside>
+			{%- endif -%}
 		</div>
 	</div>
-</div>
-<div class="ab-module-article-mostview"></div>
-<style>
-	/* pc-blog-featured/pc-blog-small-item/pc-blog-card: chỉ bọc layout Tailwind bên ngoài các
-	   include blog_item_big/blog_item_all/aside-blog vốn đã có CSS riêng ở assets/page_blog.scss.bwt
-	   — không sửa markup bên trong các include đó (giữ nguyên lazyload/data binding gốc). */
-	.pc-blog-featured .blog-item-big,
-	.pc-blog-card .item-blog-all { margin-bottom: 0; }
-</style>
-<script>
-	var swipertopic = new Swiper('.swipertopic', {
-		slidesPerView: 5,
-		spaceBetween: 20,
-		breakpoints: {
-			300: {
-				slidesPerView: 1.4,
-				spaceBetween: 20
-			},
-			768: {
-				slidesPerView: 3.2,
-				spaceBetween: 20
-			},
-			1024: {
-				slidesPerView: 3.2,
-				spaceBetween: 20
-			},
-			1199: {
-				slidesPerView: 4.2,
-				spaceBetween: 20
-			}
-		}
-	});
-</script>
+</section>

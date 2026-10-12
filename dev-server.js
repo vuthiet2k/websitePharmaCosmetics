@@ -843,6 +843,7 @@ const PAGE_HANDLE_MAP = {
   'getglowing-micro-peel-ha-noi': 'page.getglowing-micro-peel',
   'spa-services':                'page.spa-services',
   'tra-cuu-hoat-chat':           'page.tra-cuu-hoat-chat',
+  'tin-tuc':                     'page.tin-tuc', // 2026-10-13: trang tổng tin tức (mọi danh mục bài viết)
 };
 
 // Tập hợp tất cả slug 1-segment mà chính menu điều hướng của site (data/

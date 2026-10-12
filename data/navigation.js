@@ -42,7 +42,7 @@ const linklists = {
         link('Kem mắt',           '/kem-mat-peptide-3d',   ''),
       ]),
       link('KHUYẾN MÃI', '/khuyen-mai', 'khuyen-mai', []),
-      link('BLOG', '/blogs/tin-tuc', '', []),
+      link('BLOG', '/tin-tuc', '', []), // 2026-10-13: trỏ trang tổng tin tức (page.tin-tuc) thay cho 1 danh mục
     ],
   },
 
