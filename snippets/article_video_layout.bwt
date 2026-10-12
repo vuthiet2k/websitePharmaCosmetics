@@ -1,0 +1,240 @@
+{% include 'breadcrumb' %}
+
+{%- comment -%} JSON-LD Schema cho Video & Bài viết {%- endcomment -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "VideoObject",
+  "name": {{ article.title | json }},
+  "description": {{ article.summary | default: article.title | strip_html | json }},
+  "thumbnailUrl": [
+    {%- if article.image != null -%}{{ article.image.src | img_url: '1024x1024' | json }}{%- else -%}"https://placehold.co/1280x720/13241F/ffffff?text=Video"{%- endif -%}
+  ],
+  "uploadDate": {{ article.published_on | date: '%Y-%m-%dT%H:%M:%S+07:00' | json }},
+  "author": {
+    "@type": "Organization",
+    "name": {{ article.author | default: store.name | json }}
+  }
+}
+</script>
+
+<div class="pc-video-watch-page py-6 sm:py-8 bg-slate-50 min-h-screen">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      {%- comment -%} ── CỘT CHÍNH (8 CỘT): KHUNG PLAYER RẠP CHIẾU, TIÊU ĐỀ & MÔ TẢ ── {%- endcomment -%}
+      <main class="lg:col-span-8 col-span-12 space-y-5">
+        
+        {%- comment -%} 1. Khung phát video Cinema 16:9 {%- endcomment -%}
+        <div class="w-full">
+          {% include 'video_embed' %}
+        </div>
+
+        {%- comment -%} 2. Tiêu đề video chuẩn YouTube {%- endcomment -%}
+        <div>
+          <div class="flex items-center gap-2 flex-wrap mb-2">
+            {%- for tag in article.tags -%}
+              {%- if tag contains 'chude:' -%}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                  #{{ tag | remove: 'chude:' }}
+                </span>
+              {%- endif -%}
+            {%- endfor -%}
+            {%- assign is_yt = false -%}
+            {%- assign is_fb = false -%}
+            {%- for tag in article.tags -%}
+              {%- if tag contains 'youtube:' or tag contains 'yt:' -%}{%- assign is_yt = true -%}{%- endif -%}
+              {%- if tag contains 'facebook:' or tag contains 'fb:' -%}{%- assign is_fb = true -%}{%- endif -%}
+            {%- endfor -%}
+            {%- if is_yt -%}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-red-600 text-white">
+                🔴 YouTube Video
+              </span>
+            {%- elsif is_fb -%}
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-blue-600 text-white">
+                🔵 Facebook Video
+              </span>
+            {%- endif -%}
+          </div>
+          <h1 class="text-xl sm:text-2xl md:text-3xl font-extrabold text-forest-900 font-heading leading-snug">
+            {{ article.title }}
+          </h1>
+        </div>
+
+        {%- comment -%} 3. Thanh thông tin kênh & nút hành động {%- endcomment -%}
+        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-emerald-800 text-white flex items-center justify-center font-bold font-heading text-lg flex-shrink-0 shadow-inner overflow-hidden border-2 border-emerald-100">
+              {%- if article.image != null -%}
+                <img src="{{ article.image.src | img_url: 'medium' }}" alt="{{ article.author | default: 'Pharma Cosmetics' }}" class="w-full h-full object-cover">
+              {%- else -%}
+                PC
+              {%- endif -%}
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="font-bold text-sm sm:text-base text-gray-900 font-heading">
+                  {{ article.author | default: 'Pharma Cosmetics' }}
+                </span>
+                <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <p class="text-xs text-gray-500">Chuyên gia Da liễu &amp; Dược mỹ phẩm chính hãng</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <a href="https://www.youtube.com/@pharmacosmetics?sub_confirmation=1" target="_blank" rel="noopener noreferrer" 
+               class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+              <span>Đăng Ký Kênh</span>
+            </a>
+            <a href="/dat-lich-tu-van" 
+               class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors">
+              <span>Tư Vấn 1:1</span>
+            </a>
+          </div>
+        </div>
+
+        {%- comment -%} 4. Hộp mô tả video chi tiết chuẩn phong cách YouTube {%- endcomment -%}
+        <div class="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-gray-100 pb-3 text-xs text-gray-500 font-medium">
+            <span>📅 Xuất bản ngày {{ article.published_on | date: 'dd/MM/yyyy' }}</span>
+            <div class="flex items-center gap-3">
+              <a href="https://www.facebook.com/sharer.php?u={{ store.url | append: article.url | url_encode }}" target="_blank" rel="noopener noreferrer" class="hover:text-blue-600 transition-colors">Chia sẻ Facebook</a>
+              <span>&bull;</span>
+              <a href="https://chat.zalo.me" target="_blank" rel="noopener noreferrer" class="hover:text-blue-500 transition-colors">Tư vấn Zalo</a>
+            </div>
+          </div>
+
+          {%- if article.summary != blank -%}
+            <div class="text-[14px] text-gray-700 leading-relaxed font-medium bg-emerald-50/50 p-3.5 rounded-xl border border-emerald-100">
+              💡 <strong>Tóm tắt nội dung:</strong> {{ article.summary | strip_html }}
+            </div>
+          {%- endif -%}
+
+          <div class="rte article-content-main text-sm sm:text-base text-gray-800 leading-relaxed space-y-3">
+            {{ article.content }}
+          </div>
+
+          <div class="pt-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+            <span>Danh mục: <a href="{{ blog.url }}" class="text-emerald-700 font-bold hover:underline">{{ blog.name }}</a></span>
+            <span>Nền tảng Dược mỹ phẩm Pharma Cosmetics</span>
+          </div>
+        </div>
+
+        {%- comment -%} 5. Form bình luận và câu hỏi chuyên gia {%- endcomment -%}
+        <div class="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200 shadow-sm space-y-4">
+          <h3 class="text-lg font-bold font-heading text-forest-900 flex items-center gap-2">
+            <span>💬 Đặt câu hỏi cho Chuyên gia</span>
+            {%- if article.comments_count > 0 -%}
+              <span class="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">({{ article.comments_count }})</span>
+            {%- endif -%}
+          </h3>
+          <p class="text-xs text-gray-500">Mọi thắc mắc về phác đồ và hoạt chất nhắc đến trong video sẽ được Dược sĩ chuyên môn giải đáp miễn phí trong 24 giờ.</p>
+
+          {%- if blog.comments_enabled -%}
+            <form method="post" action="{{ article.url }}#comments" class="space-y-3 pt-2">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input type="text" name="comment[author]" placeholder="Họ và tên của bạn" required class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:border-emerald-600">
+                <input type="email" name="comment[email]" placeholder="Email nhận phản hồi" required class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:border-emerald-600">
+              </div>
+              <textarea name="comment[body]" rows="3" placeholder="Nhập câu hỏi hoặc tình trạng da của bạn..." required class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:border-emerald-600"></textarea>
+              <div class="flex justify-end">
+                <button type="submit" class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-colors shadow-sm">
+                  Gửi Câu Hỏi Tư Vấn
+                </button>
+              </div>
+            </form>
+          {%- endif -%}
+        </div>
+
+      </main>
+
+      {%- comment -%} ── CỘT PHỤ (4 CỘT): DANH SÁCH VIDEO TIẾP THEO (SIDEBAR CHUẨN YOUTUBE) ── {%- endcomment -%}
+      <aside class="lg:col-span-4 col-span-12 space-y-6">
+        
+        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200 shadow-sm">
+          <div class="flex items-center justify-between mb-4 pb-2 border-b border-gray-100">
+            <h3 class="text-sm font-bold font-heading text-forest-900 flex items-center gap-1.5 uppercase tracking-wide">
+              <span>🎬 Video Đề Xuất</span>
+            </h3>
+            <a href="{{ blog.url }}" class="text-xs text-emerald-700 font-semibold hover:underline">Xem tất cả →</a>
+          </div>
+
+          <div class="space-y-3">
+            {%- assign side_video_count = 0 -%}
+            {%- for rel_article in blog.articles -%}
+              {%- if rel_article.id != article.id and side_video_count < 8 -%}
+                {%- assign side_video_count = side_video_count | plus: 1 -%}
+                
+                {%- assign rel_dur = '' -%}
+                {%- assign rel_is_yt = false -%}
+                {%- assign rel_is_fb = false -%}
+                {%- for rtag in rel_article.tags -%}
+                  {%- if rtag contains 'thoiluong:' -%}{%- assign rel_dur = rtag | remove: 'thoiluong:' -%}{%- endif -%}
+                  {%- if rtag contains 'youtube:' or rtag contains 'yt:' -%}{%- assign rel_is_yt = true -%}{%- endif -%}
+                  {%- if rtag contains 'facebook:' or rtag contains 'fb:' -%}{%- assign rel_is_fb = true -%}{%- endif -%}
+                {%- endfor -%}
+
+                <a href="{{ rel_article.url }}" class="flex gap-3 group p-1.5 rounded-xl hover:bg-slate-50 transition-colors">
+                  <div class="w-32 sm:w-36 aspect-video rounded-lg overflow-hidden bg-slate-900 flex-shrink-0 relative">
+                    {%- if rel_article.image != null -%}
+                      <img src="{{ rel_article.image.src | img_url: 'medium' }}" alt="{{ rel_article.title | escape }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    {%- else -%}
+                      <div class="w-full h-full flex items-center justify-center text-slate-500 text-lg font-bold">▶</div>
+                    {%- endif -%}
+                    
+                    {%- if rel_dur != '' -%}
+                      <span class="absolute bottom-1 right-1 bg-black/80 text-white text-[9px] font-bold px-1 py-0.5 rounded">
+                        {{ rel_dur }}
+                      </span>
+                    {%- endif -%}
+                    
+                    {%- if rel_is_yt -%}
+                      <span class="absolute top-1 left-1 bg-red-600 text-white text-[8px] font-black px-1 rounded">YT</span>
+                    {%- elsif rel_is_fb -%}
+                      <span class="absolute top-1 left-1 bg-blue-600 text-white text-[8px] font-black px-1 rounded">FB</span>
+                    {%- endif -%}
+                  </div>
+
+                  <div class="min-w-0 flex-1 flex flex-col justify-center">
+                    <h4 class="text-xs font-bold text-gray-900 group-hover:text-emerald-700 line-clamp-2 leading-snug">
+                      {{ rel_article.title }}
+                    </h4>
+                    <span class="text-[11px] text-gray-500 mt-1 truncate">
+                      {{ rel_article.author | default: 'Pharma Cosmetics' }}
+                    </span>
+                    <span class="text-[10px] text-gray-400 mt-0.5">
+                      {{ rel_article.published_on | date: 'dd/MM/yyyy' }}
+                    </span>
+                  </div>
+                </a>
+
+              {%- endif -%}
+            {%- endfor -%}
+
+            {%- if side_video_count == 0 -%}
+              <p class="text-xs text-gray-400 py-3 text-center">Đang cập nhật thêm video cùng chuyên mục...</p>
+            {%- endif -%}
+          </div>
+        </div>
+
+        {%- comment -%} Banner đặt lịch khám / tư vấn da trực tiếp {%- endcomment -%}
+        <div class="rounded-2xl p-5 text-white shadow-md relative overflow-hidden" style="background: var(--color-brand-deep, #0F2318);">
+          <div class="relative z-10">
+            <span class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400">Tư Vấn Miễn Phí</span>
+            <h4 class="text-base font-extrabold font-heading mt-1 mb-2">Phác Đồ Da Liễu Cá Nhân Hóa 1:1</h4>
+            <p class="text-xs text-slate-300 leading-relaxed mb-4">Nhận tư vấn trực tiếp từ Chuyên gia Da liễu về các sản phẩm và liệu trình nhắc đến trong video.</p>
+            <a href="/dat-lich-tu-van" class="inline-flex items-center justify-center w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors shadow">
+              Đặt Lịch Hẹn Ngay →
+            </a>
+          </div>
+        </div>
+
+      </aside>
+
+    </div>
+  </div>
+</div>
