@@ -2663,6 +2663,170 @@ section.blogpage { background: #f4f8f5; padding-bottom: 32px; }
   .pc-avideo__list li { scroll-snap-align: start; }
 }
 
+/* ══ 2026-10-13: Danh mục Video (templates/blog.video.bwt) bố cục trang kênh YouTube theo mẫu khách gửi — nền trắng,
+   đầu kênh, tab, hàng cuộn ngang, lưới 4 cột thẻ .pc-vcard--yt. Màu nhấn theo brand thay cho đen/đỏ của YouTube. ══ */
+.pc-ytc { padding: 28px 0 48px; background: white; }
+.pc-ytc__head { display: flex; align-items: center; gap: 28px; margin-bottom: 20px; }
+.pc-ytc__avatar {
+  flex-shrink: 0;
+  width: 160px;
+  height: 160px;
+  padding: 26px;
+  border: 1px solid #e3ebe6;
+  border-radius: 50%;
+  background: #f4f8f5;
+  object-fit: contain;
+}
+.pc-ytc__info { min-width: 0; }
+.pc-ytc__name { margin: 0 0 8px; font-size: 34px; font-weight: 700; line-height: 1.2; color: var(--pc-brand-deep); }
+.pc-ytc__line { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 8px; font-size: 14px; color: var(--color-text-muted); }
+.pc-ytc__line span:first-child { font-weight: 600; color: var(--color-text-main); }
+.pc-ytc__line span + span::before { margin-right: 4px; content: "•"; }
+.pc-ytc__desc { max-width: 720px; margin: 0 0 8px; font-size: 14px; line-height: 1.55; color: var(--color-text-body); }
+.pc-ytc__links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: var(--color-text-muted);
+  a { font-weight: 600; color: var(--pc-brand-primary); }
+}
+.pc-ytc__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.pc-ytc__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: #eef3f0;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--pc-brand-deep);
+  text-decoration: none;
+  transition: background var(--dur-fast) var(--ease-out);
+  &:hover { background: #dfe9e3; color: var(--pc-brand-deep); text-decoration: none; }
+}
+.pc-ytc__btn--sub { background: var(--pc-brand-deep); color: white; &:hover { background: var(--pc-brand-secondary); color: white; } }
+
+/* Tab */
+.pc-ytc__tabs { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid #e3ebe6; }
+.pc-ytc__tablist { display: flex; gap: 4px; min-width: 0; overflow-x: auto; scrollbar-width: none; &::-webkit-scrollbar { display: none; } }
+.pc-ytc__tab {
+  flex-shrink: 0;
+  padding: 12px 14px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  &:hover { color: var(--pc-brand-deep); }
+  &[aria-pressed="true"] { border-bottom-color: var(--pc-brand-primary); color: var(--pc-brand-deep); }
+}
+.pc-ytc__search { display: flex; flex-shrink: 0; align-items: center; gap: 4px; }
+.pc-ytc__search-btn {
+  display: inline-flex;
+  padding: 8px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  &:hover { background: #eef3f0; color: var(--pc-brand-deep); }
+}
+.pc-ytc__search-input {
+  width: 200px;
+  padding: 6px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--pc-brand-deep);
+  outline: 0;
+  background: none;
+  font-size: 14px;
+  &[hidden] { display: none; }
+}
+
+/* Hàng "mới nhất" + lưới */
+.pc-ytc__title { margin: 0 0 14px; font-size: 20px; font-weight: 700; color: var(--pc-brand-deep); }
+.pc-ytc__shelf { margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid #e3ebe6; &[hidden] { display: none; } }
+.pc-ytc__rowwrap { position: relative; }
+.pc-ytc__row {
+  display: grid;
+  grid-auto-columns: calc((100% - 32px) / 3);
+  grid-auto-flow: column;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+.pc-ytc__rowcell { scroll-snap-align: start; }
+.pc-ytc__arrow {
+  position: absolute;
+  top: calc((100% - 70px) / 2);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+  color: var(--pc-brand-deep);
+  cursor: pointer;
+  &[hidden] { display: none; }
+  &:hover { background: #eef3f0; }
+}
+.pc-ytc__arrow--prev { left: -20px; }
+.pc-ytc__arrow--next { right: -20px; }
+.pc-ytc__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px 16px; }
+
+/* Thẻ kiểu YouTube */
+.pc-vcard--yt {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  &:hover { box-shadow: none; transform: none; }
+  .pc-vcard__media { border-radius: 12px; }
+  .pc-vcard__src { display: none; }
+  .pc-vcard__play { opacity: 0; transition: opacity var(--dur-fast) var(--ease-out); }
+  &:hover .pc-vcard__play { opacity: 1; }
+  .pc-vcard__dur { right: 6px; bottom: 6px; padding: 1px 5px; border-radius: 4px; background: rgba(0, 0, 0, .8); font-size: 12px; font-weight: 600; }
+  .pc-vcard__body { gap: 4px; padding: 10px 0 0; }
+  .pc-vcard__title { font-size: 15px; line-height: 1.4; }
+  .pc-vcard__meta { margin-top: 0; font-size: 12.5px; }
+  .pc-vcard__meta span::before { margin-right: 6px; content: "•"; }
+}
+
+@media (max-width: 1199px) {
+  .pc-ytc__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .pc-ytc__arrow--prev { left: 4px; }
+  .pc-ytc__arrow--next { right: 4px; }
+}
+@media (max-width: 767px) {
+  .pc-ytc { padding-top: 16px; }
+  .pc-ytc__head { align-items: flex-start; gap: 16px; }
+  .pc-ytc__avatar { width: 72px; height: 72px; padding: 12px; }
+  .pc-ytc__name { font-size: 24px; }
+  .pc-ytc__row { grid-auto-columns: 78%; }
+  .pc-ytc__arrow { display: none; }
+  .pc-ytc__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 12px; }
+  .pc-ytc__search-input { width: 130px; }
+  .pc-ytc__btn { height: 36px; padding: 0 14px; font-size: 13px; }
+}
+@media (max-width: 575px) {
+  .pc-ytc__grid { grid-template-columns: minmax(0, 1fr); }
+  .pc-ytc__actions .pc-ytc__btn { flex: 1; justify-content: center; }
+}
+
 /* ══ 2026-10-13: Trang tổng tin tức (templates/page.tin-tuc.bwt: khối cổng tin theo mẫu khách gửi, khối chuyên mục
    theo design/blog.html) + trang 1 danh mục (templates/blog.bwt). Dùng lại .pc-vblog__head / .pc-vfeat /
    .pc-vfilter của khối Video ở trên; thẻ bài .pc-acard ở assets/comp_article_card.scss.bwt. ══ */

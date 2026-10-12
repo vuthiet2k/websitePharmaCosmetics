@@ -510,6 +510,10 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
   YouTube/Facebook trực tiếp trong template. Ảnh bìa: ảnh đại diện bài ⇒ `i.ytimg.com/vi/<mã>/…` ⇒ placeholder.
 - Bài viết thường gắn tag `youtube:`/`facebook:` ⇒ khối "Video hướng dẫn" trước nội dung (`article_video_block.bwt`):
   tag đầu = video chính, tag sau = video bổ trợ (tên lấy từ bài cùng mã trong blog `video_blog_handle`).
+- `blog.video.bwt` (2026-10-13) bố cục trang kênh YouTube theo mẫu khách gửi (`.pc-ytc`): đầu kênh (ảnh `favicon.png`,
+  tên blog, `@kênh` tách từ `video_youtube_url`, số video, `video_intro`, link Fanpage, nút Đăng ký `?sub_confirmation=1`)
+  → tab Trang chủ + chủ đề `chude:` + nguồn (khi có cả YT/FB) + ô tìm trong trang → hàng cuộn "mới nhất" (trang 1) →
+  lưới 4 cột thẻ `video_card` kiểu `yt`. Không breadcrumb, không hiện lượt xem/số người đăng ký (không có dữ liệu thật).
 - Khối Video ở `templates/blog.bwt` (.pc-vhub) = 4 bài mới nhất của blog `video_blog_handle`; blog trống ⇒ ẩn khối.
 - JSON-LD `VideoObject` ở `article.video.bwt` (duration ISO từ `thoiluong:`). Không có link video Facebook thật ⇒ demo
   chỉ có YouTube; không bịa link Facebook.

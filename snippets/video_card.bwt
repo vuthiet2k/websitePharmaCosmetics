@@ -1,7 +1,8 @@
 {%- comment -%}
   video_card.bwt (2026-10-12, danh mục bài viết Video) — thẻ 1 bài video: ảnh bìa 16:9 + nút Play, nhãn nguồn
   (YouTube/Facebook), thời lượng (tag thoiluong:), chủ đề (tag chude:), tiêu đề, ngày đăng. Bấm thẻ mở trang xem video.
-  Đầu vào: pc_vc_article, pc_vc_layout ('grid' = lưới trang danh mục | 'row' = thẻ ngang ở cột "Video đề xuất"),
+  Đầu vào: pc_vc_article, pc_vc_layout ('grid' = lưới thẻ có khung | 'row' = thẻ ngang ở cột "Video đề xuất" |
+  'yt' = thẻ kiểu YouTube ở templates/blog.video.bwt: ảnh bo góc + thời lượng, chủ đề nằm ở dòng ngày),
   pc_vc_heading ('h3' mặc định). Thuộc tính data-pc-vfilter phục vụ bộ lọc chủ đề/nguồn ở templates/blog.video.bwt.
 {%- endcomment -%}
 {%- assign pc_vs_article = pc_vc_article -%}
@@ -20,11 +21,11 @@
 		{%- if pc_vs_dur != blank -%}<span class="pc-vcard__dur">{{ pc_vs_dur | escape }}</span>{%- endif -%}
 	</a>
 	<div class="pc-vcard__body">
-		{%- if pc_vs_topic != blank and pc_vc_layout != 'row' -%}<span class="pc-vcard__topic">{{ pc_vs_topic | escape }}</span>{%- endif -%}
+		{%- if pc_vs_topic != blank and pc_vc_layout != 'row' and pc_vc_layout != 'yt' -%}<span class="pc-vcard__topic">{{ pc_vs_topic | escape }}</span>{%- endif -%}
 		<{{ pc_vc_h }} class="pc-vcard__title"><a href="{{ pc_vc_article.url }}">{{ pc_vc_article.title | escape }}</a></{{ pc_vc_h }}>
 		<div class="pc-vcard__meta">
 			<time datetime="{{ pc_vc_article.published_on | date: 'yyyy-MM-dd' }}">{{ pc_vc_article.published_on | date: 'dd/MM/yyyy' }}</time>
-			{%- if pc_vc_layout == 'row' and pc_vs_topic != blank -%}<span>{{ pc_vs_topic | escape }}</span>{%- endif -%}
+			{%- if pc_vc_layout != 'grid' and pc_vc_layout != blank and pc_vs_topic != blank -%}<span>{{ pc_vs_topic | escape }}</span>{%- endif -%}
 		</div>
 	</div>
 </article>
