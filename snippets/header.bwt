@@ -73,6 +73,15 @@
 									</button>
 								</div>
 								<div class="row">
+									{%- comment -%} 2026-10-13 (người dùng): thanh menu khi cuộn (.hSticky, desktop) thiếu logo + giỏ hàng ⇒ thêm bản gọn,
+									  chỉ hiện ở trạng thái sticky (storefront-v3.css). Số lượng giỏ dùng chung class .count_item_pr ⇒ ajaxcart tự cập nhật. {%- endcomment -%}
+									<a href="/" class="pc-sticky-logo" title="{{ settings.store_name | default: store.name | escape }}" tabindex="-1">
+										{%- if settings.header_logo_use_image != false -%}
+										<img src="{{ 'logo.png' | asset_url }}" width="313" height="77" alt="{{ settings.store_name | default: store.name | escape }}" loading="lazy">
+										{%- else -%}
+										<img class="pc-logo-root" src="{{ 'PharmaCosmetics.svg' | asset_url }}" width="341" height="70" alt="{{ settings.store_name | default: store.name | escape }}" loading="lazy">
+										{%- endif -%}
+									</a>
 									{%- comment -%} 2026-10-07: nút Danh mục (megamenu) bật/tắt bằng display_megamenu; menu riêng ở header_nav_cate. {%- endcomment -%}
 									{%- if settings.display_megamenu -%}
 									<div class="col-lg-2 col-sm-12 col-xs-12 col-12 sudes-cate-header">
@@ -107,6 +116,10 @@
 										</div>
 										{%endif%}
 									</div>
+									<a href="/cart" class="pc-sticky-cart" aria-label="Giỏ hàng" title="Giỏ hàng" tabindex="-1">
+										<i class="fas fa-cart-shopping" aria-hidden="true"></i>
+										<span class="count_item count_item_pr{% if cart.item_count == 0 %} hidden-count{% endif %}">{{ cart.item_count }}</span>
+									</a>
 
 								</div>
 												<ul class="md-hidden mb-drawer-secondary">
