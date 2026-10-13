@@ -57,18 +57,20 @@ test('hero swiper: mỗi slide ảnh + text + nút, 1 ảnh chung mọi màn hì
   expect(await heroImages.evaluateAll(images => images.every(img => img.alt && img.getAttribute('width') === '1920' && img.getAttribute('height') === '1080'))).toBeTruthy();
   const lcpSource = await heroImages.nth(0).getAttribute('data-hero-source');
   await expect(page.locator('link[rel="preload"][as="image"][fetchpriority="high"]')).toHaveAttribute('href', lcpSource);
-  await expect(hero.locator('.swiper-slide-active .portal-hero__image')).toHaveCSS('animation-name', 'pc-hero-kenburns');
+  // a407e08: zoom + lia chạy hết mỗi slide (pc-hero-kb-in, slide chẵn kb-out).
+  await expect(hero.locator('.swiper-slide-active .portal-hero__image')).toHaveCSS('animation-name', /pc-hero-kb-(in|out)/);
 
   const slider = hero.locator('.portal-hero__media');
   const motion = await slider.evaluate(el => ({ effect: el.swiper.params.effect, speed: el.swiper.params.speed, delay: el.swiper.params.autoplay.delay, loop: el.swiper.params.loop }));
-  expect(motion).toEqual({ effect: 'fade', speed: 700, delay: 5000, loop: false });
+  expect(motion).toEqual({ effect: 'fade', speed: 1000, delay: Math.max(4000, Number(settings.home_hero_delay) || 5000), loop: false });
   await hero.locator('[data-hero-prev]').click();
   await expect.poll(() => slider.evaluate(el => el.swiper.activeIndex)).toBe(2);
   await hero.locator('[data-hero-next]').click();
   await expect.poll(() => slider.evaluate(el => el.swiper.activeIndex)).toBe(0);
-  await page.mouse.move(0, 0);
-  await expect.poll(() => slider.evaluate(el => el.swiper.autoplay.running)).toBe(true);
+  // a407e08: rê chuột không dừng (Hero 100vh ⇒ chuột luôn nằm trên); chỉ dừng khi focus bàn phím.
   await hero.hover();
+  await expect.poll(() => slider.evaluate(el => el.swiper.autoplay.running)).toBe(true);
+  await hero.locator('.swiper-slide-active .portal-hero__btn').focus();
   await expect.poll(() => slider.evaluate(el => el.swiper.autoplay.running)).toBe(false);
   expect(errors).toEqual([]);
 });
