@@ -1,6 +1,8 @@
 {%- comment -%} section_product_viewed.bwt — Sản phẩm đã xem gần đây {%- endcomment -%}
 
-<div class="section-recenview-product pc-section section--subtle pc-viewed-products">
+{%- comment -%} 2026-10-14: ẩn mặc định (d-none) — chỉ hiện khi JS nạp được ít nhất 1 sản phẩm,
+   tránh hiện tiêu đề + 2 nút ‹ › trơ trọi khi khách chưa xem sản phẩm nào. {%- endcomment -%}
+<div class="section-recenview-product pc-section section--subtle pc-viewed-products d-none">
   <div class="container">
 
     <div class="pc-viewed__header pc-featured__header">
@@ -159,8 +161,9 @@ $(document).ready(function() {
        vòng lặp (vd 2 sản phẩm liên tiếp lỗi thì lần splice thứ 2 xoá nhầm phần tử), khiến
        localStorage bị ghi sai và có thể mất luôn sản phẩm còn hợp lệ. Lọc bằng filter() theo
        đúng index tương ứng — không sửa mảng khi đang duyệt nó. */
+    var appended_count = 0;
     values.forEach(function(v) {
-      if (v !== '') { $('.swiper_viewed .swiper-wrapper').append(v); }
+      if ($.trim(v) !== '') { $('.swiper_viewed .swiper-wrapper').append(v); appended_count++; }
     });
     /* 2026-10-03: KHÔNG ghi đè bằng bản đọc lúc đầu — product.bwt thêm sản phẩm đang xem vào
        localStorage cùng lúc (document.ready) trước khi ajax xong, ghi đè bản cũ làm mất sản phẩm
@@ -176,6 +179,8 @@ $(document).ready(function() {
       });
       localStorage.setItem('last_viewed_products', JSON.stringify(latest_viewed));
     }
+    /* Không có sản phẩm nào nạp được → giữ section ẩn, bỏ qua khởi tạo Swiper. */
+    if (!appended_count) return;
     $('.section-recenview-product').removeClass('d-none');
 
     setTimeout(function() {
