@@ -170,6 +170,10 @@ dữ liệu Admin đã lưu trong `settings_data.json`.
 | 11 | Mạng xã hội + Đặt lịch | `section_portal_social.bwt` | `portal_social_*`, `portal_booking_*`, `store_name` |
 | 12 | Đăng ký bản tin | `section_portal_newsletter.bwt` | `portal_newsletter_*` |
 
+**Hero + header trang chủ (chốt 2026-10-13):** Hero cao 100vh/100svh; khi Hero là section đầu, header (topbar + hàng logo/menu) đè lên ảnh,
+nền trong suốt, chữ/icon trắng; hover/focus header hoặc cuộn (`.main-header.is-scrolled`, desktop `.hSticky`) ⇒ trở lại nền gốc.
+CSS ở `assets/home-portal.css` (khối "HEADER TRONG SUỐT TRÊN HERO"), chỉ áp `body.pc-home-v3`.
+
 Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design token (`storefront_theme.bwt`,
 `theme_{main_color,forest_color,secondary_green,dark_color,page_background}`), khung section
 (`home_portal.bwt`, `home_section_1..18`).

@@ -122,7 +122,8 @@ html:has(.pc-home-v3){scroll-behavior:smooth}
 /* HERO 2026-10-13 (theo ảnh mẫu, snippets/section_hero.bwt): swiper ảnh toàn khổ, chung 1 ảnh mọi màn hình
    (object-fit:cover, chiều cao theo bề ngang); text + nút nằm giữa phía dưới mỗi slide, scrim nhẹ ở đáy để đọc rõ. */
 .pc-home-v3 .pc-portal .hero{position:relative;padding:0;overflow:hidden;background:var(--dark)}
-.pc-home-v3 .pc-portal .portal-hero__media{position:relative;width:100%;height:clamp(420px,46vw,760px);overflow:hidden}
+/* 2026-10-13 (người dùng yêu cầu): Hero cao đúng 1 màn hình (100vh; svh cho mobile để không bị thanh địa chỉ che), header trong suốt đè lên — xem khối HEADER TRONG SUỐT bên dưới. */
+.pc-home-v3 .pc-portal .portal-hero__media{position:relative;width:100%;height:100vh;height:100svh;min-height:420px;overflow:hidden}
 .pc-home-v3 .pc-portal .portal-hero__media .swiper-wrapper,.pc-home-v3 .pc-portal .portal-hero__media .swiper-slide{width:100%;height:100%!important}
 .pc-home-v3 .pc-portal .portal-hero__slide{position:relative}
 .pc-home-v3 .pc-portal .portal-hero__slide::after{content:"";position:absolute;inset:auto 0 0;height:45%;background:linear-gradient(to top,rgba(0,20,15,.45),rgba(0,20,15,0));pointer-events:none}
@@ -158,14 +159,30 @@ html:has(.pc-home-v3){scroll-behavior:smooth}
 .pc-home-v3 .pc-portal .portal-hero__pause:hover{background:rgba(0,46,35,.72)}
 .pc-home-v3 .pc-portal .portal-hero__pause svg[hidden]{display:none}
 .pc-home-v3 .pc-portal .portal-hero__sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
-@media (max-width:991px){.pc-home-v3 .pc-portal .portal-hero__media{height:clamp(360px,62vw,560px)}}
 @media (max-width:767px){
-  .pc-home-v3 .pc-portal .portal-hero__media{height:clamp(320px,92vw,480px)}
   .pc-home-v3 .pc-portal .portal-hero__caption{bottom:44px}
   .pc-home-v3 .pc-portal .portal-hero__pause{right:16px;bottom:12px;width:36px;height:36px}
   .pc-home-v3 .pc-portal .portal-hero__nav{display:none}
   .pc-home-v3 .pc-portal .portal-hero__btn{padding:10px 22px;font-size:13px}
 }
+/* HEADER TRONG SUỐT TRÊN HERO 2026-10-13 (người dùng yêu cầu): trang chủ có Hero là section đầu ⇒ header (topbar + hàng logo/menu)
+   nằm đè lên ảnh, nền trong suốt, chữ/icon trắng. Rê chuột / focus vào header, hoặc cuộn trang (.main-header.is-scrolled — footer_script.bwt,
+   >10px; desktop .hSticky — header.bwt) ⇒ trở lại nền gốc. position:absolute + top:auto giữ header đúng chỗ tĩnh (dưới banner-top nếu bật)
+   nhưng không chiếm chỗ ⇒ Hero bắt đầu từ mép trên màn hình. Không có :has (trình duyệt cũ) ⇒ header thường, Hero vẫn 100vh. */
+body.pc-home-v3:has(#portal-main > #section_hero:first-child) header.header{position:absolute;top:auto;left:0;right:0}
+@media (max-width:991px){body.pc-home-v3:not(.pc-mh-sticky):has(#portal-main > #section_hero:first-child) header.header .main-header{position:relative;z-index:100}}
+body.pc-home-v3 header.header .main-header,body.pc-home-v3 header.header .pc-topbar,body.pc-home-v3 header.header .box-hearder{transition:background-color .3s ease,box-shadow .3s ease}
+body.pc-home-v3:has(#portal-main > #section_hero:first-child) header.header:not(:hover):not(:focus-within):not(.hSticky) .main-header:not(.is-scrolled){background:transparent!important;box-shadow:none!important}
+body.pc-home-v3:has(#portal-main > #section_hero:first-child) header.header:not(:hover):not(:focus-within):not(.hSticky) .main-header:not(.is-scrolled) .pc-topbar{background:transparent!important;box-shadow:inset 0 -1px 0 rgba(255,255,255,.18)}
+body.pc-home-v3:has(#portal-main > #section_hero:first-child) header.header:not(:hover):not(:focus-within):not(.hSticky) .main-header:not(.is-scrolled) .box-hearder{background:transparent!important;box-shadow:none!important;border-color:transparent!important}
+body.pc-home-v3:has(#portal-main > #section_hero:first-child) header.header:not(:hover):not(:focus-within):not(.hSticky) .main-header:not(.is-scrolled) .header-logo .pc-logo-master-img{filter:brightness(0) invert(1)}
+body.pc-home-v3:has(#portal-main > #section_hero:first-child) header.header:not(:hover):not(:focus-within):not(.hSticky) .main-header:not(.is-scrolled) .header-right :is(a,button,.box-icon,i){color:#fff!important}
+@media (min-width:992px){
+  body.pc-home-v3:has(#portal-main > #section_hero:first-child) header.header:not(:hover):not(:focus-within):not(.hSticky) .main-header:not(.is-scrolled) .header-menu{background:transparent!important;box-shadow:none!important}
+  body.pc-home-v3:has(#portal-main > #section_hero:first-child) header.header:not(:hover):not(:focus-within):not(.hSticky) .main-header:not(.is-scrolled) #nav > .nav-item > .nav-link{color:#fff!important}
+}
+/* Dải tối mờ ở mép trên Hero để chữ/icon trắng của header luôn đọc rõ trên ảnh sáng. */
+.pc-home-v3 .pc-portal .hero::before{content:"";position:absolute;z-index:2;inset:0 0 auto;height:200px;background:linear-gradient(to bottom,rgba(0,20,15,.55),rgba(0,20,15,0));pointer-events:none}
 /* AI-GUIDE 2026-09-20 (phase home-shopping-ux, C02): khối hướng dẫn Quiz da AI ngay sau Hero. */
 .pc-home-v3 .pc-portal .pc-ai-guide{background:var(--bg);border-bottom:1px solid var(--line)}
 .pc-home-v3 .pc-portal .pc-ai-guide .wrap{padding:44px var(--pc-container-gutter,32px);display:flex;align-items:center;justify-content:space-between;gap:40px;flex-wrap:wrap}
