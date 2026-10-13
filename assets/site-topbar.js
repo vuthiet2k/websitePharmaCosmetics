@@ -4,18 +4,10 @@
   if (!root || root.dataset.initialized) return;
   root.dataset.initialized = 'true';
   var slider = root.querySelector('.topbar-slider');
-  var pause = root.querySelector('[data-topbar-pause]');
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var paused = root.dataset.autoplay === 'false' || reduceMotion;
   var delay = Math.max(3500, Number(root.dataset.delay) || 4000);
   var swiper;
-  function updatePause() {
-    if (!pause) return;
-    pause.setAttribute('aria-pressed', String(paused));
-    pause.setAttribute('aria-label', paused ? 'Chạy thông báo' : 'Tạm dừng thông báo');
-    pause.querySelector('[data-icon-pause]').hidden = paused;
-    pause.querySelector('[data-icon-play]').hidden = !paused;
-  }
   if (slider && slider.querySelectorAll('.swiper-slide').length > 1 && typeof Swiper === 'function') {
     swiper = new Swiper(slider, {
       slidesPerView: 1,
@@ -25,19 +17,9 @@
       autoplay: paused ? false : { delay: delay, disableOnInteraction: false },
       a11y: { enabled: true },
     });
-    if (pause) pause.addEventListener('click', function () {
-      paused = !paused;
-      if (paused) swiper.autoplay.stop();
-      else {
-        swiper.params.autoplay = { delay: delay, disableOnInteraction: false };
-        swiper.autoplay.start();
-      }
-      updatePause();
-    });
     slider.addEventListener('mouseenter', function () { swiper.autoplay.stop(); });
     slider.addEventListener('mouseleave', function () { if (!paused) swiper.autoplay.start(); });
   }
-  updatePause();
 
   var langButton = root.querySelector('#langBtn');
   var langList = root.querySelector('#langList');

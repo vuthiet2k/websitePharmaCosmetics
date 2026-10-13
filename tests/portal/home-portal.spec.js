@@ -37,7 +37,7 @@ test('hero swiper: mỗi slide ảnh + text + nút, 1 ảnh chung mọi màn hì
   const hero = page.locator('[data-portal-hero]');
   expect(await hero.evaluate(el => el.getBoundingClientRect().height)).toBeGreaterThanOrEqual(420);
   await expect(hero.locator('h1')).toHaveCount(1);
-  await expect(hero.locator('h1')).toHaveCSS('color', 'rgb(255, 255, 255)');
+  await expect(hero.locator('h1')).toHaveCSS('color', 'rgba(255, 255, 255, 0.82)'); // text "chìm" theo ảnh mẫu
   await expect(hero.locator('h1')).toHaveText(settings.home_hero_title);
   const cta = hero.locator('.swiper-slide-active .portal-hero__btn');
   await expect(cta).toHaveAttribute('href', settings.home_hero_btn1_url);
@@ -90,6 +90,9 @@ test('topbar keeps accessible contrast, vector icons and a readable vertical tic
   await page.setViewportSize({ width: 1920, height: 1080 });
   const errors = await openHome(page);
   const topbar = page.locator('.pc-topbar');
+  // edd746c (2026-10-13): trang chủ có Hero đầu ⇒ header/topbar trong suốt đè lên ảnh; rê chuột vào header ⇒ về nền gốc.
+  await expect(topbar).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  await page.locator('header.header').hover();
   await expect(topbar).toHaveCSS('background-color', 'rgb(60, 179, 113)');
   await expect(topbar).toHaveCSS('color', 'rgb(255, 255, 255)');
   await expect(topbar).toHaveCSS('font-weight', '600');
@@ -133,7 +136,7 @@ test('topbar disables autoplay and animation when reduced motion is requested', 
     running: el.swiper.autoplay.running,
   }));
   expect(ticker).toEqual({ speed: 0, running: false });
-  await expect(page.locator('[data-topbar-pause]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('[data-topbar-pause]')).toHaveCount(0); // 2026-10-13: đã bỏ nút pause topbar
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
   await expect(page.locator('.pc-topbar__phone')).toBeHidden();
   await expect(page.locator('.topbar-account')).toBeHidden();
@@ -148,6 +151,9 @@ test('desktop header is compact, token-consistent and opaque while sticky', asyn
   const mainRow = header.locator('.pc-header-row');
   expect(await mainRow.evaluate(el => el.getBoundingClientRect().height)).toBe(68);
 
+  // edd746c (2026-10-13): ở đầu trang chủ header trong suốt, icon trắng; hover ⇒ về màu token gốc.
+  await expect(header.locator('.header-action-search')).toHaveCSS('color', 'rgb(255, 255, 255)');
+  await header.hover();
   const interactiveColors = await header.evaluate(el => [
     el.querySelector('.pc-logo-master'),
     el.querySelector('.header-action-search'),
