@@ -150,6 +150,8 @@ Mỗi lần tải lên Sapo chỉ báo 1 lỗi đầu tiên ⇒ mọi quy tắc 
 - 3 thành phần: Tag `{% ... %}`, Object `{{ ... }}`, Filter `{{ x | filter }}`.
 - **Chuỗi rỗng `""` vẫn là TRUE**; chỉ `false`/`null` là false ⇒ luôn dùng `{% if x != blank %}`,
   `{% unless settings.k == blank %}` thay vì `{% if x %}` khi xét nội dung.
+- **`slice` luôn ghi đủ 2 tham số** (`| slice: 0, 1`): Liquid .NET của Sapo với `| slice: 0` trả về đối tượng
+  `EnumerablePartition` ⇒ in ra `SYSTEM.LINQ.ENUMERABLE+…` (đo thật 2026-10-13). `npm run lint:liquid-globals` chặn lỗi này.
 - `blank`/`empty` **chỉ dùng để so sánh** (`== blank`, `!= blank`). Không gán làm giá trị (`assign x = blank`),
   không truyền vào filter hay `linklists[...]`: DotLiquid của Sapo báo lỗi "Đối tượng 'DotLiquid.Util.Symbol' không
   hợp lệ". Cần khởi tạo rỗng thì dùng `assign x = ''`.
