@@ -56,36 +56,60 @@ body {
     float: none !important;
     position: static !important;
   }
-  .ab-most-view-product-module .most-view-module-pager {
-    order: 2;
-    display: flex !important;
-    gap: 8px;
-    flex-shrink: 0;
-    float: none !important;
-    position: static !important;
+  /* 2026-10-13 (người dùng): bỏ đường kẻ dưới tiêu đề (app: border-bottom #cacaca); 2 nút ‹ › chuyển xuống 2 bên hàng sản phẩm,
+     giữa chiều cao thẻ (thân khối lệch tâm khối ~37px vì tiêu đề ở trên), nút tròn trắng không viền (app: box-shadow inset). */
+  .ab-most-view-product-module .most-view-module .most-view-module-heading {
+    border-bottom: 0 !important;
+    position: static !important; /* nút bám theo cả khối .most-view-module, không theo tiêu đề */
   }
-  .ab-most-view-product-module .most-view-btn-pager {
-    width: 36px;
-    height: 36px;
-    background: transparent !important;
-    border: none !important;
-    border-radius: 4px !important;
+  .ab-most-view-product-module .most-view-module {
+    position: relative;
+  }
+  .ab-most-view-product-module .most-view-module .most-view-module-heading .most-view-module-pager {
+    position: absolute !important;
+    z-index: 3;
+    top: calc(50% + 37px);
+    left: 50%;
+    width: calc(min(1200px, 100%) - 32px);
+    transform: translate(-50%, -50%);
+    display: flex !important;
+    justify-content: space-between;
+    padding: 0 !important;
+    float: none !important;
+    pointer-events: none;
+  }
+  .ab-most-view-product-module .most-view-module .most-view-btn-pager {
+    pointer-events: auto;
+    width: 40px;
+    height: 40px;
+    border: 0 !important;
+    border-radius: 50% !important;
+    background: #fff !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .14) !important;
     color: var(--mainColorDark) !important;
-    font-size: var(--fs-base);
+    font-size: 18px;
     font-weight: 700;
+    line-height: 1;
     display: inline-flex !important;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     margin: 0 !important;
-    padding: 0;
-    transition: color .2s, background .2s;
-    float: none !important;
-    position: static !important;
-    &:hover {
-      background: var(--mainColorLight, #eaf7ee) !important;
-      color: var(--mainColorDark) !important;
+    padding: 0 !important;
+    transition: color .2s, background .2s, opacity .2s;
+    &:hover, &:focus-visible {
+      background: var(--mainColor) !important;
+      color: #fff !important;
     }
+    &.swiper-button-disabled {
+      opacity: .35;
+      cursor: default;
+    }
+  }
+  /* Desktop: nút nằm đè nửa ra ngoài mép thẻ; màn nhỏ (khối tràn sát mép, overflow:hidden) giữ nút trong khung. */
+  @media (min-width: 1280px) {
+    .ab-most-view-product-module .most-view-module .most-view-btn-pager-prev { transform: translateX(-50%); }
+    .ab-most-view-product-module .most-view-module .most-view-btn-pager-next { transform: translateX(50%); }
   }
 
   /* Product card */
