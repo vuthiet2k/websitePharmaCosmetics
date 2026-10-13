@@ -22,8 +22,7 @@ test('v3 typography, section order and real destinations', async ({ page }) => {
   expect(await page.locator('.pc-portal a[href="#"]').count()).toBe(0);
   const ids = await page.locator('.portal-section').evaluateAll(nodes => nodes.map(n => n.id));
   expect(ids).toEqual(Array.from({ length: 18 }, (_, i) => settings[`home_section_${i+1}`]).filter(s => s !== 'none'));
-  await page.getByRole('link', { name: 'Chọn theo vấn đề da', exact: true }).click();
-  await expect(page).toHaveURL(/#section_solutions$/);
+  // 2026-10-13: Hero bỏ nút 2 "Chọn theo vấn đề da" (mỗi slide chỉ còn 1 nút) — giữ kiểm tra khối giải pháp.
   await expect(page.locator('.concerns a')).toHaveCount(6);
   // 2026-10-13: hoạt chất chuyển sang dải chạy .pc-bm--ing — đếm bản đọc được (không tính bản lặp aria-hidden).
   await expect(page.locator('.pc-bm--ing .pc-bm__group:first-child > .pc-bm__item')).toHaveCount(9);
@@ -31,62 +30,42 @@ test('v3 typography, section order and real destinations', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test('hero uses a stable full-background fade while copy and CTA stay static', async ({ page }) => {
+test('hero swiper: mỗi slide ảnh + text + nút, 1 ảnh chung mọi màn hình, fade + Ken Burns', async ({ page }) => {
+  // 2026-10-13 (snippets/section_hero.bwt): slide = Ảnh · Text · Text nút · Link; không loop (tránh trùng h1).
   await page.setViewportSize({ width: 1920, height: 1080 });
   const errors = await openHome(page);
   const hero = page.locator('[data-portal-hero]');
-  await expect(hero).toHaveCSS('position', 'relative');
-  expect(await hero.evaluate(el => el.getBoundingClientRect().height)).toBeGreaterThanOrEqual(560);
-  await expect(hero.locator('.portal-hero__media')).toHaveCSS('position', 'absolute');
-  await expect(hero.locator('.portal-hero__content')).toHaveCSS('z-index', '2');
-  const copy = hero.locator('.portal-hero__copy');
-  // C01 (phase home-shopping-ux, 2026-09-20): bỏ khối kính trắng .94/blur cũ — nền phải trong
-  // suốt, khung chữ tối đa 564px tính cả padding (border-box), radius 40px. Độ rõ chữ trên ảnh
-  // nền lấy từ scrim gradient của .portal-hero__mask + chữ trắng (xem home-portal.css).
-  await expect(copy).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
-  await expect(copy).toHaveCSS('backdrop-filter', 'none');
-  await expect(copy).toHaveCSS('max-width', '564px');
-  await expect(copy).toHaveCSS('box-sizing', 'border-box');
-  await expect(copy).toHaveCSS('border-radius', '40px');
-  const leftOffset = await copy.evaluate(el => {
-    const copyRect = el.getBoundingClientRect();
-    const wrapRect = el.parentElement.getBoundingClientRect();
-    return copyRect.left - wrapRect.left;
-  });
-  expect(leftOffset).toBeGreaterThan(28);
-  expect(leftOffset).toBeLessThan(36);
+  expect(await hero.evaluate(el => el.getBoundingClientRect().height)).toBeGreaterThanOrEqual(420);
+  await expect(hero.locator('h1')).toHaveCount(1);
   await expect(hero.locator('h1')).toHaveCSS('color', 'rgb(255, 255, 255)');
-  await expect(hero.locator('h1 em')).toHaveCSS('color', 'rgb(60, 179, 113)');
-  await expect(hero.locator('.eyebrow')).toHaveCSS('color', 'rgb(60, 179, 113)');
-  await expect(hero.locator('.sub')).toHaveCSS('color', 'rgba(255, 255, 255, 0.86)');
-  await expect(hero.locator('.portal-hero__media h1')).toHaveCount(0);
-  await expect(hero.getByRole('link', { name: 'Đặt lịch phân tích da →', exact: true })).toHaveAttribute('href', '/dat-lich-tu-van');
-  await expect(hero.getByRole('link', { name: 'Chọn theo vấn đề da', exact: true })).toHaveAttribute('href', '#section_solutions');
+  await expect(hero.locator('h1')).toHaveText(settings.home_hero_title);
+  const cta = hero.locator('.swiper-slide-active .portal-hero__btn');
+  await expect(cta).toHaveAttribute('href', settings.home_hero_btn1_url);
+  await expect(cta).toContainText(settings.home_hero_btn1_text);
 
-  const originalSlides = hero.locator('.portal-hero__slide:not(.swiper-slide-duplicate)');
-  await expect(originalSlides).toHaveCount(3);
-  const heroImages = originalSlides.locator('img');
+  const slides = hero.locator('.portal-hero__slide');
+  await expect(slides).toHaveCount(3);
+  await expect(hero.locator('.swiper-slide-duplicate')).toHaveCount(0);
+  await expect(hero.locator('picture, source')).toHaveCount(0);
+  const heroImages = slides.locator('img');
   await expect(heroImages.nth(0)).toHaveAttribute('loading', 'eager');
   await expect(heroImages.nth(0)).toHaveAttribute('fetchpriority', 'high');
   await expect(heroImages.nth(1)).toHaveAttribute('loading', 'lazy');
-  await expect(heroImages.nth(1)).toHaveAttribute('fetchpriority', 'low');
-  expect(await heroImages.evaluateAll(images => images.every(img => img.alt && img.getAttribute('width') === '1920' && img.getAttribute('height') === '800'))).toBeTruthy();
-  expect(await heroImages.evaluateAll(images => new Set(images.map(img => img.alt)).size)).toBe(3);
+  expect(await heroImages.evaluateAll(images => images.every(img => img.alt && img.getAttribute('width') === '1920' && img.getAttribute('height') === '1080'))).toBeTruthy();
   const lcpSource = await heroImages.nth(0).getAttribute('data-hero-source');
   await expect(page.locator('link[rel="preload"][as="image"][fetchpriority="high"]')).toHaveAttribute('href', lcpSource);
+  await expect(hero.locator('.swiper-slide-active .portal-hero__image')).toHaveCSS('animation-name', 'pc-hero-kenburns');
 
   const slider = hero.locator('.portal-hero__media');
-  const motion = await slider.evaluate(el => ({
-    effect: el.swiper.params.effect,
-    speed: el.swiper.params.speed,
-    delay: el.swiper.params.autoplay.delay,
-  }));
-  expect(motion).toEqual({ effect: 'fade', speed: 700, delay: 5000 });
-  await hero.hover();
-  await expect.poll(() => slider.evaluate(el => el.swiper.autoplay.running)).toBe(false);
+  const motion = await slider.evaluate(el => ({ effect: el.swiper.params.effect, speed: el.swiper.params.speed, delay: el.swiper.params.autoplay.delay, loop: el.swiper.params.loop }));
+  expect(motion).toEqual({ effect: 'fade', speed: 700, delay: 5000, loop: false });
+  await hero.locator('[data-hero-prev]').click();
+  await expect.poll(() => slider.evaluate(el => el.swiper.activeIndex)).toBe(2);
+  await hero.locator('[data-hero-next]').click();
+  await expect.poll(() => slider.evaluate(el => el.swiper.activeIndex)).toBe(0);
   await page.mouse.move(0, 0);
   await expect.poll(() => slider.evaluate(el => el.swiper.autoplay.running)).toBe(true);
-  await hero.getByRole('link', { name: 'Đặt lịch phân tích da →', exact: true }).focus();
+  await hero.hover();
   await expect.poll(() => slider.evaluate(el => el.swiper.autoplay.running)).toBe(false);
   expect(errors).toEqual([]);
 });
@@ -102,6 +81,7 @@ test('hero honors reduced motion and remains stable at 320px', async ({ page }) 
   }));
   expect(motion).toEqual({ speed: 0, running: false });
   await expect(hero.locator('[data-hero-pause]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(hero.locator('.swiper-slide-active .portal-hero__image')).toHaveCSS('animation-name', 'none');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
   expect(errors).toEqual([]);
 });
@@ -321,9 +301,10 @@ test('section settings tolerate disabled, unknown and duplicate slots', async ()
 });
 
 test('empty blog, image mode fallback and newsletter configuration fail gracefully', async () => {
-  const hero = await engine.renderFile('section_hero', {settings:{portal_hero_visual:'diagram'}});
-  expect(hero).toContain('Sơ đồ phân tích lớp da');
+  // 2026-10-13: Hero chưa có ảnh ⇒ không dựng swiper, vẫn giữ 1 h1 ẩn cho SEO.
+  const hero = await engine.renderFile('section_hero', {settings:{home_hero_title:'Tiêu đề thử'}});
   expect(hero).not.toContain('<img');
+  expect(hero).toContain('<h1 class="portal-hero__sr">Tiêu đề thử</h1>');
   const blog = await engine.renderFile('section_portal_blog', { settings: { portal_blog: 'missing' }, blogs: {} });
   expect(blog).toContain('Bài viết đang được cập nhật.');
   const newsletter = await engine.renderFile('section_portal_newsletter', {settings:{}});

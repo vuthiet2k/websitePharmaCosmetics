@@ -1,62 +1,72 @@
-{% assign hero_slide_count = 0 %}
-<section class="hero portal-hero" data-portal-hero data-delay="{{ settings.home_hero_delay | default: 5000 }}" data-autoplay="{{ settings.home_hero_autoplay }}" aria-labelledby="portal-hero-title">
-  <div class="portal-hero__media swiper-container" id="portalHeroMedia" aria-hidden="true">
-    {% if settings.portal_hero_visual == 'image' and settings.home_hero_image != blank %}
-    <div class="swiper-wrapper">
-      {% for i in (1..5) %}
-        {% if i == 1 %}
-          {% assign hero_image = settings.home_hero_image %}
-          {% assign hero_image_alt = settings.home_hero_image_alt | default: settings.home_hero_title %}
-        {% else %}
-          {% capture hero_image_key %}home_hero_image_{{ i }}{% endcapture %}
-          {% capture hero_alt_key %}home_hero_image_{{ i }}_alt{% endcapture %}
-          {% assign hero_image = settings[hero_image_key] %}
-          {% assign hero_image_alt = settings[hero_alt_key] | default: settings.home_hero_title %}
-        {% endif %}
-        {% if hero_image != blank %}
-          {% assign hero_slide_count = hero_slide_count | plus: 1 %}
-          <div class="swiper-slide portal-hero__slide portal-hero__slide--{{ i }}">
-            {% if i == 1 and settings.home_hero_mobile_image != blank %}
-            <picture>
-              <source media="(max-width: 680px)" srcset="{{ settings.home_hero_mobile_image | img_url: '1024x1024' }}">
-            {% endif %}
-              <img class="portal-hero__image portal-hero__image--{{ i }}" src="{{ hero_image | img_url: '2048x2048' }}" data-hero-source="{{ hero_image | img_url: '2048x2048' }}" alt="{{ hero_image_alt | escape }}" width="1920" height="800"{% if i == 1 %} loading="eager" fetchpriority="high"{% else %} loading="lazy" fetchpriority="low"{% endif %}>
-            {% if i == 1 and settings.home_hero_mobile_image != blank %}
-            </picture>
-            {% endif %}
-          </div>
-        {% endif %}
-      {% endfor %}
+{%- comment -%}
+  2026-10-13 (người dùng chốt, theo ảnh mẫu): Hero = swiper ảnh toàn khổ, mỗi slide chỉ cấu hình 4 thứ:
+  Ảnh · Text hiển thị · Text nút · Link. Dùng CHUNG 1 ảnh cho laptop/tablet/mobile (không còn ảnh riêng mobile);
+  bỏ badge/mô tả/nút 2/cam kết/sơ đồ da/alt riêng. Slide 1 giữ id cũ (home_hero_image, home_hero_title,
+  home_hero_btn1_text/url — section_spa/section_portal_social còn dùng nút 1 làm link đặt lịch dự phòng).
+  Text slide 1 là <h1> duy nhất của trang; slide sau dùng <h2>. Swiper không bật loop (loop nhân bản slide ⇒ trùng h1);
+  autoplay tự quay về slide đầu. JS: assets/home-hero.js, CSS: assets/home-portal.css.
+  Hiệu ứng theo dự án tham khảo của người dùng (xadinhhoa.vercel.app/v2): Ken Burns zoom ảnh slide đang hiện, fade,
+  mũi tên kính mờ, nút CTA viên thuốc có pulse + vệt sáng quét; tắt hết khi prefers-reduced-motion.
+{%- endcomment -%}
+{%- assign hero_slide_count = 0 -%}
+{%- assign hero_h1_done = false -%}
+{%- capture hero_slides -%}
+{%- for i in (1..5) -%}
+  {%- if i == 1 -%}
+    {%- assign hero_image = settings.home_hero_image -%}
+    {%- assign hero_text = settings.home_hero_title -%}
+    {%- assign hero_btn = settings.home_hero_btn1_text -%}
+    {%- assign hero_url = settings.home_hero_btn1_url -%}
+  {%- else -%}
+    {%- capture k_img -%}home_hero_image_{{ i }}{%- endcapture -%}
+    {%- capture k_text -%}home_hero_title_{{ i }}{%- endcapture -%}
+    {%- capture k_btn -%}home_hero_btn_text_{{ i }}{%- endcapture -%}
+    {%- capture k_url -%}home_hero_btn_url_{{ i }}{%- endcapture -%}
+    {%- assign hero_image = settings[k_img] -%}
+    {%- assign hero_text = settings[k_text] -%}
+    {%- assign hero_btn = settings[k_btn] -%}
+    {%- assign hero_url = settings[k_url] -%}
+  {%- endif -%}
+  {%- if hero_image != blank -%}
+  {%- assign hero_slide_count = hero_slide_count | plus: 1 -%}
+  <div class="swiper-slide portal-hero__slide">
+    <img class="portal-hero__image" src="{{ hero_image | img_url: '2048x2048' }}" data-hero-source="{{ hero_image | img_url: '2048x2048' }}"
+      alt="{{ hero_text | default: settings.store_name | default: store.name | strip_newlines | escape }}" width="1920" height="1080"
+      {%- if hero_slide_count == 1 %} loading="eager" fetchpriority="high"{% else %} loading="lazy" fetchpriority="low"{% endif %}>
+    {%- if hero_text != blank or hero_btn != blank -%}
+    <div class="portal-hero__caption">
+      {%- if hero_text != blank -%}
+      {%- unless hero_h1_done -%}{%- assign hero_h1_done = true -%}<h1 class="portal-hero__title" id="portal-hero-title">{{ hero_text | escape | newline_to_br }}</h1>
+      {%- else -%}<h2 class="portal-hero__title">{{ hero_text | escape | newline_to_br }}</h2>{%- endunless -%}
+      {%- endif -%}
+      {%- if hero_btn != blank -%}
+      <a class="portal-hero__btn" href="{{ hero_url | default: '/collections/all' | escape }}">{{ hero_btn | escape }}<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      {%- endif -%}
     </div>
-    {% else %}
-    <div class="portal-hero__diagram">{% include 'portal_skin_diagram' %}</div>
-    {% endif %}
+    {%- endif -%}
   </div>
-  <div class="portal-hero__mask" aria-hidden="true"></div>
-  <div class="wrap portal-hero__content">
-    <div class="portal-hero__copy">
-      <p class="eyebrow">{{ settings.home_hero_badge | default: 'Dược mỹ phẩm toàn cầu · Chuẩn y khoa' | escape }}</p>
-      {% assign portal_hero_heading = settings.home_hero_title | default: 'Làn da của bạn là một hồ sơ khoa học riêng biệt.' | escape | newline_to_br %}
-      {% assign portal_hero_highlight = settings.portal_hero_highlight | escape %}
-      {% if portal_hero_highlight != blank %}{% capture portal_hero_emphasis %}<em>{{ portal_hero_highlight }}</em>{% endcapture %}{% assign portal_hero_heading = portal_hero_heading | replace: portal_hero_highlight, portal_hero_emphasis %}{% endif %}
-      <h1 id="portal-hero-title">{{ portal_hero_heading }}</h1>
-      <p class="sub">{{ settings.home_hero_desc | escape }}</p>
-      <div class="cta">
-        <a class="btn btn-p" href="{{ settings.home_hero_btn1_url | default: '/dat-lich-tu-van' | escape }}">{{ settings.home_hero_btn1_text | default: 'Đặt lịch phân tích da' | escape }} →</a>
-        <a class="btn btn-o" href="{{ settings.home_hero_btn2_url | default: '#section_solutions' | escape }}">{{ settings.home_hero_btn2_text | default: 'Chọn theo vấn đề da' | escape }}</a>
-      </div>
-      <div class="trust">
-        {% for i in (1..3) %}
-          {% capture trust_key %}portal_hero_trust_{{ i }}{% endcapture %}
-          {% if settings[trust_key] != blank %}<div>{{ settings[trust_key] | escape }}</div>{% endif %}
-        {% endfor %}
-      </div>
-    </div>
+  {%- endif -%}
+{%- endfor -%}
+{%- endcapture -%}
+{%- if hero_slide_count > 0 -%}
+<section class="hero portal-hero" data-portal-hero data-delay="{{ settings.home_hero_delay | default: 5000 }}" data-autoplay="{{ settings.home_hero_autoplay }}" aria-roledescription="carousel" aria-label="{{ settings.store_name | default: store.name | escape }}">
+  <div class="portal-hero__media swiper-container" id="portalHeroMedia">
+    <div class="swiper-wrapper">{{ hero_slides }}</div>
+    {%- if hero_slide_count > 1 -%}
+    <div class="portal-hero__dots swiper-pagination"></div>
+    <button class="portal-hero__nav portal-hero__nav--prev" type="button" data-hero-prev aria-label="Ảnh trước"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="m15 6-6 6 6 6"/></svg></button>
+    <button class="portal-hero__nav portal-hero__nav--next" type="button" data-hero-next aria-label="Ảnh tiếp theo"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="m9 6 6 6-6 6"/></svg></button>
+    {%- endif -%}
   </div>
-  {% if hero_slide_count > 1 %}
-  <button class="portal-hero__pause" type="button" data-hero-pause aria-controls="portalHeroMedia" aria-label="Tạm dừng ảnh nền" aria-pressed="false">
+  {%- if hero_slide_count > 1 -%}
+  <button class="portal-hero__pause" type="button" data-hero-pause aria-controls="portalHeroMedia" aria-label="Tạm dừng chuyển ảnh" aria-pressed="false">
     <svg data-icon-pause width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false"><path d="M5 3v10M11 3v10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
     <svg data-icon-play width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" focusable="false" hidden><path d="m5 3 8 5-8 5V3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
   </button>
-  {% endif %}
+  {%- endif -%}
+  {%- unless hero_h1_done -%}<h1 class="portal-hero__sr">{{ settings.store_name | default: store.name | escape }}</h1>{%- endunless -%}
 </section>
+{%- else -%}
+{%- comment -%} Chưa có ảnh Hero: vẫn giữ 1 <h1> cho trang chủ (SEO), ẩn khỏi giao diện. {%- endcomment -%}
+<h1 class="portal-hero__sr">{{ settings.home_hero_title | default: settings.store_name | default: store.name | escape }}</h1>
+{%- endif -%}

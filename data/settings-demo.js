@@ -80,13 +80,9 @@ const demoSettings = {
   metafield_show:         false,
 
   // ── pc-section_hero ───────────────────────────────────────────────────────
-  home_hero_badge:          'Dược mỹ phẩm chuẩn quốc tế',
   home_hero_title:          'Chăm sóc da <em>khoa học</em><br>Tự tin mỗi ngày',
-  home_hero_desc:           'Sản phẩm được chuyên gia da liễu kiểm chứng. Thành phần hoạt tính nồng độ cao — hiệu quả thực sự, không phô trương.',
   home_hero_btn1_text:      'Khám phá ngay',
   home_hero_btn1_url:       '/san-pham-noi-bat',
-  home_hero_btn2_text:      'Tư vấn miễn phí',
-  home_hero_btn2_url:       '/lien-he',
 
   // ── pc-section_stats ─────────────────────────────────────────────────────
   home_stat_1_target: 98,    home_stat_1_suffix: '%',  home_stat_1_label: 'Khách hàng hài lòng',

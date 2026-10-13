@@ -1,7 +1,8 @@
 (function () {
   'use strict';
 
-  // HERO-FULLBG 2026-09-17: chỉ ảnh nền chuyển cảnh; nội dung/CTA đứng yên để không ngắt thao tác.
+  // HERO 2026-10-13 (snippets/section_hero.bwt): mỗi slide = ảnh + text + nút riêng, fade, có chấm chuyển slide + vuốt.
+  // Không bật loop: loop nhân bản slide ⇒ trùng <h1>; autoplay tự quay về slide đầu khi tới slide cuối.
   var root = document.querySelector('[data-portal-hero]');
   if (!root || root.dataset.initialized) return;
   root.dataset.initialized = 'true';
@@ -16,7 +17,7 @@
   function updatePauseButton() {
     if (!pauseButton) return;
     pauseButton.setAttribute('aria-pressed', String(userPaused));
-    pauseButton.setAttribute('aria-label', userPaused ? 'Chạy ảnh nền' : 'Tạm dừng ảnh nền');
+    pauseButton.setAttribute('aria-label', userPaused ? 'Chạy chuyển ảnh' : 'Tạm dừng chuyển ảnh');
     pauseButton.querySelector('[data-icon-pause]').hidden = userPaused;
     pauseButton.querySelector('[data-icon-play]').hidden = !userPaused;
   }
@@ -33,14 +34,16 @@
   if (slider && slider.querySelectorAll('.portal-hero__slide').length > 1 && typeof Swiper === 'function') {
     swiper = new Swiper(slider, {
       slidesPerView: 1,
-      loop: true,
+      loop: false,
       effect: 'fade',
       fadeEffect: { crossFade: true },
       speed: reduceMotion ? 0 : 700,
-      allowTouchMove: false,
+      allowTouchMove: true,
+      pagination: { el: root.querySelector('.portal-hero__dots'), clickable: true },
       autoplay: userPaused ? false : {
         delay: delay,
         disableOnInteraction: false,
+        stopOnLastSlide: false,
       },
       a11y: { enabled: false },
     });
@@ -54,13 +57,20 @@
       userPaused = !userPaused;
       if (userPaused) swiper.autoplay.stop();
       else {
-        swiper.params.autoplay = { delay: delay, disableOnInteraction: false };
+        swiper.params.autoplay = { delay: delay, disableOnInteraction: false, stopOnLastSlide: false };
         swiper.autoplay.start();
       }
       updatePauseButton();
     });
   } else if (pauseButton) {
     pauseButton.hidden = true;
+  }
+  // Mũi tên trước/sau vòng lại ở 2 đầu (không bật loop, xem chú thích đầu file).
+  if (swiper) {
+    var nextBtn = root.querySelector('[data-hero-next]');
+    var prevBtn = root.querySelector('[data-hero-prev]');
+    if (nextBtn) nextBtn.addEventListener('click', function () { if (swiper.isEnd) swiper.slideTo(0); else swiper.slideNext(); });
+    if (prevBtn) prevBtn.addEventListener('click', function () { if (swiper.isBeginning) swiper.slideTo(swiper.slides.length - 1); else swiper.slidePrev(); });
   }
 
   updatePauseButton();

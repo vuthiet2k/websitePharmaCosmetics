@@ -157,7 +157,7 @@ dữ liệu Admin đã lưu trong `settings_data.json`.
 
 | # | Section | Snippet | Biến cấu hình chính |
 | :-- | :-- | :-- | :-- |
-| 1 | Hero | `section_hero.bwt` | `portal_hero_visual`, `portal_hero_highlight`, `home_hero_*` |
+| 1 | Hero | `section_hero.bwt` | `home_hero_*` (slide 1: `home_hero_image/title/btn1_text/btn1_url`; slide 2–5: `home_hero_image_N/title_N/btn_text_N/btn_url_N`) |
 | 2 | Chương I — Ngã ba Shop/Clinic | `section_portal_split.bwt` | `portal_chapter_1`, `portal_shop_*`, `portal_clinic_*`, `store_name` |
 | 3 | Giải pháp theo tình trạng da | `section_solutions.bwt` | `home_solutions_*` |
 | 4 | Flash Sale | `section_flash_sale.bwt` | `home_flashsale_*`, `promo_coupon_home_enable` |
@@ -176,18 +176,15 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
 
 **Kiến trúc Hero/Header v3 hiện tại:**
 
-- Hero (`section_hero.bwt` + `home-portal.css` + `home-hero.js`) là **Swiper ảnh nền full-bleed**;
-  neo **góc trái** wrap (`justify-content:flex-start`, cập nhật 17/09/2026 — trước đó từng căn
-  giữa) để ảnh nền vẫn hiện rõ phần còn lại. Cập nhật 20/09/2026 (phase home-shopping-ux, thay cho
-  bản kính trắng mờ trước đó): `.portal-hero__copy` nền **trong suốt** (`background:transparent`),
-  rộng tối đa **564px tính cả padding** (`box-sizing:border-box`), `border-radius:40px`; không còn
-  viền/box-shadow/backdrop-filter. Độ rõ chữ trên ảnh lấy từ `.portal-hero__mask` — gradient tối phủ
-  từ trái (phía text) sang phải, đã bật lại thay cho `display:none` cũ — cộng với chữ/nút **trắng**
-  (`h1`, `.sub`, `.btn-o` đổi từ token `--ink`/`--ink-2`/`--line` sang trắng/alpha trắng; `.eyebrow`
-  và `<em>` nhấn mạnh vẫn giữ `var(--green)`/mainColor vì đã đủ tương phản trên nền tối). Ảnh đầu
-  preload + eager/high priority, các ảnh sau lazy-load; khung Hero khóa `min-height` để tránh CLS.
-  Fade 700ms mỗi 5s, dừng khi hover/focus và tắt autoplay theo `prefers-reduced-motion`. Không dựng
-  lại grid 2 cột cho Hero.
+- Hero (`section_hero.bwt` + `home-portal.css` + `home-hero.js`, chốt 13/10/2026 theo ảnh mẫu khách gửi) là
+  **Swiper ảnh toàn khổ**, mỗi slide chỉ cấu hình **Ảnh · Text hiển thị · Text nút · Link** (tối đa 5 slide;
+  slide không có ảnh bị bỏ qua). **1 ảnh dùng chung mọi màn hình** — không có ảnh riêng mobile/tablet; khung
+  cao theo bề ngang, ảnh `object-fit:cover`. Text + nút căn giữa phía dưới slide (chữ trắng in hoa, scrim đáy).
+  Text slide đầu là `<h1>` duy nhất trang chủ, slide sau `<h2>`; **không bật `loop`** (Swiper nhân bản slide ⇒
+  trùng h1) — autoplay `stopOnLastSlide:false` tự quay về đầu, mũi tên tự vòng. Hiệu ứng (theo dự án tham khảo
+  của người dùng): fade 700ms, Ken Burns zoom ảnh đang hiện, mũi tên kính mờ, nút CTA viên thuốc pulse + vệt
+  sáng; dừng khi hover/focus; tắt toàn bộ khi `prefers-reduced-motion`. Ảnh slide 1 preload ở `layouts/theme.bwt`.
+  Đã xoá các trường cũ: badge, mô tả, nút 2, chữ nhấn, 3 dòng cam kết, chế độ sơ đồ da, alt riêng, ảnh mobile.
 - Khối hướng dẫn Quiz da AI (`section_ai_guide.bwt`, phase home-shopping-ux 20/09/2026): section
   Home Portal đăng ký qua `home_portal.bwt` `valid_sections` + `home_section_N`, mặc định đặt ngay
   sau Hero (`home_section_2`). CTA trỏ `/kham-da-ai` (alias thật của `page.ai-skin-quiz.bwt`, xem
