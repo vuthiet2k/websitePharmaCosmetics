@@ -183,13 +183,30 @@ for (const { f, src, tags: ts } of parsed) {
   }
 }
 
+// Kiểm tra 4 (2026-10-13): `slice` chỉ 1 tham số (vd `| slice: 0`) — Liquid .NET của Sapo trả về đối tượng
+// EnumerablePartition chứ không phải chuỗi ⇒ in ra "SYSTEM.LINQ.ENUMERABLE+..." (đo thật trên theme xem trước,
+// khối Thương hiệu trang chủ). Luôn ghi đủ 2 tham số: `slice: 0, 1`.
+const badSlice = [];
+for (const { f, src, tags: ts } of parsed) {
+  const rel = path.relative(ROOT, f).replace(/\\/g, '/');
+  for (const t of ts) {
+    if (/\|\s*slice\s*:\s*-?\d+\s*(?:\||$)/.test(t.text.replace(/'[^']*'|"[^"]*"/g, ' ').trim())) {
+      badSlice.push(`${rel}:${src.slice(0, t.index).split('\n').length}`);
+    }
+  }
+}
+
 const ids = Object.keys(byId).sort();
 const sids = Object.keys(undeclared).sort();
 if (badSizes.length) {
   console.log(`[lint:liquid-globals] FAIL — ${badSizes.length} img_url dùng size CDN Sapo không phục vụ (404). Chỉ dùng: ${[...IMG_SIZES].join(', ')}`);
   badSizes.forEach((x) => console.log(`  ${x}`));
 }
-if (!ids.length && !sids.length && !badSizes.length) {
+if (badSlice.length) {
+  console.log(`[lint:liquid-globals] FAIL — ${badSlice.length} chỗ dùng slice 1 tham số (Sapo in ra SYSTEM.LINQ...). Ghi đủ: slice: <start>, <độ dài>`);
+  badSlice.forEach((x) => console.log(`  ${x}`));
+}
+if (!ids.length && !sids.length && !badSizes.length && !badSlice.length) {
   console.log(`[lint:liquid-globals] PASS — ${files.length} file, không có biến ngoài 38 đối tượng Sapo, mọi settings.* đã khai báo trong schema, img_url đúng size CDN.`);
   process.exit(0);
 }

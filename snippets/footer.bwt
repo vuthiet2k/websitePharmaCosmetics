@@ -77,14 +77,15 @@
 				<div class="block-payment pc-foot__payment">
 					<h4 class="title-menu"><span>{{settings.footer_payment_title}}</span></h4>
 					<div class="payment-footer list-menu">
+						{%- comment -%}
+						  2026-10-13: assets/payment_1..5.png chưa từng có trong theme (đo thật trên theme xem trước Sapo: 404) ⇒ 4 ô
+						  ảnh trống. Hiện tên phương thức (ô "Icon N — tên") dạng nhãn chữ thay cho ảnh hỏng.
+						{%- endcomment -%}
 						{% for i in (1..5) %}
 						{% capture enable %}footer_payment_{{i}}_enable{% endcapture %}
-						{% capture logo %}payment_{{i}}.png{% endcapture %}
 						{% capture alt %}footer_payment_{{i}}_alt{% endcapture %}
-						{% if settings[enable] %}
-						<div class="payment-item">
-							<img width="63" height="29" alt="{{ settings[alt] }}" src="{{ logo | asset_url }}" loading="lazy">
-						</div>
+						{% if settings[enable] and settings[alt] != blank %}
+						<span class="payment-item pc-foot__pay">{{ settings[alt] | escape }}</span>
 						{% endif %}
 						{% endfor %}
 					</div>
