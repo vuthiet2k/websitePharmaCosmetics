@@ -13,6 +13,25 @@
 	{%- if pc_vp_val contains 'facebook.com' or pc_vp_val contains 'fb.watch' or pc_vp_hint == 'facebook' -%}
 		{%- assign pc_vp_src = 'facebook' -%}
 		{%- assign pc_vp_fb = pc_vp_val | split: '"' | first | strip -%}
+		{%- comment -%}
+		  2026-10-13: plugin video Facebook chỉ nhận href là link tuyệt đối — tag nhập thiếu (vd facebook:fb_video_<số>,
+		  facebook:<số>, facebook:www.facebook.com/...) từng làm iframe trắng. Chuẩn hoá: thiếu https:// ⇒ thêm vào;
+		  chỉ có mã số (bỏ tiền tố fb_video_) ⇒ link /watch/?v=<số>; còn lại không phải link ⇒ bỏ, không nhúng khung lỗi.
+		{%- endcomment -%}
+		{%- unless pc_vp_fb contains '://' -%}
+			{%- if pc_vp_fb contains 'facebook.com' or pc_vp_fb contains 'fb.watch' -%}
+				{%- assign pc_vp_fb = 'https://' | append: pc_vp_fb -%}
+			{%- else -%}
+				{%- assign pc_vp_fbid = pc_vp_fb | remove: 'fb_video_' | remove: 'FB_VIDEO_' | strip -%}
+				{%- assign pc_vp_fbrest = pc_vp_fbid | remove: '0' | remove: '1' | remove: '2' | remove: '3' | remove: '4' | remove: '5' | remove: '6' | remove: '7' | remove: '8' | remove: '9' -%}
+				{%- if pc_vp_fbid != blank and pc_vp_fbrest == '' -%}
+					{%- assign pc_vp_fb = 'https://www.facebook.com/watch/?v=' | append: pc_vp_fbid -%}
+				{%- else -%}
+					{%- assign pc_vp_fb = '' -%}
+					{%- assign pc_vp_src = '' -%}
+				{%- endif -%}
+			{%- endif -%}
+		{%- endunless -%}
 	{%- elsif pc_vp_val contains 'youtube.com' or pc_vp_val contains 'youtu.be' or pc_vp_hint == 'youtube' -%}
 		{%- assign pc_vp_id = pc_vp_val -%}
 		{%- if pc_vp_id contains 'v=' -%}

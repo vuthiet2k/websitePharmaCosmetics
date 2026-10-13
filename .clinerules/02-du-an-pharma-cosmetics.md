@@ -506,6 +506,8 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
 - Nguồn video đọc DUY NHẤT qua `snippets/video_source.bwt` (+ `video_parse.bwt`): tag `youtube:<mã|link>` / `yt:`,
   `facebook:<link>` / `fb:` ⇒ metafield `custom.video_url` ⇒ link/iframe YouTube/Facebook trong nội dung. Tag phụ:
   `thoiluong:<MM:SS>` (cắt bằng `remove_first`, không `split: ':' | last`), `chude:<Nhãn>`, `chuyengia:<handle>`.
+- Facebook plugin chỉ nhận link tuyệt đối: `video_parse.bwt` tự thêm `https://`, đổi mã số trần/`fb_video_<số>` thành
+  `https://www.facebook.com/watch/?v=<số>`, giá trị khác ⇒ không nhúng (tránh khung trắng). Video phải ở chế độ Công khai.
 - Khung phát luôn là facade (`snippets/video_embed.bwt`): ảnh bìa + nút Play, bấm mới chèn iframe. Không nhúng iframe
   YouTube/Facebook trực tiếp trong template. Ảnh bìa: ảnh đại diện bài ⇒ `i.ytimg.com/vi/<mã>/…` ⇒ placeholder.
 - Bài viết thường gắn tag `youtube:`/`facebook:` ⇒ khối "Video hướng dẫn" trước nội dung (`article_video_block.bwt`):
