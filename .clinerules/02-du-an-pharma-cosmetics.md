@@ -531,6 +531,9 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
 - Địa chỉ/ĐT/email cột trái lấy từ `store_*` (mục Liên hệ & Hỗ trợ); dải pháp lý dùng `footer_legal_*`
   riêng. Logo Bộ Công Thương chỉ hiện khi có cả `footer_bct_url` + `footer_bct_logo` (không link cứng).
 - Thứ tự nhóm trong `settings_schema.json` mục "Chân trang" = thứ tự hiển thị trên web (①→⑤).
+- Dải cuối cùng `.pc-foot__copyright` (bản quyền + "Hiện lại nút liên hệ nhanh"): nền `--bgHeader`, căn giữa.
+  **Quy định Sapo:** mã nguồn footer phải có dòng bản quyền + `Cung cấp bởi Sapo` (link sapo.vn) — giữ text trong code,
+  ẩn khỏi giao diện bằng `.pc-foot__powered{visibility:hidden}`; không xoá dòng này.
 
 ## AI Skin Quiz — phân tầng Tier/Case & cờ an toàn (chốt 2026-10-05)
 
