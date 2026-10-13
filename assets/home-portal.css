@@ -134,7 +134,13 @@ html:has(.pc-home-v3){scroll-behavior:smooth}
 /* 2026-10-13 (người dùng, ảnh mẫu): text "chìm" — trắng trong mờ, hoà vào ảnh (không scrim); nút = link chữ + mũi tên. */
 .pc-home-v3 .pc-portal .hero .portal-hero__title{margin:0;color:rgba(255,255,255,.82);font:300 clamp(20px,2.4vw,34px)/1.2 var(--f-brand);letter-spacing:.04em;text-transform:uppercase;text-wrap:balance;text-shadow:0 1px 3px rgba(0,30,20,.28),0 0 26px rgba(0,30,20,.32)}
 .pc-home-v3 .pc-portal .portal-hero__image{transform-origin:center;will-change:transform}
-.pc-home-v3 .pc-portal .swiper-container-initialized .swiper-slide-active .portal-hero__image{animation:pc-hero-kenburns 9s cubic-bezier(.25,1,.5,1) infinite alternate}
+/* 2026-10-13 (người dùng: "animate nhanh, rõ rệt như xem video"): mỗi slide zoom + lia máy rõ (scale 1→1.18, dịch ~2%) chạy đúng
+   hết thời gian slide (--pc-hero-dur do assets/home-hero.js đặt = delay + tốc độ chuyển); slide chẵn zoom ngược chiều để nối tiếp
+   như cắt cảnh; caption trồi lên mỗi lần đổi slide. 1 slide (không swiper) ⇒ zoom qua lại liên tục. */
+.pc-home-v3 .pc-portal .swiper-container-initialized .swiper-slide-active .portal-hero__image{animation:pc-hero-kb-in var(--pc-hero-dur,5.3s) linear both}
+.pc-home-v3 .pc-portal .swiper-container-initialized .swiper-slide-active:nth-child(even) .portal-hero__image{animation-name:pc-hero-kb-out}
+.pc-home-v3 .pc-portal .portal-hero__media:not(.swiper-container-initialized) .portal-hero__slide:only-child .portal-hero__image{animation:pc-hero-kb-in 7s ease-in-out infinite alternate}
+.pc-home-v3 .pc-portal .swiper-container-initialized .swiper-slide-active .portal-hero__caption{animation:pc-hero-rise .9s cubic-bezier(.2,.8,.2,1) .35s both}
 .pc-home-v3 .pc-portal .portal-hero__btn{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:6px 2px;color:#fff;font:600 14px/1.4 var(--f-brand);text-decoration:none;text-shadow:0 1px 3px rgba(0,30,20,.4),0 0 18px rgba(0,30,20,.4)}
 .pc-home-v3 .pc-portal .portal-hero__btn svg{transition:transform .25s ease}
 .pc-home-v3 .pc-portal .portal-hero__btn:hover,.pc-home-v3 .pc-portal .portal-hero__btn:focus-visible{color:#fff;text-decoration:underline;text-underline-offset:4px}
@@ -147,9 +153,11 @@ html:has(.pc-home-v3){scroll-behavior:smooth}
 .pc-home-v3 .pc-portal .portal-hero__nav--next{right:24px}
 .pc-home-v3 .pc-portal .portal-hero__nav:hover,.pc-home-v3 .pc-portal .portal-hero__nav:focus-visible{opacity:1;transform:translateY(-50%) scale(1.12)}
 .pc-home-v3 .pc-portal .portal-hero__nav:focus-visible{outline:2px solid #fff;outline-offset:2px}
-@keyframes pc-hero-kenburns{from{transform:scale(1)}to{transform:scale(1.06)}}
+@keyframes pc-hero-kb-in{from{transform:scale(1) translate3d(0,0,0)}to{transform:scale(1.18) translate3d(-2%,-1.5%,0)}}
+@keyframes pc-hero-kb-out{from{transform:scale(1.18) translate3d(2%,1.5%,0)}to{transform:scale(1) translate3d(0,0,0)}}
+@keyframes pc-hero-rise{from{opacity:0;transform:translate(-50%,48px)}to{opacity:1;transform:translate(-50%,0)}}
 @media (prefers-reduced-motion:reduce){
-  .pc-home-v3 .pc-portal .portal-hero__image,.pc-home-v3 .pc-portal .swiper-slide-active .portal-hero__image{animation:none!important}
+  .pc-home-v3 .pc-portal .portal-hero__image,.pc-home-v3 .pc-portal .swiper-slide-active .portal-hero__image,.pc-home-v3 .pc-portal .portal-hero__caption{animation:none!important}
 }
 .pc-home-v3 .pc-portal .portal-hero__dots{position:absolute;z-index:3;left:0;right:0;bottom:16px;display:flex;justify-content:center;gap:8px}
 .pc-home-v3 .pc-portal .portal-hero__dots .swiper-pagination-bullet{width:8px;height:8px;margin:0!important;background:#fff;opacity:.5}
