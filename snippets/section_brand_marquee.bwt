@@ -1,11 +1,46 @@
+{%- comment -%}
+  2026-10-13 (người dùng chốt): nguồn thương hiệu = Menu (settings.home_brand_menu) — cấu hình 1 lần, sau này chỉ sửa
+  menu trỏ tới danh mục sản phẩm. Chưa chọn menu ⇒ tạm lấy danh sách nhà cung cấp (store.vendors) như trước.
+  Mỗi mục: ảnh trước tên. Ảnh lấy theo thứ tự: "Logo thương hiệu N" (home_brand_marquee_image_N) → ảnh của danh mục
+  mà link trỏ tới (link.object.image) → không có ảnh thì hiện chữ cái đầu.
+  Hiệu ứng chạy ngang tự động kiểu chạy chữ: render 2 nhóm giống nhau, nhóm 2 aria-hidden, CSS dịch -50% vô hạn;
+  dừng khi rê chuột/focus, tắt khi người dùng bật "giảm chuyển động" (CSS ở assets/home-portal.css).
+{%- endcomment -%}
+{%- assign brand_ll = linklists[settings.home_brand_menu] -%}
+{%- capture pc_bm_items -%}
+{%- if settings.home_brand_menu != blank and brand_ll.links.size > 0 -%}
+  {%- for link in brand_ll.links limit: 12 -%}
+    {%- capture logo_key -%}home_brand_marquee_image_{{ forloop.index }}{%- endcapture -%}
+    {%- assign pc_bm_img = settings[logo_key] -%}
+    {%- if pc_bm_img == blank and link.object.image.src != blank -%}{%- assign pc_bm_img = link.object.image.src -%}{%- endif -%}
+    <a class="pc-bm__item" href="{{ link.url | escape }}">
+      {%- if pc_bm_img != blank -%}
+      <img class="pc-bm__logo" src="{{ pc_bm_img | img_url: 'compact' }}" alt="{{ link.title | escape }}" width="48" height="48" loading="lazy">
+      {%- else -%}
+      <span class="pc-bm__logo pc-bm__logo--text" aria-hidden="true">{{ link.title | strip | slice: 0 | upcase }}</span>
+      {%- endif -%}
+      <span class="pc-bm__name">{{ link.title | escape }}</span>
+    </a>
+  {%- endfor -%}
+{%- else -%}
+  {%- for vendor in store.vendors limit: 12 -%}
+    <a class="pc-bm__item" href="/collections/all?q=vendor:({{ vendor | url_encode }})&page=1&view=grid">
+      <span class="pc-bm__logo pc-bm__logo--text" aria-hidden="true">{{ vendor | strip | slice: 0 | upcase }}</span>
+      <span class="pc-bm__name">{{ vendor | escape }}</span>
+    </a>
+  {%- endfor -%}
+{%- endif -%}
+{%- endcapture -%}
+{%- assign pc_bm_count = pc_bm_items | split: 'class="pc-bm__item"' | size | minus: 1 -%}
 <section class="brands"><div class="wrap">
   <div class="section-head"><div><p class="eyebrow">{{ settings.home_brand_lead | default: 'Nhập khẩu chính hãng' | escape }}</p><h2>{{ settings.home_brand_title | default: 'Thương hiệu tiêu biểu' | escape }}</h2></div><a class="link-more" href="{{ settings.home_brand_url | default: settings.portal_shop_url | default: '/collections/all' | escape }}">{{ settings.home_brand_viewall_text | default: 'Khám phá sản phẩm' | escape }} →</a></div>
-  <div class="bgrid">
-    {% assign brand_ll = linklists[settings.home_brand_menu] %}
-    {% if brand_ll.links.size > 0 %}
-      {% for link in brand_ll.links limit: 12 %}{% capture logo_key %}home_brand_marquee_image_{{ forloop.index }}{% endcapture %}<a href="{{ link.url | escape }}">{% if settings[logo_key] != blank %}<img src="{{ settings[logo_key] | img_url: 'compact' }}" alt="{{ link.title | escape }}" width="120" height="48" loading="lazy">{% else %}{{ link.title | escape }}{% endif %}</a>{% endfor %}
-    {% else %}
-      {% for vendor in store.vendors limit: 6 %}<a href="/collections/all?q=vendor:({{ vendor | url_encode }})&page=1&view=grid">{{ vendor | escape }}</a>{% endfor %}
-    {% endif %}
+  {%- if pc_bm_count > 0 -%}
+  {%- comment -%} Nhóm lặp 2 lần để dải luôn phủ kín chiều ngang kể cả khi menu ít mục. {%- endcomment -%}
+  <div class="pc-bm" style="--pc-bm-dur: {{ pc_bm_count | times: 6 }}s">
+    <div class="pc-bm__track">
+      <div class="pc-bm__group">{{ pc_bm_items }}{{ pc_bm_items }}</div>
+      <div class="pc-bm__group" aria-hidden="true" inert>{{ pc_bm_items }}{{ pc_bm_items }}</div>
+    </div>
   </div>
+  {%- endif -%}
 </div></section>
