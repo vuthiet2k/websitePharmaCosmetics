@@ -253,5 +253,7 @@ const linklists = {
 // (configs/settings_data.json). Preview dùng lại link của menu cũ tương ứng — giữ nguyên menu cũ, không xoá.
 linklists['chinh-sach'] = { ...linklists['footer-dich-vu'], title: 'Chính sách', handle: 'chinh-sach' };
 linklists['mua-sam-theo-danh-muc'] = { ...linklists['footer-categories'], title: 'Mua sắm theo danh mục', handle: 'mua-sam-theo-danh-muc' };
+// 2026-10-14: settings_data đổi menu chính sang 'menu-header-2026' (menu header mới trên Sapo) — preview dùng lại cây main-menu.
+linklists['menu-header-2026'] = { ...linklists['main-menu'], title: 'Menu header 2026', handle: 'menu-header-2026' };
 
 module.exports = { linklists };

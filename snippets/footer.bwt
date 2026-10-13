@@ -73,7 +73,8 @@
 				</div>
 				{% endif %}
 
-				{% if settings.footer_payment_enable %}
+				{%- comment -%} 2026-10-14: thiếu khoá trong settings_data (nil) ⇒ coi như bật theo default schema; chỉ ẩn khi Admin bỏ tick (false). {%- endcomment -%}
+				{% unless settings.footer_payment_enable == false or settings.footer_payment_enable == 'false' %}
 				<div class="block-payment pc-foot__payment">
 					<h4 class="title-menu"><span>{{settings.footer_payment_title}}</span></h4>
 					<div class="payment-footer list-menu">
@@ -87,13 +88,13 @@
 						{% capture enable %}footer_payment_{{i}}_enable{% endcapture %}
 						{% capture alt %}footer_payment_{{i}}_alt{% endcapture %}
 						{% capture logo %}payment_{{i}}.png{% endcapture %}
-						{% if settings[enable] %}
+						{% unless settings[enable] == false or settings[enable] == 'false' %}
 						<span class="payment-item pc-foot__pay pc-foot__pay--logo"><img src="{{ logo | asset_url }}" alt="{{ settings[alt] | default: 'Thanh toán' | escape }}" width="126" height="58" loading="lazy"></span>
-						{% endif %}
+						{% endunless %}
 						{% endfor %}
 					</div>
 				</div>
-				{% endif %}
+				{% endunless %}
 
 			</div>
 				{%- comment -%}
