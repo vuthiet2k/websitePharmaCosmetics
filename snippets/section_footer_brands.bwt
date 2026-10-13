@@ -1,13 +1,13 @@
 {%- comment -%}
-  FOOTER SEO — gộp 4 khối hiển thị cuối trang (mọi template).
+  FOOTER SEO — gộp 3 khối hiển thị cuối trang (mọi template).
 
-  Thứ tự render: brands → categories → keywords-1 → keywords-2
+  Thứ tự render: brands → categories → keywords
+  (2026-10-13: bỏ khối từ khoá thứ 2 "Có thể bạn đang tìm kiếm" — đang tắt, không dùng.)
 
   Mỗi khối điều khiển độc lập qua setting "display":
     footer_brands_display   — thương hiệu + loại (inline)
     footer_cate_display     — danh mục SEO (grid 4 nhóm)
-    footer_search_display   — từ khóa xu hướng block 1
-    footer_search_2_display — từ khóa xu hướng block 2
+    footer_search_display   — từ khóa xu hướng
 
   Giá trị display: all | desktop | mobile | none
     all     → hiện cả desktop & mobile
@@ -169,29 +169,6 @@
         {%- assign _fskw = _fsi | strip -%}
         {%- if _fskw != '' -%}
           <a href="/search?query={{ _fskw | url_encode }}&amp;type=product" title="{{ _fskw | escape }}">{{ _fskw }}</a>
-        {%- endif -%}
-      {%- endfor -%}
-    </div>
-  </div>
-</div>
-  {%- endif -%}
-{%- endunless -%}
-{%- comment %} ══════ BLOCK 4: TỪ KHÓA — Block 2 ══════ {%- endcomment -%}
-{%- assign _fsd2 = settings.footer_search_2_display | default: 'none' -%}
-{%- unless _fsd2 == 'none' -%}
-  {%- if settings.footer_search_2_menu != blank -%}
-    {%- assign _fsd2_cls = '' -%}
-    {%- if _fsd2 == 'desktop' -%}{%- assign _fsd2_cls = ' sm-hidden' -%}{%- endif -%}
-    {%- if _fsd2 == 'mobile'  -%}{%- assign _fsd2_cls = ' md-hidden' -%}{%- endif -%}
-<div class="pc-footer-keywords{{ _fsd2_cls }}">
-  <div class="container">
-    <h3 class="pc-footer-keywords__title">{{ settings.footer_search_2_title | default: 'Có thể bạn đang tìm kiếm' }}</h3>
-    <div class="pc-footer-keywords__tags">
-      {%- assign _fsk2 = settings.footer_search_2_menu | split: ';' -%}
-      {%- for _fsi2 in _fsk2 -%}
-        {%- assign _fskw2 = _fsi2 | strip -%}
-        {%- if _fskw2 != '' -%}
-          <a href="/search?query={{ _fskw2 | url_encode }}&amp;type=product" title="{{ _fskw2 | escape }}">{{ _fskw2 }}</a>
         {%- endif -%}
       {%- endfor -%}
     </div>

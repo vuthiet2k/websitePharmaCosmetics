@@ -11,7 +11,7 @@
  *  3. Ảnh mặc định của field `type: "image"` dạng id = tên file (cơ chế Sapo: admin upload
  *     ảnh thì Sapo ghi đè assets/<id>, template gọi '<id>' | asset_url).
  * Ảnh nội dung khác (banner, ảnh demo, QR, logo đối tác...) phải là field `type: "image"`
- * id thường (vd footer_qr_image) và render qua `settings.<id> | img_url`, không nằm trong assets/.
+ * id thường (vd footer_bct_logo) và render qua `settings.<id> | img_url`, không nằm trong assets/.
  */
 
 const fs = require('fs');

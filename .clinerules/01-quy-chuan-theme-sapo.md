@@ -88,7 +88,7 @@ Mỗi lần tải lên Sapo chỉ báo 1 lỗi đầu tiên ⇒ mọi quy tắc 
   `type: "image"`, có 2 dạng:
   - `id` = tên file (vd `"logo.png"`): admin upload thì Sapo ghi đè `assets/<id>`, template gọi
     `'<id>' | asset_url`. File mặc định được phép nằm trong `assets/`.
-  - `id` thường (vd `footer_qr_image`): render trong `{% if settings.<id> != blank %}` bằng
+  - `id` thường (vd `footer_bct_logo`): render trong `{% if settings.<id> != blank %}` bằng
     `{{ settings.<id> | img_url: '…' }}`. **Ảnh nội dung mới (banner, QR, logo đối tác, ảnh demo…)
     dùng dạng này**, để trống thì ẩn.
 - Được phép trong `assets/` (mỗi file ≤ 150 KB): SVG `icon-*/flag-*/lang-*/sprite.svg`; icon UI

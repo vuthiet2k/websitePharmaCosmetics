@@ -1,4 +1,3 @@
-{% assign social = settings.fot_social %}
 {% assign copyright = settings.footer_copyright %}
 {% assign btt = settings.backtotop_enable %}
 <footer class="footer">
@@ -138,118 +137,46 @@
 					</div>
 					{% endif %}
 				</div>
+				{%- comment -%}
+				  2026-10-13: cột menu chân trang cấu hình hoàn toàn bằng Menu (Điều hướng) của Sapo — người dùng
+				  yêu cầu footer "theo menu link, gọn, dễ dùng, bỏ phần thừa". Đã bỏ cột 4 cũ (hotline/email mặc định
+				  của Sapo + QR Zalo không có ảnh + logo Bộ Công Thương gắn link cứng của doanh nghiệp khác).
+				  Tiêu đề cột: để trống ⇒ lấy tên menu. Cột không chọn menu/menu rỗng ⇒ ẩn, các cột còn lại tự giãn đều.
+				{%- endcomment -%}
+				{%- assign _fm_count = 0 -%}
+				{%- for i in (1..3) -%}
+					{%- case i -%}{%- when 1 -%}{%- assign _h = settings.footer_policy_menu -%}{%- when 2 -%}{%- assign _h = settings.footer_support_menu -%}{%- else -%}{%- assign _h = settings.footer_custom_menu -%}{%- endcase -%}
+					{%- if _h != blank and linklists[_h].links.size > 0 -%}{%- assign _fm_count = _fm_count | plus: 1 -%}{%- endif -%}
+				{%- endfor -%}
+				{%- if _fm_count > 0 -%}
+				{%- assign _fm_col = 12 | divided_by: _fm_count -%}
 				<div class="col-lg-8 col-md-12 col-sm-12 col-xs-12 col-12">
 					<div class="row">
-						<div class="col-xs-12 col-md-3 col-lg-3 footer-click">
+						{%- for i in (1..3) -%}
+						{%- case i -%}
+							{%- when 1 -%}{%- assign _h = settings.footer_policy_menu -%}{%- assign _t = settings.footer_policy_title -%}
+							{%- when 2 -%}{%- assign _h = settings.footer_support_menu -%}{%- assign _t = settings.footer_support_title -%}
+							{%- else -%}{%- assign _h = settings.footer_custom_menu -%}{%- assign _t = settings.footer_custom_title -%}
+						{%- endcase -%}
+						{%- assign _fm_ll = linklists[_h] -%}
+						{%- if _h != blank and _fm_ll.links.size > 0 -%}
+						<div class="col-xs-12 col-md-{{ _fm_col }} col-lg-{{ _fm_col }} footer-click">
 							<h4 class="title-menu clicked">
-								<span>{{settings.footer_policy_title}}</span>
+								<span>{{ _t | default: _fm_ll.title }}</span>
 							</h4>
-							<ul class="list-menu toggle-mn hidden-mob" >
-								{%if settings.footer_policy_menu.size > 1%}
-								{% for link in linklists[settings.footer_policy_menu].links %}
+							<ul class="list-menu toggle-mn hidden-mob">
+								{%- for link in _fm_ll.links -%}
 								<li class="li_menu">
-									<a href="{{ link.url }}" title="{{ link.title }}">{{ link.title }}</a>
+									<a href="{{ link.url }}" title="{{ link.title | escape }}">{{ link.title }}</a>
 								</li>
-								{% endfor %}
-								{%else%}
-								<li class="li_menu">
-									<span style="color: #fff; cursor: auto;">Chưa cập nhật</span>
-								</li>
-								{%endif%}
+								{%- endfor -%}
 							</ul>
-						</div>
-
-						<div class="col-xs-12 col-md-3 col-lg-3 footer-click">
-							<h4 class="title-menu clicked">
-								<span>{{settings.footer_support_title}}</span>
-							</h4>
-							<ul class="list-menu toggle-mn hidden-mob footer-click" >
-								{%if settings.footer_support_menu.size > 1%}
-								{% for link in linklists[settings.footer_support_menu].links %}
-								<li class="li_menu">
-									<a href="{{ link.url }}" title="{{ link.title }}">{{ link.title }}</a>
-								</li>
-								{% endfor %}
-								{%else%}
-								<li class="li_menu">
-									<span style="color: #fff; cursor: auto;">Chưa cập nhật</span>
-								</li>
-								{%endif%}
-							</ul>
-						</div>
-						<div class="col-xs-12 col-md-3 col-lg-3 footer-click">
-							<h4 class="title-menu clicked">
-								<span>{{settings.footer_custom_title}}</span>
-							</h4>
-							<ul class="list-menu toggle-mn hidden-mob footer-click" >
-								{%if settings.footer_custom_menu.size > 1%}
-								{% for link in linklists[settings.footer_custom_menu].links %}
-								<li class="li_menu">
-									<a href="{{ link.url }}" title="{{ link.title }}">{{ link.title }}</a>
-								</li>
-								{% endfor %}
-								{%else%}
-								<li class="li_menu">
-									<span style="color: #fff; cursor: auto;">Chưa cập nhật</span>
-								</li>
-								{%endif%}
-							</ul>
-						</div>
-						{%- comment -%}
-						  T-141 — cot thu 4 chi con moi CAI TIEU DE tro troi: noi dung ben trong phu
-						  thuoc footer_support_N_enable ma ca 4 co nay deu chua bat (do that: heading
-						  hien, ben duoi 0 phan tu). Chi render cot nay khi that su co noi dung — cung
-						  nguyen tac da ap cho khoi dang nhap mang xa hoi o T-134: khong bao gio de lai
-						  mot cai nhan khong co gi ben duoi.
-						{%- endcomment -%}
-						{%- if settings.footer_support_1_enable or settings.footer_support_2_enable or settings.footer_support_3_enable or settings.footer_support_4_enable -%}
-						<div class="col-xs-12 col-md-3 col-lg-3">
-							<h4 class="title-menu">
-								<span>{{settings.footer_search_title}}</span>
-							</h4>
-							<div class="info_support">
-								{%- if settings.footer_support_1_enable -%}
-								<div class="bfr-bottom-right-item">
-									{%- if settings.footer_support_1_title.size > 0 -%}
-									<p class="title_sup">{{settings.footer_support_1_title}}</p>
-									{%- endif -%}
-									<div class="inforsup">
-										<a class="hotline_sup" href="tel:{{settings.footer_support_1_hotline | remove: " " | remove: "."}}" title="{{settings.footer_support_1_hotline}}">{{settings.footer_support_1_hotline}} {{settings.footer_support_1_hotline_sub}}</a>
-										<a class="email_sup" href="mailto:{{settings.footer_support_1_email}}" title="{{settings.footer_support_1_email}}">{{settings.footer_support_1_email}}</a>
-									</div>
-								</div>
-								{%- endif -%}
-								{%- if settings.footer_support_2_enable -%}
-								<div class="bfr-bottom-right-item">
-									{%- if settings.footer_support_2_title.size > 0 -%}
-									<p class="title_sup">{{settings.footer_support_2_title}}</p>
-									{%- endif -%}
-									<div class="inforsup">
-										<a class="hotline_sup" href="tel:{{settings.footer_support_2_hotline | remove: " " | remove: "."}}" title="{{settings.footer_support_2_hotline}}">{{settings.footer_support_2_hotline}} {{settings.footer_support_2_hotline_sub}}</a>
-										<a class="email_sup" href="mailto:{{settings.footer_support_2_email}}" title="{{settings.footer_support_2_email}}">{{settings.footer_support_2_email}}</a>
-									</div>
-								</div>
-								{%- endif -%}
-
-							</div>
-							{%- if settings.footer_qr_enable-%}
-							<h4 class="title-menu">
-								<span>{{settings.footer_app_title}}</span>
-							</h4>
-							<div class="info_zalo">
-								{%- comment -%} 2026-10-03: ảnh QR lấy từ settings.footer_qr_image (trước là assets/qrzalo.jpg) — để trống thì ẩn ảnh. {%- endcomment -%}
-								{%- if settings.footer_qr_image != blank -%}
-								<a href="{{settings.footer_qr_hotline}}" target="_blank" title="{{settings.footer_qr_alt}}">
-									<img class="lazyload" width="256" height="256" alt="{{settings.footer_qr_alt}}" data-src="{{ settings.footer_qr_image | img_url: 'large' }}" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC"/>
-								</a>
-								{%- endif -%}
-							</div>
-							{%- endif -%}
 						</div>
 						{%- endif -%}
-												{%- if settings.footer_bct_logo != blank -%}<a href="http://online.gov.vn/Home/WebDetails/103817" target="_blank"><img src="{{ settings.footer_bct_logo | img_url: 'large' }}" width="175" height="66" style="max-width:175px;    margin-top: 25px;" alt="Đã thông báo Bộ Công Thương" loading="lazy"></a>{%- endif -%}
+						{%- endfor -%}
 					</div>
 				</div>
+				{%- endif -%}
 			</div>
 		</div>
 	</div>

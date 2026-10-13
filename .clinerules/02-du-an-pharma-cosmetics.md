@@ -518,6 +518,16 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
 - JSON-LD `VideoObject` ở `article.video.bwt` (duration ISO từ `thoiluong:`). Không có link video Facebook thật ⇒ demo
   chỉ có YouTube; không bịa link Facebook.
 
+## Chân trang (`snippets/footer.bwt` + `section_footer_brands.bwt`, chốt 2026-10-13)
+
+- Mọi danh sách link ở footer lấy từ **Menu Sapo (Điều hướng)** qua `link_list`: dải Thương hiệu/Loại SP,
+  Danh mục SEO (4 nhóm), 3 cột menu (`footer_policy_*`, `footer_support_*`, `footer_custom_*`).
+  Tiêu đề cột trống ⇒ dùng tên menu; cột không có menu/menu rỗng ⇒ ẩn, cột còn lại tự chia đều.
+  Không thêm link/hotline/QR hardcode hay khối "thông tin hỗ trợ" riêng vào footer.
+- Địa chỉ/ĐT/email cột trái lấy từ `store_*` (mục Liên hệ & Hỗ trợ); dải pháp lý dùng `footer_legal_*`
+  riêng. Logo Bộ Công Thương chỉ hiện khi có cả `footer_bct_url` + `footer_bct_logo` (không link cứng).
+- Thứ tự nhóm trong `settings_schema.json` mục "Chân trang" = thứ tự hiển thị trên web (①→⑤).
+
 ## AI Skin Quiz — phân tầng Tier/Case & cờ an toàn (chốt 2026-10-05)
 
 - Engine thuần **`assets/skin-quiz-engine.js.bwt`** (`window.PharmaSkinQuizEngine`, `require` được trong Node) là
