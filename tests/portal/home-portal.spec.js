@@ -197,7 +197,8 @@ test('footer uses the master logo and white content on the mainColor brand backg
   await expect(footer.locator('.logo-icon, .logo-text-block')).toHaveCount(0);
   await expect(footer.locator('.pc-footer-logo')).toHaveCSS('color', 'rgb(255, 255, 255)');
   await expect(footer.locator('.title-menu').first()).toHaveCSS('color', 'rgb(255, 255, 255)');
-  await expect(footer.locator('.list_footer a').first()).toHaveCSS('color', 'rgb(255, 255, 255)');
+  // 2026-10-13: khối liên hệ footer đổi markup sang .pc-foot__contact (snippets/footer.bwt).
+  await expect(footer.locator('.pc-foot__contact a').first()).toHaveCSS('color', 'rgb(255, 255, 255)');
   expect(errors).toEqual([]);
 });
 
