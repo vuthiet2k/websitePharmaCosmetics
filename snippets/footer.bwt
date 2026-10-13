@@ -78,19 +78,17 @@
 					<h4 class="title-menu"><span>{{settings.footer_payment_title}}</span></h4>
 					<div class="payment-footer list-menu">
 						{%- comment -%}
-						  2026-10-13: assets/payment_1..5.png chưa từng có trong theme (đo thật trên theme xem trước Sapo: 404) ⇒ 4 ô
-						  ảnh trống. Logo lấy từ ô tải lên "Icon N — logo" (footer_payment_N_image); chưa tải ⇒ hiện tên dạng nhãn chữ.
+						  2026-10-14 (người dùng): logo thật lấy từ site đang chạy (pharmacosmetics-vn.com, theme 1139450) đưa vào
+						  assets/payment_1..5.png (MoMo, ZaloPay, VnPay, Moca, Visa — 126×58) — trước đó theme thiếu file ⇒ 404.
+						  Ô ảnh Admin "Icon N — logo" có id payment_N.png (cùng cơ chế logo_footer.png): tải ảnh mới lên ⇒ Sapo ghi đè
+						  đúng file asset này ⇒ đọc bằng 'payment_N.png' | asset_url (đạt REQ-ASSET-01: ảnh trong assets/ phải trùng id ô ảnh).
 						{%- endcomment -%}
 						{% for i in (1..5) %}
 						{% capture enable %}footer_payment_{{i}}_enable{% endcapture %}
 						{% capture alt %}footer_payment_{{i}}_alt{% endcapture %}
-						{% capture img %}footer_payment_{{i}}_image{% endcapture %}
+						{% capture logo %}payment_{{i}}.png{% endcapture %}
 						{% if settings[enable] %}
-						{%- if settings[img] != blank -%}
-						<span class="payment-item pc-foot__pay pc-foot__pay--logo"><img src="{{ settings[img] | img_url: 'small' }}" alt="{{ settings[alt] | escape }}" width="63" height="29" loading="lazy"></span>
-						{%- elsif settings[alt] != blank -%}
-						<span class="payment-item pc-foot__pay">{{ settings[alt] | escape }}</span>
-						{%- endif -%}
+						<span class="payment-item pc-foot__pay pc-foot__pay--logo"><img src="{{ logo | asset_url }}" alt="{{ settings[alt] | default: 'Thanh toán' | escape }}" width="126" height="58" loading="lazy"></span>
 						{% endif %}
 						{% endfor %}
 					</div>
