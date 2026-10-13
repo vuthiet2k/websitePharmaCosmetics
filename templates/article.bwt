@@ -370,31 +370,24 @@
 						</div>
 						{%if settings.blog_lq_enable%}
 						<div class="blog_related">
-							<div class="title">{{settings.title_blog_relate}}</div>
+							{%- comment -%} 2026-10-13 (thiết kế chi tiết bài viết): tiêu đề + "Xem tất cả" về trang blog. {%- endcomment -%}
+							<div class="blog_related__head">
+								<h2 class="title">{{ settings.title_blog_relate | default: 'Tin tức liên quan' }}</h2>
+								<a class="blog_related__more" href="{{ blog.url }}">Xem tất cả ›</a>
+							</div>
 							{% assign blog_count_lq = blog.articles.size %}
 							{%if settings.limit_blog_relate > 0 and blog_count_lq > 1 %}
 							<div class="blog-swiper swiper-container">
 								<div class="swiper-wrapper">
-									{%- assign checkRelated = page_title | handleize -%}
-
-									{%- assign isCurrentInList = false -%}
-									{%- for article in blog.articles limit: settings.limit_blog_relate -%}
-									{%- assign linkRelated = article.url | remove: "/" -%}
-									{%- if checkRelated == linkRelated -%}
-									{%- assign isCurrentInList = true -%}
-									{%- break -%}
-									{%- endif -%}
-									{%- endfor -%}
-
-									{%- assign limit_count = settings.limit_blog_relate | plus: 0 -%}
-									{%- if isCurrentInList -%}
-									{%- assign limit_count = limit_count | plus: 1 -%}
-									{%- endif -%}
-
-									{%- for article in blog.articles limit: limit_count -%}
-									{%- assign checkRelated = page_title | handleize -%}
-									{%- assign linkRelated = article.url | remove: "/" -%}
-									{%- if checkRelated != linkRelated -%}
+									{%- comment -%} 2026-10-13: so URL bài đang xem (trước vòng lặp, vì biến article bị che trong for)
+									  — cách cũ so page_title|handleize với url không bao giờ khớp ⇒ bài đang xem lọt vào danh sách. {%- endcomment -%}
+									{%- assign pc_cur_url = article.url -%}
+									{%- assign pc_rel_max = settings.limit_blog_relate | plus: 0 -%}
+									{%- assign pc_rel_limit = pc_rel_max | plus: 1 -%}
+									{%- assign pc_rel_n = 0 -%}
+									{%- for article in blog.articles limit: pc_rel_limit -%}
+									{%- if article.url != pc_cur_url and pc_rel_n < pc_rel_max -%}
+									{%- assign pc_rel_n = pc_rel_n | plus: 1 -%}
 									<div class="swiper-slide">
 										{% include 'blog_item' %}
 									</div>
@@ -503,12 +496,14 @@
 							<div class="pc-cmp-prescription-widget__title">Sản phẩm khuyên dùng theo phác đồ</div>
 							{%for product in pw_col.products limit: 3%}
 							<a href="{{ product.url }}" class="pc-cmp-prescription-widget__item no-underline">
-								{%- comment -%} 2026-10-07: Sapo dùng product.name (product.title rỗng ⇒ widget mất tên sản phẩm). {%- endcomment -%}
-								<img src="{{ product.featured_image.src | default: 'no-image.jpg' | img_url: 'small' }}" alt="{{ product.featured_image.alt | default: product.name | escape }}" width="44" height="44" loading="lazy">
+								{%- comment -%} 2026-10-07: Sapo dùng product.name (product.title rỗng ⇒ widget mất tên sản phẩm).
+								  2026-10-13 (thiết kế): ảnh lớn hơn, tên 2 dòng, nút mũi tên bên phải. {%- endcomment -%}
+								<img src="{{ product.featured_image.src | default: 'no-image.jpg' | img_url: 'medium' }}" alt="{{ product.featured_image.alt | default: product.name | escape }}" width="64" height="64" loading="lazy">
 								<div class="min-w-0">
-									<div class="pc-cmp-prescription-widget__item-name truncate">{{ product.name }}</div>
+									<div class="pc-cmp-prescription-widget__item-name">{{ product.name }}</div>
 									<div class="pc-cmp-prescription-widget__item-price">{{ product.price | money }}</div>
 								</div>
+								<span class="pc-cmp-prescription-widget__go" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="m9 6 6 6-6 6"/></svg></span>
 							</a>
 							{%endfor%}
 						</div>
