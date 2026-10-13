@@ -15,7 +15,10 @@ body {
   /* Section wrapper */
   .ab-most-view-product-module .most-view-module {
     background-color: var(--bg-subtle) !important;
-    padding: 36px 0; /* 2026-10-13: trước là 0 ⇒ mép trên dính dải phía trước */
+    /* 2026-10-13 (người dùng: "không lệch so với các section khác"): cùng nhịp dọc section trang chủ
+       (home-portal.css `.pc-portal section{padding:78px 0}`, ≤680px 54px). */
+    padding: 78px 0 68px; /* đáy 68 + 10px đệm dưới của hàng thẻ (app) = 78 */
+    @media (max-width: 680px) { padding: 54px 0 44px; }
     overflow: hidden;
   }
 
@@ -24,11 +27,12 @@ body {
      — thiếu nó thì lề 16px không bao giờ ăn, thẻ/tiêu đề dính mép màn hình (1168609). */
   .ab-most-view-product-module .most-view-module .most-view-module-heading,
   .ab-most-view-product-module .most-view-module .most-view-module-body {
-    max-width: 1200px;
+    /* 2026-10-13: cùng khung .wrap của các section khác (max-width + lề theo token container, storefront-v3.css). */
+    max-width: var(--pc-container-max, 1280px);
     margin-left: auto !important;
     margin-right: auto !important;
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: var(--pc-container-gutter, 32px);
+    padding-right: var(--pc-container-gutter, 32px);
   }
 
   /* Header: title trái — pager phải
@@ -61,6 +65,13 @@ body {
   .ab-most-view-product-module .most-view-module .most-view-module-heading {
     border-bottom: 0 !important;
     position: static !important; /* nút bám theo cả khối .most-view-module, không theo tiêu đề */
+    padding-top: 0 !important;    /* app: padding 10px 0 — bỏ để tiêu đề → thẻ = 40px như .section-head */
+    padding-bottom: 0 !important;
+    margin-bottom: 30px !important; /* + 10px đệm trên của hàng thẻ (app, chừa bóng thẻ khi hover) = 40px */
+  }
+  .ab-most-view-product-module .most-view-module .most-view-module-body {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
   }
   .ab-most-view-product-module .most-view-module {
     position: relative;
@@ -70,7 +81,7 @@ body {
     z-index: 3;
     top: calc(50% + 37px);
     left: 50%;
-    width: calc(min(1200px, 100%) - 32px);
+    width: calc(min(var(--pc-container-max, 1280px), 100%) - 2 * var(--pc-container-gutter, 32px));
     transform: translate(-50%, -50%);
     display: flex !important;
     justify-content: space-between;
@@ -107,7 +118,7 @@ body {
     }
   }
   /* Desktop: nút nằm đè nửa ra ngoài mép thẻ; màn nhỏ (khối tràn sát mép, overflow:hidden) giữ nút trong khung. */
-  @media (min-width: 1280px) {
+  @media (min-width: 1340px) {
     .ab-most-view-product-module .most-view-module .most-view-btn-pager-prev { transform: translateX(-50%); }
     .ab-most-view-product-module .most-view-module .most-view-btn-pager-next { transform: translateX(50%); }
   }
@@ -240,10 +251,4 @@ body {
     }
   }
 
-  @media (max-width: 767px) {
-    /* chỉ đệm dọc — lề ngang đã có 16px ở heading/body, cộng thêm 1rem thì mobile lệch 30px. */
-    .ab-most-view-product-module .most-view-module { padding: 1rem 0; }
-    .ab-most-view-product-module .most-view-module-heading { margin-bottom: 20px; flex-direction: column; align-items: flex-start; }
-    .ab-most-view-product-module .most-view-module-pager { order: 3; }
-  }
 }
