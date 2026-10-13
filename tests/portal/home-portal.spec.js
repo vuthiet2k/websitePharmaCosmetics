@@ -25,7 +25,8 @@ test('v3 typography, section order and real destinations', async ({ page }) => {
   await page.getByRole('link', { name: 'Chọn theo vấn đề da', exact: true }).click();
   await expect(page).toHaveURL(/#section_solutions$/);
   await expect(page.locator('.concerns a')).toHaveCount(6);
-  await expect(page.locator('.actives a')).toHaveCount(9);
+  // 2026-10-13: hoạt chất chuyển sang dải chạy .pc-bm--ing — đếm bản đọc được (không tính bản lặp aria-hidden).
+  await expect(page.locator('.pc-bm--ing .pc-bm__group:first-child > .pc-bm__item')).toHaveCount(9);
   await expect(page.locator('.post-lead')).toHaveAttribute('href', /\S+/);
   expect(errors).toEqual([]);
 });

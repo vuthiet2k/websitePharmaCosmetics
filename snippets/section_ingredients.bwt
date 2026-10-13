@@ -1,16 +1,46 @@
+{%- comment -%}
+  2026-10-13 (người dùng: "làm như mục Thương hiệu"): nguồn = Menu settings.home_ing_menu (mỗi mục trỏ tới danh mục
+  hoạt chất), dải chạy ngang tự động dùng chung CSS .pc-bm với snippets/section_brand_marquee.bwt (assets/home-portal.css).
+  Ảnh trước tên = ảnh danh mục mà link trỏ tới (link.object.image); không có ⇒ chữ cái đầu. Dòng phụ = số sản phẩm.
+  Chưa có menu ⇒ dùng 9 ô nhập tay ing_N_title/url/tag như trước.
+{%- endcomment -%}
+{%- assign ing_ll = linklists[settings.home_ing_menu] -%}
+{%- capture pc_ing_items -%}
+{%- if settings.home_ing_menu != blank and ing_ll.links.size > 0 -%}
+  {%- for link in ing_ll.links limit: 16 -%}
+    <a class="pc-bm__item" href="{{ link.url | escape }}">
+      {%- if link.object.image.src != blank -%}
+      <img class="pc-bm__logo" src="{{ link.object.image.src | img_url: 'compact' }}" alt="{{ link.title | escape }}" width="48" height="48" loading="lazy">
+      {%- else -%}
+      <span class="pc-bm__logo pc-bm__logo--text" aria-hidden="true">{{ link.title | strip | slice: 0 | upcase }}</span>
+      {%- endif -%}
+      <span class="pc-bm__text"><span class="pc-bm__name">{{ link.title | escape }}</span>{%- if link.object.products_count > 0 -%}<small class="pc-bm__sub">{{ link.object.products_count }} sản phẩm</small>{%- endif -%}</span>
+    </a>
+  {%- endfor -%}
+{%- else -%}
+  {%- for i in (1..9) -%}
+    {%- capture title -%}ing_{{ i }}_title{%- endcapture -%}{%- capture url -%}ing_{{ i }}_url{%- endcapture -%}{%- capture tag -%}ing_{{ i }}_tag{%- endcapture -%}
+    {%- assign ingredient_name = settings[title] -%}
+    {%- if i == 1 -%}{%- assign ingredient_name = ingredient_name | default: 'Retinol' -%}{%- elsif i == 2 -%}{%- assign ingredient_name = ingredient_name | default: 'Hyaluronic Acid' -%}{%- elsif i == 3 -%}{%- assign ingredient_name = ingredient_name | default: 'Ceramides' -%}{%- endif -%}
+    {%- if ingredient_name != blank -%}
+    {%- capture fallback_url -%}/search?query={{ ingredient_name | url_encode }}&type=product{%- endcapture -%}
+    <a class="pc-bm__item" href="{{ settings[url] | default: fallback_url | escape }}">
+      <span class="pc-bm__logo pc-bm__logo--text" aria-hidden="true">{{ ingredient_name | strip | slice: 0 | upcase }}</span>
+      <span class="pc-bm__text"><span class="pc-bm__name">{{ ingredient_name | escape }}</span>{%- if settings[tag] != blank -%}<small class="pc-bm__sub">{{ settings[tag] | escape }}</small>{%- endif -%}</span>
+    </a>
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+{%- endcapture -%}
+{%- assign pc_ing_count = pc_ing_items | split: 'class="pc-bm__item"' | size | minus: 1 -%}
 <section class="portal-actives"><div class="wrap">
   <div class="section-head"><div><p class="eyebrow">{{ settings.home_ing_eyebrow | default: 'Thấu hiểu làn da bằng khoa học' | escape }}</p><h2>{{ settings.home_ing_title | default: 'Tìm theo hoạt chất' | escape }}</h2></div><p class="lead">{{ settings.home_ing_subtitle | escape }}</p></div>
-  <div class="actives">
-    {% assign ing_ll = linklists[settings.home_ing_menu] %}
-    {% if ing_ll.links.size > 0 %}
-      {% for link in ing_ll.links %}<a class="active" href="{{ link.url | escape }}">{{ link.title | escape }}{% if link.object.products_count > 0 %}<small>{{ link.object.products_count }} sản phẩm</small>{% endif %}</a>{% endfor %}
-    {% else %}
-      {% for i in (1..9) %}
-        {% capture title %}ing_{{ i }}_title{% endcapture %}{% capture url %}ing_{{ i }}_url{% endcapture %}{% capture tag %}ing_{{ i }}_tag{% endcapture %}
-        {% assign ingredient_name = settings[title] %}
-        {% if i == 1 %}{% assign ingredient_name = ingredient_name | default: 'Retinol' %}{% elsif i == 2 %}{% assign ingredient_name = ingredient_name | default: 'Hyaluronic Acid' %}{% elsif i == 3 %}{% assign ingredient_name = ingredient_name | default: 'Ceramides' %}{% endif %}
-        {% if ingredient_name != blank %}{% capture fallback_url %}/search?query={{ ingredient_name | url_encode }}&type=product{% endcapture %}<a class="active" href="{{ settings[url] | default: fallback_url | escape }}">{{ ingredient_name | escape }}<small>{{ settings[tag] | escape }}</small></a>{% endif %}
-      {% endfor %}
-    {% endif %}
+  {%- if pc_ing_count > 0 -%}
+  <div class="pc-bm pc-bm--ing" style="--pc-bm-dur: {{ pc_ing_count | times: 6 }}s">
+    <div class="pc-bm__track">
+      <div class="pc-bm__group">{{ pc_ing_items }}<span class="pc-bm__dup" aria-hidden="true" inert>{{ pc_ing_items }}</span></div>
+      <div class="pc-bm__group" aria-hidden="true" inert>{{ pc_ing_items }}{{ pc_ing_items }}</div>
+    </div>
   </div>
+  {%- endif -%}
 </div></section>
