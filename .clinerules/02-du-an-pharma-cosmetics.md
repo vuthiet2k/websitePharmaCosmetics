@@ -183,11 +183,12 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
 - Hero (`section_hero.bwt` + `home-portal.css` + `home-hero.js`, chốt 13/10/2026 theo ảnh mẫu khách gửi) là
   **Swiper ảnh toàn khổ**, mỗi slide chỉ cấu hình **Ảnh · Text hiển thị · Text nút · Link** (tối đa 5 slide;
   slide không có ảnh bị bỏ qua). **1 ảnh dùng chung mọi màn hình** — không có ảnh riêng mobile/tablet; khung
-  ảnh `object-fit:cover`. Text "chìm" (trắng trong mờ, chữ mảnh in hoa, quầng tối rất nhẹ) + link chữ có mũi tên căn
-  giữa phía dưới slide; link để trống ⇒ `/dat-lich-tu-van`.
+  ảnh `object-fit:cover`. Text "chìm" (trắng trong mờ, chữ mảnh in hoa, quầng tối rất nhẹ) + **nút nền xanh đậm `#0E5235`**
+  chữ trắng đậm, nhịp sáng pulse (2026-10-13: link chữ trắng bị chìm vào ảnh sáng) căn giữa phía dưới slide;
+  link để trống ⇒ `/dat-lich-tu-van`.
   Text slide đầu là `<h1>` duy nhất trang chủ, slide sau `<h2>`; **không bật `loop`** (Swiper nhân bản slide ⇒
   trùng h1) — autoplay `stopOnLastSlide:false` tự quay về đầu, mũi tên tự vòng. Hiệu ứng (theo dự án tham khảo
-  của người dùng): fade 700ms, Ken Burns zoom ảnh đang hiện, mũi tên kính mờ; dừng khi hover/focus; tắt khi
+  của người dùng): fade 1000ms, zoom + lia ảnh rõ kiểu video chạy hết mỗi slide, caption trồi lên; chỉ dừng khi focus bàn phím (không dừng khi hover — Hero 100vh); tắt khi
   `prefers-reduced-motion`. Topbar không có nút pause (bỏ 13/10/2026). Header ≥1200px: menu căn giữa trang. Ảnh slide 1 preload ở `layouts/theme.bwt`.
   Đã xoá các trường cũ: badge, mô tả, nút 2, chữ nhấn, 3 dòng cam kết, chế độ sơ đồ da, alt riêng, ảnh mobile.
 - Khối hướng dẫn Quiz da AI (`section_ai_guide.bwt`, phase home-shopping-ux 20/09/2026): section
