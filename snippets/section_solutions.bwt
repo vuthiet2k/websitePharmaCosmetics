@@ -3,7 +3,22 @@
   <div class="concerns">
     {% assign sol_ll = linklists[settings.home_solutions_menu] %}
     {% if sol_ll.links.size > 0 %}
-      {% for link in sol_ll.links %}<a class="concern" href="{{ link.url | escape }}"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg><span>{{ link.title | escape }}</span></a>{% endfor %}
+      {%- comment -%}
+        2026-10-14 (theo bản sửa trực tiếp trên Sapo): mỗi thẻ ưu tiên ảnh đại diện của danh mục mà link trỏ tới
+        (link.object.image → featured_image); danh mục chưa có ảnh thì giữ icon mặc định để không vỡ bố cục.
+      {%- endcomment -%}
+      {% for link in sol_ll.links %}
+        {%- assign sol_img = link.object.image.src -%}
+        {%- if sol_img == blank -%}{%- assign sol_img = link.object.featured_image.src -%}{%- endif -%}
+        <a class="concern" href="{{ link.url | escape }}">
+          {%- if sol_img != blank -%}
+          <img class="concern-img" src="{{ sol_img | img_url: 'compact' }}" alt="{{ link.title | escape }}" width="48" height="48" loading="lazy">
+          {%- else -%}
+          <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+          {%- endif -%}
+          <span>{{ link.title | escape }}</span>
+        </a>
+      {% endfor %}
     {% else %}
       {% for i in (1..6) %}
         {% capture enabled %}home_solutions_{{ i }}_enable{% endcapture %}
