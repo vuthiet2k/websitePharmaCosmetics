@@ -203,9 +203,11 @@ test('flash sale and featured carousel move, prices and CTA stay readable', asyn
     await expect.poll(() => carousel.evaluate(e => e.swiper?.activeIndex)).toBe(0);
     const sizing = await carousel.evaluate(e => ({ actual: e.querySelector('.swiper-slide').getBoundingClientRect().width, expected: (e.clientWidth - 3 * e.swiper.params.spaceBetween) / 4 }));
     expect(Math.abs(sizing.actual - sizing.expected)).toBeLessThan(1);
-    await carousel.getByRole('button', { name: 'Sản phẩm tiếp theo', exact: true }).click();
+    // 2026-10-13: nút trước/sau của Sản phẩm bán chạy nằm 2 bên sườn (.pc-featured__stage), ngoài .swiper_featured.
+    const controls = selector === '.swiper_featured' ? page.locator('.pc-featured__stage') : carousel;
+    await controls.getByRole('button', { name: 'Sản phẩm tiếp theo', exact: true }).click();
     await expect.poll(() => carousel.evaluate(e => e.swiper.activeIndex)).toBeGreaterThan(0);
-    await carousel.getByRole('button', { name: 'Sản phẩm trước', exact: true }).click();
+    await controls.getByRole('button', { name: 'Sản phẩm trước', exact: true }).click();
     await expect.poll(() => carousel.evaluate(e => e.swiper.activeIndex)).toBe(0);
     await expect(carousel.locator('.pc-btn--action').first()).toHaveCSS('color', 'rgb(0, 63, 45)');
   }
@@ -216,7 +218,10 @@ test('flash sale and featured carousel move, prices and CTA stay readable', asyn
   const navGeometry = await featured.evaluate(section => {
     const prev = section.querySelector('.pc-featured__prev').getBoundingClientRect();
     const next = section.querySelector('.pc-featured__next').getBoundingClientRect();
-    const thumbnails = [...section.querySelectorAll('.product-thumbnail')].map(el => el.getBoundingClientRect());
+    // Chỉ xét ảnh của slide đang nằm trong khung swiper (slide khuất bị overflow cắt, không nhìn thấy).
+    const frame = section.querySelector('.swiper_featured').getBoundingClientRect();
+    const thumbnails = [...section.querySelectorAll('.product-thumbnail')].map(el => el.getBoundingClientRect())
+      .filter(r => r.right > frame.left + 1 && r.left < frame.right - 1);
     const overlaps = (button, image) => !(button.right <= image.left || button.left >= image.right || button.bottom <= image.top || button.top >= image.bottom);
     return {
       axisOffset: Math.abs((prev.top + prev.height / 2) - (next.top + next.height / 2)),

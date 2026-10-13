@@ -4,8 +4,6 @@
 {%- if feat_count > 0 -%}
 <section class="pc-section section--light section_featured_products pc-featured-products">
   <div class="container">
-	<div class="pc-featured__swiper swiper_featured swiper-container">
-
     <div class="pc-featured__header">
       <div class="pc-section-header pc-section-header--left">
         {%- if settings.home_featured_eyebrow != blank -%}
@@ -23,17 +21,12 @@
 			<path d="m22.707 11.293-7-7a1 1 0 0 0-1.414 1.414l5.293 5.293H2a1 1 0 0 0 0 2h17.586l-5.293 5.293a1 1 0 1 0 1.414 1.414l7-7a1 1 0 0 0 0-1.414z" fill="currentColor"/>
 		  </svg>
 		</a>
-		<div class="pc-featured__controls" aria-label="Điều hướng sản phẩm bán chạy">
-		  <button type="button" aria-label="Sản phẩm trước" class="swiper-button-prev pc-featured__prev">
-			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-		  </button>
-		  <button type="button" aria-label="Sản phẩm tiếp theo" class="swiper-button-next pc-featured__next">
-			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-		  </button>
-		</div>
 	  </div>
     </div>
 
+    {%- comment -%} 2026-10-13: nút trước/sau nằm 2 bên sườn danh sách (không còn ở góc phải tiêu đề), bỏ chấm phân trang. {%- endcomment -%}
+    <div class="pc-featured__stage">
+    <div class="pc-featured__swiper swiper_featured swiper-container">
       <div class="swiper-wrapper load-after" data-section="section_featured_products">
         {%- for i in (1..5) -%}
         <div class="swiper-slide item_null">
@@ -57,7 +50,13 @@
         </script>
       </div>
 
-      <div class="swiper-pagination pc-featured__pagination"></div>
+    </div>
+      <button type="button" aria-label="Sản phẩm trước" class="swiper-button-prev pc-featured__prev">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button type="button" aria-label="Sản phẩm tiếp theo" class="swiper-button-next pc-featured__next">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
     </div>
 
     <div class="pc-featured__footer md-hidden">
@@ -127,29 +126,39 @@
 /* Swiper wrapper */
 .pc-featured__swiper {
   overflow: hidden;
-  padding-bottom: 40px; /* room for pagination dots */
+  padding-bottom: 6px; /* chừa bóng thẻ sản phẩm (đã bỏ chấm phân trang) */
 }
 
-/* Navigation buttons */
+/* Nút trước/sau: 2 bên sườn danh sách sản phẩm (2026-10-13) */
+.pc-featured__stage {
+  position: relative;
+}
 .pc-featured__prev,
 .pc-featured__next {
-  position: static !important;
+  position: absolute !important;
+  top: 50% !important;
+  z-index: 5;
   width: 44px;
   height: 44px;
   margin: 0 !important;
-  transform: none !important;
+  transform: translateY(-50%) !important;
   opacity: 1 !important;
   visibility: visible !important;
   background: #fff;
   border: 1.5px solid var(--lineColor);
   border-radius: 50%;
   color: var(--mainColorDark);
-  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
   transition: background .2s, border-color .2s, color .2s;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+/* Lệch ra ngoài mép danh sách đến 58px khi màn hình còn lề (không đè ảnh sản phẩm); màn hẹp thì sát mép. */
+.pc-featured__prev { left: calc(-1 * clamp(10px, (100vw - 1236px) / 2, 58px)) !important; right: auto !important; }
+.pc-featured__next { right: calc(-1 * clamp(10px, (100vw - 1236px) / 2, 58px)) !important; left: auto !important; }
+.pc-featured__prev.swiper-button-disabled,
+.pc-featured__next.swiper-button-disabled { opacity: .35 !important; cursor: default; }
 .pc-featured__prev::after,
 .pc-featured__next::after { display: none; } /* ẩn text mặc định của Swiper */
 .pc-featured__prev:hover,
@@ -158,22 +167,8 @@
   border-color: var(--mainColorDark);
   color: #fff;
 }
-
-/* Pagination dots */
-.pc-featured__pagination {
-  bottom: 8px !important;
-}
-.pc-featured__pagination .swiper-pagination-bullet {
-  background: var(--lineColor);
-  opacity: 1;
-  width: 8px;
-  height: 8px;
-  transition: background .2s, width .2s;
-}
-.pc-featured__pagination .swiper-pagination-bullet-active {
-  background: var(--mainColorDark);
-  width: 24px;
-  border-radius: 4px;
+@media (max-width: 767px) {
+  .pc-featured__prev, .pc-featured__next { display: none !important; } /* mobile: vuốt ngang */
 }
 
 /* "Xem tất cả" — mobile (giữa, dưới swiper) */
@@ -220,9 +215,6 @@
     align-items: flex-start;
     margin-bottom: 20px;
   }
-  .pc-featured__swiper {
-    padding-bottom: 48px;
-  }
 }
 </style>
 
@@ -236,13 +228,9 @@ $(document).ready(function($) {
         slidesPerView: 4,
         spaceBetween: 20,
         slidesPerGroup: 1,
-        pagination: {
-          el: '.swiper_featured .pc-featured__pagination',
-          clickable: true,
-        },
         navigation: {
-          nextEl: '.swiper_featured .pc-featured__next',
-          prevEl: '.swiper_featured .pc-featured__prev',
+          nextEl: '.pc-featured__stage .pc-featured__next',
+          prevEl: '.pc-featured__stage .pc-featured__prev',
         },
         breakpoints: {
           280: { slidesPerView: 2, spaceBetween: 12 },
