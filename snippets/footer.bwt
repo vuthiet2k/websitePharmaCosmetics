@@ -3,116 +3,133 @@
   3 cột menu (tiêu đề in hoa nhỏ) → hàng icon mạng xã hội → dòng liên hệ (thay "Country/Region" của ảnh mẫu)
   → dòng pháp lý chữ nhỏ (thay dòng © của ảnh mẫu) → hàng cuối bản quyền / nút mở lại liên hệ nhanh
   (thay hàng link pháp lý của ảnh mẫu). Ảnh mẫu là dữ liệu demo: chữ, màu, link đều lấy từ cấu hình
-  (Menu Sapo, settings.footer_* / store_*). Bỏ logo chân trang cho đúng thiết kế (setting footer_logo_use_image
-  giữ nguyên trong schema, không xoá).
+  (Menu Sapo, settings.footer_* / store_*).
+  Cập nhật cùng ngày (phản hồi người dùng): giữ cột thương hiệu riêng bên trái — logo + thông tin liên hệ + mạng xã hội,
+  3 cột menu bên phải; cỡ chữ theo thang --fs-* của dự án để không nhỏ hơn phần còn lại của site.
 {%- endcomment -%}
 {% assign copyright = settings.footer_copyright %}
 {% assign btt = settings.backtotop_enable %}
 <footer class="footer pc-foot">
 	<div class="mid-footer">
 		<div class="container">
-			{%- comment -%}
-			  2026-10-13: cột menu chân trang cấu hình hoàn toàn bằng Menu (Điều hướng) của Sapo — người dùng
-			  yêu cầu footer "theo menu link, gọn, dễ dùng, bỏ phần thừa".
-			  Tiêu đề cột: để trống ⇒ lấy tên menu. Cột không chọn menu/menu rỗng ⇒ ẩn, các cột còn lại tự giãn đều.
-			{%- endcomment -%}
-			{%- assign _fm_count = 0 -%}
-			{%- for i in (1..3) -%}
-				{%- case i -%}{%- when 1 -%}{%- assign _h = settings.footer_policy_menu -%}{%- when 2 -%}{%- assign _h = settings.footer_support_menu -%}{%- else -%}{%- assign _h = settings.footer_custom_menu -%}{%- endcase -%}
-				{%- if _h != blank and linklists[_h].links.size > 0 -%}{%- assign _fm_count = _fm_count | plus: 1 -%}{%- endif -%}
-			{%- endfor -%}
-			{%- if _fm_count > 0 -%}
-			<div class="pc-foot__cols" style="--pc-foot-cols: {{ _fm_count }}">
-				{%- for i in (1..3) -%}
-				{%- case i -%}
-					{%- when 1 -%}{%- assign _h = settings.footer_policy_menu -%}{%- assign _t = settings.footer_policy_title -%}
-					{%- when 2 -%}{%- assign _h = settings.footer_support_menu -%}{%- assign _t = settings.footer_support_title -%}
-					{%- else -%}{%- assign _h = settings.footer_custom_menu -%}{%- assign _t = settings.footer_custom_title -%}
-				{%- endcase -%}
-				{%- assign _fm_ll = linklists[_h] -%}
-				{%- if _h != blank and _fm_ll.links.size > 0 -%}
-				<div class="col-xs-12 footer-click pc-foot__col">
-					<h4 class="title-menu clicked pc-foot__head">
-						<span>{{ _t | default: _fm_ll.title }}</span>
-					</h4>
-					<ul class="list-menu toggle-mn hidden-mob pc-foot__links">
-						{%- for link in _fm_ll.links -%}
-						<li class="li_menu">
-							<a href="{{ link.url }}" title="{{ link.title | escape }}">{{ link.title }}</a>
-						</li>
-						{%- endfor -%}
-					</ul>
-				</div>
+			<div class="pc-foot__top">
+				<div class="pc-foot__brand">
+				<a href="/" class="logo-wrapper pc-footer-logo pc-logo-master pc-foot__logo" title="{{ settings.store_name | default: store.name | escape }}">
+					{%- comment -%}
+					  2026-10-07: "Logo chân trang" (Admin › Chân trang, logo_footer.png) tách riêng logo header vì nền footer xanh;
+					  tắt ⇒ dùng logo gốc assets/PharmaCosmetics.svg đổi sang trắng bằng .pc-logo-root--inverse (storefront-v3.css).
+					{%- endcomment -%}
+					{%- if settings.footer_logo_use_image != false -%}
+					<img class="pc-logo-master-img" src="{{ 'logo_footer.png' | asset_url }}" width="270" height="56" alt="{{ settings.store_name | default: store.name | escape }}" loading="lazy">
+					{%- else -%}
+					<img class="pc-logo-master-img pc-logo-root pc-logo-root--inverse" src="{{ 'PharmaCosmetics.svg' | asset_url }}" width="270" height="55" alt="{{ settings.store_name | default: store.name | escape }}" loading="lazy">
+					{%- endif -%}
+				</a>
+				{%- assign _ft_addr = settings.store_address -%}
+				{%- if _ft_addr == blank -%}
+				{%- capture _ft_addr -%}{%if store.address!='' %}{{ store.address }}, {%endif%}{%if store.province!='' %}{{store.province}}, {%endif%}{%if store.district!='' %}{{store.district}}, {%endif%}{%if store.country!='' %}{{store.country}}{%endif%}{%- endcapture -%}
 				{%- endif -%}
-				{%- endfor -%}
-			</div>
-			{%- endif -%}
+				{%- assign _ft_phone = settings.store_phone | default: store.phone_number -%}
+				{%- assign _ft_email = settings.store_email | default: store.customer_email -%}
+				<ul class="pc-foot__contact">
+					{%- if _ft_addr != blank -%}
+					<li><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span>{{ _ft_addr }}</span></li>
+					{%- endif -%}
+					{%- if _ft_phone != blank -%}
+					<li><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M5 3.5h3.5l1.5 4-2 1.5a11 11 0 0 0 7 7l1.5-2 4 1.5V19a2 2 0 0 1-2 2A16 16 0 0 1 3 5.5a2 2 0 0 1 2-2Z"/></svg><a href="tel:{{ _ft_phone | remove: ' ' | remove: '.' }}" title="{{ _ft_phone }}">{{ _ft_phone }}</a></li>
+					{%- endif -%}
+					{%- if _ft_email != blank -%}
+					<li><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="m3.5 6 8.5 7 8.5-7"/></svg><a href="mailto:{{ _ft_email }}" title="{{ _ft_email }}">{{ _ft_email }}</a></li>
+					{%- endif -%}
+				</ul>
 
-			{% if settings.footer_social_enable %}
-			{%- comment -%} Icon 1 màu (currentColor) theo ảnh thiết kế thay cho ảnh logo màu tròn cũ. {%- endcomment -%}
-			<div class="pc-foot__social">
-				{% if settings.footer_social_insta != blank %}
-				<a href="{{ settings.footer_social_insta }}" target="_blank" rel="noopener" aria-label="Instagram" title="Theo dõi {{ store.name }} trên Instagram"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.3" cy="6.7" r="1.2" fill="currentColor"/></svg></a>
-				{% endif %}
-				{% if settings.footer_social_fb != blank %}
-				<a href="{{ settings.footer_social_fb }}" target="_blank" rel="noopener" aria-label="Facebook" title="Theo dõi {{ store.name }} trên Facebook"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M13.5 21v-7.5h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.5-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.8v3h2.6V21z"/></svg></a>
-				{% endif %}
-				{% if settings.footer_social_tiktok != blank %}
-				<a href="{{ settings.footer_social_tiktok }}" target="_blank" rel="noopener" aria-label="Tiktok" title="Theo dõi {{ store.name }} trên Tiktok"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M16.6 3h-3v12.2a2.7 2.7 0 1 1-2.7-2.7c.3 0 .6 0 .8.1V9.5a5.8 5.8 0 1 0 4.9 5.7V9a7 7 0 0 0 4.1 1.3V7.3A4.2 4.2 0 0 1 16.6 3Z"/></svg></a>
-				{% endif %}
-				{% if settings.footer_social_whatsapp != blank %}
-				<a href="{{ settings.footer_social_whatsapp }}" target="_blank" rel="noopener" aria-label="WhatsApp" title="Liên hệ {{ store.name }} qua WhatsApp"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 8 19.3z"/><path fill="currentColor" d="M9.2 7.6c.2 0 .4 0 .5.4l.7 1.6c0 .2 0 .3-.1.5l-.5.6c-.1.1-.2.3 0 .5.4.7 1 1.4 1.7 1.9.6.4 1.1.6 1.3.7.2.1.3 0 .4-.1l.6-.8c.2-.2.3-.2.5-.1l1.5.7c.2.1.4.2.4.3.1.3 0 1-.4 1.4-.4.4-1.1.8-1.9.7-.9-.1-2.3-.6-3.6-1.8-1.5-1.3-2.4-3-2.6-3.7-.2-.8.2-1.6.6-2 .3-.4.6-.4.9-.4Z"/></svg></a>
-				{% endif %}
-				{% if settings.footer_social_shopee != blank %}
-				<a href="{{ settings.footer_social_shopee }}" target="_blank" rel="noopener" aria-label="Shopee" title="Mua {{ store.name }} trên Shopee"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M4 8h16l-1 12.5H5zM9 8a3 3 0 0 1 6 0"/><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M14 12.2c-.6-.5-1.3-.7-2-.7-1 0-1.7.5-1.7 1.2 0 1.6 3.9.9 3.9 2.6 0 .8-.8 1.3-2 1.3-.8 0-1.6-.3-2.2-.8"/></svg></a>
-				{% endif %}
-				{% if settings.footer_social_lazada != blank %}
-				<a href="{{ settings.footer_social_lazada }}" target="_blank" rel="noopener" aria-label="Lazada" title="Mua {{ store.name }} trên Lazada"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10 8.5v7h4.5"/></svg></a>
-				{% endif %}
-			</div>
-			{% endif %}
-
-			{% if settings.enable_info_foo %}
-			<div class="info_foo_content pc-foot__info">
-				{{settings.content_info_foo}}
-			</div>
-			{% endif %}
-
-			{% if settings.footer_payment_enable %}
-			<div class="block-payment pc-foot__payment">
-				<h4 class="title-menu"><span>{{settings.footer_payment_title}}</span></h4>
-				<div class="payment-footer list-menu">
-					{% for i in (1..5) %}
-					{% capture enable %}footer_payment_{{i}}_enable{% endcapture %}
-					{% capture logo %}payment_{{i}}.png{% endcapture %}
-					{% capture alt %}footer_payment_{{i}}_alt{% endcapture %}
-					{% if settings[enable] %}
-					<div class="payment-item">
-						<img width="63" height="29" alt="{{ settings[alt] }}" src="{{ logo | asset_url }}" loading="lazy">
-					</div>
+				{% if settings.footer_social_enable %}
+				{%- comment -%} Icon 1 màu (currentColor) theo ảnh thiết kế thay cho ảnh logo màu tròn cũ. {%- endcomment -%}
+				<div class="pc-foot__social">
+					{% if settings.footer_social_insta != blank %}
+					<a href="{{ settings.footer_social_insta }}" target="_blank" rel="noopener" aria-label="Instagram" title="Theo dõi {{ store.name }} trên Instagram"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.3" cy="6.7" r="1.2" fill="currentColor"/></svg></a>
 					{% endif %}
-					{% endfor %}
+					{% if settings.footer_social_fb != blank %}
+					<a href="{{ settings.footer_social_fb }}" target="_blank" rel="noopener" aria-label="Facebook" title="Theo dõi {{ store.name }} trên Facebook"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M13.5 21v-7.5h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.5-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.8v3h2.6V21z"/></svg></a>
+					{% endif %}
+					{% if settings.footer_social_tiktok != blank %}
+					<a href="{{ settings.footer_social_tiktok }}" target="_blank" rel="noopener" aria-label="Tiktok" title="Theo dõi {{ store.name }} trên Tiktok"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M16.6 3h-3v12.2a2.7 2.7 0 1 1-2.7-2.7c.3 0 .6 0 .8.1V9.5a5.8 5.8 0 1 0 4.9 5.7V9a7 7 0 0 0 4.1 1.3V7.3A4.2 4.2 0 0 1 16.6 3Z"/></svg></a>
+					{% endif %}
+					{% if settings.footer_social_whatsapp != blank %}
+					<a href="{{ settings.footer_social_whatsapp }}" target="_blank" rel="noopener" aria-label="WhatsApp" title="Liên hệ {{ store.name }} qua WhatsApp"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 8 19.3z"/><path fill="currentColor" d="M9.2 7.6c.2 0 .4 0 .5.4l.7 1.6c0 .2 0 .3-.1.5l-.5.6c-.1.1-.2.3 0 .5.4.7 1 1.4 1.7 1.9.6.4 1.1.6 1.3.7.2.1.3 0 .4-.1l.6-.8c.2-.2.3-.2.5-.1l1.5.7c.2.1.4.2.4.3.1.3 0 1-.4 1.4-.4.4-1.1.8-1.9.7-.9-.1-2.3-.6-3.6-1.8-1.5-1.3-2.4-3-2.6-3.7-.2-.8.2-1.6.6-2 .3-.4.6-.4.9-.4Z"/></svg></a>
+					{% endif %}
+					{% if settings.footer_social_shopee != blank %}
+					<a href="{{ settings.footer_social_shopee }}" target="_blank" rel="noopener" aria-label="Shopee" title="Mua {{ store.name }} trên Shopee"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M4 8h16l-1 12.5H5zM9 8a3 3 0 0 1 6 0"/><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M14 12.2c-.6-.5-1.3-.7-2-.7-1 0-1.7.5-1.7 1.2 0 1.6 3.9.9 3.9 2.6 0 .8-.8 1.3-2 1.3-.8 0-1.6-.3-2.2-.8"/></svg></a>
+					{% endif %}
+					{% if settings.footer_social_lazada != blank %}
+					<a href="{{ settings.footer_social_lazada }}" target="_blank" rel="noopener" aria-label="Lazada" title="Mua {{ store.name }} trên Lazada"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M10 8.5v7h4.5"/></svg></a>
+					{% endif %}
 				</div>
-			</div>
-			{% endif %}
+				{% endif %}
 
-			{%- assign _ft_addr = settings.store_address -%}
-			{%- if _ft_addr == blank -%}
-			{%- capture _ft_addr -%}{%if store.address!='' %}{{ store.address }}, {%endif%}{%if store.province!='' %}{{store.province}}, {%endif%}{%if store.district!='' %}{{store.district}}, {%endif%}{%if store.country!='' %}{{store.country}}{%endif%}{%- endcapture -%}
-			{%- endif -%}
-			{%- assign _ft_phone = settings.store_phone | default: store.phone_number -%}
-			{%- assign _ft_email = settings.store_email | default: store.customer_email -%}
-			<ul class="pc-foot__contact">
-				{%- if _ft_addr != blank -%}
-				<li><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg><span>{{ _ft_addr }}</span></li>
+				{% if settings.enable_info_foo %}
+				<div class="info_foo_content pc-foot__info">
+					{{settings.content_info_foo}}
+				</div>
+				{% endif %}
+
+				{% if settings.footer_payment_enable %}
+				<div class="block-payment pc-foot__payment">
+					<h4 class="title-menu"><span>{{settings.footer_payment_title}}</span></h4>
+					<div class="payment-footer list-menu">
+						{% for i in (1..5) %}
+						{% capture enable %}footer_payment_{{i}}_enable{% endcapture %}
+						{% capture logo %}payment_{{i}}.png{% endcapture %}
+						{% capture alt %}footer_payment_{{i}}_alt{% endcapture %}
+						{% if settings[enable] %}
+						<div class="payment-item">
+							<img width="63" height="29" alt="{{ settings[alt] }}" src="{{ logo | asset_url }}" loading="lazy">
+						</div>
+						{% endif %}
+						{% endfor %}
+					</div>
+				</div>
+				{% endif %}
+
+			</div>
+				{%- comment -%}
+				  2026-10-13: cột menu chân trang cấu hình hoàn toàn bằng Menu (Điều hướng) của Sapo — người dùng
+				  yêu cầu footer "theo menu link, gọn, dễ dùng, bỏ phần thừa".
+				  Tiêu đề cột: để trống ⇒ lấy tên menu. Cột không chọn menu/menu rỗng ⇒ ẩn, các cột còn lại tự giãn đều.
+				{%- endcomment -%}
+				{%- assign _fm_count = 0 -%}
+				{%- for i in (1..3) -%}
+					{%- case i -%}{%- when 1 -%}{%- assign _h = settings.footer_policy_menu -%}{%- when 2 -%}{%- assign _h = settings.footer_support_menu -%}{%- else -%}{%- assign _h = settings.footer_custom_menu -%}{%- endcase -%}
+					{%- if _h != blank and linklists[_h].links.size > 0 -%}{%- assign _fm_count = _fm_count | plus: 1 -%}{%- endif -%}
+				{%- endfor -%}
+				{%- if _fm_count > 0 -%}
+				<div class="pc-foot__cols" style="--pc-foot-cols: {{ _fm_count }}">
+					{%- for i in (1..3) -%}
+					{%- case i -%}
+						{%- when 1 -%}{%- assign _h = settings.footer_policy_menu -%}{%- assign _t = settings.footer_policy_title -%}
+						{%- when 2 -%}{%- assign _h = settings.footer_support_menu -%}{%- assign _t = settings.footer_support_title -%}
+						{%- else -%}{%- assign _h = settings.footer_custom_menu -%}{%- assign _t = settings.footer_custom_title -%}
+					{%- endcase -%}
+					{%- assign _fm_ll = linklists[_h] -%}
+					{%- if _h != blank and _fm_ll.links.size > 0 -%}
+					<div class="col-xs-12 footer-click pc-foot__col">
+						<h4 class="title-menu clicked pc-foot__head">
+							<span>{{ _t | default: _fm_ll.title }}</span>
+						</h4>
+						<ul class="list-menu toggle-mn hidden-mob pc-foot__links">
+							{%- for link in _fm_ll.links -%}
+							<li class="li_menu">
+								<a href="{{ link.url }}" title="{{ link.title | escape }}">{{ link.title }}</a>
+							</li>
+							{%- endfor -%}
+						</ul>
+					</div>
+					{%- endif -%}
+					{%- endfor -%}
+				</div>
 				{%- endif -%}
-				{%- if _ft_phone != blank -%}
-				<li><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M5 3.5h3.5l1.5 4-2 1.5a11 11 0 0 0 7 7l1.5-2 4 1.5V19a2 2 0 0 1-2 2A16 16 0 0 1 3 5.5a2 2 0 0 1 2-2Z"/></svg><a href="tel:{{ _ft_phone | remove: ' ' | remove: '.' }}" title="{{ _ft_phone }}">{{ _ft_phone }}</a></li>
-				{%- endif -%}
-				{%- if _ft_email != blank -%}
-				<li><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="m3.5 6 8.5 7 8.5-7"/></svg><a href="mailto:{{ _ft_email }}" title="{{ _ft_email }}">{{ _ft_email }}</a></li>
-				{%- endif -%}
-			</ul>
+
+			</div>
 
 			{%- comment -%}
 			  T-126 (2026-09-12) — Nghị định 52/2013/NĐ-CP (điều 29) buộc website TMĐT phải công bố tên thương nhân,
