@@ -45,6 +45,9 @@ test('hero swiper: mỗi slide ảnh + text + nút, 1 ảnh chung mọi màn hì
 
   const slides = hero.locator('.portal-hero__slide');
   await expect(slides).toHaveCount(3);
+  // Slide không nhập text/link nút vẫn có link — mặc định về trang đặt lịch.
+  await expect(slides.locator('.portal-hero__btn')).toHaveCount(3);
+  await expect(slides.nth(1).locator('.portal-hero__btn')).toHaveAttribute('href', '/dat-lich-tu-van');
   await expect(hero.locator('.swiper-slide-duplicate')).toHaveCount(0);
   await expect(hero.locator('picture, source')).toHaveCount(0);
   const heroImages = slides.locator('img');
@@ -80,7 +83,7 @@ test('hero honors reduced motion and remains stable at 320px', async ({ page }) 
     running: el.swiper.autoplay.running,
   }));
   expect(motion).toEqual({ speed: 0, running: false });
-  await expect(hero.locator('[data-hero-pause]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(hero.locator('[data-hero-pause]')).toHaveCount(0); // 2026-10-13: đã bỏ nút pause Hero
   await expect(hero.locator('.swiper-slide-active .portal-hero__image')).toHaveCSS('animation-name', 'none');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
   expect(errors).toEqual([]);
