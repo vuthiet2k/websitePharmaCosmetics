@@ -249,4 +249,9 @@ const linklists = {
 
 };
 
+// 2026-10-13: cấu hình khách đổi menu cột 2/3 chân trang sang handle `chinh-sach` / `mua-sam-theo-danh-muc`
+// (configs/settings_data.json). Preview dùng lại link của menu cũ tương ứng — giữ nguyên menu cũ, không xoá.
+linklists['chinh-sach'] = { ...linklists['footer-dich-vu'], title: 'Chính sách', handle: 'chinh-sach' };
+linklists['mua-sam-theo-danh-muc'] = { ...linklists['footer-categories'], title: 'Mua sắm theo danh mục', handle: 'mua-sam-theo-danh-muc' };
+
 module.exports = { linklists };
