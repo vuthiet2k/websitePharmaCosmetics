@@ -1,11 +1,23 @@
 {%- comment -%}
   snippets/page_tin_tuc_hub.bwt (2026-10-14) — KHỐI NỘI DUNG TRANG TỔNG TIN TỨC:
-  Tách từ templates/page.tin-tuc.bwt để tái sử dụng: được gọi từ templates/page.tin-tuc.bwt
-  và tự động nạp từ templates/page.bwt khi page.handle là 'tin-tuc' hoặc 'trang-tin-tuc-tong'.
-  Giúp hiển thị đầy đủ giao diện cổng tin tức ngay cả khi Admin chưa chọn được template riêng.
+  Tách từ templates/page.tin-tuc.bwt để tái sử dụng: được gọi từ templates/page.tin-tuc.bwt,
+  templates/page.bwt (khi alias là tin-tuc / trang-tin-tuc-tong) và templates/blog.bwt (khi blog.url trùng
+  settings.news_hub_url trên Sapo thật do URL phẳng /tin-tuc).
+  Nếu danh mục đầu tiên trong news_hub_blogs chưa có bài viết (vd tin-tuc = 0 bài trên Sapo trong khi bi-quyet có 59 bài),
+  tự động lấy danh mục đầu tiên có bài làm nguồn hiển thị khối cổng tin đầu trang (.pc-nportal).
 {%- endcomment -%}
 {%- assign pc_nh_list = settings.news_hub_blogs | default: 'tin-tuc' | split: ',' -%}
 {%- assign pc_nh_main = pc_nh_list.first | strip -%}
+{%- assign pc_nh_mb = blogs[pc_nh_main] -%}
+{%- if pc_nh_mb.articles.size == 0 -%}
+	{%- for pc_nh_try in pc_nh_list -%}
+		{%- assign pc_nh_try_s = pc_nh_try | strip -%}
+		{%- if pc_nh_mb.articles.size == 0 and blogs[pc_nh_try_s].articles.size > 0 -%}
+			{%- assign pc_nh_main = pc_nh_try_s -%}
+			{%- assign pc_nh_mb = blogs[pc_nh_try_s] -%}
+		{%- endif -%}
+	{%- endfor -%}
+{%- endif -%}
 {%- assign pc_nh_second = '' -%}
 {%- if pc_nh_list.size > 1 -%}{%- assign pc_nh_second = pc_nh_list[1] | strip -%}{%- endif -%}
 {%- assign pc_nh_ftag = settings.news_featured_tag | default: 'noibat' -%}
@@ -13,14 +25,13 @@
 <section class="pc-nhub">
 	<div class="container">
 		{%- comment -%} Giữ 1 <h1> ẩn cho SEO/trình đọc màn hình. {%- endcomment -%}
-		<h1 class="sr-only">{{ page.title | default: settings.news_hub_title | escape }}</h1>
+		<h1 class="sr-only">{{ page.title | default: blog.name | default: settings.news_hub_title | escape }}</h1>
 
 		{%- comment -%}
 			── Đầu trang kiểu cổng tin: cột trái "Tin mới nhất" = slider tin tiêu điểm
 			(news_lead_count bài mới nhất của danh mục đầu) + lưới 2 cột các bài kế tiếp; cột phải "Tin nổi bật" (bài gắn tag
 			nổi bật ở mọi danh mục, đánh số, mỗi trang 3 tin) + "Tin quan tâm của tôi" (bài khách đã đọc).
 		{%- endcomment -%}
-		{%- assign pc_nh_mb = blogs[pc_nh_main] -%}
 		{%- if pc_nh_mb.articles.size > 0 -%}
 		{%- assign pc_nh_lead_n = settings.news_lead_count | default: 3 | plus: 0 -%}
 		{%- assign pc_nh_grid_n = settings.news_grid_count | default: 6 | plus: 0 -%}
@@ -41,11 +52,18 @@
 		{%- endcapture -%}
 		{%- assign pc_nh_feat_title = settings.news_featured_title | default: 'Tin nổi bật' -%}
 		{%- assign pc_nh_feat_url = '' -%}
-		{%- if pc_nh_fc == 0 and pc_nh_second != '' and blogs[pc_nh_second].articles.size > 0 -%}
+		{%- if pc_nh_fc == 0 and pc_nh_second != '' and blogs[pc_nh_second].articles.size > 0 and pc_nh_second != pc_nh_main -%}
 			{%- assign pc_nh_feat_title = blogs[pc_nh_second].name | default: blogs[pc_nh_second].title -%}
 			{%- assign pc_nh_feat_url = blogs[pc_nh_second].url -%}
 			{%- capture pc_nh_feat -%}
 				{%- for pc_nh_a in blogs[pc_nh_second].articles limit: pc_nh_feat_max -%}
+					{%- assign pc_nh_fc = forloop.index -%}
+					{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'rank' -%}{%- assign pc_ni_rank = forloop.index -%}{% include 'news_item' %}
+				{%- endfor -%}
+			{%- endcapture -%}
+		{%- elsif pc_nh_fc == 0 and pc_nh_mb.articles.size > 0 -%}
+			{%- capture pc_nh_feat -%}
+				{%- for pc_nh_a in pc_nh_mb.articles limit: pc_nh_feat_max -%}
 					{%- assign pc_nh_fc = forloop.index -%}
 					{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'rank' -%}{%- assign pc_ni_rank = forloop.index -%}{% include 'news_item' %}
 				{%- endfor -%}
