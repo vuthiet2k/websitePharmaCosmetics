@@ -338,10 +338,26 @@
 	var headerMenu = document.querySelector('.header-menu');
 	var btn = document.getElementById('btn-menu-mobile');
 	if (!headerMenu || !btn) return;
-	var wasOpen = false;
+	var wasOpen = false, lockY = 0;
+	/* 2026-10-14: khoá cuộn nền khi mở drawer. body{overflow:hidden} không có tác dụng vì <html> đặt overflow-x:clip
+	   (overflow của body không còn truyền lên khung nhìn) ⇒ trang phía sau vẫn cuộn. Dùng cách cố định <body> tại vị trí
+	   đang xem (chạy cả iOS Safari), đóng drawer thì trả lại đúng vị trí cuộn. */
+	function lockScroll(on) {
+		var root = document.documentElement, body = document.body;
+		if (on) {
+			lockY = window.scrollY || window.pageYOffset || 0;
+			body.style.top = (-lockY) + 'px';
+			root.classList.add('pc-scroll-lock');
+		} else if (root.classList.contains('pc-scroll-lock')) {
+			root.classList.remove('pc-scroll-lock');
+			body.style.top = '';
+			window.scrollTo({ top: lockY, left: 0, behavior: 'instant' });
+		}
+	}
 	function sync() {
 		var isOpen = headerMenu.classList.contains('current');
 		if (isOpen === wasOpen) return;
+		lockScroll(isOpen);
 		document.body.classList.toggle('pc-drawer-open', isOpen);
 		btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 		if (wasOpen && !isOpen) btn.focus();
