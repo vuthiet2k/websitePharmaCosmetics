@@ -1,12 +1,14 @@
 {%- comment -%}
-  blog.bwt — TRANG 1 DANH MỤC BÀI VIẾT (/blogs/<handle>). Dựng lại 2026-10-13: bản cũ chép bố cục "trang tổng tạp chí"
-  của design/blog.html với chuyên đề, ca lâm sàng, tác giả ghi cứng, tin đầu trang lấy từ blog khác
-  (settings.section_blog_url) và bộ lọc checkbox không hoạt động. Bố cục tổng đó nay ở templates/page.tin-tuc.bwt (/tin-tuc).
-  Trang này chỉ hiện bài của CHÍNH danh mục đang xem:
-  đầu trang (eyebrow + H1 tên danh mục) → nút chuyển danh mục (Tất cả = trang tổng, các danh mục ở news_hub_blogs) →
-  bài mới nhất dạng nổi bật (trang 1) → lưới thẻ pc_article_card 3 cột + phân trang → khối Video → khung đặt lịch.
-  Cột phải aside-blog giữ theo settings.right_asideblog_enable.
+  blog.bwt — TRANG 1 DANH MỤC BÀI VIẾT (/blogs/<handle> trên preview, /<alias> trên Sapo).
+  2026-10-14: Trên Sapo Web thật, URL không có tiền tố /blogs/ nên danh mục bài viết alias 'tin-tuc' có URL '/tin-tuc'
+  trùng với settings.news_hub_url ('/tin-tuc') và chiếm quyền định tuyến của Trang nội dung 'tin-tuc'.
+  Do đó khi blog.url == settings.news_hub_url (và danh mục tin-tuc đang đóng vai trò cổng tin tổng hoặc chưa có bài riêng),
+  tự động nạp giao diện cổng tin tức tổng (page_tin_tuc_hub) để /tin-tuc trên Sapo khớp 100% với bản thiết kế trên Vercel.
 {%- endcomment -%}
+{%- assign pc_nh_url_norm = settings.news_hub_url | default: '/tin-tuc' | strip -%}
+{%- if blog.url == pc_nh_url_norm -%}
+{% include 'page_tin_tuc_hub' %}
+{%- else -%}
 {% include 'breadcrumb' %}
 {%- assign pc_nb_list = settings.news_hub_blogs | split: ',' -%}
 {%- assign pc_nb_vblog = settings.video_blog_handle | default: 'video' -%}
@@ -113,3 +115,4 @@
 		</div>
 	</div>
 </section>
+{%- endif -%}
