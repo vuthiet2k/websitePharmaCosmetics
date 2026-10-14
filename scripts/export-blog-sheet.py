@@ -101,7 +101,7 @@ gl('QUY ƯỚC TAG THEME ĐANG ĐỌC', bold=True, fill=P_GROUP)
 gl('Tag', 'Ví dụ', 'Tác dụng trên web', bold=True)
 for row in [
     ('youtube:<mã hoặc link>', 'youtube:4B9RN_wcl_I', 'Nguồn video YouTube (mã 11 ký tự, phân biệt hoa/thường). Bài thường: nhiều tag = video chính + video bổ trợ.'),
-    ('facebook:<link video>', 'facebook:https://www.facebook.com/pharmacosmeticsxshb/videos/<số>', 'Nguồn video Facebook (video công khai trên Fanpage). Bắt buộc có ảnh đại diện (ảnh bìa ở danh sách video).'),
+    ('facebook:fb_video_<số video>', 'facebook:fb_video_427805549152968', 'Nguồn video Facebook (video Công khai trên Fanpage). Số video = dãy số sau /videos/, ?v= hoặc /reel/ trên thanh địa chỉ khi mở video. Ghi facebook:<số> cũng được. Bắt buộc có ảnh đại diện.'),
     ('khung:doc', 'khung:doc', 'Video quay dọc (9:16) ⇒ khung phát dọc, không bị thu nhỏ. Link /reel/ tự nhận, không cần tag. Ghi ở cột "Tag khác".'),
     ('thoiluong:<MM:SS>', 'thoiluong:01:23', 'Thời lượng video trên ảnh bìa + dữ liệu SEO.'),
     ('chude:<Nhãn>', 'chude:Làm sạch da', 'Nhãn chủ đề trên thẻ bài/video và nút lọc trang Video. Gõ giống hệt nhau giữa các bài.'),
@@ -141,7 +141,7 @@ n_dm = dm.max_row
 # ===== Bài viết =====
 bv = wb.create_sheet('Bài viết')
 BV_COLS = ['STT', 'Danh mục (handle) ★', 'Tiêu đề ★', 'Handle bài', 'Ngày đăng', 'Tác giả', 'Giao diện ★',
-           'YouTube (mã/link) ★', 'Facebook (link) ★', 'Thời lượng MM:SS ★', 'Chủ đề ★', 'Nổi bật ★', 'Chuyên gia (handle) ★',
+           'YouTube (mã/link) ★', 'Facebook (số video) ★', 'Thời lượng MM:SS ★', 'Chủ đề ★', 'Nổi bật ★', 'Chuyên gia (handle) ★',
            'Tag khác ★ (phẩy)', 'Tag dán vào Sapo (tự ghép)', 'Tóm tắt', 'Hành động ★', 'Ghi chú ★', 'Trạng thái ★']
 header_row(bv, BV_COLS, [6, 20, 46, 30, 12, 20, 15, 18, 30, 11, 20, 9, 22, 26, 52, 46, 14, 28, 13], freeze_col=4)
 bv.auto_filter.ref = f'A1:{get_column_letter(len(BV_COLS))}1'

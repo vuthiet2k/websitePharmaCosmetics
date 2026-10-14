@@ -5,7 +5,7 @@ Ngày lập: 14/10/2026 · Áp dụng cho theme Pharma Cosmetics (nhánh `hugo-t
 > Bảng quản lý kèm theo: `exports/quan-ly-blog.xlsx` (tạo lại bằng `npm run sheet:blog`). Sheet "Bài viết" tự ghép
 > sẵn ô **"Tag dán vào Sapo"**: điền các cột nền vàng rồi chép nguyên ô đó dán vào ô Tag của bài.
 
-Mục lục: 1. Tổng quan · 2. Tạo danh mục Video · 3. Lấy link video YouTube · 4. Lấy link video Facebook ·
+Mục lục: 1. Tổng quan · 2. Tạo danh mục Video · 3. Lấy link video YouTube · 4. Lấy số video Facebook ·
 5. Tạo bài video (từng bước) · 6. Gắn video vào bài thường · 7. Tin nổi bật · 8. Tin mới nhất · 9. Quy ước tag ·
 10. Kiểm tra & lỗi thường gặp
 
@@ -51,28 +51,34 @@ Video phải ở chế độ **Công khai** hoặc **Không công khai (Unlisted
 Lưu ý: mã **phân biệt chữ hoa/thường** (`4B9RN_wcl_I` khác `4b9rn_wcl_i`). Theme nhận các dạng: mã trần,
 `watch?v=`, `youtu.be/`, `/embed/`, `/shorts/`, `/live/`.
 
-## 4. Lấy link video Facebook
+## 4. Lấy số video Facebook
 
-Video phải đăng **Công khai** trên Fanpage (video riêng tư / chỉ bạn bè / trong nhóm kín ⇒ khung báo lỗi trên web).
+Mỗi video Facebook có **một dãy số riêng** (mã video). Người đăng bài **chỉ cần dãy số này** — không cần iframe, không
+cần mã nhúng. Video phải đăng **Công khai** trên Fanpage (riêng tư / chỉ bạn bè / trong nhóm kín ⇒ khung báo lỗi).
 
-**Cách 1 — Sao chép liên kết (trên máy tính):**
-1. Mở Fanpage › **Video** (hoặc Reels) › bấm vào video cần lấy.
-2. Bấm **⋯ (Xem thêm)** › **Sao chép liên kết**.
-3. Dán link vào trình duyệt, **Enter, đợi trang mở xong rồi chép lại link trên thanh địa chỉ**. Link đúng có dạng:
-   - `https://www.facebook.com/pharmacosmeticsxshb/videos/427805549152968`
-   - `https://www.facebook.com/watch/?v=427805549152968`
-   - `https://www.facebook.com/reel/<số>` (Reels — theme tự dùng khung dọc)
+**Cách lấy (trên máy tính):**
+1. Mở Fanpage › mục **Video** (hoặc **Reels**) › bấm vào video cần lấy để video mở ra.
+2. Nhìn **thanh địa chỉ** của trình duyệt. Dãy số dài sau `/videos/`, sau `?v=` hoặc sau `/reel/` chính là số video:
 
-   Link dạng `facebook.com/share/v/...` hoặc `facebook.com/share/r/...` (thường gặp khi bấm Chia sẻ trên điện thoại) là
-   link chuyển hướng — **không dùng trực tiếp**, phải mở ra để lấy link thật như trên.
+   | Thanh địa chỉ hiện | Số video |
+   | :-- | :-- |
+   | `facebook.com/pharmacosmeticsxshb/videos/427805549152968` | `427805549152968` |
+   | `facebook.com/watch/?v=427805549152968` | `427805549152968` |
+   | `facebook.com/reel/427805549152968` | `427805549152968` (Reels là video dọc ⇒ thêm `khung:doc`) |
 
-**Cách 2 — Mã nhúng:**
-1. Mở video › **⋯** › **Nhúng** › **Sao chép mã**.
-2. Dán nguyên đoạn `<iframe ...>` vào **metafield `custom.video_url`** hoặc vào nội dung bài (chế độ HTML) — theme tự
-   tách link video.
+3. Chép dãy số đó, ghi vào tag theo **một trong hai kiểu** (theme hiểu cả hai, chọn kiểu nào cũng được):
+   - `facebook:427805549152968`
+   - `facebook:fb_video_427805549152968` ← kiểu cũ đang dùng trên Sapo, **vẫn dùng tiếp được**.
 
-**Video quay dọc** dùng link `/videos/` hoặc `/watch/` (không phải `/reel/`) ⇒ **thêm tag `khung:doc`**. Không thêm thì
-video vẫn hiện đủ nhưng nhỏ trong khung ngang.
+**Lưu ý:**
+- Chỉ ghi **chữ số**, không dấu cách, không dấu chấm. Thiếu hoặc thừa 1 chữ số là ra video khác / không có video.
+- Link chia sẻ trên điện thoại dạng `facebook.com/share/v/AbC123...` **không chứa số video** — mở link đó trên máy tính
+  để thanh địa chỉ chuyển sang dạng có số như bảng trên, rồi mới lấy số.
+- Kiểm tra nhanh số đúng hay sai: dán `https://www.facebook.com/watch/?v=<số>` vào trình duyệt — mở ra đúng video là
+  được; báo "Nội dung này hiện không hiển thị" là sai số hoặc video chưa Công khai.
+- Video quay dọc ⇒ **thêm tag `khung:doc`** (không thêm thì video vẫn hiện đủ nhưng nhỏ trong khung ngang).
+- Người rành kỹ thuật có thể dán thẳng link video hoặc mã nhúng (nút "Nhúng" của Facebook) — theme cũng hiểu, nhưng
+  **không bắt buộc**; cách ghi số ở trên là đủ.
 
 ## 5. Tạo bài video — từng bước
 
@@ -90,9 +96,8 @@ video vẫn hiện đủ nhưng nhỏ trong khung ngang.
    | :-- | :-- |
    | YouTube | `youtube:4B9RN_wcl_I, thoiluong:01:23, chude:Làm sạch da` |
    | YouTube Shorts | `youtube:https://www.youtube.com/shorts/<mã>, khung:doc, thoiluong:00:45, chude:Làm sạch da` |
-   | Facebook ngang | `facebook:https://www.facebook.com/pharmacosmeticsxshb/videos/<số>, thoiluong:01:16, chude:Chống nắng & trang điểm` |
-   | Facebook quay dọc | `facebook:https://www.facebook.com/watch/?v=<số>, khung:doc, thoiluong:01:16, chude:Chống nắng & trang điểm` |
-   | Facebook Reels | `facebook:https://www.facebook.com/reel/<số>, thoiluong:00:30, chude:...` |
+   | Facebook ngang | `facebook:fb_video_427805549152968, thoiluong:01:16, chude:Chống nắng & trang điểm` |
+   | Facebook quay dọc / Reels | `facebook:fb_video_427805549152968, khung:doc, thoiluong:01:16, chude:Chống nắng & trang điểm` |
 
    - `thoiluong:` ghi đúng dạng `MM:SS` (hiện trên ảnh bìa + SEO). Không biết thì bỏ.
    - `chude:` gõ **giống hệt** giữa các bài cùng chủ đề (để nút lọc ở trang Video gom đúng).
@@ -100,8 +105,8 @@ video vẫn hiện đủ nhưng nhỏ trong khung ngang.
 7. **Giao diện** (khung bên phải, mục "Giao diện"/"Template"): chọn **`article.video`**.
 8. **Hiển thị**: Hiện › **Lưu**.
 
-Không muốn dùng tag nguồn video thì dán link vào **metafield `custom.video_url`**, hoặc dán link / mã nhúng vào nội
-dung bài. Theme đọc theo thứ tự: tag › metafield › nội dung.
+(Nâng cao, không bắt buộc: theme cũng đọc link video trong metafield `custom.video_url` hoặc link / mã nhúng dán trong
+nội dung bài. Thứ tự ưu tiên: tag › metafield › nội dung.)
 
 **Trên web, khách xem thế nào:**
 - YouTube: ảnh bìa + nút Play; bấm 1 lần là phát, có âm thanh.
@@ -110,7 +115,7 @@ dung bài. Theme đọc theo thứ tự: tag › metafield › nội dung.
 
 ## 6. Gắn video vào bài viết thường (Bí quyết, Tin tức…)
 
-Thêm tag `youtube:<mã>` hoặc `facebook:<link>` vào bài viết thường (giao diện giữ `article` mặc định) ⇒ khối
+Thêm tag `youtube:<mã>` hoặc `facebook:fb_video_<số>` vào bài viết thường (giao diện giữ `article` mặc định) ⇒ khối
 **"Video hướng dẫn"** hiện trước nội dung bài.
 
 - Nhiều tag video ⇒ **tag đầu = video chính**, các tag sau = danh sách video bổ trợ (bấm để đổi video trong khung).
@@ -158,7 +163,7 @@ khách chưa đọc bài nào thì khối ẩn.
 | Tag | Ví dụ | Tác dụng |
 | :-- | :-- | :-- |
 | `youtube:<mã hoặc link>` | `youtube:4B9RN_wcl_I` | Nguồn video YouTube. |
-| `facebook:<link video>` | `facebook:https://www.facebook.com/watch/?v=427805549152968` | Nguồn video Facebook. |
+| `facebook:<số video>` | `facebook:fb_video_427805549152968` hoặc `facebook:427805549152968` | Nguồn video Facebook (lấy số ở mục 4). |
 | `khung:doc` | `khung:doc` | Video quay dọc ⇒ khung phát 9:16 (link `/reel/` tự nhận). |
 | `thoiluong:<MM:SS>` | `thoiluong:01:23` | Thời lượng trên ảnh bìa + SEO. |
 | `chude:<Nhãn>` | `chude:Làm sạch da` | Nhãn chủ đề + nút lọc ở trang Video. |
@@ -176,7 +181,7 @@ Tag có dấu `:` không hiện ra thành nhãn trên web. Viết thường, kh�
 
 | Hiện tượng | Nguyên nhân thường gặp |
 | :-- | :-- |
-| Khung video trống / báo "video không khả dụng" | Video Facebook/YouTube chưa Công khai; link `share/...` chưa mở ra lấy link thật; sai hoa/thường mã YouTube. |
+| Khung video báo "Video unavailable" / "không khả dụng" | Sai số video Facebook (thừa/thiếu chữ số, số mẫu) hoặc video chưa Công khai; sai hoa/thường mã YouTube. |
 | Trang bài hiện như bài viết thường, không có khung video lớn | Bài chưa chọn giao diện `article.video`. |
 | Video dọc nhỏ, có viền hai bên | Thiếu tag `khung:doc`. |
 | Ảnh bìa video Facebook xám | Bài Facebook chưa có ảnh đại diện. |
