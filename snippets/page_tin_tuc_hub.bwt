@@ -1,12 +1,14 @@
 {%- comment -%}
   snippets/page_tin_tuc_hub.bwt (2026-10-14) — KHỐI NỘI DUNG TRANG TỔNG TIN TỨC:
   Tách từ templates/page.tin-tuc.bwt để tái sử dụng: được gọi từ templates/page.tin-tuc.bwt,
-  templates/page.bwt (khi alias là tin-tuc / trang-tin-tuc-tong) và templates/blog.bwt (khi blog.url trùng
-  settings.news_hub_url trên Sapo thật do URL phẳng /tin-tuc).
+  templates/page.bwt (khi alias là tin-tuc / trang-tin-tuc-tong) và templates/blog.bwt (khi blog.alias == 'tin-tuc'
+  trên Sapo thật do URL phẳng /tin-tuc).
   Nếu danh mục đầu tiên trong news_hub_blogs chưa có bài viết (vd tin-tuc = 0 bài trên Sapo trong khi bi-quyet có 59 bài),
   tự động lấy danh mục đầu tiên có bài làm nguồn hiển thị khối cổng tin đầu trang (.pc-nportal).
 {%- endcomment -%}
-{%- assign pc_nh_list = settings.news_hub_blogs | default: 'tin-tuc' | split: ',' -%}
+{%- assign pc_nh_raw = settings.news_hub_blogs | strip -%}
+{%- if pc_nh_raw == blank -%}{%- assign pc_nh_raw = 'tin-tuc, bi-quyet, y-kien-chuyen-gia' -%}{%- endif -%}
+{%- assign pc_nh_list = pc_nh_raw | split: ',' -%}
 {%- assign pc_nh_main = pc_nh_list.first | strip -%}
 {%- assign pc_nh_mb = blogs[pc_nh_main] -%}
 {%- if pc_nh_mb.articles.size == 0 -%}
@@ -226,7 +228,7 @@
 			h.appendChild(link); body.appendChild(h);
 			var meta = document.createElement('span'); meta.className = 'pc-news-meta';
 			if (a.date) { var t = document.createElement('time'); t.textContent = a.date; meta.appendChild(t); }
-			if (a.topic) { var c = document.createElement('span'); c.className = 'pc-news-chip'; c.textContent = a.topic; meta.appendChild(c); }
+			if (a.topic) { var c = document.createElement('span'); c.textContent = a.topic; meta.appendChild(c); }
 			body.appendChild(meta); li.appendChild(no); li.appendChild(body); ol.appendChild(li);
 		});
 		if (ol.children.length) mine.hidden = false;
