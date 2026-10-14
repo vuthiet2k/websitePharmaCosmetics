@@ -1,0 +1,216 @@
+{%- comment -%}
+  snippets/page_tin_tuc_hub.bwt (2026-10-14) — KHỐI NỘI DUNG TRANG TỔNG TIN TỨC:
+  Tách từ templates/page.tin-tuc.bwt để tái sử dụng: được gọi từ templates/page.tin-tuc.bwt
+  và tự động nạp từ templates/page.bwt khi page.handle là 'tin-tuc' hoặc 'trang-tin-tuc-tong'.
+  Giúp hiển thị đầy đủ giao diện cổng tin tức ngay cả khi Admin chưa chọn được template riêng.
+{%- endcomment -%}
+{%- assign pc_nh_list = settings.news_hub_blogs | default: 'tin-tuc' | split: ',' -%}
+{%- assign pc_nh_main = pc_nh_list.first | strip -%}
+{%- assign pc_nh_second = '' -%}
+{%- if pc_nh_list.size > 1 -%}{%- assign pc_nh_second = pc_nh_list[1] | strip -%}{%- endif -%}
+{%- assign pc_nh_ftag = settings.news_featured_tag | default: 'noibat' -%}
+{%- assign pc_nh_count_label = settings.news_count_suffix | default: 'bài viết' -%}
+<section class="pc-nhub">
+	<div class="container">
+		{%- comment -%} Giữ 1 <h1> ẩn cho SEO/trình đọc màn hình. {%- endcomment -%}
+		<h1 class="sr-only">{{ page.title | default: settings.news_hub_title | escape }}</h1>
+
+		{%- comment -%}
+			── Đầu trang kiểu cổng tin: cột trái "Tin mới nhất" = slider tin tiêu điểm
+			(news_lead_count bài mới nhất của danh mục đầu) + lưới 2 cột các bài kế tiếp; cột phải "Tin nổi bật" (bài gắn tag
+			nổi bật ở mọi danh mục, đánh số, mỗi trang 3 tin) + "Tin quan tâm của tôi" (bài khách đã đọc).
+		{%- endcomment -%}
+		{%- assign pc_nh_mb = blogs[pc_nh_main] -%}
+		{%- if pc_nh_mb.articles.size > 0 -%}
+		{%- assign pc_nh_lead_n = settings.news_lead_count | default: 3 | plus: 0 -%}
+		{%- assign pc_nh_grid_n = settings.news_grid_count | default: 6 | plus: 0 -%}
+		{%- assign pc_nh_feat_max = settings.news_featured_count | default: 9 | plus: 0 -%}
+		{%- assign pc_nh_feat_per = settings.news_featured_per_page | default: 3 | plus: 0 -%}
+		{%- if pc_nh_feat_per < 1 -%}{%- assign pc_nh_feat_per = 3 -%}{%- endif -%}
+		{%- assign pc_nh_fc = 0 -%}
+		{%- capture pc_nh_feat -%}
+			{%- for pc_nh_h in pc_nh_list -%}
+				{%- assign pc_nh_hs = pc_nh_h | strip -%}
+				{%- for pc_nh_a in blogs[pc_nh_hs].articles -%}
+					{%- if pc_nh_fc < pc_nh_feat_max and pc_nh_a.tags contains pc_nh_ftag -%}
+						{%- assign pc_nh_fc = pc_nh_fc | plus: 1 -%}
+						{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'rank' -%}{%- assign pc_ni_rank = pc_nh_fc -%}{% include 'news_item' %}
+					{%- endif -%}
+				{%- endfor -%}
+			{%- endfor -%}
+		{%- endcapture -%}
+		{%- assign pc_nh_feat_title = settings.news_featured_title | default: 'Tin nổi bật' -%}
+		{%- assign pc_nh_feat_url = '' -%}
+		{%- if pc_nh_fc == 0 and pc_nh_second != '' and blogs[pc_nh_second].articles.size > 0 -%}
+			{%- assign pc_nh_feat_title = blogs[pc_nh_second].name | default: blogs[pc_nh_second].title -%}
+			{%- assign pc_nh_feat_url = blogs[pc_nh_second].url -%}
+			{%- capture pc_nh_feat -%}
+				{%- for pc_nh_a in blogs[pc_nh_second].articles limit: pc_nh_feat_max -%}
+					{%- assign pc_nh_fc = forloop.index -%}
+					{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'rank' -%}{%- assign pc_ni_rank = forloop.index -%}{% include 'news_item' %}
+				{%- endfor -%}
+			{%- endcapture -%}
+		{%- endif -%}
+		{%- assign pc_nh_more = settings.news_more_short | default: 'Tất cả' -%}
+		{%- capture pc_nh_nav -%}
+			<div class="pc-nslider__nav">
+				<button type="button" class="pc-nslider__btn" data-dir="-1" aria-label="{{ settings.news_prev_label | default: 'Tin trước' | escape }}" disabled><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M15 6l-6 6 6 6"/></svg></button>
+				<button type="button" class="pc-nslider__btn" data-dir="1" aria-label="{{ settings.news_next_label | default: 'Tin sau' | escape }}"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M9 6l6 6-6 6"/></svg></button>
+			</div>
+		{%- endcapture -%}
+		<div class="pc-nportal">
+			<div class="pc-nportal__main">
+				<div class="pc-nhead"><h2 class="pc-nhead__title">{{ settings.news_latest_title | default: 'Tin mới nhất' | escape }}</h2><a class="pc-nhead__more" href="{{ pc_nh_mb.url }}">{{ pc_nh_more | escape }}</a></div>
+				<div class="pc-nslider pc-nslider--lead" data-pc-nslider>
+					<div class="pc-nslider__track">
+						{%- for pc_nh_a in pc_nh_mb.articles limit: pc_nh_lead_n -%}
+						<div class="pc-nslider__page"{% unless forloop.first %} hidden{% endunless %}>
+							{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'lead' -%}{%- if forloop.first -%}{%- assign pc_ni_priority = true -%}{%- endif -%}{% include 'news_item' %}
+						</div>
+						{%- endfor -%}
+					</div>
+					{%- if pc_nh_mb.articles.size > 1 and pc_nh_lead_n > 1 -%}{{ pc_nh_nav }}{%- endif -%}
+				</div>
+				{%- if pc_nh_mb.articles.size > pc_nh_lead_n -%}
+				<div class="pc-ncards">
+					{%- for pc_nh_a in pc_nh_mb.articles offset: pc_nh_lead_n limit: pc_nh_grid_n -%}
+					{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'card' -%}{% include 'news_item' %}
+					{%- endfor -%}
+				</div>
+				{%- endif -%}
+			</div>
+			<aside class="pc-nportal__side">
+				{%- if pc_nh_feat != blank -%}
+				<div class="pc-nside">
+					<div class="pc-nhead"><h2 class="pc-nhead__title">{{ pc_nh_feat_title | escape }}</h2>{% if pc_nh_feat_url != '' %}<a class="pc-nhead__more" href="{{ pc_nh_feat_url }}">{{ pc_nh_more | escape }}</a>{% endif %}</div>
+					<div class="pc-nslider" data-pc-nslider data-per="{{ pc_nh_feat_per }}">
+						<ol class="pc-nranks pc-nslider__track">{{ pc_nh_feat }}</ol>
+						{%- if pc_nh_fc > pc_nh_feat_per -%}{{ pc_nh_nav }}{%- endif -%}
+					</div>
+				</div>
+				{%- endif -%}
+				<div class="pc-nside" data-pc-nmine data-max="{{ settings.news_mine_count | default: 5 | plus: 0 }}" hidden>
+					<div class="pc-nhead"><h2 class="pc-nhead__title">{{ settings.news_mine_title | default: 'Tin quan tâm của tôi' | escape }}</h2></div>
+					<ol class="pc-nranks"></ol>
+				</div>
+			</aside>
+		</div>
+		{%- endif -%}
+
+		{%- comment -%} ── Chuyên mục: mỗi ô = 1 danh mục thật, số bài, bài mới nhất. ── {%- endcomment -%}
+		{%- assign pc_nh_vblog = settings.video_blog_handle | default: 'video' -%}
+		<section class="pc-nsec">
+			<div class="pc-nsec__head"><h2 class="pc-nsec__title">{{ settings.news_cats_title | default: 'Chuyên mục' | escape }}</h2></div>
+			<div class="pc-ncats">
+				{%- for pc_nh_h in pc_nh_list -%}
+				{%- assign pc_nh_hs = pc_nh_h | strip -%}
+				{%- assign pc_nh_b = blogs[pc_nh_hs] -%}
+				{%- if pc_nh_b.articles.size > 0 -%}
+				<a class="pc-ncat" href="{{ pc_nh_b.url }}">
+					<span class="pc-ncat__name">{{ pc_nh_b.name | default: pc_nh_b.title | escape }}</span>
+					<span class="pc-ncat__count">{{ pc_nh_b.articles_count }} {{ pc_nh_count_label | escape }}</span>
+					<span class="pc-ncat__latest">{{ pc_nh_b.articles.first.title | escape }}</span>
+				</a>
+				{%- endif -%}
+				{%- endfor -%}
+				{%- if blogs[pc_nh_vblog].articles.size > 0 -%}
+				<a class="pc-ncat pc-ncat--video" href="{{ blogs[pc_nh_vblog].url }}">
+					<span class="pc-ncat__name">{{ blogs[pc_nh_vblog].name | default: blogs[pc_nh_vblog].title | escape }}</span>
+					<span class="pc-ncat__count">{{ blogs[pc_nh_vblog].articles_count }} {{ pc_nh_count_label | escape }}</span>
+					<span class="pc-ncat__latest">{{ blogs[pc_nh_vblog].articles.first.title | escape }}</span>
+				</a>
+				{%- endif -%}
+			</div>
+		</section>
+
+		{%- comment -%} ── Khối từng chuyên mục: tin lớn + 2 ô | danh sách 4 tin. ── {%- endcomment -%}
+		{%- assign pc_nh_sec_n = settings.news_section_list_count | default: 4 | plus: 0 -%}
+		{%- for pc_nh_h in pc_nh_list offset: 1 -%}
+		{%- assign pc_nh_hs = pc_nh_h | strip -%}
+		{%- assign pc_nh_b = blogs[pc_nh_hs] -%}
+		{%- if pc_nh_b.articles.size > 0 -%}
+		<section class="pc-nsec">
+			<div class="pc-nsec__head">
+				<h2 class="pc-nsec__title">{{ pc_nh_b.name | default: pc_nh_b.title | escape }}</h2>
+				<a class="pc-nsec__more" href="{{ pc_nh_b.url }}">{{ settings.news_more_label | default: 'Xem tất cả' | escape }} ({{ pc_nh_b.articles_count }})</a>
+			</div>
+			<div class="pc-nmag">
+				<div class="pc-nmag__main">
+					{%- assign pc_ni_article = pc_nh_b.articles.first -%}{%- assign pc_ni_style = 'big' -%}{% include 'news_item' %}
+					{%- if pc_nh_b.articles.size > 1 -%}
+					<div class="pc-nmag__subs">
+						{%- for pc_nh_a in pc_nh_b.articles offset: 1 limit: 2 -%}
+						{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'sub' -%}{% include 'news_item' %}
+						{%- endfor -%}
+					</div>
+					{%- endif -%}
+				</div>
+				{%- if pc_nh_b.articles.size > 3 and pc_nh_sec_n > 0 -%}
+				<div class="pc-nbox pc-news-thumblist">
+					{%- for pc_nh_a in pc_nh_b.articles offset: 3 limit: pc_nh_sec_n -%}
+					{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'thumb' -%}{% include 'news_item' %}
+					{%- endfor -%}
+				</div>
+				{%- endif -%}
+			</div>
+		</section>
+		{%- endif -%}
+		{%- endfor -%}
+
+		{%- comment -%} ── Video: 4 bài mới nhất của blog Video. ── {%- endcomment -%}
+		{%- assign pc_nh_vcount = settings.video_hub_count | default: 4 | plus: 0 -%}
+		{%- if blogs[pc_nh_vblog].articles.size > 0 and pc_nh_vcount > 0 -%}
+		<section class="pc-nsec pc-vhub">
+			<div class="pc-nsec__head">
+				<h2 class="pc-nsec__title">{{ settings.video_hub_title | default: 'Video tư vấn' | escape }}</h2>
+				<a class="pc-nsec__more" href="{{ blogs[pc_nh_vblog].url }}">{{ settings.video_hub_more_label | default: 'Xem tất cả video' | escape }}</a>
+			</div>
+			<div class="pc-nvideo">
+				{%- assign pc_vc_layout = 'grid' -%}{%- assign pc_vc_heading = 'h3' -%}
+				{%- for pc_nh_a in blogs[pc_nh_vblog].articles limit: pc_nh_vcount -%}{%- assign pc_vc_article = pc_nh_a -%}{% include 'video_card' %}{%- endfor -%}
+			</div>
+		</section>
+		{%- endif -%}
+
+		{% include 'news_cta' %}
+	</div>
+</section>
+<script>
+	/* Slider "Tin mới nhất" và "Tin nổi bật" + khối "Tin quan tâm của tôi" */
+	(function () {
+		document.querySelectorAll('[data-pc-nslider]').forEach(function (box) {
+			var track = box.querySelector('.pc-nslider__track');
+			var items = Array.prototype.slice.call(track.children);
+			var per = parseInt(box.getAttribute('data-per') || '1', 10);
+			var pages = Math.ceil(items.length / per), cur = 0;
+			var btns = box.querySelectorAll('.pc-nslider__btn');
+			function show() {
+				items.forEach(function (el, i) { el.hidden = Math.floor(i / per) !== cur; });
+				btns.forEach(function (b) { b.disabled = +b.getAttribute('data-dir') < 0 ? cur === 0 : cur >= pages - 1; });
+			}
+			btns.forEach(function (b) {
+				b.addEventListener('click', function () { cur = Math.max(0, Math.min(pages - 1, cur + +b.getAttribute('data-dir'))); show(); });
+			});
+			show();
+		});
+		var mine = document.querySelector('[data-pc-nmine]');
+		if (!mine) return;
+		var list = [];
+		try { list = JSON.parse(localStorage.getItem('pc_read_articles') || '[]'); } catch (e) { list = []; }
+		if (!Array.isArray(list)) return;
+		var ol = mine.querySelector('ol');
+		list.filter(function (a) { return a && a.url && a.title; }).slice(0, parseInt(mine.getAttribute('data-max') || '5', 10) || 5).forEach(function (a, i) {
+			var li = document.createElement('li'); li.className = 'pc-news-rank';
+			var no = document.createElement('span'); no.className = 'pc-news-rank__no'; no.textContent = i + 1;
+			var body = document.createElement('div'); body.className = 'pc-news-rank__body';
+			var h = document.createElement('h3'); h.className = 'pc-news-rank__title';
+			var link = document.createElement('a'); link.href = a.url; link.textContent = a.title;
+			h.appendChild(link); body.appendChild(h);
+			var meta = document.createElement('span'); meta.className = 'pc-news-meta';
+			if (a.date) { var t = document.createElement('time'); t.textContent = a.date; meta.appendChild(t); }
+			if (a.topic) { var c = document.createElement('span'); c.className = 'pc-news-chip'; c.textContent = a.topic; meta.appendChild(c); }
+			body.appendChild(meta); li.appendChild(no); li.appendChild(body); ol.appendChild(li);
+		});
+		if (ol.children.length) mine.hidden = false;
+	})();
+</script>
