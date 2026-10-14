@@ -925,9 +925,13 @@ function resolvePrettyPath(pathname, searchParams) {
     const withSuffix = (base, suffix) => (suffix && fs.existsSync(path.join(ROOT, 'templates', `${base}.${suffix}.bwt`)) ? `${base}.${suffix}` : base);
     const blogData = parts[1] ? (mockModule.blogsObj || {})[parts[1]] : null;
     if (parts.length === 1) return { tpl: 'blog', routeParams: {} };
+    // 2026-10-14: blog/bài không có trong dữ liệu mock → 404 như Sapo thật. Trước đây preview-mock lặng lẽ thế bằng
+    // bài mặc định (Retinol của tin-tuc) ⇒ gõ handle bài video chưa có trong mock lại ra trang bài thường, dễ tưởng lỗi theme.
+    if (parts.length >= 2 && !blogData) return null;
     if (parts.length === 2) return { tpl: withSuffix('blog', blogData && blogData.template_suffix), routeParams: { blogHandle: parts[1] } };
     if (parts.length === 3) {
       const art = blogData && (blogData.articles || []).find((a) => a.handle === parts[2]);
+      if (!art) return null;
       return { tpl: withSuffix('article', art && art.template_suffix), routeParams: { blogHandle: parts[1], articleHandle: parts[2] } };
     }
   }

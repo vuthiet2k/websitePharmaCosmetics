@@ -35,8 +35,68 @@
 		if (t === 'facebook' && fb) return 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(fb) + '&show_text=false&autoplay=true&width=1280';
 		return '';
 	}
+	/* 2026-10-14: iframe plugins/video.php của Facebook BỎ QUA autoplay (đã thử autoplay=true/1, mute=0/1 trên Chrome thật:
+	   video luôn đứng yên) ⇒ khách bấm Play của theme xong phải bấm Play lần nữa trong khung Facebook. Nay video Facebook
+	   phát bằng Facebook SDK (chỉ tải sdk.js khi khách bấm video FB đầu tiên) rồi gọi player.play() ⇒ bấm 1 lần là chạy.
+	   Trình duyệt chỉ cho tự phát khi TẮT TIẾNG (Chrome chặn bật tiếng trong iframe facebook.com khi khách chưa chạm vào
+	   khung đó) ⇒ video chạy không tiếng, khách bấm biểu tượng loa của Facebook để nghe. SDK bị chặn (trình chặn quảng cáo,
+	   mạng lỗi) quá 6 giây ⇒ quay về iframe thường như cũ để vẫn xem được. */
+	var fbQueue = [], fbState = 0, fbSeq = 0;
+	function fbLoad(cb) {
+		if (fbState === 2) return cb(true);
+		fbQueue.push(cb);
+		if (fbState === 1) return;
+		fbState = 1;
+		var done = function (ok) { if (fbState === 2 && ok) return; fbState = ok ? 2 : 0; var q = fbQueue; fbQueue = []; q.forEach(function (f) { f(ok); }); };
+		var timer = setTimeout(function () { done(false); }, 6000);
+		var prevInit = window.fbAsyncInit;
+		window.fbAsyncInit = function () {
+			if (prevInit) try { prevInit(); } catch (e) {}
+			clearTimeout(timer);
+			if (!window.FB || !FB.XFBML) return done(false);
+			try { FB.init({ xfbml: false, version: 'v19.0' }); } catch (e) {}
+			done(true);
+		};
+		if (window.FB && FB.XFBML) return window.fbAsyncInit();
+		var s = document.createElement('script');
+		s.src = 'https://connect.facebook.net/vi_VN/sdk.js';
+		s.async = true; s.defer = true; s.crossOrigin = 'anonymous';
+		s.onerror = function () { clearTimeout(timer); done(false); };
+		document.head.appendChild(s);
+	}
+	function playFacebook(p, fb, fallback) {
+		var id = 'pc-fbv-' + (++fbSeq);
+		p.__pcFbId = id; /* khách đổi sang video khác khi SDK còn đang tải ⇒ bỏ lượt cũ */
+		p.innerHTML = '';
+		p.classList.add('is-playing', 'is-loading');
+		fbLoad(function (ok) {
+			if (p.__pcFbId !== id) return;
+			if (!ok) { p.classList.remove('is-loading'); return fallback(); }
+			var box = document.createElement('div');
+			box.id = id; box.className = 'fb-video pc-vplayer__fb';
+			box.setAttribute('data-href', fb);
+			box.setAttribute('data-width', String(Math.round(p.clientWidth) || 1280));
+			box.setAttribute('data-autoplay', 'true');
+			box.setAttribute('data-allowfullscreen', 'true');
+			box.setAttribute('data-show-text', 'false');
+			p.appendChild(box);
+			var handler = function (msg) {
+				if (msg.type !== 'video' || msg.id !== id) return;
+				FB.Event.unsubscribe('xfbml.ready', handler);
+				p.classList.remove('is-loading');
+				try { msg.instance.play(); } catch (e) {}
+			};
+			FB.Event.subscribe('xfbml.ready', handler);
+			FB.XFBML.parse(p);
+		});
+	}
 	function play(p) {
 		var url = src(p); if (!url) return;
+		var fb = p.getAttribute('data-pc-video-fb');
+		if (p.getAttribute('data-pc-video') === 'facebook' && fb && !p.__pcFbFallback) {
+			return playFacebook(p, fb, function () { p.__pcFbFallback = true; play(p); p.__pcFbFallback = false; });
+		}
+		p.__pcFbId = null;
 		var f = document.createElement('iframe');
 		f.className = 'pc-vplayer__frame';
 		f.src = url;
