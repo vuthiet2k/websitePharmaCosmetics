@@ -5597,11 +5597,33 @@ $support-color: var(--pc-support-color, #3CB371);
 
   /* settings.mobile_header_sticky → class pc-mh-sticky trên <body> (layouts/theme.bwt), 2026-10-07 */
   body.pc-mh-sticky header.header .main-header {
-    position: sticky;
-    top: 0;
-    z-index: 9980;
+    position: relative;
+    z-index: 1000; /* trên lớp phủ .mobile-nav-overflow (999) để drawer menu bên trong không bị phủ tối */
     background: var(--bgHeader);
   }
+  /* 2026-10-14 (chủ shop: "khi scroll header phải fixed, chỉ ẩn top-header"): trước đây sticky đặt trên .main-header — nhưng
+     .main-header cao bằng đúng header.header cha nên không có chỗ để dính ⇒ cuộn mất cả header. Nay dính cả header.header,
+     top âm đúng bằng chiều cao topbar (--pc-topbar-h do header.bwt đo) ⇒ topbar cuộn đi, thanh logo/menu/giỏ ở lại trên
+     cùng (mẫu header thương mại điện tử mobile phổ biến). */
+  body.pc-mh-sticky header.header {
+    position: sticky;
+    top: calc(-1 * var(--pc-topbar-h, 44px));
+    z-index: 9980;
+  }
+  /* Trang chủ có Hero: header nằm đè lên ảnh (home-portal.css: absolute) ⇒ dùng fixed, cuộn qua 10px thì đẩy topbar lên. */
+  body.pc-mh-sticky.pc-home-v3:has(#portal-main > #section_hero:first-child) header.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    transition: top .2s ease;
+  }
+  body.pc-mh-sticky.pc-home-v3:has(#portal-main > #section_hero:first-child) header.header:has(.main-header.is-scrolled) {
+    top: calc(-1 * var(--pc-topbar-h, 44px));
+  }
+  header.header.mb-compact .box-hearder { box-shadow: 0 2px 10px rgba(0, 46, 35, .08); }
+  /* Menu mobile (drawer) phải nằm trên topbar (site-topbar.css z-index 10010) — trước đây topbar đè lên đầu drawer, che nút đóng. */
+  header.header .header-menu.current { z-index: 10040 !important; }
 
   /* Ẩn topbar (promo slider / text chạy) trên mobile */
   header.header .main-header .top-main-header { display: none; }
@@ -5870,15 +5892,16 @@ $support-color: var(--pc-support-color, #3CB371);
   }
 
   /* Topbar drawer — logo trái, nút đóng phải, nền thương hiệu */
+  /* 2026-10-14: đầu drawer nền trắng như header mobile (logo màu xanh đậm trên nền --bgHeader xanh đậm gần như không đọc được). */
   .mb-drawer-topbar {
     width: 100%;
-    background: var(--bgHeader);
-    border-bottom: none;
+    background: #fff;
+    border-bottom: 1px solid #edf1ee;
     padding: 0 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-height: 50px;
+    min-height: 56px;
   }
   .mb-drawer-logo { display: flex; align-items: center; }
   .mb-drawer-logo img { display: block; height: 36px; width: auto; }
@@ -5893,15 +5916,18 @@ $support-color: var(--pc-support-color, #3CB371);
     border: none;
     background: none;
     cursor: pointer;
-    color: rgba(255,255,255,0.85);
+    color: var(--mainColorDark, #003F2D);
     padding: 8px;
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
     font-size: 20px;
     line-height: 1;
     display: inline-flex;
     align-items: center;
     overflow: hidden;
   }
-  .mb-drawer-close:hover { color: #fff; }
+  .mb-drawer-close:hover { color: var(--mainColor); }
 
   /* Nav links: xoá ALL-CAPS */
   .header-menu .sudes-main-header .col-menu a { text-transform: none; }

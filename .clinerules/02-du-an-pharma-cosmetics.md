@@ -138,6 +138,22 @@ Bổ sung cho `01-quy-chuan-theme-sapo.md` (quy chuẩn nền tảng Sapo). File
 - CSS AI chat phải giới hạn trong `.ai-skin-chat-app`, không khoá cuộn toàn trang.
 - Giữ `layouts/chat.bwt` theo quyết định trước đó và `layouts/mops-admin.bwt` cho quản trị.
 
+## Header & breadcrumb responsive (chốt 2026-10-14)
+
+- **Mobile/tablet ≤991px:** `header.header` dính (`position: sticky`, `top: -var(--pc-topbar-h)`) ⇒ topbar cuộn đi,
+  thanh logo/menu/giỏ (56px) luôn ở trên cùng. `--pc-topbar-h` do `snippets/header.bwt` (measureHeader) đo. Trang chủ có
+  Hero: header `fixed`, `.main-header.is-scrolled` thì đẩy topbar lên. KHÔNG đặt sticky lên `.main-header` (cao bằng
+  cha ⇒ không dính). Bật/tắt: `settings.mobile_header_sticky` (class `pc-mh-sticky` trên body).
+- Desktop ≥992px: thanh menu cuộn `.hSticky` dùng đúng khung header gốc (`--pc-container-max` 1280px + gutter), logo
+  sát trái/giỏ sát phải; hàng header 64px. `#nav` căn giữa bằng `margin:auto` ở mục đầu/cuối (không `justify-content:
+  center` — tràn trái, mất "TRANG CHỦ").
+- Logo header mobile cao 36px (≤360px: 32px), căn giữa cả 2 chiều. Vùng bấm icon header ≥44×44 (Apple HIG 44pt /
+  Material 48dp). Drawer menu: đầu nền trắng, nằm trên topbar (`.header-menu.current` z-index 10040, `.main-header`
+  z-index 1000 > lớp phủ 999).
+- Breadcrumb: không nền, không margin-bottom; mobile 1 dòng, cắt "…" (mục giữa ≤40%, mục cuối lấp phần còn lại).
+- Sau khi sửa CSS thuần (`storefront-v3.css`…): kiểm tra cân bằng ngoặc `{}` — 1 khối `@media` thiếu dấu đóng từng
+  làm rule ẩn `.pc-sticky-*` chỉ chạy ở desktop. Kiểm tra responsive: 360/390/768/1024/1280, không cuộn ngang.
+
 ## 8. Home Portal v3 — bản đồ Section ↔ Config ↔ Snippet (nguồn chuẩn duy nhất)
 
 > Thay thế mọi ma trận section/config trong các báo cáo QA/kiểm thử bên ngoài (kể cả các bản đã đính
