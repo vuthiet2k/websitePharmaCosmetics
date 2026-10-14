@@ -1,12 +1,16 @@
 {%- comment -%}
-  video_embed.bwt (2026-10-12, danh mục bài viết Video) — khung phát video 16:9 kiểu "facade": ban đầu chỉ có ảnh bìa +
-  nút Play, bấm mới chèn iframe YouTube/Facebook thật (mỗi iframe tải ~0,5–1MB script — trang nhiều video vẫn nhẹ).
+  video_embed.bwt (2026-10-12, danh mục bài viết Video) — khung phát video 16:9 (video dọc: 9:16) kiểu "facade": ban đầu chỉ
+  có ảnh bìa + nút Play, bấm mới chèn iframe YouTube (mỗi iframe tải ~0,5–1MB script — trang nhiều video vẫn nhẹ).
+  Facebook (2026-10-14): gắn trình phát Facebook khi khung sắp cuộn tới — xem chú thích trong script.
   Đầu vào: pc_ve_src ('youtube' | 'facebook'), pc_ve_id, pc_ve_fb, pc_ve_title, pc_ve_thumb (URL ảnh bìa),
   pc_ve_priority (true = video đầu trang/LCP ⇒ ảnh không lazy, ưu tiên tải), pc_ve_uid (id DOM, tuỳ chọn — để
   danh sách video bổ trợ đổi video trong khung này). Không có nguồn ⇒ chỉ hiện ảnh bìa.
 {%- endcomment -%}
 {%- assign pc_ve_play_label = settings.video_play_label | default: 'Phát video' -%}
-<div class="pc-vplayer"{% if pc_ve_uid != blank %} id="{{ pc_ve_uid }}"{% endif %} data-pc-video="{{ pc_ve_src }}" data-pc-video-id="{{ pc_ve_id }}" data-pc-video-fb="{{ pc_ve_fb | escape }}" data-pc-video-title="{{ pc_ve_title | escape }}">
+{%- comment -%} 2026-10-14: video dọc (Reels / video quay đứng) ⇒ khung 9:16: link /reel/ hoặc bài gắn tag khung:doc. {%- endcomment -%}
+{%- assign pc_ve_portrait = false -%}
+{%- if pc_ve_fb contains '/reel/' or article.tags contains 'khung:doc' -%}{%- assign pc_ve_portrait = true -%}{%- endif -%}
+<div class="pc-vplayer{% if pc_ve_portrait %} pc-vplayer--portrait{% endif %}"{% if pc_ve_portrait %} data-pc-video-portrait="1"{% endif %}{% if pc_ve_uid != blank %} id="{{ pc_ve_uid }}"{% endif %} data-pc-video="{{ pc_ve_src }}" data-pc-video-id="{{ pc_ve_id }}" data-pc-video-fb="{{ pc_ve_fb | escape }}" data-pc-video-title="{{ pc_ve_title | escape }}">
 	{%- if pc_ve_src != blank -%}
 	<button type="button" class="pc-vplayer__facade" aria-label="{{ pc_ve_play_label | escape }}: {{ pc_ve_title | escape }}">
 	{%- else -%}
@@ -32,71 +36,52 @@
 	function src(p) {
 		var t = p.getAttribute('data-pc-video'), id = p.getAttribute('data-pc-video-id'), fb = p.getAttribute('data-pc-video-fb');
 		if (t === 'youtube' && id) return 'https://www.youtube.com/embed/' + encodeURIComponent(id) + '?autoplay=1&rel=0&playsinline=1';
-		if (t === 'facebook' && fb) return 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(fb) + '&show_text=false&autoplay=true&width=1280';
+		if (t === 'facebook' && fb) return fb;
 		return '';
 	}
-	/* 2026-10-14: iframe plugins/video.php của Facebook BỎ QUA autoplay (đã thử autoplay=true/1, mute=0/1 trên Chrome thật:
-	   video luôn đứng yên) ⇒ khách bấm Play của theme xong phải bấm Play lần nữa trong khung Facebook. Nay video Facebook
-	   phát bằng Facebook SDK (chỉ tải sdk.js khi khách bấm video FB đầu tiên) rồi gọi player.play() ⇒ bấm 1 lần là chạy.
-	   Trình duyệt chỉ cho tự phát khi TẮT TIẾNG (Chrome chặn bật tiếng trong iframe facebook.com khi khách chưa chạm vào
-	   khung đó) ⇒ video chạy không tiếng, khách bấm biểu tượng loa của Facebook để nghe. SDK bị chặn (trình chặn quảng cáo,
-	   mạng lỗi) quá 6 giây ⇒ quay về iframe thường như cũ để vẫn xem được. */
-	var fbQueue = [], fbState = 0, fbSeq = 0;
-	function fbLoad(cb) {
-		if (fbState === 2) return cb(true);
-		fbQueue.push(cb);
-		if (fbState === 1) return;
-		fbState = 1;
-		var done = function (ok) { if (fbState === 2 && ok) return; fbState = ok ? 2 : 0; var q = fbQueue; fbQueue = []; q.forEach(function (f) { f(ok); }); };
-		var timer = setTimeout(function () { done(false); }, 6000);
-		var prevInit = window.fbAsyncInit;
-		window.fbAsyncInit = function () {
-			if (prevInit) try { prevInit(); } catch (e) {}
-			clearTimeout(timer);
-			if (!window.FB || !FB.XFBML) return done(false);
-			try { FB.init({ xfbml: false, version: 'v19.0' }); } catch (e) {}
-			done(true);
-		};
-		if (window.FB && FB.XFBML) return window.fbAsyncInit();
-		var s = document.createElement('script');
-		s.src = 'https://connect.facebook.net/vi_VN/sdk.js';
-		s.async = true; s.defer = true; s.crossOrigin = 'anonymous';
-		s.onerror = function () { clearTimeout(timer); done(false); };
-		document.head.appendChild(s);
+	/* 2026-10-14 (đo trên Chrome thật): Facebook BỎ QUA autoplay của plugin video, còn SDK (FB.play) chỉ phát được khi
+	   TẮT TIẾNG vì iframe do SDK tạo không có quyền autoplay. Chỉ khi khách bấm chính nút Play của Facebook thì video mới
+	   phát CÓ TIẾNG ⇒ video Facebook không dùng facade nữa: khi khung sắp cuộn tới, gắn thẳng trình phát Facebook (khách
+	   bấm 1 lần là phát có tiếng; trước khi phát Facebook tự hiện ảnh bìa của video). Truyền width/height đúng kích thước
+	   khung ⇒ Facebook thu video vừa khung (object-fit: contain), video dọc 9:16 không bị cắt. Khung dọc: xem portrait(). */
+	function key(p) { return p.getAttribute('data-pc-video') + '|' + (p.getAttribute('data-pc-video-id') || p.getAttribute('data-pc-video-fb') || ''); }
+	/* Khung dọc 9:16: link Reels, hoặc video chính của bài gắn tag khung:doc (Liquid đặt data-pc-video-portrait) —
+	   đổi sang video bổ trợ khác thì về 16:9. */
+	function portrait(p) {
+		if (p.__pcOrig === undefined) p.__pcOrig = key(p);
+		return /\/reel\//.test(p.getAttribute('data-pc-video-fb') || '') || (p.getAttribute('data-pc-video-portrait') === '1' && key(p) === p.__pcOrig);
 	}
-	function playFacebook(p, fb, fallback) {
-		var id = 'pc-fbv-' + (++fbSeq);
-		p.__pcFbId = id; /* khách đổi sang video khác khi SDK còn đang tải ⇒ bỏ lượt cũ */
+	function mountFacebook(p) {
+		var fb = p.getAttribute('data-pc-video-fb');
+		if (!fb) return;
+		p.classList.toggle('pc-vplayer--portrait', portrait(p));
+		var w = Math.round(p.clientWidth) || 560, h = Math.round(p.clientHeight) || 315;
+		var f = document.createElement('iframe');
+		f.className = 'pc-vplayer__frame';
+		f.src = 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(fb) + '&show_text=false&width=' + w + '&height=' + h;
+		f.title = p.getAttribute('data-pc-video-title') || '';
+		f.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share; fullscreen');
+		f.setAttribute('allowfullscreen', '');
+		f.setAttribute('scrolling', 'no');
 		p.innerHTML = '';
-		p.classList.add('is-playing', 'is-loading');
-		fbLoad(function (ok) {
-			if (p.__pcFbId !== id) return;
-			if (!ok) { p.classList.remove('is-loading'); return fallback(); }
-			var box = document.createElement('div');
-			box.id = id; box.className = 'fb-video pc-vplayer__fb';
-			box.setAttribute('data-href', fb);
-			box.setAttribute('data-width', String(Math.round(p.clientWidth) || 1280));
-			box.setAttribute('data-autoplay', 'true');
-			box.setAttribute('data-allowfullscreen', 'true');
-			box.setAttribute('data-show-text', 'false');
-			p.appendChild(box);
-			var handler = function (msg) {
-				if (msg.type !== 'video' || msg.id !== id) return;
-				FB.Event.unsubscribe('xfbml.ready', handler);
-				p.classList.remove('is-loading');
-				try { msg.instance.play(); } catch (e) {}
-			};
-			FB.Event.subscribe('xfbml.ready', handler);
-			FB.XFBML.parse(p);
+		p.appendChild(f);
+		p.classList.add('is-playing');
+	}
+	function initFacebook() {
+		Array.prototype.forEach.call(document.querySelectorAll('.pc-vplayer'), portrait); /* ghi nhớ video gốc của từng khung */
+		var list = document.querySelectorAll('.pc-vplayer[data-pc-video="facebook"]:not(.is-playing)');
+		if (!list.length) return;
+		var io = 'IntersectionObserver' in window ? new IntersectionObserver(function (es) {
+			es.forEach(function (e) { if (e.isIntersecting) { io.unobserve(e.target); if (!e.target.classList.contains('is-playing')) mountFacebook(e.target); } });
+		}, { rootMargin: '300px 0px' }) : null;
+		Array.prototype.forEach.call(list, function (p) {
+			if (io) io.observe(p); else mountFacebook(p);
 		});
 	}
 	function play(p) {
 		var url = src(p); if (!url) return;
-		var fb = p.getAttribute('data-pc-video-fb');
-		if (p.getAttribute('data-pc-video') === 'facebook' && fb && !p.__pcFbFallback) {
-			return playFacebook(p, fb, function () { p.__pcFbFallback = true; play(p); p.__pcFbFallback = false; });
-		}
-		p.__pcFbId = null;
+		if (p.getAttribute('data-pc-video') === 'facebook') return mountFacebook(p);
+		p.classList.toggle('pc-vplayer--portrait', portrait(p));
 		var f = document.createElement('iframe');
 		f.className = 'pc-vplayer__frame';
 		f.src = url;
@@ -109,6 +94,7 @@
 		p.classList.add('is-playing');
 	}
 	window.pcVideoFacade = { play: play };
+	if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initFacebook); else initFacebook();
 	document.addEventListener('click', function (e) {
 		var btn = e.target.closest && e.target.closest('.pc-vplayer__facade');
 		if (btn && btn.tagName === 'BUTTON') { play(btn.parentNode); return; }

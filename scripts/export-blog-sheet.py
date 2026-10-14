@@ -101,7 +101,8 @@ gl('QUY ƯỚC TAG THEME ĐANG ĐỌC', bold=True, fill=P_GROUP)
 gl('Tag', 'Ví dụ', 'Tác dụng trên web', bold=True)
 for row in [
     ('youtube:<mã hoặc link>', 'youtube:4B9RN_wcl_I', 'Nguồn video YouTube (mã 11 ký tự, phân biệt hoa/thường). Bài thường: nhiều tag = video chính + video bổ trợ.'),
-    ('facebook:<link video>', 'facebook:https://www.facebook.com/pharmacosmeticsxshb/videos/<số>', 'Nguồn video Facebook (video công khai trên Fanpage). Bắt buộc có ảnh đại diện.'),
+    ('facebook:<link video>', 'facebook:https://www.facebook.com/pharmacosmeticsxshb/videos/<số>', 'Nguồn video Facebook (video công khai trên Fanpage). Bắt buộc có ảnh đại diện (ảnh bìa ở danh sách video).'),
+    ('khung:doc', 'khung:doc', 'Video quay dọc (9:16) ⇒ khung phát dọc, không bị thu nhỏ. Link /reel/ tự nhận, không cần tag. Ghi ở cột "Tag khác".'),
     ('thoiluong:<MM:SS>', 'thoiluong:01:23', 'Thời lượng video trên ảnh bìa + dữ liệu SEO.'),
     ('chude:<Nhãn>', 'chude:Làm sạch da', 'Nhãn chủ đề trên thẻ bài/video và nút lọc trang Video. Gõ giống hệt nhau giữa các bài.'),
     ('chuyengia:<handle>', 'chuyengia:chuyen-gia-thanh-hang', 'Hiện ảnh + tên chuyên gia (bài trong danh mục "' + setting('expert_blog_handle', 'chuyen-gia') + '").'),

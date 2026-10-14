@@ -511,8 +511,14 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
   `thoiluong:<MM:SS>` (cắt bằng `remove_first`, không `split: ':' | last`), `chude:<Nhãn>`, `chuyengia:<handle>`.
 - Facebook plugin chỉ nhận link tuyệt đối: `video_parse.bwt` tự thêm `https://`, đổi mã số trần/`fb_video_<số>` thành
   `https://www.facebook.com/watch/?v=<số>`, giá trị khác ⇒ không nhúng (tránh khung trắng). Video phải ở chế độ Công khai.
-- Khung phát luôn là facade (`snippets/video_embed.bwt`): ảnh bìa + nút Play, bấm mới chèn iframe. Không nhúng iframe
-  YouTube/Facebook trực tiếp trong template. Ảnh bìa: ảnh đại diện bài ⇒ `i.ytimg.com/vi/<mã>/…` ⇒ placeholder.
+- Khung phát (`snippets/video_embed.bwt`): YouTube = facade (ảnh bìa + nút Play, bấm mới chèn iframe `autoplay=1`).
+  Facebook (đo trên Chrome thật 2026-10-14): plugin bỏ qua autoplay, SDK `FB.play()` chỉ phát được khi tắt tiếng ⇒ KHÔNG
+  dùng facade/SDK; JS gắn thẳng iframe `plugins/video.php` khi khung sắp cuộn tới (IntersectionObserver), truyền
+  `width`/`height` = kích thước khung ⇒ Facebook thu video vừa khung (contain), khách bấm Play của Facebook 1 lần là phát
+  CÓ TIẾNG. Không viết iframe trực tiếp trong template. Ảnh bìa (YouTube/thẻ danh sách): ảnh đại diện bài ⇒
+  `i.ytimg.com/vi/<mã>/…` ⇒ placeholder.
+- Video dọc (Reels/quay đứng) ⇒ khung 9:16 `.pc-vplayer--portrait` (cao tối đa ~80vh, căn giữa): tự nhận link `/reel/`,
+  link `/watch`/`/videos` thì bài gắn tag `khung:doc`. Không đánh dấu ⇒ khung 16:9, video dọc vẫn hiện đủ nhưng nhỏ.
 - Bài viết thường gắn tag `youtube:`/`facebook:` ⇒ khối "Video hướng dẫn" trước nội dung (`article_video_block.bwt`):
   tag đầu = video chính, tag sau = video bổ trợ (tên lấy từ bài cùng mã trong blog `video_blog_handle`).
 - `blog.video.bwt` (2026-10-13) bố cục trang kênh YouTube theo mẫu khách gửi (`.pc-ytc`): đầu kênh (ảnh `favicon.png`,
@@ -520,8 +526,9 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
   → tab Trang chủ + chủ đề `chude:` + nguồn (khi có cả YT/FB) + ô tìm trong trang → hàng cuộn "mới nhất" (trang 1) →
   lưới 4 cột thẻ `video_card` kiểu `yt`. Không breadcrumb, không hiện lượt xem/số người đăng ký (không có dữ liệu thật).
 - Khối Video ở `templates/blog.bwt` (.pc-vhub) = 4 bài mới nhất của blog `video_blog_handle`; blog trống ⇒ ẩn khối.
-- JSON-LD `VideoObject` ở `article.video.bwt` (duration ISO từ `thoiluong:`). Không có link video Facebook thật ⇒ demo
-  chỉ có YouTube; không bịa link Facebook.
+- JSON-LD `VideoObject` ở `article.video.bwt` (duration ISO từ `thoiluong:`). Demo Facebook chỉ dùng video công khai
+  thật của Fanpage (`427805549152968`, quay dọc) — không bịa link Facebook.
+- Dev-server: `/blogs/<blog>/<bài>` không có trong `data/articles.js` ⇒ 404 (như Sapo), không thế bằng bài khác.
 
 ## Chân trang (`snippets/footer.bwt` + `section_footer_brands.bwt`, chốt 2026-10-13)
 
