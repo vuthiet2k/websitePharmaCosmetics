@@ -343,11 +343,13 @@
       background: var(--mainColorLight) !important;
     }
     /* When scrolled, only navigation occupies the fixed bar. */
+    {%- comment -%} 2026-10-14 (chủ shop): thanh menu khi cuộn từng bó 960px ⇒ logo/giỏ hàng lệch vào giữa so với header gốc
+      (1280px, lề --pc-container-gutter). Dùng đúng khung của header gốc để logo sát trái, giỏ hàng sát phải. {%- endcomment -%}
     header.header.hSticky .box-hearder .header-menu > .container {
       width: 100%;
-      max-width: 960px;
+      max-width: var(--pc-container-max, 1280px) !important;
       margin: 0 auto;
-      padding: 0 15px;
+      padding: 0 var(--pc-container-gutter, 32px);
     }
     header.header.hSticky .box-hearder .header-menu .sudes-cate-header {
       display: block;
@@ -402,13 +404,18 @@
     header.header .box-hearder .pc-header-row {
       min-height: 48px !important;
     }
+    {%- comment -%} 2026-10-14 (chủ shop: "logo mobile bé quá"): 20px ⇒ 36px — mức thường gặp của logo chữ trên header
+      mobile (32–40px, vùng chạm ≥44px), vẫn chừa chỗ cho menu/tìm kiếm bên trái và giỏ hàng bên phải. Máy ≤360px: 32px. {%- endcomment -%}
     header.header .main-header .box-hearder .row .header-logo .pc-logo-master {
-      height: 20px !important;
+      height: 36px !important;
     }
     footer.footer .copyright,
     footer.footer .bg-footer-bottom {
       padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
     }
+  }
+  @media (max-width: 360px) {
+    header.header .main-header .box-hearder .row .header-logo .pc-logo-master { height: 32px !important; }
   }
   @media (min-width: 992px) and (max-width: 1399px) {
     header.header .box-hearder .header-mid { display: none !important; }
