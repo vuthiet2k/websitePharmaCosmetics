@@ -2,10 +2,12 @@
   page.bwt (2026-10-05) — template MẶC ĐỊNH cho trang tĩnh (Admin → Trang nội dung) không chọn template
   riêng. Sapo bắt buộc có file này: tải gói lên Sapo bị báo thiếu "templates/page.bwt". Chỉ in đúng dữ
   liệu trang (page.title, page.content) — không thêm nội dung cố định.
-  2026-10-14: Tự động nạp giao diện cổng tin tức tổng (page_tin_tuc_hub) khi alias/handle là 'tin-tuc' hoặc 'trang-tin-tuc-tong'
-  để bảo đảm hiển thị đầy đủ giao diện ngay cả khi Admin chưa chọn được template riêng hoặc theme chưa xuất bản.
+  2026-10-14: Tự động nạp giao diện cổng tin tức tổng (page_tin_tuc_hub) khi page.alias (Sapo thật) hoặc
+  page.handle (preview mock) là 'tin-tuc' hoặc 'trang-tin-tuc-tong' để bảo đảm hiển thị đầy đủ ngay cả
+  khi Admin chưa chọn được template riêng hoặc theme chưa xuất bản.
 {%- endcomment -%}
-{%- if page.handle == 'tin-tuc' or page.handle == 'trang-tin-tuc-tong' -%}
+{%- assign pc_page_slug = page.alias | default: page.handle -%}
+{%- if pc_page_slug == 'tin-tuc' or pc_page_slug == 'trang-tin-tuc-tong' -%}
   {% include 'page_tin_tuc_hub' %}
 {%- else -%}
 {% include 'breadcrumb' %}
