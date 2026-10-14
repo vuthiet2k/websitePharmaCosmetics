@@ -135,3 +135,32 @@
 		}
 	}
 }
+/* 2026-10-14 (yêu cầu chủ shop, chỉ mobile): breadcrumb bỏ nền hồng, giữ 1 dòng — mục trung gian tối đa 40% bề ngang,
+   mục cuối (trang đang xem) chiếm phần còn lại; chữ dài cắt bằng "…" thay vì xuống dòng. */
+@media (max-width: 767px) {
+	.bread-crumb { background: transparent; }
+	.breadcrumb {
+		display: flex;
+		flex-wrap: nowrap;
+		align-items: center;
+		white-space: nowrap;
+		word-break: normal;
+		li {
+			display: flex;
+			align-items: center;
+			min-width: 0;
+			flex: 0 1 auto;
+			max-width: 40%;
+			> a, > strong {
+				display: block;
+				min-width: 0;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+			.mr_lr { flex: none; }
+			&.home { flex: none; max-width: none; }
+			&:last-child { flex: 1 1 0; max-width: none; }
+		}
+	}
+}
