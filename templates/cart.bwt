@@ -1,19 +1,36 @@
 {% include 'breadcrumb' %}
+{%- comment -%}
+  2026-10-15: thanh bước / dòng lưu ý / dòng quà tặng / ô cam kết trước đây hardcode cứng trong template —
+  dòng "Tặng 01 Tuýp Mini Kem Chống Nắng 10ml (Đã chọn ✓)" hiện với MỌI giỏ hàng dù không có quà nào
+  được thêm vào đơn (bịa ưu đãi). Nay đọc từ settings (Cài đặt giao diện → Nội dung trang giỏ hàng);
+  quà tặng để trống = ẩn, quà thật phải cấu hình ở Sapo Admin (module Mua X tặng Y).
+{%- endcomment -%}
+{%- if settings.cart_steps_enable -%}
+{%- assign _cart_steps = settings.cart_steps_text | default: 'Giỏ hàng;Thông tin giao hàng;Thanh toán' | split: ';' -%}
 <div class="pc-cart-steps max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center gap-2 text-xs sm:text-sm font-semibold text-gray-400 mt-4">
-	<span class="pc-cart-step pc-cart-step--active inline-flex items-center gap-1.5 text-clinical-700 bg-mint-50 border border-emerald-200 rounded-full px-3 py-1">
-		<i class="fas fa-shopping-bag text-[11px]"></i> 1. Giỏ Hàng
+	{%- for _step in _cart_steps -%}
+	{%- assign _step_name = _step | strip -%}
+	{%- unless forloop.first -%}<span class="pc-cart-step-arrow text-gray-300" aria-hidden="true">→</span>{%- endunless -%}
+	{%- if forloop.first -%}
+	<span class="pc-cart-step pc-cart-step--active inline-flex items-center gap-1.5 text-clinical-700 bg-mint-50 border border-emerald-200 rounded-full px-3 py-1" aria-current="step">
+		<i class="fas fa-shopping-bag text-[11px]"></i> {{ forloop.index }}. {{ _step_name }}
 	</span>
-	<span class="pc-cart-step-arrow text-gray-300">→</span>
-	<span class="pc-cart-step rounded-full px-3 py-1">2. Thông Tin Giao Hàng</span>
-	<span class="pc-cart-step-arrow text-gray-300">→</span>
-	<span class="pc-cart-step rounded-full px-3 py-1">3. Thanh Toán Y Khoa</span>
+	{%- else -%}
+	<span class="pc-cart-step rounded-full px-3 py-1">{{ forloop.index }}. {{ _step_name }}</span>
+	{%- endif -%}
+	{%- endfor -%}
 </div>
+{%- endif -%}
+{%- if settings.cart_note_text != blank -%}
 <div class="pc-cart-note max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-3">
-	<div class="pc-kit-badge-clinical text-xs sm:text-sm !inline-flex w-auto">🩺 Chuyên gia sẽ gọi điện xác nhận tình trạng da trước khi gửi hàng.</div>
+	<div class="pc-kit-badge-clinical text-xs sm:text-sm !inline-flex w-auto">🩺 {{ settings.cart_note_text }}</div>
 </div>
+{%- endif -%}
+{%- if settings.cart_gift_text != blank and cart.item_count > 0 -%}
 <div class="pc-cart-gift max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-2">
-	<div class="pc-kit-badge-gold text-xs sm:text-sm !inline-flex w-auto">🎁 Tặng 01 Tuýp Mini Kem Chống Nắng 10ml (Đã chọn ✓)</div>
+	<div class="pc-kit-badge-gold text-xs sm:text-sm !inline-flex w-auto">🎁 {{ settings.cart_gift_text }}</div>
 </div>
+{%- endif -%}
 {% assign invoice = 'Xuất hóa đơn' %}
 {% assign company_name = 'Tên công ty' %}
 {% assign company_address = 'Địa chỉ công ty' %}
@@ -57,14 +74,14 @@
 						<div class="product-suggest product-swipers">
 							<div class="section-title a-left txt-uppercese">
 								<h2>
-									<a href="/collections/{{ settings.cart_suggest_product_col }}" title="{{settings.cart_suggest_product_title | strip_html}}">{{settings.cart_suggest_product_title}}</a>
+									<a href="/collections/{{ sudes_product_suggest }}" title="{{settings.cart_suggest_product_title | strip_html}}">{{settings.cart_suggest_product_title}}</a>
 								</h2>
 							</div>
-							{% assign count = collections[settings.cart_suggest_product_col].products_count %}
+							{% assign count = collections[sudes_product_suggest].products_count %}
 							{% if count > 0 %}
 							<div class="swiper_suggest swiper-container">
 								<div class="swiper-wrapper">
-									{% for product in collections[settings.cart_suggest_product_col].products limit: settings.cart_suggest_product_limit %}
+									{% for product in collections[sudes_product_suggest].products limit: settings.cart_suggest_product_limit %}
 									<div class="swiper-slide">
 										<div class="item_product_main">
 											{%include 'product_grid_office'%}
@@ -92,84 +109,6 @@
 							{%endif%}
 						</div>
 					</div>
-					{% include 'buyxgety-module-cart' %}
-<script>
-(function($) {
-
-	/* ── Calculator: cập nhật tổng theo sản phẩm được chọn (KHÔNG ảnh hưởng checkout) ── */
-	var _cartMoneyFmt = '{{store.money_format}}';
-	function _fmt(n) {
-		return (typeof Bizweb !== 'undefined' && Bizweb.formatMoney && _cartMoneyFmt)
-			? Bizweb.formatMoney(n, _cartMoneyFmt)
-			: n.toLocaleString('vi-VN') + 'đ';
-	}
-
-	function updateSelectionTotal() {
-		var subtotal = 0, count = 0, allCount = $('.cart-item-select').length;
-		$('.cart-item-select:checked').each(function() {
-			subtotal += parseInt($(this).attr('data-raw-price'), 10) || 0;
-			count++;
-		});
-		if (count > 0) {
-			var label = count + (allCount > count ? '/' + allCount : '') + ' sản phẩm được chọn';
-			$('.summary-total .js-cart-count').html(label);
-			$('.summary-total .js-subtotal').html(_fmt(subtotal));
-		} else {
-			$('.summary-total .js-cart-count').html('Chưa chọn sản phẩm');
-			$('.summary-total .js-subtotal').html('—');
-		}
-		/* .total-price (Tổng đặt hàng) KHÔNG được ghi đè — luôn = toàn bộ giỏ hàng */
-	}
-
-	/* Select-all */
-	$(document).on('click', '#cart-select-all', function() {
-		var isChecked = this.checked;
-		$('.cart-item-select').each(function() { this.checked = isChecked; });
-		updateSelectionTotal();
-	});
-
-	/* Per-item */
-	$(document).on('change', '.cart-item-select', function() {
-		var total = $('.cart-item-select').length;
-		var selected = $('.cart-item-select:checked').length;
-		$('#cart-select-all').each(function() { this.checked = (total > 0 && total === selected); });
-		updateSelectionTotal();
-	});
-
-	/* Re-sync sau mỗi lần Handlebars rebuild */
-	$('body').on('ajaxCart', function() {
-		var $items = $('.cart-item-select');
-		var total = $items.length, selected = $items.filter(':checked').length;
-		$('#cart-select-all').each(function() { this.checked = (total > 0 && total === selected); });
-		updateSelectionTotal();
-	});
-
-	/* ── Checkout toàn bộ giỏ hàng ── */
-	window.cartGoToCheckout = function(e) {
-		if (e) e.preventDefault();
-		{%- if settings.delivery_show or settings.use_cart_vat -%}
-		if (typeof goToCheckout === 'function') goToCheckout(e || { preventDefault: function(){} });
-		else window.location.href = '/checkout';
-		{%- else -%}
-		window.location.href = '/checkout';
-		{%- endif -%}
-	};
-
-	/* Coupon apply */
-	$(document).on('click', '.js-apply-coupon', function() {
-		var code = $('#coupon-code-input').val().trim();
-		var $feedback = $('.coupon-feedback');
-		if (!code) {
-			$feedback.removeClass('coupon-feedback--success').addClass('coupon-feedback--error').text('Vui lòng nhập mã giảm giá.');
-			return;
-		}
-		$feedback.removeClass('coupon-feedback--error coupon-feedback--success').text('');
-		$(this).prop('disabled', true).text('Đang xử lý...');
-		window.location.href = '/checkout?discount=' + encodeURIComponent(code);
-	});
-
-})(jQuery);
-</script>
 					<script>
 						var swiper_suggest = null;
 						function initSwiperSuggest() {
@@ -245,17 +184,17 @@
 												</fieldset>
 												<fieldset class="input_group date_time">
 													<select name="time" class="timeer timedeli-cta" >
-														<option selected>{{settings.delivery_time_default}}</option>
+														<option value="" selected>{{settings.delivery_time_default | default: 'Chọn khung giờ'}}</option>
 														{%assign options = settings.delivery_time | split: ';'%}
 														{%for opt in options%}
-														<option value="{{opt}}">{{opt}}</option>
+														{%- assign _opt = opt | strip -%}{%- if _opt != blank -%}<option value="{{_opt}}">{{_opt}}</option>{%- endif -%}
 														{%endfor%}
 													</select>
 												</fieldset>
 											</div>
 											{% endif %}
 											{% if settings.use_cart_vat %}
-											<div class="r-bill d-none">
+											<div class="r-bill">
 												<div class="checkbox">
 													<input type="hidden" name="attributes[invoice]" id="re-checkbox-bill"
 														   value='không'>
@@ -314,20 +253,18 @@
 											<button onclick="cartGoToCheckout(event)" type="button" class="button btn btn-default cart__btn-proceed-checkout btn-primary duration-300" id="btn-proceed-checkout" title="Đặt hàng ngay">Đặt hàng ngay</button>
 										</div>
 										<a class="cart-continue-link text-clinical-700 hover:text-clinical-600 text-sm font-semibold" title="Tiếp tục mua hàng" href="/collections/all">← Tiếp tục mua hàng</a>
+									{%- if settings.cart_trust_enable and settings.cart_trust_text != blank -%}
+									{%- assign _trust_items = settings.cart_trust_text | split: ';' -%}
+									{%- assign _trust_icons = 'fa-shield-alt,fa-sync,fa-user-md' | split: ',' -%}
 									<div class="grid grid-cols-3 gap-2 text-center text-[11px] text-gray-600 pt-4 mt-3 border-t border-gray-100">
+										{%- for _trust in _trust_items limit: 3 -%}
 										<div class="p-2 rounded-lg bg-gray-50 border border-gray-100">
-											<i class="fas fa-shield-alt text-clinical-600 text-base mb-1 block"></i>
-											<span>100% Chính ngạch</span>
+											<i class="fas {{ _trust_icons[forloop.index0] }} text-clinical-600 text-base mb-1 block"></i>
+											<span>{{ _trust | strip }}</span>
 										</div>
-										<div class="p-2 rounded-lg bg-gray-50 border border-gray-100">
-											<i class="fas fa-sync text-clinical-600 text-base mb-1 block"></i>
-											<span>Đổi trả 7 ngày</span>
-										</div>
-										<div class="p-2 rounded-lg bg-gray-50 border border-gray-100">
-											<i class="fas fa-user-md text-clinical-600 text-base mb-1 block"></i>
-											<span>Chuyên gia 1:1</span>
-										</div>
+										{%- endfor -%}
 									</div>
+									{%- endif -%}
 									</div>
 								</div>
 							</div>
@@ -346,7 +283,7 @@
 						<div class="product-suggest-mob product-swipers">
 							<div class="section-title a-left txt-uppercese">
 								<h2>
-									<a href="/collections/{{ settings.cart_suggest_product_col }}" title="{{settings.cart_suggest_product_title | strip_html}}">{{settings.cart_suggest_product_title}}</a>
+									<a href="/collections/{{ sudes_product_suggest }}" title="{{settings.cart_suggest_product_title | strip_html}}">{{settings.cart_suggest_product_title}}</a>
 								</h2>
 							</div>
 							{% assign count = collections[sudes_product_suggest].products_count %}
@@ -423,6 +360,43 @@
 		</div>
 	</div>
 </section>
+{%- comment -%} 2026-10-15: script giỏ hàng trước đây nằm trong điều kiện settings.cart_suggest_product_enable ⇒ tắt khối gợi ý là nút Đặt hàng ngay (cartGoToCheckout) không còn tác dụng. Đưa ra ngoài mọi điều kiện. {%- endcomment -%}
+<script>
+(function($) {
+
+	/* 2026-10-15: bỏ JS "chọn sản phẩm để tính tổng" — ô chọn đã bị ẩn (page_cart.scss: checkout Sapo luôn
+	   lấy TOÀN BỘ giỏ) nhưng JS vẫn đổi số Tạm tính, còn bản mobile lại hiện ô chọn không có tác dụng. */
+	function proceedCheckout(e) {
+		{%- if settings.delivery_show or settings.use_cart_vat -%}
+		if (typeof goToCheckout === 'function') { goToCheckout(e || { preventDefault: function(){} }); return; }
+		{%- endif -%}
+		window.location.href = window.cartCheckoutUrl || '/checkout';
+	}
+
+	/* ── Đặt hàng: toàn bộ giỏ hàng ── */
+	window.cartGoToCheckout = function(e) {
+		if (e && e.preventDefault) e.preventDefault();
+		proceedCheckout(e);
+	};
+
+	/* Mã giảm giá: được áp ở trang checkout ⇒ đi qua cùng luồng đặt hàng (ngày giao, VAT) thay vì nhảy thẳng sang /checkout bỏ qua các bước đó như trước. */
+	$(document).on('click', '.js-apply-coupon', function(e) {
+		var code = $('#coupon-code-input').val().trim();
+		var $feedback = $('.coupon-feedback');
+		if (!code) {
+			$feedback.removeClass('coupon-feedback--success').addClass('coupon-feedback--error').text('Vui lòng nhập mã giảm giá.');
+			return;
+		}
+		$feedback.removeClass('coupon-feedback--error').addClass('coupon-feedback--success').text('Mã sẽ được áp dụng ở bước thanh toán.');
+		window.cartCheckoutUrl = '/checkout?discount=' + encodeURIComponent(code);
+		window.cartGoToCheckout(e);
+	});
+	$(document).on('keydown', '#coupon-code-input', function(e) {
+		if (e.key === 'Enter') { e.preventDefault(); $('.js-apply-coupon').trigger('click'); }
+	});
+
+})(jQuery);
+</script>
 {% if settings.use_cart_vat or settings.delivery_show%}
 <script src='{{"sweetalert-min.js" | asset_url}}'></script>
 <link rel="preload" as="script" href="{{ 'bootstrap-datepicker.js' | asset_url}}" />
@@ -460,11 +434,10 @@
 			if (typeof _baseCheckout === 'function') _baseCheckout(e);
 		};
 		{%- endif -%}
-
-		setTimeout(function(){$('.colrightvat').removeClass('d-none')}, 300);
 	})
 </script>
 {%include 'vat-cart'%}
 {%endif%}
 {% if cart.item_count > 0 %}{% for item in cart.items %}<div class="product-id-in-cart hidden">{{item.product.id}}</div>{% endfor %}{% endif %}{% include 'product-recommend' %}
+{%- comment -%} 2026-10-15: trước đây include 2 lần (1 lần nằm trong khối gợi ý) ⇒ 2 khung module Mua X tặng Y; giữ 1 lần, không phụ thuộc bật/tắt gợi ý {%- endcomment -%}
 {% include 'buyxgety-module-cart' %}

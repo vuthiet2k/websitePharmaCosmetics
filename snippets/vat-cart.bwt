@@ -32,14 +32,14 @@
 			}
 		}
 
-		$('.timedeli-cta, .date_picker').on('change touchstart', function(){
-			let date = $('.date_picker').val().split('/')
-			var timex = $(this).find(":selected").val();
-			if (date != undefined && timex != undefined) {
-				setCookie('ego-delivery-value', '' , 1);
-				setCookie('ego-delivery-value', ''+date + ' - ' +timex+'' , 1);
-			}
-		})
+		/* 2026-10-15: trước đây handler đọc ":selected" trên cả ô ngày (luôn undefined ⇒ chọn ngày không ghi
+		   gì) và ghép mảng ngày thành "15,10,2026". Nay đọc thẳng 2 ô lúc đặt hàng (getDeliveryValue). */
+		function getDeliveryValue() {
+			var date = ($('.date_picker').val() || '').trim();
+			var time = ($('.timedeli-cta').val() || '').trim();
+			if (!date) return '';
+			return time ? date + ' - ' + time : date;
+		}
 	function updateVAT() { 
 		$('.btn-checkout').addClass('disabled');
 		var invoice = $('input[name="attributes[invoice]"]').val();
@@ -74,7 +74,7 @@
 			'email': email_company
 		});
 		var attributes = Object.keys(cart_info).reduce(function(result, info) {
-			if (cart_info[info] !== "") {
+			if (cart_info[info] != null && cart_info[info] !== "") {
 				return {
 					...result,
 					...{
@@ -84,8 +84,7 @@
 			}
 			return result;
 		}, {})
-		const deliveryAttr = getCookie('ego-delivery-value');
-		//alert(deliveryAttr);
+		const deliveryAttr = getDeliveryValue();
 		if (deliveryAttr !== '') {
 			attributes['{{delivery_attr_key}}'] = deliveryAttr;
 		}
@@ -99,7 +98,7 @@
 				data: data,
 				dataType: 'json',
 				success: function(cart) {
-					window.location.href = '/checkout'
+					window.location.href = window.cartCheckoutUrl || '/checkout';
 				},
 				complete: function() {
 					setTimeout(function() {
@@ -111,7 +110,6 @@
 				}
 			};
 			jQuery.ajax(params);
-			setCookie('ego-delivery-value', '' , 1);
 	}
 
   		$(document).on('keyup', '.val-f', function () {
@@ -166,17 +164,9 @@
 			 })
 				
 			 if (isValidated) {
-				 swal({
-					 title: `Bạn có chắc không xuất hóa đơn?`,
-					 text: `Chọn đóng và chọn vào xuất hóa đơn công ty sau đó nhập thông tin công ty để xuất hóa đơn!`,
-					 type: "warning",
-				   	 className: 'vat-checked-modal',
-					 buttons: ["Đóng", "Xác nhận"],
-				 }).then(function() {
-					 $('body').on('click', '.swal-button--confirm', function() {
-						 updateVAT();
-					 })
-				 });
+				 /* 2026-10-15: trước đây hiện hộp thoại hỏi ngược "Bạn có chắc không xuất hóa đơn?" và gắn
+				    handler nút Xác nhận sau khi hộp thoại đã đóng ⇒ khách tích xuất hoá đơn không đặt được hàng. */
+				 updateVAT();
 			 } else {
 			   $('.val-f').each(function() {
 			     if ($(this).val() === '') {
@@ -187,7 +177,7 @@
 				   $(this).next('span.text-danger').remove();
 				   if($(this).hasClass('val-n')
 					   && $(this).val().trim().length < Number('10')) {
-					  $(this).after('<span class="text-danger">Mã số thuế phải tối thiểu 10 ký tự nè</span>');
+					  $(this).after('<span class="text-danger">Mã số thuế phải tối thiểu 10 ký tự</span>');
 					}
 					if ($(this).hasClass('val-email')
 					   && !(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test($(this).val().trim()))) {
@@ -197,15 +187,14 @@
 			    })
 			 }
 		 } else {
+			 /* 2026-10-15: bỏ lệnh chuyển trang ngay sau updateVAT() — nó chạy trước khi /cart/update.js lưu
+			    xong ngày giờ giao ⇒ thông tin giao hàng có thể mất. updateVAT() tự chuyển sang checkout khi lưu xong. */
 			 updateVAT();
-			 $('body').off('click', '.swal-button--confirm');
-		 	location.href = '/checkout'
 		 }
 		 return;
 		{%else%}
 	 	
-		$('body').off('click', '.swal-button--confirm');
-		 location.href = '/checkout'
+		 location.href = window.cartCheckoutUrl || '/checkout';
 		 {% endif %}
 		 
 	 }
