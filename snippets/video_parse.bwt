@@ -14,6 +14,13 @@
 		{%- assign pc_vp_src = 'facebook' -%}
 		{%- assign pc_vp_fb = pc_vp_val | split: '"' | first | strip -%}
 		{%- comment -%}
+		  2026-10-14: dán nguyên iframe / link plugins/video.php (nút "Nhúng" của Facebook) vào tag hoặc metafield
+		  ⇒ trước đây bị bọc plugin lần 2 (iframe) hoặc mất video. Lấy tham số href rồi giải mã về link video gốc.
+		{%- endcomment -%}
+		{%- if pc_vp_val contains 'plugins/video.php' and pc_vp_val contains 'href=' -%}
+			{%- assign pc_vp_fb = pc_vp_val | split: 'plugins/video.php' | last | split: 'href=' | last | split: '&' | first | split: '"' | first | split: "'" | first | replace: '%3A', ':' | replace: '%3a', ':' | replace: '%2F', '/' | replace: '%2f', '/' | replace: '%3F', '?' | replace: '%3f', '?' | replace: '%3D', '=' | replace: '%3d', '=' | replace: '%26', '&' | strip -%}
+		{%- endif -%}
+		{%- comment -%}
 		  2026-10-13: plugin video Facebook chỉ nhận href là link tuyệt đối — tag nhập thiếu (vd facebook:fb_video_<số>,
 		  facebook:<số>, facebook:www.facebook.com/...) từng làm iframe trắng. Chuẩn hoá: thiếu https:// ⇒ thêm vào;
 		  chỉ có mã số (bỏ tiền tố fb_video_) ⇒ link /watch/?v=<số>; còn lại không phải link ⇒ bỏ, không nhúng khung lỗi.
@@ -32,6 +39,8 @@
 				{%- endif -%}
 			{%- endif -%}
 		{%- endunless -%}
+		{%- comment -%} Link copy từ điện thoại (m. / web.) ⇒ đưa về www. cho đồng nhất. {%- endcomment -%}
+		{%- assign pc_vp_fb = pc_vp_fb | replace: '://m.facebook.com', '://www.facebook.com' | replace: '://web.facebook.com', '://www.facebook.com' -%}
 	{%- elsif pc_vp_val contains 'youtube.com' or pc_vp_val contains 'youtu.be' or pc_vp_hint == 'youtube' -%}
 		{%- assign pc_vp_id = pc_vp_val -%}
 		{%- if pc_vp_id contains 'v=' -%}

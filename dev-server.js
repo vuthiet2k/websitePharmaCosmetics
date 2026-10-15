@@ -299,9 +299,16 @@ engine.registerFilter('link_to_type', (v) => {
   const name = String(v || '');
   return `<a href="/collections/types?q=${encodeURIComponent(name)}" title="${name}">${name}</a>`;
 });
+// 2026-10-14: hiểu định dạng .NET của Sapo (yyyy MM dd HH mm ss) — trang tổng tin tức sắp xếp bài theo
+// khoá 'yyyyMMddHHmmss', trả mỗi ngày vi-VN thì preview xếp sai thứ tự.
 engine.registerFilter('date',         (v, fmt) => {
   try {
-    return new Date(v).toLocaleDateString('vi-VN');
+    const d = new Date(v);
+    if (isNaN(d)) return String(v || '');
+    if (!fmt || !/yyyy|MM|dd|HH|mm|ss/.test(fmt)) return d.toLocaleDateString('vi-VN');
+    const p = (n) => String(n).padStart(2, '0');
+    const map = { yyyy: d.getFullYear(), MM: p(d.getMonth() + 1), dd: p(d.getDate()), HH: p(d.getHours()), mm: p(d.getMinutes()), ss: p(d.getSeconds()) };
+    return fmt.replace(/yyyy|MM|dd|HH|mm|ss/g, (t) => map[t]);
   } catch { return String(v || ''); }
 });
 engine.registerFilter('json', (v) => JSON.stringify(v));
@@ -552,8 +559,8 @@ function devToolbarStyle() {
 </style>`;
 }
 
-function devToolbarHtml(tpl) {
-  const groups = [
+function devCuratedGroups() {
+  return [
     { label: 'Templates', items: [
       ['index',      'index (Trang chủ)'],
       ['product',    'product (Sản phẩm)'],
@@ -606,6 +613,82 @@ function devToolbarHtml(tpl) {
       ['article', 'Article Detail'],
     ]},
   ];
+}
+
+// 2026-10-14: toolbar + trang /__pages liệt kê ĐỦ mọi trang preview — tự quét templates/ (kể cả customers/) nên thêm
+// template mới không cần sửa tay danh sách; cộng thêm trang nội dung, danh mục, sản phẩm, blog & bài viết từ data mock.
+function listTemplateFiles() {
+  const out = [];
+  const walk = (dir, prefix) => {
+    if (!fs.existsSync(dir)) return;
+    fs.readdirSync(dir, { withFileTypes: true }).forEach((d) => {
+      if (d.isDirectory()) walk(path.join(dir, d.name), prefix + d.name + '/');
+      else if (d.name.endsWith('.bwt')) out.push(prefix + d.name.replace(/\.bwt$/, ''));
+    });
+  };
+  walk(path.join(ROOT, 'templates'), '');
+  return out.sort();
+}
+function devTemplateUrl(tpl) {
+  const name = tpl.replace(/^customers\//, '');
+  if (name === 'index') return '/';
+  if (name === 'page.mops-admin') return '/mops-admin';
+  const slug = Object.keys(PAGE_HANDLE_MAP).find((k) => PAGE_HANDLE_MAP[k] === name);
+  if (slug) return '/' + slug;
+  return '/?tpl=' + encodeURIComponent(name);
+}
+function devAllPageGroups() {
+  const tplItems = listTemplateFiles().map((t) => {
+    const name = t.replace(/^customers\//, '');
+    const isData = /^search\.(data|data_list|quizjson|smartjson|smartjsonar|productsame)$|^collection\.ajaxload2?$/.test(name);
+    return [name, t + (isData ? ' — dữ liệu AJAX/JSON' : ''), devTemplateUrl(t)];
+  });
+  const pageItems = Object.keys(PAGE_HANDLE_MAP).sort().map((slug) => [PAGE_HANDLE_MAP[slug], '/' + slug, '/' + slug]);
+  const cols = Object.entries(mockModule.collectionsData || {}).map(([h, c]) => ['collection', c.title || c.name || h, '/collections/' + h]);
+  const prods = Object.entries(mockModule.byAlias || {}).map(([a, p]) => ['product', p.name || p.title || a, '/products/' + a]);
+  // blogsObj tự sinh blog rỗng cho mọi chuỗi trong settings ⇒ chỉ lấy blog có bài.
+  const blogs = Object.values(mockModule.blogsObj || {}).filter((b) => (b.articles || []).length);
+  const blogItems = blogs.map((b) => ['blog' + (b.template_suffix ? '.' + b.template_suffix : ''), (b.title || b.handle) + ' (' + b.articles.length + ' bài)', '/blogs/' + b.handle]);
+  const groups = [
+    { label: 'Tất cả templates (' + tplItems.length + ')', items: tplItems },
+    { label: 'Trang nội dung (' + pageItems.length + ')', items: pageItems },
+    { label: 'Danh mục sản phẩm (' + cols.length + ')', items: cols },
+    { label: 'Sản phẩm (' + prods.length + ')', items: prods },
+    { label: 'Danh mục bài viết (' + blogItems.length + ')', items: blogItems },
+  ];
+  blogs.forEach((b) => groups.push({
+    label: 'Bài viết · ' + (b.title || b.handle) + ' (' + b.articles.length + ')',
+    items: b.articles.map((a) => ['article' + (a.template_suffix ? '.' + a.template_suffix : ''), a.title, a.url || ('/blogs/' + b.handle + '/' + a.handle)]),
+  }));
+  return groups;
+}
+function devAllPagesHtml() {
+  const esc = (v) => String(v == null ? '' : v).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const shortcuts = { label: 'Lối tắt (như toolbar)', items: devCuratedGroups().flatMap((g) => g.items.map(([v, l, u]) => [v, g.label + ' · ' + l, u || devTemplateUrl(v)])) };
+  const groups = [shortcuts].concat(devAllPageGroups());
+  const total = groups.slice(1).reduce((n, g) => n + g.items.length, 0);
+  const body = groups.map((g) => `<details open><summary>${esc(g.label)}</summary><ul>${g.items.map(([t, l, u]) =>
+    `<li data-q="${esc((l + ' ' + u + ' ' + t).toLowerCase())}"><a href="${esc(u)}">${esc(l)}</a><code>${esc(u)}</code><span>${esc(t)}</span></li>`).join('')}</ul></details>`).join('');
+  return `<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tất cả trang preview</title>
+<style>body{margin:0;background:#1e1e2e;color:#cdd6f4;font:14px/1.5 system-ui,sans-serif}main{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:20px;margin:0 0 4px}p{color:#a6adc8;margin:0 0 14px}p a{color:#89b4fa}
+input{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:6px;border:1px solid #45475a;background:#313244;color:#cdd6f4;font-size:15px;position:sticky;top:8px;z-index:1}
+details{margin-top:14px;background:#181825;border-radius:8px;padding:6px 12px}summary{cursor:pointer;font-weight:600;color:#89b4fa;padding:6px 0}
+ul{list-style:none;margin:0;padding:0}li{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) 170px;gap:12px;padding:5px 0;border-top:1px solid #313244;align-items:baseline}
+li a{color:#f5e0dc;text-decoration:none;overflow-wrap:anywhere}li a:hover{color:#a6e3a1;text-decoration:underline}code{color:#a6adc8;font-size:12px;overflow-wrap:anywhere}li span{color:#6c7086;font-size:12px}[hidden]{display:none!important}
+@media(max-width:700px){li{grid-template-columns:1fr}li span{display:none}}</style></head><body><main>
+<h1>Tất cả trang preview <small style="color:#6c7086">(${total} trang)</small></h1><p><a href="/">← Trang chủ</a> · gõ để lọc theo tên, URL hoặc template.</p>
+<input id="q" type="search" placeholder="Lọc… vd: video, tin-tuc, page.loyalty" autofocus>${body}
+<script>document.getElementById('q').addEventListener('input',function(){var q=this.value.trim().toLowerCase();document.querySelectorAll('li').forEach(function(li){li.hidden=!!q&&li.getAttribute('data-q').indexOf(q)<0});document.querySelectorAll('details').forEach(function(d){d.hidden=!d.querySelector('li:not([hidden])')})});</script>
+</main></body></html>`;
+}
+
+function devToolbarHtml(tpl) {
+  const groups = devCuratedGroups();
+  // Template chưa có trong lối tắt ⇒ tự thêm vào nhóm riêng (không sót template nào).
+  const covered = new Set(groups.flatMap((g) => g.items.map(([v]) => v)));
+  const extra = listTemplateFiles().map((t) => t.replace(/^customers\//, '')).filter((t) => !covered.has(t));
+  if (extra.length) groups.push({ label: 'Templates khác (tự quét)', items: extra.map((t) => [t, t, devTemplateUrl(t)]) });
   const options = groups.map(({ label, items }) =>
     `<optgroup label="${label}">${items.map(([v, l, u]) =>
       `<option value="${v}"${u ? ` data-url="${u}"` : ''}${tpl===v?' selected':''}>${l}</option>`).join('')}</optgroup>`
@@ -620,6 +703,7 @@ function devToolbarHtml(tpl) {
   <div style="display:flex;align-items:center;gap:12px;">
     <span>Template:</span>
     <select id="tpl-select" onchange="var o=this.options[this.selectedIndex],v=this.value;location.href=(o.getAttribute('data-url')||(v==='page.mops-admin'?'/mops-admin':'/?tpl='+v))">${options}</select>
+    <a class="tpl-badge" href="/__pages" style="text-decoration:none">📋 Tất cả trang</a>
     <span class="tpl-badge">localhost:${PORT}</span>
   </div>
 </div>
@@ -1627,6 +1711,13 @@ async function requestHandler(req, res) {
       res.writeHead(500, { 'Content-Type': 'text/plain' });
       res.end('Render error: ' + err.message);
     }
+    return;
+  }
+
+  // ── Route: /__pages — danh sách mọi trang preview (dev)
+  if (pathname === '/__pages') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(devAllPagesHtml());
     return;
   }
 

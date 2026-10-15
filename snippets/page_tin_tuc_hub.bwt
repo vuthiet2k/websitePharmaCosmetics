@@ -71,6 +71,23 @@
 				{%- endfor -%}
 			{%- endcapture -%}
 		{%- endif -%}
+		{%- comment -%}
+			2026-10-14: "Tin mới nhất" gom bài của MỌI danh mục trong news_hub_blogs, xếp theo thời gian đăng
+			(mới → cũ) thay vì chỉ lấy danh mục đầu. Khoá sắp xếp "yyyyMMddHHmmss|handle|vị trí" ⇒ sort chuỗi
+			= sort thời gian; duyệt reversed để lấy mới nhất trước. Bỏ qua handle khai báo trùng.
+		{%- endcomment -%}
+		{%- assign pc_nh_seen = ',' -%}
+		{%- capture pc_nh_keys -%}
+			{%- for pc_nh_h in pc_nh_list -%}
+				{%- assign pc_nh_hs = pc_nh_h | strip -%}
+				{%- assign pc_nh_hk = ',' | append: pc_nh_hs | append: ',' -%}
+				{%- unless pc_nh_hs == blank or pc_nh_seen contains pc_nh_hk -%}
+					{%- assign pc_nh_seen = pc_nh_seen | append: pc_nh_hs | append: ',' -%}
+					{%- for pc_nh_a in blogs[pc_nh_hs].articles -%}{{ pc_nh_a.published_on | date: 'yyyyMMddHHmmss' }}|{{ pc_nh_hs }}|{{ forloop.index0 }};{%- endfor -%}
+				{%- endunless -%}
+			{%- endfor -%}
+		{%- endcapture -%}
+		{%- assign pc_nh_keys = pc_nh_keys | split: ';' | sort -%}
 		{%- assign pc_nh_more = settings.news_more_short | default: 'Tất cả' -%}
 		{%- capture pc_nh_nav -%}
 			<div class="pc-nslider__nav">
@@ -81,22 +98,46 @@
 		<div class="pc-nportal">
 			<div class="pc-nportal__main">
 				<div class="pc-nhead"><h2 class="pc-nhead__title">{{ settings.news_latest_title | default: 'Tin mới nhất' | escape }}</h2><a class="pc-nhead__more" href="{{ pc_nh_mb.url }}">{{ pc_nh_more | escape }}</a></div>
-				<div class="pc-nslider pc-nslider--lead" data-pc-nslider>
-					<div class="pc-nslider__track">
-						{%- for pc_nh_a in pc_nh_mb.articles limit: pc_nh_lead_n -%}
-						<div class="pc-nslider__page"{% unless forloop.first %} hidden{% endunless %}>
-							{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'lead' -%}{%- if forloop.first -%}{%- assign pc_ni_priority = true -%}{%- endif -%}{% include 'news_item' %}
-						</div>
-						{%- endfor -%}
-					</div>
-					{%- if pc_nh_mb.articles.size > 1 and pc_nh_lead_n > 1 -%}{{ pc_nh_nav }}{%- endif -%}
-				</div>
-				{%- if pc_nh_mb.articles.size > pc_nh_lead_n -%}
-				<div class="pc-ncards">
-					{%- for pc_nh_a in pc_nh_mb.articles offset: pc_nh_lead_n limit: pc_nh_grid_n -%}
-					{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'card' -%}{% include 'news_item' %}
+				{%- comment -%} news_lead_count bài mới nhất vào Swiper (Swiper 6 nạp sẵn ở layouts/theme.bwt), các bài kế tiếp vào lưới. {%- endcomment -%}
+				{%- assign pc_nh_n = 0 -%}
+				{%- assign pc_nh_end = pc_nh_lead_n | plus: pc_nh_grid_n -%}
+				{%- capture pc_nh_lead -%}
+					{%- for pc_nh_k in pc_nh_keys reversed -%}
+						{%- if pc_nh_k != blank and pc_nh_n < pc_nh_lead_n -%}
+							{%- assign pc_nh_kp = pc_nh_k | split: '|' -%}{%- assign pc_nh_kh = pc_nh_kp[1] -%}{%- assign pc_nh_ki = pc_nh_kp[2] | plus: 0 -%}
+							{%- assign pc_nh_n = pc_nh_n | plus: 1 -%}
+							<div class="swiper-slide">
+								{%- assign pc_ni_article = blogs[pc_nh_kh].articles[pc_nh_ki] -%}{%- assign pc_ni_style = 'lead' -%}{%- if pc_nh_n == 1 -%}{%- assign pc_ni_priority = true -%}{%- else -%}{%- assign pc_ni_priority = false -%}{%- endif -%}{% include 'news_item' %}
+							</div>
+						{%- endif -%}
 					{%- endfor -%}
+				{%- endcapture -%}
+				{%- assign pc_ni_priority = false -%}
+				{%- assign pc_nh_lead_cnt = pc_nh_n -%}
+				{%- assign pc_nh_n = 0 -%}
+				{%- capture pc_nh_cards -%}
+					{%- for pc_nh_k in pc_nh_keys reversed -%}
+						{%- if pc_nh_k != blank -%}
+							{%- assign pc_nh_n = pc_nh_n | plus: 1 -%}
+							{%- if pc_nh_n > pc_nh_lead_n and pc_nh_n <= pc_nh_end -%}
+								{%- assign pc_nh_kp = pc_nh_k | split: '|' -%}{%- assign pc_nh_kh = pc_nh_kp[1] -%}{%- assign pc_nh_ki = pc_nh_kp[2] | plus: 0 -%}
+								{%- assign pc_ni_article = blogs[pc_nh_kh].articles[pc_nh_ki] -%}{%- assign pc_ni_style = 'card' -%}{% include 'news_item' %}
+							{%- endif -%}
+						{%- endif -%}
+					{%- endfor -%}
+				{%- endcapture -%}
+				<div class="pc-nslider pc-nslider--lead swiper-container" data-pc-nlead>
+					<div class="swiper-wrapper">{{ pc_nh_lead }}</div>
+					{%- if pc_nh_lead_cnt > 1 -%}
+					<div class="pc-nslider__nav">
+						<button type="button" class="pc-nslider__btn" data-dir="-1" aria-label="{{ settings.news_prev_label | default: 'Tin trước' | escape }}"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M15 6l-6 6 6 6"/></svg></button>
+						<div class="pc-nslider__dots"></div>
+						<button type="button" class="pc-nslider__btn" data-dir="1" aria-label="{{ settings.news_next_label | default: 'Tin sau' | escape }}"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M9 6l6 6-6 6"/></svg></button>
+					</div>
+					{%- endif -%}
 				</div>
+				{%- if pc_nh_cards != blank -%}
+				<div class="pc-ncards">{{ pc_nh_cards }}</div>
 				{%- endif -%}
 			</div>
 			<aside class="pc-nportal__side">
@@ -198,6 +239,17 @@
 <script>
 	/* Slider "Tin mới nhất" và "Tin nổi bật" + khối "Tin quan tâm của tôi" */
 	(function () {
+		/* "Tin mới nhất": Swiper (vuốt trên mobile + nút + chấm trang) */
+		document.querySelectorAll('[data-pc-nlead]').forEach(function (box) {
+			if (typeof Swiper === 'undefined' || box.swiper || box.querySelectorAll('.swiper-slide').length < 2) return;
+			new Swiper(box, {
+				slidesPerView: 1,
+				spaceBetween: 16,
+				autoHeight: true,
+				navigation: { prevEl: box.querySelector('.pc-nslider__btn[data-dir="-1"]'), nextEl: box.querySelector('.pc-nslider__btn[data-dir="1"]') },
+				pagination: { el: box.querySelector('.pc-nslider__dots'), clickable: true }
+			});
+		});
 		document.querySelectorAll('[data-pc-nslider]').forEach(function (box) {
 			var track = box.querySelector('.pc-nslider__track');
 			var items = Array.prototype.slice.call(track.children);

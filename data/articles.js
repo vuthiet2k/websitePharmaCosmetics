@@ -552,6 +552,32 @@ beautyTipsArticles.forEach((a) => {
   (tipVideos[a.id] || []).forEach((id) => a.tags.push(`youtube:${id}`));
 });
 
+// 2026-10-14: dữ liệu test video Facebook — 427805549152968 là video công khai thật của Fanpage Pharma Cosmetics
+// (đã phát thử trong khung: nội dung kem chống nắng Daily Matte Moisturizer SPF 30+ nhà Image). Mỗi bài 1 kiểu nhập để kiểm tra snippets/video_parse.bwt:
+//   1201 tag link /watch/?v=   ·   1202 metafield custom.video_url = nguyên mã iframe nút "Nhúng"
+//   bài Bí Quyết 222: video chính = tag facebook:fb_video_<số> (đúng kiểu tag gây lỗi trên Sapo), YouTube thành bổ trợ.
+const FB_TEST_VIDEO = '427805549152968';
+const fbVideoArticle = (id, title, day, extra) => ({
+  id, title, alias: videoHandle(title), handle: videoHandle(title), url: `/blogs/video/${videoHandle(title)}`,
+  summary: 'Video trên Fanpage Pharma Cosmetics × Skin Health Beauty: điểm mới của kem chống nắng Daily Matte Moisturizer SPF 30+ nhà Image.',
+  excerpt: 'Video trên Fanpage Pharma Cosmetics × Skin Health Beauty: điểm mới của kem chống nắng Daily Matte Moisturizer SPF 30+ nhà Image.',
+  content: '', image: null, featured_image: null, author: 'Pharma Cosmetics',
+  published_on: day, created_at: day, tags: ['chude:Chống nắng & trang điểm'], template_suffix: 'video', comments_count: 0,
+  blog: { handle: 'video', title: 'Video Tư Vấn Skincare' },
+  ...extra,
+});
+videoArticles.unshift(
+  fbVideoArticle(1201, 'Kem chống nắng Daily Matte Moisturizer SPF 30+ bản mới nhà Image có gì nổi bật', '2026-10-12T02:00:00', {
+    // video này quay dọc 720×1280 ⇒ tag khung:doc (khung 9:16); bài 1202 giữ 16:9 để kiểm tra Facebook thu video vừa khung.
+    tags: [`facebook:https://www.facebook.com/watch/?v=${FB_TEST_VIDEO}`, 'khung:doc', 'chude:Chống nắng & trang điểm'],
+  }),
+  fbVideoArticle(1202, 'Daily Matte Moisturizer SPF 30+ — bản nhúng iframe Facebook', '2026-10-11T02:00:00', {
+    metafields: { custom: { video_url: `<iframe src="https://www.facebook.com/plugins/video.php?height=314&href=https%3A%2F%2Fwww.facebook.com%2Fwatch%2F%3Fv%3D${FB_TEST_VIDEO}&show_text=false&width=560&t=0" width="560" height="314" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true"></iframe>` } },
+  }),
+);
+const fbTipArticle = beautyTipsArticles.find((a) => a.id === 222);
+if (fbTipArticle) fbTipArticle.tags.splice(fbTipArticle.tags.findIndex((t) => t.startsWith('youtube:')), 0, `facebook:fb_video_${FB_TEST_VIDEO}`);
+
 // T-109 (2026-09-11): BUG THẬT phát hiện khi chuẩn bị demo data — templates/blog.bwt dùng
 // {{blog.name}} (không phải .title) và {% if blog.articles_count > 0 %} (không phải
 // .articles.size) để quyết định render tiêu đề trang + toàn bộ lưới bài viết. Object blogs{}
