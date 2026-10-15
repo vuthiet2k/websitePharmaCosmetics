@@ -1,31 +1,11 @@
 {% include 'breadcrumb' %}
 {%- comment -%}
-  2026-10-15: thanh bước / dòng lưu ý / dòng quà tặng / ô cam kết trước đây hardcode cứng trong template —
+  2026-10-15: dòng quà tặng / ô cam kết trước đây hardcode cứng trong template —
   dòng "Tặng 01 Tuýp Mini Kem Chống Nắng 10ml (Đã chọn ✓)" hiện với MỌI giỏ hàng dù không có quà nào
   được thêm vào đơn (bịa ưu đãi). Nay đọc từ settings (Cài đặt giao diện → Nội dung trang giỏ hàng);
-  quà tặng để trống = ẩn, quà thật phải cấu hình ở Sapo Admin (module Mua X tặng Y).
+  quà tặng để trống = ẩn. Thanh "1. Giỏ hàng → 2. Thông tin giao hàng → 3. Thanh toán" + dòng lưu ý
+  "Chuyên gia sẽ gọi điện…" đã bỏ hẳn: bấm Đặt hàng là sang checkout của Sapo (có luồng bước riêng) nên thừa; quà thật phải cấu hình ở Sapo Admin (module Mua X tặng Y).
 {%- endcomment -%}
-{%- if settings.cart_steps_enable -%}
-{%- assign _cart_steps = settings.cart_steps_text | default: 'Giỏ hàng;Thông tin giao hàng;Thanh toán' | split: ';' -%}
-<div class="pc-cart-steps max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center gap-2 text-xs sm:text-sm font-semibold text-gray-400 mt-4">
-	{%- for _step in _cart_steps -%}
-	{%- assign _step_name = _step | strip -%}
-	{%- unless forloop.first -%}<span class="pc-cart-step-arrow text-gray-300" aria-hidden="true">→</span>{%- endunless -%}
-	{%- if forloop.first -%}
-	<span class="pc-cart-step pc-cart-step--active inline-flex items-center gap-1.5 text-clinical-700 bg-mint-50 border border-emerald-200 rounded-full px-3 py-1" aria-current="step">
-		<i class="fas fa-shopping-bag text-[11px]"></i> {{ forloop.index }}. {{ _step_name }}
-	</span>
-	{%- else -%}
-	<span class="pc-cart-step rounded-full px-3 py-1">{{ forloop.index }}. {{ _step_name }}</span>
-	{%- endif -%}
-	{%- endfor -%}
-</div>
-{%- endif -%}
-{%- if settings.cart_note_text != blank -%}
-<div class="pc-cart-note max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-3">
-	<div class="pc-kit-badge-clinical text-xs sm:text-sm !inline-flex w-auto">🩺 {{ settings.cart_note_text }}</div>
-</div>
-{%- endif -%}
 {%- if settings.cart_gift_text != blank and cart.item_count > 0 -%}
 <div class="pc-cart-gift max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-2">
 	<div class="pc-kit-badge-gold text-xs sm:text-sm !inline-flex w-auto">🎁 {{ settings.cart_gift_text }}</div>
