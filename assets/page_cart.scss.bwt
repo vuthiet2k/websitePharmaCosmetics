@@ -2120,10 +2120,12 @@ form {
 @media (max-width: 991px) {
 	.main-cart-page .col-cart-left {
 		display: contents;
-		> * { flex: 0 0 calc(100% - 30px); max-width: calc(100% - 30px); margin-left: 15px; margin-right: 15px; min-width: 0; }
+		> * { flex: 0 0 100%; max-width: 100%; min-width: 0; }
 		> .pc-cart-skin, > .pc-cart-skin ~ .bg-shadow { order: 2; }
 	}
-	.main-cart-page .col-cart-right { order: 1; }
+	.main-cart-page .col-cart-right { order: 1; padding-left: 0; padding-right: 0; }
+	/* 2026-10-16: màn nhỏ — chỉ 1 lớp lề là gutter của .container (SSOT); bỏ gutter hàng/cột bootstrap lồng thêm. */
+	.main-cart-page .wrap_background_aside > .row { margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; }
 }
 /* 2026-10-16 (thiết kế giỏ hàng): số sản phẩm dưới tiêu đề + link "Tiếp tục mua hàng" dưới bảng sản phẩm. */
 .main-cart-page .cart-head-count { margin: 4px 0 0; font-size: 13px; color: var(--gray-777, gray); }
@@ -2138,9 +2140,43 @@ form {
 	i { color: var(--pc-brand-primary); }
 	&:hover { color: var(--pc-brand-primary); }
 }
+/* 2026-10-16 (người dùng: "mobile đã là màn nhỏ — không để các padding lồng vào nhau, ưu tiên show nội dung tối đa"):
+   ≤767px bỏ hộp/viền/padding ngang của card giỏ, khung đơn hàng, ô mã giảm giá, khối phác đồ và thẻ giai đoạn;
+   các khối ngăn cách bằng đường kẻ, nội dung chạy sát gutter của .container. */
 @media (max-width: 767px) {
-	.main-cart-page .col-cart-right .ajaxcart__footer {
-		padding: 16px;
-		.checkout-body .cart-trust-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.main-cart-page {
+		.CartMobileContainer { padding: 0; border: 0; border-radius: 0; }
+		.col-cart-right .ajaxcart__footer {
+			padding: 16px 0 0;
+			margin-bottom: 0;
+			border: 0;
+			border-top: 1px solid var(--pc-sum-line);
+			border-radius: 0;
+			box-shadow: none;
+			background: transparent;
+			.checkout-body {
+				.summary-coupon { padding: 0 0 14px; border: 0; border-bottom: 1px solid var(--pc-sum-line); border-radius: 0; background: transparent; }
+				.cart-trust-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+				.cart-trust-item { flex-direction: row; justify-content: flex-start; gap: 8px; padding: 0; border: 0; background: transparent; text-align: left; font-size: 12.5px; i { font-size: 16px; flex: 0 0 auto; } }
+			}
+		}
+		.col-cart-right .bg-shadow { margin-bottom: 0; }
+		.pc-cart-skin {
+			padding: 16px 0 0;
+			border-top: 1px solid var(--pc-cs-line);
+			&__stages { gap: 0; }
+			&__stage {
+				flex-direction: column;
+				gap: 4px;
+				padding: 12px 0;
+				border: 0;
+				border-top: 1px solid var(--pc-cs-line);
+				border-radius: 0;
+				background: transparent;
+				&.is-done, &.is-blocked { background: transparent; }
+			}
+			&__icon { display: none; }
+			&__profile { padding-left: 0; }
+		}
 	}
 }

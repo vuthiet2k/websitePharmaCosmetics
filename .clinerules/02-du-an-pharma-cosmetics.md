@@ -138,6 +138,14 @@ Bổ sung cho `01-quy-chuan-theme-sapo.md` (quy chuẩn nền tảng Sapo). File
 - CSS AI chat phải giới hạn trong `.ai-skin-chat-app`, không khoá cuộn toàn trang.
 - Giữ `layouts/chat.bwt` theo quyết định trước đó và `layouts/mops-admin.bwt` cho quản trị.
 
+## Mobile: không padding lồng nhau, ưu tiên nội dung (người dùng chốt 2026-10-16)
+
+- Màn nhỏ (≤767px) chỉ có **1 lớp lề ngang** = `var(--pc-container-gutter)` của `.container`. Không cộng thêm gutter
+  hàng/cột bootstrap (`.row` âm + `.col` 15px), padding/viền của card, hộp con trong card (ô mã giảm giá, thẻ giai đoạn…).
+- Trên mobile các khối là dải phẳng chạy sát gutter, ngăn nhau bằng đường kẻ `border-top`/khoảng cách dọc — không đóng
+  hộp viền + padding ngang. Cột phụ chiếm bề ngang (icon đầu khối, cột số "01") thì ẩn hoặc đưa lên cùng dòng/trên tiêu đề.
+- Desktop/tablet vẫn dùng card như thiết kế; quy tắc này chỉ áp cho màn nhỏ. Mẫu: `assets/page_cart.scss.bwt` (giỏ hàng).
+
 ## Header & breadcrumb responsive (chốt 2026-10-14)
 
 - **Mobile/tablet ≤991px:** `header.header` dính (`position: sticky`, `top: -var(--pc-topbar-h)`) ⇒ topbar cuộn đi,
