@@ -1,47 +1,83 @@
 {%- comment -%}
   2026-10-13 (người dùng chốt): nguồn thương hiệu = Menu (settings.home_brand_menu) — cấu hình 1 lần, sau này chỉ sửa
   menu trỏ tới danh mục sản phẩm. Chưa chọn menu ⇒ tạm lấy danh sách nhà cung cấp (store.vendors) như trước.
-  Mỗi mục: ảnh trước tên. Ảnh lấy theo thứ tự: "Logo thương hiệu N" (home_brand_marquee_image_N) → ảnh của danh mục
-  mà link trỏ tới (link.object.image) → không có ảnh thì hiện chữ cái đầu.
-  Hiệu ứng chạy ngang tự động kiểu chạy chữ: render 2 nhóm giống nhau, nhóm 2 aria-hidden, CSS dịch -50% vô hạn;
-  dừng khi rê chuột/focus, tắt khi người dùng bật "giảm chuyển động" (CSS ở assets/home-portal.css).
+  2026-10-16 (người dùng, theo ảnh thiết kế "Thương hiệu tiêu biểu"): bỏ dải chạy chữ dạng viên bo tròn — mỗi thương hiệu
+  là 1 cột KHÔNG bo góc, KHÔNG đổ bóng: logo lớn (thương hiệu là chính, không để nhỏ) + mô tả 2 dòng bên dưới, ngăn nhau
+  bằng đường kẻ dọc mảnh; carousel Swiper có mũi tên tròn 2 bên + thanh phân trang; dòng giới thiệu dưới tiêu đề.
+  - Logo: "Logo thương hiệu N" (home_brand_marquee_image_N) → ảnh danh mục mà link trỏ tới (link.object.image)
+    → không có ảnh thì hiện tên thương hiệu cỡ lớn.
+  - Mô tả: "Mô tả thương hiệu N" (home_brand_marquee_text_N) → mô tả danh mục nếu ngắn (≤ 70 ký tự sau khi bỏ HTML;
+    mô tả dài kiểu bài giới thiệu thì không cắt bừa) → không có thì ẩn dòng mô tả.
+  CSS: assets/home-portal.css (.pc-brands). Tên snippet giữ nguyên để không đổi thứ tự section đã cấu hình (home_section_N).
 {%- endcomment -%}
 {%- assign brand_ll = linklists[settings.home_brand_menu] -%}
-{%- capture pc_bm_items -%}
+{%- capture pc_br_slides -%}
 {%- if settings.home_brand_menu != blank and brand_ll.links.size > 0 -%}
   {%- for link in brand_ll.links limit: 12 -%}
     {%- capture logo_key -%}home_brand_marquee_image_{{ forloop.index }}{%- endcapture -%}
+    {%- capture text_key -%}home_brand_marquee_text_{{ forloop.index }}{%- endcapture -%}
     {%- assign pc_bm_img = settings[logo_key] -%}
     {%- if pc_bm_img == blank and link.object.image.src != blank -%}{%- assign pc_bm_img = link.object.image.src -%}{%- endif -%}
     {%- if pc_bm_img == blank and link.object.featured_image.src != blank -%}{%- assign pc_bm_img = link.object.featured_image.src -%}{%- endif -%}
-    <a class="pc-bm__item" href="{{ link.url | escape }}">
-      {%- if pc_bm_img != blank -%}
-      <img class="pc-bm__logo" src="{{ pc_bm_img | img_url: 'compact' }}" alt="{{ link.title | escape }}" width="32" height="32" loading="lazy">
-      {%- else -%}
-      <span class="pc-bm__logo pc-bm__logo--text" aria-hidden="true">{{ link.title | strip | slice: 0, 1 | upcase }}</span>
-      {%- endif -%}
-      <span class="pc-bm__name">{{ link.title | escape }}</span>
+    {%- assign pc_br_text = settings[text_key] | strip -%}
+    {%- if pc_br_text == blank -%}
+      {%- assign pc_br_desc = link.object.description | strip_html | strip_newlines | strip -%}
+      {%- if pc_br_desc != blank and pc_br_desc.size <= 70 -%}{%- assign pc_br_text = pc_br_desc -%}{%- endif -%}
+    {%- endif -%}
+    <a class="swiper-slide pc-brand" href="{{ link.url | escape }}" title="{{ link.title | escape }}">
+      <span class="pc-brand__logo">
+        {%- if pc_bm_img != blank -%}
+        <img src="{{ pc_bm_img | img_url: 'large' }}" alt="{{ link.title | escape }}" width="240" height="96" loading="lazy">
+        {%- else -%}
+        <span class="pc-brand__name">{{ link.title | escape }}</span>
+        {%- endif -%}
+      </span>
+      {%- if pc_br_text != blank -%}<span class="pc-brand__text">{{ pc_br_text | escape }}</span>{%- endif -%}
     </a>
   {%- endfor -%}
 {%- else -%}
   {%- for vendor in store.vendors limit: 12 -%}
-    <a class="pc-bm__item" href="/collections/all?q=vendor:({{ vendor | url_encode }})&page=1&view=grid">
-      <span class="pc-bm__logo pc-bm__logo--text" aria-hidden="true">{{ vendor | strip | slice: 0, 1 | upcase }}</span>
-      <span class="pc-bm__name">{{ vendor | escape }}</span>
+    <a class="swiper-slide pc-brand" href="/collections/all?q=vendor:({{ vendor | url_encode }})&page=1&view=grid" title="{{ vendor | escape }}">
+      <span class="pc-brand__logo"><span class="pc-brand__name">{{ vendor | escape }}</span></span>
     </a>
   {%- endfor -%}
 {%- endif -%}
 {%- endcapture -%}
-{%- assign pc_bm_count = pc_bm_items | split: 'class="pc-bm__item"' | size | minus: 1 -%}
+{%- assign pc_bm_count = pc_br_slides | split: 'class="swiper-slide pc-brand"' | size | minus: 1 -%}
 <section class="brands"><div class="wrap">
-  <div class="section-head"><div><p class="eyebrow">{{ settings.home_brand_lead | default: 'Nhập khẩu chính hãng' | escape }}</p><h2>{{ settings.home_brand_title | default: 'Thương hiệu tiêu biểu' | escape }}</h2></div><a class="link-more" href="{{ settings.home_brand_url | default: settings.portal_shop_url | default: '/collections/all' | escape }}">{{ settings.home_brand_viewall_text | default: 'Khám phá sản phẩm' | escape }} →</a></div>
-  {%- if pc_bm_count > 0 -%}
-  {%- comment -%} Mỗi nhóm lặp 2 lần để dải luôn phủ kín chiều ngang kể cả khi menu ít mục; chỉ bản đầu tiên cho trình đọc màn hình/tab. {%- endcomment -%}
-  <div class="pc-bm" style="--pc-bm-dur: {{ pc_bm_count | times: 6 }}s">
-    <div class="pc-bm__track">
-      <div class="pc-bm__group">{{ pc_bm_items }}<span class="pc-bm__dup" aria-hidden="true" inert>{{ pc_bm_items }}</span></div>
-      <div class="pc-bm__group" aria-hidden="true" inert>{{ pc_bm_items }}{{ pc_bm_items }}</div>
+  <div class="section-head">
+    <div>
+      <p class="eyebrow">{{ settings.home_brand_lead | default: 'Nhập khẩu chính hãng' | escape }}</p>
+      <h2>{{ settings.home_brand_title | default: 'Thương hiệu tiêu biểu' | escape }}</h2>
+      {%- if settings.home_brand_subtitle != blank -%}<p class="lead pc-brands__lead">{{ settings.home_brand_subtitle | escape }}</p>{%- endif -%}
     </div>
+    <a class="link-more" href="{{ settings.home_brand_url | default: settings.portal_shop_url | default: '/collections/all' | escape }}">{{ settings.home_brand_viewall_text | default: 'Xem tất cả thương hiệu' | escape }} →</a>
   </div>
+  {%- if pc_bm_count > 0 -%}
+  <div class="pc-brands" data-pc-brands>
+    <button type="button" class="pc-brands__nav pc-brands__nav--prev" aria-label="Thương hiệu trước"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+    <div class="pc-brands__viewport swiper-container">
+      <div class="swiper-wrapper">{{ pc_br_slides }}</div>
+    </div>
+    <button type="button" class="pc-brands__nav pc-brands__nav--next" aria-label="Thương hiệu sau"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    <div class="pc-brands__dots"></div>
+  </div>
+  <script>
+  (function () {
+    var root = document.querySelector('[data-pc-brands]');
+    if (!root || root.dataset.ready) return;
+    function init() {
+      if (typeof Swiper !== 'function' || root.dataset.ready) return;
+      root.dataset.ready = '1';
+      new Swiper(root.querySelector('.pc-brands__viewport'), {
+        slidesPerView: 2, slidesPerGroup: 2, spaceBetween: 0, speed: 500, watchOverflow: true,
+        navigation: { prevEl: root.querySelector('.pc-brands__nav--prev'), nextEl: root.querySelector('.pc-brands__nav--next') },
+        pagination: { el: root.querySelector('.pc-brands__dots'), clickable: true },
+        breakpoints: { 576: { slidesPerView: 3, slidesPerGroup: 3 }, 992: { slidesPerView: 4, slidesPerGroup: 4 }, 1200: { slidesPerView: 6, slidesPerGroup: 1 } }
+      });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  })();
+  </script>
   {%- endif -%}
 </div></section>
