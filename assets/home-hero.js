@@ -2,7 +2,7 @@
   'use strict';
 
   // 2026-10-13 (người dùng): bỏ nút tạm dừng — dừng khi focus bàn phím, tắt autoplay khi giảm chuyển động.
-  // HERO 2026-10-13 (snippets/section_hero.bwt): mỗi slide = ảnh + text + nút riêng, fade, có chấm chuyển slide + vuốt.
+  // HERO 2026-10-13 (snippets/section_hero.bwt): mỗi slide = ảnh + text + nút riêng, fade, vuốt để chuyển slide.
   // Không bật loop: loop nhân bản slide ⇒ trùng <h1>; autoplay tự quay về slide đầu khi tới slide cuối.
   var root = document.querySelector('[data-portal-hero]');
   if (!root || root.dataset.initialized) return;
@@ -34,7 +34,6 @@
       fadeEffect: { crossFade: true },
       speed: speed,
       allowTouchMove: true,
-      pagination: { el: root.querySelector('.portal-hero__dots'), clickable: true },
       autoplay: userPaused ? false : {
         delay: delay,
         disableOnInteraction: false,
@@ -48,11 +47,5 @@
     root.addEventListener('focusin', function (e) { if (e.target.matches(':focus-visible')) stopForInteraction(); });
     root.addEventListener('focusout', function () { window.setTimeout(resumeAfterInteraction, 0); });
   }
-  // Mũi tên trước/sau vòng lại ở 2 đầu (không bật loop, xem chú thích đầu file).
-  if (swiper) {
-    var nextBtn = root.querySelector('[data-hero-next]');
-    var prevBtn = root.querySelector('[data-hero-prev]');
-    if (nextBtn) nextBtn.addEventListener('click', function () { if (swiper.isEnd) swiper.slideTo(0); else swiper.slideNext(); });
-    if (prevBtn) prevBtn.addEventListener('click', function () { if (swiper.isBeginning) swiper.slideTo(swiper.slides.length - 1); else swiper.slidePrev(); });
-  }
+  // 2026-10-16 (người dùng): bỏ chấm phân trang + mũi tên trước/sau — chỉ còn autoplay + vuốt.
 })();

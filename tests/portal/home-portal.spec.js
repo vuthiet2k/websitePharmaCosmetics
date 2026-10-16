@@ -65,10 +65,12 @@ test('hero swiper: mỗi slide ảnh + text + nút, 1 ảnh chung mọi màn hì
   const slider = hero.locator('.portal-hero__media');
   const motion = await slider.evaluate(el => ({ effect: el.swiper.params.effect, speed: el.swiper.params.speed, delay: el.swiper.params.autoplay.delay, loop: el.swiper.params.loop }));
   expect(motion).toEqual({ effect: 'fade', speed: 1000, delay: Math.max(4000, Number(settings.home_hero_delay) || 5000), loop: false });
-  await hero.locator('[data-hero-prev]').click();
-  await expect.poll(() => slider.evaluate(el => el.swiper.activeIndex)).toBe(2);
-  await hero.locator('[data-hero-next]').click();
-  await expect.poll(() => slider.evaluate(el => el.swiper.activeIndex)).toBe(0);
+  // 2026-10-16 (người dùng): bỏ chấm phân trang + mũi tên; nút không nền, chữ xanh có vệt sáng quét.
+  await expect(hero.locator('[data-hero-prev], [data-hero-next], .portal-hero__dots')).toHaveCount(0);
+  const btn = hero.locator('.swiper-slide-active .portal-hero__btn');
+  await expect(btn).toHaveCSS('animation-name', 'pc-hero-btn-shine');
+  await expect(btn).toHaveCSS('box-shadow', 'none');
+  expect(await btn.evaluate(el => getComputedStyle(el).backgroundClip || getComputedStyle(el).webkitBackgroundClip)).toBe('text');
   // a407e08: rê chuột không dừng (Hero 100vh ⇒ chuột luôn nằm trên); chỉ dừng khi focus bàn phím.
   await hero.hover();
   await expect.poll(() => slider.evaluate(el => el.swiper.autoplay.running)).toBe(true);
