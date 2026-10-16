@@ -104,7 +104,7 @@ const SCALE = new Set([10,11,12,13,14,15,16,17,18,20,24,26,28,32,36,40,46,56,100
             const f=cs.fontFamily.split(',')[0].replace(/["']/g,'').trim(); fam[f]=(fam[f]||0)+1;
             const fs=parseFloat(cs.fontSize); if (!SCALE.has(fs)) { const k=fs+'px'; (odd[k]=odd[k]||[]).push(el.tagName.toLowerCase()+'.'+String(el.className).split(' ')[0]+'«'+t.textContent.trim().slice(0,16)+'»'); }
           }
-          document.querySelectorAll('h1').forEach(h=>{ if(deepVis(h)) h1++; }); // h1 sr-only / đang fade-in vẫn hợp lệ cho SEO
+          document.querySelectorAll('h1').forEach(h=>{ let ok=true; for(let e=h;e&&e!==document.body;e=e.parentElement){ if(getComputedStyle(e).display==='none'){ok=false;break;} } if(ok) h1++; }); /* chỉ display:none mới tính là mất h1 — h1 trong slide hero tự chạy tạm visibility:hidden khi chuyển slide */ // h1 sr-only / đang fade-in vẫn hợp lệ cho SEO
           out.fonts = fam; out.oddSizes = Object.fromEntries(Object.entries(odd).map(([k,v])=>[k,[v.length, ...[...new Set(v)].slice(0,4)]])); out.h1 = h1;
           // ảnh
           const imgs = []; document.querySelectorAll('img').forEach(i => { if(!deepVis(i)) return; if (i.complete && i.naturalWidth===0 && i.getAttribute('src')) imgs.push('BROKEN '+i.getAttribute('src').slice(0,80)); else if (!i.hasAttribute('alt')) imgs.push('NOALT '+(i.getAttribute('src')||'').slice(0,80)); });
