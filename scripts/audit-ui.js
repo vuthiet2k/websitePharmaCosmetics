@@ -37,6 +37,7 @@ const PAGES = (process.env.AUDIT_PAGES ? process.env.AUDIT_PAGES.replace(/,/g,'\
 /blogs/truoc-va-sau
 /blogs/giai-phap-skin-health
 /?tpl=blog.video
+/?tpl=blog.instagram-feed
 /about-us
 /gioi-thieu
 /chuyen-gia
