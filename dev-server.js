@@ -1665,9 +1665,13 @@ async function requestHandler(req, res) {
   if (pathname === '/cart/change.js' && req.method === 'POST') {
     const raw = await readRequestBody(req);
     const body = parseBody(req, raw);
-    const variantId = body.variantId || body.VariantId || body.id || body.line;
     const quantity = parseInt(body.quantity, 10);
     let lines = readCartLines(req);
+    // 2026-10-16: "line" là SỐ THỨ TỰ dòng (1-based) như Sapo thật (ajaxcartfunction gửi quantity=&line=) — trước đây
+    // bị coi là variantId nên nút Xóa / +/- ở trang giỏ preview không có tác dụng.
+    const lineIdx = parseInt(body.line, 10);
+    const byLine = !body.variantId && !body.VariantId && !body.id && lineIdx > 0 && lines[lineIdx - 1];
+    const variantId = body.variantId || body.VariantId || body.id || (byLine ? byLine.variantId : null);
     if (variantId != null) {
       if (!quantity) lines = lines.filter((l) => String(l.variantId) !== String(variantId));
       else {
