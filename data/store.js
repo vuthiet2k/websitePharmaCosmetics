@@ -19,8 +19,11 @@ module.exports = {
     // ── Tiền tệ ───────────────────────────────────────────────────────────
     currency:                    'VND',
     currency_symbol:             '₫',
-    money_format:                '{{ amount }}đ',
-    money_with_currency_format:  '{{ amount }} VND',
+    // 2026-10-16: theo định dạng VNĐ của Sapo (không số lẻ, dấu chấm ngăn nghìn, ký hiệu ₫ tách bằng khoảng trắng)
+    // — trước đây '{{ amount }}đ' làm JS giỏ hàng (Bizweb.formatMoney) in "480,000.00đ" lệch với Liquid "480.000 ₫".
+    // Trên Sapo thật giá trị này do Admin › Cấu hình › Định dạng tiền tệ quyết định.
+    money_format:                '{{amount_no_decimals_with_comma_separator}} ₫',
+    money_with_currency_format:  '{{amount_no_decimals_with_comma_separator}} VND',
     locale:                      'vi',
     country:                     'Việt Nam',
 

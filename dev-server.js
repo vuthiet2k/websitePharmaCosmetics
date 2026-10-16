@@ -271,10 +271,25 @@ engine.registerFilter('img_url', (src, size) => {
   return `https://placehold.co/${dim}/e8f5e9/3cb371?text=img`;
 });
 
-engine.registerFilter('money', (price) => {
-  if (price == null) return '';
-  return new Intl.NumberFormat('vi-VN').format(Number(price)) + ' ₫';
-});
+// 2026-10-16: money / money_with_currency theo store.money_format như Sapo (cùng nguồn với Bizweb.formatMoney phía JS)
+// ⇒ giá in bằng Liquid và giá giỏ hàng dựng lại bằng JS giống hệt nhau.
+function sapoFormatMoney(price, format) {
+  if (price == null || price === '') return '';
+  const n = Number(price);
+  const group = (v, dec, th, ds) => {
+    const [i, d] = Math.abs(v).toFixed(dec).split('.');
+    return (v < 0 ? '-' : '') + i.replace(/\B(?=(\d{3})+(?!\d))/g, th) + (d ? ds + d : '');
+  };
+  return String(format || '{{amount_no_decimals_with_comma_separator}} ₫').replace(/\{\{\s*(\w+)\s*\}\}/, (m, key) => ({
+    amount: group(n, 2, ',', '.'),
+    amount_no_decimals: group(n, 0, ',', '.'),
+    amount_with_comma_separator: group(n, 2, '.', ','),
+    amount_no_decimals_with_comma_separator: group(n, 0, '.', ',')
+  }[key] || group(n, 0, '.', ',')));
+}
+const sapoStore = require('./data/store').store;
+engine.registerFilter('money', (price) => sapoFormatMoney(price, sapoStore.money_format));
+engine.registerFilter('money_with_currency', (price) => sapoFormatMoney(price, sapoStore.money_with_currency_format));
 
 engine.registerFilter('stylesheet_tag', (url) => {
   if (!url) return '';

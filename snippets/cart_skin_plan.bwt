@@ -121,7 +121,12 @@
   var safety = window.PharmaQuizSafetyCopy || {};
   var engine = window.PharmaSkinQuizEngine || null;
   var copy = window.PharmaCartSkinCopy || {};
-  var money = new Intl.NumberFormat('vi-VN');
+  // Giá theo định dạng tiền của cửa hàng (store.money_format) như bảng giỏ hàng — không tự ghép số + "₫".
+  var moneyFormat = {{ store.money_format | json }};
+  function money(v) {
+    if (window.Bizweb && Bizweb.formatMoney) return Bizweb.formatMoney(v, moneyFormat);
+    return new Intl.NumberFormat('vi-VN').format(v) + ' ₫';
+  }
 
   // ── Giỏ hàng: SP → các khoá danh mục phác đồ (soothing/barrier/bha...) ──
   var handleKey = {};
@@ -224,7 +229,7 @@
     name.href = p.url;
     name.setAttribute('translate', 'no');
     info.appendChild(name);
-    if (p.price) info.appendChild(el('span', 'pc-cart-skin__pick-price', money.format(p.price) + '₫'));
+    if (p.price) info.appendChild(el('span', 'pc-cart-skin__pick-price', money(p.price)));
     box.appendChild(info);
     var btn;
     if (p.variant_id) {
