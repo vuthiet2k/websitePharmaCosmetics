@@ -8,7 +8,7 @@
 {%- endcomment -%}
 {%- if settings.cart_gift_text != blank and cart.item_count > 0 -%}
 <div class="pc-cart-gift max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-2">
-	<div class="pc-kit-badge-gold text-xs sm:text-sm !inline-flex w-auto">🎁 {{ settings.cart_gift_text }}</div>
+	<div class="pc-kit-badge-gold text-xs sm:text-sm !inline-flex w-auto"><i class="fa-solid fa-gift" aria-hidden="true"></i> {{ settings.cart_gift_text }}</div>
 </div>
 {%- endif -%}
 {% assign invoice = 'Xuất hóa đơn' %}
@@ -25,7 +25,7 @@
 						<div class="header-cart border-b border-gray-100 pb-3 mb-2">
 							<div class="title-block-page">
 								<h1 class="title_cart font-heading text-forest-900 text-xl sm:text-2xl font-extrabold flex items-center gap-2">
-									<i class="fas fa-shopping-bag text-clinical-700 text-lg"></i>
+									<i class="fa-solid fa-bag-shopping text-clinical-700 text-lg" aria-hidden="true"></i>
 									<span>Giỏ hàng của bạn</span>
 								</h1>
 								{%- comment -%} 2026-10-16 (thiết kế giỏ hàng): số sản phẩm dưới tiêu đề, thay dòng "Số sản phẩm" trong khung đơn hàng; JS cập nhật theo 'ajaxCart'. {%- endcomment -%}
@@ -48,7 +48,7 @@
 						</div>
 					</div>
 					{%- comment -%} 2026-10-16 (thiết kế giỏ hàng): "Tiếp tục mua hàng" chuyển từ khung đơn hàng xuống dưới bảng sản phẩm. {%- endcomment -%}
-					<a class="cart-continue-link" href="{{ settings.cart_continue_url | default: '/collections/all' | escape }}"><i class="fas fa-arrow-left" aria-hidden="true"></i> {{ settings.cart_continue_label | default: 'Tiếp tục mua hàng' | escape }}</a>
+					<a class="cart-continue-link" href="{{ settings.cart_continue_url | default: '/collections/all' | escape }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> {{ settings.cart_continue_label | default: 'Tiếp tục mua hàng' | escape }}</a>
 					{%- comment -%} 2026-10-16: cá nhân hoá theo kết quả soi da / khảo sát (localStorage + GAS) — xem snippets/cart_skin_plan.bwt. {%- endcomment -%}
 					{%- if settings.cart_skin_enable -%}
 					{%- include 'customer_context_extractor' -%}
@@ -155,7 +155,7 @@
 						<div class="bg-shadow margin-bottom-20">
 							<div class="ajaxcart__footer">
 								{%- comment -%} 2026-10-16: khung đơn hàng dựng lại theo thiết kế giỏ hàng — Tạm tính · Phí vận chuyển · Mã giảm giá · Tổng thanh toán · Đặt hàng ngay · 4 ô cam kết. {%- endcomment -%}
-								<h2 class="checkout-header"><i class="fas fa-clipboard-list" aria-hidden="true"></i> {{ settings.cart_summary_title | default: 'Thông tin đơn hàng' | escape }}</h2>
+								<h2 class="checkout-header"><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> {{ settings.cart_summary_title | default: 'Thông tin đơn hàng' | escape }}</h2>
 								<div class="checkout-body">
 									<div class="summary-total">
 										{%- include 'cart_initial_ssr', target: 'footer' -%}
@@ -167,7 +167,7 @@
 										<span class="cart-shipping-row__label">{{ settings.cart_shipping_label | default: 'Phí vận chuyển' | escape }}</span>
 										<span class="cart-shipping-row__value" data-cart-shipping-value>
 											{%- if settings.free_shipping_enable and _ship_min > 0 -%}
-												{%- if cart.total_price >= _ship_min -%}<i class="fas fa-truck-fast" aria-hidden="true"></i> {{ settings.cart_shipping_free | default: 'Miễn phí' }}
+												{%- if cart.total_price >= _ship_min -%}<i class="fa-solid fa-truck-fast" aria-hidden="true"></i> {{ settings.cart_shipping_free | default: 'Miễn phí' }}
 												{%- else -%}{%- assign _ship_left = _ship_min | minus: cart.total_price | money -%}{{ settings.cart_shipping_more | default: 'Mua thêm {so_tien} để được miễn phí' | replace: '{so_tien}', _ship_left }}{%- endif -%}
 											{%- else -%}{{ settings.cart_shipping_pending | default: 'Tính ở bước thanh toán' }}{%- endif -%}
 										</span>
@@ -242,7 +242,7 @@
 									{%endif%}
 									{%- if settings.use_cart_coupons -%}
 									<div class="summary-coupon">
-										<label class="coupon-label" for="coupon-code-input"><i class="fas fa-ticket" aria-hidden="true"></i> {{ settings.cart_coupon_label | default: 'Mã giảm giá' | escape }}</label>
+										<label class="coupon-label" for="coupon-code-input"><i class="fa-solid fa-ticket" aria-hidden="true"></i> {{ settings.cart_coupon_label | default: 'Mã giảm giá' | escape }}</label>
 										<div class="coupon-input-wrap">
 											<input type="text" class="coupon-code-input" id="coupon-code-input" placeholder="{{ settings.cart_coupon_placeholder | default: 'Nhập mã giảm giá' | escape }}" autocomplete="off">
 											<button type="button" class="coupon-apply-btn js-apply-coupon">{{ settings.cart_coupon_apply_label | default: 'Áp dụng' | escape }}</button>
@@ -275,7 +275,7 @@
 									<div class="summary-button">
 										<div class="cart__btn-proceed-checkout-dt">
 											{%- assign _checkout_label = settings.cart_checkout_label | default: 'Đặt hàng ngay' -%}
-											<button onclick="cartGoToCheckout(event)" type="button" class="button btn btn-default cart__btn-proceed-checkout btn-primary duration-300" id="btn-proceed-checkout" title="{{ _checkout_label | escape }}"><i class="fas fa-lock" aria-hidden="true"></i> <span>{{ _checkout_label | escape }}</span> <i class="fas fa-arrow-right" aria-hidden="true"></i></button>
+											<button onclick="cartGoToCheckout(event)" type="button" class="button btn btn-default cart__btn-proceed-checkout btn-primary duration-300" id="btn-proceed-checkout" title="{{ _checkout_label | escape }}"><i class="fa-solid fa-lock" aria-hidden="true"></i> <span>{{ _checkout_label | escape }}</span> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
 										</div>
 									{%- if settings.cart_trust_enable and settings.cart_trust_text != blank -%}
 									{%- assign _trust_items = settings.cart_trust_text | split: ';' -%}
@@ -410,7 +410,7 @@
 		if (String($ship.data('enabled')) !== '1') { $val.text($ship.data('pending')); return; }
 		var min = Number($ship.data('min')) || 0;
 		if (cart.total_price >= min) {
-			$val.empty().append('<i class="fas fa-truck-fast" aria-hidden="true"></i> ').append(document.createTextNode($ship.data('free')));
+			$val.empty().append('<i class="fa-solid fa-truck-fast" aria-hidden="true"></i> ').append(document.createTextNode($ship.data('free')));
 		} else {
 			$val.text(String($ship.data('more')).replace('{so_tien}', cartMoney(min - cart.total_price)));
 		}

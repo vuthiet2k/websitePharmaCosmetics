@@ -48,6 +48,7 @@ function countMetrics(rel, source) {
   }
   if (isStyle || isMarkup) metrics.important = (source.match(IMPORTANT) || []).length;
   if (isMarkup) {
+    metrics.inlineSvg = (source.match(/<svg[\s>]/gi) || []).length; // UI-9: SVG nhúng tay không được tăng
     metrics.inlineStyle = [...source.matchAll(STATIC_INLINE_STYLE)].filter((m) => !/\{\{|\{%/.test(m[1])).length;
   }
   metrics.aiComment = (source.match(AI_COMMENT) || []).length;
@@ -105,6 +106,48 @@ if (fontViolations.length && !process.argv.includes('--update-baseline')) {
   process.exit(1);
 }
 
+/*
+ * RULE CỨNG UI-9 (2026-10-17, .clinerules/03): icon dùng chung Font Awesome 6 Free (CDN cdnjs trong layouts/theme.bwt).
+ * FAIL khi: cú pháp FA cũ (fas/far/fab, "fa fa-x", tên v4/v5 đã đổi ở v6), emoji/ký tự dùng làm icon trong markup,
+ * icon dạng ảnh (icon_*.png / *.gif). SVG nhúng tay: không FAIL nhưng là chỉ số baseline "inlineSvg" — không được tăng.
+ * Ngoại lệ: MOPS admin (Material Symbols, layout riêng), vendor, nội dung trong comment.
+ */
+const ICON_EXEMPT = /(^|\/)(mops[^/]*|page_mops_admin\.scss\.bwt|page\.mops-admin\.bwt)$/i;
+const FA_LEGACY_PREFIX = /(?:class(?:Name)?\s*=\s*["'][^"']*|el\(\s*'i'\s*,\s*'|default:\s*')\b(fas|far|fab|fa)\s+fa-[a-z0-9-]+/gi;
+const FA_V5_NAMES = /\bfa-(times|close|user-md|phone-alt|check-circle|shield-alt|map-marker-alt|edit|calendar-alt|info-circle|search|shopping-bag|shopping-cart|user-cog|money|sparkles|home|trash-alt|exclamation-triangle|sync|sync-alt|times-circle|question-circle|star-half-alt|tint-slash|external-link-alt)\b(?![\w-])/g;
+const EMOJI_ICON = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B50}\u{2B06}\u{2194}-\u{21FF}]/u;
+// Ảnh nhãn đồ hoạ có chữ (không phải icon): lớp phủ "Đặt trước" trên ảnh SP, nhãn "Order" cạnh menu — được phép.
+const IMG_ICON = /['"][^'"]*\bicon[_-](?!pre_order\.png|menu_order\.png)[a-z0-9_-]+\.(png|gif|jpe?g)['"]/i;
+function stripComments(src) {
+  return src
+    .replace(/{%-?\s*comment\s*-?%}[\s\S]*?{%-?\s*endcomment\s*-?%}/g, (m) => m.replace(/[^\n]/g, ' '))
+    .replace(/<!--[\s\S]*?-->/g, (m) => m.replace(/[^\n]/g, ' '))
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
+    .replace(/(^|[^:'"\\])\/\/[^\n]*/g, (m, p) => p + ' '.repeat(m.length - p.length));
+}
+const iconViolations = [];
+for (const dir of SCAN_DIRS) {
+  for (const file of walk(path.join(rootDir, dir))) {
+    const rel = path.relative(rootDir, file).split(path.sep).join('/');
+    if (VENDOR.test(rel) || ICON_EXEMPT.test(rel) || !/\.(css|bwt|js)$/i.test(rel)) continue;
+    const lines = stripComments(fs.readFileSync(file, 'utf8')).split(/\r?\n/);
+    lines.forEach((line, i) => {
+      const at = `${rel}:${i + 1}`;
+      if (FA_LEGACY_PREFIX.test(line)) iconViolations.push(`${at}  cú pháp FA cũ (dùng fa-solid/fa-regular/fa-brands): ${line.trim().slice(0, 80)}`);
+      FA_LEGACY_PREFIX.lastIndex = 0;
+      const v5 = line.match(FA_V5_NAMES);
+      if (v5 && /fa-(solid|regular|brands)|class|\.fa-/.test(line)) iconViolations.push(`${at}  tên icon FA v4/v5: ${v5.join(', ')}`);
+      if (/\.bwt$/i.test(rel) && EMOJI_ICON.test(line)) iconViolations.push(`${at}  emoji/ký tự làm icon (dùng <i class="fa-solid …">): ${line.trim().slice(0, 80)}`);
+      if (IMG_ICON.test(line)) iconViolations.push(`${at}  icon dạng ảnh: ${line.trim().slice(0, 80)}`);
+    });
+  }
+}
+if (iconViolations.length && !process.argv.includes('--update-baseline')) {
+  console.error(`[lint:guardrails] FAIL — ${iconViolations.length} vi phạm quy tắc icon (UI-9: Font Awesome 6 Free):`);
+  for (const v of iconViolations.slice(0, 60)) console.error(`  ✗ ${v}`);
+  process.exit(1);
+}
+
 const current = collect();
 const totals = {};
 for (const metrics of Object.values(current)) {
@@ -126,7 +169,7 @@ for (const [file, metrics] of Object.entries(current)) {
   }
 }
 
-const LABELS = { hex: 'hex hardcode', important: '!important', inlineStyle: 'style="" tĩnh', aiComment: 'comment AI rỗng' };
+const LABELS = { inlineSvg: 'SVG nhúng tay', hex: 'hex hardcode', important: '!important', inlineStyle: 'style="" tĩnh', aiComment: 'comment AI rỗng' };
 console.log('[lint:guardrails] Tổng hiện tại:', Object.entries(totals).map(([k, v]) => `${LABELS[k] || k} ${v}`).join(', '));
 if (!regressions.length) {
   console.log('[lint:guardrails] PASS — không có vi phạm mới so với baseline.');

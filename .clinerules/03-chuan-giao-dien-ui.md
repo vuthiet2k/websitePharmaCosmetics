@@ -89,6 +89,25 @@ Xuất `test-results/audit-ui/report.json` + ảnh chụp toàn trang; mã lỗi
 | UI-8.2 ✱ | Không trang nào trả lỗi render Liquid (chuỗi `Liquid error`, `SYSTEM.LINQ`, `{{`, `{%` lộ ra màn hình). | `liquidLeak` |
 | UI-8.3 ◇ | Trạng thái rỗng (giỏ trống, danh mục 0 SP, chưa đăng nhập) có thông điệp + nút dẫn tiếp, không để khoảng trắng. | ảnh chụp |
 
+## UI-9. Icon — thư viện dùng chung (RULE CỨNG, 17/10/2026)
+
+**Thư viện duy nhất: Font Awesome 6 Free** (bản 6.5.0, CDN cdnjs) — nạp **một lần** ở `layouts/theme.bwt` (và
+`layouts/chat.bwt`):
+`<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">`.
+Đổi phiên bản = sửa đúng 2 thẻ này, cùng lúc. Không nạp thêm bộ icon khác (Bootstrap Icons, Material, Ionicons…) cho
+storefront. Tra tên icon: fontawesome.com/search?o=r&m=free (chỉ lấy icon **Free**; icon Pro như `fa-sparkles`,
+style `fal`/light hiện ô trống).
+
+| Mã | Tiêu chí | Kiểm |
+| :-- | :-- | :-- |
+| UI-9.1 ✱ | Cú pháp v6: `<i class="fa-solid fa-house" aria-hidden="true"></i>`. Cấm tiền tố cũ `fas`/`far`/`fab`/`fa fa-…` và tên v4/v5 (`fa-times`→`fa-xmark`, `fa-user-md`→`fa-user-doctor`, `fa-search`→`fa-magnifying-glass`, `fa-check-circle`→`fa-circle-check`, `fa-shield-alt`→`fa-shield-halved`, `fa-map-marker-alt`→`fa-location-dot`…). Giá trị icon trong Admin (`*_icon` ở settings) cũng theo cú pháp này. | `lint:guardrails` |
+| UI-9.2 | **Một kiểu nét**: mặc định `fa-solid` cho mọi icon giao diện; `fa-brands` cho logo mạng xã hội; `fa-regular` **chỉ** cho trạng thái "chưa chọn" của icon bật/tắt (tim yêu thích, sao) hoặc cả một cụm đồng bộ — không trộn solid/regular trong cùng một cụm (vd thanh header, bottom nav). | ảnh chụp |
+| UI-9.3 ✱ | Không dùng **emoji / ký tự** làm icon trong markup (✓ ➔ ⭐ 🎁 ⚠️ ☏ ✉ →…). Mũi tên sau chữ link/nút = `fa-solid fa-arrow-right`; dấu tick = `fa-solid fa-check`. Pseudo-element cần icon: `content:"\f00c"; font-family:"Font Awesome 6 Free"; font-weight:900`. Chuỗi gán bằng `textContent` (nút trả lời nhanh chat) thì bỏ icon, không chèn emoji. | `lint:guardrails` |
+| UI-9.4 ✱ | Không dùng **ảnh làm icon** (`icon_*.png/gif/jpg`). Ngoại lệ là ảnh nhãn đồ hoạ có chữ: `icon_pre_order.png` (phủ "Đặt trước" trên ảnh SP), `icon_menu_order.png` (nhãn cạnh menu). | `lint:guardrails` |
+| UI-9.5 | **SVG nhúng tay** chỉ cho: logo/brand mark (`PharmaCosmetics.svg`), cờ ngôn ngữ, logo thanh toán/sàn (MoMo, ZaloPay, VNPAY, Visa, Shopee, Lazada), hình minh hoạ/khung camera, biểu đồ. Icon giao diện có trong FA Free phải dùng FA. SVG icon cũ còn lại (chủ yếu trang chủ portal, soi da, tài khoản) chuyển dần khi sửa file đó; số `<svg>` mỗi file là chỉ số baseline `inlineSvg` — **không được tăng**. | `lint:guardrails` (baseline) |
+| UI-9.6 | Kích cỡ icon bằng token chữ (`font-size: var(--fs-*)`, UI-2.9), màu `currentColor` theo chữ cha; không đặt `width/height` px cho `<i>`. Icon trang trí luôn `aria-hidden="true"`; icon đứng một mình trong nút/link thì nút có `aria-label`. | review |
+| UI-9.7 | Ngoại lệ có chủ đích: **MOPS admin** dùng Material Symbols (layout `mops-admin`, `mops_admin_*`, `assets/mops-*`) — không áp UI-9. | — |
+
 ---
 
 ## Quy trình kiểm toàn bộ sản phẩm

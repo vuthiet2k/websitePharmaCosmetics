@@ -23,6 +23,7 @@ Repo: **websitePharmaCosmetics** — theme giao diện **Sapo Web (.bwt)** cho P
 - Nội dung hiển thị phải **cấu hình hoá**: `settings.<id>` + `| default:` trong snippet, khai báo
   `id`/`default` ở `configs/settings_schema.json`, giá trị ở `configs/settings_data.json`.
 - **Cỡ chữ = biến (RULE CỨNG UI-2.9):** mọi `font-size`/`font:` dùng `var(--fs-*)` (`snippets/design_tokens.bwt`) — cấm px/rem/pt ghi cứng; `npm run lint:guardrails` (trong `build:sapo`) FAIL nếu vi phạm. Cần cỡ mới thì thêm bậc token, không ghi số tại chỗ.
+- **Icon = Font Awesome 6 Free (RULE CỨNG UI-9):** thư viện duy nhất, nạp 1 lần qua CDN trong `layouts/theme.bwt`; cú pháp `fa-solid fa-x` + `aria-hidden="true"`; cấm emoji/ký tự/ảnh làm icon, cấm cú pháp `fas`/`fa fa-`; không thêm SVG icon tự vẽ (`lint:guardrails` FAIL/baseline). MOPS admin là ngoại lệ (Material Symbols).
 - Liquid: chuỗi rỗng là TRUE ⇒ kiểm tra bằng `!= blank`; ảnh phải qua `img_url` + `alt` riêng +
   `width`/`height`, `loading="lazy"` (trừ ảnh hero/LCP phải preload); mỗi trang 1 `<h1>`.
 - Kiểm tra tối thiểu trước khi báo xong: parse JSON config, `npm run build` khi sửa asset,
