@@ -595,6 +595,12 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
 - An toàn: Tier 1 ⇒ chỉ cảnh báo + Zalo, không gợi ý SP; cờ thai kỳ/dị ứng ⇒ ẩn danh mục BHA/Retinoid, cảnh báo SP trong
   giỏ chứa hoạt chất bị loại (`skin-quiz-engine.isProductAllowed`). Link "giải pháp" = `settings.cart_skin_solution_<loại da>`.
 - Mobile/tablet ≤991px: giỏ → "Thông tin đơn hàng" → khối phác đồ (cột trái `display: contents` + `order`).
+- Khung "Thông tin đơn hàng" (theo thiết kế giỏ hàng): Tạm tính (`#FooterCartTemplate` + SSR footer) · Phí vận chuyển
+  (Miễn phí khi `cart.total_price` ≥ `free_shipping_price`, chưa đạt ⇒ "Mua thêm…", tắt freeship ⇒ "Tính ở bước thanh
+  toán" — phí thật do checkout Sapo tính) · Mã giảm giá (`use_cart_coupons`; mã voucher `promo_coupon_N_*` là nút bấm
+  điền vào ô) · Tổng thanh toán · nút đỏ `--pc-cart-cta` (`cart_checkout_bg`) · 4 ô cam kết (`cart_trust_text`/`_icons`).
+  Số SP dưới tiêu đề, "Tiếp tục mua hàng" dưới bảng SP. Số SP/phí ship/tổng nằm ngoài template ⇒ cập nhật theo `ajaxCart`.
+  Không include `coupon_products` ở giỏ (trang giỏ không có JS popup/sao chép của khối đó).
 
 ## 9. Cách đọc báo cáo/spec bên ngoài — luôn xác minh, không copy số liệu
 

@@ -122,11 +122,8 @@
 {%- elsif target == 'footer' -%}
   {%- assign has_discount = false -%}
   {%- if cart.total_discounts > 0 -%}{%- assign has_discount = true -%}{%- endif -%}
+  {%- comment -%} 2026-10-16: "Số sản phẩm" (lên dưới tiêu đề) và "Tổng" (xuống dưới mã giảm giá) nằm ngoài khối này theo thiết kế giỏ hàng — xem templates/cart.bwt. Giữ khớp #FooterCartTemplate. {%- endcomment -%}
   <div class="cart-summary-breakdown">
-    <div class="cart-summary-row cart-summary-row--count">
-      <span class="cart-summary-label">Số sản phẩm</span>
-      <span class="cart-summary-count js-cart-count">{{ cart.item_count }} sản phẩm</span>
-    </div>
     {%- if has_discount -%}
     <div class="cart-summary-row">
       <span class="cart-summary-label">Tạm tính</span>
@@ -142,9 +139,5 @@
       <span class="cart-summary-value js-subtotal">{{ cart.total_line_items_price | money }}</span>
     </div>
     {%- endif -%}
-    <div class="cart-summary-row cart-summary-row--total">
-      <span class="cart-summary-label">Tổng đặt hàng</span>
-      <span class="total-price">{{ cart.total_price | money }}</span>
-    </div>
   </div>
 {%- endif -%}

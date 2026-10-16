@@ -28,6 +28,9 @@
 									<i class="fas fa-shopping-bag text-clinical-700 text-lg"></i>
 									<span>Giỏ hàng của bạn</span>
 								</h1>
+								{%- comment -%} 2026-10-16 (thiết kế giỏ hàng): số sản phẩm dưới tiêu đề, thay dòng "Số sản phẩm" trong khung đơn hàng; JS cập nhật theo 'ajaxCart'. {%- endcomment -%}
+								{%- assign _cart_count_text = settings.cart_count_text | default: '{so} sản phẩm' -%}
+								<p class="cart-head-count" data-cart-count data-template="{{ _cart_count_text | escape }}">{{ _cart_count_text | replace: '{so}', cart.item_count }}</p>
 							</div>
 						</div>
 						<div class="cart-page d-xl-block d-none">
@@ -44,6 +47,8 @@
 							</div>
 						</div>
 					</div>
+					{%- comment -%} 2026-10-16 (thiết kế giỏ hàng): "Tiếp tục mua hàng" chuyển từ khung đơn hàng xuống dưới bảng sản phẩm. {%- endcomment -%}
+					<a class="cart-continue-link" href="{{ settings.cart_continue_url | default: '/collections/all' | escape }}"><i class="fas fa-arrow-left" aria-hidden="true"></i> {{ settings.cart_continue_label | default: 'Tiếp tục mua hàng' | escape }}</a>
 					{%- comment -%} 2026-10-16: cá nhân hoá theo kết quả soi da / khảo sát (localStorage + GAS) — xem snippets/cart_skin_plan.bwt. {%- endcomment -%}
 					{%- if settings.cart_skin_enable -%}
 					{%- include 'customer_context_extractor' -%}
@@ -149,14 +154,24 @@
 					<div class="sticky">
 						<div class="bg-shadow margin-bottom-20">
 							<div class="ajaxcart__footer">
-								<div class="checkout-header font-heading text-forest-900 font-bold text-base sm:text-lg border-b border-gray-100 pb-3">
-									<i class="fas fa-receipt text-clinical-700"></i> Thông tin đơn hàng
-								</div>
+								{%- comment -%} 2026-10-16: khung đơn hàng dựng lại theo thiết kế giỏ hàng — Tạm tính · Phí vận chuyển · Mã giảm giá · Tổng thanh toán · Đặt hàng ngay · 4 ô cam kết. {%- endcomment -%}
+								<h2 class="checkout-header"><i class="fas fa-clipboard-list" aria-hidden="true"></i> {{ settings.cart_summary_title | default: 'Thông tin đơn hàng' | escape }}</h2>
 								<div class="checkout-body">
 									<div class="summary-total">
 										{%- include 'cart_initial_ssr', target: 'footer' -%}
 									</div>
-									{% include 'free-shipping' %}
+									{%- comment -%} Phí vận chuyển: phí thật do checkout Sapo tính; ở giỏ chỉ báo "Miễn phí" khi đạt mức settings.free_shipping_price
+									(thay thanh tiến độ freeship cũ), chưa đạt thì báo số tiền còn thiếu; tắt freeship ⇒ "tính ở bước thanh toán". {%- endcomment -%}
+									{%- assign _ship_min = settings.free_shipping_price | default: 0 | plus: 0 -%}
+									<div class="cart-shipping-row" data-cart-shipping data-enabled="{% if settings.free_shipping_enable and _ship_min > 0 %}1{% else %}0{% endif %}" data-min="{{ _ship_min }}" data-free="{{ settings.cart_shipping_free | default: 'Miễn phí' | escape }}" data-more="{{ settings.cart_shipping_more | default: 'Mua thêm {so_tien} để được miễn phí' | escape }}" data-pending="{{ settings.cart_shipping_pending | default: 'Tính ở bước thanh toán' | escape }}">
+										<span class="cart-shipping-row__label">{{ settings.cart_shipping_label | default: 'Phí vận chuyển' | escape }}</span>
+										<span class="cart-shipping-row__value" data-cart-shipping-value>
+											{%- if settings.free_shipping_enable and _ship_min > 0 -%}
+												{%- if cart.total_price >= _ship_min -%}<i class="fas fa-truck-fast" aria-hidden="true"></i> {{ settings.cart_shipping_free | default: 'Miễn phí' }}
+												{%- else -%}{%- assign _ship_left = _ship_min | minus: cart.total_price | money -%}{{ settings.cart_shipping_more | default: 'Mua thêm {so_tien} để được miễn phí' | replace: '{so_tien}', _ship_left }}{%- endif -%}
+											{%- else -%}{{ settings.cart_shipping_pending | default: 'Tính ở bước thanh toán' }}{%- endif -%}
+										</span>
+									</div>
 									{%if settings.delivery_show or settings.use_cart_vat%}
 									<div class="summary-vat">
 
@@ -227,26 +242,48 @@
 									{%endif%}
 									{%- if settings.use_cart_coupons -%}
 									<div class="summary-coupon">
-										<label class="coupon-label">Mã giảm giá</label>
+										<label class="coupon-label" for="coupon-code-input"><i class="fas fa-ticket" aria-hidden="true"></i> {{ settings.cart_coupon_label | default: 'Mã giảm giá' | escape }}</label>
 										<div class="coupon-input-wrap">
-											<input type="text" class="coupon-code-input" id="coupon-code-input" placeholder="Nhập mã giảm giá..." autocomplete="off">
-											<button type="button" class="coupon-apply-btn js-apply-coupon">Áp dụng</button>
+											<input type="text" class="coupon-code-input" id="coupon-code-input" placeholder="{{ settings.cart_coupon_placeholder | default: 'Nhập mã giảm giá' | escape }}" autocomplete="off">
+											<button type="button" class="coupon-apply-btn js-apply-coupon">{{ settings.cart_coupon_apply_label | default: 'Áp dụng' | escape }}</button>
 										</div>
 										<p class="coupon-feedback"></p>
+										{%- comment -%} 2026-10-16: mã voucher đang bật (Cài đặt › Mã giảm giá, promo_coupon_N_*) — bấm để điền vào ô, mô tả ưu đãi hiện bên dưới. {%- endcomment -%}
+										{%- capture _cp_chips -%}
+										{%- for i in (1..6) -%}
+										{%- capture _cp_en -%}promo_coupon_{{ i }}_enable{%- endcapture -%}
+										{%- capture _cp_code -%}promo_coupon_{{ i }}_code{%- endcapture -%}
+										{%- capture _cp_value -%}promo_coupon_{{ i }}_value{%- endcapture -%}
+										{%- if settings[_cp_en] and settings[_cp_code] != blank -%}
+										<button type="button" class="coupon-chip js-coupon-chip" data-code="{{ settings[_cp_code] | strip | escape }}" data-desc="{{ settings[_cp_value] | strip_html | strip | escape }}">{{ settings[_cp_code] | strip }}</button>
+										{%- endif -%}
+										{%- endfor -%}
+										{%- endcapture -%}
+										{%- if _cp_chips != blank -%}
+										<div class="coupon-chips">
+											<span class="coupon-chips__label">{{ settings.cart_coupon_list_label | default: 'Mã đang có' | escape }}:</span>
+											{{ _cp_chips }}
+										</div>
+										{%- endif -%}
 									</div>
 									{%- endif -%}
+									{%- comment -%} Tổng thanh toán = cart.total_price (đã trừ khuyến mãi tự động của Sapo); JS cập nhật theo 'ajaxCart'. {%- endcomment -%}
+									<div class="cart-total-row">
+										<span class="cart-total-row__label">{{ settings.cart_total_label | default: 'Tổng thanh toán' | escape }}</span>
+										<span class="cart-total-row__value" data-cart-total>{{ cart.total_price | money }}</span>
+									</div>
 									<div class="summary-button">
 										<div class="cart__btn-proceed-checkout-dt">
-											<button onclick="cartGoToCheckout(event)" type="button" class="button btn btn-default cart__btn-proceed-checkout btn-primary duration-300" id="btn-proceed-checkout" title="Đặt hàng ngay">Đặt hàng ngay</button>
+											{%- assign _checkout_label = settings.cart_checkout_label | default: 'Đặt hàng ngay' -%}
+											<button onclick="cartGoToCheckout(event)" type="button" class="button btn btn-default cart__btn-proceed-checkout btn-primary duration-300" id="btn-proceed-checkout" title="{{ _checkout_label | escape }}"><i class="fas fa-lock" aria-hidden="true"></i> <span>{{ _checkout_label | escape }}</span> <i class="fas fa-arrow-right" aria-hidden="true"></i></button>
 										</div>
-										<a class="cart-continue-link text-clinical-700 hover:text-clinical-600 text-sm font-semibold" title="Tiếp tục mua hàng" href="/collections/all">← Tiếp tục mua hàng</a>
 									{%- if settings.cart_trust_enable and settings.cart_trust_text != blank -%}
 									{%- assign _trust_items = settings.cart_trust_text | split: ';' -%}
-									{%- assign _trust_icons = 'fa-shield-alt,fa-sync,fa-user-md' | split: ',' -%}
-									<div class="grid grid-cols-3 gap-2 text-center text-[11px] text-gray-600 pt-4 mt-3 border-t border-gray-100">
-										{%- for _trust in _trust_items limit: 3 -%}
-										<div class="p-2 rounded-lg bg-gray-50 border border-gray-100">
-											<i class="fas {{ _trust_icons[forloop.index0] }} text-clinical-600 text-base mb-1 block"></i>
+									{%- assign _trust_icons = settings.cart_trust_icons | default: 'fa-hand-holding-dollar;fa-rotate;fa-circle-check;fa-headset' | split: ';' -%}
+									<div class="cart-trust-grid">
+										{%- for _trust in _trust_items limit: 4 -%}
+										<div class="cart-trust-item">
+											<i class="fas {{ _trust_icons[forloop.index0] | strip | default: 'fa-circle-check' }}" aria-hidden="true"></i>
 											<span>{{ _trust | strip }}</span>
 										</div>
 										{%- endfor -%}
@@ -256,9 +293,7 @@
 								</div>
 							</div>
 						</div>
-						{%if settings.use_cart_coupons %}
-						{% include 'coupon_products' %}
-						{%endif%}
+						{%- comment -%} 2026-10-16: bỏ include 'coupon_products' ở giỏ — trang giỏ không có JS mở popup/sao chép của khối đó (bấm không có tác dụng). Mã voucher hiện thành nút trong ô "Mã giảm giá" ở trên. {%- endcomment -%}
 					</div>
 					{%if settings.cart_suggest_product_enable%}
 					{% if collections[settings.cart_suggest_product_col].products_count > 0 %}
@@ -360,6 +395,27 @@
 		window.location.href = window.cartCheckoutUrl || '/checkout';
 	}
 
+	/* 2026-10-16 (thiết kế giỏ hàng): số SP dưới tiêu đề, Phí vận chuyển, Tổng thanh toán nằm ngoài FooterCartTemplate
+	   ⇒ cập nhật theo sự kiện 'ajaxCart' (buildCart bắn kèm object giỏ sau mỗi lần thêm/xoá/đổi số lượng). */
+	function cartMoney(v) {
+		return (window.Bizweb && Bizweb.formatMoney) ? Bizweb.formatMoney(v, Bizweb.money_format) : String(v);
+	}
+	$(document).on('ajaxCart', function(e, cart) {
+		if (!cart || cart.total_price == null) return;
+		var $count = $('[data-cart-count]');
+		$count.text(String($count.data('template') || '').replace('{so}', cart.item_count));
+		$('[data-cart-total]').text(cartMoney(cart.total_price));
+		var $ship = $('[data-cart-shipping]');
+		var $val = $ship.find('[data-cart-shipping-value]');
+		if (String($ship.data('enabled')) !== '1') { $val.text($ship.data('pending')); return; }
+		var min = Number($ship.data('min')) || 0;
+		if (cart.total_price >= min) {
+			$val.empty().append('<i class="fas fa-truck-fast" aria-hidden="true"></i> ').append(document.createTextNode($ship.data('free')));
+		} else {
+			$val.text(String($ship.data('more')).replace('{so_tien}', cartMoney(min - cart.total_price)));
+		}
+	});
+
 	/* ── Đặt hàng: toàn bộ giỏ hàng ── */
 	window.cartGoToCheckout = function(e) {
 		if (e && e.preventDefault) e.preventDefault();
@@ -377,6 +433,13 @@
 		$feedback.removeClass('coupon-feedback--error').addClass('coupon-feedback--success').text('Mã sẽ được áp dụng ở bước thanh toán.');
 		window.cartCheckoutUrl = '/checkout?discount=' + encodeURIComponent(code);
 		window.cartGoToCheckout(e);
+	});
+	$(document).on('click', '.js-coupon-chip', function() {
+		var $chip = $(this);
+		$('.js-coupon-chip').removeClass('is-active');
+		$chip.addClass('is-active');
+		$('#coupon-code-input').val($chip.data('code')).trigger('focus');
+		$('.coupon-feedback').removeClass('coupon-feedback--error').addClass('coupon-feedback--success').text($chip.data('desc') || '');
 	});
 	$(document).on('keydown', '#coupon-code-input', function(e) {
 		if (e.key === 'Enter') { e.preventDefault(); $('.js-apply-coupon').trigger('click'); }
