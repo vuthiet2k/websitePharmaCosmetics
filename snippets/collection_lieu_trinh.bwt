@@ -1,0 +1,57 @@
+{%- comment -%}
+  collection_lieu_trinh — danh mục LIỆU TRÌNH (2026-10-17): thay lưới cũ product_grid_lieu_trinh (tiêu đề nhóm rỗng điền bằng JS,
+  style inline, không h1, tràn ngang mobile, thẻ "thêm giỏ"). H1 = tên danh mục; đoạn mở đầu = phần mô tả trước H2 đầu tiên;
+  nhóm chính = sản phẩm của danh mục (phân trang), nhóm phụ = settings.lt_collection_groups với tên/mô tả = cặp H2 + đoạn văn
+  trong mô tả danh mục (đọc phía server). Thẻ: snippets/lieu_trinh_card.bwt. Giao diện laptop 4 cột → tablet 2–3 → mobile 1.
+{%- endcomment -%}
+{{ 'lieu-trinh.css' | asset_url | stylesheet_tag }}
+{%- assign lt_desc_parts = collection.description | split: '<h2' -%}
+{%- assign lt_intro = lt_desc_parts | first | strip_html | strip -%}
+{%- assign lt_gtitles = '' -%}{%- assign lt_gdescs = '' -%}
+{%- for lt_part in lt_desc_parts offset: 1 -%}
+  {%- assign lt_gt = lt_part | split: '</h2>' | first | split: '>' | last | strip_html | strip -%}
+  {%- assign lt_gd = lt_part | split: '</h2>' | last | split: '</p>' | first | strip_html | strip -%}
+  {%- assign lt_gtitles = lt_gtitles | append: lt_gt | append: '§' -%}{%- assign lt_gdescs = lt_gdescs | append: lt_gd | append: '§' -%}
+{%- endfor -%}
+{%- assign lt_gtitles = lt_gtitles | split: '§' -%}{%- assign lt_gdescs = lt_gdescs | split: '§' -%}
+<div class="lt-page lt-collection">
+  <section class="lt-intro lt-intro--collection">
+    <div class="container">
+      <p class="lt-eyebrow">{{ settings.lt_eyebrow | escape }}</p>
+      <h1 class="lt-intro__title">{{ collection.title | default: collection.name | escape }}</h1>
+      {%- if lt_intro != blank -%}<p class="lt-lead">{{ lt_intro }}</p>{%- endif -%}
+    </div>
+  </section>
+  <section class="lt-section lt-section--white">
+    <div class="container">
+      {%- if lt_gtitles[0] != blank -%}<header class="lt-head"><h2 class="lt-title">{{ lt_gtitles[0] | escape }}</h2>{% if lt_gdescs[0] != blank %}<p class="lt-lead">{{ lt_gdescs[0] | escape }}</p>{% endif %}</header>{%- endif -%}
+      {%- if collection.products.size > 0 -%}
+      <div class="lt-pgrid">
+        {%- for product in collection.products -%}{%- assign lt_product = product -%}{%- include 'lieu_trinh_card' -%}{%- endfor -%}
+      </div>
+      {%- if paginate.pages > 1 -%}<div class="pagenav">{% include 'collection-paginate-pages' %}</div>{%- endif -%}
+      {%- else -%}
+      <p class="lt-lead">Danh mục chưa có liệu trình.</p>
+      {%- endif -%}
+    </div>
+  </section>
+  {%- assign lt_groups = settings.lt_collection_groups | split: ',' -%}
+  {%- for lt_g in lt_groups -%}
+    {%- assign lt_gh = lt_g | strip -%}
+    {%- assign lt_gc = collections[lt_gh] -%}
+    {%- if lt_gh != blank and lt_gc.products.size > 0 -%}
+    {%- assign lt_gi = forloop.index -%}
+    <section class="lt-section {% cycle 'lt-section--soft', 'lt-section--white' %}">
+      <div class="container">
+        <header class="lt-head">
+          <h2 class="lt-title">{{ lt_gtitles[lt_gi] | default: lt_gc.title | default: lt_gc.name | escape }}</h2>
+          {%- if lt_gdescs[lt_gi] != blank -%}<p class="lt-lead">{{ lt_gdescs[lt_gi] | escape }}</p>{%- endif -%}
+        </header>
+        <div class="lt-pgrid">
+          {%- for product in lt_gc.products limit: 24 -%}{%- assign lt_product = product -%}{%- include 'lieu_trinh_card' -%}{%- endfor -%}
+        </div>
+      </div>
+    </section>
+    {%- endif -%}
+  {%- endfor -%}
+</div>

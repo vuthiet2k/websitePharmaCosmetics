@@ -1,25 +1,15 @@
 {% layout 'theme' %}
 {%- comment -%}
-  templates/page.getglowing-micro-peel.bwt — Trang dịch vụ GetGlowing Micro-Peel (Skin Health Beauty, Hà Nội).
-  2026-10-17: dựng lại theo hồ sơ thiết kế bàn giao IT (8 phần: banner · giới thiệu · vấn đề da · công nghệ & hoạt chất ·
-  quy trình 1:1 · trước–sau · thông tin & đặt lịch · FAQ). Toàn bộ chữ/ảnh lấy từ nhóm cấu hình "Dịch vụ GetGlowing
-  Micro-Peel" (settings gg_*) — ô trống ⇒ phần đó ẩn, không hiện ảnh giả/ô giữ chỗ (.clinerules/02 mục 7).
-  Trước đây: ảnh nạp bằng JS từ page.content (alt [concern-1]…), hình lọ thuốc/ô "[Vị trí ảnh trước]" vẽ giả hiện cho khách.
-  SEO title/meta: nhập ở Sapo Admin › Trang nội dung › SEO (layout in page_title/page_description).
-  Khung: .container chung (UI-1.2b), cỡ chữ var(--fs-*) (UI-2.9), icon Font Awesome (UI-9).
+  templates/page.getglowing-micro-peel.bwt — trang nội dung /getglowing-micro-peel-ha-noi giữ lại cho link cũ.
+  2026-10-17: GetGlowing là 1 SẢN PHẨM liệu trình (giao diện product.lieu-trinh). Trang này hiển thị đúng sản phẩm đó
+  (settings.lt_page_product) bằng cùng bố cục + thẻ canonical trỏ về URL sản phẩm (tránh trùng nội dung). Khuyến nghị: tạo
+  chuyển hướng 301 trang này → URL sản phẩm trong Sapo Admin. Không tìm thấy sản phẩm ⇒ hiện nội dung trang (page.content).
 {%- endcomment -%}
-{{ 'service-getglowing.css' | asset_url | stylesheet_tag }}
-
+{%- assign lt_product = all_products[settings.lt_page_product] -%}
 {% include 'breadcrumb' %}
-
-<div id="getglowing-service-page" class="gg-page">
-  {% include 'service_getglowing_banner' %}
-  {% include 'service_getglowing_concerns' %}
-  {% include 'service_getglowing_mechanism' %}
-  {% include 'service_getglowing_steps' %}
-  {% include 'service_getglowing_cases' %}
-  {% include 'service_getglowing_info_cta' %}
-  {% include 'service_getglowing_faq' %}
-</div>
-
-<script defer src="{{ 'service-getglowing.js' | asset_url }}"></script>
+{%- if lt_product != blank and lt_product.id != blank -%}
+<link rel="canonical" href="{{ lt_product.url }}">
+{% include 'lieu_trinh_page' %}
+{%- else -%}
+<div class="container"><h1 class="pc-section-title">{{ page.title }}</h1><div class="rte">{{ page.content }}</div></div>
+{%- endif -%}

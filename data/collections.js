@@ -61,6 +61,8 @@ function makeShell(id, name, alias, products_count, opts = {}) {
 // ── Collections thật từ store (50 items) ─────────────────────────────────
 
 const collectionsData = {
+  // 2026-10-17: danh mục liệu trình (snippets/collection_lieu_trinh.bwt) — 6 liệu trình thật của store.
+  'dieu-tri-chuyen-nghiep': makeCollection('Điều trị chuyên nghiệp', 'dieu-tri-chuyen-nghiep', 9301, '<p>Liệu trình trị liệu da 1:1 tại Skin Health Beauty — phân tích da, phác đồ cá nhân hóa và theo dõi xuyên suốt bởi chuyên gia.</p>', products.filter((p) => p.template_suffix === 'lieu-trinh')),
 
   // ── Meta: tất cả demo products ────────────────────────────────────────
   'all': makeCollection(

@@ -982,6 +982,13 @@ function getKnownNavSlugs() {
   return slugs;
 }
 
+// 2026-10-17: Sapo cho chọn giao diện riêng từng sản phẩm (template_suffix, vd 'lieu-trinh' ⇒ templates/product.lieu-trinh.bwt).
+function productTpl(alias) {
+  const p = mockModule.byAlias[alias];
+  const sfx = p && p.template_suffix;
+  return sfx && fs.existsSync(path.join(ROOT, 'templates', 'product.' + sfx + '.bwt')) ? 'product.' + sfx : 'product';
+}
+
 function resolvePrettyPath(pathname, searchParams) {
   const parts = pathname.replace(/^\/+|\/+$/g, '').split('/').filter(Boolean);
   if (parts.length === 0) return null; // '/' đã xử lý riêng ở caller
@@ -1039,7 +1046,7 @@ function resolvePrettyPath(pathname, searchParams) {
   // /products/<alias>?view=favorite). 2026-10-10: thiếu route này dev-server trả 404 ⇒ favorite_js tưởng SP
   // không tồn tại và xoá khỏi danh sách yêu thích ngay sau khi bấm tim.
   if (parts[0] === 'products' && parts.length === 2 && mockModule.byAlias[parts[1]]) {
-    return { tpl: 'product', routeParams: { productAlias: parts[1] } };
+    return { tpl: productTpl(parts[1]), routeParams: { productAlias: parts[1] } };
   }
 
   // /collections (danh sách toàn bộ danh mục) và /collections/:handle
@@ -1058,7 +1065,7 @@ function resolvePrettyPath(pathname, searchParams) {
   if (parts.length === 1) {
     const slug = parts[0];
     if (PAGE_HANDLE_MAP[slug]) return { tpl: PAGE_HANDLE_MAP[slug], routeParams: {} };
-    if (mockModule.byAlias[slug]) return { tpl: 'product', routeParams: { productAlias: slug } };
+    if (mockModule.byAlias[slug]) return { tpl: productTpl(slug), routeParams: { productAlias: slug } };
     if (mockModule.collectionsData[slug]) return { tpl: 'collection', routeParams: { collectionHandle: slug } };
     if (getKnownNavSlugs().has(slug)) return { tpl: 'collection', routeParams: { collectionHandle: slug } };
   }

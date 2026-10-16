@@ -1,0 +1,39 @@
+{%- comment -%}
+  lieu_trinh_concerns — vấn đề da: bài trong blog settings.lt_concern_blog, chọn bằng tag vande:<handle> trên sản phẩm (theo thứ tự tag).
+  Tiêu đề bài = tên (hiển thị CHỮ HOA theo bản bàn giao), Trích dẫn = mô tả, ảnh bài 4:3. Không tag nào khớp ⇒ ẩn phần.
+{%- endcomment -%}
+{%- assign lt_cblog = blogs[settings.lt_concern_blog] -%}
+{%- assign lt_vlist = lt_vande | split: '|' -%}
+{%- assign lt_cn = 0 -%}{%- assign lt_cimg = false -%}
+{%- capture lt_cards -%}
+{%- for lt_h in lt_vlist -%}{%- assign lt_h = lt_h | strip -%}
+  {%- for lt_a in lt_cblog.articles -%}{%- if lt_a.handle == lt_h -%}
+  {%- assign lt_cn = lt_cn | plus: 1 -%}
+  <article class="lt-card lt-concern">
+    {%- if lt_a.image.src != blank -%}{%- assign lt_cimg = true -%}
+    <div class="lt-media lt-media--4x3"><img src="{{ lt_a.image.src | img_url: 'large' }}" alt="{{ lt_a.image.alt | default: lt_a.title | escape }}" width="1200" height="900" loading="lazy" decoding="async"></div>
+    {%- endif -%}
+    <div class="lt-card__body">
+      <span class="lt-num">{% if lt_cn < 10 %}0{% endif %}{{ lt_cn }}</span>
+      <h3 class="lt-card__title lt-upper">{{ lt_a.title | escape }}</h3>
+      {%- assign lt_sum = lt_a.summary | default: lt_a.excerpt | strip_html | strip -%}
+      {%- if lt_sum != blank -%}<p class="lt-card__text">{{ lt_sum }}</p>{%- endif -%}
+    </div>
+  </article>
+  {%- endif -%}{%- endfor -%}
+{%- endfor -%}
+{%- endcapture -%}
+{%- if lt_cn > 0 -%}
+<section id="service-concerns-section" class="lt-section lt-section--white">
+  <div class="container">
+    <header class="lt-head">
+      {%- if settings.lt_concerns_eyebrow != blank -%}<p class="lt-eyebrow">{{ settings.lt_concerns_eyebrow | replace: '[ten]', lt_short | escape }}</p>{%- endif -%}
+      <h2 class="lt-title">{{ settings.lt_concerns_title | replace: '[ten]', lt_short | escape }}</h2>
+      {%- assign lt_paras = settings.lt_concerns_text | replace: '[ten]', lt_short | newline_to_br | split: '<br />' -%}
+      {%- for lt_p in lt_paras -%}{%- assign lt_p = lt_p | strip -%}{%- if lt_p != blank -%}<p class="lt-lead">{{ lt_p | escape }}</p>{%- endif -%}{%- endfor -%}
+    </header>
+    <div class="lt-concerns">{{ lt_cards }}</div>
+    {%- if lt_cimg and settings.lt_concerns_note != blank -%}<p class="lt-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> {{ settings.lt_concerns_note | escape }}</p>{%- endif -%}
+  </div>
+</section>
+{%- endif -%}

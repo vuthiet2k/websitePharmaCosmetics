@@ -412,6 +412,8 @@ function getContext(templateName = 'index', routeParams = {}) {
 
     // Product / Collection context
     product:     currentProduct,
+    // 2026-10-17: all_products[alias] (global Sapo) — page.getglowing-micro-peel lấy sản phẩm liệu trình theo settings.lt_page_product.
+    all_products: byAlias,
     collection:  currentCollection,
     collections: collectionsObj,
 

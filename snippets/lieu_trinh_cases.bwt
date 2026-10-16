@@ -1,0 +1,44 @@
+{%- comment -%}
+  lieu_trinh_cases — trước–sau: bài trong blog ca khách hàng (settings.clinical_case_blog_handle, quy ước trang Trước & Sau) có tag
+  lieutrinh:<alias sản phẩm> và ĐỦ anhtruoc:/anhsau:. Ghi nhận = tag tuan:, phacdo: (thiếu ⇒ ẩn). Không ca ⇒ ẩn cả phần.
+  Không dùng ảnh hãng/ảnh liệu trình khác (vd Skin Renewal Peeling System) làm kết quả.
+{%- endcomment -%}
+{%- assign lt_kblog = blogs[settings.clinical_case_blog_handle] -%}
+{%- assign lt_kn = 0 -%}
+{%- capture lt_cases -%}
+{%- for lt_a in lt_kblog.articles limit: 50 -%}
+  {%- assign lt_b = '' -%}{%- assign lt_f = '' -%}{%- assign lt_mine = false -%}{%- assign lt_wk = '' -%}{%- assign lt_pd = '' -%}
+  {%- for lt_t in lt_a.tags -%}{%- if lt_t contains ':' -%}
+    {%- assign lt_tr = lt_t | split: ':' | first -%}{%- assign lt_tk = lt_tr | strip | downcase -%}{%- assign lt_tv = lt_t | remove_first: lt_tr | remove_first: ':' | strip -%}
+    {%- if lt_tk == 'anhtruoc' -%}{%- assign lt_b = lt_tv -%}{%- endif -%}
+    {%- if lt_tk == 'anhsau' -%}{%- assign lt_f = lt_tv -%}{%- endif -%}
+    {%- if lt_tk == 'lieutrinh' and lt_tv == lt_alias -%}{%- assign lt_mine = true -%}{%- endif -%}
+    {%- if lt_tk == 'tuan' -%}{%- assign lt_wk = lt_tv -%}{%- endif -%}
+    {%- if lt_tk == 'phacdo' -%}{%- assign lt_pd = lt_tv -%}{%- endif -%}
+  {%- endif -%}{%- endfor -%}
+  {%- if lt_mine and lt_b != blank and lt_f != blank and lt_kn < 4 -%}
+  {%- assign lt_kn = lt_kn | plus: 1 -%}
+  <article class="lt-card lt-case">
+    <h3 class="lt-card__title"><span class="lt-num">Case 0{{ lt_kn }}</span> {{ lt_a.title | escape }}</h3>
+    <div class="lt-case__pair">
+      <figure><div class="lt-media lt-media--4x3"><img src="{{ lt_b }}" alt="{{ lt_a.title | escape }} — trước điều trị" width="600" height="450" loading="lazy" decoding="async"></div><figcaption>Trước điều trị</figcaption></figure>
+      <figure><div class="lt-media lt-media--4x3"><img src="{{ lt_f }}" alt="{{ lt_a.title | escape }} — sau điều trị" width="600" height="450" loading="lazy" decoding="async"></div><figcaption>Sau điều trị</figcaption></figure>
+    </div>
+    {%- if lt_wk != blank or lt_pd != blank -%}<p class="lt-card__text">{% if lt_wk != blank %}Theo dõi {{ lt_wk | escape }} tuần{% endif %}{% if lt_wk != blank and lt_pd != blank %} · {% endif %}{% if lt_pd != blank %}{{ lt_pd | escape }}{% endif %}</p>{%- endif -%}
+  </article>
+  {%- endif -%}
+{%- endfor -%}
+{%- endcapture -%}
+{%- if lt_kn > 0 -%}
+<section id="service-cases-section" class="lt-section lt-section--white">
+  <div class="container">
+    <header class="lt-head">
+      {%- if settings.lt_cases_eyebrow != blank -%}<p class="lt-eyebrow">{{ settings.lt_cases_eyebrow | escape }}</p>{%- endif -%}
+      <h2 class="lt-title">{{ settings.lt_cases_title | escape }}</h2>
+      {%- if settings.lt_cases_text != blank -%}<p class="lt-lead">{{ settings.lt_cases_text | escape }}</p>{%- endif -%}
+    </header>
+    <div class="lt-cases">{{ lt_cases }}</div>
+    {%- if settings.lt_cases_disclaimer != blank -%}<p class="lt-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> {{ settings.lt_cases_disclaimer | escape }}</p>{%- endif -%}
+  </div>
+</section>
+{%- endif -%}

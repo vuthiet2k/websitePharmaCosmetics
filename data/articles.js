@@ -585,6 +585,36 @@ if (fbTipArticle) fbTipArticle.tags.splice(fbTipArticle.tags.findIndex((t) => t.
 // hiện (bất kể có bao nhiêu bài) — 1 empty-state ẩn tồn tại từ trước, không liên quan số lượng
 // demo data. Thêm name (alias title) + description + articles_count (tính theo articles.length)
 // để khớp đúng field name mà Sapo Liquid thật cung cấp (blog.name/blog.articles_count).
+// ── Dữ liệu trang liệu trình (2026-10-17) — snippets/lieu_trinh_*, docs/huong-dan-tao-lieu-trinh.md ─────────────
+// Sản phẩm liệu trình gắn tag vande:<handle> / hoatchat:<handle>; FAQ gắn tag sanpham:<alias sản phẩm>. Chữ = hồ sơ bàn giao IT.
+const LT_GG = 'elaine-brennan-getglowing-micro-peel-lieu-trinh-peel-chuyen-nghiep-ho-tro-lam-sang-va-cai-thien-be-mat-da';
+const ltArticle = (blog, id, handle, title, summary, extra) => Object.assign({
+  id, title, alias: handle, handle, url: `/blogs/${blog.handle}/${handle}`, summary, excerpt: summary,
+  content: `<p>${summary}</p>`, image: null, featured_image: null, author: 'Skin Health Beauty',
+  published_on: '2026-10-17T08:00:00', created_at: '2026-10-17T08:00:00', tags: [], comments_count: 0, blog,
+}, extra || {});
+const LT_CONCERN_BLOG = { handle: 'van-de-da', title: 'Vấn đề da' };
+const concernArticles = [
+  ['mun-va-bit-tac', 'Mụn và bít tắc', 'Hỗ trợ giảm tích tụ tế bào sừng và tình trạng bít tắc nang lông.'],
+  ['tham-sau-mun', 'Thâm sau mụn', 'Hỗ trợ cải thiện sắc tố tồn dư sau viêm, giúp màu da trông đồng đều hơn.'],
+  ['sac-to-khong-dong-deu', 'Sắc tố không đồng đều', 'Hỗ trợ cải thiện các vùng tăng sắc tố nông và vẻ ngoài xỉn màu.'],
+  ['be-mat-san-rap', 'Bề mặt sần ráp', 'Hỗ trợ loại bỏ tế bào sừng tích tụ, cải thiện độ mịn của bề mặt.'],
+  ['dau-hieu-lao-hoa-som', 'Dấu hiệu lão hóa sớm', 'Hỗ trợ cải thiện vẻ ngoài của nếp nhăn nông, kết cấu da và độ tươi sáng.'],
+].map(([h, t, d], i) => ltArticle(LT_CONCERN_BLOG, 700 + i, h, t, d));
+const LT_ING_BLOG = { handle: 'hoat-chat', title: 'Thư viện hoạt chất' };
+const peelActiveArticles = [
+  ['resorcinol', 'Resorcinol', 'Hỗ trợ bong sừng, cải thiện tình trạng thô ráp và bề mặt da không đồng đều.', 'TÁI TẠO BỀ MẶT', 'Tiêu sừng'],
+  ['salicylic-acid', 'Salicylic Acid', 'Hoạt chất BHA có tính ưa lipid, hỗ trợ làm thông thoáng nang lông và cải thiện mụn không viêm.', 'KIỂM SOÁT BÍT TẮC', 'BHA'],
+  ['kojic-acid', 'Kojic Acid', 'Hỗ trợ ức chế tyrosinase, góp phần cải thiện thâm và sắc tố không đồng đều.', 'HỖ TRỢ ĐIỀU HÒA SẮC TỐ', 'Làm sáng'],
+].map(([h, t, d, role, nhom], i) => ltArticle(LT_ING_BLOG, 710 + i, h, t, d, { tags: [`nhom:${nhom}`, `vaitro:${role}`] }));
+const LT_FAQ_BLOG = { handle: 'cau-hoi-lieu-trinh', title: 'Câu hỏi liệu trình' };
+const treatmentFaqArticles = [
+  ['getglowing-co-gay-bong-da-khong', 'GetGlowing Micro-Peel có gây bong da không?', 'Có thể xuất hiện bong da trong những ngày sau trị liệu. Mức độ bong phụ thuộc vào nền da và đáp ứng của từng khách hàng.'],
+  ['getglowing-can-bao-nhieu-buoi', 'Liệu trình cần bao nhiêu buổi?', 'Số buổi phụ thuộc tình trạng da và mục tiêu cải thiện. Hãng có gợi ý liệu trình tham khảo sáu buổi, cách nhau 2–6 tuần; lịch thực tế cần được cá nhân hóa.'],
+  ['getglowing-da-nhay-cam', 'Da nhạy cảm có thực hiện được không?', 'Cần đánh giá riêng. Da đang kích ứng, tổn thương hoặc hàng rào bảo vệ suy yếu có thể cần trì hoãn peel.'],
+  ['getglowing-cham-soc-sau-peel', 'Sau peel cần chăm sóc như thế nào?', 'Ưu tiên làm sạch dịu nhẹ, dưỡng phục hồi, chống nắng và tránh tự bóc lớp da đang bong. Chỉ sử dụng lại các hoạt chất treatment khi da đã phục hồi và được hướng dẫn phù hợp.'],
+].map(([h, q, a], i) => ltArticle(LT_FAQ_BLOG, 720 + i, h, q, a, { tags: [`sanpham:${LT_GG}`] }));
+
 function withBlogMeta(blog) {
   return { ...blog, name: blog.title, description: blog.description || '', articles_count: blog.articles.length };
 }
@@ -626,7 +656,7 @@ const blogs = {
     title:   'Thư viện hoạt chất',
     handle:  'hoat-chat',
     url:     '/blogs/hoat-chat',
-    articles: ingredientArticles,
+    articles: [...ingredientArticles, ...peelActiveArticles],
   }),
   'danh-gia-khach-hang': withBlogMeta({
     id:      306,
@@ -671,6 +701,8 @@ const blogs = {
     template_suffix: 'video',
     articles: videoArticles,
   }),
+  'van-de-da': withBlogMeta({ id: 313, title: 'Vấn đề da', handle: 'van-de-da', url: '/blogs/van-de-da', articles: concernArticles }),
+  'cau-hoi-lieu-trinh': withBlogMeta({ id: 314, title: 'Câu hỏi liệu trình', handle: 'cau-hoi-lieu-trinh', url: '/blogs/cau-hoi-lieu-trinh', articles: treatmentFaqArticles }),
   'giai-phap-skin-health': withBlogMeta({
     id:      311,
     title:   'Giải pháp Skin Health',

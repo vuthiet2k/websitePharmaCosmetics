@@ -1,0 +1,31 @@
+{%- comment -%}
+  lieu_trinh_faq — câu hỏi: bài trong blog settings.lt_faq_blog có tag sanpham:<alias sản phẩm> (tiêu đề = câu hỏi, nội dung = trả lời).
+  <details>/<summary> (không cần JS) + JSON-LD FAQPage. Không có câu ⇒ ẩn.
+{%- endcomment -%}
+{%- assign lt_fblog = blogs[settings.lt_faq_blog] -%}
+{%- assign lt_fn = 0 -%}{%- assign lt_ld = '' -%}
+{%- capture lt_faqs -%}
+{%- for lt_a in lt_fblog.articles limit: 50 -%}
+  {%- assign lt_mine = false -%}
+  {%- for lt_t in lt_a.tags -%}{%- if lt_t contains ':' -%}{%- assign lt_tr = lt_t | split: ':' | first -%}{%- assign lt_tk = lt_tr | strip | downcase -%}{%- assign lt_tv = lt_t | remove_first: lt_tr | remove_first: ':' | strip -%}{%- if lt_tk == 'sanpham' and lt_tv == lt_alias -%}{%- assign lt_mine = true -%}{%- endif -%}{%- endif -%}{%- endfor -%}
+  {%- assign lt_ans = lt_a.content | default: lt_a.summary -%}
+  {%- if lt_mine and lt_ans != blank -%}
+  {%- assign lt_fn = lt_fn | plus: 1 -%}
+  <details class="lt-faq__item"{% if lt_fn == 1 %} open{% endif %}>
+    <summary>{{ lt_a.title | escape }}<i class="fa-solid fa-chevron-down" aria-hidden="true"></i></summary>
+    <div class="lt-rte">{{ lt_ans }}</div>
+  </details>
+  {%- capture lt_item -%}{"@type":"Question","name":{{ lt_a.title | json }},"acceptedAnswer":{"@type":"Answer","text":{{ lt_ans | strip_html | strip | json }}}}{%- endcapture -%}
+  {%- if lt_ld != blank -%}{%- assign lt_ld = lt_ld | append: ',' -%}{%- endif -%}{%- assign lt_ld = lt_ld | append: lt_item -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- endcapture -%}
+{%- if lt_fn > 0 -%}
+<section id="service-faq-section" class="lt-section lt-section--soft">
+  <div class="container">
+    <header class="lt-head"><h2 class="lt-title">{{ settings.lt_faq_title | default: 'Câu hỏi thường gặp' | escape }}</h2></header>
+    <div class="lt-faq">{{ lt_faqs }}</div>
+  </div>
+</section>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{{ lt_ld }}]}</script>
+{%- endif -%}

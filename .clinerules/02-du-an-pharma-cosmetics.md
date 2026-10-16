@@ -655,3 +655,16 @@ grep -o '"id"[[:space:]]*:[[:space:]]*"[a-z_]*"' configs/settings_schema.json
 - Nguồn chữ nội dung chỉ tải một request Montserrat với các weight đang dùng; không khôi phục Inter, Fraunces, Playfair Display, IBM Plex Mono, Roboto hoặc font UI khác.
 - Font icon (Font Awesome, Material Symbols, swiper-icons), logo vector và vùng mã/JSON monospace là ngoại lệ có chủ đích; không dùng selector toàn cục ép font làm hỏng glyph.
 - **Cỡ chữ (RULE CỨNG, 17/10/2026):** nguồn duy nhất là token `--fs-*` trong `snippets/design_tokens.bwt` (desktop + bản mobile); trang chủ dùng bí danh vai trò `--ts-*` trỏ về `--fs-*`; Tailwind CDN `text-*` map về `--fs-*`. Cấm ghi px/rem/pt cho `font-size`/`font:` — chi tiết, ngoại lệ (MOPS admin, vendor) và bảng bậc ở `.clinerules/03` UI-2.2/UI-2.9; `npm run lint:guardrails` FAIL nếu vi phạm.
+## Trang liệu trình = sản phẩm (`templates/product.lieu-trinh.bwt`, chốt 2026-10-17)
+
+- Liệu trình/dịch vụ trị liệu da là **sản phẩm Sapo** (danh mục Điều trị chuyên nghiệp) chọn giao diện `product.lieu-trinh`.
+  Bố cục = hồ sơ thiết kế bàn giao IT GetGlowing Micro-Peel (banner · giới thiệu · vấn đề da · công nghệ & hoạt chất · quy trình
+  1:1 · thông tin chi tiết · trước–sau · thông tin & đặt lịch · FAQ), snippet `snippets/lieu_trinh_*` + `assets/lieu-trinh.css|js`.
+- Dữ liệu riêng từng liệu trình: tên, Mô tả ngắn (giới thiệu), Mô tả chi tiết, giá, Nhà cung cấp, ảnh alt `[banner]`/`[banner-mobile]`/
+  `[hero]`/`[congthuc]`/`[sanpham]`/`[buoc-N]`, tag `nhan:` `phude:` `tenngan:` `tieude:` `congthuc:` `hinhthuc:` `thoigian:`
+  `sobuoi:` `diadiem:` `vande:<bài>` `hoatchat:<bài>`; blog `van-de-da`, `hoat-chat` (tag `vaitro:`), `cau-hoi-lieu-trinh` (tag
+  `sanpham:<alias>`), `truoc-va-sau` (tag `lieutrinh:<alias>` + `anhtruoc:`/`anhsau:`). Chữ dùng chung: nhóm cấu hình "Trang liệu
+  trình (sản phẩm)" (`lt_*`, `[ten]` = tên ngắn). Thiếu dữ liệu ⇒ phần đó ẩn. Hướng dẫn nhập liệu: `docs/huong-dan-tao-lieu-trinh.md`.
+- Tên vấn đề da / hoạt chất in CHỮ HOA theo bản bàn giao (người dùng chốt) — ngoại lệ có chủ đích của UI-2.7.
+- `page.getglowing-micro-peel` chỉ còn bọc hiển thị sản phẩm `settings.lt_page_product` + canonical về URL sản phẩm (link cũ).
+- Preview: sản phẩm mock có `template_suffix` ⇒ `dev-server.js` (`productTpl`) render `product.<suffix>`; `all_products` có trong context.

@@ -1,0 +1,37 @@
+{%- comment -%}
+  lieu_trinh_steps — quy trình trị liệu 1:1, 5 bước dùng chung (settings lt_step_N_*; [ten] = tên ngắn liệu trình).
+  Ảnh bước: ảnh sản phẩm alt [buoc-N] ưu tiên, sau đó ảnh chung lt_step_N_image. Có ít nhất 1 bước có ảnh ⇒ bước thiếu ảnh hiện
+  khung cùng tỉ lệ với icon FA (hàng thẻ cao đều); không bước nào có ảnh ⇒ tất cả chỉ có chữ.
+{%- endcomment -%}
+{%- assign lt_any = false -%}
+{%- if lt_buoc1 != blank or lt_buoc2 != blank or lt_buoc3 != blank or lt_buoc4 != blank or lt_buoc5 != blank -%}{%- assign lt_any = true -%}{%- endif -%}
+{%- if settings.lt_step_1_image != blank or settings.lt_step_2_image != blank or settings.lt_step_3_image != blank or settings.lt_step_4_image != blank or settings.lt_step_5_image != blank -%}{%- assign lt_any = true -%}{%- endif -%}
+{%- assign lt_icons = 'fa-microscope,fa-pump-soap,fa-wand-magic-sparkles,fa-shield-heart,fa-chart-line' | split: ',' -%}
+<section id="service-steps-section" class="lt-section lt-section--white">
+  <div class="container">
+    <header class="lt-head">
+      {%- if settings.lt_steps_eyebrow != blank -%}<p class="lt-eyebrow">{{ settings.lt_steps_eyebrow | replace: '[ten]', lt_short | escape }}</p>{%- endif -%}
+      <h2 class="lt-title">{{ settings.lt_steps_title | replace: '[ten]', lt_short | escape }}</h2>
+    </header>
+    <ol class="lt-steps">
+      {%- for i in (1..5) -%}
+      {%- assign k_img = 'lt_step_' | append: i | append: '_image' -%}
+      {%- assign k_title = 'lt_step_' | append: i | append: '_title' -%}
+      {%- assign k_text = 'lt_step_' | append: i | append: '_text' -%}
+      {%- case i -%}{%- when 1 -%}{%- assign lt_si = lt_buoc1 -%}{%- when 2 -%}{%- assign lt_si = lt_buoc2 -%}{%- when 3 -%}{%- assign lt_si = lt_buoc3 -%}{%- when 4 -%}{%- assign lt_si = lt_buoc4 -%}{%- else -%}{%- assign lt_si = lt_buoc5 -%}{%- endcase -%}
+      {%- if lt_si == blank and settings[k_img] != blank -%}{%- assign lt_si = settings[k_img] -%}{%- endif -%}
+      {%- if settings[k_title] != blank -%}
+      {%- assign lt_st = settings[k_title] | replace: '[ten]', lt_short -%}
+      <li class="lt-card lt-step">
+        {%- if lt_si != blank -%}<div class="lt-media lt-media--4x3"><img src="{{ lt_si | img_url: 'large' }}" alt="{{ lt_st | escape }}" width="1200" height="900" loading="lazy" decoding="async"></div>{%- elsif lt_any -%}{%- assign lt_ix = i | minus: 1 -%}<div class="lt-media lt-media--4x3 lt-media--icon"><i class="fa-solid {{ lt_icons[lt_ix] }}" aria-hidden="true"></i></div>{%- endif -%}
+        <div class="lt-card__body">
+          <span class="lt-num">Bước 0{{ i }}</span>
+          <h3 class="lt-card__title">{{ lt_st | escape }}</h3>
+          {%- if settings[k_text] != blank -%}<p class="lt-card__text">{{ settings[k_text] | replace: '[ten]', lt_short | escape }}</p>{%- endif -%}
+        </div>
+      </li>
+      {%- endif -%}
+      {%- endfor -%}
+    </ol>
+  </div>
+</section>

@@ -1,0 +1,47 @@
+{%- comment -%}
+  lieu_trinh_info — thông tin dịch vụ & đặt lịch: bảng (hình thức · thời gian · liệu trình · giá · địa điểm) từ tag sản phẩm +
+  giá sản phẩm; khối đặt lịch (nút gắn ?handle=<alias> ⇒ trang đặt lịch chọn sẵn liệu trình) + hotline + dòng thương hiệu;
+  thanh đặt lịch bám đáy mobile (lt_sticky_cta).
+{%- endcomment -%}
+{%- assign lt_phone = settings.store_phone -%}
+{%- assign lt_price = lt_product.selected_or_first_available_variant.price | default: lt_product.price -%}
+<section id="service-booking-section" class="lt-section lt-section--white">
+  <div class="container">
+    <div class="lt-info">
+      <div>
+        {%- if settings.lt_info_eyebrow != blank -%}<p class="lt-eyebrow">{{ settings.lt_info_eyebrow | escape }}</p>{%- endif -%}
+        <h2 class="lt-title lt-upper">{{ lt_short | escape }} 1:1</h2>
+        {%- if settings.lt_info_text != blank -%}<p class="lt-lead">{{ settings.lt_info_text | replace: '[ten]', lt_short | escape }}</p>{%- endif -%}
+        <dl class="lt-spec">
+          {%- assign lt_v = lt_hinhthuc | default: settings.lt_info_form_default -%}
+          {%- if lt_v != blank -%}<div class="lt-spec__row"><dt>{{ settings.lt_info_form_label | escape }}</dt><dd>{{ lt_v | escape }}</dd></div>{%- endif -%}
+          {%- if lt_thoigian != blank -%}<div class="lt-spec__row"><dt>{{ settings.lt_info_time_label | escape }}</dt><dd>{{ lt_thoigian | escape }}</dd></div>{%- endif -%}
+          {%- assign lt_v = lt_sobuoi | default: settings.lt_info_sessions_default -%}
+          {%- if lt_v != blank -%}<div class="lt-spec__row"><dt>{{ settings.lt_info_sessions_label | escape }}</dt><dd>{{ lt_v | escape }}</dd></div>{%- endif -%}
+          <div class="lt-spec__row"><dt>{{ settings.lt_info_price_label | escape }}</dt><dd>{% if lt_price > 0 %}<strong>{{ lt_price | money }}</strong>{% else %}{{ settings.lt_info_price_contact | escape }}{% endif %}</dd></div>
+          {%- assign lt_v = lt_diadiem | default: settings.lt_info_place_default -%}
+          {%- if lt_v != blank -%}<div class="lt-spec__row"><dt>{{ settings.lt_info_place_label | escape }}</dt><dd>{{ lt_v | escape }}</dd></div>{%- endif -%}
+        </dl>
+      </div>
+      <div class="lt-booking">
+        <h3 class="lt-booking__title">{{ settings.lt_booking_title | escape }}</h3>
+        <div class="lt-actions">
+          <a href="{{ lt_cta_url | escape }}" class="lt-btn lt-btn--primary"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> {{ lt_cta_text | escape }}</a>
+          {%- if lt_phone != blank -%}<a href="tel:{{ lt_phone | remove: ' ' | remove: '.' }}" class="lt-btn lt-btn--light"><i class="fa-solid fa-phone" aria-hidden="true"></i> {{ lt_phone | escape }}</a>{%- endif -%}
+        </div>
+        {%- if settings.lt_brand_lines != blank -%}
+        <div class="lt-brand">
+          {%- assign lt_lines = settings.lt_brand_lines | newline_to_br | split: '<br />' -%}
+          {%- for lt_l in lt_lines -%}{%- assign lt_l = lt_l | strip -%}{%- if lt_l != blank -%}<p{% if forloop.first %} class="lt-brand__name"{% endif %}>{{ lt_l | escape }}</p>{%- endif -%}{%- endfor -%}
+        </div>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</section>
+{%- if settings.lt_sticky_cta -%}
+<div id="peel-mobile-sticky-cta" class="lt-sticky" aria-hidden="true">
+  {%- if lt_phone != blank -%}<a href="tel:{{ lt_phone | remove: ' ' | remove: '.' }}" class="lt-btn lt-btn--light" tabindex="-1"><i class="fa-solid fa-phone" aria-hidden="true"></i> Hotline</a>{%- endif -%}
+  <a href="{{ lt_cta_url | escape }}" class="lt-btn lt-btn--primary" tabindex="-1"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> {{ lt_cta_text | escape }}</a>
+</div>
+{%- endif -%}

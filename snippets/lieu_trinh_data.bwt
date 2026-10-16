@@ -1,0 +1,64 @@
+{%- comment -%}
+  lieu_trinh_data — đọc dữ liệu 1 liệu trình từ SẢN PHẨM Sapo (biến vào: lt_product). Dùng bởi templates/product.lieu-trinh.bwt
+  và page.getglowing-micro-peel.bwt. Quy ước nhập liệu: docs/huong-dan-tao-lieu-trinh.md (2026-10-17).
+  - Tag khoá:giá trị (giá trị KHÔNG chứa dấu phẩy — Sapo tách tag theo dấu phẩy): nhan, phude, tenngan, tieude, congthuc,
+    hinhthuc, thoigian, sobuoi, diadiem; vande:<handle bài blog vấn đề da>, hoatchat:<handle bài blog hoạt chất> (lặp, theo thứ tự).
+  - Ảnh sản phẩm: alt chứa [banner] / [banner-mobile] / [hero] / [congthuc] / [sanpham] / [buoc-1]…[buoc-5]. Ảnh đầu = ảnh đại diện.
+{%- endcomment -%}
+{%- assign lt_alias = lt_product.alias -%}
+{%- assign lt_name = lt_product.name | default: lt_product.title -%}
+{%- assign lt_nhan = '' -%}{%- assign lt_phude = '' -%}{%- assign lt_tenngan = '' -%}{%- assign lt_tieude = '' -%}{%- assign lt_congthuc = '' -%}
+{%- assign lt_hinhthuc = '' -%}{%- assign lt_thoigian = '' -%}{%- assign lt_sobuoi = '' -%}{%- assign lt_diadiem = '' -%}
+{%- assign lt_vande = '' -%}{%- assign lt_hoatchat = '' -%}
+{%- for lt_tag in lt_product.tags -%}
+  {%- if lt_tag contains ':' -%}
+    {%- assign lt_raw = lt_tag | split: ':' | first -%}
+    {%- assign lt_key = lt_raw | strip | downcase -%}
+    {%- assign lt_val = lt_tag | remove_first: lt_raw | remove_first: ':' | strip -%}
+    {%- case lt_key -%}
+      {%- when 'nhan' -%}{%- assign lt_nhan = lt_val -%}
+      {%- when 'phude' -%}{%- assign lt_phude = lt_val -%}
+      {%- when 'tenngan' -%}{%- assign lt_tenngan = lt_val -%}
+      {%- when 'tieude' -%}{%- assign lt_tieude = lt_val -%}
+      {%- when 'congthuc' -%}{%- assign lt_congthuc = lt_val -%}
+      {%- when 'hinhthuc' -%}{%- assign lt_hinhthuc = lt_val -%}
+      {%- when 'thoigian' -%}{%- assign lt_thoigian = lt_val -%}
+      {%- when 'sobuoi' -%}{%- assign lt_sobuoi = lt_val -%}
+      {%- when 'diadiem' -%}{%- assign lt_diadiem = lt_val -%}
+      {%- when 'vande' -%}{%- assign lt_vande = lt_vande | append: lt_val | append: '|' -%}
+      {%- when 'hoatchat' -%}{%- assign lt_hoatchat = lt_hoatchat | append: lt_val | append: '|' -%}
+    {%- endcase -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- assign lt_short = lt_tenngan | default: lt_name -%}
+{%- assign lt_h1 = lt_tieude | default: lt_name -%}
+
+{%- assign lt_img_banner = '' -%}{%- assign lt_img_banner_m = '' -%}{%- assign lt_img_hero = '' -%}{%- assign lt_img_congthuc = '' -%}{%- assign lt_img_sanpham = '' -%}
+{%- assign lt_buoc1 = '' -%}{%- assign lt_buoc2 = '' -%}{%- assign lt_buoc3 = '' -%}{%- assign lt_buoc4 = '' -%}{%- assign lt_buoc5 = '' -%}
+{%- for lt_im in lt_product.images -%}
+  {%- assign lt_alt = lt_im.alt | downcase -%}
+  {%- if lt_alt contains '[banner-mobile]' -%}{%- assign lt_img_banner_m = lt_im.src -%}
+  {%- elsif lt_alt contains '[banner]' -%}{%- assign lt_img_banner = lt_im.src -%}
+  {%- elsif lt_alt contains '[hero]' -%}{%- assign lt_img_hero = lt_im.src -%}
+  {%- elsif lt_alt contains '[congthuc]' -%}{%- assign lt_img_congthuc = lt_im.src -%}
+  {%- elsif lt_alt contains '[sanpham]' -%}{%- assign lt_img_sanpham = lt_im.src -%}
+  {%- elsif lt_alt contains '[buoc-1]' -%}{%- assign lt_buoc1 = lt_im.src -%}
+  {%- elsif lt_alt contains '[buoc-2]' -%}{%- assign lt_buoc2 = lt_im.src -%}
+  {%- elsif lt_alt contains '[buoc-3]' -%}{%- assign lt_buoc3 = lt_im.src -%}
+  {%- elsif lt_alt contains '[buoc-4]' -%}{%- assign lt_buoc4 = lt_im.src -%}
+  {%- elsif lt_alt contains '[buoc-5]' -%}{%- assign lt_buoc5 = lt_im.src -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- if lt_img_sanpham == blank and lt_product.featured_image.src != blank -%}{%- assign lt_img_sanpham = lt_product.featured_image.src -%}{%- endif -%}
+{%- assign lt_img_tech = lt_img_congthuc | default: lt_img_sanpham -%}
+{%- assign lt_img_side = lt_img_hero | default: lt_img_sanpham -%}
+
+{%- assign lt_cta_base = settings.lt_cta_url | default: '/dat-lich-tu-van' -%}
+{%- if lt_cta_base contains 'http' -%}
+  {%- assign lt_cta_url = lt_cta_base -%}
+{%- elsif lt_cta_base contains '?' -%}
+  {%- assign lt_cta_url = lt_cta_base | append: '&handle=' | append: lt_alias -%}
+{%- else -%}
+  {%- assign lt_cta_url = lt_cta_base | append: '?handle=' | append: lt_alias -%}
+{%- endif -%}
+{%- assign lt_cta_text = settings.lt_cta_text | default: 'ĐẶT LỊCH TƯ VẤN 1:1' -%}

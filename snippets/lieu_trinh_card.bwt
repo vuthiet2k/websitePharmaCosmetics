@@ -1,0 +1,28 @@
+{%- comment -%}
+  lieu_trinh_card — thẻ 1 liệu trình ở danh mục liệu trình (biến vào: lt_product). Ảnh đại diện 1:1 · hãng · tên ngắn (tag tenngan:)
+  · tiêu đề phụ (phude:) · thời gian (thoigian:) · giá · nút Chi tiết + Đặt lịch (?handle=<alias>). 2026-10-17.
+{%- endcomment -%}
+{%- include 'lieu_trinh_data' -%}
+{%- assign lt_price = lt_product.selected_or_first_available_variant.price | default: lt_product.price -%}
+<article class="lt-card lt-pcard">
+  <a href="{{ lt_product.url }}" class="lt-pcard__media lt-media lt-media--1x1" tabindex="-1" aria-hidden="true">
+    {%- if lt_product.featured_image.src != blank -%}
+    <img src="{{ lt_product.featured_image.src | img_url: 'large' }}" alt="{{ lt_short | escape }}" width="480" height="480" loading="lazy" decoding="async">
+    {%- else -%}<i class="fa-solid fa-spa" aria-hidden="true"></i>{%- endif -%}
+  </a>
+  <div class="lt-card__body lt-pcard__body">
+    {%- assign lt_kicker = lt_product.vendor -%}
+    {%- if lt_kicker == blank or lt_kicker == 'Skin Health Beauty' -%}{%- assign lt_kicker = lt_product.type -%}{%- endif -%}
+    {%- if lt_kicker != blank -%}<p class="lt-eyebrow">{{ lt_kicker | escape }}</p>{%- endif -%}
+    <h3 class="lt-pcard__title"><a href="{{ lt_product.url }}">{{ lt_short | escape }}</a></h3>
+    {%- if lt_phude != blank -%}<p class="lt-card__text lt-pcard__sub">{{ lt_phude | escape }}</p>{%- endif -%}
+    <div class="lt-pcard__meta">
+      {%- if lt_thoigian != blank -%}<span><i class="fa-solid fa-clock" aria-hidden="true"></i> {{ lt_thoigian | escape }}</span>{%- endif -%}
+      <strong>{% if lt_price > 0 %}{{ lt_price | money }}{% else %}{{ settings.lt_info_price_contact | escape }}{% endif %}</strong>
+    </div>
+    <div class="lt-pcard__actions">
+      <a href="{{ lt_product.url }}" class="lt-btn lt-btn--light">{{ settings.lt_card_view_text | default: 'Chi tiết' | escape }}</a>
+      <a href="{{ lt_cta_url | escape }}" class="lt-btn lt-btn--primary">{{ settings.lt_card_book_text | default: 'Đặt lịch' | escape }}</a>
+    </div>
+  </div>
+</article>

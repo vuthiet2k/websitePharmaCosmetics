@@ -1,0 +1,31 @@
+{%- comment -%}
+  lieu_trinh_hero — banner + giới thiệu. Có ảnh [banner] ⇒ dải ảnh toàn ngang (1920×900) rồi phần chữ bên dưới (ảnh có chữ không
+  lặp tiêu đề); không có ⇒ phần chữ 2 cột với ảnh [hero] (hoặc ảnh sản phẩm) bên phải. Giới thiệu = Mô tả ngắn sản phẩm.
+{%- endcomment -%}
+{%- if lt_img_banner != blank -%}
+<section class="lt-hero-banner" aria-label="{{ lt_h1 | escape }}">
+  <picture>
+    {%- if lt_img_banner_m != blank -%}<source media="(max-width: 767px)" srcset="{{ lt_img_banner_m | img_url: '1024x1024' }}">{%- endif -%}
+    <img src="{{ lt_img_banner | img_url: '2048x2048' }}" alt="{{ lt_h1 | escape }}" width="1920" height="900" loading="eager" fetchpriority="high" decoding="async">
+  </picture>
+</section>
+{%- endif -%}
+<section id="service-hero-section" class="lt-intro">
+  <div class="container">
+    <div class="lt-intro__grid{% if lt_img_banner != blank or lt_img_side == blank %} lt-intro__grid--single{% endif %}">
+      <div class="lt-intro__copy">
+        <p class="lt-eyebrow">{{ lt_nhan | default: settings.lt_eyebrow | escape }}</p>
+        <h1 class="lt-intro__title">{{ lt_h1 | escape }}</h1>
+        {%- if lt_phude != blank -%}<p class="lt-intro__subtitle">{{ lt_phude | escape }}</p>{%- endif -%}
+        {%- if lt_product.summary != blank -%}<div class="lt-intro__text lt-rte">{{ lt_product.summary | replace: '<h1', '<h2' | replace: '</h1>', '</h2>' }}</div>{%- endif -%}
+        <div class="lt-actions">
+          <a href="{{ lt_cta_url | escape }}" class="lt-btn lt-btn--primary"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> {{ lt_cta_text | escape }}</a>
+          {%- if settings.lt_cta2_text != blank -%}<a href="#service-concerns-section" class="lt-btn lt-btn--ghost">{{ settings.lt_cta2_text | escape }} <i class="fa-solid fa-arrow-down" aria-hidden="true"></i></a>{%- endif -%}
+        </div>
+      </div>
+      {%- if lt_img_banner == blank and lt_img_side != blank -%}
+      <div class="lt-intro__media"><img src="{{ lt_img_side | img_url: '1024x1024' }}" alt="{{ lt_h1 | escape }}" width="960" height="960" loading="eager" fetchpriority="high" decoding="async"></div>
+      {%- endif -%}
+    </div>
+  </div>
+</section>
