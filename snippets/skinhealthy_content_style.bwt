@@ -25,7 +25,7 @@
       --sh-mono:   'Montserrat', system-ui, sans-serif;
 
       /* spacing */
-      --sh-container: 1280px;
+      --sh-container: var(--pc-container-max, 1280px); /* bí danh của khung chung — .clinerules/01 2.1 */
 
       /* motion */
       --sh-ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -107,15 +107,8 @@
       margin-bottom: 8px;
     }
 
-    .sh-container {
-      max-width: var(--sh-container);
-      margin: 0 auto;
-      padding: 0 40px;
-    }
-
-    @media (max-width: 767px) {
-      .sh-container { padding: 0 20px; }
-    }
+    /* 2026-10-17 (.clinerules/01 2.1, UI-1.2): .sh-container không còn tự đặt bề rộng/lề — markup gắn kèm .container chung
+       (storefront-v3.css: --pc-container-max / --pc-container-gutter). Trước đây 1180px + lề 32–40px ⇒ nội dung SHB thụt 52px so với logo header. */
 
     /* ── SERVICE BASKET BAR ─────────────────────────────── */
     .sh-cart-bar {
@@ -133,8 +126,8 @@
       display: flex;
       align-items: center;
       gap: 20px;
-      padding: 14px 40px;
-      max-width: var(--sh-container);
+      padding: 14px var(--pc-container-gutter, 32px); /* 2026-10-17: cùng khung .container chung */
+      max-width: var(--pc-container-max, 1280px);
       margin: 0 auto;
     }
     .sh-cart-bar__count {
@@ -351,13 +344,7 @@
 {% endif %}
 <style>
   /* Khung SHB đồng bộ với .bodywrap/.container của storefront Pharma. */
-  .pc-clinic-content { --sh-container: 1180px; }
-  .pc-clinic-content .sh-container {
-    max-width: 1180px;
-    width: 100%;
-    padding-left: 32px;
-    padding-right: 32px;
-  }
+  /* bề rộng/lề khung: .container chung (xem ghi chú .sh-container phía trên) */
   .pc-clinic-content .sh-main { padding-top: 0; }
   .pc-clinic-content .sh-hero { margin-top: 0; }
   .pc-clinic-content :is(h1,h2,h3,h4,h5,h6,p,a,button,input,select,textarea,label,span) {
@@ -365,10 +352,8 @@
   }
   .pc-clinic-content :is(h1,h2,h3,h4,h5,h6) { font-weight: 600; letter-spacing: -.01em; }
   .pc-clinic-content .svcs-subnav,
-  .pc-clinic-content .sh-col-sidebar { top: 113px; }
+  .pc-clinic-content .sh-col-sidebar { top: var(--pc-sticky-offset, 44px); } /* 2026-10-17: từng 113px/79px ⇒ hở khe dưới header khi cuộn */
   @media (max-width: 680px) {
-    .pc-clinic-content .sh-container { padding-left: 20px; padding-right: 20px; }
-    .pc-clinic-content .svcs-subnav,
-    .pc-clinic-content .sh-col-sidebar { top: 79px; }
+
   }
 </style>

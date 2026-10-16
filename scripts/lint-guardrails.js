@@ -148,6 +148,33 @@ if (iconViolations.length && !process.argv.includes('--update-baseline')) {
   process.exit(1);
 }
 
+/*
+ * RULE CỨNG UI-1.2 / .clinerules/01 mục 2.1 (2026-10-17): khung nội dung = .container chung. FAIL khi markup tự dựng
+ * khung bằng Tailwind (max-w-4xl…7xl + mx-auto + px-N), hoặc gắn max-w-N / px-N lên chính .container.
+ * Cột đọc hẹp được phép: max-w-* mx-auto KHÔNG kèm px-*, đặt bên trong .container.
+ */
+const frameViolations = [];
+for (const dir of ['snippets', 'templates', 'layouts']) {
+  for (const file of walk(path.join(rootDir, dir))) {
+    const rel = path.relative(rootDir, file).split(path.sep).join('/');
+    if (!/\.bwt$/i.test(rel) || /mops/i.test(rel)) continue;
+    stripComments(fs.readFileSync(file, 'utf8')).split(/\r?\n/).forEach((line, i) => {
+      for (const m of line.matchAll(/class\s*=\s*"([^"{}]*)"/g)) {
+        const t = m[1].split(/\s+/);
+        const hasPx = t.some((c) => /^(sm:|md:|lg:)?px-\d/.test(c));
+        const selfFrame = t.some((c) => /^max-w-(4|5|6|7)xl$|^max-w-screen-/.test(c)) && t.includes('mx-auto') && hasPx;
+        const dirtyContainer = t.includes('container') && (hasPx || t.some((c) => /^max-w-/.test(c)));
+        if (selfFrame || dirtyContainer) frameViolations.push(`${rel}:${i + 1}  ${selfFrame ? 'khung tự dựng' : '.container gắn max-w/px'}: class="${m[1].slice(0, 70)}"`);
+      }
+    });
+  }
+}
+if (frameViolations.length && !process.argv.includes('--update-baseline')) {
+  console.error(`[lint:guardrails] FAIL — ${frameViolations.length} khung tự dựng thay cho .container chung (.clinerules/01 2.1, UI-1.2):`);
+  for (const v of frameViolations.slice(0, 40)) console.error(`  ✗ ${v}`);
+  process.exit(1);
+}
+
 const current = collect();
 const totals = {};
 for (const metrics of Object.values(current)) {
