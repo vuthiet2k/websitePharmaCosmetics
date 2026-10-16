@@ -213,9 +213,17 @@ test('flash sale and featured carousel move, prices and CTA stay readable', asyn
     await expect.poll(() => carousel.evaluate(e => e.swiper.activeIndex)).toBeGreaterThan(0);
     await controls.getByRole('button', { name: 'Sản phẩm trước', exact: true }).click();
     await expect.poll(() => carousel.evaluate(e => e.swiper.activeIndex)).toBe(0);
-    await expect(carousel.locator('.pc-btn--action').first()).toHaveCSS('color', 'rgb(0, 63, 45)');
+    // 2026-10-16: Flash Sale chuyển tông đỏ theo thiết kế (nút viền chữ đỏ, nút Thêm vào giỏ đỏ chữ trắng); Bán chạy giữ xanh.
+    if (selector === '.swiper_sale') {
+      await expect(carousel.locator('.pc-btn--action:not(.add_to_cart)').first()).toHaveCSS('color', 'rgb(225, 29, 42)');
+      await expect(carousel.locator('.pc-btn--action.add_to_cart').first()).toHaveCSS('color', 'rgb(255, 255, 255)');
+    } else {
+      await expect(carousel.locator('.pc-btn--action').first()).toHaveCSS('color', 'rgb(0, 63, 45)');
+    }
   }
-  await expect(page.locator('.pc-flashsale')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await expect(page.locator('.pc-flashsale')).toHaveCSS('background-image', /linear-gradient/);
+  await expect(page.locator('.pc-flashsale__countdown-timer .block-timer b').first()).toHaveCSS('color', 'rgb(255, 255, 255)');
+  await expect(page.locator('.pc-flashsale__title .pc-flashsale__bolt img')).toHaveCSS('animation-name', 'pc-fs-bolt');
   await expect(page.locator('.pc-flashsale__countdown-timer')).not.toContainText('NaN');
 
   const featured = page.locator('.pc-featured-products');
