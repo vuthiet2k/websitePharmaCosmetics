@@ -654,3 +654,9 @@ grep -o '"id"[[:space:]]*:[[:space:]]*"[a-z_]*"' configs/settings_schema.json
 - Font chữ UI chuẩn của storefront, SHB, tài khoản, AI chat và MOPS là **Montserrat**; các alias `--pc-font-*`, `--font-*`, `--f-*`, `--sh-*`, `--chat-font-*` phải trỏ về stack Montserrat/system.
 - Nguồn chữ nội dung chỉ tải một request Montserrat với các weight đang dùng; không khôi phục Inter, Fraunces, Playfair Display, IBM Plex Mono, Roboto hoặc font UI khác.
 - Font icon (Font Awesome, Material Symbols, swiper-icons), logo vector và vùng mã/JSON monospace là ngoại lệ có chủ đích; không dùng selector toàn cục ép font làm hỏng glyph.
+- **Thang cỡ chữ trang chủ (16/10/2026)** — token `--ts-*` khai báo trên `.pc-home-v3` cuối `assets/home-portal-integration.css`
+  (khối `TYPE-SCALE`). Desktop / mobile ≤767px: display (tiêu đề chương SHB) 46/32 · h2 mọi section 32/26 (gồm Flash Sale,
+  "Sản phẩm xem nhiều") · thẻ lớn 24/20 · tiêu đề thẻ 17/16 · tên SP & bài blog nhỏ 15/14 · giá 16/15 · lead 16/15 (weight 400,
+  không dùng 300) · body 14 · phụ 13 · meta 12 · nhãn/eyebrow/NCC 11 (600, chữ hoa) · nút & link hành động 14/13. Heading
+  weight 600 (không dùng 560/650). Khối mới trên trang chủ phải dùng `var(--ts-*)`, không đặt px lẻ (13.5/14.5/18.75…) hay rem
+  (rem nhân `theme_font_scale` ra cỡ lẻ 13.125/12.6px). Kiểm bằng trình duyệt thật: đếm cỡ chữ của mọi text hiển thị ở 1440 và 390px.
