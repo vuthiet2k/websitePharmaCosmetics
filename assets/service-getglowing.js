@@ -1,152 +1,55 @@
 /**
- * assets/service-getglowing.js
- * Script điều phối Trang dịch vụ GetGlowing Micro-Peel chuẩn y khoa.
- * Dự án: Pharma Cosmetics — Skin Health Beauty (Hà Nội).
- * Chức năng:
- *  1. Tagged Image Hydration: Bóc tách ảnh từ page.content qua Alt Text ([hero-desktop], [concern-1]..[concern-5], [product-kit], cases).
- *  2. Accordion FAQ: Mở/đóng các câu hỏi thường gặp mượt mà.
- *  3. Mobile Sticky CTA: Hiển thị thanh đặt lịch cố định bám đáy khi cuộn qua banner.
- *  4. Smooth scroll: Điều hướng êm tới các phân đoạn mục tiêu.
+ * assets/service-getglowing.js — Trang dịch vụ GetGlowing Micro-Peel.
+ * 2026-10-17: ảnh/chữ giờ render server-side từ settings gg_* (bỏ cơ chế nạp ảnh bằng JS từ page.content);
+ * FAQ dùng <details> (không cần JS). Còn lại: thanh đặt lịch bám đáy trên mobile + cuộn mượt tới neo.
  */
-
 (function () {
   'use strict';
-
   document.addEventListener('DOMContentLoaded', function () {
-    initTaggedImageHydration();
-    initFaqAccordion();
-    initMobileStickyCta();
+    initStickyCta();
     initSmoothScroll();
   });
 
-  /**
-   * 1. Bóc tách và ánh xạ ảnh từ vùng dữ liệu thô page.content
-   */
-  function initTaggedImageHydration() {
-    var rawContainer = document.getElementById('service-raw-data');
-    if (!rawContainer) return;
-
-    var mapping = [
-      { tag: '[hero-desktop]', targetId: 'hero-banner-img' },
-      { tag: '[concern-1]', targetId: 'concern-img-1' },
-      { tag: '[concern-2]', targetId: 'concern-img-2' },
-      { tag: '[concern-3]', targetId: 'concern-img-3' },
-      { tag: '[concern-4]', targetId: 'concern-img-4' },
-      { tag: '[concern-5]', targetId: 'concern-img-5' },
-      { tag: '[product-kit]', targetId: 'product-kit-img' }
-    ];
-
-    mapping.forEach(function (item) {
-      var sourceImg = rawContainer.querySelector('img[alt*="' + item.tag + '"]');
-      var targetImg = document.getElementById(item.targetId);
-      if (sourceImg && targetImg && sourceImg.src) {
-        targetImg.src = sourceImg.src;
-      }
-    });
-
-    // Xử lý các ca lâm sàng Before/After (nếu có ảnh đã đối soát)
-    var caseMapping = [
-      { tag: '[case-01-before]', imgId: 'case-01-before-img', placeholderId: 'case-01-before-placeholder' },
-      { tag: '[case-01-after]', imgId: 'case-01-after-img', placeholderId: 'case-01-after-placeholder' },
-      { tag: '[case-02-before]', imgId: 'case-02-before-img', placeholderId: 'case-02-before-placeholder' },
-      { tag: '[case-02-after]', imgId: 'case-02-after-img', placeholderId: 'case-02-after-placeholder' }
-    ];
-
-    caseMapping.forEach(function (item) {
-      var sourceImg = rawContainer.querySelector('img[alt*="' + item.tag + '"]');
-      var targetImg = document.getElementById(item.imgId);
-      var placeholder = document.getElementById(item.placeholderId);
-      if (sourceImg && targetImg && sourceImg.src) {
-        targetImg.src = sourceImg.src;
-        targetImg.classList.remove('hidden');
-        if (placeholder) placeholder.style.display = 'none';
-      }
-    });
-  }
-
-  /**
-   * 2. Accordion FAQ
-   */
-  function initFaqAccordion() {
-    var accordion = document.getElementById('peel-faq-accordion');
-    if (!accordion) return;
-
-    var items = accordion.querySelectorAll('.pc-peel-faq-item');
-    items.forEach(function (item) {
-      var btn = item.querySelector('button');
-      var content = item.querySelector('.pc-peel-faq-content');
-      if (!btn || !content) return;
-
-      btn.addEventListener('click', function () {
-        var isExpanded = btn.getAttribute('aria-expanded') === 'true';
-
-        // Đóng các câu hỏi khác
-        items.forEach(function (otherItem) {
-          if (otherItem !== item) {
-            var otherBtn = otherItem.querySelector('button');
-            var otherContent = otherItem.querySelector('.pc-peel-faq-content');
-            if (otherBtn && otherContent) {
-              otherBtn.setAttribute('aria-expanded', 'false');
-              otherContent.classList.add('hidden');
-            }
-          }
-        });
-
-        // Đổi trạng thái câu hỏi hiện tại
-        if (isExpanded) {
-          btn.setAttribute('aria-expanded', 'false');
-          content.classList.add('hidden');
-        } else {
-          btn.setAttribute('aria-expanded', 'true');
-          content.classList.remove('hidden');
-        }
-      });
-    });
-  }
-
-  /**
-   * 3. Mobile Sticky CTA Bar
-   */
-  function initMobileStickyCta() {
-    var stickyBar = document.getElementById('peel-mobile-sticky-cta');
-    var heroSection = document.getElementById('service-hero-section');
-    if (!stickyBar || !heroSection) return;
-
-    function handleScroll() {
-      if (window.innerWidth >= 1024) {
-        stickyBar.classList.remove('is-visible');
-        return;
-      }
-      var heroBottom = heroSection.getBoundingClientRect().bottom;
-      if (heroBottom < 100) {
-        stickyBar.classList.add('is-visible');
-      } else {
-        stickyBar.classList.remove('is-visible');
-      }
+  // Hiện thanh đặt lịch khi đã cuộn qua phần giới thiệu; đặt ngay trên bottom-nav mobile để không chồng lên nhau.
+  function initStickyCta() {
+    var bar = document.getElementById('peel-mobile-sticky-cta');
+    var intro = document.getElementById('service-hero-section');
+    var booking = document.getElementById('service-booking-section');
+    if (!bar || !intro) return;
+    var nav = document.querySelector('.pc-bottom-nav');
+    function place() {
+      // bottom-nav là position:fixed ⇒ offsetParent luôn null; đo trực tiếp kích thước khi đang hiển thị
+      var h = nav && getComputedStyle(nav).display !== 'none' ? nav.getBoundingClientRect().height : 0;
+      bar.style.bottom = h + 'px';
     }
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleScroll, { passive: true });
-    handleScroll();
+    function update() {
+      if (window.innerWidth >= 992) { bar.classList.remove('is-visible'); return; }
+      place();
+      var past = intro.getBoundingClientRect().bottom < 80;
+      var atBooking = booking && booking.getBoundingClientRect().top < window.innerHeight && booking.getBoundingClientRect().bottom > 0;
+      var show = past && !atBooking;
+      bar.classList.toggle('is-visible', show);
+      // nút nổi (liên hệ, lên đầu trang) dịch lên đúng chiều cao thanh để không bị che (UI-7.2)
+      document.body.style.setProperty('--gg-sticky-h', bar.getBoundingClientRect().height + 'px');
+      document.body.classList.toggle('gg-sticky-on', show);
+      bar.setAttribute('aria-hidden', show ? 'false' : 'true');
+      bar.querySelectorAll('a').forEach(function (a) { a.tabIndex = show ? 0 : -1; });
+    }
+    place();
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', function () { place(); update(); }, { passive: true });
+    update();
   }
 
-  /**
-   * 4. Smooth Scroll tới các liên kết neo (#...)
-   */
   function initSmoothScroll() {
     var page = document.getElementById('getglowing-service-page');
     if (!page) return;
-
-    var links = page.querySelectorAll('a[href^="#"]');
-    links.forEach(function (link) {
+    page.querySelectorAll('a[href^="#"]').forEach(function (link) {
       link.addEventListener('click', function (e) {
-        var href = link.getAttribute('href');
-        if (href === '#' || href === '') return;
-        var targetEl = document.querySelector(href);
-        if (targetEl) {
-          e.preventDefault();
-          targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        var target = document.querySelector(link.getAttribute('href'));
+        if (!target) return;
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     });
   }

@@ -1,112 +1,47 @@
 {%- comment -%}
-  snippets/service_getglowing_info_cta.bwt — Module 06: Thông tin Dịch vụ & Sticky CTA Mobile
-  Dự án: Pharma Cosmetics — Skin Health Beauty (Hà Nội).
-  Đảm bảo: Bảng thông số kỹ thuật 5 mục, đồng bộ hotline và địa chỉ từ Thông tin cửa hàng Sapo,
-  tích hợp Sticky CTA Bar cố định bám đáy trên thiết bị di động.
+  service_getglowing_info_cta — 6. Thông tin dịch vụ và đặt lịch: bảng 5 dòng (settings gg_info_N_*), khối "Đặt lịch phân tích
+  da 1:1" + hotline, dòng thương hiệu cuối; thanh đặt lịch bám đáy trên mobile (gg_sticky_cta).
+  2026-10-03: store.phone/store.address không có trên Sapo ⇒ hotline lấy settings.store_phone.
 {%- endcomment -%}
-
-{%- comment -%} 2026-10-03: store.phone/store.address/settings.hotline không có trên Sapo → trước đây luôn hiện số giả 0987.654.321. Dùng hotline/địa chỉ cửa hàng trong cấu hình. {%- endcomment -%}
-{%- assign clinic_phone = settings.store_phone | default: store.phone_number -%}
-{%- assign clinic_address = settings.store_address | default: settings.footer_legal_address | default: 'Skin Health Beauty, Hà Nội' -%}
-{%- assign zalo_contact = settings.contact_zalo | default: clinic_phone | remove: ' ' | remove: '.' -%}
-
-<section id="service-booking-section" class="pc-peel-info py-16 bg-white border-b border-slate-200">
-  <div class="container"><div class="max-w-4xl mx-auto">
-    <div class="text-center mb-10">
-      <span class="text-emerald-700 text-xs font-bold uppercase tracking-wider bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-        Tổng hợp thông số
-      </span>
-      <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 font-heading mt-3">
-        Thông tin dịch vụ &amp; Đặt lịch
-      </h2>
-      <p class="text-slate-600 text-sm sm:text-base mt-2">
-        Liệu trình tái tạo bề mặt đa mục tiêu được cá nhân hóa theo tình trạng và khả năng dung nạp của từng làn da.
-      </p>
-    </div>
-
-    {%- comment -%} Bảng thông số 5 dòng {%- endcomment -%}
-    <div class="rounded-2xl border border-slate-200 overflow-hidden shadow-sm bg-slate-50 mb-8">
-      <div class="divide-y divide-slate-200">
-        <div class="grid grid-cols-1 sm:grid-cols-3 p-4 bg-white hover:bg-slate-50/50 transition-colors">
-          <span class="font-bold text-slate-900 text-sm flex items-center gap-2">
-            <i class="fa-solid fa-hand-holding-medical text-emerald-600" aria-hidden="true"></i> Hình thức
-          </span>
-          <span class="sm:col-span-2 text-slate-700 text-sm font-medium mt-1 sm:mt-0">
-            Trị liệu da cá nhân hóa 1:1
-          </span>
+{%- assign gg_cta_url = settings.gg_cta_url | default: '/dat-lich-tu-van' -%}
+{%- assign gg_phone = settings.store_phone -%}
+<section id="service-booking-section" class="gg-section gg-section--white">
+  <div class="container">
+    <div class="gg-info">
+      <div class="gg-info__main">
+        {%- if settings.gg_info_eyebrow != blank -%}<p class="gg-eyebrow">{{ settings.gg_info_eyebrow | escape }}</p>{%- endif -%}
+        <h2 class="gg-title">{{ settings.gg_info_title | default: 'GetGlowing Micro-Peel 1:1' | escape }}</h2>
+        {%- if settings.gg_info_text != blank -%}<p class="gg-lead">{{ settings.gg_info_text | escape }}</p>{%- endif -%}
+        <dl class="gg-spec">
+          {%- for i in (1..5) -%}
+          {%- assign kl = 'gg_info_' | append: i | append: '_label' -%}{%- assign kv = 'gg_info_' | append: i | append: '_value' -%}
+          {%- if settings[kl] != blank and settings[kv] != blank -%}
+          <div class="gg-spec__row"><dt>{{ settings[kl] | escape }}</dt><dd>{{ settings[kv] | escape }}</dd></div>
+          {%- endif -%}
+          {%- endfor -%}
+        </dl>
+      </div>
+      <div class="gg-booking">
+        <h3 class="gg-booking__title">{{ settings.gg_booking_title | default: 'Đặt lịch phân tích da 1:1' | escape }}</h3>
+        <div class="gg-actions">
+          <a href="{{ gg_cta_url | escape }}" class="gg-btn gg-btn--primary"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> {{ settings.gg_cta_text | default: 'ĐẶT LỊCH TƯ VẤN 1:1' | escape }}</a>
+          {%- if gg_phone != blank -%}
+          <a href="tel:{{ gg_phone | remove: ' ' | remove: '.' }}" class="gg-btn gg-btn--light"><i class="fa-solid fa-phone" aria-hidden="true"></i> {{ gg_phone | escape }}</a>
+          {%- endif -%}
         </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 p-4 bg-white hover:bg-slate-50/50 transition-colors">
-          <span class="font-bold text-slate-900 text-sm flex items-center gap-2">
-            <i class="fa-solid fa-clock text-emerald-600" aria-hidden="true"></i> Thời gian peel
-          </span>
-          <span class="sm:col-span-2 text-slate-700 text-sm font-medium mt-1 sm:mt-0">
-            Khoảng 30 – 60 phút (tùy thuộc phác đồ chỉ định)
-          </span>
+        {%- if settings.gg_brand_lines != blank -%}
+        <div class="gg-brand">
+          {%- assign gg_lines = settings.gg_brand_lines | newline_to_br | split: '<br />' -%}
+          {%- for gg_l in gg_lines -%}{%- assign gg_l = gg_l | strip -%}{%- if gg_l != blank -%}<p{% if forloop.first %} class="gg-brand__name"{% endif %}>{{ gg_l | escape }}</p>{%- endif -%}{%- endfor -%}
         </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 p-4 bg-white hover:bg-slate-50/50 transition-colors">
-          <span class="font-bold text-slate-900 text-sm flex items-center gap-2">
-            <i class="fa-solid fa-user-gear text-emerald-600" aria-hidden="true"></i> Liệu trình
-          </span>
-          <span class="sm:col-span-2 text-slate-700 text-sm font-medium mt-1 sm:mt-0">
-            Cá nhân hóa sau khi chuyên gia soi da &amp; đánh giá lâm sàng
-          </span>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 p-4 bg-white hover:bg-slate-50/50 transition-colors">
-          <span class="font-bold text-slate-900 text-sm flex items-center gap-2">
-            <i class="fa-solid fa-tag text-emerald-600" aria-hidden="true"></i> Giá dịch vụ
-          </span>
-          <span class="sm:col-span-2 text-slate-700 text-sm font-medium mt-1 sm:mt-0">
-            <a href="https://zalo.me/{{ zalo_contact }}" target="_blank" rel="noopener" class="text-emerald-700 font-bold hover:underline">
-              Liên hệ tư vấn chi tiết phác đồ
-            </a>
-          </span>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 p-4 bg-white hover:bg-slate-50/50 transition-colors">
-          <span class="font-bold text-slate-900 text-sm flex items-center gap-2">
-            <i class="fa-solid fa-location-dot text-emerald-600" aria-hidden="true"></i> Địa điểm
-          </span>
-          <span class="sm:col-span-2 text-slate-700 text-sm font-medium mt-1 sm:mt-0">
-            {{ clinic_address }}
-          </span>
-        </div>
+        {%- endif -%}
       </div>
     </div>
-
-    {%- comment -%} Khối CTA Chính {%- endcomment -%}
-    <div class="p-8 rounded-3xl bg-gradient-to-br from-emerald-900 to-slate-950 text-white text-center shadow-xl space-y-4">
-      <h3 class="text-xl sm:text-2xl font-extrabold font-heading text-emerald-300">
-        Sẵn sàng khởi tạo làn da tươi mới rạng rỡ?
-      </h3>
-      <p class="text-slate-300 text-sm max-w-xl mx-auto">
-        Đặt hẹn trực tiếp với chuyên gia Skin Health Beauty để nhận phân tích tình trạng nền da và tư vấn phác đồ GetGlowing Micro-Peel phù hợp nhất.
-      </p>
-      <div class="flex flex-wrap items-center justify-center gap-4 pt-2">
-        <a href="https://zalo.me/{{ zalo_contact }}" target="_blank" rel="noopener"
-          class="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-sm bg-emerald-400 text-slate-950 hover:bg-emerald-300 transition-all shadow-lg shadow-emerald-500/25">
-          <i class="fa-solid fa-calendar-check text-base" aria-hidden="true"></i> ĐẶT LỊCH PHÂN TÍCH DA 1:1
-        </a>
-        <a href="tel:{{ clinic_phone | remove: ' ' | remove: '.' }}"
-          class="inline-flex items-center gap-2 px-6 py-4 rounded-xl font-semibold text-sm bg-white/10 hover:bg-white/15 border border-white/20 transition-all text-white">
-          <i class="fa-solid fa-phone text-emerald-400" aria-hidden="true"></i> Hotline: {{ clinic_phone }}
-        </a>
-      </div>
-    </div>
-
-  </div></div>
-</section>
-
-{%- comment -%} Sticky CTA Bar bám đáy Mobile {%- endcomment -%}
-<div id="peel-mobile-sticky-cta" class="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 lg:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.08)] transform translate-y-full transition-transform duration-300">
-  <div class="flex items-center gap-2">
-    <a href="tel:{{ clinic_phone | remove: ' ' | remove: '.' }}" class="flex-1 py-3 px-3 rounded-xl bg-slate-100 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5 border border-slate-200">
-      <i class="fa-solid fa-phone text-emerald-600" aria-hidden="true"></i> Hotline
-    </a>
-    <a href="https://zalo.me/{{ zalo_contact }}" target="_blank" rel="noopener" class="flex-[2] py-3 px-4 rounded-xl bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20">
-      <i class="fa-solid fa-calendar-check" aria-hidden="true"></i> ĐẶT LỊCH 1:1
-    </a>
   </div>
+</section>
+{%- if settings.gg_sticky_cta -%}
+<div id="peel-mobile-sticky-cta" class="gg-sticky" aria-hidden="true">
+  {%- if gg_phone != blank -%}<a href="tel:{{ gg_phone | remove: ' ' | remove: '.' }}" class="gg-btn gg-btn--light" tabindex="-1"><i class="fa-solid fa-phone" aria-hidden="true"></i> Hotline</a>{%- endif -%}
+  <a href="{{ gg_cta_url | escape }}" class="gg-btn gg-btn--primary" tabindex="-1"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> {{ settings.gg_cta_text | default: 'ĐẶT LỊCH TƯ VẤN 1:1' | escape }}</a>
 </div>
+{%- endif -%}
