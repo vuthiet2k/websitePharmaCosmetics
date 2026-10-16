@@ -256,4 +256,45 @@ linklists['mua-sam-theo-danh-muc'] = { ...linklists['footer-categories'], title:
 // 2026-10-14: settings_data đổi menu chính sang 'menu-header-2026' (menu header mới trên Sapo) — preview dùng lại cây main-menu.
 linklists['menu-header-2026'] = { ...linklists['main-menu'], title: 'Menu header 2026', handle: 'menu-header-2026' };
 
+// 2026-10-16: menu demo cho 2 khối trang chủ (settings.home_ing_menu / home_brand_menu) — mục & thứ tự theo menu
+// "Thành phần" / "Thương hiệu" thật trên pharmacosmetics-vn.com. link.object = danh mục (có ảnh) như Sapo; đọc trễ
+// (getter) vì data/collections.js cũng require file này.
+function objLink(title, url, alias) {
+  const l = link(title, url, alias);
+  Object.defineProperty(l, 'object', { enumerable: true, get: () => require('./collections').collectionsData[alias] || null });
+  return l;
+}
+linklists['mua-sam-theo-thanh-phan'] = { title: 'Mua sắm theo thành phần', handle: 'mua-sam-theo-thanh-phan', links: [
+    objLink('Retinol', '/retinoil', 'retinoil'),
+    objLink('Hyaluronic Acid (HA)', '/hyaluronic-acid-ha', 'hyaluronic-acid-ha'),
+    objLink('Niacinamide (B3)', '/niacinamide-vitamin-b3', 'niacinamide-vitamin-b3'),
+    objLink('Vitamin C', '/vitamin-c', 'vitamin-c'),
+    objLink('Salicylic Acid (BHA)', '/salicylic-acid-bha', 'salicylic-acid-bha'),
+    objLink('AHA (Glycolic Acid)', '/aha', 'aha'),
+    objLink('Azelaic Acid', '/azelaic-acid', 'azelaic-acid'),
+    objLink('Ceramides', '/ceramides', 'ceramides'),
+    objLink('Peptides', '/peptides', 'peptides'),
+    objLink('Tranexamic Acid', '/tranexamic-acid', 'tranexamic-acid'),
+    objLink('Arbutin', '/arbutin', 'arbutin'),
+    objLink('Panthenol (B5)', '/panthenol-b5', 'panthenol-b5'),
+    objLink('Centella Asiatica', '/centella-asiatica', 'centella-asiatica'),
+    objLink('Vitamin E', '/vitamin-e', 'vitamin-e'),
+    objLink('Mandelic Acid', '/mandelic-acid', 'mandelic-acid'),
+    objLink('Retinal', '/retinal', 'retinal'),
+] };
+linklists['thuong-hieu'] = { title: 'Thương hiệu', handle: 'thuong-hieu', links: [
+    objLink('ZO SKIN HEALTH', '/zo-skin-health', 'zo-skin-health'),
+    objLink('IMAGE SKINCARE', '/image-skincare', 'image-skincare'),
+    objLink('SKINCEUTICALS', '/skinceuticals', 'skinceuticals'),
+    objLink('mesoestetic', '/mesoestetic', 'mesoestetic'),
+    objLink('NEOVA SMART SKINCARE', '/neova-smart-skincare', 'neova-smart-skincare'),
+    objLink('GLOWBIOTICS', '/glowbiotics', 'glowbiotics'),
+    objLink('Comfort Zone', '/comfort-zone', 'comfort-zone'),
+    objLink('CHRISTINA', '/christina', 'christina'),
+    objLink('MD: CEUTICALS', '/md-ceuticals', 'md-ceuticals'),
+    objLink('IVATHERM', '/ivatherm', 'ivatherm'),
+    objLink('MARTI DERMA', '/martiderm', 'martiderm'),
+    objLink('TEOXANE', '/teoxane', 'teoxane'),
+] };
+
 module.exports = { linklists };
