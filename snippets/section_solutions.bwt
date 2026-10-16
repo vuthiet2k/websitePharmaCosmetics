@@ -6,13 +6,18 @@
       {%- comment -%}
         2026-10-14 (theo bản sửa trực tiếp trên Sapo): mỗi thẻ ưu tiên ảnh đại diện của danh mục mà link trỏ tới
         (link.object.image → featured_image); danh mục chưa có ảnh thì giữ icon mặc định để không vỡ bố cục.
+        2026-10-16 (người dùng: "kiếm ảnh thực tế vào"): thẻ thành dạng ảnh chụp lớn + tên bên dưới. Danh mục chưa có ảnh ⇒
+        ảnh mặc định của theme assets/home_concern_N.jpg (Pexels, giấy phép dùng thương mại miễn phí) theo THỨ TỰ mục menu
+        tinh-trang-lan-da: 1 Mụn trứng cá · 2 Nám & tàn nhang · 3 Da khô thiếu ẩm · 4 Lão hoá · 5 Dầu thừa · 6 Da nhạy cảm.
+        Đổi thứ tự menu thì nên gắn ảnh cho từng danh mục để ảnh khớp đúng vấn đề. Mục thứ 7 trở đi không có ảnh mặc định ⇒ icon.
       {%- endcomment -%}
       {% for link in sol_ll.links %}
         {%- assign sol_img = link.object.image.src -%}
         {%- if sol_img == blank -%}{%- assign sol_img = link.object.featured_image.src -%}{%- endif -%}
-        <a class="concern" href="{{ link.url | escape }}">
-          {%- if sol_img != blank -%}
-          <img class="concern-img" src="{{ sol_img | img_url: 'compact' }}" alt="{{ link.title | escape }}" width="48" height="48" loading="lazy">
+        {%- if sol_img != blank -%}{%- assign sol_src = sol_img | img_url: 'large' -%}{%- elsif forloop.index <= 6 -%}{%- capture sol_asset -%}home_concern_{{ forloop.index }}.jpg{%- endcapture -%}{%- assign sol_src = sol_asset | asset_url -%}{%- else -%}{%- assign sol_src = '' -%}{%- endif -%}
+        <a class="concern{% if sol_src != blank %} concern--photo{% endif %}" href="{{ link.url | escape }}">
+          {%- if sol_src != blank -%}
+          <span class="concern-media"><img class="concern-img" src="{{ sol_src }}" alt="{{ link.title | escape }}" width="600" height="600" loading="lazy"></span>
           {%- else -%}
           <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
           {%- endif -%}
@@ -53,9 +58,11 @@
           {%- assign sol_handle = settings[col_key] | default: sol_default -%}
           {% assign sol_col = collections[sol_handle] %}
           {% if sol_col.products_count > 0 %}{% assign sol_url = sol_col.url %}{% endif %}
-          <a class="concern" href="{{ sol_url | escape }}">
-            {%- if settings[image] != blank -%}
-            <img class="concern-img" src="{{ settings[image] | img_url: 'compact' }}" alt="{{ settings[label] | escape }}" width="48" height="48" loading="lazy">
+          {%- comment -%} 2026-10-16: không tải ảnh lên ⇒ ảnh mặc định assets/home_concern_N.jpg (cùng thứ tự 6 vấn đề). {%- endcomment -%}
+          {%- if settings[image] != blank -%}{%- assign sol_src = settings[image] | img_url: 'large' -%}{%- else -%}{%- capture sol_asset -%}home_concern_{{ i }}.jpg{%- endcapture -%}{%- assign sol_src = sol_asset | asset_url -%}{%- endif -%}
+          <a class="concern concern--photo" href="{{ sol_url | escape }}">
+            {%- if sol_src != blank -%}
+            <span class="concern-media"><img class="concern-img" src="{{ sol_src }}" alt="{{ settings[label] | escape }}" width="600" height="600" loading="lazy"></span>
             {%- else -%}
             <i class="{{ settings[icon] | default: 'fas fa-spa' | escape }}" aria-hidden="true"></i>
             {%- endif -%}
