@@ -1,0 +1,55 @@
+{%- comment -%}
+  JS carousel dải cột logo .pc-brands (Swiper loop, tự chạy liên tục, mũi tên 2 bên, rê chuột dừng tại chỗ).
+  Include từ snippets/section_brand_marquee.bwt và snippets/section_ingredients.bwt. CSS: assets/home-portal.css (.pc-brands).
+{%- endcomment -%}
+  <script>
+  (function () {
+    // 2026-10-16 (người dùng): bỏ thanh phân trang; giữ mũi tên trước/sau 2 bên; tự chạy LIÊN TỤC như dải chạy ban đầu
+    // (loop + autoplay delay 0 + chuyển động tuyến tính), rê chuột/focus thì dừng tại chỗ, rời ra chạy tiếp.
+    // 2026-10-16: dùng chung cho mọi dải [data-pc-brands] (Thương hiệu + Tìm theo hoạt chất); data-ready chống khởi tạo 2 lần
+    // khi snippet được include ở cả 2 section.
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function initAll() {
+      if (typeof Swiper !== 'function') return;
+      document.querySelectorAll('[data-pc-brands]').forEach(init);
+    }
+    function init(root) {
+      if (root.dataset.ready) return;
+      root.dataset.ready = '1';
+      var vp = root.querySelector('.pc-brands__viewport');
+      var count = vp.querySelectorAll('.pc-brand').length;
+      var swiper = new Swiper(vp, {
+        slidesPerView: 2, spaceBetween: 0, loop: count > 2, loopedSlides: count, speed: reduce ? 400 : 3500,
+        allowTouchMove: true, watchOverflow: true,
+        autoplay: reduce ? false : { delay: 0, disableOnInteraction: false, reverseDirection: root.hasAttribute('data-pc-reverse') },
+        breakpoints: { 576: { slidesPerView: 3 }, 992: { slidesPerView: 4 }, 1200: { slidesPerView: 6 } }
+      });
+      if (!reduce) root.classList.add('pc-brands--marquee');
+      // Dừng đúng vị trí đang chạy: đọc translate hiện tại từ CSS rồi bỏ transition.
+      function freeze() {
+        if (reduce || !swiper.autoplay.running) return;
+        swiper.autoplay.stop();
+        var m = new DOMMatrixReadOnly(getComputedStyle(swiper.wrapperEl).transform);
+        swiper.setTransition(0);
+        swiper.setTranslate(m.m41);
+        swiper.updateProgress(); // cắt transition ⇒ không có transitionEnd: tự bỏ cờ đang trượt để slide tiếp được
+        swiper.animating = false;
+      }
+      function resume() {
+        // Chỉ giữ dừng khi đang rê chuột hoặc focus BÀN PHÍM (bấm chuột vào mũi tên cũng để lại focus — không tính).
+        if (reduce || root.matches(':hover') || root.querySelector(':focus-visible')) return;
+        // Dừng giữa chừng đã cắt transition ⇒ Swiper không nhận transitionEnd nên cờ paused không tự bỏ; bỏ tay rồi chạy tiếp.
+        swiper.autoplay.paused = false;
+        swiper.autoplay.start();
+      }
+      root.addEventListener('mouseenter', freeze);
+      root.addEventListener('mouseleave', resume);
+      root.addEventListener('focusin', function (e) { if (e.target.matches(':focus-visible')) freeze(); });
+      root.addEventListener('focusout', function () { window.setTimeout(resume, 0); });
+      // Mũi tên: chuyển nhanh 1 thương hiệu (không theo tốc độ chạy chậm của dải).
+      root.querySelector('.pc-brands__nav--prev').addEventListener('click', function () { freeze(); swiper.slidePrev(450); });
+      root.querySelector('.pc-brands__nav--next').addEventListener('click', function () { freeze(); swiper.slideNext(450); });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initAll); else initAll();
+  })();
+  </script>

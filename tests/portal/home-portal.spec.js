@@ -24,10 +24,14 @@ test('v3 typography, section order and real destinations', async ({ page }) => {
   expect(ids).toEqual(Array.from({ length: 18 }, (_, i) => settings[`home_section_${i+1}`]).filter(s => s !== 'none'));
   // 2026-10-13: Hero bỏ nút 2 "Chọn theo vấn đề da" (mỗi slide chỉ còn 1 nút) — giữ kiểm tra khối giải pháp.
   await expect(page.locator('.concerns a')).toHaveCount(6);
-  // 2026-10-13: hoạt chất chuyển sang dải chạy .pc-bm--ing — đếm bản đọc được (không tính bản lặp aria-hidden).
-  // 2026-10-16: dữ liệu demo có menu mua-sam-theo-thanh-phan (16 hoạt chất, ảnh danh mục thật) ⇒ mục nào cũng có ảnh.
-  await expect(page.locator('.pc-bm--ing .pc-bm__group:first-child > .pc-bm__item')).toHaveCount(16);
-  await expect(page.locator('.pc-bm--ing .pc-bm__group:first-child > .pc-bm__item .pc-bm__logo--text')).toHaveCount(0);
+  // 2026-10-16: "Tìm theo hoạt chất" dùng chung carousel .pc-brands với Thương hiệu — đếm slide thật (bỏ bản lặp loop của Swiper).
+  // Dữ liệu demo có menu mua-sam-theo-thanh-phan (16 hoạt chất, ảnh danh mục thật) ⇒ mục nào cũng có ảnh + tên dưới ảnh.
+  const ingSlides = page.locator('.pc-brands--ing .pc-brand:not(.swiper-slide-duplicate)');
+  await expect(ingSlides).toHaveCount(16);
+  await expect(ingSlides.locator('.pc-brand__logo img')).toHaveCount(16);
+  await expect(ingSlides.locator('.pc-brand__title')).toHaveCount(16);
+  await expect(page.locator('.pc-brands--ing')).toHaveAttribute('data-ready', '1');
+  await expect(page.locator('.pc-brands--ing .pc-brands__nav')).toHaveCount(2);
   await expect(page.locator('.post-lead')).toHaveAttribute('href', /\S+/);
   expect(errors).toEqual([]);
 });
