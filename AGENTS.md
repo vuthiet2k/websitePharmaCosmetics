@@ -13,7 +13,10 @@ Repo: **websitePharmaCosmetics** — theme giao diện **Sapo Web (.bwt)** cho P
    `configs/`, `assets/`) + self-check trước khi báo hoàn thành.
 3. [`.clinerules/02-du-an-pharma-cosmetics.md`](./.clinerules/02-du-an-pharma-cosmetics.md) — thực tế
    repo: lệnh dev/build/test, quy ước code & commit, giới hạn deploy Vercel, những việc phải tránh.
-4. [`README.md`](./README.md) — tổng quan dự án, cấu trúc thư mục, danh mục tài liệu.
+4. [`.clinerules/03-chuan-giao-dien-ui.md`](./.clinerules/03-chuan-giao-dien-ui.md) — **chuẩn giao diện storefront**
+   (tiêu chí UI-x.y: khung, chữ, màu, nút, thẻ SP, ảnh, header/footer) + công cụ kiểm `npm run audit:ui`
+   (trình duyệt thật 1440/390px). Lệnh `/goal` (`.claude/commands/goal.md`) chạy review + sửa theo bộ rule này.
+5. [`README.md`](./README.md) — tổng quan dự án, cấu trúc thư mục, danh mục tài liệu.
 
 ## Tóm tắt nhanh (không thay thế 2 file rule ở trên)
 
