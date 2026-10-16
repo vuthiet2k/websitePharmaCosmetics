@@ -39,20 +39,26 @@
 {% capture flash_fallback_url %}/{{ settings.home_flashsale_collection }}{% endcapture %}
 {% assign flash_collection_url = flash_collection.url | default: flash_fallback_url %}
 {% assign count = collections[settings.home_flashsale_collection].products_count %}
+{%- assign pc_fs_viewall = settings.home_flashsale_viewall_text | default: 'Xem tất cả' -%}
 <section class="pc-section section--brand section_flash_sale pc-flashsale">
 	<div class="pc-flashsale__body {%if settings.home_flashsale_countdown_enable%}has-deal-time{%endif%}">
 		<div class="pc-flashsale__header">
 			<div class="container">
 				<div class="pc-flashsale__header-inner">
 					<h2 class="pc-flashsale__title">
-						<a href="{{ flash_collection_url | escape }}" title="{{settings.home_flashsale_title}}">
-							<img width="32" height="32" alt="{{settings.home_flashsale_title}}" src="{{'flash_-1.png' | asset_url}}">
-							{{settings.home_flashsale_title}}
+						{%- comment -%} 2026-10-16 (người dùng: thiếu thu hút, thiếu đỏ kích thích): tia sét flash_-1.png có hiệu ứng nháy;
+						  phần chữ settings.home_flashsale_title_hl (mặc định "Flash Sale") tô đỏ, phần còn lại màu thương hiệu. {%- endcomment -%}
+						{%- assign pc_fs_title = settings.home_flashsale_title | escape -%}
+						{%- assign pc_fs_hl = settings.home_flashsale_title_hl | default: 'Flash Sale' | escape -%}
+						{%- capture pc_fs_hl_html -%}<em>{{ pc_fs_hl }}</em>{%- endcapture -%}
+						<a href="{{ flash_collection_url | escape }}" title="{{ pc_fs_title }}">
+							<span class="pc-flashsale__bolt" aria-hidden="true"><img width="32" height="32" alt="" src="{{'flash_-1.png' | asset_url}}"></span>
+							<span class="pc-flashsale__title-text">{%- if pc_fs_hl != blank and pc_fs_title contains pc_fs_hl -%}{{ pc_fs_title | replace_first: pc_fs_hl, pc_fs_hl_html }}{%- else -%}{{ pc_fs_title }}{%- endif -%}</span>
 						</a>
 					</h2>
 					{%if settings.home_flashsale_countdown_enable%}
 					<div class="pc-flashsale__countdown">
-						<div class="pc-flashsale__countdown-label">{{settings.home_flashsale_countdown_title}}</div>
+						<div class="pc-flashsale__countdown-label"><i class="fas fa-stopwatch pc-flashsale__alarm" aria-hidden="true"></i>{{settings.home_flashsale_countdown_title}}</div>
 						<div class="pc-flashsale__countdown-timer" data-countdown="countdown" data-date="{{settings.home_flashsale_countdown_end}}" data-cycle-hours="{{settings.home_flashsale_countdown_cycle_hours | default: 0}}">
 						</div>
 					</div>
@@ -60,8 +66,7 @@
 
 					{% if count > 0 %}
 					<div class="pc-flashsale__viewall sm-hidden">
-						<a href="{{ flash_collection_url | escape }}" title="Xem tất cả" class="ssmore action">Xem tất cả
-							<svg height="64" viewBox="0 0 24 24" width="64" xmlns="http://www.w3.org/2000/svg" data-name="Layer 2"><path d="m22.707 11.293-7-7a1 1 0 0 0 -1.414 1.414l5.293 5.293h-17.586a1 1 0 0 0 0 2h17.586l-5.293 5.293a1 1 0 1 0 1.414 1.414l7-7a1 1 0 0 0 0-1.414z"/></svg></a>
+						<a href="{{ flash_collection_url | escape }}" title="{{ pc_fs_viewall | escape }}" class="ssmore action"><span>{{ pc_fs_viewall | escape }}</span><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg></a>
 					</div>
 					{%endif%}
 				</div>
@@ -106,9 +111,7 @@
 					</svg>
 				</button>
 				<div class="pc-flashsale__viewmore clearfix">
-					<a href="{{ flash_collection_url | escape }}" title="Xem tất cả" class="show-more btn btn-extent frame flexbtn">
-						Xem tất cả <svg height="64" viewBox="0 0 24 24" width="64" xmlns="http://www.w3.org/2000/svg" data-name="Layer 2"><path d="m22.707 11.293-7-7a1 1 0 0 0 -1.414 1.414l5.293 5.293h-17.586a1 1 0 0 0 0 2h17.586l-5.293 5.293a1 1 0 1 0 1.414 1.414l7-7a1 1 0 0 0 0-1.414z"/></svg>
-					</a>
+					<a href="{{ flash_collection_url | escape }}" title="{{ pc_fs_viewall | escape }}" class="pc-flashsale__more"><span>{{ pc_fs_viewall | escape }}</span><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg></a>
 				</div>
 			</div>
 		</div>
