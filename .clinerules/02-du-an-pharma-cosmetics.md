@@ -144,7 +144,13 @@ Bổ sung cho `01-quy-chuan-theme-sapo.md` (quy chuẩn nền tảng Sapo). File
   hàng/cột bootstrap (`.row` âm + `.col` 15px), padding/viền của card, hộp con trong card (ô mã giảm giá, thẻ giai đoạn…).
 - Trên mobile các khối là dải phẳng chạy sát gutter, ngăn nhau bằng đường kẻ `border-top`/khoảng cách dọc — không đóng
   hộp viền + padding ngang. Cột phụ chiếm bề ngang (icon đầu khối, cột số "01") thì ẩn hoặc đưa lên cùng dòng/trên tiêu đề.
-- Desktop/tablet vẫn dùng card như thiết kế; quy tắc này chỉ áp cho màn nhỏ. Mẫu: `assets/page_cart.scss.bwt` (giỏ hàng).
+- Desktop/tablet vẫn dùng card như thiết kế; quy tắc này chỉ áp cho màn nhỏ. Đã áp: giỏ hàng, /tin-tuc (`.pc-nportal`),
+  blog/bài viết (`.pc-vfeat`, `.pc-nbox`, `.pc-art-card`), thông số SP (`.pc-pdp-spec`), kết quả da (`.pc-plan`, các hộp con),
+  đăng nhập (`.pc-auth-shell`), đặt lịch (`.mops-booking-right-box`, `.mops-price-summary`), FAQ (`.pc-faq-item`), bộ lọc tìm kiếm.
+  **Giữ padding** khi khối có nền màu/ảnh mà chữ nằm trên nền (banner CTA, hero, voucher, thân thẻ SP/bài dưới ảnh).
+- `.row` KHÔNG có padding ngang: `vendor_bootstrap.css` (nạp sau) quyết định margin hàng −15 / padding cột 15 ⇒ thêm padding
+  vào `.row` làm mỗi tầng hàng/cột lồng nhau lệch thêm (lỗi cũ ≤480px: +7px/tầng). Kiểm bằng cách đo mép chữ so với mép
+  nội dung `.container` ở 360–390px, không đọc CSS bằng mắt.
 
 ## Header & breadcrumb responsive (chốt 2026-10-14)
 
