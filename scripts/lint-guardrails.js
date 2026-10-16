@@ -68,6 +68,43 @@ function collect() {
   return result;
 }
 
+/*
+ * RULE CỨNG UI-2.9 (2026-10-17, .clinerules/03): cỡ chữ chỉ lấy từ token --fs-* (snippets/design_tokens.bwt).
+ * Cấm font-size / font: shorthand ghi px, rem, pt, hay em phân số (<1) trong theme storefront — luôn FAIL (không
+ * baseline). Cho phép: var(--fs-*) (kể cả fallback bên trong var()), clamp() chỉ gồm var()/vw, 0, inherit, 100%,
+ * em ≥ 1 (icon/mũi tên tỉ lệ theo chữ cha). Ngoại lệ có chủ đích: MOPS admin (layout riêng không nạp design_tokens,
+ * thang Material + bản in hoá đơn dùng pt) và vendor.
+ */
+const FONT_EXEMPT = /(^|\/)(mops[^/]*|page_mops_admin\.scss\.bwt|page\.mops-admin\.bwt|design_tokens\.bwt)$/i;
+function fontHardcodes(rel, source) {
+  const out = [];
+  source.split(/\r?\n/).forEach((line, i) => {
+    const decls = line.match(/(?:font-size\s*:|(?<![\w-])font\s*:)[^;{}"'`]*/gi) || [];
+    for (const d of decls) {
+      const noVar = d.replace(/\/\*.*?(\*\/|$)/g, '').replace(/var\([^()]*(\([^()]*\)[^()]*)*\)/g, ''); // bỏ var(--fs-x, fallback)
+      const value = noVar.replace(/^[^:]*:/, '');
+      const sizePart = /^\s*font-size/i.test(d) ? value : (value.split('/')[0] || '');
+      const hard = /\d*\.?\d+(px|rem|pt)\b/i.test(sizePart) && !/^\s*0(px)?\s*(!important)?\s*$/i.test(sizePart);
+      const fracEm = /(^|[^\d.])0?\.\d+em\b/i.test(sizePart);
+      if (hard || fracEm) out.push(`${rel}:${i + 1}  ${d.trim().slice(0, 90)}`);
+    }
+  });
+  return out;
+}
+const fontViolations = [];
+for (const dir of SCAN_DIRS) {
+  for (const file of walk(path.join(rootDir, dir))) {
+    const rel = path.relative(rootDir, file).split(path.sep).join('/');
+    if (VENDOR.test(rel) || FONT_EXEMPT.test(rel) || !/\.(css|bwt)$/i.test(rel) || /\.js\.bwt$/i.test(rel)) continue;
+    fontViolations.push(...fontHardcodes(rel, fs.readFileSync(file, 'utf8')));
+  }
+}
+if (fontViolations.length && !process.argv.includes('--update-baseline')) {
+  console.error(`[lint:guardrails] FAIL — ${fontViolations.length} cỡ chữ ghi cứng (UI-2.9: dùng var(--fs-*) trong ${TOKEN_FILE}):`);
+  for (const v of fontViolations.slice(0, 60)) console.error(`  ✗ ${v}`);
+  process.exit(1);
+}
+
 const current = collect();
 const totals = {};
 for (const metrics of Object.values(current)) {

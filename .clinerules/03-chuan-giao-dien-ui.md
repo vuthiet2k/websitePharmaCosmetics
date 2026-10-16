@@ -10,7 +10,8 @@ mỗi mục là một **tiêu chí đo được** + **cách kiểm**. Bổ sung 
 phải đạt toàn bộ mục ✱ (tự động) trước khi báo xong; mục ◇ (mắt người) kiểm trên ảnh chụp.
 
 **Công cụ kiểm:** `npm run audit:ui` (`scripts/audit-ui.js`, Playwright thật, 1440px + 390px) — chạy trên preview
-local (`npm run preview`) hoặc production (`AUDIT_URL=https://hugo-theme-sept2026-test.vercel.app npm run audit:ui`).
+local (`npm run preview`) hoặc production (`AUDIT_URL=https://hugo-theme-sept2026-test.vercel.app npm run audit:ui`). Lệnh `/goal` (để trống) chạy trọn quy trình review → sửa → deploy theo file này.
+Git Bash trên Windows: đặt `MSYS_NO_PATHCONV=1` khi truyền `AUDIT_PAGES` (đường dẫn `/…` bị đổi thành `C:/Program Files/Git/…`).
 Xuất `test-results/audit-ui/report.json` + ảnh chụp toàn trang; mã lỗi in ra khớp mã tiêu chí bên dưới.
 
 ---
@@ -30,10 +31,13 @@ Xuất `test-results/audit-ui/report.json` + ảnh chụp toàn trang; mã lỗi
 | Mã | Tiêu chí | Kiểm |
 | :-- | :-- | :-- |
 | UI-2.1 ✱ | Font chữ duy nhất **Montserrat** (02 "Font UI chung"). Ngoại lệ: font icon, vùng mã monospace. | `fonts` |
-| UI-2.2 ✱ | Cỡ chữ chỉ lấy từ thang: **10** (đơn vị đồng hồ đếm ngược) · **11** nhãn/eyebrow · **12** meta · **13** phụ · **14** body · **15** tên SP/tiêu đề nhỏ · **16** lead/giá · **17–18** tiêu đề thẻ · **20/24** tiêu đề thẻ lớn · **26/32** tiêu đề section (mobile/desktop) · **36–46** tiêu đề trang/chương. Không cỡ lẻ (13.5, 14.5, 18.75…) và **không dùng `rem`/`em` cho cỡ chữ** — `html{font-size}` nhân `theme_font_scale` sinh cỡ lẻ (13.125, 12.6px). | `oddSizes` |
-| UI-2.3 | Trang chủ dùng token `--ts-*` (khối `TYPE-SCALE` cuối `assets/home-portal-integration.css`); trang khác dùng đúng các giá trị ở UI-2.2. | review code |
+| UI-2.2 ✱ | Cỡ chữ hiển thị chỉ ra các bậc của thang token (desktop / mobile ≤767px): `--fs-3xs` 10 · `--fs-2xs` 11 (nhãn/eyebrow) · `--fs-xs` 12 (meta) · `--fs-sm` 13 (phụ) · `--fs-body` 14 (body, nút) · `--fs-base` 15 (tên SP) · `--fs-md` 16 (lead, giá, input) · `--fs-card` 17/16 (tiêu đề thẻ) · `--fs-lg` 18/17 · `--fs-h4` 20/18 · `--fs-xl` 24/20 (thẻ lớn, h1 SP) · `--fs-h3` 28/24 · `--fs-2xl` 32/26 (tiêu đề section, h1 trang) · `--fs-display` 36/28 · `--fs-3xl` 40/32 · `--fs-hero` 46/32 · `--fs-jumbo` 56/40 · `--fs-giant` 200/100 (số 404). | `oddSizes` |
+| UI-2.3 | Trang chủ dùng `--ts-*` (khối `TYPE-SCALE` cuối `assets/home-portal-integration.css`) — đây là **bí danh vai trò** trỏ về `--fs-*`, không khai báo px. | review code |
 | UI-2.4 | Độ đậm: 400 body · 500 nhấn nhẹ/menu · 600 tiêu đề, nút · 700 số liệu, giá · 800 chỉ cho nhấn khuyến mãi (Flash Sale). Không 300, không 560/650. | review code |
 | UI-2.5 ✱ | Mỗi trang đúng **1 thẻ `<h1>`** hiển thị. | `h1` |
+| UI-2.7 | Tiêu đề (h1–h3, tiêu đề section) **không** `text-transform:uppercase`, viết hoa chữ đầu câu như trang chủ; chữ HOA chỉ cho nhãn/eyebrow 11px và nút phụ nhỏ. Khối chuẩn hoá: `HEADING-SCALE` cuối `assets/storefront-v3.css`. Nội dung nhập Hoa Từng Chữ (vd "Đội Ngũ Chuyên Gia") là dữ liệu — sửa ở nguồn nội dung khi khách đồng ý, không ép bằng CSS. | `heads` ◇ |
+| UI-2.8 | Tailwind CDN `text-xs…text-6xl` đã map về `--fs-*` trong `layouts/theme.bwt`. Núm Admin "Cỡ chữ tổng thể" (`theme_font_scale`) chỉ còn tác động spacing/CSS rem cũ — không dùng nó để chỉnh cỡ chữ. | review code |
+| **UI-2.9 ✱ RULE CỨNG** | **Không ghi cứng cỡ chữ.** Mọi `font-size` và phần cỡ của `font:` shorthand trong `assets/`, `snippets/`, `layouts/`, `templates/` (kể cả `style=""` inline, chuỗi HTML trong JS của template) phải là `var(--fs-*)` hoặc `var(--ts-*)`. Cấm px / rem / pt / em phân số; `clamp()` chỉ được ghép `var(--fs-*)` với `vw`. Được phép: `0` (mẹo ẩn chữ), `inherit`, `em ≥ 1` (icon/mũi tên tỉ lệ theo chữ cha), fallback bên trong `var(--fs-x, …)`. Cần cỡ mới ⇒ thêm bậc vào `snippets/design_tokens.bwt` (cả bản mobile) và cập nhật UI-2.2, không ghi số tại chỗ. Ngoại lệ có chủ đích: MOPS admin (`layouts/mops-admin.bwt`, `page_mops_admin.scss.bwt`, `mops_admin_*`, `assets/mops-*` — layout riêng không nạp design_tokens, bản in hoá đơn dùng pt) và file vendor. **Cưỡng chế:** `npm run lint:guardrails` (bước đầu của `build:sapo`) FAIL kèm file:dòng. | `lint:guardrails` |
 | UI-2.6 ◇ | Tiêu đề không vỡ 1 chữ mồ côi ở dòng cuối khi tránh được (`text-wrap:balance` cho h1/h2). Tên sản phẩm cắt **2 dòng** gọn (không lộ nửa dòng 3). | ảnh chụp |
 
 ## UI-3. Màu, viền, bo góc, bóng
@@ -57,7 +61,7 @@ Xuất `test-results/audit-ui/report.json` + ảnh chụp toàn trang; mã lỗi
 
 | Mã | Tiêu chí | Kiểm |
 | :-- | :-- | :-- |
-| UI-5.1 ◇ | Một mẫu thẻ SP cho mọi nơi (trang chủ, danh mục, tìm kiếm, liên quan): ảnh tỉ lệ cố định 1:1, NCC 11px chữ hoa, tên 15/14px 600 cắt 2 dòng, giá 16/15px 700 + giá gốc 13px gạch, nút 14/13px. | ảnh chụp |
+| UI-5.1 ◇ | Hai họ thẻ SP, mỗi họ một kiểu: **thẻ trang chủ** (`product_grid_office_sale`, theo thiết kế trang chủ: nút viền, nhãn góc trái) và **thẻ catalog** cho mọi nơi khác (danh mục, PDP "Có thể bạn thích"/"Liên quan", đã xem, tài khoản — theo mockup `design/danh-muc/`: nhãn giảm giá dạng viên đỏ góc trái, nút xanh rừng `#003F2D` bo 8px, giá `#003F2D`). Chung: ảnh tỉ lệ cố định, tên 15/14px 600 cắt đúng 2 dòng, giá 16/15px 700 + giá gốc 13px gạch, nút 14/13px. Khối `PCARD-UNIFY` cuối `assets/storefront-v3.css`. | ảnh chụp |
 | UI-5.2 ◇ | Các thẻ trong một hàng cao bằng nhau; nút bám đáy thẻ thẳng hàng. | ảnh chụp |
 | UI-5.3 | Không bịa dữ liệu (đánh giá sao, % đã bán) — thiếu dữ liệu thì ẩn phần tử (02 mục 7). | review |
 
