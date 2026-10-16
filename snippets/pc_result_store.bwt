@@ -71,6 +71,38 @@
         saved: !!this.get('pc_crm_intake_record_id')
       };
     },
+    // 2026-10-16: dựng lại kết quả trên thiết bị từ bản ghi CRM đầy đủ (GAS chỉ trả khi khớp submission_id/session_id
+    // của thiết bị — crm-intake.js getCustomerInfo). Dùng chung trang kết quả + giỏ hàng. resultsData = quiz_results_data.
+    // Trả về true nếu đã ghi được kết quả (sự kiện pc:result-store báo cho các khối đang mở).
+    hydrateFromCrm: function (info, resultsData) {
+      if (!info || !info.stored_in_gas || !info.consultation) return false;
+      resultsData = resultsData || {};
+      var rec = info.consultation;
+      var savedAt = Date.parse(rec.created_at) || Date.now();
+      var sc = (rec.scores && typeof rec.scores === 'object') ? rec.scores : {};
+      if (info.source === 'ai_skin_scan_camera' && sc.acne) {
+        this.set('pc_skin_scan_result', JSON.stringify({
+          saved_at: savedAt, scores: sc, skin_type: rec.skin_type, skin_age: rec.skin_age, primary_concern: rec.primary_concern,
+          regimen: rec.regimen || [], recommended_products: rec.recommended_products || [], source: 'crm'
+        }));
+      } else {
+        // Khảo sát: scores = { skin_type: 'oily' } (lưu từ trang kết quả) hoặc số điểm theo từng loại da (lưu từ trang chat).
+        var key = (typeof sc.skin_type === 'string' && sc.skin_type !== 'cases' && resultsData[sc.skin_type]) ? sc.skin_type : null;
+        if (!key) {
+          Object.keys(sc).forEach(function (k) {
+            if (k !== 'cases' && resultsData[k] && typeof sc[k] === 'number' && (key === null || sc[k] > sc[key])) key = k;
+          });
+        }
+        if (!key) return false;
+        this.set('pc_quiz_skin_type', key);
+        this.set('pc_quiz_saved_at', String(savedAt));
+      }
+      if (info.record_id) {
+        this.set('pc_crm_intake_record_id', String(info.record_id));
+        this.set('pc_crm_saved_at', new Date(savedAt).toISOString());
+      }
+      return true;
+    },
     clearAll: function () {
       var self = this;
       KEYS.forEach(function (k) { self.remove(k); });

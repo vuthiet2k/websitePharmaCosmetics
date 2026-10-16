@@ -583,6 +583,19 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
   (`var x = {% include %}`) — không bọc `<script>`.
 - Câu chữ cảnh báo: `snippets/quiz_safety_copy.bwt` + field `quiz_*` (Theme Settings, nhóm AI Skin).
 
+## Giỏ hàng — phác đồ theo kết quả da (`snippets/cart_skin_plan.bwt`, chốt 2026-10-16)
+
+- Kết quả da → danh mục/giai đoạn chỉ có **1 nguồn**: `snippets/pc_result_collections.bwt` (`window.PharmaResultCollections`
+  + `window.PharmaSkinPlanMap`), dùng chung trang kết quả và giỏ hàng. Sửa quy tắc giai đoạn/hoạt chất ở đây, không chép lại.
+  Giai đoạn 1 = làm dịu (`skin_result_col_soothing`), 2 = phục hồi (`_barrier`), 3 = theo vấn đề soi da / loại da khảo sát.
+- Nguồn kết quả: `PharmaResultStore.latestResult()` (localStorage `pcr:*`); thiết bị chưa có ⇒ GAS `getCustomerInfo` →
+  `PharmaResultStore.hydrateFromCrm()` (hàm dùng chung); GAS chỉ báo "đã có hồ sơ" ⇒ đổi lời nhắn, không bịa kết quả.
+- Đối chiếu giỏ theo **product id** (SSR `item.product.collections` + `ids` ≤50 SP/danh mục), cập nhật theo sự kiện
+  `ajaxCart`. Nút "Thêm vào giỏ" chỉ khi SP 1 phân loại còn hàng (`/cart/add.js` → `ajaxCart.load()`); còn lại "Xem chi tiết".
+- An toàn: Tier 1 ⇒ chỉ cảnh báo + Zalo, không gợi ý SP; cờ thai kỳ/dị ứng ⇒ ẩn danh mục BHA/Retinoid, cảnh báo SP trong
+  giỏ chứa hoạt chất bị loại (`skin-quiz-engine.isProductAllowed`). Link "giải pháp" = `settings.cart_skin_solution_<loại da>`.
+- Mobile/tablet ≤991px: giỏ → "Thông tin đơn hàng" → khối phác đồ (cột trái `display: contents` + `order`).
+
 ## 9. Cách đọc báo cáo/spec bên ngoài — luôn xác minh, không copy số liệu
 
 Kiểm chứng 16/09/2026 với báo cáo "Báo Cáo Kiểm Thử UI_UX & Đối Chiếu Snippets Codebase - Hugo Theme

@@ -58,49 +58,9 @@
   ];
   window.PharmaQuizResultsData = {% include 'quiz_results_data' %};
   window.PharmaQuizSafetyCopy = {% include 'quiz_safety_copy' %};
-  {%- comment -%}
-    2026-10-09: 8 danh mục tự động theo phác đồ (tạo trên Sapo 09/10/2026) — badge hoạt chất và 3 thẻ giai
-    đoạn bấm được để xem sản phẩm. Chỉ xuất danh mục có sản phẩm ⇒ danh mục chưa tạo/trống thì link tự ẩn.
-  {%- endcomment %}
-  window.PharmaResultCollections = {
-    {%- assign pc_rc_first = true -%}
-    {%- capture pc_rc_list -%}
-      bha:{{ settings.skin_result_col_bha | default: 'hoat-chat-bha-salicylic' }},
-      niacinamide:{{ settings.skin_result_col_niacinamide | default: 'tinh-chat-niacinamide' }},
-      barrier:{{ settings.skin_result_col_barrier | default: 'phuc-hoi-hang-rao-bao-ve-da' }},
-      hydration:{{ settings.skin_result_col_hydration | default: 'duong-am-phuc-hoi-b5-ha' }},
-      soothing:{{ settings.skin_result_col_soothing | default: 'lam-diu-on-dinh-nen-da' }},
-      retinoid:{{ settings.skin_result_col_retinoid | default: 'retinol-chong-lao-hoa' }},
-      brightening:{{ settings.skin_result_col_brightening | default: 'tri-nam-sang-da-tranexamic-vitc' }},
-      sunscreen:{{ settings.skin_result_col_sunscreen | default: 'kem-chong-nang-pho-rong' }}
-    {%- endcapture -%}
-    {%- assign pc_rc_pairs = pc_rc_list | strip_newlines | remove: ' ' | split: ',' -%}
-    {%- for pc_rc_pair in pc_rc_pairs -%}
-    {%- assign pc_rc_kv = pc_rc_pair | split: ':' -%}
-    {%- assign pc_rc_handle = pc_rc_kv.last -%}
-    {%- assign pc_rc = collections[pc_rc_handle] -%}
-    {%- if pc_rc.products_count > 0 -%}
-    {%- unless pc_rc_first %},{% endunless -%}
-    {%- assign pc_rc_first = false %}
-    {{ pc_rc_kv.first | json }}: { "url": {{ pc_rc.url | json }}, "title": {{ pc_rc.name | json }}, "count": {{ pc_rc.products_count | json }}, "products": [
-      {%- comment -%} 2026-10-10: tối đa 8 SP (bỏ kê toa) mỗi danh mục làm nguồn "Sản phẩm đề xuất" theo đúng hoạt chất/giai đoạn. {%- endcomment -%}
-      {%- assign pc_rcp_n = 0 -%}
-      {%- for product in pc_rc.products limit: 16 -%}
-      {%- if pc_rcp_n < 8 -%}
-      {%- include 'pc_is_rx' -%}
-      {%- unless pc_is_rx -%}
-      {%- if pc_rcp_n > 0 %},{% endif -%}
-      {%- assign pc_rcp_n = pc_rcp_n | plus: 1 %}
-      {%- assign pc_rcp_vid = '' -%}
-      {%- if product.available and product.variants.size == 1 -%}{%- assign pc_rcp_vid = product.variants.first.id -%}{%- endif %}
-      { "name": {{ product.name | json }}, "alias": {{ product.alias | json }}, "url": {{ product.url | json }}, "vendor": {{ product.vendor | json }}, "variant_id": {{ pc_rcp_vid | json }}, "tags": {{ product.tags | json }}, "price": {{ product.price | default: 0 | json }}, "compare_at_price": {{ product.compare_at_price | default: 0 | json }}, "featured_image": {% if product.featured_image.src != blank %}{ "src": {{ product.featured_image.src | img_url: 'large' | json }} }{% else %}null{% endif %} }
-      {%- endunless -%}
-      {%- endif -%}
-      {%- endfor %}
-    ] }
-    {%- endif -%}
-    {%- endfor %}
-  };
+  {%- comment -%} 2026-10-09: badge hoạt chất và 3 thẻ giai đoạn bấm được để xem sản phẩm của 8 danh mục tự động;
+  2026-10-16: tách sang snippets/pc_result_collections.bwt — dùng chung với giỏ hàng (cart_skin_plan). {%- endcomment %}
+  {% include 'pc_result_collections' %}
 </script>
 
 <section class="pc-result-page py-6 sm:py-10 bg-slate-50/50 min-h-screen">
@@ -453,8 +413,10 @@
   } catch (e) {
     /* Safe fallback if storage blocked */
   }
+  // Bảng ánh xạ kết quả → danh mục/giai đoạn dùng chung với giỏ hàng (snippets/pc_result_collections.bwt, 2026-10-16).
+  var planMap = window.PharmaSkinPlanMap;
   // Vấn đề trọng tâm của soi da → nhóm loại da dùng để lọc sản phẩm/bài viết (cùng bảng từ khoá bên dưới).
-  var scanConcernSkin = { acne: 'oily', pores: 'oily', pigmentation: 'pigmentation', wrinkles: 'aging', redness: 'sensitive' };
+  var scanConcernSkin = planMap.concernSkin;
   var scanConcernNames = { acne: 'Mụn & bít tắc', pores: 'Lỗ chân lông & dầu thừa', pigmentation: 'Sắc tố & thâm sạm', wrinkles: 'Nếp nhăn & lão hóa', redness: 'Da đỏ & nhạy cảm' };
   function basisSkin() {
     if (skinScan && skinScan.scores) return scanConcernSkin[skinScan.primary_concern] || 'normal';
@@ -524,48 +486,17 @@
   if (isDemo) showEmptyState();
 
   // ── 2026-10-09: badge hoạt chất / thẻ giai đoạn → danh mục tự động trên Sapo (window.PharmaResultCollections).
-  // Thứ tự quy tắc có chủ ý: "Kem Chống Nắng Vật Lý Dịu Nhẹ" phải ra chống nắng, "Panthenol (Vitamin B5)" ra
-  // phục hồi hàng rào, "Serum Cấp Nước B5" ra cấp ẩm.
+  // 2026-10-16: quy tắc nhận hoạt chất + bảng giai đoạn chuyển sang planMap (dùng chung với giỏ hàng).
   var resultCollections = window.PharmaResultCollections || {};
-  var collectionRules = [
-    ['sunscreen', /chống nắng|spf|broad-spectrum/i],
-    ['bha', /salicylic|bha|azela/i],
-    ['niacinamide', /niacinamide|oil-free|dầu nước|kiềm dầu/i],
-    ['hydration', /hyaluronic|cấp nước|cấp ẩm|khóa ẩm|khoá ẩm/i],
-    ['barrier', /ceramide|centella|rau má|panthenol|phục hồi/i],
-    ['brightening', /tranexamic|vitamin c|nám|sáng da|sắc tố/i],
-    ['retinoid', /retin|peptide|lão hóa|lão hoá/i],
-    ['soothing', /làm dịu|dịu nhẹ|nhạy cảm/i]
-  ];
-  // Danh mục chứa hoạt chất có thể bị loại theo cờ an toàn (thai kỳ, dị ứng nặng) ⇒ không đưa link.
-  var collectionActive = { bha: 'bha', retinoid: 'retinoid' };
   function collectionFor(key) {
     var c = key && resultCollections[key];
     if (!c || !c.url) return null;
-    if (collectionActive[key] && excluded.indexOf(collectionActive[key]) !== -1) return null;
+    if (planMap.guardedActives[key] && excluded.indexOf(planMap.guardedActives[key]) !== -1) return null;
     return c;
   }
-  function collectionKeyForText(text) {
-    for (var i = 0; i < collectionRules.length; i++) {
-      if (collectionRules[i][1].test(text || '')) return collectionRules[i][0];
-    }
-    return null;
-  }
+  function collectionKeyForText(text) { return planMap.keyForText(text); }
   // Giai đoạn 1 = làm dịu, 2 = phục hồi hàng rào, 3 = đặc trị theo vấn đề trọng tâm (soi da) hoặc loại da (khảo sát).
-  var stage3BySkin = { oily: 'bha', combination: 'niacinamide', dry: 'hydration', sensitive: 'sunscreen', normal: 'brightening', pigmentation: 'brightening', aging: 'retinoid' };
-  var stage3ByConcern = { acne: 'bha', pores: 'niacinamide', pigmentation: 'brightening', wrinkles: 'retinoid', redness: 'sunscreen' };
-  function stageCollectionKey(stage) {
-    if (stage === 1) return 'soothing';
-    if (stage === 2) return 'barrier';
-    if (skinScan && skinScan.scores) {
-      // Bản lưu cũ có thể thiếu primary_concern ⇒ lấy chỉ số raw_score cao nhất (cùng cách skin-routine-matcher).
-      var concern = skinScan.primary_concern || Object.keys(skinScan.scores).sort(function (a, b) {
-        return Number(skinScan.scores[b] && skinScan.scores[b].raw_score || 0) - Number(skinScan.scores[a] && skinScan.scores[a].raw_score || 0);
-      })[0];
-      return stage3ByConcern[concern] || 'barrier';
-    }
-    return stage3BySkin[skinType] || 'barrier';
-  }
+  function stageCollectionKey(stage) { return planMap.stageKey(stage, skinScan, skinType); }
   function renderBadge(text, key) {
     var c = collectionFor(key);
     var el = document.createElement(c ? 'a' : 'span');
@@ -1169,30 +1100,8 @@
       if (sessionStorage.getItem('pc_crm_hydrated')) return false;
       sessionStorage.setItem('pc_crm_hydrated', '1');
     } catch (e) { return false; }
-    var rec = info.consultation || {};
-    var savedAt = Date.parse(rec.created_at) || Date.now();
-    var sc = (rec.scores && typeof rec.scores === 'object') ? rec.scores : {};
-    if (info.source === 'ai_skin_scan_camera' && sc.acne) {
-      store.set('pc_skin_scan_result', JSON.stringify({
-        saved_at: savedAt, scores: sc, skin_type: rec.skin_type, skin_age: rec.skin_age, primary_concern: rec.primary_concern,
-        regimen: rec.regimen || [], recommended_products: rec.recommended_products || [], source: 'crm'
-      }));
-    } else {
-      // Khảo sát: scores = { skin_type: 'oily' } (lưu từ trang kết quả) hoặc số điểm theo từng loại da (lưu từ trang chat).
-      var key = (typeof sc.skin_type === 'string' && sc.skin_type !== 'cases' && resultsData[sc.skin_type]) ? sc.skin_type : null;
-      if (!key) {
-        Object.keys(sc).forEach(function (k) {
-          if (k !== 'cases' && resultsData[k] && typeof sc[k] === 'number' && (key === null || sc[k] > sc[key])) key = k;
-        });
-      }
-      if (!key) return false;
-      store.set('pc_quiz_skin_type', key);
-      store.set('pc_quiz_saved_at', String(savedAt));
-    }
-    if (info.record_id) {
-      store.set('pc_crm_intake_record_id', String(info.record_id));
-      store.set('pc_crm_saved_at', new Date(savedAt).toISOString());
-    }
+    // 2026-10-16: phần ghi kết quả chuyển vào PharmaResultStore.hydrateFromCrm (giỏ hàng dùng chung).
+    if (!store.hydrateFromCrm(info, resultsData)) return false;
     window.location.reload();
     return true;
   }

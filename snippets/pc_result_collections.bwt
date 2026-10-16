@@ -1,0 +1,89 @@
+{%- comment -%}
+  pc_result_collections.bwt (2026-10-16) — nguồn DUY NHẤT cho "kết quả da → danh mục sản phẩm", in ra câu lệnh JS
+  (include BÊN TRONG thẻ <script>). Tách từ templates/page.ai-skin-quiz-results.bwt để trang giỏ hàng
+  (snippets/cart_skin_plan.bwt) dùng đúng cùng danh mục + cùng bảng ánh xạ giai đoạn, không chép lại logic.
+  - window.PharmaResultCollections: 8 danh mục tự động theo phác đồ (settings.skin_result_col_*, tạo trên Sapo
+    09/10/2026). Chỉ xuất danh mục có sản phẩm ⇒ danh mục chưa tạo/trống thì mọi link tới nó tự ẩn. Mỗi danh mục
+    kèm tối đa 8 SP (bỏ kê toa) làm nguồn gợi ý.
+  - with_ids: true ⇒ kèm "ids" (id ≤ 50 SP đầu danh mục) để giỏ hàng biết SP trong giỏ thuộc giai đoạn nào.
+  - window.PharmaSkinPlanMap: giai đoạn 1 = làm dịu, 2 = phục hồi hàng rào, 3 = đặc trị theo vấn đề trọng tâm
+    (soi da) hoặc loại da (khảo sát); quy tắc nhận hoạt chất từ nhãn gợi ý → danh mục.
+{%- endcomment -%}
+window.PharmaResultCollections = {
+  {%- assign pc_rc_first = true -%}
+  {%- capture pc_rc_list -%}
+    bha:{{ settings.skin_result_col_bha | default: 'hoat-chat-bha-salicylic' }},
+    niacinamide:{{ settings.skin_result_col_niacinamide | default: 'tinh-chat-niacinamide' }},
+    barrier:{{ settings.skin_result_col_barrier | default: 'phuc-hoi-hang-rao-bao-ve-da' }},
+    hydration:{{ settings.skin_result_col_hydration | default: 'duong-am-phuc-hoi-b5-ha' }},
+    soothing:{{ settings.skin_result_col_soothing | default: 'lam-diu-on-dinh-nen-da' }},
+    retinoid:{{ settings.skin_result_col_retinoid | default: 'retinol-chong-lao-hoa' }},
+    brightening:{{ settings.skin_result_col_brightening | default: 'tri-nam-sang-da-tranexamic-vitc' }},
+    sunscreen:{{ settings.skin_result_col_sunscreen | default: 'kem-chong-nang-pho-rong' }}
+  {%- endcapture -%}
+  {%- assign pc_rc_pairs = pc_rc_list | strip_newlines | remove: ' ' | split: ',' -%}
+  {%- for pc_rc_pair in pc_rc_pairs -%}
+  {%- assign pc_rc_kv = pc_rc_pair | split: ':' -%}
+  {%- assign pc_rc_handle = pc_rc_kv.last -%}
+  {%- assign pc_rc = collections[pc_rc_handle] -%}
+  {%- if pc_rc.products_count > 0 -%}
+  {%- unless pc_rc_first %},{% endunless -%}
+  {%- assign pc_rc_first = false %}
+  {{ pc_rc_kv.first | json }}: { "url": {{ pc_rc.url | json }}, "title": {{ pc_rc.name | json }}, "count": {{ pc_rc.products_count | json }}, "products": [
+    {%- assign pc_rcp_n = 0 -%}
+    {%- for product in pc_rc.products limit: 16 -%}
+    {%- if pc_rcp_n < 8 -%}
+    {%- include 'pc_is_rx' -%}
+    {%- unless pc_is_rx -%}
+    {%- if pc_rcp_n > 0 %},{% endif -%}
+    {%- assign pc_rcp_n = pc_rcp_n | plus: 1 %}
+    {%- assign pc_rcp_vid = '' -%}
+    {%- if product.available and product.variants.size == 1 -%}{%- assign pc_rcp_vid = product.variants.first.id -%}{%- endif %}
+    { "id": {{ product.id | json }}, "name": {{ product.name | json }}, "alias": {{ product.alias | json }}, "url": {{ product.url | json }}, "vendor": {{ product.vendor | json }}, "variant_id": {{ pc_rcp_vid | json }}, "tags": {{ product.tags | json }}, "price": {{ product.price | default: 0 | json }}, "compare_at_price": {{ product.compare_at_price | default: 0 | json }}, "featured_image": {% if product.featured_image.src != blank %}{ "src": {{ product.featured_image.src | img_url: 'large' | json }} }{% else %}null{% endif %} }
+    {%- endunless -%}
+    {%- endif -%}
+    {%- endfor %}
+  ]
+  {%- if with_ids -%}, "ids": [{%- for pc_rc_p in pc_rc.products limit: 50 -%}{{ pc_rc_p.id | json }}{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}]{%- endif %} }
+  {%- endif -%}
+  {%- endfor %}
+};
+// Thứ tự quy tắc có chủ ý: "Kem Chống Nắng Vật Lý Dịu Nhẹ" phải ra chống nắng, "Panthenol (Vitamin B5)" ra
+// phục hồi hàng rào, "Serum Cấp Nước B5" ra cấp ẩm.
+window.PharmaSkinPlanMap = {
+  rules: [
+    ['sunscreen', /chống nắng|spf|broad-spectrum/i],
+    ['bha', /salicylic|bha|azela/i],
+    ['niacinamide', /niacinamide|oil-free|dầu nước|kiềm dầu/i],
+    ['hydration', /hyaluronic|cấp nước|cấp ẩm|khóa ẩm|khoá ẩm/i],
+    ['barrier', /ceramide|centella|rau má|panthenol|phục hồi/i],
+    ['brightening', /tranexamic|vitamin c|nám|sáng da|sắc tố/i],
+    ['retinoid', /retin|peptide|lão hóa|lão hoá/i],
+    ['soothing', /làm dịu|dịu nhẹ|nhạy cảm/i]
+  ],
+  stageKeys: { 1: 'soothing', 2: 'barrier' },
+  stage3BySkin: { oily: 'bha', combination: 'niacinamide', dry: 'hydration', sensitive: 'sunscreen', normal: 'brightening', pigmentation: 'brightening', aging: 'retinoid' },
+  stage3ByConcern: { acne: 'bha', pores: 'niacinamide', pigmentation: 'brightening', wrinkles: 'retinoid', redness: 'sunscreen' },
+  // Vấn đề trọng tâm của soi da → nhóm loại da (lọc sản phẩm/bài viết, chọn hoạt chất gợi ý).
+  concernSkin: { acne: 'oily', pores: 'oily', pigmentation: 'pigmentation', wrinkles: 'aging', redness: 'sensitive' },
+  // Danh mục chứa hoạt chất có thể bị loại theo cờ an toàn (thai kỳ, dị ứng nặng) ⇒ không đưa link.
+  guardedActives: { bha: 'bha', retinoid: 'retinoid' },
+  keyForText: function (text) {
+    for (var i = 0; i < this.rules.length; i++) {
+      if (this.rules[i][1].test(text || '')) return this.rules[i][0];
+    }
+    return null;
+  },
+  // Soi da: bản lưu cũ có thể thiếu primary_concern ⇒ lấy chỉ số raw_score cao nhất (cùng cách skin-routine-matcher).
+  primaryConcern: function (scan) {
+    if (!scan || !scan.scores) return null;
+    return scan.primary_concern || Object.keys(scan.scores).sort(function (a, b) {
+      return Number(scan.scores[b] && scan.scores[b].raw_score || 0) - Number(scan.scores[a] && scan.scores[a].raw_score || 0);
+    })[0];
+  },
+  stageKey: function (stage, scan, skinType) {
+    if (this.stageKeys[stage]) return this.stageKeys[stage];
+    if (scan && scan.scores) return this.stage3ByConcern[this.primaryConcern(scan)] || 'barrier';
+    return this.stage3BySkin[skinType] || 'barrier';
+  }
+};

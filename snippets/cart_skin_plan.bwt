@@ -1,0 +1,422 @@
+{%- comment -%}
+  cart_skin_plan.bwt (2026-10-16) — khối "Phác đồ cho làn da của bạn" ở trang giỏ hàng (templates/cart.bwt).
+  Người dùng yêu cầu: vào giỏ hàng vẫn thấy sản phẩm + thanh toán như cũ, đồng thời đưa lại kết quả sau test
+  (soi da AI / khảo sát chat) để gợi ý giai đoạn & hoạt chất phù hợp từng người; không hardcode, mọi nút phải có
+  chức năng thật trên Sapo.
+  Nguồn dữ liệu (không bịa, không tự chấm lại):
+  - Kết quả: PharmaResultStore (localStorage "pcr:*", snippets/pc_result_store.bwt) — lấy kết quả MỚI NHẤT
+    (latestResult). Thiết bị chưa có ⇒ gọi GAS (crm-intake.js getCustomerInfo): hồ sơ đầy đủ khớp mã thiết bị thì
+    dựng lại kết quả (hydrateFromCrm); chỉ biết "tài khoản đã có hồ sơ" thì đổi lời nhắn mời làm lại.
+  - Giai đoạn / hoạt chất → danh mục: snippets/pc_result_collections.bwt (cùng nguồn trang kết quả).
+  - Cờ an toàn (thai kỳ, dị ứng nặng, Tier 1/2): pc_quiz_result + assets/skin-quiz-engine.js.bwt.
+  - Giỏ: SSR cart.items (kèm danh mục của từng SP) rồi cập nhật theo sự kiện 'ajaxCart' (snippets/ajaxcartfunction.bwt).
+  Chức năng: đối chiếu SP trong giỏ với 3 giai đoạn (đã có / còn thiếu), gợi ý 1 SP thật cho bước thiếu + nút thêm
+  vào giỏ (/cart/add.js → ajaxCart.load), "Xem tất cả" → danh mục, cảnh báo SP trong giỏ chứa hoạt chất bị loại theo
+  cờ an toàn, link hồ sơ da, link "giải pháp" theo vấn đề da (danh mục settings.cart_skin_solution_*).
+  Chữ: settings.cart_skin_* (+ dùng lại skin_plan_*, skin_quiz_profile_source_*, skin_scan_score_*, quiz_*).
+{%- endcomment -%}
+<section class="pc-cart-skin bg-shadow margin-bottom-20" data-cart-skin hidden aria-labelledby="pcCartSkinTitle">
+  <div class="pc-cart-skin__head">
+    <span class="pc-cart-skin__icon" aria-hidden="true"><i class="fas fa-seedling"></i></span>
+    <div class="pc-cart-skin__heading">
+      <h2 id="pcCartSkinTitle" class="pc-cart-skin__title">{{ settings.cart_skin_title | default: 'Phác đồ cho làn da của bạn' | escape }}</h2>
+      <p class="pc-cart-skin__basis" data-cart-skin-basis></p>
+    </div>
+    <a class="pc-cart-skin__profile" href="{{ settings.cart_skin_profile_url | default: '/ai-skin-quiz-results' | escape }}" data-cart-skin-profile hidden>{{ settings.cart_skin_profile_label | default: 'Xem hồ sơ da' | escape }} <i class="fas fa-chevron-right" aria-hidden="true"></i></a>
+  </div>
+
+  <div class="pc-cart-skin__alerts" data-cart-skin-alerts hidden></div>
+
+  <div class="pc-cart-skin__body" data-cart-skin-body hidden>
+    <div class="pc-cart-skin__actives" data-cart-skin-actives hidden>
+      <span class="pc-cart-skin__label">{{ settings.cart_skin_actives_label | default: 'Hoạt chất phù hợp' | escape }}:</span>
+    </div>
+    <ol class="pc-cart-skin__stages" data-cart-skin-stages></ol>
+    <div class="pc-cart-skin__foot">
+      <p class="pc-cart-skin__progress" data-cart-skin-progress></p>
+      <span class="pc-cart-skin__badge"><i class="fas fa-shield-heart" aria-hidden="true"></i> {{ settings.skin_scan_recommendation_badge | default: 'Gợi ý tham khảo' | escape }}</span>
+      <a class="pc-cart-skin__solution" data-cart-skin-solution hidden></a>
+    </div>
+  </div>
+
+  <div class="pc-cart-skin__empty" data-cart-skin-empty hidden>
+    <p class="pc-cart-skin__empty-title">{{ settings.cart_skin_empty_title | default: 'Giỏ hàng đã hợp với làn da của bạn chưa?' | escape }}</p>
+    <p class="pc-cart-skin__empty-text" data-cart-skin-empty-text>{{ settings.cart_skin_empty_text | default: 'Soi da AI hoặc khảo sát da vài phút để nhận phác đồ 3 giai đoạn — giỏ hàng sẽ tự đối chiếu và gợi ý bước còn thiếu.' | escape }}</p>
+    <div class="pc-cart-skin__empty-actions">
+      <a class="pc-cart-skin__btn pc-cart-skin__btn--primary" href="{{ settings.cart_skin_scan_url | default: '/ai-skin-quiz?tab=camera' | escape }}" data-cart-skin-scan><i class="fas fa-camera" aria-hidden="true"></i> {{ settings.cart_skin_scan_label | default: 'Soi da AI' | escape }}</a>
+      <a class="pc-cart-skin__btn" href="{{ settings.cart_skin_quiz_url | default: '/ai-skin-quiz' | escape }}" data-cart-skin-quiz><i class="far fa-comment-dots" aria-hidden="true"></i> {{ settings.cart_skin_quiz_label | default: 'Khảo sát da' | escape }}</a>
+    </div>
+  </div>
+</section>
+{%- capture pc_cs_solutions -%}
+  oily:{{ settings.cart_skin_solution_oily | default: 'giai-phap-mun-trung-ca' }},
+  combination:{{ settings.cart_skin_solution_combination | default: 'giai-phap-kiem-soat-dau-thua' }},
+  dry:{{ settings.cart_skin_solution_dry | default: 'giai-phap-da-kho-thieu-am' }},
+  sensitive:{{ settings.cart_skin_solution_sensitive | default: 'giai-phap-da-nhay-cam' }},
+  pigmentation:{{ settings.cart_skin_solution_pigmentation | default: 'giai-phap-nam-tan-nhang' }},
+  aging:{{ settings.cart_skin_solution_aging | default: 'giai-phap-lao-hoa-da' }}
+{%- endcapture -%}
+{%- assign pc_cs_pairs = pc_cs_solutions | strip_newlines | remove: ' ' | split: ',' -%}
+{%- capture pc_cs_placeholder -%}{% include 'placeholder_img_url' %}{%- endcapture -%}
+<script>
+  window.PharmaQuizResultsData = window.PharmaQuizResultsData || {% include 'quiz_results_data' %};
+  window.PharmaQuizSafetyCopy = window.PharmaQuizSafetyCopy || {% include 'quiz_safety_copy' %};
+  {% include 'pc_result_collections', with_ids: true %}
+  {%- comment -%} SP đang có trong giỏ lúc tải trang: danh mục (handle) + tag để biết thuộc giai đoạn nào / có hoạt chất bị loại không. {%- endcomment %}
+  window.PharmaCartSkinItems = [
+    {%- for item in cart.items -%}
+    { "product_id": {{ item.product.id | json }}, "title": {{ item.product.name | json }}, "url": {{ item.url | json }}, "alias": {{ item.product.alias | json }}, "tags": {{ item.product.tags | json }}, "handles": [{%- for pc_cs_c in item.product.collections -%}{{ pc_cs_c.url | remove: '/' | json }}{%- unless forloop.last -%},{%- endunless -%}{%- endfor -%}] }{%- unless forloop.last -%},{%- endunless -%}
+    {%- endfor -%}
+  ];
+  window.PharmaCartSkinCopy = {
+    basis: {{ settings.cart_skin_basis_text | default: 'Theo kết quả {nguon} ngày {ngay}' | json }},
+    sourceCamera: {{ settings.skin_quiz_profile_source_camera | default: 'soi da AI' | json }},
+    sourceQuiz: {{ settings.skin_quiz_profile_source_quiz | default: 'khảo sát chat' | json }},
+    stageTitles: [
+      {{ settings.skin_plan_stage_1_title | default: 'Làm dịu: làm sạch dịu nhẹ' | json }},
+      {{ settings.skin_plan_stage_2_title | default: 'Phục hồi: củng cố hàng rào da' | json }},
+      {{ settings.skin_plan_stage_3_title | default: 'Chăm sóc chuyên sâu: cân nhắc hoạt chất cùng chuyên gia' | json }}
+    ],
+    concernNames: {
+      acne: {{ settings.skin_scan_score_acne | default: 'Mụn' | json }},
+      pigmentation: {{ settings.skin_scan_score_pigmentation | default: 'Sắc tố' | json }},
+      wrinkles: {{ settings.skin_scan_score_wrinkles | default: 'Nếp nhăn' | json }},
+      redness: {{ settings.skin_scan_score_redness | default: 'Độ đỏ' | json }},
+      pores: {{ settings.skin_scan_score_pores | default: 'Lỗ chân lông' | json }}
+    },
+    inCart: {{ settings.cart_skin_in_cart_label | default: 'Đã có trong giỏ' | json }},
+    missing: {{ settings.cart_skin_missing_label | default: 'Giỏ chưa có sản phẩm cho bước này — gợi ý:' | json }},
+    progress: {{ settings.cart_skin_progress_text | default: 'Giỏ hàng đã có {so}/{tong} giai đoạn trong phác đồ của bạn' | json }},
+    addLabel: {{ settings.cart_skin_add_label | default: 'Thêm vào giỏ' | json }},
+    addedLabel: {{ settings.skin_plan_added_label | default: 'Đã thêm vào giỏ' | json }},
+    detailLabel: {{ settings.skin_plan_detail_label | default: 'Xem chi tiết' | json }},
+    viewAll: {{ settings.skin_plan_view_all_label | default: 'Xem tất cả' | json }},
+    warn: {{ settings.cart_skin_warn_text | default: '“{san_pham}” có hoạt chất cần chuyên gia chỉ định riêng với tình trạng bạn đã khai báo khi khảo sát.' | json }},
+    existsText: {{ settings.cart_skin_exists_text | default: 'Tài khoản của bạn đã có hồ sơ chăm sóc da nhưng thiết bị này chưa có kết quả. Soi da hoặc khảo sát lại để đối chiếu giỏ hàng với phác đồ mới nhất.' | json }},
+    solutionLabel: {{ settings.cart_skin_solution_label | default: 'Khám phá giải pháp' | json }},
+    solutions: {
+      {%- assign pc_cs_first = true -%}
+      {%- for pc_cs_pair in pc_cs_pairs -%}
+      {%- assign pc_cs_kv = pc_cs_pair | split: ':' -%}
+      {%- assign pc_cs_col = collections[pc_cs_kv.last] -%}
+      {%- if pc_cs_kv.last != blank and pc_cs_col.products_count > 0 -%}
+      {%- unless pc_cs_first %},{% endunless -%}{%- assign pc_cs_first = false %}
+      {{ pc_cs_kv.first | json }}: { "url": {{ pc_cs_col.url | json }}, "title": {{ pc_cs_col.name | json }} }
+      {%- endif -%}
+      {%- endfor %}
+    },
+    placeholder: {{ pc_cs_placeholder | strip | json }}
+  };
+</script>
+<script src="{{ 'skin-quiz-engine.js' | asset_url }}"></script>
+<script>
+(function () {
+  'use strict';
+  var root = document.querySelector('[data-cart-skin]');
+  var store = window.PharmaResultStore;
+  var map = window.PharmaSkinPlanMap;
+  if (!root || !store || !map) return;
+  var cols = window.PharmaResultCollections || {};
+  var data = window.PharmaQuizResultsData || {};
+  var safety = window.PharmaQuizSafetyCopy || {};
+  var engine = window.PharmaSkinQuizEngine || null;
+  var copy = window.PharmaCartSkinCopy || {};
+  var money = new Intl.NumberFormat('vi-VN');
+
+  // ── Giỏ hàng: SP → các khoá danh mục phác đồ (soothing/barrier/bha...) ──
+  var handleKey = {};
+  Object.keys(cols).forEach(function (k) { handleKey[String(cols[k].url || '').split('/').pop()] = k; });
+  var productKeys = {};   // product_id → { key: true }
+  var productTags = {};   // product_id → tags (kiểm tra hoạt chất bị loại)
+  function markKey(pid, key) { if (!pid || !key) return; (productKeys[pid] = productKeys[pid] || {})[key] = true; }
+  Object.keys(cols).forEach(function (k) {
+    (cols[k].ids || []).forEach(function (pid) { markKey(String(pid), k); });
+    (cols[k].products || []).forEach(function (p) { markKey(String(p.id), k); productTags[String(p.id)] = p.tags || []; });
+  });
+  (window.PharmaCartSkinItems || []).forEach(function (it) {
+    var pid = String(it.product_id);
+    productTags[pid] = it.tags || [];
+    (it.handles || []).forEach(function (h) { markKey(pid, handleKey[h]); });
+  });
+  // Giỏ lúc tải trang (SSR); sau đó cập nhật theo sự kiện 'ajaxCart' (ajaxCart.load chạy khi DOM ready).
+  var cartItems = (window.PharmaCartSkinItems || []).slice();
+
+  // ── Kết quả da mới nhất trên thiết bị ──
+  function readResult() {
+    var latest = store.latestResult();
+    if (!latest) return null;
+    var r = { source: latest.source, savedAt: latest.saved_at, excluded: [], tier: 0, flags: [], scan: null, skinType: null, caseData: null };
+    if (latest.source === 'camera') {
+      try { r.scan = JSON.parse(store.get('pc_skin_scan_result') || 'null'); } catch (e) {}
+      if (!r.scan || !r.scan.scores) return null;
+      r.concern = map.primaryConcern(r.scan);
+      r.skinKey = map.concernSkin[r.concern] || 'normal';
+      r.title = r.scan.skin_type || (data[r.skinKey] && data[r.skinKey].skin_type) || '';
+    } else {
+      r.skinType = store.get('pc_quiz_skin_type');
+      if (!r.skinType || !data[r.skinType]) return null;
+      var quiz = null;
+      try { quiz = JSON.parse(store.get('pc_quiz_result') || 'null'); } catch (e) {}
+      if (quiz) {
+        r.tier = Number(quiz.tier) || 0;
+        r.flags = quiz.safety_flags || [];
+        r.excluded = quiz.excluded_actives || [];
+        r.caseData = data.cases ? data.cases[quiz.case_id] : null;
+      }
+      r.skinKey = (r.caseData && r.caseData.skin_type_key) || r.skinType;
+      r.title = r.tier === 1 ? (safety.redFlagTitle || '') : ((r.caseData && r.caseData.title) || data[r.skinType].skin_type);
+    }
+    return r;
+  }
+
+  function collectionFor(key, r) {
+    var c = key && cols[key];
+    if (!c || !c.url) return null;
+    if (map.guardedActives[key] && r.excluded.indexOf(map.guardedActives[key]) !== -1) return null;
+    return c;
+  }
+  function allowed(p, r) { return !engine || engine.isProductAllowed(p, r.excluded); }
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function zaloLink() {
+    var a = el('a', 'pc-cart-skin__zalo', safety.zaloLabel || '');
+    a.href = safety.zaloUrl || '/dat-lich-tu-van';
+    a.target = '_blank';
+    a.rel = 'noopener';
+    return a;
+  }
+  function itemPid(it) { return String(it.product_id || (it.product && it.product.id) || ''); }
+
+  function addToCart(p, btn) {
+    btn.disabled = true;
+    window.fetch('/cart/add.js', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'quantity=1&variantId=' + encodeURIComponent(p.variant_id)
+    }).then(function (res) { if (!res.ok) throw new Error('cart'); return res.json(); }).then(function () {
+      btn.textContent = copy.addedLabel;
+      btn.classList.add('is-added');
+      // Dựng lại bảng giỏ + tổng tiền; buildCart bắn 'ajaxCart' ⇒ khối này tự đối chiếu lại.
+      if (window.ajaxCart && typeof window.ajaxCart.load === 'function') window.ajaxCart.load();
+      else loadCart();
+    }).catch(function () { window.location.href = p.url; });
+  }
+
+  function suggestion(p) {
+    var box = el('div', 'pc-cart-skin__pick');
+    box.setAttribute('data-cart-skin-pick', p.alias || '');
+    var media = el('a', 'pc-cart-skin__pick-media');
+    media.href = p.url;
+    var img = el('img');
+    img.src = (p.featured_image && p.featured_image.src) || copy.placeholder;
+    img.alt = p.name || '';
+    img.width = 56; img.height = 56; img.loading = 'lazy';
+    media.appendChild(img);
+    box.appendChild(media);
+    var info = el('div', 'pc-cart-skin__pick-info');
+    var name = el('a', 'pc-cart-skin__pick-name notranslate', p.name || '');
+    name.href = p.url;
+    name.setAttribute('translate', 'no');
+    info.appendChild(name);
+    if (p.price) info.appendChild(el('span', 'pc-cart-skin__pick-price', money.format(p.price) + '₫'));
+    box.appendChild(info);
+    var btn;
+    if (p.variant_id) {
+      btn = el('button', 'pc-cart-skin__pick-btn', copy.addLabel);
+      btn.type = 'button';
+      btn.setAttribute('data-cart-skin-add', String(p.variant_id));
+      btn.addEventListener('click', function () { markKey(String(p.id), btn.getAttribute('data-key')); addToCart(p, btn); });
+    } else {
+      // Nhiều phân loại / hết hàng ⇒ chọn phân loại ở trang chi tiết.
+      btn = el('a', 'pc-cart-skin__pick-btn', copy.detailLabel);
+      btn.href = p.url;
+    }
+    box.appendChild(btn);
+    return box;
+  }
+
+  function renderStages(r) {
+    var list = root.querySelector('[data-cart-skin-stages]');
+    list.innerHTML = '';
+    var regimen = (r.scan && r.scan.regimen) || [];
+    var inCartIds = {};
+    (cartItems || []).forEach(function (it) { inCartIds[itemPid(it)] = it; });
+    var total = 0, covered = 0;
+    [1, 2, 3].forEach(function (stage) {
+      var key = map.stageKey(stage, r.scan, r.skinType || r.skinKey);
+      var guarded = map.guardedActives[key] && r.excluded.indexOf(map.guardedActives[key]) !== -1;
+      var c = collectionFor(key, r);
+      if (!c && !guarded) return; // danh mục chưa tạo/trống ⇒ không có gì để đối chiếu, bỏ bước
+      total++;
+      var li = el('li', 'pc-cart-skin__stage');
+      li.setAttribute('data-cart-skin-stage', String(stage));
+      li.setAttribute('data-stage-key', key);
+      li.appendChild(el('span', 'pc-cart-skin__num', '0' + stage));
+      var body = el('div', 'pc-cart-skin__stage-body');
+      body.appendChild(el('h3', 'pc-cart-skin__stage-title', regimen[stage - 1] || copy.stageTitles[stage - 1]));
+      if (guarded) {
+        body.appendChild(el('p', 'pc-cart-skin__blocked', safety.blockedStepLabel || ''));
+        body.appendChild(zaloLink());
+        li.classList.add('is-blocked');
+        li.appendChild(body);
+        list.appendChild(li);
+        return;
+      }
+      var have = (cartItems || []).filter(function (it) { var k = productKeys[itemPid(it)]; return k && k[key]; });
+      if (have.length) {
+        covered++;
+        li.classList.add('is-done');
+        var ok = el('p', 'pc-cart-skin__have');
+        ok.appendChild(el('i', 'fas fa-circle-check'));
+        ok.firstChild.setAttribute('aria-hidden', 'true');
+        ok.appendChild(document.createTextNode(' ' + copy.inCart + ': '));
+        ok.appendChild(el('strong', 'notranslate', have.map(function (it) { return it.title || it.name || ''; }).join(', ')));
+        body.appendChild(ok);
+      } else {
+        var pick = (c.products || []).filter(function (p) { return !inCartIds[String(p.id)] && allowed(p, r); })[0];
+        if (pick) {
+          body.appendChild(el('p', 'pc-cart-skin__missing', copy.missing));
+          var s = suggestion(pick);
+          var b = s.querySelector('[data-cart-skin-add]');
+          if (b) b.setAttribute('data-key', key);
+          body.appendChild(s);
+        }
+      }
+      var all = el('a', 'pc-cart-skin__all', copy.viewAll + ' (' + c.count + ')');
+      all.href = c.url;
+      all.title = c.title;
+      all.setAttribute('data-cart-skin-view', key);
+      body.appendChild(all);
+      li.appendChild(body);
+      list.appendChild(li);
+    });
+    var progress = root.querySelector('[data-cart-skin-progress]');
+    progress.textContent = total ? copy.progress.replace('{so}', covered).replace('{tong}', total) : '';
+    progress.hidden = !total;
+    list.hidden = !total;
+    return total;
+  }
+
+  function renderActives(r) {
+    var box = root.querySelector('[data-cart-skin-actives]');
+    box.querySelectorAll('.pc-cart-skin__chip').forEach(function (n) { n.remove(); });
+    var rec = ((data[r.skinKey] || {}).recommend || []).filter(function (t) { return !engine || engine.isTextAllowed(t, r.excluded); });
+    rec.forEach(function (text) {
+      var c = collectionFor(map.keyForText(text), r);
+      var chip = el(c ? 'a' : 'span', 'pc-cart-skin__chip', text);
+      if (c) { chip.href = c.url; chip.title = c.title; chip.setAttribute('data-cart-skin-active', map.keyForText(text)); }
+      box.appendChild(chip);
+    });
+    box.hidden = !rec.length;
+  }
+
+  function renderAlerts(r) {
+    var box = root.querySelector('[data-cart-skin-alerts]');
+    box.innerHTML = '';
+    function note(text, mod) {
+      if (!text) return;
+      box.appendChild(el('p', 'pc-cart-skin__alert pc-cart-skin__alert--' + mod, text));
+    }
+    if (r.tier === 1) note(safety.redFlagText, 'danger');
+    else {
+      if (r.tier === 2) note(safety.tier2Note, 'warn');
+      // SP đang trong giỏ chứa hoạt chất bị loại theo cờ an toàn (thai kỳ, dị ứng nặng).
+      if (r.excluded.length && engine) {
+        (cartItems || []).forEach(function (it) {
+          var name = it.title || it.name || '';
+          var alias = String(it.url || '').split('?')[0].split('/').pop();
+          if (!engine.isProductAllowed({ name: name, alias: alias, tags: productTags[itemPid(it)] || [] }, r.excluded)) {
+            var li = el('p', 'pc-cart-skin__alert pc-cart-skin__alert--warn');
+            li.setAttribute('data-cart-skin-warn', itemPid(it));
+            li.textContent = copy.warn.replace('{san_pham}', name);
+            box.appendChild(li);
+          }
+        });
+      }
+    }
+    if (box.children.length) box.appendChild(zaloLink());
+    box.hidden = !box.children.length;
+  }
+
+  var accountHasProfile = false;
+  function render() {
+    var r = readResult();
+    var body = root.querySelector('[data-cart-skin-body]');
+    var empty = root.querySelector('[data-cart-skin-empty]');
+    var basis = root.querySelector('[data-cart-skin-basis]');
+    var profile = root.querySelector('[data-cart-skin-profile]');
+    root.hidden = false;
+    if (!r) {
+      body.hidden = true;
+      root.querySelector('[data-cart-skin-alerts]').hidden = true;
+      profile.hidden = true;
+      basis.textContent = '';
+      if (accountHasProfile) root.querySelector('[data-cart-skin-empty-text]').textContent = copy.existsText;
+      empty.hidden = false;
+      root.setAttribute('data-state', 'empty');
+      return;
+    }
+    empty.hidden = true;
+    profile.hidden = false;
+    var date = r.savedAt ? new Date(r.savedAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+    var line = copy.basis.replace('{nguon}', r.source === 'camera' ? copy.sourceCamera : copy.sourceQuiz)
+      .replace(' ngày {ngay}', date ? ' ngày ' + date : '').replace('{ngay}', date);
+    basis.textContent = '';
+    basis.appendChild(document.createTextNode(line + (r.title ? ': ' : '')));
+    if (r.title) basis.appendChild(el('strong', '', r.title));
+    if (r.concern && copy.concernNames[r.concern]) basis.appendChild(document.createTextNode(' · ' + copy.concernNames[r.concern]));
+    renderAlerts(r);
+    root.setAttribute('data-state', r.tier === 1 ? 'red-flag' : 'plan');
+    if (r.tier === 1) { body.hidden = true; return; } // Tier 1: không gợi ý sản phẩm, chỉ chuyển chuyên gia
+    renderActives(r);
+    var stages = renderStages(r);
+    var sol = root.querySelector('[data-cart-skin-solution]');
+    var s = (copy.solutions || {})[r.skinKey];
+    if (s) {
+      sol.textContent = copy.solutionLabel + ': ' + s.title + ' ';
+      var ic = el('i', 'fas fa-arrow-right');
+      ic.setAttribute('aria-hidden', 'true');
+      sol.appendChild(ic);
+      sol.href = s.url;
+    }
+    sol.hidden = !s;
+    // Không danh mục nào cấu hình/có hàng ⇒ không có gì bấm được, ẩn hẳn thay vì để khung rỗng.
+    body.hidden = !stages && root.querySelector('[data-cart-skin-actives]').hidden && !s;
+  }
+
+  var timer = null;
+  function schedule() { clearTimeout(timer); timer = setTimeout(render, 30); }
+  function loadCart() {
+    return window.fetch('/cart.js', { credentials: 'same-origin' }).then(function (res) { return res.json(); })
+      .then(function (cart) { cartItems = (cart && cart.items) || []; schedule(); }).catch(function () {});
+  }
+  // buildCart (ajaxcartfunction) bắn 'ajaxCart' kèm object giỏ mỗi lần thêm/xoá/đổi số lượng.
+  if (window.jQuery) {
+    window.jQuery(document).on('ajaxCart', function (e, cart) {
+      if (cart && cart.items) { cartItems = cart.items; schedule(); }
+    });
+  }
+  window.addEventListener('pc:result-store', schedule);
+  render();
+
+  // Thiết bị chưa có kết quả ⇒ hỏi GAS (crm-intake.js nạp defer ⇒ chờ DOMContentLoaded).
+  function askCrm() {
+    if (store.latestResult()) return;
+    var crm = window.PharmaCrmIntake;
+    if (!crm || !crm.isReady || !crm.isReady() || typeof crm.getCustomerInfo !== 'function') return;
+    crm.getCustomerInfo().then(function (info) {
+      if (store.latestResult() || !info) return;
+      if (store.hydrateFromCrm(info, data)) return; // pc:result-store ⇒ render lại
+      if (info.profile_exists) { accountHasProfile = true; schedule(); }
+    }).catch(function () {});
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', askCrm);
+  else askCrm();
+})();
+</script>
