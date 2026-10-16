@@ -170,10 +170,12 @@
 				{%- if settings.footer_legal_representative != blank %}
 				<p class="footer-legal__line">Người đại diện pháp luật: {{ settings.footer_legal_representative }}</p>
 				{%- endif %}
-				{%- if settings.footer_bct_url != blank and settings.footer_bct_logo != blank %}
+				{%- comment -%} 2026-10-16: chưa upload footer_bct_logo ⇒ dùng ảnh "Đã thông báo" chính thức do online.gov.vn cấp (BCT yêu cầu dùng đúng ảnh gốc). {%- endcomment -%}
+				{%- if settings.footer_bct_url != blank %}
+				{%- if settings.footer_bct_logo != blank -%}{%- assign pc_bct_logo = settings.footer_bct_logo | img_url: 'large' -%}{%- else -%}{%- assign pc_bct_logo = 'https://fileserver.online.gov.vn/uploads/Resources/iconxacnhan/DaThongBao.png' -%}{%- endif %}
 				<p class="footer-legal__line">
-					<a href="{{ settings.footer_bct_url }}" target="_blank" rel="noopener nofollow" title="Đã thông báo Bộ Công Thương">
-						<img src="{{ settings.footer_bct_logo | img_url: 'large' }}" alt="Đã thông báo Bộ Công Thương" width="130" height="49" loading="lazy">
+					<a href="{{ settings.footer_bct_url | escape }}" target="_blank" rel="noopener nofollow" title="Đã thông báo Bộ Công Thương">
+						<img src="{{ pc_bct_logo }}" alt="Đã thông báo Bộ Công Thương" width="130" height="49" loading="lazy">
 					</a>
 				</p>
 				{%- endif %}
