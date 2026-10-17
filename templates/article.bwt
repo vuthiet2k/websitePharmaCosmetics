@@ -20,7 +20,7 @@
 		<div class="bg_blog">
 			{%- comment -%} 2026-10-03: microdata Article chuyển sang JSON-LD (cùng dữ kiện; dateModified giữ nguồn created_on như bản cũ; ngày ISO 8601 giờ VN +07:00). {%- endcomment -%}
 			{%- assign pc_ld_base = store.url | remove: 'https:' | remove: 'http:' | prepend: 'https:' -%}
-			{%- if article.image.src != blank -%}{%- assign pc_ld_article_img = article.image.src | img_url: 'grande' -%}{%- else -%}{%- assign pc_ld_article_img = 'logo.png' | asset_url -%}{%- endif -%}
+			{%- if article.image.src != blank -%}{%- assign pc_ld_article_img = article.image.src | img_url: 'grande' -%}{%- else -%}{%- assign pc_ld_article_img = 'logo_share.png' | asset_url -%}{%- endif -%}
 			{%- assign pc_ld_article_img = pc_ld_article_img | remove: 'https:' | remove: 'http:' | prepend: 'https:' -%}
 			<script type="application/ld+json">
 			{
@@ -40,7 +40,7 @@
 				{%- if article.created_on != blank %}
 				"dateModified": {{ article.created_on | date: '%Y-%m-%dT%H:%M:%S+07:00' | json }},
 				{%- endif %}
-				"publisher": {"@type": "Organization", "name": {{ store.name | json }}, "logo": {"@type": "ImageObject", "url": {{ 'logo.png' | asset_url | remove: 'https:' | remove: 'http:' | prepend: 'https:' | json }}, "width": 400, "height": 60}}
+				"publisher": {"@type": "Organization", "name": {{ store.name | json }}, "logo": {"@type": "ImageObject", "url": {{ 'logo_share.png' | asset_url | remove: 'https:' | remove: 'http:' | prepend: 'https:' | json }}, "width": 400, "height": 60}}
 			}
 			</script>
 			<article class="article-main">
@@ -266,7 +266,7 @@
 								<div class="item_store">
 									<div class="item_image_store">
 										<div class="image">
-											<img width="100" height="100" class="lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC"  data-src="{{'img_kiemd_icon.jpg' | asset_url }}" alt="{{settings.kiem_duyet_name}}"/>
+											<img width="100" height="100" class="lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC"  data-src="{%- if settings.kiem_duyet_image != blank -%}{{ settings.kiem_duyet_image | img_url: 'small' }}{%- else -%}{{ 'PharmaCosmetics.svg' | asset_url }}{%- endif -%}" alt="{{settings.kiem_duyet_name}}"/>
 										</div>
 									</div>
 									<div class="info_store">

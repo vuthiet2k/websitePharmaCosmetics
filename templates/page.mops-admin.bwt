@@ -8,9 +8,14 @@
 
 <div id="ma-preloader" class="ma-preloader-overlay">
   <div class="ma-loader-mark">
-    <img src="{{ 'logoPC.svg' | asset_url }}" alt="MOPS Admin"
+    {%- comment -%} 2026-10-17: assets/logoPC.svg đã xoá ⇒ dùng logo MOPS tải lên, chưa có thì chữ "M". {%- endcomment -%}
+    {%- if settings.mops_admin_logo != blank -%}
+    <img src="{{ settings.mops_admin_logo | img_url: 'compact' }}" alt="MOPS Admin"
       onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
     <div class="ma-loader-mark-fallback">M</div>
+    {%- else -%}
+    <div class="ma-loader-mark-fallback" style="display:flex">M</div>
+    {%- endif -%}
   </div>
   <div class="ma-loader-bar"><span></span></div>
   <p class="ma-loader-status">Đang kiểm tra phiên đăng nhập...</p>
@@ -262,9 +267,14 @@
 
 <div id="ma-boot-splash" v-if="screen === 'booting'" class="min-h-screen w-full flex flex-col items-center justify-center gap-5">
   <div class="ma-loader-mark">
-    <img src="{{ 'logoPC.svg' | asset_url }}" alt="MOPS Admin"
+    {%- comment -%} 2026-10-17: assets/logoPC.svg đã xoá ⇒ dùng logo MOPS tải lên, chưa có thì chữ "M". {%- endcomment -%}
+    {%- if settings.mops_admin_logo != blank -%}
+    <img src="{{ settings.mops_admin_logo | img_url: 'compact' }}" alt="MOPS Admin"
       onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
     <div class="ma-loader-mark-fallback">M</div>
+    {%- else -%}
+    <div class="ma-loader-mark-fallback" style="display:flex">M</div>
+    {%- endif -%}
   </div>
   <div class="ma-loader-bar"><span></span></div>
   <p class="ma-loader-status">Đang kiểm tra phiên đăng nhập...</p>
@@ -327,10 +337,9 @@
     <header class="ma-launcher__header flex justify-between">
       <div class="ma-launcher__brand">
         {% if settings.mops_admin_logo != blank %}
-        <img src="{{ settings.mops_admin_logo | img_url: 'compact' }}" alt="MOPS Admin" width="40" height="40"
-          onerror="this.onerror=null;this.src='{{ 'logoPC.svg' | asset_url }}';">
+        <img src="{{ settings.mops_admin_logo | img_url: 'compact' }}" alt="MOPS Admin" width="40" height="40">
         {% else %}
-        <img src="{{ 'logoPC.svg' | asset_url }}" alt="MOPS Admin" width="40" height="40">
+        <span class="material-symbols-outlined ma-launcher__brand-icon" aria-hidden="true">admin_panel_settings</span>
         {% endif %}
         <div class="min-w-0">
           <p class="text-label-md font-bold text-on-surface leading-tight truncate">MOPS Admin</p>

@@ -421,6 +421,11 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
   (không lặp lại chính màu nền).
 - Topbar: thông báo phân tách bằng `;`, chuyển dọc 600ms mỗi 4s, dừng khi hover và tắt autoplay theo
   `prefers-reduced-motion`; icon phone/user/chevron dùng SVG inline, kế thừa `currentColor` (trắng).
+- **Ảnh tải lên dạng field thường, không dùng asset trùng tên id (2026-10-17):** `logo.png`, `img_kiemd_icon.jpg`,
+  `popup_banner.jpg`, `logoPC.svg` đã xoá khỏi assets/ (người dùng chốt). Thay bằng `header_logo_image`, `kiem_duyet_image`
+  (trống ⇒ PharmaCosmetics.svg), `popup_banner_image` (trống ⇒ không hiện popup), `mops_admin_logo` (trống ⇒ chữ "M"/icon);
+  logo JSON-LD publisher = `logo_share.png`. Field ảnh dạng "id = tên file" chỉ được dùng khi file mặc định có thật trong
+  assets/ (vd `home_concern_1..6.jpg` của khối Giải pháp) — nếu không `validate:sapo` FAIL.
 - **Logo gốc của dự án = `assets/PharmaCosmetics.svg`** (chốt 2026-10-08): header, drawer mobile và footer
   đều dùng file này khi tắt cờ `header_logo_use_image`/`footer_logo_use_image` (mặc định tắt). Footer nền
   xanh đổi logo sang trắng bằng `.pc-logo-root--inverse` (CSS filter). `snippets/logo-master-svg.bwt` không còn

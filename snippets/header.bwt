@@ -42,8 +42,9 @@
 								assets/logo.png mặc định = Logo Master SVG xuất PNG màu xanh đậm thương hiệu (mainColorDark), nền trong suốt (người dùng chốt: mặc định là SVG).
 								Tắt "Dùng ảnh Logo tải lên" để quay về Logo Master SVG (T-121).
 							{%- endcomment -%}
-							{%- if settings.header_logo_use_image != false -%}
-							<img class="pc-logo-master-img" src="{{ 'logo.png' | asset_url }}" width="313" height="77"
+							{%- comment -%} 2026-10-17: assets/logo.png đã xoá ⇒ ảnh Logo tải lên đổi sang field ảnh thường header_logo_image (img_url); chưa tải ⇒ logo gốc SVG. {%- endcomment -%}
+							{%- if settings.header_logo_use_image and settings.header_logo_image != blank -%}
+							<img class="pc-logo-master-img" src="{{ settings.header_logo_image | img_url: 'large' }}" width="313" height="77"
 								alt="{{ settings.store_name | default: store.name | escape }}" fetchpriority="high">
 							{%- else -%}
 							{%- comment -%} 2026-10-08: logo gốc của dự án = assets/PharmaCosmetics.svg (người dùng chốt, dùng chung header + footer). {%- endcomment -%}
@@ -59,8 +60,8 @@
 								<div class="mb-drawer-topbar md-hidden">
 									<a href="/" class="mb-drawer-logo" title="{{settings.store_name | default: store.name}}">
 										{%- comment -%} 2026-10-07: settings['logo.png'] luôn rỗng (ảnh nằm ở asset, không ở settings) ⇒ drawer luôn rơi về icon; dùng chung cờ với logo header. {%- endcomment -%}
-										{%- if settings.header_logo_use_image != false -%}
-										<img src="{{ 'logo.png' | asset_url }}"
+										{%- if settings.header_logo_use_image and settings.header_logo_image != blank -%}
+										<img src="{{ settings.header_logo_image | img_url: 'large' }}"
 											width="146" height="36"
 											alt="{{settings.store_name | default: store.name}}"
 											onerror="this.onerror=null;this.src='{{ 'PharmaCosmetics.svg' | asset_url }}'">
@@ -76,8 +77,8 @@
 									{%- comment -%} 2026-10-13 (người dùng): thanh menu khi cuộn (.hSticky, desktop) thiếu logo + giỏ hàng ⇒ thêm bản gọn,
 									  chỉ hiện ở trạng thái sticky (storefront-v3.css). Số lượng giỏ dùng chung class .count_item_pr ⇒ ajaxcart tự cập nhật. {%- endcomment -%}
 									<a href="/" class="pc-sticky-logo" title="{{ settings.store_name | default: store.name | escape }}" tabindex="-1">
-										{%- if settings.header_logo_use_image != false -%}
-										<img src="{{ 'logo.png' | asset_url }}" width="313" height="77" alt="{{ settings.store_name | default: store.name | escape }}" loading="lazy">
+										{%- if settings.header_logo_use_image and settings.header_logo_image != blank -%}
+										<img src="{{ settings.header_logo_image | img_url: 'large' }}" width="313" height="77" alt="{{ settings.store_name | default: store.name | escape }}" loading="lazy">
 										{%- else -%}
 										<img class="pc-logo-root" src="{{ 'PharmaCosmetics.svg' | asset_url }}" width="341" height="70" alt="{{ settings.store_name | default: store.name | escape }}" loading="lazy">
 										{%- endif -%}
