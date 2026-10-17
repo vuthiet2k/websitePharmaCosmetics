@@ -1,0 +1,130 @@
+{%- comment -%}
+  dev-preview/templates/blog.truoc-va-sau.bwt (2026-10-17) — TRANG TEST LOCAL: tổng quan mọi ca trong blog Trước & Sau
+  để kiểm dữ liệu nhập (đủ ảnh chưa, nhóm, tóm tắt, tác giả, giao diện bài) trước khi xem /clinical-proof.
+  CHỈ chạy trên preview (dev-server.js đọc thêm thư mục dev-preview/templates/). build / build:sapo chỉ copy
+  assets/configs/layouts/snippets/templates ⇒ KHÔNG có trong gói Sapo; trên Sapo thật blog này dùng giao diện blog mặc định.
+  Dữ liệu từng ca đọc qua snippets/ba_case_source.bwt (cùng logic với /clinical-proof). CSS để inline vì không được đưa vào assets/.
+{%- endcomment -%}
+{%- assign pc_bt_total = 0 -%}{%- assign pc_bt_ok = 0 -%}{%- assign pc_bt_gcount = 0 -%}{%- assign pc_bt_groups = '' -%}
+{%- assign pc_bt_other = settings.clinical_group_other | default: 'Kết quả khác' -%}
+{%- capture pc_bt_cards -%}
+{%- for pc_bt_a in blog.articles -%}
+  {%- assign pc_bt_total = pc_bt_total | plus: 1 -%}
+  {%- assign pc_bs_article = pc_bt_a -%}{%- include 'ba_case_source' -%}
+  {%- assign pc_bt_has = false -%}{%- if pc_bs_before != blank and pc_bs_after != blank -%}{%- assign pc_bt_has = true -%}{%- assign pc_bt_ok = pc_bt_ok | plus: 1 -%}{%- endif -%}
+  {%- assign pc_bt_group = pc_bs_group | default: pc_bt_other -%}
+  {%- assign pc_bt_wrap = '|' | append: pc_bt_group | append: '|' -%}
+  {%- unless pc_bt_groups contains pc_bt_wrap -%}{%- assign pc_bt_groups = pc_bt_groups | append: pc_bt_wrap -%}{%- assign pc_bt_gcount = pc_bt_gcount | plus: 1 -%}{%- endunless -%}
+  {%- assign pc_bt_tagjoin = pc_bt_a.tags | join: ',' -%}
+  {%- assign pc_bt_src = 'nội dung bài' -%}{%- if pc_bt_tagjoin contains 'anhtruoc:' -%}{%- assign pc_bt_src = 'tag anhtruoc:/anhsau:' -%}{%- endif -%}
+  {%- assign pc_bt_sum = pc_bt_a.summary | default: pc_bt_a.excerpt | strip_html | strip -%}
+  <article class="pc-ba-card pc-bt-card{% unless pc_bt_has %} is-missing{% endunless %}" data-bt-group="{{ pc_bt_group | escape }}" data-bt-ok="{{ pc_bt_has }}">
+    {%- if pc_bt_has -%}
+    <div class="pc-ba-pair">
+      <figure class="pc-ba-frame pc-ba-frame--before"><img src="{{ pc_bs_before }}" alt="{{ pc_bt_a.title | escape }} — trước" width="280" height="280" loading="lazy"><figcaption class="pc-ba-badge">TRƯỚC</figcaption></figure>
+      <figure class="pc-ba-frame pc-ba-frame--after"><img src="{{ pc_bs_after }}" alt="{{ pc_bt_a.title | escape }} — sau" width="280" height="280" loading="lazy"><figcaption class="pc-ba-badge pc-ba-badge--after">SAU</figcaption></figure>
+    </div>
+    {%- else -%}
+    <div class="pc-bt-empty"><i class="fa-solid fa-image" aria-hidden="true"></i> Thiếu ảnh — ca KHÔNG hiện ở /clinical-proof</div>
+    {%- endif -%}
+    <p class="pc-bt-card__group">{{ pc_bt_group | upcase }}</p>
+    <h2 class="pc-bt-card__title"><a href="{{ pc_bt_a.url }}">{{ pc_bt_a.title }}</a></h2>
+    {%- capture pc_bt_meta -%}
+      {%- if pc_bs_age != blank -%}<span>{{ pc_bs_age }} tuổi</span>{%- endif -%}
+      {%- if pc_bs_city != blank -%}<span>{{ pc_bs_city }}</span>{%- endif -%}
+      {%- if pc_bs_weeks != blank -%}<span>Theo dõi {{ pc_bs_weeks }} tuần</span>{%- endif -%}
+      {%- if pc_bs_plan != blank -%}<span>{{ pc_bs_plan }}</span>{%- endif -%}
+    {%- endcapture -%}
+    {%- if pc_bt_meta != blank -%}<p class="pc-bt-card__meta">{{ pc_bt_meta }}</p>{%- endif -%}
+    <ul class="pc-bt-checks">
+      <li class="{% if pc_bt_has %}is-ok{% else %}is-bad{% endif %}"><i class="fa-solid {% if pc_bt_has %}fa-circle-check{% else %}fa-circle-xmark{% endif %}" aria-hidden="true"></i> Ảnh trước/sau{% if pc_bt_has %} · từ {{ pc_bt_src }}{% endif %}</li>
+      <li class="{% if pc_bs_group != blank %}is-ok{% else %}is-warn{% endif %}"><i class="fa-solid {% if pc_bs_group != blank %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}" aria-hidden="true"></i> Tag nhom:{% if pc_bs_group == blank %} — vào "{{ pc_bt_other }}"{% endif %}</li>
+      <li class="{% if pc_bt_sum != blank %}is-ok{% else %}is-warn{% endif %}"><i class="fa-solid {% if pc_bt_sum != blank %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}" aria-hidden="true"></i> Tóm tắt</li>
+      <li class="{% if pc_bt_a.author != blank %}is-ok{% else %}is-warn{% endif %}"><i class="fa-solid {% if pc_bt_a.author != blank %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}" aria-hidden="true"></i> Tác giả (chuyên gia){% if pc_bt_a.author != blank %} · {{ pc_bt_a.author }}{% endif %}</li>
+      <li class="{% if pc_bt_a.template_suffix == 'truoc-va-sau' %}is-ok{% else %}is-warn{% endif %}"><i class="fa-solid {% if pc_bt_a.template_suffix == 'truoc-va-sau' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}" aria-hidden="true"></i> Khung giao diện: article{% if pc_bt_a.template_suffix != blank %}.{{ pc_bt_a.template_suffix }}{% endif %}</li>
+      {%- if pc_bs_lt_first != blank -%}<li class="is-ok"><i class="fa-solid fa-link" aria-hidden="true"></i> Liệu trình: {{ pc_bs_lt_first | truncate: 40 }}</li>{%- endif -%}
+    </ul>
+  </article>
+{%- endfor -%}
+{%- endcapture -%}
+{%- assign pc_bt_group_list = pc_bt_groups | split: '|' -%}
+{%- assign pc_bt_missing = pc_bt_total | minus: pc_bt_ok -%}
+
+{% include 'breadcrumb' %}
+<main class="pc-ba pc-bt">
+  <style>
+    /* Inline có chủ đích: trang test local, không được đưa CSS vào assets/ (sẽ bị đóng gói). */
+    .pc-bt-devbar { background: var(--pc-brand-deep); color: white; font-size: var(--fs-sm); padding: 10px 0; }
+    .pc-bt-devbar .container { display: flex; gap: 8px; align-items: center; }
+    .pc-bt-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .pc-bt-stat { padding: 16px 18px; }
+    .pc-bt-stat strong { display: block; font-size: var(--fs-h3); line-height: 1.2; }
+    .pc-bt-stat span { font-size: var(--fs-sm); color: var(--pc-ba-soft); }
+    .pc-bt-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .pc-bt-chip { min-height: 40px; padding: 8px 16px; border: 1px solid var(--pc-ba-line); border-radius: 999px; background: white; color: var(--pc-brand-deep); font-size: var(--fs-sm); font-weight: 600; cursor: pointer; }
+    .pc-bt-chip[aria-pressed="true"] { background: var(--pc-brand-deep); border-color: var(--pc-brand-deep); color: white; }
+    .pc-bt-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+    .pc-bt-card { display: flex; flex-direction: column; padding: 14px; }
+    .pc-bt-card[hidden] { display: none; }
+    .pc-bt-card.is-missing { border-color: var(--pc-danger, #c0392b); }
+    .pc-bt-empty { display: flex; align-items: center; justify-content: center; gap: 8px; aspect-ratio: 2 / 1; padding: 12px; border-radius: 6px; background: #fbeeee; color: var(--pc-danger, #c0392b); font-size: var(--fs-sm); font-weight: 600; text-align: center; }
+    .pc-bt-card__group { margin: 12px 0 2px; font-size: var(--fs-xs); font-weight: 700; letter-spacing: .1em; color: var(--pc-brand-secondary); }
+    .pc-bt-card__title { margin: 0 0 4px; font-size: var(--fs-base); font-weight: 600; line-height: 1.35; }
+    .pc-bt-card__title a { color: var(--pc-brand-deep); }
+    .pc-bt-card__title a:hover, .pc-bt-card__title a:focus-visible { text-decoration: underline; }
+    .pc-bt-card__meta { margin: 0 0 8px; font-size: var(--fs-sm); color: var(--pc-ba-muted); }
+    .pc-bt-card__meta span + span::before { content: "\00B7"; margin: 0 6px; }
+    .pc-bt-checks { margin: auto 0 0; padding: 10px 0 0; border-top: 1px solid var(--pc-ba-line); list-style: none; font-size: var(--fs-xs); }
+    .pc-bt-checks li { padding: 2px 0; overflow-wrap: anywhere; }
+    .pc-bt-checks .is-ok i { color: var(--pc-brand-secondary); }
+    .pc-bt-checks .is-warn i { color: #b7791f; }
+    .pc-bt-checks .is-bad { color: var(--pc-danger, #c0392b); font-weight: 600; }
+    @media (max-width: 991px) { .pc-bt-grid { grid-template-columns: 1fr 1fr; } .pc-bt-stats { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 767px) { .pc-bt-grid { grid-template-columns: 1fr; } .pc-bt-stats { gap: 10px; } }
+  </style>
+  <div class="pc-bt-devbar"><div class="container"><i class="fa-solid fa-flask" aria-hidden="true"></i> TRANG TEST LOCAL — dữ liệu demo, không đóng gói lên Sapo.</div></div>
+  <section class="container pc-ba-hero pc-ba-hero--text">
+    <div class="pc-ba-hero__text">
+      <p class="pc-ba-kicker">DANH MỤC BÀI VIẾT · {{ blog.handle | upcase }}</p>
+      <h1 class="pc-ba-hero__title pc-bd__title">{{ blog.title }}</h1>
+      {%- if blog.description != blank -%}<p class="pc-ba-hero__lead">{{ blog.description | strip_html }}</p>{%- endif -%}
+      <div class="pc-ba-actions">
+        <a href="{{ settings.clinical_article_back_link | default: '/clinical-proof' }}" class="pc-ba-btn pc-ba-btn--primary">Xem trang /clinical-proof</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="container pc-ba-section pc-ba-section--last">
+    <div class="pc-bt-stats">
+      <div class="pc-ba-card pc-bt-stat"><strong>{{ pc_bt_total }}</strong><span>Tổng bài trong danh mục</span></div>
+      <div class="pc-ba-card pc-bt-stat"><strong>{{ pc_bt_ok }}</strong><span>Đủ ảnh — hiện ở /clinical-proof</span></div>
+      <div class="pc-ba-card pc-bt-stat"><strong>{{ pc_bt_missing }}</strong><span>Thiếu ảnh — bị ẩn</span></div>
+      <div class="pc-ba-card pc-bt-stat"><strong>{{ pc_bt_gcount }}</strong><span>Nhóm vấn đề da</span></div>
+    </div>
+    <div class="pc-bt-filter" role="group" aria-label="Lọc theo nhóm">
+      <button type="button" class="pc-bt-chip" data-bt-filter="" aria-pressed="true">Tất cả ({{ pc_bt_total }})</button>
+      {%- for pc_bt_g in pc_bt_group_list -%}{%- if pc_bt_g != blank -%}
+      <button type="button" class="pc-bt-chip" data-bt-filter="{{ pc_bt_g | escape }}" aria-pressed="false">{{ pc_bt_g }}</button>
+      {%- endif -%}{%- endfor -%}
+      {%- if pc_bt_missing > 0 -%}<button type="button" class="pc-bt-chip" data-bt-filter="__missing" aria-pressed="false">Thiếu ảnh ({{ pc_bt_missing }})</button>{%- endif -%}
+    </div>
+    <div class="pc-bt-grid">{{ pc_bt_cards }}</div>
+  </section>
+</main>
+<script>
+  /* Lọc thẻ theo nhóm / thiếu ảnh (chỉ trang test). */
+  (function () {
+    var chips = document.querySelectorAll('[data-bt-filter]');
+    var cards = document.querySelectorAll('.pc-bt-card');
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        var f = chip.getAttribute('data-bt-filter');
+        chips.forEach(function (c) { c.setAttribute('aria-pressed', c === chip ? 'true' : 'false'); });
+        cards.forEach(function (card) {
+          var show = !f || (f === '__missing' ? card.getAttribute('data-bt-ok') !== 'true' : card.getAttribute('data-bt-group') === f);
+          card.hidden = !show;
+        });
+      });
+    });
+  })();
+</script>

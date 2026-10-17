@@ -466,10 +466,10 @@ const beforeAfterArticles = [
     // Tên nhóm theo artboard thiết kế (4 nhóm vấn đề da).
     211: ['nhom:Mụn', 'tuoi:24', 'tuan:8', 'phacdo:BHA + Niacinamide'],
     214: ['nhom:Mụn', 'tuan:10', 'phacdo:AHA/BHA + Retinol liều thấp'],
-    215: ['nhom:Thâm, nám, tăng sắc tố', 'tuoi:27', 'tuan:5', 'phacdo:Alpha Arbutin + Tranexamic Acid'],
-    212: ['nhom:Thâm, nám, tăng sắc tố', 'tuoi:38', 'tuan:12', 'phacdo:Tranexamic Acid + chống nắng'],
-    213: ['nhom:Đỏ da, nhạy cảm', 'tuan:6', 'phacdo:Ceramide + Centella Asiatica'],
-    216: ['nhom:Lão hóa, tiền mãn kinh', 'tuan:12'],
+    215: ['nhom:Thâm – nám – tăng sắc tố', 'tuoi:27', 'tuan:5', 'phacdo:Alpha Arbutin + Tranexamic Acid'],
+    212: ['nhom:Thâm – nám – tăng sắc tố', 'tuoi:38', 'tuan:12', 'phacdo:Tranexamic Acid + chống nắng'],
+    213: ['nhom:Đỏ da – nhạy cảm', 'tuan:6', 'phacdo:Ceramide + Centella Asiatica'],
+    216: ['nhom:Lão hóa – tiền mãn kinh', 'tuan:12'],
   };
   // 2026-10-17: ca 211/212 mô phỏng cách nhập trên trình soạn thảo Sapo — 2 ảnh đầu chèn trong Nội dung (trước, sau);
   // các ca còn lại giữ tag anhtruoc:/anhsau: (snippets/ba_case_source.bwt nhận cả 2 cách). Mọi ca chọn giao diện
@@ -485,6 +485,36 @@ const beforeAfterArticles = [
       a.tags.push(`anhtruoc:${baBefore}`, `anhsau:${baAfter}`, ...baTags[a.id]);
     }
   });
+
+  // 2026-10-17: DỮ LIỆU DEMO cho trang test local blog.truoc-va-sau (dev-preview/templates/) — đủ các tình huống cần
+  // kiểm: ca có câu chuyện đầy đủ + ảnh mốc thứ 3, ca gắn liệu trình, ca thiếu ảnh (không được hiện ở /clinical-proof),
+  // ca không có tag nhom: (vào nhóm "Kết quả khác"). Tiêu đề ghi [DEMO]; KHÔNG phải ca khách hàng thật.
+  const baMid = img('E3EDE6/5F7A6D', '[ẢNH TUẦN 4]', '600x600');
+  const story = (extra) => `<h2>Tình trạng ban đầu</h2><p>[DEMO] Mô tả loại da, vấn đề chính và sản phẩm khách đã dùng trước khi bắt đầu.</p>`
+    + `<h2>Phác đồ</h2><ul><li>Giai đoạn 1 (tuần 1–2): làm sạch dịu nhẹ, phục hồi hàng rào bảo vệ da.</li><li>Giai đoạn 2 (tuần 3–8): đưa hoạt chất điều trị vào routine, tăng dần tần suất.</li></ul>`
+    + `<h2>Diễn tiến</h2>${extra || ''}<p>[DEMO] Ghi nhận theo từng mốc tái khám.</p>`
+    + `<h2>Kết quả &amp; lưu ý</h2><p>[DEMO] Kết quả khác nhau tùy cơ địa; ca được đăng khi khách đồng ý.</p>`;
+  const a211 = beforeAfterArticles.find((a) => a.id === 211);
+  if (a211) a211.content = `<p><img src="${baBefore}" alt="" /></p><p><img src="${baAfter}" alt="" /></p>`
+    + story(`<p><img src="${baMid}" alt="Mốc tuần 4" /></p>`);
+  const demoCase = (id, handle, title, excerpt, tags, content, extra) => Object.assign({
+    id, title, alias: handle, handle, url: `/blogs/truoc-va-sau/${handle}`, excerpt, summary: excerpt, content,
+    image: { src: baAfter, alt: title }, featured_image: { src: baAfter, alt: title },
+    author: 'Chuyên gia Thanh Hằng', published_on: '2026-10-15T08:00:00', created_at: '2026-10-15T08:00:00',
+    tags, comments_count: 0, template_suffix: 'truoc-va-sau', blog: { handle: 'truoc-va-sau', title: 'Trước & Sau Điều Trị' },
+  }, extra || {});
+  beforeAfterArticles.unshift(
+    demoCase(217, 'demo-getglowing-micro-peel-6-tuan', '[DEMO] GetGlowing Micro-Peel – cải thiện bít tắc sau 6 tuần',
+      '[DEMO] Ca mẫu gắn liệu trình GetGlowing Micro-Peel — hiện cả ở trang liệu trình.',
+      ['nhom:Mụn', 'tuoi:29', 'tinh:Hà Nội', 'tuan:6', 'phacdo:GetGlowing Micro-Peel + phục hồi', 'lieutrinh:' + 'elaine-brennan-getglowing-micro-peel-lieu-trinh-peel-chuyen-nghiep-ho-tro-lam-sang-va-cai-thien-be-mat-da'],
+      `<p><img src="${baBefore}" alt="" /></p><p><img src="${baAfter}" alt="" /></p>` + story()),
+    demoCase(218, 'demo-ca-thieu-anh', '[DEMO] Ca chưa đủ ảnh – chỉ có ảnh trước',
+      '[DEMO] Ca thiếu ảnh sau ⇒ KHÔNG hiện ở /clinical-proof; trang test đánh dấu "Thiếu ảnh".',
+      ['nhom:Mụn', 'tuan:4'], `<p><img src="${baBefore}" alt="" /></p>` + story()),
+    demoCase(219, 'demo-ca-khong-gan-nhom', '[DEMO] Ca không gắn tag nhom:',
+      '[DEMO] Không có tag nhom: ⇒ vào nhóm "Kết quả khác".',
+      ['tuoi:41', 'tuan:10'], `<p><img src="${baBefore}" alt="" /></p><p><img src="${baAfter}" alt="" /></p>` + story(), { author: '' }),
+  );
 }
 
 // 2026-10-12: blog "video" (giao diện blog.video / article.video) — 14 video THẬT của kênh YouTube Pharma Cosmetics
@@ -641,6 +671,8 @@ const blogs = {
   }),
   'truoc-va-sau': withBlogMeta({
     id:      302,
+    // 2026-10-17: giao diện blog.truoc-va-sau CHỈ có ở dev-preview/templates/ (trang test local, không đóng gói).
+    template_suffix: 'truoc-va-sau',
     title:   'Trước & Sau Điều Trị',
     description: 'Case study thực tế ghi nhận tiến trình điều trị theo từng tuần, đánh giá bởi đội ngũ chuyên gia phụ trách.',
     handle:  'truoc-va-sau',

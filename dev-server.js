@@ -129,9 +129,13 @@ function preprocessBwt(content) {
 }
 
 // ── Custom fs adapter: intercept file reads để preprocess trước khi parse ──
+// 2026-10-17: dev-preview/templates/ = template CHỈ để kiểm tra trên preview local (vd blog.truoc-va-sau — trang tổng quan
+// ca Trước & Sau). Đặt SAU templates/ nên template thật luôn thắng; build/build:sapo chỉ copy 5 thư mục theme ⇒ không đóng gói.
+const DEV_TEMPLATES_DIR = path.join(ROOT, 'dev-preview', 'templates');
 const TEMPLATE_DIRS = [
   path.join(ROOT, 'snippets'),
   path.join(ROOT, 'templates'),
+  DEV_TEMPLATES_DIR,
   path.join(ROOT, 'layouts'),
   path.join(ROOT, 'assets'),
   // case-insensitive aliases (Windows)
@@ -642,6 +646,7 @@ function listTemplateFiles() {
     });
   };
   walk(path.join(ROOT, 'templates'), '');
+  walk(DEV_TEMPLATES_DIR, '');
   return out.sort();
 }
 function devTemplateUrl(tpl) {
@@ -1028,7 +1033,7 @@ function resolvePrettyPath(pathname, searchParams) {
   // 2026-10-12: Sapo cho chọn giao diện riêng từng blog/bài (blog.video, article.video) — mock khai báo bằng
   // template_suffix trong data/articles.js; chỉ dùng khi file templates/<loại>.<suffix>.bwt có thật.
   if (parts[0] === 'blogs') {
-    const withSuffix = (base, suffix) => (suffix && fs.existsSync(path.join(ROOT, 'templates', `${base}.${suffix}.bwt`)) ? `${base}.${suffix}` : base);
+    const withSuffix = (base, suffix) => (suffix && [path.join(ROOT, 'templates'), DEV_TEMPLATES_DIR].some((d) => fs.existsSync(path.join(d, `${base}.${suffix}.bwt`))) ? `${base}.${suffix}` : base);
     const blogData = parts[1] ? (mockModule.blogsObj || {})[parts[1]] : null;
     if (parts.length === 1) return { tpl: 'blog', routeParams: {} };
     // 2026-10-14: blog/bài không có trong dữ liệu mock → 404 như Sapo thật. Trước đây preview-mock lặng lẽ thế bằng
