@@ -9,6 +9,11 @@ sheet sinh tự động từ schema nên luôn khớp code — schema đổi th�
 Cột ID là khoá để agent áp thay đổi ngược vào configs/ — tuyệt đối không sửa cột này trên sheet.
 """
 import json, os, re, sys
+# 2026-10-17: console Windows mặc định cp1258 không in được chữ Việt có dấu ⇒ build:sapo crash ở lint:config.
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except AttributeError:
+    pass
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.worksheet.datavalidation import DataValidation
