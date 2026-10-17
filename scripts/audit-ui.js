@@ -28,8 +28,8 @@ const PAGES = (process.env.AUDIT_PAGES ? process.env.AUDIT_PAGES.replace(/,/g,'\
 /?tpl=account
 /?tpl=orders
 /?tpl=addresses
-/blogs/tin-tuc
-/blogs/tin-tuc/retinol-thanh-phan-vang-chong-lao-hoa
+/blogs/tin-tuc-va-kien-thuc
+/blogs/tin-tuc-va-kien-thuc/retinol-thanh-phan-vang-chong-lao-hoa
 /blogs/chuyen-gia
 /blogs/chuyen-gia/chuyen-gia-thanh-hang
 /blogs/hoat-chat

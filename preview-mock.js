@@ -350,8 +350,8 @@ function getContext(templateName = 'index', routeParams = {}) {
 
   // Blog/article — ưu tiên handle thật từ URL (/blogs/:handle, /blogs/:handle/:article).
   const currentBlog = routeParams.blogHandle
-    ? (blogsObj[routeParams.blogHandle] || blogsObj['tin-tuc'])
-    : blogsObj['tin-tuc'];
+    ? (blogsObj[routeParams.blogHandle] || blogsObj['tin-tuc-va-kien-thuc'])
+    : blogsObj['tin-tuc-va-kien-thuc'];
   let resolvedArticle = currentArticle;
   if (routeParams.articleHandle) {
     const allArticles = Object.values(blogsObj).flatMap((b) => b.articles || []);

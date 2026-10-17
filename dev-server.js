@@ -615,7 +615,7 @@ function devCuratedGroups() {
     // /?tpl=<tên> — với blog.video/article.video, ?tpl= sẽ lấy nhầm blog mặc định tin-tuc.
     { label: 'Tin tức & Video', items: [
       ['page.tin-tuc',  'Tin tức · Trang tổng (/tin-tuc)',              '/tin-tuc'],
-      ['blog',          'Tin tức · 1 danh mục (/blogs/tin-tuc)',        '/blogs/tin-tuc'],
+      ['blog',          'Tin tức · 1 danh mục (/blogs/tin-tuc-va-kien-thuc)',        '/blogs/tin-tuc-va-kien-thuc'],
       ['blog',          'Tin tức · 1 danh mục (/blogs/bi-quyet)',       '/blogs/bi-quyet'],
       ['article',       'Bài viết có khối video (Bí Quyết)',            '/blogs/bi-quyet/double-cleansing-rua-mat-2-buoc-sach-sau'],
       ['blog.video',    'Video · Danh mục (/blogs/video)',              '/blogs/video'],
@@ -1777,7 +1777,7 @@ async function requestHandler(req, res) {
       res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(`<meta charset="utf-8"><div style="font:15px/1.6 system-ui;max-width:640px;margin:48px auto;padding:0 16px">`
         + `<h1 style="font-size:20px">Không có template <code>${tpl.replace(/[<>&"]/g, '')}.bwt</code></h1>`
-        + `<p>Trang tổng tin tức: <a href="/tin-tuc">/tin-tuc</a> (page.tin-tuc) · Danh mục bài viết: <a href="/blogs/tin-tuc">/blogs/tin-tuc</a> (blog.bwt)`
+        + `<p>Trang tổng tin tức: <a href="/tin-tuc">/tin-tuc</a> (page.tin-tuc) · Danh mục bài viết: <a href="/blogs/tin-tuc-va-kien-thuc">/blogs/tin-tuc</a> (blog.bwt)`
         + ` · Video: <a href="/blogs/video">/blogs/video</a> (blog.video).</p><p><a href="/">← Trang chủ</a></p></div>`);
       return;
     }

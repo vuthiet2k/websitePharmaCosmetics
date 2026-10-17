@@ -17,7 +17,7 @@ const articles = [
     title:         'Retinol: Thành phần vàng trong chống lão hoá — Cách dùng đúng để không kích ứng',
     alias:         'retinol-thanh-phan-vang-chong-lao-hoa',
     handle:        'retinol-thanh-phan-vang-chong-lao-hoa',
-    url:           '/blogs/tin-tuc/retinol-thanh-phan-vang-chong-lao-hoa',
+    url:           '/blogs/tin-tuc-va-kien-thuc/retinol-thanh-phan-vang-chong-lao-hoa',
     excerpt:       'Retinol là dẫn xuất Vitamin A được khoa học chứng minh hiệu quả nhất trong việc làm mờ nếp nhăn, tăng collagen và đều màu da — nhưng cần dùng đúng cách.',
     content:       '<p>Retinol đã được nghiên cứu hơn 40 năm và là một trong số ít thành phần skincare được FDA công nhận có hiệu quả điều trị lão hoá da...</p>',
     image:         { src: img('d4a373/ffffff', 'Retinol Guide'), alt: 'Hướng dẫn dùng Retinol' },
@@ -27,7 +27,7 @@ const articles = [
     created_at:    '2026-04-08T14:30:00',
     tags:          ['retinol', 'chong-lao-hoa', 'skincare-101', 'chude:Thành phần'],
     comments_count: 14,
-    blog: { handle: 'tin-tuc', title: 'Tin tức & Kiến thức' },
+    blog: { handle: 'tin-tuc-va-kien-thuc', title: 'Tin tức' },
   },
 
   {
@@ -35,7 +35,7 @@ const articles = [
     title:         'Vitamin C trong skincare: Phân biệt các dạng & chọn nồng độ phù hợp',
     alias:         'vitamin-c-skincare-phan-biet-cac-dang',
     handle:        'vitamin-c-skincare-phan-biet-cac-dang',
-    url:           '/blogs/tin-tuc/vitamin-c-skincare-phan-biet-cac-dang',
+    url:           '/blogs/tin-tuc-va-kien-thuc/vitamin-c-skincare-phan-biet-cac-dang',
     excerpt:       'L-Ascorbic Acid, Ascorbyl Glucoside, Sodium Ascorbyl Phosphate... Mỗi dạng có ưu điểm và cách dùng khác nhau. Bài viết giúp bạn chọn đúng.',
     content:       '<p>Vitamin C là antioxidant mạnh, làm sáng da, kích thích collagen và bảo vệ da khỏi tổn thương UV...</p>',
     image:         { src: img('f4a261/ffffff', 'Vitamin C Guide'), alt: 'Vitamin C trong skincare' },
@@ -45,7 +45,7 @@ const articles = [
     created_at:    '2026-04-03T11:00:00',
     tags:          ['vitamin-c', 'lam-sang', 'chude:Làm sáng da', 'skincare-101', 'sanpham:serum-vitamin-c-15', 'hoatchat:vitamin-c'],
     comments_count: 9,
-    blog: { handle: 'tin-tuc', title: 'Tin tức & Kiến thức' },
+    blog: { handle: 'tin-tuc-va-kien-thuc', title: 'Tin tức' },
   },
 
   {
@@ -53,7 +53,7 @@ const articles = [
     title:         '5 bước xây dựng routine skincare buổi sáng chuẩn chuyên gia',
     alias:         '5-buoc-routine-skincare-buoi-sang',
     handle:        '5-buoc-routine-skincare-buoi-sang',
-    url:           '/blogs/tin-tuc/5-buoc-routine-skincare-buoi-sang',
+    url:           '/blogs/tin-tuc-va-kien-thuc/5-buoc-routine-skincare-buoi-sang',
     excerpt:       'Rửa mặt → Toner → Serum → Dưỡng ẩm → Chống nắng. Đơn giản nhưng mỗi bước đều có lý do khoa học. Cùng xem thứ tự đúng và sản phẩm nên dùng.',
     content:       '<p>Một routine skincare buổi sáng tốt không cần nhiều bước, nhưng cần đúng thứ tự và sản phẩm phù hợp với loại da của bạn...</p>',
     image:         { src: img('95d5b2/333333', 'AM Routine'), alt: '5 bước skincare buổi sáng' },
@@ -63,7 +63,7 @@ const articles = [
     created_at:    '2026-03-26T10:00:00',
     tags:          ['routine', 'skincare-101', 'ban-chay', 'chude:Routine'],
     comments_count: 22,
-    blog: { handle: 'tin-tuc', title: 'Tin tức & Kiến thức' },
+    blog: { handle: 'tin-tuc-va-kien-thuc', title: 'Tin tức' },
   },
 
   {
@@ -71,7 +71,7 @@ const articles = [
     title:         'Nám da: Nguyên nhân, phân loại và phác đồ điều trị hiệu quả nhất 2026',
     alias:         'nam-da-nguyen-nhan-phac-do-dieu-tri',
     handle:        'nam-da-nguyen-nhan-phac-do-dieu-tri',
-    url:           '/blogs/tin-tuc/nam-da-nguyen-nhan-phac-do-dieu-tri',
+    url:           '/blogs/tin-tuc-va-kien-thuc/nam-da-nguyen-nhan-phac-do-dieu-tri',
     excerpt:       'Nám là nỗi lo của hàng triệu phụ nữ Việt. Hiểu rõ nám nông, nám sâu và nám hỗn hợp giúp bạn chọn đúng phác đồ — tránh tiêu tiền vô ích.',
     content:       '<p>Nám da (melasma) là tình trạng tăng sắc tố mãn tính do nhiều yếu tố kết hợp: UV, hormon, viêm nhiễm...</p>',
     image:         { src: img('fff3e0/6d4c41', 'Nam Da Guide'), alt: 'Điều trị nám da' },
@@ -81,7 +81,7 @@ const articles = [
     created_at:    '2026-03-12T14:00:00',
     tags:          ['tri-nam', 'chuyen-nghiep', 'bac-si-tu-van'],
     comments_count: 31,
-    blog: { handle: 'tin-tuc', title: 'Tin tức & Kiến thức' },
+    blog: { handle: 'tin-tuc-va-kien-thuc', title: 'Tin tức' },
   },
 
   {
@@ -89,7 +89,7 @@ const articles = [
     title:         'SPF, PA, UVA/UVB — Giải mã ký hiệu kem chống nắng để chọn đúng sản phẩm',
     alias:         'giai-ma-ky-hieu-kem-chong-nang-spf-pa',
     handle:        'giai-ma-ky-hieu-kem-chong-nang-spf-pa',
-    url:           '/blogs/tin-tuc/giai-ma-ky-hieu-kem-chong-nang-spf-pa',
+    url:           '/blogs/tin-tuc-va-kien-thuc/giai-ma-ky-hieu-kem-chong-nang-spf-pa',
     excerpt:       'SPF50+ PA++++ nghĩa là gì? Tại sao cần bôi lại sau 2 tiếng? Bài viết giải thích đầy đủ để bạn không mua nhầm kem chống nắng nữa.',
     content:       '<p>Kem chống nắng là bước không thể bỏ qua trong bất kỳ routine skincare nào. SPF đo khả năng chống UVB, còn PA+++ đo UVA...</p>',
     image:         { src: img('90e0ef/333333', 'SPF Guide'), alt: 'Hướng dẫn kem chống nắng' },
@@ -99,7 +99,7 @@ const articles = [
     created_at:    '2026-03-03T10:30:00',
     tags:          ['chong-nang', 'spf', 'skincare-101'],
     comments_count: 18,
-    blog: { handle: 'tin-tuc', title: 'Tin tức & Kiến thức' },
+    blog: { handle: 'tin-tuc-va-kien-thuc', title: 'Tin tức' },
   },
 
   {
@@ -107,7 +107,7 @@ const articles = [
     title:         'Niacinamide và Zinc: Bộ đôi kiểm soát dầu nhờn, thu nhỏ lỗ chân lông',
     alias:         'niacinamide-zinc-kiem-soat-dau-nhon',
     handle:        'niacinamide-zinc-kiem-soat-dau-nhon',
-    url:           '/blogs/tin-tuc/niacinamide-zinc-kiem-soat-dau-nhon',
+    url:           '/blogs/tin-tuc-va-kien-thuc/niacinamide-zinc-kiem-soat-dau-nhon',
     excerpt:       'Da dầu, lỗ chân lông to là nỗi ám ảnh của nhiều người. Niacinamide nồng độ 5-10% kết hợp Zinc PCA giúp điều tiết bã nhờn hiệu quả mà không gây khô căng.',
     content:       '<p>Niacinamide (Vitamin B3) là hoạt chất đa năng: vừa điều tiết dầu, vừa củng cố hàng rào bảo vệ da và làm đều màu da...</p>',
     image:         { src: img('2a9d8f/ffffff', 'Niacinamide Guide'), alt: 'Niacinamide và Zinc kiểm soát dầu' },
@@ -117,7 +117,7 @@ const articles = [
     created_at:    '2026-02-18T09:30:00',
     tags:          ['niacinamide', 'da-dau', 'skincare-101'],
     comments_count: 11,
-    blog: { handle: 'tin-tuc', title: 'Tin tức & Kiến thức' },
+    blog: { handle: 'tin-tuc-va-kien-thuc', title: 'Tin tức' },
   },
 
 ];
@@ -661,13 +661,13 @@ function withBlogMeta(blog) {
 }
 
 const blogs = {
-  'tin-tuc': withBlogMeta({
+  'tin-tuc-va-kien-thuc': withBlogMeta({
     id:      301,
-    title:   'Tin tức & Kiến thức',
+    title:   'Tin tức',
     description: 'Kiến thức da liễu, thành phần hoạt chất và hướng dẫn chăm sóc da chuẩn y khoa từ đội ngũ chuyên gia Pharma Cosmetics.',
-    handle:  'tin-tuc',
-    url:     '/blogs/tin-tuc',
-    articles: articles.filter(a => a.blog.handle === 'tin-tuc'),
+    handle:  'tin-tuc-va-kien-thuc',
+    url:     '/blogs/tin-tuc-va-kien-thuc',
+    articles: articles.filter(a => a.blog.handle === 'tin-tuc-va-kien-thuc'),
   }),
   'truoc-va-sau': withBlogMeta({
     id:      302,

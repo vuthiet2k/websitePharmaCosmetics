@@ -3,17 +3,17 @@
   Tách từ templates/page.tin-tuc.bwt để tái sử dụng: được gọi từ templates/page.tin-tuc.bwt,
   templates/page.bwt (khi alias là tin-tuc / trang-tin-tuc-tong) và templates/blog.bwt (khi blog.alias == 'tin-tuc'
   trên Sapo thật do URL phẳng /tin-tuc).
-  Nếu danh mục đầu tiên trong news_hub_blogs chưa có bài viết (vd tin-tuc = 0 bài trên Sapo trong khi bi-quyet có 59 bài),
-  tự động lấy danh mục đầu tiên có bài làm nguồn hiển thị khối cổng tin đầu trang (.pc-nportal).
+  Nếu danh mục đầu tiên trong news_hub_blogs chưa có bài hoặc không tồn tại, tự động lấy danh mục đầu tiên có bài làm
+  nguồn khối cổng tin đầu trang (.pc-nportal). Handle thật trên Sapo: xem bảng "Đường dẫn & handle THẬT" ở .clinerules/02.
 {%- endcomment -%}
 {%- assign pc_nh_raw = settings.news_hub_blogs | strip -%}
-{%- if pc_nh_raw == blank -%}{%- assign pc_nh_raw = 'tin-tuc, bi-quyet, y-kien-chuyen-gia' -%}{%- endif -%}
+{%- if pc_nh_raw == blank -%}{%- assign pc_nh_raw = 'bi-quyet, y-kien-chuyen-gia, tin-tuc-va-kien-thuc' -%}{%- endif -%}
 {%- assign pc_nh_list = pc_nh_raw | split: ',' -%}
 {%- assign pc_nh_main = pc_nh_list.first | strip -%}
 {%- assign pc_nh_mb = blogs[pc_nh_main] -%}
 {%- comment -%}
-  2026-10-17: so sánh "> 0" thay cho "== 0" — trên Sapo danh mục tin-tuc KHÔNG tồn tại (/tin-tuc là Trang nội dung) nên
-  blogs['tin-tuc'].articles.size = nil, "nil == 0" là false ⇒ không dự phòng, mất cả khối Tin mới nhất / Tin nổi bật.
+  2026-10-17: so sánh "> 0" thay cho "== 0" — danh mục khai báo mà KHÔNG tồn tại trên Sapo (vd 'tin-tuc' — /tin-tuc là Trang nội dung) có
+  articles.size = nil, "nil == 0" là false ⇒ không dự phòng, mất cả khối Tin mới nhất / Tin nổi bật.
 {%- endcomment -%}
 {%- unless pc_nh_mb.articles.size > 0 -%}
 	{%- assign pc_nh_found = false -%}

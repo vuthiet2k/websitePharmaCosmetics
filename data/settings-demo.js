@@ -60,7 +60,7 @@ const demoSettings = {
 
   // ── section_blog ─────────────────────────────────────────────────────────
   section_blog_title:     'Kiến thức skincare',
-  section_blog_col:       'tin-tuc',
+  section_blog_col:       'tin-tuc-va-kien-thuc',
   section_blog_limit:     3,
 
   // ── section_category ────────────────────────────────────────────────────

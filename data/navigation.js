@@ -148,7 +148,7 @@ const linklists = {
     handle: 'footer',
     links: [
       link('Giới thiệu',         '/gioi-thieu',         'gioi-thieu'),
-      link('Tin tức',            '/blogs/tin-tuc',       ''),
+      link('Tin tức',            '/blogs/tin-tuc-va-kien-thuc',       ''),
       link('Chính sách bảo mật', '/chinh-sach-bao-mat', ''),
       link('Điều khoản sử dụng', '/dieu-khoan',         ''),
       link('Tuyển dụng',         '/tuyen-dung',         ''),

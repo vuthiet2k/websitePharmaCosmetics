@@ -303,7 +303,7 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
     giải pháp = blog `spa_solution_blog_handle` (mặc định `giai-phap-skin-health`), tag `en:`,
     `phuhop:` (lặp), `tagline:`. AI Skin Quiz: bảng kết quả theo loại da dùng chung
     `snippets/quiz_results_data.bwt` (logic ứng dụng, không phải nội dung admin); bài khuyên đọc ở
-    trang kết quả lấy blog `quiz_article_blog_handle` (mặc định `tin-tuc`).
+    trang kết quả lấy blog `quiz_article_blog_handle` (mặc định `tin-tuc-va-kien-thuc`).
 - **Chặn biến mock tái phát:** `npm run lint:liquid-globals` (nằm trong `build:sapo`) báo mọi biến
   Liquid không thuộc 38 đối tượng Sapo và không được assign/capture/for/tham số include ở đâu. Ngoại
   lệ phải ghi lý do trong `ALLOW` của `scripts/lint-liquid-globals.js`. Đã kiểm trên shop Sapo thật
@@ -525,13 +525,35 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
   Chỉ đăng ca thật khách đã đồng ý; theme không tự sinh ca/số liệu. Ảnh trong `data/articles.js` chỉ là khung
   placeholder để preview.
 
+## Đường dẫn & handle THẬT trên Sapo (đối soát 2026-10-17 — bắt buộc dùng khi viết default/tài liệu)
+
+Bản dev (localhost/Vercel) có route riêng (`/clinical-proof`, `/blogs/<handle>`) KHÔNG tồn tại trên Sapo. Mọi giá trị
+mặc định trong `settings_schema.json`/`settings_data.json`, `| default:` trong Liquid và tài liệu hướng dẫn phải ghi theo
+bảng này; dữ liệu mẫu `data/articles.js` dùng cùng handle để localhost phản ánh đúng Sapo.
+
+| Thành phần | Sapo thật | Ghi chú |
+| :-- | :-- | :-- |
+| Trang tổng tin tức | Trang nội dung alias `tin-tuc` (`page.tin-tuc`) | KHÔNG có danh mục bài viết handle `tin-tuc` |
+| Danh mục "Tin tức" | handle **`tin-tuc-va-kien-thuc`** (ID 509691) | 0 bài (17/10) |
+| Danh mục "Bí Quyết Làm Đẹp" | `bi-quyet` | 56 bài — danh mục chính có bài |
+| Danh mục "ý kiến chuyên gia" | `y-kien-chuyen-gia` (ID 784009) | 0 bài |
+| Danh mục Video | `video` | 24 bài |
+| Danh mục ca Trước & Sau | "Trước và sau", `truoc-va-sau` | 0 bài |
+| Trang Trước & Sau | Trang nội dung alias **`truoc-sau-cham-soc-da-tu-xa`** (`page.clinical-proof`) | `/clinical-proof` chỉ có ở bản dev |
+| `news_hub_blogs` | `bi-quyet, y-kien-chuyen-gia, tin-tuc-va-kien-thuc` | đã lưu trên Theme Editor |
+
+- URL Sapo không có tiền tố `/blogs/`: link tới danh mục/bài viết phải dùng `blog.url`/`article.url`, không ghi cứng
+  `/blogs/<handle>`.
+- Liquid: `blogs['không-tồn-tại'].articles.size` là nil — kiểm "có bài" bằng `> 0` / `unless … > 0`, KHÔNG dùng `== 0`.
+
 ## Trang tổng tin tức & trang 1 danh mục bài viết (chốt 2026-10-13)
 
 - `design/blog.html` view 1 là **trang tổng** (gom nhiều danh mục), KHÔNG phải trang 1 danh mục. Trang tổng =
   Trang nội dung alias `tin-tuc`, giao diện `templates/page.tin-tuc.bwt` (`/tin-tuc`, menu BLOG trỏ về đây).
   Danh mục hiển thị = `settings.news_hub_blogs` (handle, phẩy). Đầu trang (2026-10-13, theo mẫu cổng tin khách gửi) =
-  `.pc-nportal` 2 cột: "Tin mới nhất" của danh mục đầu (slider `news_lead_count` tin tiêu điểm + lưới 2 cột
-  `news_grid_count` tin) | "Tin nổi bật" đánh số 3 tin/trang = bài gắn tag `news_featured_tag` (mặc định `noibat`),
+  `.pc-nportal` 2 cột: "Tin mới nhất" (slider `news_lead_count` tin tiêu điểm + lưới 2 cột
+  `news_grid_count` tin, gom mọi danh mục theo ngày đăng; danh mục đầu không có bài/không tồn tại ⇒ lấy danh mục
+  đầu tiên có bài) | "Tin nổi bật" đánh số 3 tin/trang = bài gắn tag `news_featured_tag` (mặc định `noibat`),
   không có ⇒ bài mới của danh mục thứ 2 + "Tin quan tâm của tôi" = bài khách đã đọc (localStorage `pc_read_articles`,
   ghi ở cuối `templates/article.bwt`; trống thì ẩn). Phần dưới (Chuyên mục, khối từng chuyên mục, Video) giữ theo
   `design/blog.html`. Bỏ khối Audio/Spotlight của mockup cho tới khi có dữ liệu thật — không dựng lại bằng chữ ghi cứng.

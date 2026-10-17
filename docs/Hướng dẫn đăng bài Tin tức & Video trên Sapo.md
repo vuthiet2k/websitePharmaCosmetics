@@ -15,13 +15,28 @@ Mục lục: 1. Tổng quan · 2. Tạo danh mục Video · 3. Lấy link video 
 
 | Trang trên web | Là gì trên Sapo | Giao diện phải chọn |
 | :-- | :-- | :-- |
-| `/tin-tuc` — trang tổng Tin tức & Kiến thức | Danh mục bài viết `tin-tuc` (hoặc Trang nội dung alias `tin-tuc`) | `blog` (mặc định) / `page.tin-tuc` |
-| `/bi-quyet`, `/y-kien-chuyen-gia`… — 1 danh mục | Danh mục bài viết | `blog` (mặc định) |
+| `/tin-tuc` — trang tổng Tin tức & Kiến thức | **Trang nội dung** alias `tin-tuc` (không phải danh mục bài viết) | `page.tin-tuc` |
+| `/bi-quyet`, `/y-kien-chuyen-gia`, `/tin-tuc-va-kien-thuc` — 1 danh mục | Danh mục bài viết | `blog` (mặc định) |
 | `/video` — kênh video | Danh mục bài viết handle **`video`** | **`blog.video`** |
 | Trang xem 1 video | Bài viết trong danh mục `video` | **`article.video`** |
 | Bài viết thường có video kèm | Bài viết trong danh mục bất kỳ | `article` (mặc định) |
 
 Mọi cấu hình nói tới trong tài liệu nằm ở **Sapo Admin › Website › Giao diện › Tuỳ chỉnh › Blog & Bài viết**.
+
+### Danh mục bài viết đang có trên Sapo (đối soát 17/10/2026)
+
+| Tên trên Sapo | Handle (alias) — ghi đúng chữ này vào cấu hình | Số bài |
+| :-- | :-- | :-- |
+| Bí Quyết Làm Đẹp | `bi-quyet` | 56 |
+| Video Tư Vấn Skincare | `video` | 24 |
+| ý kiến chuyên gia (ID 784009) | `y-kien-chuyen-gia` | 0 |
+| Tin tức (ID 509691) | **`tin-tuc-va-kien-thuc`** — KHÔNG phải `tin-tuc` | 0 |
+| Trước và sau | `truoc-va-sau` | 0 |
+
+- `tin-tuc` là alias của **Trang nội dung** trang tổng, không có danh mục bài viết nào tên `tin-tuc`. Ghi `tin-tuc` vào
+  ô nhận handle danh mục (Danh mục hiển thị, Blog lấy bài viết khuyên đọc…) là trỏ vào danh mục không tồn tại.
+- Ô **Danh mục hiển thị** (`news_hub_blogs`) trên Sapo đang là: `bi-quyet, y-kien-chuyen-gia, tin-tuc-va-kien-thuc`.
+- Danh mục 0 bài tự ẩn trên web; đăng bài vào là tự hiện, không cần sửa cấu hình.
 
 ## 2. Tạo danh mục Video (chỉ làm 1 lần)
 
@@ -124,17 +139,18 @@ Thêm tag `youtube:<mã>` hoặc `facebook:fb_video_<số>` vào bài viết th�
 ## 7. Đưa 1 tin vào "Tin nổi bật" (trang `/tin-tuc`)
 
 1. Mở bài viết cần đưa lên (bài phải thuộc một danh mục có trong ô **Danh mục hiển thị** — hiện là
-   `tin-tuc, bi-quyet, y-kien-chuyen-gia`).
+   `bi-quyet, y-kien-chuyen-gia, tin-tuc-va-kien-thuc`).
 2. Ô **Tag**: thêm **`noibat`** › **Lưu**.
 3. Gỡ khỏi Tin nổi bật: xoá tag `noibat` khỏi bài.
 
 Cách theme chọn và xếp:
-- Lấy bài có tag `noibat`, duyệt **theo thứ tự danh mục** trong ô Danh mục hiển thị (hết bài nổi bật của `tin-tuc` mới
-  tới `bi-quyet`…), trong mỗi danh mục bài mới trước.
+- Lấy bài có tag `noibat`, duyệt **theo thứ tự danh mục** trong ô Danh mục hiển thị (hết bài nổi bật của `bi-quyet` mới
+  tới `y-kien-chuyen-gia`…), trong mỗi danh mục bài mới trước.
 - Tối đa **9 tin** (`news_featured_count`), mỗi trang **3 tin** (`news_featured_per_page`), có nút ‹ › chuyển trang,
   đánh số 1, 2, 3…
 - **Không bài nào có tag `noibat`** ⇒ cột này tự đổi thành các bài mới nhất của danh mục thứ 2 trong danh sách (tiêu đề
-  cột = tên danh mục đó).
+  cột = tên danh mục đó); danh mục thứ 2 chưa có bài ⇒ lấy bài mới của danh mục đầu (trùng "Tin mới nhất") — vì vậy nên
+  luôn gắn `noibat` cho vài bài.
 - Đổi tên tag (vd `hot`) ở ô **Tag đánh dấu tin nổi bật** (`news_featured_tag`); đổi tiêu đề cột ở `news_featured_title`.
 - Sapo chỉ trả về cho theme một số bài mới nhất của mỗi danh mục ⇒ bài rất cũ dù có tag `noibat` có thể không được xét.
   Muốn đẩy bài cũ lên, cập nhật lại ngày đăng của bài.
@@ -151,9 +167,9 @@ Không cần thao tác gì — đăng bài (Hiện) vào một danh mục trong 
 - Danh mục `video` không nằm trong Danh mục hiển thị ⇒ video không lẫn vào Tin mới nhất; video có khối riêng
   "Video tư vấn" (4 video mới nhất của danh mục Video) bên dưới.
 
-> Lưu ý kỹ thuật (14/10/2026): cách gom "mọi danh mục theo ngày đăng" là thay đổi mới của `snippets/page_tin_tuc_hub.bwt`.
-> Bản theme trước đó chỉ lấy bài của **danh mục đầu tiên có bài**. Kiểm tra bản đang chạy trên Sapo trước khi hướng dẫn
-> người đăng bài.
+> Lưu ý kỹ thuật (17/10/2026): khối "Tin mới nhất" + "Tin nổi bật" chỉ hiện khi trong ô Danh mục hiển thị có ít nhất 1
+> danh mục có bài. Bản theme trước commit `ad4e647` (17/10/2026) bị ẩn cả khối nếu danh mục **đầu tiên** không tồn tại trên
+> Sapo (vd ghi `tin-tuc`) — tải bản zip mới lên Sapo để có bản sửa.
 
 "Tin quan tâm của tôi" (dưới Tin nổi bật) = các bài **chính khách đó đã đọc** trên máy của họ — không cần cấu hình;
 khách chưa đọc bài nào thì khối ẩn.
@@ -185,5 +201,5 @@ Tag có dấu `:` không hiện ra thành nhãn trên web. Viết thường, kh�
 | Trang bài hiện như bài viết thường, không có khung video lớn | Bài chưa chọn giao diện `article.video`. |
 | Video dọc nhỏ, có viền hai bên | Thiếu tag `khung:doc`. |
 | Ảnh bìa video Facebook xám | Bài Facebook chưa có ảnh đại diện. |
-| Bài không lên trang `/tin-tuc` | Bài đang Ẩn, hoặc danh mục của bài không có trong ô Danh mục hiển thị. |
+| Bài không lên trang `/tin-tuc` | Bài đang Ẩn, hoặc danh mục của bài không có trong ô Danh mục hiển thị, hoặc ô này ghi sai handle (vd `tin-tuc` thay vì `tin-tuc-va-kien-thuc`). |
 | Sửa theme ở máy nhưng web không đổi | Chưa tải bản zip mới lên Sapo và xuất bản (`npm run build:sapo` ⇒ `exports/sapo-theme-1.0.0.zip`). |

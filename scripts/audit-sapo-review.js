@@ -14,7 +14,7 @@ const { chromium } = require('playwright');
 const BASE = (process.env.BASE || 'http://localhost:3000').replace(/\/$/, '');
 const ROUTES = [
   '/', '/collections/all', '/chong-lao-hoa', '/serum-vitamin-c-15', '/kem-duong-am-hyaluronic-acid',
-  '/blogs/tin-tuc', '/blogs/tin-tuc/retinol-thanh-phan-vang-chong-lao-hoa', '/cart', '/search?query=serum',
+  '/blogs/tin-tuc-va-kien-thuc', '/blogs/tin-tuc-va-kien-thuc/retinol-thanh-phan-vang-chong-lao-hoa', '/cart', '/search?query=serum',
   '/account/login', '/account/register', '/account',
   '/about-us', '/ai-skin-quiz', '/ai-skin-quiz-results', '/chuyen-gia',
   '/chuyen-gia-detail', '/clinical-proof', '/chinh-sach-bao-mat', '/dai-ly-b2b',
