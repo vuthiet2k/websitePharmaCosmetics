@@ -156,6 +156,41 @@
 					</div>
 				</div>
 				{%- endif -%}
+				{%- comment -%} 2026-10-17 (người dùng: "Chuyên mục để col-4 cho gọn, tương tự dạng list Tin nổi bật"): khối
+				   Chuyên mục chuyển từ lưới 4 ô trải ngang vào cột phải cổng tin, mỗi dòng = 1 danh mục thật
+				   (tên + số bài + bài mới nhất) theo kiểu .pc-news-rank. {%- endcomment -%}
+				<div class="pc-nside">
+					<div class="pc-nhead"><h2 class="pc-nhead__title">{{ settings.news_cats_title | default: 'Chuyên mục' | escape }}</h2></div>
+					<ol class="pc-nranks pc-ncatlist">
+						{%- assign pc_nh_ci = 0 -%}
+						{%- for pc_nh_h in pc_nh_list -%}
+						{%- assign pc_nh_hs = pc_nh_h | strip -%}
+						{%- assign pc_nh_b = blogs[pc_nh_hs] -%}
+						{%- if pc_nh_b.articles.size > 0 -%}
+						{%- assign pc_nh_ci = pc_nh_ci | plus: 1 -%}
+						<li class="pc-news-rank">
+							<span class="pc-news-rank__no">{{ pc_nh_ci }}</span>
+							<div class="pc-news-rank__body">
+								<h3 class="pc-news-rank__title"><a href="{{ pc_nh_b.url }}">{{ pc_nh_b.name | default: pc_nh_b.title | escape }}</a></h3>
+								<span class="pc-news-meta"><span class="pc-news-chip">{{ pc_nh_b.articles_count }} {{ pc_nh_count_label | escape }}</span></span>
+								<a class="pc-ncatlist__latest" href="{{ pc_nh_b.articles.first.url }}">{{ pc_nh_b.articles.first.title | escape }}</a>
+							</div>
+						</li>
+						{%- endif -%}
+						{%- endfor -%}
+						{%- if blogs[pc_nh_vblog].articles.size > 0 -%}
+						{%- assign pc_nh_ci = pc_nh_ci | plus: 1 -%}
+						<li class="pc-news-rank pc-ncatlist--video">
+							<span class="pc-news-rank__no">{{ pc_nh_ci }}</span>
+							<div class="pc-news-rank__body">
+								<h3 class="pc-news-rank__title"><a href="{{ blogs[pc_nh_vblog].url }}">{{ blogs[pc_nh_vblog].name | default: blogs[pc_nh_vblog].title | escape }}</a></h3>
+								<span class="pc-news-meta"><span class="pc-news-chip">{{ blogs[pc_nh_vblog].articles_count }} {{ pc_nh_count_label | escape }}</span></span>
+								<a class="pc-ncatlist__latest" href="{{ blogs[pc_nh_vblog].articles.first.url }}">{{ blogs[pc_nh_vblog].articles.first.title | escape }}</a>
+							</div>
+						</li>
+						{%- endif -%}
+					</ol>
+				</div>
 				<div class="pc-nside" data-pc-nmine data-max="{{ settings.news_mine_count | default: 5 | plus: 0 }}" hidden>
 					<div class="pc-nhead"><h2 class="pc-nhead__title">{{ settings.news_mine_title | default: 'Tin quan tâm của tôi' | escape }}</h2></div>
 					<ol class="pc-nranks"></ol>
@@ -164,31 +199,7 @@
 		</div>
 		{%- endif -%}
 
-		{%- comment -%} ── Chuyên mục: mỗi ô = 1 danh mục thật, số bài, bài mới nhất. ── {%- endcomment -%}
 		{%- assign pc_nh_vblog = settings.video_blog_handle | default: 'video' -%}
-		<section class="pc-nsec">
-			<div class="pc-nsec__head"><h2 class="pc-nsec__title">{{ settings.news_cats_title | default: 'Chuyên mục' | escape }}</h2></div>
-			<div class="pc-ncats">
-				{%- for pc_nh_h in pc_nh_list -%}
-				{%- assign pc_nh_hs = pc_nh_h | strip -%}
-				{%- assign pc_nh_b = blogs[pc_nh_hs] -%}
-				{%- if pc_nh_b.articles.size > 0 -%}
-				<a class="pc-ncat" href="{{ pc_nh_b.url }}">
-					<span class="pc-ncat__name">{{ pc_nh_b.name | default: pc_nh_b.title | escape }}</span>
-					<span class="pc-ncat__count">{{ pc_nh_b.articles_count }} {{ pc_nh_count_label | escape }}</span>
-					<span class="pc-ncat__latest">{{ pc_nh_b.articles.first.title | escape }}</span>
-				</a>
-				{%- endif -%}
-				{%- endfor -%}
-				{%- if blogs[pc_nh_vblog].articles.size > 0 -%}
-				<a class="pc-ncat pc-ncat--video" href="{{ blogs[pc_nh_vblog].url }}">
-					<span class="pc-ncat__name">{{ blogs[pc_nh_vblog].name | default: blogs[pc_nh_vblog].title | escape }}</span>
-					<span class="pc-ncat__count">{{ blogs[pc_nh_vblog].articles_count }} {{ pc_nh_count_label | escape }}</span>
-					<span class="pc-ncat__latest">{{ blogs[pc_nh_vblog].articles.first.title | escape }}</span>
-				</a>
-				{%- endif -%}
-			</div>
-		</section>
 
 		{%- comment -%} ── Khối từng chuyên mục: tin lớn + 2 ô | danh sách 4 tin. ── {%- endcomment -%}
 		{%- assign pc_nh_sec_n = settings.news_section_list_count | default: 4 | plus: 0 -%}
@@ -196,30 +207,33 @@
 		{%- assign pc_nh_hs = pc_nh_h | strip -%}
 		{%- assign pc_nh_b = blogs[pc_nh_hs] -%}
 		{%- if pc_nh_b.articles.size > 0 -%}
-		<section class="pc-nsec">
-			<div class="pc-nsec__head">
-				<h2 class="pc-nsec__title">{{ pc_nh_b.name | default: pc_nh_b.title | escape }}</h2>
-				<a class="pc-nsec__more" href="{{ pc_nh_b.url }}">{{ settings.news_more_label | default: 'Xem tất cả' | escape }} ({{ pc_nh_b.articles_count }})</a>
-			</div>
-			<div class="pc-nmag">
-				<div class="pc-nmag__main">
-					{%- assign pc_ni_article = pc_nh_b.articles.first -%}{%- assign pc_ni_style = 'big' -%}{% include 'news_item' %}
-					{%- if pc_nh_b.articles.size > 1 -%}
-					<div class="pc-nmag__subs">
-						{%- for pc_nh_a in pc_nh_b.articles offset: 1 limit: 2 -%}
-						{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'sub' -%}{% include 'news_item' %}
-						{%- endfor -%}
-					</div>
-					{%- endif -%}
+		{%- comment -%} 2026-10-17 (người dùng: khối chuyên mục "quá to", muốn "tương tự Tin mới nhất"): bỏ ảnh lớn
+		   phủ chữ ('big'/'sub') ⇒ dùng lại đúng bố cục cổng tin: tin tiêu điểm 'lead' (tiêu đề + tóm tắt + ảnh phải)
+		   + lưới 'card' 2 cột | cột phải viền ngăn = danh sách 'thumb'. {%- endcomment -%}
+		<section class="pc-nportal pc-nportal--sec">
+			<div class="pc-nportal__main">
+				<div class="pc-nhead">
+					<h2 class="pc-nhead__title">{{ pc_nh_b.name | default: pc_nh_b.title | escape }}</h2>
+					<a class="pc-nhead__more" href="{{ pc_nh_b.url }}">{{ settings.news_more_label | default: 'Xem tất cả' | escape }} ({{ pc_nh_b.articles_count }})</a>
 				</div>
-				{%- if pc_nh_b.articles.size > 3 and pc_nh_sec_n > 0 -%}
-				<div class="pc-nbox pc-news-thumblist">
-					{%- for pc_nh_a in pc_nh_b.articles offset: 3 limit: pc_nh_sec_n -%}
-					{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'thumb' -%}{% include 'news_item' %}
+				{%- assign pc_ni_article = pc_nh_b.articles.first -%}{%- assign pc_ni_style = 'lead' -%}{% include 'news_item' %}
+				{%- if pc_nh_b.articles.size > 1 -%}
+				<div class="pc-ncards">
+					{%- for pc_nh_a in pc_nh_b.articles offset: 1 limit: 2 -%}
+					{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'card' -%}{% include 'news_item' %}
 					{%- endfor -%}
 				</div>
 				{%- endif -%}
 			</div>
+			{%- if pc_nh_b.articles.size > 3 and pc_nh_sec_n > 0 -%}
+			<aside class="pc-nportal__side">
+				<div class="pc-news-thumblist">
+					{%- for pc_nh_a in pc_nh_b.articles offset: 3 limit: pc_nh_sec_n -%}
+					{%- assign pc_ni_article = pc_nh_a -%}{%- assign pc_ni_style = 'thumb' -%}{% include 'news_item' %}
+					{%- endfor -%}
+				</div>
+			</aside>
+			{%- endif -%}
 		</section>
 		{%- endif -%}
 		{%- endfor -%}
