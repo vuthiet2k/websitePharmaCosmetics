@@ -579,6 +579,9 @@ blog ra `href="tin-tuc"`); `portal_clinic_chip_urls` còn `/ai-skin-quiz?tab=cam
 hôm nay".
 
 - URL Sapo không có tiền tố `/blogs/`: link tới danh mục/bài viết phải dùng `blog.url`/`article.url`, không ghi cứng.
+- Liquid (Sapo = DotLiquid .NET): KHÔNG truy cập mảng bằng chỉ số là biến số (`articles[pc_i]` với `pc_i` tính từ `| plus:`)
+  ⇒ lỗi "Unable to cast object of type 'System.Decimal' to type 'System.String'" (sự cố /tin-tuc 17/10). Dùng
+  `{% for x in list offset: pc_i limit: 1 %}`. Chỉ số hằng (`variants[0]`) vẫn được. LiquidJS ở dev không báo lỗi này.
 - Liquid: `blogs['không-tồn-tại'].articles.size` là nil — kiểm "có bài" bằng `> 0` / `unless … > 0`, KHÔNG dùng `== 0`.
   Bản dev (`preview-mock.js` `buildBlogsObj`) tự tạo blog rỗng cho mọi chuỗi trong settings nên KHÔNG tái hiện được lỗi nil.
 

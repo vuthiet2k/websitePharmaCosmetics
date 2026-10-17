@@ -93,6 +93,8 @@
 				{%- endunless -%}
 			{%- endfor -%}
 		{%- endcapture -%}
+		{%- comment -%} 2026-10-17: lấy bài theo vị trí bằng for … offset: limit: 1 — Sapo (DotLiquid .NET) báo "Unable to cast
+		  'System.Decimal' to 'System.String'" khi chỉ số mảng là số tính từ `| plus: 0` (articles[pc_nh_ki]); LiquidJS ở dev không lỗi. {%- endcomment -%}
 		{%- assign pc_nh_keys = pc_nh_keys | split: ';' | sort -%}
 		{%- assign pc_nh_more = settings.news_more_short | default: 'Tất cả' -%}
 		{%- capture pc_nh_nav -%}
@@ -113,7 +115,7 @@
 							{%- assign pc_nh_kp = pc_nh_k | split: '|' -%}{%- assign pc_nh_kh = pc_nh_kp[1] -%}{%- assign pc_nh_ki = pc_nh_kp[2] | plus: 0 -%}
 							{%- assign pc_nh_n = pc_nh_n | plus: 1 -%}
 							<div class="swiper-slide">
-								{%- assign pc_ni_article = blogs[pc_nh_kh].articles[pc_nh_ki] -%}{%- assign pc_ni_style = 'lead' -%}{%- if pc_nh_n == 1 -%}{%- assign pc_ni_priority = true -%}{%- else -%}{%- assign pc_ni_priority = false -%}{%- endif -%}{% include 'news_item' %}
+								{%- for pc_nh_pick in blogs[pc_nh_kh].articles offset: pc_nh_ki limit: 1 -%}{%- assign pc_ni_article = pc_nh_pick -%}{%- endfor -%}{%- assign pc_ni_style = 'lead' -%}{%- if pc_nh_n == 1 -%}{%- assign pc_ni_priority = true -%}{%- else -%}{%- assign pc_ni_priority = false -%}{%- endif -%}{% include 'news_item' %}
 							</div>
 						{%- endif -%}
 					{%- endfor -%}
@@ -127,7 +129,7 @@
 							{%- assign pc_nh_n = pc_nh_n | plus: 1 -%}
 							{%- if pc_nh_n > pc_nh_lead_n and pc_nh_n <= pc_nh_end -%}
 								{%- assign pc_nh_kp = pc_nh_k | split: '|' -%}{%- assign pc_nh_kh = pc_nh_kp[1] -%}{%- assign pc_nh_ki = pc_nh_kp[2] | plus: 0 -%}
-								{%- assign pc_ni_article = blogs[pc_nh_kh].articles[pc_nh_ki] -%}{%- assign pc_ni_style = 'card' -%}{% include 'news_item' %}
+								{%- for pc_nh_pick in blogs[pc_nh_kh].articles offset: pc_nh_ki limit: 1 -%}{%- assign pc_ni_article = pc_nh_pick -%}{%- endfor -%}{%- assign pc_ni_style = 'card' -%}{% include 'news_item' %}
 							{%- endif -%}
 						{%- endif -%}
 					{%- endfor -%}
