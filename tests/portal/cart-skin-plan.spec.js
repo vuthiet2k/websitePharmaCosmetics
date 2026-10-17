@@ -48,8 +48,8 @@ test('chưa có kết quả ⇒ mời soi da / khảo sát, nút trỏ đúng tr
   const box = page.locator('[data-cart-skin]');
   await expect(box).toBeVisible();
   await expect(box).toHaveAttribute('data-state', 'empty');
-  await expect(box.locator('[data-cart-skin-scan]')).toHaveAttribute('href', '/ai-skin-quiz?tab=camera');
-  await expect(box.locator('[data-cart-skin-quiz]')).toHaveAttribute('href', '/ai-skin-quiz');
+  await expect(box.locator('[data-cart-skin-scan]')).toHaveAttribute('href', '/kham-da-ai?tab=camera');
+  await expect(box.locator('[data-cart-skin-quiz]')).toHaveAttribute('href', '/kham-da-ai');
   await expect(box.locator('[data-cart-skin-body]')).toBeHidden();
 });
 

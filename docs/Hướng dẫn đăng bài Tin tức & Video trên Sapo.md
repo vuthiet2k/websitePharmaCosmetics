@@ -23,19 +23,22 @@ Mục lục: 1. Tổng quan · 2. Tạo danh mục Video · 3. Lấy link video 
 
 Mọi cấu hình nói tới trong tài liệu nằm ở **Sapo Admin › Website › Giao diện › Tuỳ chỉnh › Blog & Bài viết**.
 
-### Danh mục bài viết đang có trên Sapo (đối soát 17/10/2026)
+### Danh mục bài viết đang có trên Sapo (đối soát sitemap 17/10/2026)
 
 | Tên trên Sapo | Handle (alias) — ghi đúng chữ này vào cấu hình | Số bài |
 | :-- | :-- | :-- |
-| Bí Quyết Làm Đẹp | `bi-quyet` | 56 |
+| Bí Quyết Làm Đẹp | `bi-quyet` | ~56 |
 | Video Tư Vấn Skincare | `video` | 24 |
-| ý kiến chuyên gia (ID 784009) | `y-kien-chuyen-gia` | 0 |
-| Tin tức (ID 509691) | **`tin-tuc-va-kien-thuc`** — KHÔNG phải `tin-tuc` | 0 |
-| Trước và sau | `truoc-va-sau` | 0 |
+| Tin tức & Kiến thức | **`tin-tuc-va-kien-thuc`** — KHÔNG phải `tin-tuc` | 3 |
+| ý kiến chuyên gia | `y-kien-chuyen-gia` | 2 |
+| ý kiến chuyên gia (trùng tên) | `y-kien-chuyen-gia-1` | 3 — nên chuyển bài sang `y-kien-chuyen-gia` rồi xoá danh mục trùng |
+| Bí quyết / Video (trùng tên) | `bi-quyet-1`, `video-1` | 0 — không dùng |
 
 - `tin-tuc` là alias của **Trang nội dung** trang tổng, không có danh mục bài viết nào tên `tin-tuc`. Ghi `tin-tuc` vào
   ô nhận handle danh mục (Danh mục hiển thị, Blog lấy bài viết khuyên đọc…) là trỏ vào danh mục không tồn tại.
-- Ô **Danh mục hiển thị** (`news_hub_blogs`) trên Sapo đang là: `bi-quyet, y-kien-chuyen-gia, tin-tuc-va-kien-thuc`.
+- Ô **Danh mục hiển thị** (`news_hub_blogs`) nên là: `bi-quyet, y-kien-chuyen-gia, tin-tuc-va-kien-thuc`. Kiểm 17/10: theme
+  `hugo_2026` (1172249) vẫn đang dùng giá trị cũ bắt đầu bằng `tin-tuc` — lưu lại đúng theme này.
+- Ô **Chọn danh mục bài viết** (`relate_blog`, cột phải trang danh mục) đang là `tin-tuc` ⇒ đổi sang `bi-quyet`.
 - Danh mục 0 bài tự ẩn trên web; đăng bài vào là tự hiện, không cần sửa cấu hình.
 
 ## 2. Tạo danh mục Video (chỉ làm 1 lần)

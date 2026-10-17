@@ -29,22 +29,20 @@ test('dải voucher riêng dưới banner: ô màu theo mức giảm, "Lấy mã
   await expect(page.locator('.popup-coupon .code')).toHaveText('LAMQUEN');
 });
 
-test('bộ lọc nhanh từ menu, "Sản phẩm (N)" + sắp xếp, nút sắp xếp nhanh cũ đã ẩn', async ({ page }) => {
+test('bộ lọc nhanh ẩn khi chưa có menu, "Sản phẩm (N)" + sắp xếp, nút sắp xếp nhanh cũ đã ẩn', async ({ page }) => {
   await page.goto(URL);
-  const chips = page.locator('.pc-quick-filters__chip');
-  await expect(chips.first()).toHaveText('Mặc định');
-  await expect(page.locator('.pc-quick-filters__chip.is-active')).toHaveAttribute('href', URL); // chip trùng danh mục đang xem
+  // 2026-10-17: menu bo-loc-nhanh CHƯA có trên Sapo (đối soát trang danh mục thật) ⇒ dữ liệu local bỏ menu này, hàng bộ lọc
+  // nhanh phải ẩn như Sapo. Tạo menu trên Sapo thì thêm vào data/sapo-menus.json và khôi phục kiểm tra chip.
+  await expect(page.locator('.pc-quick-filters')).toHaveCount(0);
   await expect(page.locator('.sort-cate-count')).toContainText(/Sản phẩm \(\d+\)/);
   await expect(page.locator('.sort-cate-select__input')).toBeVisible();
   await expect(page.locator('.sort-cate-right')).toBeHidden();
-  await page.locator('.pc-quick-filters__chip', { hasText: 'Cấp ẩm sâu' }).click();
-  await expect(page).toHaveURL(/\/duong-am-phuc-hoi-b5-ha$/);
 });
 
 test('thẻ sản phẩm: nhãn giảm %, nhãn tag nhan:, chip voucher/freeship, thêm giỏ, yêu thích', async ({ page }) => {
   await page.goto(URL);
   const sale = page.locator('.pc-pcard', { has: page.locator('.pc-pcard__badge--sale') }).first();
-  await expect(sale.locator('.pc-pcard__badge')).toHaveText(/Giảm \d+%/);
+  await expect(sale.locator('.pc-pcard__badge')).toHaveText(/^-\d+%$/); // 2026-10-17: nhãn giảm giá dạng -X% (commit f205345)
   await expect(sale.locator('.pc-pcard__chip--voucher')).toHaveText(/Voucher -10%/);
   await expect(page.locator('.pc-pcard__badge--pick')).toHaveText('Đề xuất');
   await expect(page.locator('.pc-pcard__chip--freeship').first()).toBeVisible();
@@ -63,7 +61,7 @@ test('thẻ sản phẩm: nhãn giảm %, nhãn tag nhan:, chip voucher/freeship
 test('SP 1 phiên bản còn hàng: nút giỏ thêm bằng AJAX, không rời trang', async ({ page }) => {
   await page.goto('/duong-am-phuc-hoi-b5-ha');
   const card = page.locator('.pc-pcard', { has: page.locator('button.add_to_cart') }).first();
-  await expect(card.locator('.pc-pcard__badge')).toHaveText(/Giảm \d+%/); // đang giảm giá ⇒ nhãn giảm % ưu tiên hơn tag nhan:Hàng mới
+  await expect(card.locator('.pc-pcard__badge')).toHaveText(/^-\d+%$/); // đang giảm giá ⇒ nhãn giảm % ưu tiên hơn tag nhan:Hàng mới
   const req = page.waitForRequest(r => r.url().includes('/cart/add') && r.method() === 'POST');
   await card.locator('button.add_to_cart').click();
   await req;

@@ -1,12 +1,12 @@
 # Hướng dẫn tạo bài TRƯỚC & SAU (ca khách hàng)
 
-Mỗi ca khách hàng là **1 bài viết Sapo** trong danh mục bài viết **Trước và sau** (handle `truoc-va-sau`). Một bài nhập xong sẽ
+Mỗi ca khách hàng là **1 bài viết Sapo** trong danh mục bài viết **Trước & Sau** (handle **`truoc-va-sau-1`** — alias `truoc-va-sau` đã thuộc một Trang nội dung). Một bài nhập xong sẽ
 tự hiện ở 3 nơi:
 
 | Nơi hiển thị | Hiện gì |
 | :-- | :-- |
 | Trang **/truoc-sau-cham-soc-da-tu-xa** — phần "Kết quả của khách hàng" | Ca được gom theo nhóm vấn đề da (tag `nhom:`), có nút ‹ › chuyển ca, link "Xem chi tiết ca". Ca đầu tiên còn làm ảnh hero nếu chưa cài ảnh hero riêng. |
-| **Trang chi tiết ca** `/<đường dẫn bài>` trên Sapo (bản dev: `/blogs/truoc-va-sau/<đường dẫn bài>`) (giao diện `article.truoc-va-sau`) | Nhóm · tiêu đề (H1) · tóm tắt · bảng thông tin ca · cặp ảnh TRƯỚC/SAU · nội dung câu chuyện · ca khác cùng nhóm · khối CTA |
+| **Trang chi tiết ca** `/<đường dẫn bài>` trên Sapo (bản dev: `/blogs/truoc-va-sau-1/<đường dẫn bài>`) (giao diện `article.truoc-va-sau`) | Nhóm · tiêu đề (H1) · tóm tắt · bảng thông tin ca · cặp ảnh TRƯỚC/SAU · nội dung câu chuyện · ca khác cùng nhóm · khối CTA |
 | Trang **liệu trình** (sản phẩm giao diện `product.lieu-trinh`) — phần "Trước – sau" | Chỉ khi bài có tag `lieutrinh:<alias sản phẩm>` (tối đa 4 ca/trang) |
 
 > **Chỉ đăng ca thật**, đã được khách đồng ý công bố. Ảnh trước và sau phải cùng góc chụp, cùng ánh sáng và không chỉnh sửa.
@@ -21,13 +21,13 @@ tự hiện ở 3 nơi:
 | Thành phần | Trên Sapo | Trạng thái |
 | :-- | :-- | :-- |
 | Trang giới thiệu Trước & Sau | Trang nội dung alias **`truoc-sau-cham-soc-da-tu-xa`**, giao diện `page.clinical-proof` → `/truoc-sau-cham-soc-da-tu-xa` | Đã có. **Không có** đường dẫn `/clinical-proof` trên Sapo (chỉ là tên route ở bản dev). |
-| Danh mục bài viết ca | **Trước và sau**, handle `truoc-va-sau` | Đã có, **0 bài** ⇒ phần "Kết quả của khách hàng" trống |
+| Danh mục bài viết ca | **Trước & Sau**, handle **`truoc-va-sau-1`** (`/truoc-va-sau` là Trang nội dung "Trước và sau", không phải danh mục) | Có 1 bài "[DEMO] Hành trình 8 tuần…" — gỡ/ẩn trước khi công bố. Ô **Blog ca điều trị** phải chọn danh mục này |
 | Ảnh hero TRƯỚC/SAU | Cấu hình theme › Trang Trước & Sau › Hero — ảnh TRƯỚC / ảnh SAU | Trống ⇒ hero lấy cặp ảnh của ca đầu tiên; chưa có ca ⇒ hero chỉ còn chữ |
 
 Ảnh trên bản dev (localhost/Vercel) chỉ là ô giữ chỗ "[ẢNH TRƯỚC] / [ẢNH SAU]" của dữ liệu mẫu — theme **không** đưa
 ảnh nào lên Sapo. Ảnh thật phải nhập theo mục 2.
 
-1. **Website › Bài viết › Danh mục bài viết**: đã có danh mục **Trước và sau**, đường dẫn `truoc-va-sau`.
+1. **Website › Bài viết › Danh mục bài viết**: đã có danh mục **Trước & Sau**, đường dẫn `truoc-va-sau-1`.
    Nếu dùng đường dẫn khác thì chọn lại ở **Cấu hình theme › Trang Trước & Sau (/truoc-sau-cham-soc-da-tu-xa) › Blog ca điều trị**.
 2. Ảnh hero (tuỳ chọn): **Cấu hình theme › Trang Trước & Sau** › **Hero — ảnh TRƯỚC** + **Hero — ảnh SAU** (phải đủ cả
    hai; thiếu một ⇒ dùng ca đầu tiên). Ảnh khách thật đã đồng ý công bố, vuông 1:1.
@@ -50,7 +50,7 @@ Nhập lần lượt các ô trên màn hình **Đăng bài viết mới**:
 | **Trạng thái** | **Hiển thị** (hoặc Đặt lịch hiển thị) | Chọn **Ẩn** thì ca không hiện ở cả 3 nơi |
 | **Ảnh bài viết** | Ảnh đại diện: ảnh SAU hoặc ảnh ghép trước/sau, tỉ lệ 1:1 | Danh sách bài của blog, ảnh chia sẻ Facebook/Zalo. Không dùng làm khung so sánh. |
 | **Tác giả** | Chuyên gia phụ trách ca | Dòng "Chuyên gia phụ trách" trên trang chi tiết |
-| **Danh mục** | **Trước và sau** (bắt buộc) | Bài ở danh mục khác sẽ không được trang đọc |
+| **Danh mục** | **Trước & Sau** (`truoc-va-sau-1`, bắt buộc) | Bài ở danh mục khác sẽ không được trang đọc |
 | **Tag** | Các tag dạng `khoá:giá trị` (xem 2.2) | Nhóm, bảng thông tin ca, liên kết liệu trình |
 | **Khung giao diện** | **`article.truoc-va-sau`** (bắt buộc) | Nếu để `article`, trang chi tiết hiện như bài tin tức thường |
 
@@ -99,7 +99,7 @@ Dùng Heading 2/3, chữ đậm và gạch đầu dòng. Không chỉnh cỡ ch�
 - **Tiêu đề**: `Hành trình 8 tuần cải thiện da mụn viêm`
 - **Nội dung**: [ảnh trước] · [ảnh sau] · *Tình trạng ban đầu… Phác đồ… Diễn tiến…*
 - **Tóm tắt**: `Khách hàng nữ 24 tuổi, da mụn viêm mức độ trung bình, theo dõi 8 tuần với phác đồ BHA + Niacinamide.`
-- **Tác giả**: `Chuyên gia Thanh Hằng` · **Danh mục**: `Trước và sau` · **Khung giao diện**: `article.truoc-va-sau`
+- **Tác giả**: `Chuyên gia Thanh Hằng` · **Danh mục**: `Trước & Sau` · **Khung giao diện**: `article.truoc-va-sau`
 - **Tag**: `nhom:Mụn`, `tuoi:24`, `tinh:Hà Nội`, `tuan:8`, `phacdo:BHA + Niacinamide`
 
 ## 4. Kiểm tra trước khi công bố (laptop + điện thoại)
@@ -108,5 +108,5 @@ Dùng Heading 2/3, chữ đậm và gạch đầu dòng. Không chỉnh cỡ ch�
 2. Mở trang chi tiết ca: có 1 tiêu đề H1, bảng thông tin đúng, phần nội dung không lặp lại 2 ảnh trước/sau, nút Zalo mở đúng số.
 3. Nếu có tag `lieutrinh:`: mở trang liệu trình đó và kiểm tra phần "Trước – sau".
 4. Dev: `npm run preview`, sau đó chạy
-   `AUDIT_PAGES="/clinical-proof,/blogs/truoc-va-sau/<đường dẫn bài>" npm run audit:ui` (route bản dev)
+   `AUDIT_PAGES="/clinical-proof,/blogs/truoc-va-sau-1/<đường dẫn bài>" npm run audit:ui` (route bản dev)
    (Git Bash thêm `MSYS_NO_PATHCONV=1`). Kết quả cần 0 lỗi ở 1440px và 390px.

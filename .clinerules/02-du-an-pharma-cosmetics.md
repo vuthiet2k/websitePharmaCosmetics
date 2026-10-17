@@ -527,24 +527,60 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
 
 ## Đường dẫn & handle THẬT trên Sapo (đối soát 2026-10-17 — bắt buộc dùng khi viết default/tài liệu)
 
-Bản dev (localhost/Vercel) có route riêng (`/clinical-proof`, `/blogs/<handle>`) KHÔNG tồn tại trên Sapo. Mọi giá trị
-mặc định trong `settings_schema.json`/`settings_data.json`, `| default:` trong Liquid và tài liệu hướng dẫn phải ghi theo
-bảng này; dữ liệu mẫu `data/articles.js` dùng cùng handle để localhost phản ánh đúng Sapo.
+Nguồn: `sitemap.xml` của pharmacosmetics-vn.com (pages / collections / blogs / products) + quét trang thật ở
+`?previewThemeId=1172249`. Sapo chuyển path KHÔNG tồn tại về trang chủ (HTTP 200, `url_effective` = `/`) — kiểm path bằng
+URL đích sau redirect, không bằng mã HTTP. Bản dev có route riêng (`/clinical-proof`, `/ai-skin-quiz`, `/blogs/<handle>`…)
+KHÔNG tồn tại trên Sapo. Mọi giá trị mặc định trong `settings_schema.json`/`settings_data.json`, `| default:` trong Liquid,
+`href` ghi cứng và tài liệu phải ghi theo bảng này; dữ liệu mẫu (`data/articles.js`, `data/navigation.js`) dùng cùng
+handle để localhost phản ánh đúng Sapo.
 
-| Thành phần | Sapo thật | Ghi chú |
+**Trang nội dung → giao diện (vân tay class trên trang thật):**
+
+| Path Sapo | Giao diện | Ghi chú |
 | :-- | :-- | :-- |
-| Trang tổng tin tức | Trang nội dung alias `tin-tuc` (`page.tin-tuc`) | KHÔNG có danh mục bài viết handle `tin-tuc` |
-| Danh mục "Tin tức" | handle **`tin-tuc-va-kien-thuc`** (ID 509691) | 0 bài (17/10) |
-| Danh mục "Bí Quyết Làm Đẹp" | `bi-quyet` | 56 bài — danh mục chính có bài |
-| Danh mục "ý kiến chuyên gia" | `y-kien-chuyen-gia` (ID 784009) | 0 bài |
-| Danh mục Video | `video` | 24 bài |
-| Danh mục ca Trước & Sau | "Trước và sau", `truoc-va-sau` | 0 bài |
-| Trang Trước & Sau | Trang nội dung alias **`truoc-sau-cham-soc-da-tu-xa`** (`page.clinical-proof`) | `/clinical-proof` chỉ có ở bản dev |
-| `news_hub_blogs` | `bi-quyet, y-kien-chuyen-gia, tin-tuc-va-kien-thuc` | đã lưu trên Theme Editor |
+| `/kham-da-ai` | `page.ai-skin-quiz` | Trang quiz/soi da THẬT. `/ai-skin-quiz` **không tồn tại** (chỉ route dev); `?tab=camera` vẫn dùng được |
+| `/ai-skin-quiz-results` | `page.ai-skin-quiz-results` | |
+| `/truoc-sau-cham-soc-da-tu-xa` | `page.clinical-proof` | `/clinical-proof` chỉ có ở dev. Menu header "DỊCH VỤ" trỏ về đây |
+| `/tin-tuc` | `page.tin-tuc` | KHÔNG có danh mục bài viết handle `tin-tuc` |
+| `/chuyen-gia-1` | `page.chuyen-gia` | `/chuyen-gia` trên Sapo là **danh mục bài viết** "Đội ngũ chuyên gia" |
+| `/dich-vu-skin-healthy-beauty` | `page.skinhealthy-services` | `/spa-services`, `/dich-vu-tri-lieu`, `/skinhealthy-services` không tồn tại |
+| `/skin-health-beauty-chi-tiet` | `page.skinhealthy-service-detail` | |
+| `/skin-health-beauty-thanh-toan`, `/dang-ky-lieu-trinh-tri-mun` | `page.payment` | |
+| `/skin-health-beauty` | `page.indexskinhealthy` | |
+| `/tra-cuu-hoat-chat` | `page.tra-cuu-hoat-chat` | "Thư viện hoạt chất" (thay `/thanh-phan-hoat-tinh` không tồn tại) |
+| `/gioi-thieu` | `page.about-us` | |
+| `/about-us` | `page` (mặc định, chỉ nội dung) | Menu header "VỀ CHÚNG TÔI" trỏ đây ⇒ KHÔNG hiện giao diện about-us — cần chọn giao diện trên Sapo |
+| `/order` | `page.order-lookup` | |
+| `/dat-lich-tu-van`, `/loyalty`, `/dai-ly-b2b`, `/chinh-sach-bao-mat` | cùng tên | |
+| `/truoc-va-sau`, `/phan-hoi-cua-khach-hang` | `page` mặc định | `/truoc-va-sau` chiếm alias ⇒ danh mục ca phải là `truoc-va-sau-1` |
 
-- URL Sapo không có tiền tố `/blogs/`: link tới danh mục/bài viết phải dùng `blog.url`/`article.url`, không ghi cứng
-  `/blogs/<handle>`.
+**Danh mục bài viết (blog):** `bi-quyet` (Bí Quyết Làm Đẹp, ~56 bài), `video` (24), `tin-tuc-va-kien-thuc` ("Tin tức &
+Kiến thức", 3 bài), `y-kien-chuyen-gia` (2), `y-kien-chuyen-gia-1` (3 — trùng tên, nên gộp), **`truoc-va-sau-1`** ("Trước &
+Sau", ca khách hàng; có 1 bài "[DEMO]" cần gỡ trước khi công bố), `chuyen-gia`, `hoat-chat`, `giai-phap-skin-health`,
+`danh-gia-khach-hang`, `cau-hoi-san-pham`, `cau-hoi-dat-lich`, `cau-hoi-tai-khoan`, `tri-lieu-da`, `bi-quyet-1`, `video-1`
+(0 bài). **Chưa có trên Sapo:** `cau-hoi-lieu-trinh` (`lt_faq_blog`), `van-de-da` (`lt_concern_blog`) ⇒ 2 khối ở trang
+liệu trình ẩn cho tới khi tạo.
+
+**Danh mục sản phẩm hay bị ghi sai:** vấn đề da = `mun-trung-ca-acne`, `nam-va-tan-nhang-melasma-freckles`,
+`da-kho-thieu-am`, `lao-hoa-da-1`, `da-nhay-cam`, `da-mun-dau`, `da-sam-khong-deu-mau` (KHÔNG có `/tri-mun`, `/tri-nam`,
+`/duong-am`, `/chong-lao-hoa`, `/lam-sang`, `/serum`, `/retinol` — retinol là `/retinoil`); tẩy trang = `top-tay-trang-noi-bat`;
+bán chạy = `san-pham-ban-chay-noi-bat`; voucher = trang `/uu-dai-hap-dan-cung-pharma-cosmetics-ma-voucher-cho-moi-don-hang`
+(KHÔNG có `/khuyen-mai`). Không có trang `/he-thong-cua-hang`, `/lien-he`, `/tuyen-dung`, `/hoi-vien`, `/huong-dan-mua-hang`.
+
+**Menu:** snapshot menu thật ở `data/sapo-menus.json` (header "Danh mục" `main-menu` → `mua-sam-theo-danh-muc` /
+`mua-sam-theo-thanh-phan` / `tpcn-khoe-dep` / `thuong-hieu`; menu header `menu-header-2026`; chân trang `footer`,
+`chinh-sach`, `tinh-trang-lan-da`, `thanh-phan-hoat-chat`, `gel-duong`, `buoc-cham-soc-da`, `top-thuong-hieu`,
+`giai-phap-dieu-tri`; `dieu-tri-chuyen-nghiep`). `data/navigation.js` chỉ đọc file này — sửa menu trên Sapo thì cập nhật
+JSON, không tự thêm link. Chưa có trên Sapo: `bo-loc-nhanh`, `serum-nhu-cau-da`, `skinhealthy-nav` (khối dùng menu đó ẩn).
+
+**Cấu hình theme đang lưu trên Sapo (khác repo, phải sửa trong Theme Editor):** `news_hub_blogs` vẫn bắt đầu bằng
+`tin-tuc` (trang /tin-tuc vẫn hiện khối "Bí Quyết" ở phần dưới); `relate_blog` = `tin-tuc` (link "Tin nổi bật" ở cột phải
+blog ra `href="tin-tuc"`); `portal_clinic_chip_urls` còn `/ai-skin-quiz?tab=camera`; `home_flashsale_title` còn "Flash Sale
+hôm nay".
+
+- URL Sapo không có tiền tố `/blogs/`: link tới danh mục/bài viết phải dùng `blog.url`/`article.url`, không ghi cứng.
 - Liquid: `blogs['không-tồn-tại'].articles.size` là nil — kiểm "có bài" bằng `> 0` / `unless … > 0`, KHÔNG dùng `== 0`.
+  Bản dev (`preview-mock.js` `buildBlogsObj`) tự tạo blog rỗng cho mọi chuỗi trong settings nên KHÔNG tái hiện được lỗi nil.
 
 ## Trang tổng tin tức & trang 1 danh mục bài viết (chốt 2026-10-13)
 

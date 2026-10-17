@@ -33,9 +33,11 @@ test('trang SP: "Có thể bạn thích" và "Sản phẩm liên quan" không l�
   expect(all).not.toContain(PDP);
 });
 
-test('trang chủ: 6 thẻ "Giải pháp" mở danh mục giai-phap-* (không về trang tìm kiếm)', async ({ page }) => {
+// 2026-10-17: thẻ lấy menu home_solutions_menu (tinh-trang-lan-da) — local dùng menu thật của Sapo (data/sapo-menus.json).
+test('trang chủ: 6 thẻ "Giải pháp" mở đúng danh mục của menu Tình trạng làn da (không về trang tìm kiếm)', async ({ page }) => {
   await page.goto('/');
   const hrefs = await page.locator('.portal-concerns a.concern').evaluateAll(els => els.map(e => e.getAttribute('href')));
-  expect(hrefs.length).toBe(6);
-  for (const h of hrefs) expect(h).toMatch(/^\/giai-phap-/);
+  const expected = require('../../data/sapo-menus.json')['tinh-trang-lan-da'].links.map(l => l.url);
+  expect(hrefs).toEqual(expected);
+  for (const h of hrefs) expect(h).not.toMatch(/^\/search/);
 });

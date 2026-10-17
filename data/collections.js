@@ -168,7 +168,16 @@ const collectionsData = {
     'ADAPALENE', 'adapalene', 4281592, '',
     pick(1001, 1011),
     { products_count: 16,
-      image: 'https://bizweb.dktcdn.net/100/415/053/collections/thie-t-ke-chu-a-co-te-n-85.png?v=1771644280640',
+      // 2026-10-17: image phải là object { src } như Sapo (chuỗi trần ⇒ ô hoạt chất trang chủ mất ảnh).
+      image: { src: 'https://bizweb.dktcdn.net/100/415/053/collections/thie-t-ke-chu-a-co-te-n-85.png?v=1771644280640', alt: 'ADAPALENE' },
+      sort: 'manual' }
+  ),
+  // 2026-10-17: danh mục thật trên Sapo, mục đầu menu mua-sam-theo-thanh-phan (ảnh lấy từ trang chủ Sapo).
+  'tretinoin': makeCollection(
+    'TRETINOIN', 'tretinoin', 4281593, '',
+    pick(1001, 1011),
+    { products_count: 20,
+      image: { src: 'https://bizweb.dktcdn.net/100/415/053/collections/thie-t-ke-chu-a-co-te-n-12.png?v=1758080545680', alt: 'TRETINOIN' },
       sort: 'manual' }
   ),
 

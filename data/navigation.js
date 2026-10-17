@@ -2,299 +2,40 @@
  * data/navigation.js — Menus / linklists (giả lập Sapo `linklists[handle]`)
  *
  * Proxy trong preview-mock.js cho phép: linklists['main-menu'].links
+ *
+ * 2026-10-17: menu local = SNAPSHOT menu THẬT trên Sapo (data/sapo-menus.json, quét từ
+ * https://pharmacosmetics-vn.com/?previewThemeId=1172249: header "Danh mục", menu header, chân trang, khối trang chủ).
+ * Trước đây file này tự dựng menu demo với nhiều link không tồn tại trên Sapo (/tri-mun, /serum, /khuyen-mai,
+ * /he-thong-cua-hang…) ⇒ localhost khác hẳn Sapo. Menu nào chưa có trên Sapo (vd bo-loc-nhanh, serum-nhu-cau-da,
+ * skinhealthy-nav) thì KHÔNG khai báo ở đây — khối dùng menu đó tự ẩn, giống Sapo.
+ * Sửa menu trên Sapo ⇒ cập nhật data/sapo-menus.json, không tự thêm link.
  */
 
-function link(title, url, alias, subLinks) {
-  return {
-    title,
-    url,
-    alias: alias || '',
+const sapoMenus = require('./sapo-menus.json');
+
+// link.object = danh mục (có ảnh) như Sapo khi link trỏ tới 1 danh mục; đọc trễ (getter) vì data/collections.js
+// cũng require file này.
+function toLink(raw) {
+  const l = {
+    title: raw.title,
+    url: raw.url,
+    alias: raw.alias || '',
     active: false,
-    links: subLinks || [],
+    links: (raw.links || []).map(toLink),
   };
-}
-
-const linklists = {
-
-  // ── Menu chính (header nav) ──────────────────────────────────────────────
-  'main-menu': {
-    title:  'Main Menu',
-    handle: 'main-menu',
-    links: [
-      link('TRANG CHỦ', '/', '', []),
-      link('ĐIỀU TRỊ CHUYÊN NGHIỆP', '/dieu-tri-chuyen-nghiep', 'dieu-tri-chuyen-nghiep', [
-        link('Điều trị nám',      '/tri-nam',             'tri-nam'),
-        link('Điều trị mụn',      '/tri-mun',             'tri-mun'),
-        link('Chống lão hoá',     '/chong-lao-hoa',       'chong-lao-hoa'),
-        link('Phục hồi hàng rào', '/duong-am',            'duong-am'),
-      ]),
-      link('MUA SẮM THEO THÀNH PHẦN', '/serum', 'serum', [
-        link('Retinol',           '/retinol',              'retinol'),
-        link('Vitamin C',         '/lam-sang',             'lam-sang'),
-        link('Niacinamide',       '/toner-niacinamide-5-zinc', ''),
-        link('AHA / BHA',         '/serum-aha-10-bha-2',   ''),
-        link('Hyaluronic Acid',   '/kem-duong-am-hyaluronic-acid', ''),
-        link('Ceramide',          '/kem-phuc-hoi-ceramide-niacinamide', ''),
-      ]),
-      link('TPCN KHOẺ & ĐẸP', '/san-pham-noi-bat', 'san-pham-noi-bat', [
-        link('Collagen',          '/serum-collagen-te-bao-goc', ''),
-        link('Chống nắng',        '/chong-nang',           'chong-nang'),
-        link('Kem mắt',           '/kem-mat-peptide-3d',   ''),
-      ]),
-      link('KHUYẾN MÃI', '/khuyen-mai', 'khuyen-mai', []),
-      link('BLOG', '/tin-tuc', '', []), // 2026-10-13: trỏ trang tổng tin tức (page.tin-tuc) thay cho 1 danh mục
-    ],
-  },
-
-  // ── Menu danh mục (sidebar) ──────────────────────────────────────────────
-  'danh-muc': {
-    title:  'Danh mục',
-    handle: 'danh-muc',
-    links: [
-      link('Chống lão hoá',          '/chong-lao-hoa',      'chong-lao-hoa', [
-        link('Retinol & Peptide',     '/retinol',            ''),
-        link('Serum chống lão hoá',   '/serum',              ''),
-      ]),
-      link('Điều trị nám & thâm',    '/tri-nam',            'tri-nam'),
-      link('Điều trị mụn',           '/tri-mun',            'tri-mun'),
-      link('Dưỡng ẩm',              '/duong-am',           'duong-am'),
-      link('Chống nắng',             '/chong-nang',         'chong-nang'),
-      link('Làm sạch da',            '/sua-rua-mat-amino-acid', ''),
-      link('Serum dưỡng da',         '/serum',              'serum'),
-      link('Kem mắt',                '/kem-mat-peptide-3d', ''),
-      link('Điều trị chuyên nghiệp', '/dieu-tri-chuyen-nghiep', 'dieu-tri-chuyen-nghiep'),
-    ],
-  },
-
-  // ── Sidebar danh mục dành cho section_product_1 ──────────────────────────
-  'cate-product-1': {
-    title:  'Danh mục sản phẩm nổi bật',
-    handle: 'cate-product-1',
-    links: [
-      link('Chống lão hoá',  '/chong-lao-hoa', 'chong-lao-hoa'),
-      link('Dưỡng ẩm',      '/duong-am',       'duong-am'),
-      link('Serum',          '/serum',          'serum'),
-      link('Trị nám',        '/tri-nam',        'tri-nam'),
-      link('Chống nắng',     '/chong-nang',     'chong-nang'),
-      link('Trị mụn',        '/tri-mun',        'tri-mun'),
-    ],
-  },
-
-  // ── F01/F02 (phase home-shopping-ux, 2026-09-20) — DEMO/TEST cho ô danh mục
-  //    con nhóm tinh chất/serum, dùng qua settings collection_subnav_1_menu.
-  //    Người dùng đã duyệt tạo linklist demo này để thấy trên bản test; sẽ tự
-  //    tạo Menu/collection thật trên Sapo Admin khi triển khai production.
-  //    2 ô có collection thật trong data/collections.js (da-mun-dau,
-  //    top-10-kem-duong-am-...) trỏ thẳng collection; 3 ô còn lại (thâm/nám,
-  //    nhạy cảm, lão hoá) CHƯA có collection con thật trong data mock nên trỏ
-  //    /search?query=...&type=product — cùng cách section_solutions.bwt đang
-  //    dùng cho nút "Chọn theo vấn đề da" (xem snippets/section_solutions.bwt),
-  //    không phải cơ chế mới. Nhóm + từ khoá tham khảo cấu trúc Biologique
-  //    Recherche (blemishes/hydration/pigmentation/sensitivity/anti-aging) và
-  //    từ khoá tiếng Việt thực tế (kem trị nám/tàn nhang, serum trị thâm mụn,
-  //    kem dưỡng ẩm da dầu — tìm kiếm 09/2026), KHÔNG sao chép nội dung/ảnh BR.
-  'serum-nhu-cau-da': {
-    title:  'Serum theo nhu cầu da',
-    handle: 'serum-nhu-cau-da',
-    links: [
-      link('Da dầu, mụn và lỗ chân lông', '/da-mun-dau', 'da-mun-dau'),
-      link('Thâm sau mụn, không đều màu', '/search?query=' + encodeURIComponent('trị thâm nám') + '&type=product', ''),
-      link('Da khô, thiếu ẩm', '/top-10-kem-duong-am-chuyen-biet-tu-tam-trung-den-cao-cap-phu-hop-cho-mua-chuyen-mua', 'top-10-kem-duong-am-chuyen-biet-tu-tam-trung-den-cao-cap-phu-hop-cho-mua-chuyen-mua'),
-      link('Da nhạy cảm, hỗ trợ phục hồi', '/search?query=' + encodeURIComponent('da nhạy cảm phục hồi') + '&type=product', ''),
-      link('Chăm sóc dấu hiệu tuổi tác', '/search?query=' + encodeURIComponent('chống lão hoá') + '&type=product', ''),
-    ],
-  },
-
-  // 2026-10-10: menu "Bộ lọc nhanh" trang danh mục (settings.collection_quick_filter_menu) — trỏ danh mục tự động thật.
-  'bo-loc-nhanh': {
-    title:  'Bộ lọc nhanh',
-    handle: 'bo-loc-nhanh',
-    links: [
-      link('Phục hồi da sau treatment', '/phuc-hoi-hang-rao-bao-ve-da', 'phuc-hoi-hang-rao-bao-ve-da'),
-      link('Cấp ẩm sâu', '/duong-am-phuc-hoi-b5-ha', 'duong-am-phuc-hoi-b5-ha'),
-      link('Giảm kích ứng', '/lam-diu-on-dinh-nen-da', 'lam-diu-on-dinh-nen-da'),
-      link('Da nhạy cảm', '/giai-phap-da-nhay-cam', 'giai-phap-da-nhay-cam'),
-      link('Da khô, bong tróc', '/giai-phap-da-kho-thieu-am', 'giai-phap-da-kho-thieu-am'),
-      link('Chống nắng', '/kem-chong-nang-pho-rong', 'kem-chong-nang-pho-rong'),
-    ],
-  },
-
-  // ── Skin Healthy — nhóm dịch vụ (cho page.skinhealthy-services.bwt) ────────
-  'skinhealthy-services': {
-    title:  'Nhóm dịch vụ Skin Healthy',
-    handle: 'skinhealthy-services',
-    links: [
-      link('Chăm sóc & Duy trì', '/skinhealthy-services?group=maintenance', 'maintenance'),
-      link('Điều trị chuyên sâu', '/skinhealthy-services?group=targeted',   'targeted'),
-      link('Can thiệp thủ thuật', '/skinhealthy-services?group=invasive',   'invasive'),
-    ],
-  },
-
-  // ── Topbar ────────────────────────────────────────────────────────────────
-  'topbar': {
-    title:  'Topbar',
-    handle: 'topbar',
-    links: [
-      link('Hệ thống cửa hàng',  '/he-thong-cua-hang', ''),
-      link('Chính sách đổi trả', '/chinh-sach',         ''),
-      link('Hướng dẫn mua hàng', '/huong-dan-mua-hang', ''),
-      link('Liên hệ',            '/lien-he',            ''),
-    ],
-  },
-
-  // ── Footer ────────────────────────────────────────────────────────────────
-  'footer': {
-    title:  'Footer',
-    handle: 'footer',
-    links: [
-      link('Giới thiệu',         '/gioi-thieu',         'gioi-thieu'),
-      link('Tin tức',            '/blogs/tin-tuc-va-kien-thuc',       ''),
-      link('Chính sách bảo mật', '/chinh-sach-bao-mat', ''),
-      link('Điều khoản sử dụng', '/dieu-khoan',         ''),
-      link('Tuyển dụng',         '/tuyen-dung',         ''),
-      link('Hệ thống cửa hàng',  '/he-thong-cua-hang',  ''),
-    ],
-  },
-
-  // ── Footer dịch vụ ────────────────────────────────────────────────────────
-  'footer-dich-vu': {
-    title:  'Dịch vụ',
-    handle: 'footer-dich-vu',
-    links: [
-      link('Giao hàng nhanh',    '/chinh-sach-giao-hang', ''),
-      link('Đổi trả 30 ngày',    '/chinh-sach-doi-tra',   ''),
-      link('Tư vấn miễn phí',    '/lien-he',              ''),
-      link('Hội viên thân thiết','/hoi-vien',             ''),
-      link('Đặt lịch trực tuyến','/dat-lich-tu-van',      'dat-lich-tu-van'),
-      link('Đại lý phân phối',   '/dai-ly-b2b',           ''),
-    ],
-  },
-
-  // ── Mega Footer SEO (section_footer_categories.bwt) ───────────────────────
-  // Cấp 1 = tiêu đề cột; cấp 2 = link con (render inline, ngăn bằng "|").
-  // Kiểu danh mục sàn TMĐT. Khớp taxonomy Pharma Cosmetics.
-  'footer-categories': {
-    title:  'Footer Categories',
-    handle: 'footer-categories',
-    links: [
-      link('Mỹ phẩm High-End', '/collections/all', '', [
-        link('Sesderma',  '/sesderma',  'sesderma'),
-        link('Atache',    '/atache',    'atache'),
-        link('Profiderm', '/profiderm', 'profiderm'),
-        link('Toskani',   '/toskani',   'toskani'),
-        link('Sensilis',  '/sensilis',  'sensilis'),
-        link('Priori',    '/priori',    'priori'),
-        link('Solgar',    '/solgar',    'solgar'),
-      ]),
-      link('Chăm sóc da mặt', '/duong-am', 'duong-am', [
-        link('Sữa rửa mặt', '/sua-rua-mat-amino-acid', ''),
-        link('Tẩy trang',   '/top-san-pham-tay-trang-noi-bat', ''),
-        link('Toner',       '/top-san-pham-toner-noi-bat', ''),
-        link('Serum',       '/top-san-pham-serum-ban-chay', ''),
-        link('Kem dưỡng',   '/top-kem-duong-noi-bat', ''),
-        link('Mặt nạ',      '/top-san-pham-mat-na-ban-chay', ''),
-        link('Chống nắng',  '/top-kem-chong-nang-noi-bat', ''),
-        link('Kem mắt',     '/cham-soc-da-vung-mat-ban-chay', ''),
-      ]),
-      link('Theo công dụng', '/lam-sang', 'lam-sang', [
-        link('Trị mụn',       '/tri-mun',              'tri-mun'),
-        link('Làm sáng da',   '/lam-sang',             'lam-sang'),
-        link('Chống lão hoá', '/chong-lao-hoa',        'chong-lao-hoa'),
-        link('Dưỡng ẩm',      '/duong-am',             'duong-am'),
-        link('Phục hồi da',   '/phuc-hoi-sau-xam-lan', 'phuc-hoi-sau-xam-lan'),
-        link('Kiềm dầu',      '/da-mun-dau',           'da-mun-dau'),
-      ]),
-      link('Theo vấn đề da', '/tri-nam', 'tri-nam', [
-        link('Da dầu mụn',      '/da-mun-dau',     'da-mun-dau'),
-        link('Nám & tàn nhang', '/tri-nam',        'tri-nam'),
-        link('Lão hoá da',      '/chong-lao-hoa',  'chong-lao-hoa'),
-        link('Da nhạy cảm',     '/sensilis',       'sensilis'),
-        link('Lỗ chân lông to', '/da-mun-dau',     'da-mun-dau'),
-        link('Thâm & sẹo',      '/tri-nam',        'tri-nam'),
-      ]),
-      link('Theo hoạt chất', '/mua-sam-theo-thanh-phan', 'mua-sam-theo-thanh-phan', [
-        link('Retinol',         '/retinol',                       'retinol'),
-        link('Vitamin C',       '/lam-sang',                      'lam-sang'),
-        link('Niacinamide',     '/toner-niacinamide-5-zinc',      ''),
-        link('AHA / BHA',       '/serum-aha-10-bha-2',            ''),
-        link('Hyaluronic Acid', '/kem-duong-am-hyaluronic-acid',  ''),
-        link('Azelaic Acid',    '/da-mun-dau',                    ''),
-        link('Tranexamic Acid', '/serum-tranexamic-acid-3',       ''),
-      ]),
-      link('Đặc trị (kê đơn)', '/retinol', 'retinol', [
-        link('Tretinoin',     '/adapalene',      ''),
-        link('Adapalene',     '/adapalene',      'adapalene'),
-        link('Isotretinoin',  '/isotretinoin',   'isotretinoin'),
-        link('Clascoterone',  '/clascoterone',   'clascoterone'),
-        link('Clindamycin',   '/clindamycin',    'clindamycin'),
-        link('Dapsone',       '/dapsone',        'dapsone'),
-        link('Minoxidil',     '/minoxidil',      'minoxidil'),
-      ]),
-      link('TPCN & Sức khoẻ', '/san-pham-noi-bat', '', [
-        link('Collagen',          '/serum-collagen-te-bao-goc', ''),
-        link('Vitamin tổng hợp',  '/solgar',     'solgar'),
-        link('Hỗ trợ gan',        '/solgar',     ''),
-        link('Hỗ trợ tim mạch',   '/orthomol',   'orthomol'),
-        link('Đẹp da từ bên trong','/san-pham-noi-bat', ''),
-      ]),
-      link('Liệu trình & Dịch vụ', '/dieu-tri-chuyen-nghiep', '', [
-        link('Routine ban ngày',       '/san-pham-ban-chay-noi-bat',   ''),
-        link('Routine ban đêm',        '/top-san-pham-serum-ban-chay', ''),
-        link('Phục hồi sau xâm lấn',   '/phuc-hoi-sau-xam-lan',        'phuc-hoi-sau-xam-lan'),
-        link('Điều trị chuyên nghiệp', '/dieu-tri-chuyen-nghiep',      'dieu-tri-chuyen-nghiep'),
-        link('Tư vấn chuyên gia',      '/lien-he',                     ''),
-      ]),
-    ],
-  },
-
-};
-
-// 2026-10-13: cấu hình khách đổi menu cột 2/3 chân trang sang handle `chinh-sach` / `mua-sam-theo-danh-muc`
-// (configs/settings_data.json). Preview dùng lại link của menu cũ tương ứng — giữ nguyên menu cũ, không xoá.
-linklists['chinh-sach'] = { ...linklists['footer-dich-vu'], title: 'Chính sách', handle: 'chinh-sach' };
-linklists['mua-sam-theo-danh-muc'] = { ...linklists['footer-categories'], title: 'Mua sắm theo danh mục', handle: 'mua-sam-theo-danh-muc' };
-// 2026-10-14: settings_data đổi menu chính sang 'menu-header-2026' (menu header mới trên Sapo) — preview dùng lại cây main-menu.
-linklists['menu-header-2026'] = { ...linklists['main-menu'], title: 'Menu header 2026', handle: 'menu-header-2026' };
-
-// 2026-10-16: menu demo cho 2 khối trang chủ (settings.home_ing_menu / home_brand_menu) — mục & thứ tự theo menu
-// "Thành phần" / "Thương hiệu" thật trên pharmacosmetics-vn.com. link.object = danh mục (có ảnh) như Sapo; đọc trễ
-// (getter) vì data/collections.js cũng require file này.
-function objLink(title, url, alias) {
-  const l = link(title, url, alias);
-  Object.defineProperty(l, 'object', { enumerable: true, get: () => require('./collections').collectionsData[alias] || null });
+  if (l.alias) {
+    Object.defineProperty(l, 'object', {
+      enumerable: true,
+      get: () => require('./collections').collectionsData[l.alias] || null,
+    });
+  }
   return l;
 }
-linklists['mua-sam-theo-thanh-phan'] = { title: 'Mua sắm theo thành phần', handle: 'mua-sam-theo-thanh-phan', links: [
-    objLink('Retinol', '/retinoil', 'retinoil'),
-    objLink('Hyaluronic Acid (HA)', '/hyaluronic-acid-ha', 'hyaluronic-acid-ha'),
-    objLink('Niacinamide (B3)', '/niacinamide-vitamin-b3', 'niacinamide-vitamin-b3'),
-    objLink('Vitamin C', '/vitamin-c', 'vitamin-c'),
-    objLink('Salicylic Acid (BHA)', '/salicylic-acid-bha', 'salicylic-acid-bha'),
-    objLink('AHA (Glycolic Acid)', '/aha', 'aha'),
-    objLink('Azelaic Acid', '/azelaic-acid', 'azelaic-acid'),
-    objLink('Ceramides', '/ceramides', 'ceramides'),
-    objLink('Peptides', '/peptides', 'peptides'),
-    objLink('Tranexamic Acid', '/tranexamic-acid', 'tranexamic-acid'),
-    objLink('Arbutin', '/arbutin', 'arbutin'),
-    objLink('Panthenol (B5)', '/panthenol-b5', 'panthenol-b5'),
-    objLink('Centella Asiatica', '/centella-asiatica', 'centella-asiatica'),
-    objLink('Vitamin E', '/vitamin-e', 'vitamin-e'),
-    objLink('Mandelic Acid', '/mandelic-acid', 'mandelic-acid'),
-    objLink('Retinal', '/retinal', 'retinal'),
-] };
-linklists['thuong-hieu'] = { title: 'Thương hiệu', handle: 'thuong-hieu', links: [
-    objLink('ZO SKIN HEALTH', '/zo-skin-health', 'zo-skin-health'),
-    objLink('IMAGE SKINCARE', '/image-skincare', 'image-skincare'),
-    objLink('SKINCEUTICALS', '/skinceuticals', 'skinceuticals'),
-    objLink('mesoestetic', '/mesoestetic', 'mesoestetic'),
-    objLink('NEOVA SMART SKINCARE', '/neova-smart-skincare', 'neova-smart-skincare'),
-    objLink('GLOWBIOTICS', '/glowbiotics', 'glowbiotics'),
-    objLink('Comfort Zone', '/comfort-zone', 'comfort-zone'),
-    objLink('CHRISTINA', '/christina', 'christina'),
-    objLink('MD: CEUTICALS', '/md-ceuticals', 'md-ceuticals'),
-    objLink('IVATHERM', '/ivatherm', 'ivatherm'),
-    objLink('MARTI DERMA', '/martiderm', 'martiderm'),
-    objLink('TEOXANE', '/teoxane', 'teoxane'),
-] };
+
+const linklists = {};
+for (const [handle, menu] of Object.entries(sapoMenus)) {
+  if (handle.startsWith('_')) continue;
+  linklists[handle] = { title: menu.title, handle, links: (menu.links || []).map(toLink) };
+}
 
 module.exports = { linklists };

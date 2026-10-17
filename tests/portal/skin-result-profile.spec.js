@@ -69,8 +69,8 @@ async function expectEmptyState(page) {
   await expect(page.locator('[data-result-empty-title]')).toHaveText('Bạn chưa có hồ sơ chăm sóc da');
   await expect(page.locator('h1')).toHaveCount(1);
   await expect(page.locator('h1')).toHaveText('Hiểu làn da để chăm đúng cách');
-  await expect(page.locator('[data-result-empty-scan]')).toHaveAttribute('href', '/ai-skin-quiz?tab=camera');
-  await expect(page.locator('[data-result-empty-quiz]')).toHaveAttribute('href', '/ai-skin-quiz');
+  await expect(page.locator('[data-result-empty-scan]')).toHaveAttribute('href', '/kham-da-ai?tab=camera');
+  await expect(page.locator('[data-result-empty-quiz]')).toHaveAttribute('href', '/kham-da-ai');
   for (const sel of ['[data-result-disclaimer]', '[data-result-profile]', '[data-customer-card]', '[data-result-recommend]', '[data-result-products-section]', '[data-result-blogs-section]']) {
     await expect(page.locator(sel)).toBeHidden();
   }
@@ -140,7 +140,7 @@ test('nút xoá kết quả trên thiết bị xoá sạch và trang trở về 
 test('nút "Bắt đầu ngay" ở trang kết quả mở đúng tab soi da AI; ?tab=quiz mở khảo sát; bấm tab cập nhật URL', async ({ page }) => {
   await page.goto('/ai-skin-quiz-results');
   await page.locator('[data-result-empty-scan]').click();
-  await page.waitForURL(/\/ai-skin-quiz\?tab=camera$/);
+  await page.waitForURL(/\/kham-da-ai\?tab=camera$/); // 2026-10-17: trang quiz thật trên Sapo là /kham-da-ai
   await expect(page.locator('[data-skin-mode="camera"]')).toHaveAttribute('aria-selected', 'true');
   await expect(page.locator('[data-skin-scan]')).toBeVisible();
   await expect(page.locator('#aiSkinChatApp')).toBeHidden();

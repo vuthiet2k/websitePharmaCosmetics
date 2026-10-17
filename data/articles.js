@@ -27,7 +27,7 @@ const articles = [
     created_at:    '2026-04-08T14:30:00',
     tags:          ['retinol', 'chong-lao-hoa', 'skincare-101', 'chude:Thành phần'],
     comments_count: 14,
-    blog: { handle: 'tin-tuc-va-kien-thuc', title: 'Tin tức' },
+    blog: { handle: 'tin-tuc-va-kien-thuc', title: 'Tin tức & Kiến thức' },
   },
 
   {
@@ -45,7 +45,7 @@ const articles = [
     created_at:    '2026-04-03T11:00:00',
     tags:          ['vitamin-c', 'lam-sang', 'chude:Làm sáng da', 'skincare-101', 'sanpham:serum-vitamin-c-15', 'hoatchat:vitamin-c'],
     comments_count: 9,
-    blog: { handle: 'tin-tuc-va-kien-thuc', title: 'Tin tức' },
+    blog: { handle: 'tin-tuc-va-kien-thuc', title: 'Tin tức & Kiến thức' },
   },
 
   {
@@ -63,7 +63,7 @@ const articles = [
     created_at:    '2026-03-26T10:00:00',
     tags:          ['routine', 'skincare-101', 'ban-chay', 'chude:Routine'],
     comments_count: 22,
-    blog: { handle: 'tin-tuc-va-kien-thuc', title: 'Tin tức' },
+    blog: { handle: 'tin-tuc-va-kien-thuc', title: 'Tin tức & Kiến thức' },
   },
 
   {
@@ -81,7 +81,7 @@ const articles = [
     created_at:    '2026-03-12T14:00:00',
     tags:          ['tri-nam', 'chuyen-nghiep', 'bac-si-tu-van'],
     comments_count: 31,
-    blog: { handle: 'tin-tuc-va-kien-thuc', title: 'Tin tức' },
+    blog: { handle: 'tin-tuc-va-kien-thuc', title: 'Tin tức & Kiến thức' },
   },
 
   {
@@ -99,7 +99,7 @@ const articles = [
     created_at:    '2026-03-03T10:30:00',
     tags:          ['chong-nang', 'spf', 'skincare-101'],
     comments_count: 18,
-    blog: { handle: 'tin-tuc-va-kien-thuc', title: 'Tin tức' },
+    blog: { handle: 'tin-tuc-va-kien-thuc', title: 'Tin tức & Kiến thức' },
   },
 
   {
@@ -117,7 +117,7 @@ const articles = [
     created_at:    '2026-02-18T09:30:00',
     tags:          ['niacinamide', 'da-dau', 'skincare-101'],
     comments_count: 11,
-    blog: { handle: 'tin-tuc-va-kien-thuc', title: 'Tin tức' },
+    blog: { handle: 'tin-tuc-va-kien-thuc', title: 'Tin tức & Kiến thức' },
   },
 
 ];
@@ -381,79 +381,79 @@ const beforeAfterArticles = [
     id: 211, title: 'Hành trình 8 tuần cải thiện da mụn viêm nặng',
     alias: 'hanh-trinh-8-tuan-cai-thien-da-mun-viem',
     handle: 'hanh-trinh-8-tuan-cai-thien-da-mun-viem',
-    url: '/blogs/truoc-va-sau/hanh-trinh-8-tuan-cai-thien-da-mun-viem',
+    url: '/blogs/truoc-va-sau-1/hanh-trinh-8-tuan-cai-thien-da-mun-viem',
     excerpt: 'Case study thực tế: khách hàng nữ 24 tuổi, da mụn viêm mức độ trung bình, cải thiện 80% sau 8 tuần theo phác đồ kết hợp BHA + Niacinamide.',
     content: '<p>Ghi nhận tiến trình điều trị mụn viêm theo từng tuần, kèm đánh giá của chuyên gia da liễu phụ trách...</p>',
     image: { src: img('e9c46a/333333', 'Case 01'), alt: 'Case study điều trị mụn viêm' },
     featured_image: { src: img('e9c46a/333333', 'Case 01'), alt: 'Case study điều trị mụn viêm' },
     author: 'Chuyên gia Thanh Hằng', published_on: '2026-04-01T08:00:00', created_at: '2026-03-30T10:00:00',
     tags: ['case-study', 'tri-mun'], comments_count: 7,
-    blog: { handle: 'truoc-va-sau', title: 'Trước & Sau Điều Trị' },
+    blog: { handle: 'truoc-va-sau-1', title: 'Trước & Sau' },
   },
   {
     id: 212, title: 'Case study: Mờ nám mảng sau 12 tuần điều trị chuẩn y khoa',
     alias: 'case-study-mo-nam-mang-12-tuan',
     handle: 'case-study-mo-nam-mang-12-tuan',
-    url: '/blogs/truoc-va-sau/case-study-mo-nam-mang-12-tuan',
+    url: '/blogs/truoc-va-sau-1/case-study-mo-nam-mang-12-tuan',
     excerpt: 'Khách hàng nữ 38 tuổi, nám mảng lâu năm, áp dụng phác đồ Tranexamic Acid + chống nắng nghiêm ngặt, ghi nhận cải thiện rõ sau 3 tháng.',
     content: '<p>Nám mảng là dạng khó điều trị nhất trong các loại tăng sắc tố. Case study này ghi lại lộ trình theo dõi định kỳ mỗi 2 tuần...</p>',
     image: { src: img('f4a261/333333', 'Case 02'), alt: 'Case study điều trị nám' },
     featured_image: { src: img('f4a261/333333', 'Case 02'), alt: 'Case study điều trị nám' },
     author: 'Chuyên gia Lê Thị Lan', published_on: '2026-03-20T08:00:00', created_at: '2026-03-18T10:00:00',
     tags: ['case-study', 'tri-nam'], comments_count: 15,
-    blog: { handle: 'truoc-va-sau', title: 'Trước & Sau Điều Trị' },
+    blog: { handle: 'truoc-va-sau-1', title: 'Trước & Sau' },
   },
   {
     id: 213, title: 'Phục hồi hàng rào bảo vệ da sau 6 tuần cho da nhạy cảm',
     alias: 'phuc-hoi-hang-rao-bao-ve-da-6-tuan',
     handle: 'phuc-hoi-hang-rao-bao-ve-da-6-tuan',
-    url: '/blogs/truoc-va-sau/phuc-hoi-hang-rao-bao-ve-da-6-tuan',
+    url: '/blogs/truoc-va-sau-1/phuc-hoi-hang-rao-bao-ve-da-6-tuan',
     excerpt: 'Da nhạy cảm, dễ đỏ rát do dùng mỹ phẩm sai cách nhiều năm — lộ trình phục hồi bằng Ceramide và Centella Asiatica trong 6 tuần.',
     content: '<p>Hàng rào bảo vệ da tổn thương cần thời gian và sự kiên nhẫn để phục hồi. Case study ghi lại từng mốc đánh giá...</p>',
     image: { src: img('95d5b2/333333', 'Case 03'), alt: 'Case study phục hồi da nhạy cảm' },
     featured_image: { src: img('95d5b2/333333', 'Case 03'), alt: 'Case study phục hồi da nhạy cảm' },
     author: 'Chuyên gia Thanh Hằng', published_on: '2026-03-10T08:00:00', created_at: '2026-03-08T10:00:00',
     tags: ['case-study', 'phuc-hoi-da'], comments_count: 9,
-    blog: { handle: 'truoc-va-sau', title: 'Trước & Sau Điều Trị' },
+    blog: { handle: 'truoc-va-sau-1', title: 'Trước & Sau' },
   },
   {
     id: 214, title: 'Cải thiện lỗ chân lông to và bề mặt da sau liệu trình 10 tuần',
     alias: 'cai-thien-lo-chan-long-to-10-tuan',
     handle: 'cai-thien-lo-chan-long-to-10-tuan',
-    url: '/blogs/truoc-va-sau/cai-thien-lo-chan-long-to-10-tuan',
+    url: '/blogs/truoc-va-sau-1/cai-thien-lo-chan-long-to-10-tuan',
     excerpt: 'Kết hợp AHA/BHA nồng độ tăng dần với Retinol liều thấp giúp cải thiện kết cấu da và lỗ chân lông rõ rệt sau 10 tuần theo dõi.',
     content: '<p>Lỗ chân lông to thường liên quan đến tăng tiết bã nhờn và mất đàn hồi collagen quanh nang lông...</p>',
     image: { src: img('90e0ef/333333', 'Case 04'), alt: 'Case study cải thiện lỗ chân lông' },
     featured_image: { src: img('90e0ef/333333', 'Case 04'), alt: 'Case study cải thiện lỗ chân lông' },
     author: 'Chuyên gia Trần Thu Hương', published_on: '2026-02-25T08:00:00', created_at: '2026-02-23T10:00:00',
     tags: ['case-study', 'lo-chan-long'], comments_count: 6,
-    blog: { handle: 'truoc-va-sau', title: 'Trước & Sau Điều Trị' },
+    blog: { handle: 'truoc-va-sau-1', title: 'Trước & Sau' },
   },
   {
     id: 215, title: 'Giảm thâm sau mụn rõ rệt chỉ sau 5 tuần dùng đúng hoạt chất',
     alias: 'giam-tham-sau-mun-5-tuan',
     handle: 'giam-tham-sau-mun-5-tuan',
-    url: '/blogs/truoc-va-sau/giam-tham-sau-mun-5-tuan',
+    url: '/blogs/truoc-va-sau-1/giam-tham-sau-mun-5-tuan',
     excerpt: 'Thâm sau mụn (PIH) đáp ứng tốt với Alpha Arbutin và Tranexamic Acid nồng độ phù hợp — case study khách hàng 27 tuổi.',
     content: '<p>Thâm sau mụn khác với nám ở cơ chế hình thành, nên cần phác đồ và thời gian điều trị khác nhau...</p>',
     image: { src: img('d4a373/333333', 'Case 05'), alt: 'Case study giảm thâm sau mụn' },
     featured_image: { src: img('d4a373/333333', 'Case 05'), alt: 'Case study giảm thâm sau mụn' },
     author: 'Chuyên gia Thanh Hằng', published_on: '2026-02-14T08:00:00', created_at: '2026-02-12T10:00:00',
     tags: ['case-study', 'tham-mun'], comments_count: 13,
-    blog: { handle: 'truoc-va-sau', title: 'Trước & Sau Điều Trị' },
+    blog: { handle: 'truoc-va-sau-1', title: 'Trước & Sau' },
   },
   {
     id: 216, title: 'Da sáng khoẻ, đều màu hơn sau 3 tháng chăm sóc kiên trì',
     alias: 'da-sang-khoe-deu-mau-3-thang',
     handle: 'da-sang-khoe-deu-mau-3-thang',
-    url: '/blogs/truoc-va-sau/da-sang-khoe-deu-mau-3-thang',
+    url: '/blogs/truoc-va-sau-1/da-sang-khoe-deu-mau-3-thang',
     excerpt: 'Không phải mọi cải thiện đều cần thủ thuật xâm lấn — case study da xỉn màu, không đều được cải thiện chỉ bằng routine dưỡng da đúng cách.',
     content: '<p>Đôi khi vấn đề lớn nhất của làn da chỉ là routine chưa đúng thứ tự và thiếu kiên trì...</p>',
     image: { src: img('e5989b/333333', 'Case 06'), alt: 'Case study da sáng đều màu' },
     featured_image: { src: img('e5989b/333333', 'Case 06'), alt: 'Case study da sáng đều màu' },
     author: 'Chuyên gia Lê Thị Lan', published_on: '2026-01-30T08:00:00', created_at: '2026-01-28T10:00:00',
     tags: ['case-study', 'duong-da'], comments_count: 5,
-    blog: { handle: 'truoc-va-sau', title: 'Trước & Sau Điều Trị' },
+    blog: { handle: 'truoc-va-sau-1', title: 'Trước & Sau' },
   },
 ];
 
@@ -498,10 +498,10 @@ const beforeAfterArticles = [
   if (a211) a211.content = `<p><img src="${baBefore}" alt="" /></p><p><img src="${baAfter}" alt="" /></p>`
     + story(`<p><img src="${baMid}" alt="Mốc tuần 4" /></p>`);
   const demoCase = (id, handle, title, excerpt, tags, content, extra) => Object.assign({
-    id, title, alias: handle, handle, url: `/blogs/truoc-va-sau/${handle}`, excerpt, summary: excerpt, content,
+    id, title, alias: handle, handle, url: `/blogs/truoc-va-sau-1/${handle}`, excerpt, summary: excerpt, content,
     image: { src: baAfter, alt: title }, featured_image: { src: baAfter, alt: title },
     author: 'Chuyên gia Thanh Hằng', published_on: '2026-10-15T08:00:00', created_at: '2026-10-15T08:00:00',
-    tags, comments_count: 0, template_suffix: 'truoc-va-sau', blog: { handle: 'truoc-va-sau', title: 'Trước & Sau Điều Trị' },
+    tags, comments_count: 0, template_suffix: 'truoc-va-sau', blog: { handle: 'truoc-va-sau-1', title: 'Trước & Sau' },
   }, extra || {});
   beforeAfterArticles.unshift(
     demoCase(217, 'demo-getglowing-micro-peel-6-tuan', '[DEMO] GetGlowing Micro-Peel – cải thiện bít tắc sau 6 tuần',
@@ -663,20 +663,20 @@ function withBlogMeta(blog) {
 const blogs = {
   'tin-tuc-va-kien-thuc': withBlogMeta({
     id:      301,
-    title:   'Tin tức',
+    title:   'Tin tức & Kiến thức',
     description: 'Kiến thức da liễu, thành phần hoạt chất và hướng dẫn chăm sóc da chuẩn y khoa từ đội ngũ chuyên gia Pharma Cosmetics.',
     handle:  'tin-tuc-va-kien-thuc',
     url:     '/blogs/tin-tuc-va-kien-thuc',
     articles: articles.filter(a => a.blog.handle === 'tin-tuc-va-kien-thuc'),
   }),
-  'truoc-va-sau': withBlogMeta({
+  'truoc-va-sau-1': withBlogMeta({
     id:      302,
     // 2026-10-17: giao diện blog.truoc-va-sau CHỈ có ở dev-preview/templates/ (trang test local, không đóng gói).
     template_suffix: 'truoc-va-sau',
     title:   'Trước & Sau Điều Trị',
     description: 'Case study thực tế ghi nhận tiến trình điều trị theo từng tuần, đánh giá bởi đội ngũ chuyên gia phụ trách.',
-    handle:  'truoc-va-sau',
-    url:     '/blogs/truoc-va-sau',
+    handle:  'truoc-va-sau-1',
+    url:     '/blogs/truoc-va-sau-1',
     articles: beforeAfterArticles,
   }),
   'bi-quyet': withBlogMeta({

@@ -34,7 +34,7 @@ const PAGES = (process.env.AUDIT_PAGES ? process.env.AUDIT_PAGES.replace(/,/g,'\
 /blogs/chuyen-gia/chuyen-gia-thanh-hang
 /blogs/hoat-chat
 /blogs/hoat-chat/retinol
-/blogs/truoc-va-sau
+/blogs/truoc-va-sau-1
 /blogs/giai-phap-skin-health
 /?tpl=blog.video
 /?tpl=blog.instagram-feed
