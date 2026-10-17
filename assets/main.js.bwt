@@ -78,7 +78,16 @@ if (wDWs < 767) {
 			$(".sudes-main-cate .sudes-main-cate-has-child").removeClass('active');
 			$(this).closest('li').addClass('active');
 		});
-	}); 
+		// 2026-10-17 (UX mega menu desktop): mở ra là hiện sẵn lưới của nhóm đầu tiên có menu con — không để nửa phải trống.
+		if (window.matchMedia('(min-width: 992px)').matches && !$('.sudes-main-cate > li.sudes-main-cate-has-child.active').length) {
+			$('.sudes-main-cate > li.sudes-main-cate-has-child').has('> .sudes-sub-mega-menu').first().addClass('active');
+		}
+	});
+	// 2026-10-17: rê chuột qua nhóm ⇒ nhóm đó thành "active" (chỉ 1 lưới hiện, không chồng lưới nhóm đang chọn + nhóm đang rê).
+	$(document).on('mouseenter', '.sudes-list-cate .sudes-main-cate > li.sudes-main-cate-has-child', function(){
+		if (!window.matchMedia('(min-width: 992px)').matches) return;
+		$(this).addClass('active').siblings('.sudes-main-cate-has-child').removeClass('active');
+	});
 	$('.mobile-nav-overflow').on('click', function(){
 		if (!window.matchMedia('(min-width: 992px)').matches) return;
 		$('.js-menu-toggle').removeClass('active').attr('aria-expanded', 'false');
