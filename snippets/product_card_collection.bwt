@@ -1,7 +1,7 @@
 {%- comment -%}
   product_card_collection.bwt (2026-10-10) — thẻ sản phẩm lưới trang danh mục + kết quả lọc AJAX (search.data / data_list),
   theo thiết kế design/danh-muc/danh-muc-san-pham.png. Thẻ cũ product_grid_office giữ nguyên cho các khối khác.
-  - Nhãn góc trái: đang giảm giá ⇒ "Giảm X%"; không thì tag dạng nhan:<chữ> (vd nhan:Bán chạy, nhan:Hàng mới, nhan:Đề xuất).
+  - Nhãn góc trái: đang giảm giá ⇒ "-X%" (2026-10-17: quy định ghi mức giảm dạng -X%, vd -50%); không thì tag dạng nhan:<chữ> (vd nhan:Bán chạy, nhan:Hàng mới, nhan:Đề xuất).
   - Chip dưới giá: tag voucher:<mức> (vd voucher:-10%) ⇒ "Voucher -10%"; tag freeship ⇒ "Freeship". Không tag ⇒ không chip.
   - Sao đánh giá CHỈ khi có đánh giá thật (app Sapo Product Reviews, metafields.bpr) — không bịa số.
   - Kê toa (pc_is_rx): không giá, không giỏ, chỉ "Liên hệ tư vấn" + xem chi tiết (RULE kê toa như thẻ cũ).
@@ -31,7 +31,7 @@
 <form action="/cart/add" method="post" class="pc-pcard variants" data-cart-form data-id="product-actions-{{ product.id }}" enctype="multipart/form-data">
 	<div class="pc-pcard__media">
 		{%- if pcc_discount > 0 -%}
-		<span class="pc-pcard__badge pc-pcard__badge--sale">{{ settings.collection_card_sale_label | default: 'Giảm' | escape }} {{ pcc_discount }}%</span>
+		<span class="pc-pcard__badge pc-pcard__badge--sale">-{{ pcc_discount }}%</span>
 		{%- elsif pcc_badge != blank -%}
 		{%- comment -%} Màu nhãn theo từ khoá (không phụ thuộc handleize): bán chạy = đỏ, đề xuất = tím xanh, yêu thích = cam, còn lại = xanh. {%- endcomment -%}
 		{%- assign pcc_bl = pcc_badge | downcase -%}
@@ -45,10 +45,20 @@
 		</a>
 	</div>
 	<div class="pc-pcard__body">
-		{%- if product.vendor != blank -%}<p class="pc-pcard__brand notranslate" translate="no">{{ product.vendor | escape }}</p>{%- endif -%}
+		{%- comment -%} 2026-10-17: hãng + mô tả luôn có ô (trống thì để rỗng) để giá các thẻ cùng hàng thẳng một vạch. {%- endcomment -%}
+		<p class="pc-pcard__brand notranslate" translate="no">{{ product.vendor | escape }}</p>
 		{%- comment -%} RULE-P0-01: tên SP chứa nồng độ hoạt chất/thương hiệu quốc tế ⇒ notranslate. {%- endcomment -%}
 		<h3 class="pc-pcard__name notranslate" translate="no"><a href="{{ product.url }}" title="{{ product.name | escape }}">{{ product.name }}</a></h3>
-		{%- if product.summary != blank -%}<p class="pc-pcard__desc">{{ product.summary | strip_html | strip_newlines | truncatewords: 12 }}</p>{%- endif -%}
+		{%- comment -%} 2026-10-17: mô tả ngắn nhiều dòng (<p>/<br>) bị strip_html dính chữ ("NUBIANCEXUẤT XỨ") ⇒ tách dòng, nối bằng " · ". {%- endcomment -%}
+		{%- assign pcc_desc = '' -%}
+		{%- if product.summary != blank -%}
+			{%- assign pcc_lines = product.summary | replace: '</p>', '~~' | replace: '<br />', '~~' | replace: '<br/>', '~~' | replace: '<br>', '~~' | replace: '</li>', '~~' | replace: '</div>', '~~' | strip_html | strip_newlines | split: '~~' -%}
+			{%- for pcc_line in pcc_lines -%}
+				{%- assign pcc_l = pcc_line | replace: '&nbsp;', ' ' | strip -%}
+				{%- if pcc_l != blank -%}{%- if pcc_desc != blank -%}{%- assign pcc_desc = pcc_desc | append: ' · ' -%}{%- endif -%}{%- assign pcc_desc = pcc_desc | append: pcc_l -%}{%- endif -%}
+			{%- endfor -%}
+		{%- endif -%}
+		<p class="pc-pcard__desc"{% if pcc_desc == blank %} aria-hidden="true"{% endif %}>{{ pcc_desc | truncatewords: 14 }}</p>
 		<div class="pc-pcard__price">
 			{%- if pc_is_rx -%}
 			<span class="pc-pcard__price-now pc-price--rx">{{ settings.product_rx_card_label | default: 'Liên hệ tư vấn' }}</span>

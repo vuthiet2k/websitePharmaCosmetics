@@ -2662,18 +2662,22 @@ body .sort-cate.clearfix .sort-cate-right ul li.active a { background: var(--mai
 	background: rgba(255, 255, 255, .92);
 	color: var(--color-text-muted);
 	cursor: pointer;
-	.fas { display: none; }
+	/* 2026-10-17: icon đổi sang fa-regular/fa-solid (UI-9) nhưng CSS còn .far/.fas ⇒ hiện 2 tim chồng nhau. */
+	.fa-solid { display: none; }
 	&.is-active { color: var(--accent-flash-red); }
-	&.is-active .far { display: none; }
-	&.is-active .fas { display: inline; }
+	&.is-active .fa-regular { display: none; }
+	&.is-active .fa-solid { display: inline; }
 }
 .pc-pcard__body { display: flex; flex-direction: column; gap: 5px; flex: 1; padding: 12px; }
-.pc-pcard__brand { margin: 0; font-size: var(--fs-xs); color: var(--color-text-muted); }
+/* 2026-10-17: giá thẳng hàng giữa các thẻ — hãng (1 dòng), tên (2 dòng), mô tả (2 dòng) giữ chỗ cố định; chip ngay dưới giá;
+   hàng sao + nút giỏ ghim đáy thẻ (trước đây giá margin-top:auto nên lệch khi giá cũ xuống dòng/có chip). */
+.pc-pcard__brand { margin: 0; min-height: calc(var(--fs-xs) * 1.45); font-size: var(--fs-xs); line-height: 1.45; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pc-pcard__name {
 	margin: 0;
 	font-size: var(--fs-body);
 	font-weight: 700;
 	line-height: 1.35;
+	min-height: calc(var(--fs-body) * 1.35 * 2);
 	a {
 		display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 		color: var(--color-text-main); text-decoration: none;
@@ -2682,12 +2686,12 @@ body .sort-cate.clearfix .sort-cate-right ul li.active a { background: var(--mai
 }
 .pc-pcard__desc {
 	display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-	margin: 0; font-size: var(--fs-xs); line-height: 1.45; color: var(--color-text-muted);
+	margin: 0; min-height: calc(var(--fs-xs) * 1.45 * 2); font-size: var(--fs-xs); line-height: 1.45; color: var(--color-text-muted);
 }
-.pc-pcard__price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; margin-top: auto; padding-top: 4px; }
+.pc-pcard__price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; padding-top: 4px; }
 .pc-pcard__price-now { font-size: var(--fs-md); font-weight: 800; color: var(--color-text-main); }
 .pc-pcard__price-old { font-size: var(--fs-xs); color: var(--color-text-muted); }
-.pc-pcard__foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pc-pcard__foot { order: 2; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 4px; }
 .pc-pcard__rating {
 	font-size: var(--fs-xs); font-weight: 700; color: var(--color-text-main);
 	i { color: var(--star-color); }
@@ -2706,7 +2710,7 @@ body .sort-cate.clearfix .sort-cate-right ul li.active a { background: var(--mai
 	&:disabled { opacity: .45; cursor: not-allowed; }
 	&--view { background: var(--color-mint-subtle); color: var(--pc-brand-deep); }
 }
-.pc-pcard__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.pc-pcard__chips { order: 1; display: flex; flex-wrap: wrap; gap: 6px; }
 .pc-pcard__chip {
 	display: inline-flex; align-items: center; gap: 4px;
 	padding: 2px 8px;
@@ -2726,7 +2730,7 @@ html[data-pc-view="list"] .category-products .pc-pcard__body { padding: 16px 20p
 @media (max-width: 575px) {
 	html[data-pc-view="list"] .category-products .pc-pcard__media { flex-basis: 120px; }
 	.pc-pcard__body { padding: 10px; }
-	.pc-pcard__name { font-size: var(--fs-sm); }
+	.pc-pcard__name { font-size: var(--fs-sm); min-height: calc(var(--fs-sm) * 1.35 * 2); }
 	.pc-pcard__price-now { font-size: var(--fs-body); }
 	.pc-pcard__cart { width: 34px; height: 34px; }
 }
