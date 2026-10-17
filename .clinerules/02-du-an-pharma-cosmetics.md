@@ -161,6 +161,8 @@ Bổ sung cho `01-quy-chuan-theme-sapo.md` (quy chuẩn nền tảng Sapo). File
 - Desktop ≥992px: thanh menu cuộn `.hSticky` dùng đúng khung header gốc (`--pc-container-max` 1280px + gutter), logo
   sát trái/giỏ sát phải; hàng header 64px. `#nav` căn giữa bằng `margin:auto` ở mục đầu/cuối (không `justify-content:
   center` — tràn trái, mất "TRANG CHỦ").
+- Nút Danh mục desktop (chốt 2026-10-17): viên thuốc "☰ DANH MỤC" nền `--mainColorLight`, đang mở nền `--mainColorDark` chữ
+  trắng, vạch ngăn 1px với menu, không mũi tên ˅; dropdown rộng 240px. Không quay lại kiểu chỉ-icon.
 - Logo header mobile cao 36px (≤360px: 32px), căn giữa cả 2 chiều. Vùng bấm icon header ≥44×44 (Apple HIG 44pt /
   Material 48dp). Drawer menu: đầu nền trắng, nằm trên topbar (`.header-menu.current` z-index 10040, `.main-header`
   z-index 1000 > lớp phủ 999).
