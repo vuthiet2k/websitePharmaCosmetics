@@ -6,6 +6,11 @@
 **laptop (≥ 992px), tablet và mobile (390px)**. Mẫu chuẩn đã nhập đủ: sản phẩm
 *Elaine Brennan GetGlowing Micro-Peel* (mục 8).
 
+> **Trang liệu trình là SẢN PHẨM, không phải bài blog hay Trang nội dung.** `http://localhost:3000/?tpl=page.getglowing-micro-peel`
+> chỉ là trang nội dung kiểu cũ hiển thị lại sản phẩm đặt ở cấu hình `lt_page_product`. Trên Sapo (đối soát sitemap 17/10/2026)
+> **không có** trang `/getglowing-micro-peel-ha-noi`; liệu trình mẫu chạy ở URL sản phẩm
+> `/elaine-brennan-getglowing-micro-peel-lieu-trinh-peel-chuyen-nghiep-ho-tro-lam-sang-va-cai-thien-be-mat-da`.
+
 > Nguyên tắc: **chỉ nhập dữ liệu thật**. Phần nào chưa có dữ liệu thì để trống — trang tự ẩn phần đó, không hiện ô trống,
 > ảnh giả hay số liệu bịa. Ảnh trước–sau chỉ dùng ca thật của chính liệu trình, khách đã đồng ý.
 
@@ -22,7 +27,7 @@
 | 4 | **Công nghệ & hoạt chất**: nhãn = hãng · tiêu đề = tên ngắn (CHỮ HOA) · mô tả · ảnh · thẻ hoạt chất | **Nhà cung cấp/Hãng** · tag `tenngan:` · tag `congthuc:` · ảnh `[congthuc]` (→ `[sanpham]`) · tag `hoatchat:<handle>` → blog **Hoạt chất** (`hoat-chat`) | Ẩn phần/ảnh |
 | 5 | **Quy trình 1:1** (5 bước, dùng chung mọi liệu trình) | Cấu hình theme › "Trang liệu trình (sản phẩm)"; ảnh bước = ảnh SP alt `[buoc-1]`…`[buoc-5]`, không có thì ảnh chung trong cấu hình | Bước thiếu ảnh hiện khung icon |
 | 6 | **Thông tin chi tiết** (thu gọn, nút "Xem thêm") | **Mô tả chi tiết** sản phẩm | Ẩn |
-| 7 | **Trước – sau** | Bài blog **Trước & Sau** (`truoc-va-sau`) có tag `lieutrinh:<alias SP>` + đủ 2 ảnh (trong nội dung hoặc tag `anhtruoc:`/`anhsau:`) | Ẩn cả phần |
+| 7 | **Trước – sau** | Bài blog **Trước & Sau** (`truoc-va-sau-1`) có tag `lieutrinh:<alias SP>` + đủ 2 ảnh (trong nội dung hoặc tag `anhtruoc:`/`anhsau:`) | Ẩn cả phần |
 | 8 | **Thông tin & đặt lịch**: bảng · nút đặt lịch · hotline · dòng thương hiệu | Tag `hinhthuc:` `thoigian:` `sobuoi:` `diadiem:` · **giá sản phẩm** (0 ⇒ "Liên hệ tư vấn") · cấu hình | Dòng trống ẩn / dùng mặc định |
 | 9 | **FAQ** (+ JSON-LD FAQPage cho Google) | Bài blog **Câu hỏi liệu trình** (`cau-hoi-lieu-trinh`) có tag `sanpham:<alias SP>` | Ẩn |
 | — | Thanh đặt lịch bám đáy (mobile) | Cấu hình `lt_sticky_cta` | — |
@@ -33,8 +38,16 @@ Nút **Đặt lịch** tự mở `/dat-lich-tu-van?handle=<alias SP>` ⇒ trang 
 
 ## 2. Chuẩn bị 1 lần (đã có thì bỏ qua)
 
-1. **Blog** (Website › Bài viết › Danh mục bài viết): `van-de-da` (Vấn đề da), `cau-hoi-lieu-trinh` (Câu hỏi liệu trình),
-   `hoat-chat` (đã có), `truoc-va-sau` (đã có). Đổi handle khác thì sửa ở Cấu hình theme › "Trang liệu trình (sản phẩm)".
+1. **Blog** (Website › Bài viết › Danh mục bài viết) — hiện trạng Sapo 17/10/2026:
+
+   | Danh mục | Handle | Trên Sapo |
+   | :-- | :-- | :-- |
+   | Vấn đề da | `van-de-da` | **CHƯA CÓ — cần tạo** (không có ⇒ phần "Vấn đề da" ẩn) |
+   | Câu hỏi liệu trình | `cau-hoi-lieu-trinh` | **CHƯA CÓ — cần tạo** (không có ⇒ FAQ ẩn) |
+   | Thư viện hoạt chất | `hoat-chat` | Đã có |
+   | Trước & Sau | **`truoc-va-sau-1`** | Đã có (alias `truoc-va-sau` thuộc một Trang nội dung) |
+
+   Tạo đúng handle như bảng (ô Đường dẫn khi tạo danh mục). Đổi handle khác thì sửa ở Cấu hình theme › "Trang liệu trình (sản phẩm)".
 2. **Cấu hình theme › "Trang liệu trình (sản phẩm)"**: chữ dùng chung (nhãn, tiêu đề các phần, 5 bước quy trình, nhãn bảng
    thông tin, nút, dòng thương hiệu). `[ten]` trong chữ tự thay bằng tên ngắn liệu trình. Ảnh chung cho 5 bước (tuỳ chọn).
 
@@ -100,7 +113,7 @@ Giá trị **không được chứa dấu phẩy** (Sapo tách tag theo dấu ph
 Tiêu đề = tên hoạt chất · handle = giá trị tag `hoatchat:` · Trích dẫn = công dụng 1–2 câu · tag `vaitro:` = nhãn vai trò
 (vd `vaitro:TÁI TẠO BỀ MẶT`) · tag `nhom:`/`inci:` như thư viện hoạt chất. **Chỉ ghi nồng độ khi đã đối chiếu INCI/tài liệu kỹ thuật chính thức.**
 
-## 6. Bài "Trước – sau" (blog `truoc-va-sau`) — chỉ ca thật
+## 6. Bài "Trước – sau" (blog `truoc-va-sau-1`) — chỉ ca thật
 
 Hướng dẫn đầy đủ: [`huong-dan-tao-ca-truoc-sau.md`](./huong-dan-tao-ca-truoc-sau.md) (khung giao diện `article.truoc-va-sau`).
 Tiêu đề = tên ca (vd *Sắc tố và kết cấu da*) · tag `lieutrinh:<alias sản phẩm>` · ảnh: 2 ảnh đầu chèn trong Nội dung (trước, sau)
@@ -148,8 +161,9 @@ Tiêu đề = câu hỏi · Nội dung = trả lời · tag `sanpham:<alias sả
 7. Tạo 4 bài **Câu hỏi liệu trình** (bong da · số buổi · da nhạy cảm · chăm sóc sau peel) với tag `sanpham:<alias>`.
 8. SEO sản phẩm — Tiêu đề: `GetGlowing Micro-Peel tại Hà Nội | Skin Health Beauty`; Mô tả: `GetGlowing Micro-Peel tại Hà Nội.
    Liệu trình peel đa mục tiêu hỗ trợ cải thiện bít tắc, thâm mụn, sắc tố và bề mặt da. Trị liệu cá nhân hóa 1:1.`
-9. Trang nội dung cũ `/getglowing-micro-peel-ha-noi` vẫn hiện liệu trình này (cấu hình `lt_page_product`) với thẻ canonical về URL
-   sản phẩm — nên tạo **chuyển hướng 301** trang đó → URL sản phẩm (Website › Chuyển hướng URL).
+9. Trang nội dung `/getglowing-micro-peel-ha-noi` **không tồn tại trên Sapo** (17/10/2026) — không cần tạo. Chỉ khi cần giữ link cũ:
+   tạo Trang nội dung đường dẫn đó, giao diện `page.getglowing-micro-peel` (tự hiện sản phẩm ở cấu hình `lt_page_product`, có
+   canonical về URL sản phẩm), hoặc tốt hơn tạo **chuyển hướng 301** → URL sản phẩm (Website › Chuyển hướng URL).
 
 **Ảnh còn thiếu (cần chụp/thiết kế, đặt alt theo bảng 3.1):** banner 1920×900 đã duyệt (`[banner]`), ảnh bước 1/4/5
 (`[buoc-1]`, `[buoc-4]`, `[buoc-5]` hoặc ảnh chung trong cấu hình), ảnh 4:3 cho 5 bài vấn đề da, ảnh trước–sau ca thật đã đồng ý.
