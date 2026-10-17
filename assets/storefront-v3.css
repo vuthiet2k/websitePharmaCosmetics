@@ -116,20 +116,41 @@ body.pc-site-v3{font-family:var(--pc-font-body);font-size:var(--fs-base)}
  .pc-site-v3 header.header .box-hearder .header-right .header-action-search{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;background:transparent;border:0}
  /* 2026-10-17 (người dùng: header bé, chữ nhỏ): menu 12px/500 ⇒ token menu --fs-body 14px/600, ≥1200px --fs-base 15px;
     nút "Danh mục" cùng cỡ, đậm 700, cao 40px. 992–1199px giữ 14px để 5 mục + nút không tràn (đo 1024px). */
- .pc-site-v3 header.header .box-hearder .header-menu .sudes-main-header #nav>.nav-item>a{font-size:var(--fs-body);font-weight:600;padding-left:10px;padding-right:10px}
+ .pc-site-v3 header.header .box-hearder .header-menu .sudes-main-header #nav>.nav-item>a{--pc-nav-pad:10px;font-size:var(--fs-body);font-weight:600;padding-left:var(--pc-nav-pad);padding-right:var(--pc-nav-pad)}
  html .pc-site-v3 header.header .box-hearder .header-menu .sudes-cate-header .title.js-menu-toggle{font-size:var(--fs-body)!important;font-weight:700!important;height:40px!important;padding:0 16px!important}
  .pc-site-v3 header.header.hSticky .header-menu{z-index:10020!important;background:#fff!important;box-shadow:0 8px 24px rgba(0,46,35,.14)!important;isolation:isolate}
 }
 /* 992–1199px (đo 2026-10-17): 5 mục menu 14px cần 536px, chỗ trống chỉ 394–540px ⇒ nút "Danh mục" chỉ còn icon (đã có aria-label)
    + chữ menu --fs-sm 13px/600, đệm 6px — vẫn to/đậm hơn bản cũ 12px/500 và không tràn. */
 @media(min-width:992px) and (max-width:1199.98px){
- .pc-site-v3 header.header .box-hearder .header-menu .sudes-main-header #nav>.nav-item>a{font-size:var(--fs-sm);padding-left:6px;padding-right:6px}
+ .pc-site-v3 header.header .box-hearder .header-menu .sudes-main-header #nav>.nav-item>a{--pc-nav-pad:6px;font-size:var(--fs-sm)}
  html .pc-site-v3 header.header .box-hearder .header-menu .sudes-cate-header .title.js-menu-toggle{width:40px!important;padding:0!important;justify-content:center!important}
  html .pc-site-v3 header.header .box-hearder .header-menu .sudes-cate-header .title.js-menu-toggle>span{display:none!important}
 }
 @media(min-width:1200px){
- .pc-site-v3 header.header .box-hearder .header-menu .sudes-main-header #nav>.nav-item>a{font-size:var(--fs-base);padding-left:12px;padding-right:12px}
+ .pc-site-v3 header.header .box-hearder .header-menu .sudes-main-header #nav>.nav-item>a{--pc-nav-pad:13px;font-size:var(--fs-base)} /* 1200px: 14px thừa 1px ⇒ tràn */
  html .pc-site-v3 header.header .box-hearder .header-menu .sudes-cate-header .title.js-menu-toggle{font-size:var(--fs-base)!important}
+}
+@media(min-width:1280px){
+ .pc-site-v3 header.header .box-hearder .header-menu .sudes-main-header #nav>.nav-item>a{--pc-nav-pad:14px}
+}
+/* 2026-10-17 (ảnh mẫu người dùng gửi): nút "Danh mục" bỏ nền viên thuốc — chỉ icon + chữ xanh đậm, vạch ngăn với menu;
+   mục đang xem (link.active của Sapo) đậm 700, xanh đậm, gạch chân 3px mainColor; rê chuột hiện gạch chân nhạt;
+   đáy header là bóng mờ thay cho viền. */
+@media(min-width:992px){
+ html .pc-site-v3 header.header .box-hearder .header-menu .sudes-cate-header .title.js-menu-toggle{background:transparent!important;color:var(--mainColorDark,#003F2D)!important;font-weight:600!important;padding:0 10px!important;gap:10px!important;border-radius:8px}
+ html .pc-site-v3 header.header .box-hearder .header-menu .sudes-cate-header .title.js-menu-toggle .pc-cate-ico{font-size:var(--fs-lg)}
+ html .pc-site-v3 header.header .box-hearder .header-menu .sudes-cate-header .title.js-menu-toggle:is(:hover,:focus-visible,.active,[aria-expanded="true"]){background:var(--mainColorLight,#EAF7EE)!important;color:var(--mainColorDark,#003F2D)!important}
+ html .pc-site-v3 header.header .box-hearder .header-menu .sudes-cate-header{padding-right:20px!important;margin-right:8px}
+ .pc-site-v3 header.header .box-hearder .header-menu .sudes-main-header #nav>.nav-item>a{position:relative;color:#231F20;border-bottom:0!important} /* bỏ viền 2px active cũ — chỉ dùng gạch chân ::after */
+ .pc-site-v3 header.header .box-hearder .header-menu .sudes-main-header #nav>.nav-item>a::after{content:"";position:absolute;left:var(--pc-nav-pad,10px);right:var(--pc-nav-pad,10px);bottom:4px;height:3px;border-radius:3px;background:var(--mainColor,#3CB371);transform:scaleX(0);transition:transform .2s ease,opacity .2s ease;pointer-events:none}
+ .pc-site-v3 header.header .box-hearder .header-menu .sudes-main-header #nav>.nav-item>a:is(:hover,:focus-visible){color:var(--mainColorDark,#003F2D)!important}
+ .pc-site-v3 header.header .box-hearder .header-menu .sudes-main-header #nav>.nav-item>a:is(:hover,:focus-visible)::after{transform:scaleX(1);opacity:.45}
+ .pc-site-v3 header.header .box-hearder .header-menu .sudes-main-header #nav>.nav-item.active>a{color:var(--mainColorDark,#003F2D)!important;font-weight:700}
+ .pc-site-v3 header.header .box-hearder .header-menu .sudes-main-header #nav>.nav-item.active>a::after{transform:scaleX(1);opacity:1}
+ .pc-site-v3 header.header .box-hearder{border-bottom-color:transparent!important;box-shadow:0 6px 18px rgba(0,46,35,.07)!important}
+ .pc-site-v3 header.header .box-hearder .header-action-search i{font-size:var(--fs-h4)!important} /* 15px ở 1440 lọt thỏm cạnh tim/giỏ 24px; ảnh mẫu ≈20px */
+ body.pc-home-v3:has(#portal-main > #section_hero:first-child) header.header:not(:hover):not(:focus-within):not(.hSticky) .main-header:not(.is-scrolled) .sudes-main-header #nav>.nav-item>a::after{background:#fff}
 }
 /* 2026-10-14: khối @media(min-width:992px) phía trên trước đây thiếu dấu đóng (đóng nhầm ở cuối cụm header) ⇒ rule ẩn
    .pc-sticky-* bên dưới chỉ chạy ≥992px, logo + giỏ của thanh cuộn desktop lọt vào menu mobile. */
@@ -197,7 +218,7 @@ body.pc-site-v3{font-family:var(--pc-font-body);font-size:var(--fs-base)}
  .pc-site-v3 header.header .box-hearder .header-menu .sudes-list-cate .sudes-sub-mega-menu>li{width:auto!important;float:none!important;clear:none!important;margin:0!important}
  .pc-site-v3 header.header .box-hearder .header-menu .sudes-list-cate .sudes-sub-mega-menu>li>a.image_thumb{margin:0;height:100%}
  /* Header trong suốt trên Hero (edd746c): icon trắng như chữ menu. */
- body.pc-home-v3:has(#portal-main > #section_hero:first-child) header.header:not(:hover):not(:focus-within):not(.hSticky) .main-header:not(.is-scrolled) .sudes-cate-header .title.js-menu-toggle{color:#fff!important;background:rgba(255,255,255,.16)!important}
+ body.pc-home-v3:has(#portal-main > #section_hero:first-child) header.header:not(:hover):not(:focus-within):not(.hSticky) .main-header:not(.is-scrolled) .sudes-cate-header .title.js-menu-toggle{color:#fff!important;background:transparent!important}
  body.pc-home-v3:has(#portal-main > #section_hero:first-child) header.header:not(:hover):not(:focus-within):not(.hSticky) .main-header:not(.is-scrolled) .sudes-cate-header{border-right-color:rgba(255,255,255,.35)}
 }
 
