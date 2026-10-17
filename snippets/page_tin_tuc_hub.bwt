@@ -11,15 +11,21 @@
 {%- assign pc_nh_list = pc_nh_raw | split: ',' -%}
 {%- assign pc_nh_main = pc_nh_list.first | strip -%}
 {%- assign pc_nh_mb = blogs[pc_nh_main] -%}
-{%- if pc_nh_mb.articles.size == 0 -%}
+{%- comment -%}
+  2026-10-17: so sánh "> 0" thay cho "== 0" — trên Sapo danh mục tin-tuc KHÔNG tồn tại (/tin-tuc là Trang nội dung) nên
+  blogs['tin-tuc'].articles.size = nil, "nil == 0" là false ⇒ không dự phòng, mất cả khối Tin mới nhất / Tin nổi bật.
+{%- endcomment -%}
+{%- unless pc_nh_mb.articles.size > 0 -%}
+	{%- assign pc_nh_found = false -%}
 	{%- for pc_nh_try in pc_nh_list -%}
 		{%- assign pc_nh_try_s = pc_nh_try | strip -%}
-		{%- if pc_nh_mb.articles.size == 0 and blogs[pc_nh_try_s].articles.size > 0 -%}
+		{%- if pc_nh_found == false and blogs[pc_nh_try_s].articles.size > 0 -%}
+			{%- assign pc_nh_found = true -%}
 			{%- assign pc_nh_main = pc_nh_try_s -%}
 			{%- assign pc_nh_mb = blogs[pc_nh_try_s] -%}
 		{%- endif -%}
 	{%- endfor -%}
-{%- endif -%}
+{%- endunless -%}
 {%- assign pc_nh_second = '' -%}
 {%- if pc_nh_list.size > 1 -%}{%- assign pc_nh_second = pc_nh_list[1] | strip -%}{%- endif -%}
 {%- assign pc_nh_ftag = settings.news_featured_tag | default: 'noibat' -%}
