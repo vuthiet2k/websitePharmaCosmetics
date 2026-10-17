@@ -471,8 +471,19 @@ const beforeAfterArticles = [
     213: ['nhom:Đỏ da, nhạy cảm', 'tuan:6', 'phacdo:Ceramide + Centella Asiatica'],
     216: ['nhom:Lão hóa, tiền mãn kinh', 'tuan:12'],
   };
+  // 2026-10-17: ca 211/212 mô phỏng cách nhập trên trình soạn thảo Sapo — 2 ảnh đầu chèn trong Nội dung (trước, sau);
+  // các ca còn lại giữ tag anhtruoc:/anhsau: (snippets/ba_case_source.bwt nhận cả 2 cách). Mọi ca chọn giao diện
+  // article.truoc-va-sau như hướng dẫn docs/huong-dan-tao-ca-truoc-sau.md.
+  const baInContent = [211, 212];
   beforeAfterArticles.forEach((a) => {
-    if (baTags[a.id]) a.tags.push(`anhtruoc:${baBefore}`, `anhsau:${baAfter}`, ...baTags[a.id]);
+    a.template_suffix = 'truoc-va-sau';
+    if (!baTags[a.id]) return;
+    if (baInContent.includes(a.id)) {
+      a.content = `<p><img src="${baBefore}" alt="" /></p><p><img src="${baAfter}" alt="" /></p>${a.content}`;
+      a.tags.push(...baTags[a.id]);
+    } else {
+      a.tags.push(`anhtruoc:${baBefore}`, `anhsau:${baAfter}`, ...baTags[a.id]);
+    }
   });
 }
 

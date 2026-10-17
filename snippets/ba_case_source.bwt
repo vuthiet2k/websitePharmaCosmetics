@@ -1,0 +1,72 @@
+{%- comment -%}
+  ba_case_source.bwt (2026-10-17) — đọc dữ liệu 1 ca Trước & Sau (bài trong blog settings.clinical_case_blog_handle).
+  Dùng chung cho page.clinical-proof, article.truoc-va-sau và snippets/lieu_trinh_cases — trước đây mỗi nơi tự tách tag.
+  Đầu vào: pc_bs_article; pc_bs_need_body = true nếu cần nội dung đã gỡ 2 ảnh trước/sau (trang chi tiết).
+  Ảnh trước/sau, theo thứ tự ưu tiên (bài nào nhập kiểu nào cũng nhận):
+    1. Tag anhtruoc:<link ảnh> / anhsau:<link ảnh> (cách cũ, vẫn giữ).
+    2. 2 ảnh ĐẦU TIÊN chèn trong Nội dung bài (ảnh 1 = trước, ảnh 2 = sau) — cách nhập trên trình soạn thảo Sapo,
+       không phải dán link vào tag.
+  Tag phụ: nhom:, tuoi:, tinh:, tuan:, phacdo:, lieutrinh:<alias SP> (lặp được).
+  Đầu ra: pc_bs_before, pc_bs_after (rỗng ⇒ ca không đủ ảnh), pc_bs_group, pc_bs_age, pc_bs_city, pc_bs_weeks,
+  pc_bs_plan, pc_bs_lt ("|alias1|alias2|"), pc_bs_lt_first, pc_bs_body (chỉ khi pc_bs_need_body).
+{%- endcomment -%}
+{%- assign pc_bs_before = '' -%}{%- assign pc_bs_after = '' -%}{%- assign pc_bs_group = '' -%}
+{%- assign pc_bs_age = '' -%}{%- assign pc_bs_city = '' -%}{%- assign pc_bs_weeks = '' -%}{%- assign pc_bs_plan = '' -%}
+{%- assign pc_bs_lt = '|' -%}{%- assign pc_bs_lt_first = '' -%}
+{%- for pc_bs_tag in pc_bs_article.tags -%}
+  {%- if pc_bs_tag contains ':' -%}
+    {%- assign pc_bs_raw = pc_bs_tag | split: ':' | first -%}
+    {%- assign pc_bs_key = pc_bs_raw | strip | downcase -%}
+    {%- comment -%} Cắt đúng phần sau "khoá:" (không split ':' | last — làm hỏng link https://). {%- endcomment -%}
+    {%- assign pc_bs_val = pc_bs_tag | remove_first: pc_bs_raw | remove_first: ':' | strip -%}
+    {%- case pc_bs_key -%}
+    {%- when 'anhtruoc' -%}{%- assign pc_bs_before = pc_bs_val -%}
+    {%- when 'anhsau' -%}{%- assign pc_bs_after = pc_bs_val -%}
+    {%- when 'nhom' -%}{%- assign pc_bs_group = pc_bs_val -%}
+    {%- when 'tuoi' -%}{%- assign pc_bs_age = pc_bs_val -%}
+    {%- when 'tinh' -%}{%- assign pc_bs_city = pc_bs_val -%}
+    {%- when 'tuan' -%}{%- assign pc_bs_weeks = pc_bs_val -%}
+    {%- when 'phacdo' -%}{%- assign pc_bs_plan = pc_bs_val -%}
+    {%- when 'lieutrinh' -%}
+      {%- assign pc_bs_lt = pc_bs_lt | append: pc_bs_val | append: '|' -%}
+      {%- if pc_bs_lt_first == blank -%}{%- assign pc_bs_lt_first = pc_bs_val -%}{%- endif -%}
+    {%- endcase -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{%- assign pc_bs_body = '' -%}
+{%- assign pc_bs_tag1 = '' -%}{%- assign pc_bs_tag2 = '' -%}{%- assign pc_bs_img1 = '' -%}{%- assign pc_bs_img2 = '' -%}
+{%- if pc_bs_need_body or pc_bs_before == blank or pc_bs_after == blank -%}
+  {%- if pc_bs_article.content contains '<img' -%}
+    {%- comment -%} Thêm "~" đầu chuỗi để phần tử [0] luôn là đoạn trước ảnh đầu (kể cả khi nội dung mở đầu bằng ảnh). {%- endcomment -%}
+    {%- assign pc_bs_parts = pc_bs_article.content | prepend: '~' | split: '<img' -%}
+    {%- for pc_bs_part in pc_bs_parts offset: 1 limit: 2 -%}
+      {%- assign pc_bs_attr = pc_bs_part | split: '>' | first -%}
+      {%- assign pc_bs_src = '' -%}
+      {%- if pc_bs_attr contains 'src="' -%}
+        {%- assign pc_bs_src = pc_bs_attr | split: 'src="' | last | split: '"' | first -%}
+      {%- elsif pc_bs_attr contains "src='" -%}
+        {%- assign pc_bs_src = pc_bs_attr | split: "src='" | last | split: "'" | first -%}
+      {%- endif -%}
+      {%- assign pc_bs_full = '<img' | append: pc_bs_attr | append: '>' -%}
+      {%- if forloop.index == 1 -%}{%- assign pc_bs_img1 = pc_bs_src -%}{%- assign pc_bs_tag1 = pc_bs_full -%}
+      {%- else -%}{%- assign pc_bs_img2 = pc_bs_src -%}{%- assign pc_bs_tag2 = pc_bs_full -%}{%- endif -%}
+    {%- endfor -%}
+    {%- if pc_bs_before == blank and pc_bs_after == blank and pc_bs_img1 != blank and pc_bs_img2 != blank -%}
+      {%- assign pc_bs_before = pc_bs_img1 -%}{%- assign pc_bs_after = pc_bs_img2 -%}
+      {%- assign pc_bs_from_content = true -%}
+    {%- else -%}
+      {%- assign pc_bs_from_content = false -%}
+    {%- endif -%}
+  {%- else -%}
+    {%- assign pc_bs_from_content = false -%}
+  {%- endif -%}
+  {%- if pc_bs_need_body -%}
+    {%- assign pc_bs_body = pc_bs_article.content -%}
+    {%- comment -%} Ảnh trước/sau đã hiện ở khung so sánh ⇒ gỡ khỏi nội dung để không lặp ảnh. {%- endcomment -%}
+    {%- if pc_bs_from_content -%}
+      {%- assign pc_bs_body = pc_bs_body | remove_first: pc_bs_tag1 | remove_first: pc_bs_tag2 -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endif -%}
+{%- assign pc_bs_need_body = false -%}

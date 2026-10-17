@@ -1,0 +1,143 @@
+{%- comment -%}
+  article.truoc-va-sau.bwt (2026-10-17) — trang chi tiết 1 ca Trước & Sau (Sapo Admin → bài viết → Khung giao diện:
+  article.truoc-va-sau). Cùng ngôn ngữ thiết kế trang /clinical-proof (class .pc-ba-*, CSS ở assets/page_static.scss.bwt):
+  hero = nhóm vấn đề da · H1 tiêu đề ca · tóm tắt · thông tin ca · cặp ảnh TRƯỚC/SAU → nội dung bài (đã gỡ 2 ảnh trước/sau)
+  → ca khác cùng nhóm → khối CTA cuối (dùng chung câu chữ clinical_final_*).
+  Dữ liệu ca đọc qua snippets/ba_case_source.bwt; hướng dẫn nhập: docs/huong-dan-tao-ca-truoc-sau.md.
+  Bài chưa đủ 2 ảnh ⇒ không hiện khung so sánh, nội dung bài hiện nguyên vẹn.
+{%- endcomment -%}
+{%- assign pc_bs_article = article -%}{%- assign pc_bs_need_body = true -%}{%- include 'ba_case_source' -%}
+{%- assign pc_bd_before = pc_bs_before -%}{%- assign pc_bd_after = pc_bs_after -%}
+{%- assign pc_bd_group = pc_bs_group -%}{%- assign pc_bd_plan = pc_bs_plan -%}{%- assign pc_bd_body = pc_bs_body -%}
+{%- assign pc_bd_ok = false -%}{%- if pc_bd_before != blank and pc_bd_after != blank -%}{%- assign pc_bd_ok = true -%}{%- endif -%}
+{%- assign pc_bd_blog_handle = settings.clinical_case_blog_handle | default: 'truoc-va-sau' -%}
+{%- assign pc_bd_back_link = settings.clinical_article_back_link | default: '/clinical-proof' -%}
+{%- assign pc_bd_cta_link = settings.clinical_hero_cta_link | default: '/ai-skin-quiz' -%}
+{%- assign pc_bd_zalo = settings.contact_zalo | remove: ' ' | remove: '.' | strip -%}
+{%- assign pc_bd_summary = article.summary | default: article.excerpt | strip_html | strip -%}
+{%- assign pc_bd_product = false -%}
+{%- if pc_bs_lt_first != blank -%}{%- assign pc_bd_product = all_products[pc_bs_lt_first] -%}{%- endif -%}
+
+{%- assign pc_ld_base = store.url | remove: 'https:' | remove: 'http:' | prepend: 'https:' -%}
+{%- if article.image.src != blank -%}{%- assign pc_bd_ld_img = article.image.src | img_url: 'grande' -%}{%- elsif pc_bd_ok -%}{%- assign pc_bd_ld_img = pc_bd_after -%}{%- else -%}{%- assign pc_bd_ld_img = 'logo.png' | asset_url -%}{%- endif -%}
+{%- assign pc_bd_ld_img = pc_bd_ld_img | remove: 'https:' | remove: 'http:' | prepend: 'https:' -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "mainEntityOfPage": {{ pc_ld_base | append: article.url | json }},
+  "headline": {{ article.title | truncate: 100 | json }},
+  {%- if pc_bd_summary != blank %}
+  "description": {{ pc_bd_summary | json }},
+  {%- endif %}
+  "image": {{ pc_bd_ld_img | json }},
+  {%- if article.author != blank %}
+  "author": {"@type": "Person", "name": {{ article.author | json }}},
+  {%- endif %}
+  "datePublished": {{ article.published_on | date: '%Y-%m-%dT%H:%M:%S+07:00' | json }},
+  "publisher": {"@type": "Organization", "name": {{ store.name | json }}, "logo": {"@type": "ImageObject", "url": {{ 'logo.png' | asset_url | remove: 'https:' | remove: 'http:' | prepend: 'https:' | json }}}}
+}
+</script>
+
+{% include 'breadcrumb' %}
+<main class="pc-ba pc-bd">
+  <section class="container pc-ba-hero{% unless pc_bd_ok %} pc-ba-hero--text{% endunless %}">
+    <div class="pc-ba-hero__text">
+      <p class="pc-ba-kicker">{{ pc_bd_group | default: settings.clinical_group_other | default: 'Kết quả khác' | upcase }}</p>
+      <h1 class="pc-ba-hero__title pc-bd__title">{{ article.title }}</h1>
+      {%- if pc_bd_summary != blank -%}<p class="pc-ba-hero__lead">{{ pc_bd_summary }}</p>{%- endif -%}
+      {%- capture pc_bd_meta -%}
+        {%- if pc_bs_age != blank -%}<li><span>{{ settings.clinical_article_age_label | default: 'Tuổi' }}</span><strong>{{ pc_bs_age }}</strong></li>{%- endif -%}
+        {%- if pc_bs_city != blank -%}<li><span>{{ settings.clinical_article_city_label | default: 'Tỉnh/thành' }}</span><strong>{{ pc_bs_city }}</strong></li>{%- endif -%}
+        {%- if pc_bs_weeks != blank -%}<li><span>{{ settings.clinical_article_weeks_label | default: 'Thời gian theo dõi' }}</span><strong>{{ pc_bs_weeks }} tuần</strong></li>{%- endif -%}
+        {%- if pc_bd_plan != blank -%}<li><span>{{ settings.clinical_article_plan_label | default: 'Phác đồ' }}</span><strong>{{ pc_bd_plan }}</strong></li>{%- endif -%}
+        {%- if pc_bd_product and pc_bd_product.url != blank -%}<li><span>{{ settings.clinical_article_treatment_label | default: 'Liệu trình' }}</span><strong><a href="{{ pc_bd_product.url }}">{{ pc_bd_product.title }}</a></strong></li>{%- endif -%}
+        {%- if article.author != blank -%}<li><span>{{ settings.clinical_article_expert_label | default: 'Chuyên gia phụ trách' }}</span><strong>{{ article.author }}</strong></li>{%- endif -%}
+      {%- endcapture -%}
+      {%- if pc_bd_meta != blank -%}<ul class="pc-bd-meta">{{ pc_bd_meta }}</ul>{%- endif -%}
+      <div class="pc-ba-actions">
+        {%- if pc_bd_zalo != blank -%}
+        <a href="https://zalo.me/{{ pc_bd_zalo }}" target="_blank" rel="noopener" class="pc-ba-btn pc-ba-btn--primary">{{ settings.clinical_case_cta_label | default: 'TƯ VẤN PHÁC ĐỒ QUA ZALO' }}</a>
+        {%- else -%}
+        <a href="{{ pc_bd_cta_link }}" class="pc-ba-btn pc-ba-btn--primary">{{ settings.clinical_hero_cta_label | default: 'Nhận phân tích da miễn phí' }}</a>
+        {%- endif -%}
+        <a href="{{ pc_bd_back_link }}" class="pc-ba-btn pc-ba-btn--outline">{{ settings.clinical_article_back_label | default: 'Xem tất cả kết quả' }}</a>
+      </div>
+    </div>
+    {%- if pc_bd_ok -%}
+    <div class="pc-ba-pair pc-ba-pair--hero">
+      <figure class="pc-ba-frame pc-ba-frame--before">
+        <img src="{{ pc_bd_before }}" alt="{{ article.title | escape }} — trước" width="420" height="420" fetchpriority="high">
+        <figcaption class="pc-ba-badge">TRƯỚC</figcaption>
+      </figure>
+      <figure class="pc-ba-frame pc-ba-frame--after">
+        <img src="{{ pc_bd_after }}" alt="{{ article.title | escape }} — sau" width="420" height="420" fetchpriority="high">
+        <figcaption class="pc-ba-badge pc-ba-badge--after">SAU</figcaption>
+      </figure>
+    </div>
+    {%- endif -%}
+  </section>
+
+  {%- assign pc_bd_body_text = pc_bd_body | strip_html | strip -%}
+  {%- if pc_bd_body_text != blank or pc_bd_body contains '<img' or pc_bd_body contains '<iframe' -%}
+  <section class="container pc-ba-section">
+    <article class="pc-ba-card pc-bd-body">
+      {%- if settings.clinical_article_story_title != blank -%}<h2 class="pc-ba-h2 pc-ba-h2--sm">{{ settings.clinical_article_story_title }}</h2>{%- endif -%}
+      <div class="pc-bd-body__content">{{ pc_bd_body }}</div>
+    </article>
+    {%- if settings.clinical_note != blank -%}<p class="pc-ba-note">{{ settings.clinical_note }}</p>{%- endif -%}
+  </section>
+  {%- endif -%}
+
+  {%- comment -%} Ca khác cùng nhóm (tối đa 3, đủ 2 ảnh, khác bài hiện tại). {%- endcomment -%}
+  {%- assign pc_bd_group_key = pc_bd_group | default: '~' -%}
+  {%- assign pc_bd_rel_n = 0 -%}
+  {%- capture pc_bd_related -%}
+    {%- for pc_bd_a in blogs[pc_bd_blog_handle].articles limit: 50 -%}
+      {%- if pc_bd_rel_n < 3 and pc_bd_a.url != article.url -%}
+        {%- assign pc_bs_article = pc_bd_a -%}{%- include 'ba_case_source' -%}
+        {%- assign pc_bd_a_group = pc_bs_group | default: '~' -%}
+        {%- if pc_bs_before != blank and pc_bs_after != blank and pc_bd_a_group == pc_bd_group_key -%}
+        {%- assign pc_bd_rel_n = pc_bd_rel_n | plus: 1 -%}
+        <a class="pc-ba-card pc-bd-rel" href="{{ pc_bd_a.url }}">
+          <div class="pc-ba-pair">
+            <figure class="pc-ba-frame pc-ba-frame--before">
+              <img src="{{ pc_bs_before }}" alt="{{ pc_bd_a.title | escape }} — trước" width="280" height="280" loading="lazy">
+              <figcaption class="pc-ba-badge">TRƯỚC</figcaption>
+            </figure>
+            <figure class="pc-ba-frame pc-ba-frame--after">
+              <img src="{{ pc_bs_after }}" alt="{{ pc_bd_a.title | escape }} — sau" width="280" height="280" loading="lazy">
+              <figcaption class="pc-ba-badge pc-ba-badge--after">SAU</figcaption>
+            </figure>
+          </div>
+          <h3 class="pc-bd-rel__title">{{ pc_bd_a.title }}</h3>
+          {%- if pc_bs_weeks != blank or pc_bs_plan != blank -%}
+          <p class="pc-bd-rel__meta">{% if pc_bs_weeks != blank %}Theo dõi {{ pc_bs_weeks }} tuần{% endif %}{% if pc_bs_weeks != blank and pc_bs_plan != blank %} · {% endif %}{{ pc_bs_plan }}</p>
+          {%- endif -%}
+        </a>
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endcapture -%}
+  {%- if pc_bd_rel_n > 0 -%}
+  <section class="container pc-ba-section">
+    <h2 class="pc-ba-h2">{{ settings.clinical_article_related_title | default: 'Ca khác cùng nhóm' }}</h2>
+    <div class="pc-bd-rels">{{ pc_bd_related }}</div>
+  </section>
+  {%- endif -%}
+
+  <section class="container pc-ba-section pc-ba-section--last">
+    <div class="pc-ba-final">
+      <div class="pc-ba-final__text">
+        <h2 class="pc-ba-final__title">{{ settings.clinical_final_title | default: 'Bắt đầu hành trình làn da của bạn' }}</h2>
+        {%- if settings.clinical_final_text != blank -%}<p class="pc-ba-final__desc">{{ settings.clinical_final_text }}</p>{%- endif -%}
+      </div>
+      <div class="pc-ba-actions">
+        <a href="{{ pc_bd_cta_link }}" class="pc-ba-btn pc-ba-btn--light">{{ settings.clinical_final_cta_label | default: 'Phân tích da miễn phí' }}</a>
+        {%- if settings.clinical_final_cta2_label != blank -%}
+        <a href="{{ settings.clinical_final_cta2_link | default: '/dat-lich-tu-van' }}" class="pc-ba-btn pc-ba-btn--ghost">{{ settings.clinical_final_cta2_label }}</a>
+        {%- endif -%}
+      </div>
+    </div>
+  </section>
+</main>

@@ -316,7 +316,9 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
   (`0987.654.321`, `1900xxxx` → dùng `settings.store_phone`), hồ sơ sức khoẻ bịa ở
   `page.patient-portal` (chỉ giữ tên + đơn hàng thật), ca bệnh/số liệu bịa ở `page.clinical-proof`
   (giới thiệu + 4 chỉ số = `clinical_*` settings, mặc định trống; ca điều trị = blog
-  `clinical_case_blog_handle`, mặc định `truoc-va-sau`, ảnh trước/sau qua tag `anhtruoc:`/`anhsau:`).
+  `clinical_case_blog_handle`, mặc định `truoc-va-sau`). Mọi nơi đọc ca (/clinical-proof, `article.truoc-va-sau`,
+  `lieu_trinh_cases`) đi qua `snippets/ba_case_source.bwt`: ảnh = tag `anhtruoc:`/`anhsau:` hoặc 2 ảnh đầu trong nội dung
+  bài (trang chi tiết gỡ 2 ảnh đó khỏi nội dung). Hướng dẫn nhập: `docs/huong-dan-tao-ca-truoc-sau.md`.
 - **Audit Checklist Sapo tự động:** `BASE=http://localhost:3000 npm run audit:sapo-review` (Playwright,
   33 route): 1 `<h1>`/trang, `<img>` có alt + width/height, ảnh dưới màn hình đầu lazy, không lỗi
   JS/console/HTTP ≥400, không tràn ngang @375px. Chỉ thêm width/height cho ảnh khi CSS đã cố định CẢ 2

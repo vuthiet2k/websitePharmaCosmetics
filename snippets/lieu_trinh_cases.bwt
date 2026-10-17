@@ -1,21 +1,17 @@
 {%- comment -%}
   lieu_trinh_cases — trước–sau: bài trong blog ca khách hàng (settings.clinical_case_blog_handle, quy ước trang Trước & Sau) có tag
-  lieutrinh:<alias sản phẩm> và ĐỦ anhtruoc:/anhsau:. Ghi nhận = tag tuan:, phacdo: (thiếu ⇒ ẩn). Không ca ⇒ ẩn cả phần.
+  lieutrinh:<alias sản phẩm> và ĐỦ ảnh trước/sau (tag anhtruoc:/anhsau: hoặc 2 ảnh đầu trong nội dung). Ghi nhận = tag tuan:, phacdo: (thiếu ⇒ ẩn). Không ca ⇒ ẩn cả phần.
   Không dùng ảnh hãng/ảnh liệu trình khác (vd Skin Renewal Peeling System) làm kết quả.
 {%- endcomment -%}
 {%- assign lt_kblog = blogs[settings.clinical_case_blog_handle] -%}
 {%- assign lt_kn = 0 -%}
 {%- capture lt_cases -%}
 {%- for lt_a in lt_kblog.articles limit: 50 -%}
-  {%- assign lt_b = '' -%}{%- assign lt_f = '' -%}{%- assign lt_mine = false -%}{%- assign lt_wk = '' -%}{%- assign lt_pd = '' -%}
-  {%- for lt_t in lt_a.tags -%}{%- if lt_t contains ':' -%}
-    {%- assign lt_tr = lt_t | split: ':' | first -%}{%- assign lt_tk = lt_tr | strip | downcase -%}{%- assign lt_tv = lt_t | remove_first: lt_tr | remove_first: ':' | strip -%}
-    {%- if lt_tk == 'anhtruoc' -%}{%- assign lt_b = lt_tv -%}{%- endif -%}
-    {%- if lt_tk == 'anhsau' -%}{%- assign lt_f = lt_tv -%}{%- endif -%}
-    {%- if lt_tk == 'lieutrinh' and lt_tv == lt_alias -%}{%- assign lt_mine = true -%}{%- endif -%}
-    {%- if lt_tk == 'tuan' -%}{%- assign lt_wk = lt_tv -%}{%- endif -%}
-    {%- if lt_tk == 'phacdo' -%}{%- assign lt_pd = lt_tv -%}{%- endif -%}
-  {%- endif -%}{%- endfor -%}
+  {%- comment -%} 2026-10-17: đọc ca qua snippets/ba_case_source (ảnh = tag anhtruoc:/anhsau: hoặc 2 ảnh đầu trong nội dung bài). {%- endcomment -%}
+  {%- assign pc_bs_article = lt_a -%}{%- include 'ba_case_source' -%}
+  {%- assign lt_b = pc_bs_before -%}{%- assign lt_f = pc_bs_after -%}{%- assign lt_wk = pc_bs_weeks -%}{%- assign lt_pd = pc_bs_plan -%}
+  {%- assign lt_mine_key = '|' | append: lt_alias | append: '|' -%}
+  {%- assign lt_mine = false -%}{%- if pc_bs_lt contains lt_mine_key -%}{%- assign lt_mine = true -%}{%- endif -%}
   {%- if lt_mine and lt_b != blank and lt_f != blank and lt_kn < 4 -%}
   {%- assign lt_kn = lt_kn | plus: 1 -%}
   <article class="lt-card lt-case">

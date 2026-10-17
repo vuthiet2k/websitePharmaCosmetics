@@ -8,8 +8,9 @@
   Nguồn dữ liệu:
   - Câu chữ, link, ảnh hero: Theme Settings → "Trang Minh chứng lâm sàng" (field clinical_*). Ảnh hero trống ⇒ lấy
     cặp ảnh của ca đầu tiên có đủ ảnh; không có ca nào ⇒ hero chỉ còn chữ.
-  - Ca khách hàng = bài viết trong blog settings.clinical_case_blog_handle (mặc định truoc-va-sau), tag dạng
-    khoá:giá trị — anhtruoc:<link ảnh>, anhsau:<link ảnh> (BẮT BUỘC đủ 2 ảnh, thiếu ⇒ không hiện ca),
+  - Ca khách hàng = bài viết trong blog settings.clinical_case_blog_handle (mặc định truoc-va-sau), đọc qua
+    snippets/ba_case_source.bwt (2026-10-17): ảnh trước/sau = tag anhtruoc:/anhsau: HOẶC 2 ảnh đầu chèn trong nội dung
+    bài (BẮT BUỘC đủ 2 ảnh, thiếu ⇒ không hiện ca). Hướng dẫn nhập: docs/huong-dan-tao-ca-truoc-sau.md. Tag phụ
     nhom:<vấn đề da> (gom nhóm; không có ⇒ nhóm clinical_group_other), tuoi:<số>, tinh:<tỉnh/thành>,
     tuan:<số tuần theo dõi>, phacdo:<tên phác đồ/sản phẩm chính>. Thiếu tag nào ⇒ ẩn phần đó.
     Chỉ đăng ca thật đã được khách đồng ý công bố — theme không tự sinh ca/số liệu.
@@ -27,17 +28,8 @@
 {%- assign pc_ba_first_after = '' -%}
 {%- assign pc_ba_first_title = '' -%}
 {%- for pc_ba in pc_ba_blog.articles limit: 50 -%}
-  {%- assign pc_ba_before = '' -%}{%- assign pc_ba_after = '' -%}{%- assign pc_ba_group = '' -%}
-  {%- for pc_ba_tag in pc_ba.tags -%}
-    {%- if pc_ba_tag contains ':' -%}
-      {%- assign pc_ba_raw = pc_ba_tag | split: ':' | first -%}
-      {%- assign pc_ba_key = pc_ba_raw | strip | downcase -%}
-      {%- assign pc_ba_val = pc_ba_tag | remove_first: pc_ba_raw | remove_first: ':' | strip -%}
-      {%- if pc_ba_key == 'anhtruoc' -%}{%- assign pc_ba_before = pc_ba_val -%}{%- endif -%}
-      {%- if pc_ba_key == 'anhsau' -%}{%- assign pc_ba_after = pc_ba_val -%}{%- endif -%}
-      {%- if pc_ba_key == 'nhom' -%}{%- assign pc_ba_group = pc_ba_val -%}{%- endif -%}
-    {%- endif -%}
-  {%- endfor -%}
+  {%- assign pc_bs_article = pc_ba -%}{%- include 'ba_case_source' -%}
+  {%- assign pc_ba_before = pc_bs_before -%}{%- assign pc_ba_after = pc_bs_after -%}{%- assign pc_ba_group = pc_bs_group -%}
   {%- if pc_ba_before != blank and pc_ba_after != blank -%}
     {%- if pc_ba_group == blank -%}{%- assign pc_ba_group = pc_ba_group_other -%}{%- endif -%}
     {%- assign pc_ba_wrapped = '|' | append: pc_ba_group | append: '|' -%}
@@ -161,24 +153,9 @@
       {%- assign pc_ba_infos = '' -%}
       {%- assign pc_ba_n = 0 -%}
         {%- for pc_ba in pc_ba_blog.articles limit: 50 -%}
-          {%- assign pc_ba_before = '' -%}{%- assign pc_ba_after = '' -%}{%- assign pc_ba_group = '' -%}
-          {%- assign pc_ba_age = '' -%}{%- assign pc_ba_city = '' -%}{%- assign pc_ba_weeks = '' -%}{%- assign pc_ba_plan = '' -%}
-          {%- for pc_ba_tag in pc_ba.tags -%}
-            {%- if pc_ba_tag contains ':' -%}
-              {%- assign pc_ba_raw = pc_ba_tag | split: ':' | first -%}
-              {%- assign pc_ba_key = pc_ba_raw | strip | downcase -%}
-              {%- assign pc_ba_val = pc_ba_tag | remove_first: pc_ba_raw | remove_first: ':' | strip -%}
-              {%- case pc_ba_key -%}
-              {%- when 'anhtruoc' -%}{%- assign pc_ba_before = pc_ba_val -%}
-              {%- when 'anhsau' -%}{%- assign pc_ba_after = pc_ba_val -%}
-              {%- when 'nhom' -%}{%- assign pc_ba_group = pc_ba_val -%}
-              {%- when 'tuoi' -%}{%- assign pc_ba_age = pc_ba_val -%}
-              {%- when 'tinh' -%}{%- assign pc_ba_city = pc_ba_val -%}
-              {%- when 'tuan' -%}{%- assign pc_ba_weeks = pc_ba_val -%}
-              {%- when 'phacdo' -%}{%- assign pc_ba_plan = pc_ba_val -%}
-              {%- endcase -%}
-            {%- endif -%}
-          {%- endfor -%}
+          {%- assign pc_bs_article = pc_ba -%}{%- include 'ba_case_source' -%}
+          {%- assign pc_ba_before = pc_bs_before -%}{%- assign pc_ba_after = pc_bs_after -%}{%- assign pc_ba_group = pc_bs_group -%}
+          {%- assign pc_ba_age = pc_bs_age -%}{%- assign pc_ba_city = pc_bs_city -%}{%- assign pc_ba_weeks = pc_bs_weeks -%}{%- assign pc_ba_plan = pc_bs_plan -%}
           {%- if pc_ba_group == blank -%}{%- assign pc_ba_group = pc_ba_group_other -%}{%- endif -%}
           {%- if pc_ba_before != blank and pc_ba_after != blank and pc_ba_group == pc_ba_group_name -%}
           {%- assign pc_ba_n = pc_ba_n | plus: 1 -%}
@@ -205,6 +182,8 @@
               {%- endcapture -%}
               {%- if pc_ba_meta != blank -%}<p class="pc-ba-case__meta">{{ pc_ba_meta }}</p>{%- endif -%}
               {%- if pc_ba_plan != blank -%}<p class="pc-ba-case__plan">Phác đồ: {{ pc_ba_plan }}</p>{%- endif -%}
+              {%- comment -%} 2026-10-17: link sang trang chi tiết ca (giao diện article.truoc-va-sau); nhãn trống ⇒ ẩn. {%- endcomment -%}
+              {%- if settings.clinical_case_more_label != blank -%}<a class="pc-ba-case__more" href="{{ pc_ba.url }}">{{ settings.clinical_case_more_label }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>{%- endif -%}
             </div>
           {%- endcapture -%}
           {%- assign pc_ba_infos = pc_ba_infos | append: pc_ba_one -%}
