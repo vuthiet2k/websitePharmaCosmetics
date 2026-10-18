@@ -2292,6 +2292,27 @@ section.blogpage { background: #f4f8f5; padding-bottom: 32px; }
   .pc-art-body { padding: 20px 16px; }
   .pc-art-body .article-content-main h2 { font-size: var(--fs-h4); }
 }
+/* 2026-10-18 (người dùng: "xem chi tiết như vậy thì tệ quá — làm giao diện mobile ổn"): trên mobile nội dung bài bắt đầu ở
+   ~1077px (thẻ đầu bài + byline + dải ngày/tác giả lặp + thẻ tag + chia sẻ + video). Làm phẳng: bỏ khung thẻ, dải ngày thành
+   1 dòng chữ, ẩn tác giả lặp (đã có ở byline), tag 1 hàng vuốt ngang, chia sẻ gọn; thân bài bỏ khung để chữ rộng hơn. */
+@media (max-width: 767px) {
+  section.blogpage { background: #fff; }
+  .layout-article .pc-art-head { margin: 0; padding: 6px 0 14px; border: 0; border-bottom: 1px solid #e3ebe6; border-radius: 0; background: transparent; box-shadow: none; }
+  .pc-art-head .pc-art-title { margin: 0 0 12px !important; font-size: var(--fs-xl) !important; line-height: 1.32 !important; }
+  .pc-art-head .pc-art-byline { margin: 0 0 6px; }
+  .pc-art-head .pc-art-meta { padding: 0; gap: 4px 12px; background: none; font-size: var(--fs-xs); color: #5f7a6d; }
+  .pc-art-head .pc-art-meta__leaf { display: none; }
+  .pc-art-head .pc-art-byline + .pc-art-meta .pc-art-meta__item + .pc-art-meta__item { display: none; }
+  .pc-art-head .pc-art-tags { flex-wrap: nowrap; gap: 6px; margin: 10px calc(-1 * var(--pc-container-gutter, 16px)) 0; padding: 0 var(--pc-container-gutter, 16px); overflow-x: auto; scrollbar-width: none; }
+  .pc-art-head .pc-art-tags::-webkit-scrollbar { display: none; }
+  .pc-art-head .pc-art-tag { flex: none; padding: 4px 10px; font-size: var(--fs-2xs); }
+  .pc-art-head .social-sharing { margin: 10px 0 0; }
+  .pc-art-head .social-sharing .social-media { gap: 8px; }
+  .pc-art-head .social-sharing .social-media .title { margin-right: 8px; font-size: var(--fs-xs); }
+  .pc-art-head .social-sharing .social-media__item a, .pc-art-head .social-sharing .social-media__item svg { width: 28px; height: 28px; }
+  .layout-article .pc-art-body { padding: 16px 0 8px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+  .pc-art-body .pc-avideo { margin: 0 0 18px; }
+}
 
 /* ══ 2026-10-12: Danh mục bài viết Video — templates/blog.video.bwt (lưới), templates/article.video.bwt (trang xem),
    snippets/video_embed.bwt (khung phát facade), video_card.bwt (thẻ), article_video_block.bwt (khối video trong bài
@@ -2696,8 +2717,13 @@ section.blogpage { background: #f4f8f5; padding-bottom: 32px; }
   .pc-vwatch__title { font-size: var(--fs-h4); }
   .pc-vchannelbar__actions { width: 100%; }
   .pc-vchannelbar__actions .pc-vchannel { flex: 1; justify-content: center; }
-  .pc-avideo__list { grid-template-columns: repeat(3, 62%); overflow-x: auto; scroll-snap-type: x mandatory; }
-  .pc-avideo__list li { scroll-snap-align: start; }
+  /* 2026-10-18: video bổ trợ thành hàng thẻ ngang gọn (ảnh 96px + tên) vuốt ngang — trước thẻ 62% ngang, ảnh 16:9 to đẩy nội dung bài xuống. */
+  .pc-avideo__list { display: flex; gap: 8px; margin-right: calc(-1 * var(--pc-container-gutter, 16px)); padding-right: var(--pc-container-gutter, 16px); overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; }
+  .pc-avideo__list::-webkit-scrollbar { display: none; }
+  .pc-avideo__list li { flex: none; width: 230px; scroll-snap-align: start; }
+  .pc-avideo__item { flex-direction: row; align-items: center; gap: 8px; padding: 5px; }
+  .pc-avideo__thumb { flex: none; width: 96px; }
+  .pc-avideo__name { font-size: var(--fs-xs); }
 }
 
 /* ══ 2026-10-13: Danh mục Video (templates/blog.video.bwt) bố cục trang kênh YouTube theo mẫu khách gửi — nền trắng,
