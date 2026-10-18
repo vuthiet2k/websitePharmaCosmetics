@@ -523,8 +523,13 @@ const beforeAfterArticles = [
   beforeAfterArticles.unshift(
     demoCase(217, 'demo-getglowing-micro-peel-6-tuan', '[DEMO] GetGlowing Micro-Peel – cải thiện bít tắc sau 6 tuần',
       '[DEMO] Ca mẫu gắn liệu trình GetGlowing Micro-Peel — hiện cả ở trang liệu trình.',
-      ['nhom:Mụn', 'tuoi:29', 'tinh:Hà Nội', 'tuan:6', 'phacdo:GetGlowing Micro-Peel + phục hồi', 'lieutrinh:' + 'elaine-brennan-getglowing-micro-peel-lieu-trinh-peel-chuyen-nghiep-ho-tro-lam-sang-va-cai-thien-be-mat-da'],
-      `<p><img src="${baBefore}" alt="" /></p><p><img src="${baAfter}" alt="" /></p>` + story()),
+      ['nhom:Mụn', 'tuoi:29', 'tinh:Hà Nội', 'tuan:6', 'phacdo:GetGlowing Micro-Peel + phục hồi', 'lieutrinh:' + 'elaine-brennan-getglowing-micro-peel-lieu-trinh-peel-chuyen-nghiep-ho-tro-lam-sang-va-cai-thien-be-mat-da',
+        'tinhtrang:Bít tắc và bề mặt sần ráp', 'chupanh:Ảnh chụp cùng góc và ánh sáng – không chỉnh sửa', 'sanpham:kem-phuc-hoi-ceramide-niacinamide', 'sanpham:kem-chong-nang-mineral-spf50'],
+      // 2026-10-18: đủ 6 khối article.truoc-va-sau (Trích dẫn = nhận định chuyên gia, danh sách số = lộ trình).
+      `<p><img src="${baBefore}" alt="" /></p><p><img src="${baAfter}" alt="" /></p>`
+        + `<blockquote><p>[DEMO] Nền da bít tắc nhưng hàng rào bảo vệ còn tốt nên phù hợp peel đa mục tiêu. Giữ khoảng cách giữa các buổi và chống nắng nghiêm ngặt giúp kết quả ổn định.</p></blockquote>`
+        + `<ol><li>Tuần 0: Soi da, lập hồ sơ và thử phản ứng trước khi peel.</li><li>Tuần 1–2: Buổi GetGlowing Micro-Peel đầu tiên, bong nhẹ 3–5 ngày, dưỡng phục hồi tại nhà.</li><li>Tuần 3–6: Buổi peel thứ 2 và 3, bề mặt da mịn hơn, nhân mụn giảm dần.</li></ol>`
+        + story(), { summary: '[DEMO] Khách hàng nữ 29 tuổi, da bít tắc và sần ráp. 3 buổi GetGlowing Micro-Peel kết hợp phục hồi tại nhà; bề mặt da mịn hơn, nhân mụn giảm sau 6 tuần.' }),
     demoCase(218, 'demo-ca-thieu-anh', '[DEMO] Ca chưa đủ ảnh – chỉ có ảnh trước',
       '[DEMO] Ca thiếu ảnh sau ⇒ KHÔNG hiện ở /clinical-proof; trang test đánh dấu "Thiếu ảnh".',
       ['nhom:Mụn', 'tuan:4'], `<p><img src="${baBefore}" alt="" /></p>` + story()),

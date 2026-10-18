@@ -355,7 +355,8 @@ function getContext(templateName = 'index', routeParams = {}) {
   let resolvedArticle = currentArticle;
   if (routeParams.articleHandle) {
     const allArticles = Object.values(blogsObj).flatMap((b) => b.articles || []);
-    resolvedArticle = allArticles.find((a) => a.handle === routeParams.articleHandle) || currentArticle;
+    // 2026-10-18: Sapo không có article.handle — bài mock chỉ có url vẫn tìm được (handle = phần cuối url).
+    resolvedArticle = allArticles.find((a) => (a.handle || String(a.url || "").split("/").pop()) === routeParams.articleHandle) || currentArticle;
   }
 
   // Search — thật theo query string khi router truyền vào; nếu không (toolbar

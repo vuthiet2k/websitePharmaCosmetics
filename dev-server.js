@@ -1049,7 +1049,8 @@ function resolvePrettyPath(pathname, searchParams) {
     if (parts.length >= 2 && !blogData) return null;
     if (parts.length === 2) return { tpl: withSuffix('blog', blogData && blogData.template_suffix), routeParams: { blogHandle: parts[1] } };
     if (parts.length === 3) {
-      const art = blogData && (blogData.articles || []).find((a) => a.handle === parts[2]);
+      // 2026-10-18: bài mock chỉ có url (giống Sapo, không có handle) — so phần cuối url.
+      const art = blogData && (blogData.articles || []).find((a) => (a.handle || String(a.url || "").split("/").pop()) === parts[2]);
       if (!art) return null;
       return { tpl: withSuffix('article', art && art.template_suffix), routeParams: { blogHandle: parts[1], articleHandle: parts[2] } };
     }
