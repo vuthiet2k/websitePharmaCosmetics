@@ -69,6 +69,29 @@
     .sh2-ba-slider { aspect-ratio: 4/5; }
   }
 
+  /* ── Triết lý điều trị: ảnh 5 / chữ 7 trên desktop, 1 cột (ảnh trên) trên điện thoại ── */
+  .sh-philo { display: grid; grid-template-columns: 1fr; gap: 64px; align-items: center; }
+  .sh-philo--img { grid-template-columns: 5fr 7fr; }
+  @media (max-width: 767px) { .sh-philo--img { grid-template-columns: 1fr; gap: 32px; } }
+  /* ── Hành trình 6 bước dạng timeline (2026-10-18) — mốc vuông, không bo góc ── */
+  .sh-tl { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 24px; margin: 0; padding: 0; list-style: none; }
+  .sh-tl::before { content: ""; position: absolute; left: 0; right: 0; top: 22px; height: 1px; background: var(--sh-line); }
+  .sh-tl__step { position: relative; min-width: 0; }
+  .sh-tl__node { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--sh-gold); background: var(--sh-white); font-family: var(--sh-serif); font-size: var(--fs-sm); font-weight: 400; letter-spacing: .04em; color: var(--sh-gold); transition: background-color 200ms, color 200ms; }
+  .sh-tl__step:hover .sh-tl__node { background: var(--sh-gold); color: var(--sh-white); }
+  .sh-tl__body { margin-top: 20px; }
+  .sh-tl__title { margin: 0; font-family: var(--sh-serif); font-weight: 500; font-size: var(--fs-md); line-height: 1.35; color: var(--sh-ink); }
+  .sh-tl__body .sh2-journey-step__dur i { font-size: var(--fs-3xs); }
+  .sh-tl__img { margin-top: 14px; aspect-ratio: 4 / 3; overflow: hidden; background: var(--sh-ivory-dark); }
+  .sh-tl__img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  @media (max-width: 991px) {
+    .sh-tl { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .sh-tl::before { left: 21px; right: auto; top: 0; bottom: 0; width: 1px; height: auto; }
+    .sh-tl__step { display: grid; grid-template-columns: 44px 1fr; column-gap: 20px; padding-bottom: 28px; }
+    .sh-tl__step:last-child { padding-bottom: 0; }
+    .sh-tl__body { margin-top: 10px; }
+  }
+
   /* ── Virtual Clinic Tour (2026-10-18, theo ảnh mẫu VR360): ảnh phòng phủ toàn ngang, chữ + nút đè lên, dải ảnh nhỏ dưới phải. Không bo góc. ── */
   .sh-vt { position: relative; overflow: hidden; height: min(82vh, 760px); min-height: 520px; background: var(--sh-ink); color: #fff; }
   .sh-vt__stage, .sh-vt__shade { position: absolute; inset: 0; }
@@ -576,24 +599,27 @@
       <span class="sh2-eyebrow">Quy Trình</span>
       <h2 class="sh2-title" style="font-size:var(--fs-h3);">Hành Trình Điều Trị 6 Bước</h2>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:40px;">
+    {%- comment -%} 2026-10-18 (người dùng: "để dạng time line"): desktop = 1 đường ngang nối 6 mốc vuông (không bo góc), điện thoại =
+      timeline dọc. Giữ nguyên chữ/cấu hình (tên bước, thời lượng skinhealthy_journey_dur_*, ảnh skinhealthy_journey_img_* nếu có).
+      Bỏ emoji ⏱ (UI-9 ⇒ icon Font Awesome) và slice số thứ tự (DotLiquid Sapo trả chuỗi rác). {%- endcomment -%}
+    <ol class="sh-tl">
       {%- for n in (1..6) -%}
         {%- capture ik -%}skinhealthy_journey_img_{{ n }}{%- endcapture -%}
         {%- capture dk -%}skinhealthy_journey_dur_{{ n }}{%- endcapture -%}
         {%- assign sh_j_img = settings[ik] -%}
         {%- assign sh_j_dur = settings[dk] | default: sh_journey_durs_default[forloop.index0] -%}
-        <div>
-          {%- if sh_j_img != blank -%}
-          <div style="aspect-ratio:4/3;overflow:hidden;background:var(--sh-ivory-dark);margin-bottom:16px;">
-            <img src="{{ sh_j_img | img_url: 'grande' }}" alt="{{ sh_journey_titles[forloop.index0] }}" width="600" height="600" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">
+        <li class="sh-tl__step">
+          <span class="sh-tl__node" aria-hidden="true">{% if forloop.index < 10 %}0{% endif %}{{ forloop.index }}</span>
+          <div class="sh-tl__body">
+            <h3 class="sh-tl__title">{{ sh_journey_titles[forloop.index0] }}</h3>
+            <span class="sh2-journey-step__dur"><i class="fa-solid fa-clock" aria-hidden="true"></i> {{ sh_j_dur }}</span>
+            {%- if sh_j_img != blank -%}
+            <div class="sh-tl__img"><img src="{{ sh_j_img | img_url: 'grande' }}" alt="{{ sh_journey_titles[forloop.index0] }}" width="600" height="450" loading="lazy"></div>
+            {%- endif -%}
           </div>
-          {%- endif -%}
-          <span class="sh2-journey-step__num">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
-          <h3 class="sh2-title" style="font-size:var(--fs-md);margin-top:8px;">{{ sh_journey_titles[forloop.index0] }}</h3>
-          <span class="sh2-journey-step__dur">⏱ {{ sh_j_dur }}</span>
-        </div>
+        </li>
       {%- endfor -%}
-    </div>
+    </ol>
   </div>
 </section>
 
@@ -637,7 +663,8 @@
 
 {%- comment -%} ═══ 11. TRIẾT LÝ ĐIỀU TRỊ (IV-G) ═══ {%- endcomment -%}
 <section class="sh-reveal" style="padding:88px 0;background:var(--sh-white);">
-  <div class="container sh-container" style="display:grid;grid-template-columns:{% if settings.skinhealthy_philosophy_img != blank %}5fr 7fr{% else %}1fr{% endif %};gap:64px;align-items:center;">
+  {%- comment -%} 2026-10-18: lưới 2 cột chuyển thành class — inline style ép 2 cột cả trên điện thoại (ảnh bé, chữ dồn hẹp). {%- endcomment -%}
+  <div class="container sh-container sh-philo{% if settings.skinhealthy_philosophy_img != blank %} sh-philo--img{% endif %}">
     {%- if settings.skinhealthy_philosophy_img != blank -%}
     <div style="aspect-ratio:4/5;overflow:hidden;background:var(--sh-ivory-dark);">
       <img src="{{ settings.skinhealthy_philosophy_img | img_url: '1024x1024' }}" alt="{{ settings.skinhealthy_philosophy_title | default: 'Triết lý điều trị' }}" width="800" height="600" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">
