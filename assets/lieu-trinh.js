@@ -9,6 +9,7 @@
     initStickyCta();
     initCollapse();
     initSmoothScroll();
+    initCaseSlider();
   });
 
   function initStickyCta() {
@@ -70,5 +71,39 @@
         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     });
+  }
+  // 2026-10-18: "Trước – sau" — trình chiếu 1 ca/lần (‹ ›, chấm, vuốt), đồng bộ thư viện kết quả trang Trước & Sau.
+  function initCaseSlider() {
+    var root = document.querySelector('[data-lt-slider]');
+    if (!root) return;
+    var slides = [].slice.call(root.querySelectorAll('.lt-slide'));
+    var dots = root.querySelector('[data-lt-dots]');
+    var prev = root.querySelector('[data-lt-prev]'), next = root.querySelector('[data-lt-next]');
+    var index = 0;
+    function render() {
+      slides.forEach(function (s, k) { s.hidden = k !== index; });
+      var multi = slides.length > 1;
+      prev.hidden = next.hidden = !multi;
+      dots.innerHTML = '';
+      if (!multi) return;
+      slides.forEach(function (_, k) {
+        var d = document.createElement('button');
+        d.type = 'button'; d.className = 'lt-dot'; d.setAttribute('aria-label', 'Xem ca ' + (k + 1));
+        if (k === index) d.setAttribute('aria-current', 'true');
+        d.addEventListener('click', function () { go(k); });
+        dots.appendChild(d);
+      });
+    }
+    function go(i) { index = (i + slides.length) % slides.length; render(); }
+    prev.addEventListener('click', function () { go(index - 1); });
+    next.addEventListener('click', function () { go(index + 1); });
+    var x0 = null;
+    root.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+    root.addEventListener('touchend', function (e) {
+      if (x0 === null) return;
+      var dx = e.changedTouches[0].clientX - x0; x0 = null;
+      if (Math.abs(dx) > 40 && slides.length > 1) go(index + (dx < 0 ? 1 : -1));
+    }, { passive: true });
+    render();
   }
 })();

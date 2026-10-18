@@ -7,7 +7,7 @@ tự hiện ở 3 nơi:
 | :-- | :-- |
 | Trang **/truoc-sau-cham-soc-da-tu-xa** — phần "Kết quả của khách hàng" | Thanh **nav tab lọc** (gạch chân) theo nhóm vấn đề da (tự sinh từ các giá trị tag `nhom:` đang có ca; "Kết quả khác" luôn cuối) + **khung trình chiếu 1 ca/lần**: cặp ảnh TRƯỚC (trái) / SAU (phải) full ngang tỉ lệ 4:3, không nhãn đè trên ảnh, nút ‹ › + chấm, vuốt trên điện thoại. Chữ (tiêu đề · Tóm tắt · tuổi · số tuần · "Xem chi tiết ca") chỉ trượt lên khi rê chuột vào ảnh; điện thoại hiện sẵn dưới ảnh. Bấm vào ca mở trang chi tiết. Ca đầu tiên còn làm ảnh hero nếu chưa cài ảnh hero riêng. |
 | **Trang chi tiết ca** `/<đường dẫn bài>` trên Sapo (bản dev: `/blogs/truoc-va-sau-1/<đường dẫn bài>`) (giao diện `article.truoc-va-sau`) | Khung **bài viết blog** như mọi bài khác. Cột chính: thẻ đầu bài (nhãn nhóm · H1 · chuyên gia · ngày/tỉnh · tóm tắt · hồ sơ ca 4 ô) → ảnh TRƯỚC/SAU 50/50 có nhãn tuần → nhận định chuyên gia → lộ trình diễn tiến → câu chuyện. Sidebar: đặt lịch + hotline + Zalo → liệu trình & sản phẩm đồng hành → ca khác cùng nhóm. Mobile: sidebar xuống dưới + thanh đặt lịch bám đáy |
-| Trang **liệu trình** (sản phẩm giao diện `product.lieu-trinh`) — phần "Trước – sau" | Chỉ khi bài có tag `lieutrinh:<alias sản phẩm>` (tối đa 4 ca/trang) |
+| Trang **liệu trình** (sản phẩm giao diện `product.lieu-trinh`) — phần "Trước – sau" | Chỉ khi bài có tag `lieutrinh:<alias sản phẩm>` (tối đa 8 ca, trình chiếu ‹ ›) |
 
 > **Chỉ đăng ca thật**, đã được khách đồng ý công bố. Ảnh trước và sau phải cùng góc chụp, cùng ánh sáng và không chỉnh sửa.
 > Không dùng ảnh của hãng hoặc ảnh của liệu trình khác làm kết quả. Phần nào chưa có dữ liệu thì để trống, trang sẽ tự ẩn phần đó.

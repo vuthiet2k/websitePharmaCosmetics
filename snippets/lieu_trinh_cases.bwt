@@ -2,6 +2,9 @@
   lieu_trinh_cases — trước–sau: bài trong blog ca khách hàng (settings.clinical_case_blog_handle, quy ước trang Trước & Sau) có tag
   lieutrinh:<alias sản phẩm> và ĐỦ ảnh trước/sau (tag anhtruoc:/anhsau: hoặc 2 ảnh đầu trong nội dung). Ghi nhận = tag tuan:, phacdo: (thiếu ⇒ ẩn). Không ca ⇒ ẩn cả phần.
   Không dùng ảnh hãng/ảnh liệu trình khác (vd Skin Renewal Peeling System) làm kết quả.
+  2026-10-18 (người dùng: "để swiper tương tự cho đồng bộ"): trình chiếu 1 ca/lần giống thư viện kết quả /truoc-sau-cham-soc-da-tu-xa
+  — cặp ảnh TRƯỚC/SAU full ngang 4:3 không nhãn đè, ‹ › + chấm + vuốt; chữ (tiêu đề · tóm tắt · số tuần · phác đồ · Xem chi tiết ca)
+  trượt lên khi rê chuột, màn cảm ứng hiện sẵn. Cả slide là link sang trang chi tiết ca. Tối đa 8 ca. JS: assets/lieu-trinh.js.
 {%- endcomment -%}
 {%- assign lt_kblog_handle = settings.clinical_case_blog_handle | default: 'truoc-va-sau-1' -%}{%- assign lt_kblog = blogs[lt_kblog_handle] -%}
 {%- assign lt_kn = 0 -%}
@@ -12,16 +15,24 @@
   {%- assign lt_b = pc_bs_before -%}{%- assign lt_f = pc_bs_after -%}{%- assign lt_wk = pc_bs_weeks -%}{%- assign lt_pd = pc_bs_plan -%}
   {%- assign lt_mine_key = '|' | append: lt_alias | append: '|' -%}
   {%- assign lt_mine = false -%}{%- if pc_bs_lt contains lt_mine_key -%}{%- assign lt_mine = true -%}{%- endif -%}
-  {%- if lt_mine and lt_b != blank and lt_f != blank and lt_kn < 4 -%}
+  {%- if lt_mine and lt_b != blank and lt_f != blank and lt_kn < 8 -%}
   {%- assign lt_kn = lt_kn | plus: 1 -%}
-  <article class="lt-card lt-case">
-    <h3 class="lt-card__title"><span class="lt-num">Case 0{{ lt_kn }}</span> {{ lt_a.title | escape }}</h3>
-    <div class="lt-case__pair">
-      <figure><div class="lt-media lt-media--4x3"><img src="{{ lt_b }}" alt="{{ lt_a.title | escape }} — trước điều trị" width="600" height="450" loading="lazy" decoding="async"></div><figcaption>Trước điều trị</figcaption></figure>
-      <figure><div class="lt-media lt-media--4x3"><img src="{{ lt_f }}" alt="{{ lt_a.title | escape }} — sau điều trị" width="600" height="450" loading="lazy" decoding="async"></div><figcaption>Sau điều trị</figcaption></figure>
-    </div>
-    {%- if lt_wk != blank or lt_pd != blank -%}<p class="lt-card__text">{% if lt_wk != blank %}Theo dõi {{ lt_wk | escape }} tuần{% endif %}{% if lt_wk != blank and lt_pd != blank %} · {% endif %}{% if lt_pd != blank %}{{ lt_pd | escape }}{% endif %}</p>{%- endif -%}
-  </article>
+  {%- assign lt_sum = lt_a.summary | default: lt_a.excerpt | strip_html | strip | truncate: 160 -%}
+  <a class="lt-slide" href="{{ lt_a.url }}"{% if lt_kn > 1 %} hidden{% endif %}>
+    <span class="lt-slide__shot"><img src="{{ lt_b }}" alt="{{ lt_a.title | escape }} — trước điều trị" width="800" height="600" loading="lazy" decoding="async"></span>
+    <span class="lt-slide__shot lt-slide__shot--after"><img src="{{ lt_f }}" alt="{{ lt_a.title | escape }} — sau điều trị{% if lt_wk != blank %} {{ lt_wk | escape }} tuần{% endif %}" width="800" height="600" loading="lazy" decoding="async"></span>
+    <span class="lt-slide__info">
+      <span class="lt-slide__text">
+        <span class="lt-slide__title">{{ lt_a.title | escape }}</span>
+        {%- if lt_sum != blank -%}<span class="lt-slide__sum">{{ lt_sum }}</span>{%- endif -%}
+      </span>
+      <span class="lt-slide__facts">
+        {%- if lt_wk != blank -%}<span><i class="fa-solid fa-calendar-check" aria-hidden="true"></i>{{ lt_wk | escape }} tuần</span>{%- endif -%}
+        {%- if lt_pd != blank -%}<span><i class="fa-solid fa-flask-vial" aria-hidden="true"></i>{{ lt_pd | escape }}</span>{%- endif -%}
+        <span class="lt-slide__more">{{ settings.clinical_case_more_label | default: 'Xem chi tiết ca' | escape }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+      </span>
+    </span>
+  </a>
   {%- endif -%}
 {%- endfor -%}
 {%- endcapture -%}
@@ -33,7 +44,12 @@
       <h2 class="lt-title">{{ settings.lt_cases_title | escape }}</h2>
       {%- if settings.lt_cases_text != blank -%}<p class="lt-lead">{{ settings.lt_cases_text | escape }}</p>{%- endif -%}
     </header>
-    <div class="lt-cases">{{ lt_cases }}</div>
+    <div class="lt-slider" data-lt-slider>
+      <button type="button" class="lt-arrow lt-arrow--prev" data-lt-prev aria-label="Ca trước"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+      <div class="lt-slider__viewport" aria-live="polite">{{ lt_cases }}</div>
+      <button type="button" class="lt-arrow lt-arrow--next" data-lt-next aria-label="Ca sau"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+      <div class="lt-dots" data-lt-dots></div>
+    </div>
     {%- if settings.lt_cases_disclaimer != blank -%}<p class="lt-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> {{ settings.lt_cases_disclaimer | escape }}</p>{%- endif -%}
   </div>
 </section>
