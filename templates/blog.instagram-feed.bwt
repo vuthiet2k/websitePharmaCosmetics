@@ -103,8 +103,18 @@
             {%- endif -%}
           {%- endfor -%}
           {%- assign pc_vs_article = article -%}{%- include 'video_source' -%}
-          {%- assign pc_ig_yt = '' -%}
-          {%- if pc_vs_src == 'youtube' -%}{%- assign pc_ig_yt = pc_vs_id -%}{%- endif -%}
+          {%- comment -%} 2026-10-18 (người dùng): ưu tiên VIDEO trước ảnh bài viết — YouTube > Facebook (tag hoặc video trong bài). {%- endcomment -%}
+          {%- assign pc_ig_yt = '' -%}{%- assign pc_ig_fb = '' -%}
+          {%- if pc_vs_list != '' -%}
+            {%- assign pc_ig_vitems = pc_vs_list | split: '||' -%}
+            {%- for pc_ig_vi in pc_ig_vitems -%}{%- assign pc_ig_vp = pc_ig_vi | split: '~' -%}
+              {%- if pc_ig_yt == '' and pc_ig_vp[0] == 'youtube' -%}{%- assign pc_ig_yt = pc_ig_vp[1] -%}{%- endif -%}
+              {%- if pc_ig_fb == '' and pc_ig_vp[0] == 'facebook' -%}{%- assign pc_ig_fb = pc_ig_vp[2] -%}{%- endif -%}
+            {%- endfor -%}
+          {%- endif -%}
+          {%- if pc_ig_yt == '' and pc_vs_src == 'youtube' -%}{%- assign pc_ig_yt = pc_vs_id -%}{%- endif -%}
+          {%- if pc_ig_fb == '' and pc_vs_src == 'facebook' -%}{%- assign pc_ig_fb = pc_vs_fb -%}{%- endif -%}
+          {%- if pc_ig_yt != '' -%}{%- assign pc_ig_fb = '' -%}{%- endif -%}
           {%- assign pc_ig_ago = '' -%}{%- assign pc_ig_fresh = false -%}
           {%- if pc_ig_has_now -%}
             {%- assign pc_ig_pub = article.published_on | date: '%s' | plus: 0 -%}
@@ -128,15 +138,15 @@
               </div>
               <time class="pc-ig-post__time" datetime="{{ article.published_on | date: '%Y-%m-%dT%H:%M:%S' }}">{{ pc_ig_ago }}</time>
             </header>
-            <a class="pc-ig-post__media" href="{{ article.url }}" aria-label="{{ article.title | escape }}">
-              {%- if article.image.src != blank -%}
-              <img src="{{ article.image.src | img_url: 'grande' }}" alt="{{ article.image.alt | default: article.title | escape }}" width="600" height="750" {% if pc_ig_n > 1 %}loading="lazy" {% endif %}decoding="async">
-              {%- elsif pc_ig_yt != blank -%}
+            <a class="pc-ig-post__media" href="{{ article.url }}" aria-label="{{ article.title | escape }}"{% if pc_ig_yt != '' %} data-ig-video="youtube" data-ig-vid="{{ pc_ig_yt }}"{% elsif pc_ig_fb != '' %} data-ig-video="facebook" data-ig-vfb="{{ pc_ig_fb | escape }}"{% endif %}>
+              {%- if pc_ig_yt != blank -%}
               <img src="https://i.ytimg.com/vi/{{ pc_ig_yt }}/hqdefault.jpg" alt="{{ article.title | escape }}" width="480" height="360" {% if pc_ig_n > 1 %}loading="lazy" {% endif %}decoding="async">
+              {%- elsif article.image.src != blank -%}
+              <img src="{{ article.image.src | img_url: 'grande' }}" alt="{{ article.image.alt | default: article.title | escape }}" width="600" height="750" {% if pc_ig_n > 1 %}loading="lazy" {% endif %}decoding="async">
               {%- else -%}
               <span class="pc-ig-post__ph" aria-hidden="true"><i class="fa-solid fa-newspaper"></i><span>{{ article.title | escape }}</span></span>
               {%- endif -%}
-              {%- if pc_ig_yt != blank -%}<span class="pc-ig-post__play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>{%- endif -%}
+              {%- if pc_ig_yt != blank or pc_ig_fb != blank -%}<span class="pc-ig-post__play" aria-hidden="true"><i class="fa-solid fa-play"></i></span><span class="pc-ig-post__vid" aria-hidden="true"><i class="fa-solid fa-video"></i></span>{%- endif -%}
               {%- if pc_ig_fresh -%}<span class="pc-ig-post__new">{{ settings.feed_new_label | default: 'Mới' | escape }}</span>{%- endif -%}
             </a>
             <div class="pc-ig-post__actions">
@@ -195,6 +205,26 @@
     }
     bind('[data-ig-like]', KEY_L, 'fa-heart', 'fa-heart', '');
     bind('[data-ig-save]', KEY_S, 'fa-bookmark', 'fa-bookmark', {{ settings.feed_saved_toast | default: 'Đã lưu bài viết' | json }});
+    /* 2026-10-18: video tự phát (tắt tiếng, lặp) khi bài vào màn hình — chỉ nạp iframe lúc đó, gỡ khi ra khỏi; tắt khi giảm chuyển động. */
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
+      var vio = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          var m = en.target, fr = m.querySelector('iframe');
+          if (en.isIntersecting && !fr && !m.closest('[hidden]')) {
+            fr = document.createElement('iframe');
+            if (m.dataset.igVideo === 'youtube') {
+              var id = m.dataset.igVid;
+              fr.src = 'https://www.youtube.com/embed/' + id + '?autoplay=1&mute=1&loop=1&playlist=' + id + '&controls=0&playsinline=1&rel=0&modestbranding=1';
+            } else {
+              fr.src = 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(m.dataset.igVfb) + '&show_text=false&autoplay=true&mute=1';
+            }
+            fr.title = m.getAttribute('aria-label') || ''; fr.allow = 'autoplay; encrypted-media; picture-in-picture'; fr.setAttribute('tabindex', '-1');
+            m.appendChild(fr); m.classList.add('is-playing');
+          } else if (!en.isIntersecting && fr) { fr.remove(); m.classList.remove('is-playing'); }
+        });
+      }, { threshold: 0.6 });
+      document.querySelectorAll('[data-ig-video]').forEach(function (m) { vio.observe(m); });
+    }
     var more = document.querySelector('[data-ig-more]');
     if (more) more.addEventListener('click', function () {
       var hidden = [].slice.call(document.querySelectorAll('[data-ig-feed] .pc-ig-post[hidden]')), step = parseInt(more.getAttribute('data-step'), 10) || 12;
