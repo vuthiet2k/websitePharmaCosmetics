@@ -5,7 +5,8 @@
   · Tên blog = h1 ẩn (khối hồ sơ đầu trang đã bỏ theo người dùng 18/10).
   · Story = các blog trong settings.feed_story_blogs (handle, cách nhau dấu phẩy): ảnh bài mới nhất của blog, nhãn MỚI nếu có bài
     trong 7 ngày, blog đang xem được đánh dấu.
-  · Feed = bài của blog này (Sapo trả mới nhất trước), 12 bài/trang + nút "Xem thêm bài viết". Mỗi bài: chuyên mục (tag chude: hoặc
+  · Feed = bài mới nhất gom từ MỌI danh mục settings.news_hub_blogs (cùng nguồn khối "Tin mới nhất"), 12 bài + "Xem thêm" (tối đa 36).
+    Mỗi bài: chuyên mục (tag chude: hoặc
     tên blog) · thời gian "x giờ/ngày trước" · ảnh 4:5 (bài có tag youtube: ⇒ ảnh video + nút ▶) · nhãn MỚI (< 3 ngày) · tim / bình
     luận / chia sẻ / lưu · tiêu đề + tóm tắt 2 dòng "xem thêm" · hashtag (tag thường) · số bình luận THẬT nếu có.
   · Tim/lưu chỉ ghi trên máy người xem (localStorage) — KHÔNG hiện số lượt bịa (bản cũ tính comments_count × 17 + 900).
@@ -62,86 +63,111 @@
   <nav class="pc-ig-stories" aria-label="{{ settings.feed_story_label | default: 'Chuyên mục' | escape }}"><ul>{{ pc_ig_stories }}</ul></nav>
   {%- endif -%}
 
-  {%- comment -%} ═══ Feed bài mới nhất ═══ {%- endcomment -%}
-  {% paginate blog.articles by 12 %}
-  <div class="pc-ig-feed">
-    {%- for article in blog.articles -%}
-      {%- comment -%} Chuyên mục = tag chude:, hashtag = tag thường (bỏ tag hệ thống khoá:giá trị / duocsi_ / video). {%- endcomment -%}
-      {%- assign pc_ig_topic = '' -%}{%- assign pc_ig_tags = '' -%}
-      {%- for pc_ig_t in article.tags -%}
-        {%- if pc_ig_t contains ':' -%}
-          {%- assign pc_ig_k = pc_ig_t | split: ':' | first | strip | downcase -%}
-          {%- if pc_ig_k == 'chude' -%}{%- assign pc_ig_topic = pc_ig_t | remove_first: 'chude:' | strip -%}{%- endif -%}
-        {%- else -%}
-          {%- unless pc_ig_t contains 'duocsi_' or pc_ig_t contains 'video' or pc_ig_t contains '|' -%}{%- assign pc_ig_tags = pc_ig_tags | append: pc_ig_t | append: '|' -%}{%- endunless -%}
-        {%- endif -%}
-      {%- endfor -%}
-      {%- assign pc_vs_article = article -%}{%- include 'video_source' -%}
-      {%- assign pc_ig_yt = '' -%}
-      {%- if pc_vs_src == 'youtube' -%}{%- assign pc_ig_yt = pc_vs_id -%}{%- endif -%}
-      {%- assign pc_ig_ago = '' -%}{%- assign pc_ig_fresh = false -%}
-      {%- if pc_ig_has_now -%}
-        {%- assign pc_ig_pub = article.published_on | date: '%s' | plus: 0 -%}
-        {%- assign pc_ig_age = pc_ig_now | minus: pc_ig_pub -%}
-        {%- if pc_ig_age >= 0 -%}
-          {%- if pc_ig_age < 3600 -%}{%- assign pc_ig_ago = settings.feed_just_now | default: 'Vừa đăng' -%}
-          {%- elsif pc_ig_age < 86400 -%}{%- assign pc_ig_ago = pc_ig_age | divided_by: 3600 | append: ' giờ trước' -%}
-          {%- elsif pc_ig_age < 604800 -%}{%- assign pc_ig_ago = pc_ig_age | divided_by: 86400 | append: ' ngày trước' -%}
-          {%- endif -%}
-          {%- if pc_ig_age < 259200 -%}{%- assign pc_ig_fresh = true -%}{%- endif -%}
-        {%- endif -%}
-      {%- endif -%}
-      {%- if pc_ig_ago == blank -%}{%- assign pc_ig_ago = article.published_on | date: '%d/%m/%Y' -%}{%- endif -%}
-      {%- assign pc_ig_sum = article.summary | default: article.excerpt | strip_html | strip -%}
-      <article class="pc-ig-post" data-ig-post="{{ article.url }}">
-        <header class="pc-ig-post__head">
-          <span class="pc-ig-post__avatar">{{ pc_ig_avatar }}</span>
-          <div class="pc-ig-post__who">
-            <span class="pc-ig-post__name">{{ pc_ig_name | escape }} <i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
-            <span class="pc-ig-post__sub">{{ pc_ig_topic | default: blog.title | escape }}</span>
-          </div>
-          <time class="pc-ig-post__time" datetime="{{ article.published_on | date: '%Y-%m-%dT%H:%M:%S' }}">{{ pc_ig_ago }}</time>
-        </header>
-        <a class="pc-ig-post__media" href="{{ article.url }}" aria-label="{{ article.title | escape }}">
-          {%- if article.image.src != blank -%}
-          <img src="{{ article.image.src | img_url: 'grande' }}" alt="{{ article.image.alt | default: article.title | escape }}" width="600" height="750" {% if forloop.index > 1 %}loading="lazy" {% endif %}decoding="async">
-          {%- elsif pc_ig_yt != blank -%}
-          <img src="https://i.ytimg.com/vi/{{ pc_ig_yt }}/hqdefault.jpg" alt="{{ article.title | escape }}" width="480" height="360" {% if forloop.index > 1 %}loading="lazy" {% endif %}decoding="async">
-          {%- else -%}
-          <span class="pc-ig-post__ph" aria-hidden="true"><i class="fa-solid fa-newspaper"></i><span>{{ article.title | escape }}</span></span>
-          {%- endif -%}
-          {%- if pc_ig_yt != blank -%}<span class="pc-ig-post__play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>{%- endif -%}
-          {%- if pc_ig_fresh -%}<span class="pc-ig-post__new">{{ settings.feed_new_label | default: 'Mới' | escape }}</span>{%- endif -%}
-        </a>
-        <div class="pc-ig-post__actions">
-          <button type="button" class="pc-ig-act" data-ig-like aria-pressed="false" aria-label="{{ settings.feed_like_label | default: 'Thích' | escape }}"><i class="fa-regular fa-heart" aria-hidden="true"></i></button>
-          <a class="pc-ig-act" href="{{ article.url }}{% if blog.comments_enabled %}#article_comments{% endif %}" aria-label="{{ settings.feed_comment_label | default: 'Bình luận' | escape }}"><i class="fa-solid fa-comment" aria-hidden="true"></i></a>
-          <button type="button" class="pc-ig-act" data-ig-share data-title="{{ article.title | escape }}" aria-label="{{ settings.feed_share_label | default: 'Chia sẻ' | escape }}"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
-          <button type="button" class="pc-ig-act pc-ig-act--save" data-ig-save aria-pressed="false" aria-label="{{ settings.feed_save_label | default: 'Lưu bài' | escape }}"><i class="fa-regular fa-bookmark" aria-hidden="true"></i></button>
-        </div>
-        <div class="pc-ig-post__caption">
-          <a class="pc-ig-post__title" href="{{ article.url }}"><strong>{{ pc_ig_name | escape }}</strong> {{ article.title | escape }}</a>
-          {%- if pc_ig_sum != blank -%}
-          <p class="pc-ig-post__text">{{ pc_ig_sum | truncate: 220 }}</p>
-          <a class="pc-ig-post__more" href="{{ article.url }}">{{ settings.feed_more_text | default: 'xem thêm' | escape }}</a>
-          {%- endif -%}
-          {%- if pc_ig_tags != blank -%}
-          {%- assign pc_ig_tag_list = pc_ig_tags | split: '|' -%}
-          <p class="pc-ig-post__tags">{%- for pc_ig_t in pc_ig_tag_list limit: 4 -%}{%- if pc_ig_t != blank -%}<a href="/blogs/all/tagged/(({{ pc_ig_t | replace: ' ', '%20' }}))">#{{ pc_ig_t | replace: ' ', '' | replace: '-', '' }}</a> {% endif -%}{%- endfor -%}</p>
-          {%- endif -%}
-          {%- if blog.comments_enabled and article.comments_count > 0 -%}
-          <a class="pc-ig-post__comments" href="{{ article.url }}#article_comments">{{ settings.feed_comments_view | default: 'Xem bình luận' | escape }} ({{ article.comments_count }})</a>
-          {%- endif -%}
-        </div>
-      </article>
-    {%- else -%}
-      <p class="pc-ig-empty">{{ settings.feed_empty_text | default: 'Chuyên mục đang cập nhật bài viết.' | escape }}</p>
+  {%- comment -%}
+    ═══ Feed bài mới nhất ═══ 2026-10-18 (người dùng: "cùng lấy theo tin mới nhất nhưng data khác nhau"): dùng CHUNG nguồn + cách
+    xếp với khối "Tin mới nhất" trang tin tức (snippets/page_tin_tuc_hub.bwt): gom bài MỌI danh mục trong settings.news_hub_blogs,
+    khoá "yyyyMMddHHmmss|handle|vị trí" ⇒ sort chuỗi = sort thời gian, duyệt reversed (mới → cũ); lấy bài bằng for … offset: limit: 1
+    (DotLiquid Sapo lỗi chỉ số mảng tính từ plus: 0). Tối đa 36 bài, hiện 12, nút "Xem thêm" mở thêm 12 (không tải lại trang).
+  {%- endcomment -%}
+  {%- assign pc_ig_raw = settings.news_hub_blogs | strip -%}
+  {%- if pc_ig_raw == blank -%}{%- assign pc_ig_raw = blog.handle | default: 'tin-tuc-va-kien-thuc' -%}{%- endif -%}
+  {%- assign pc_ig_list = pc_ig_raw | split: ',' -%}
+  {%- assign pc_ig_seen = ',' -%}
+  {%- capture pc_ig_keys -%}
+    {%- for pc_ig_h in pc_ig_list -%}
+      {%- assign pc_ig_hs = pc_ig_h | strip -%}
+      {%- assign pc_ig_hk = ',' | append: pc_ig_hs | append: ',' -%}
+      {%- unless pc_ig_hs == blank or pc_ig_seen contains pc_ig_hk -%}
+        {%- assign pc_ig_seen = pc_ig_seen | append: pc_ig_hs | append: ',' -%}
+        {%- for pc_ig_a in blogs[pc_ig_hs].articles -%}{{ pc_ig_a.published_on | date: 'yyyyMMddHHmmss' }}|{{ pc_ig_hs }}|{{ forloop.index0 }};{%- endfor -%}
+      {%- endunless -%}
     {%- endfor -%}
+  {%- endcapture -%}
+  {%- assign pc_ig_keys = pc_ig_keys | split: ';' | sort -%}
+  {%- assign pc_ig_page = 12 -%}{%- assign pc_ig_max = 36 -%}{%- assign pc_ig_n = 0 -%}
+  <div class="pc-ig-feed" data-ig-feed>
+    {%- for pc_ig_k in pc_ig_keys reversed -%}
+      {%- if pc_ig_k != blank and pc_ig_n < pc_ig_max -%}
+        {%- assign pc_ig_kp = pc_ig_k | split: '|' -%}{%- assign pc_ig_kh = pc_ig_kp[1] -%}{%- assign pc_ig_ki = pc_ig_kp[2] | plus: 0 -%}
+        {%- assign pc_ig_kb = blogs[pc_ig_kh] -%}
+        {%- assign pc_ig_n = pc_ig_n | plus: 1 -%}
+        {%- for article in pc_ig_kb.articles offset: pc_ig_ki limit: 1 -%}
+          {%- comment -%} Chuyên mục = tag chude:, hashtag = tag thường (bỏ tag hệ thống khoá:giá trị / duocsi_ / video). {%- endcomment -%}
+          {%- assign pc_ig_topic = '' -%}{%- assign pc_ig_tags = '' -%}
+          {%- for pc_ig_t in article.tags -%}
+            {%- if pc_ig_t contains ':' -%}
+              {%- assign pc_ig_k = pc_ig_t | split: ':' | first | strip | downcase -%}
+              {%- if pc_ig_k == 'chude' -%}{%- assign pc_ig_topic = pc_ig_t | remove_first: 'chude:' | strip -%}{%- endif -%}
+            {%- else -%}
+              {%- unless pc_ig_t contains 'duocsi_' or pc_ig_t contains 'video' or pc_ig_t contains '|' -%}{%- assign pc_ig_tags = pc_ig_tags | append: pc_ig_t | append: '|' -%}{%- endunless -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {%- assign pc_vs_article = article -%}{%- include 'video_source' -%}
+          {%- assign pc_ig_yt = '' -%}
+          {%- if pc_vs_src == 'youtube' -%}{%- assign pc_ig_yt = pc_vs_id -%}{%- endif -%}
+          {%- assign pc_ig_ago = '' -%}{%- assign pc_ig_fresh = false -%}
+          {%- if pc_ig_has_now -%}
+            {%- assign pc_ig_pub = article.published_on | date: '%s' | plus: 0 -%}
+            {%- assign pc_ig_age = pc_ig_now | minus: pc_ig_pub -%}
+            {%- if pc_ig_age >= 0 -%}
+              {%- if pc_ig_age < 3600 -%}{%- assign pc_ig_ago = settings.feed_just_now | default: 'Vừa đăng' -%}
+              {%- elsif pc_ig_age < 86400 -%}{%- assign pc_ig_ago = pc_ig_age | divided_by: 3600 | append: ' giờ trước' -%}
+              {%- elsif pc_ig_age < 604800 -%}{%- assign pc_ig_ago = pc_ig_age | divided_by: 86400 | append: ' ngày trước' -%}
+              {%- endif -%}
+              {%- if pc_ig_age < 259200 -%}{%- assign pc_ig_fresh = true -%}{%- endif -%}
+            {%- endif -%}
+          {%- endif -%}
+          {%- if pc_ig_ago == blank -%}{%- assign pc_ig_ago = article.published_on | date: '%d/%m/%Y' -%}{%- endif -%}
+          {%- assign pc_ig_sum = article.summary | default: article.excerpt | strip_html | strip -%}
+          <article class="pc-ig-post"{% if pc_ig_n > pc_ig_page %} hidden{% endif %} data-ig-post="{{ article.url }}">
+            <header class="pc-ig-post__head">
+              <span class="pc-ig-post__avatar">{{ pc_ig_avatar }}</span>
+              <div class="pc-ig-post__who">
+                <span class="pc-ig-post__name">{{ pc_ig_name | escape }} <i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
+                <span class="pc-ig-post__sub">{{ pc_ig_topic | default: pc_ig_kb.title | escape }}</span>
+              </div>
+              <time class="pc-ig-post__time" datetime="{{ article.published_on | date: '%Y-%m-%dT%H:%M:%S' }}">{{ pc_ig_ago }}</time>
+            </header>
+            <a class="pc-ig-post__media" href="{{ article.url }}" aria-label="{{ article.title | escape }}">
+              {%- if article.image.src != blank -%}
+              <img src="{{ article.image.src | img_url: 'grande' }}" alt="{{ article.image.alt | default: article.title | escape }}" width="600" height="750" {% if pc_ig_n > 1 %}loading="lazy" {% endif %}decoding="async">
+              {%- elsif pc_ig_yt != blank -%}
+              <img src="https://i.ytimg.com/vi/{{ pc_ig_yt }}/hqdefault.jpg" alt="{{ article.title | escape }}" width="480" height="360" {% if pc_ig_n > 1 %}loading="lazy" {% endif %}decoding="async">
+              {%- else -%}
+              <span class="pc-ig-post__ph" aria-hidden="true"><i class="fa-solid fa-newspaper"></i><span>{{ article.title | escape }}</span></span>
+              {%- endif -%}
+              {%- if pc_ig_yt != blank -%}<span class="pc-ig-post__play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>{%- endif -%}
+              {%- if pc_ig_fresh -%}<span class="pc-ig-post__new">{{ settings.feed_new_label | default: 'Mới' | escape }}</span>{%- endif -%}
+            </a>
+            <div class="pc-ig-post__actions">
+              <button type="button" class="pc-ig-act" data-ig-like aria-pressed="false" aria-label="{{ settings.feed_like_label | default: 'Thích' | escape }}"><i class="fa-regular fa-heart" aria-hidden="true"></i></button>
+              <a class="pc-ig-act" href="{{ article.url }}{% if pc_ig_kb.comments_enabled %}#article_comments{% endif %}" aria-label="{{ settings.feed_comment_label | default: 'Bình luận' | escape }}"><i class="fa-solid fa-comment" aria-hidden="true"></i></a>
+              <button type="button" class="pc-ig-act" data-ig-share data-title="{{ article.title | escape }}" aria-label="{{ settings.feed_share_label | default: 'Chia sẻ' | escape }}"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
+              <button type="button" class="pc-ig-act pc-ig-act--save" data-ig-save aria-pressed="false" aria-label="{{ settings.feed_save_label | default: 'Lưu bài' | escape }}"><i class="fa-regular fa-bookmark" aria-hidden="true"></i></button>
+            </div>
+            <div class="pc-ig-post__caption">
+              <a class="pc-ig-post__title" href="{{ article.url }}"><strong>{{ pc_ig_name | escape }}</strong> {{ article.title | escape }}</a>
+              {%- if pc_ig_sum != blank -%}
+              <p class="pc-ig-post__text">{{ pc_ig_sum | truncate: 220 }}</p>
+              <a class="pc-ig-post__more" href="{{ article.url }}">{{ settings.feed_more_text | default: 'xem thêm' | escape }}</a>
+              {%- endif -%}
+              {%- if pc_ig_tags != blank -%}
+              {%- assign pc_ig_tag_list = pc_ig_tags | split: '|' -%}
+              <p class="pc-ig-post__tags">{%- for pc_ig_t in pc_ig_tag_list limit: 4 -%}{%- if pc_ig_t != blank -%}<a href="/blogs/all/tagged/(({{ pc_ig_t | replace: ' ', '%20' }}))">#{{ pc_ig_t | replace: ' ', '' | replace: '-', '' }}</a> {% endif -%}{%- endfor -%}</p>
+              {%- endif -%}
+              {%- if pc_ig_kb.comments_enabled and article.comments_count > 0 -%}
+              <a class="pc-ig-post__comments" href="{{ article.url }}#article_comments">{{ settings.feed_comments_view | default: 'Xem bình luận' | escape }} ({{ article.comments_count }})</a>
+              {%- endif -%}
+            </div>
+          </article>
+        {%- endfor -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- if pc_ig_n == 0 -%}<p class="pc-ig-empty">{{ settings.feed_empty_text | default: 'Chuyên mục đang cập nhật bài viết.' | escape }}</p>{%- endif -%}
   </div>
-  {%- if paginate.next -%}
-  <div class="pc-ig-more"><a class="pc-ig-more__btn" href="{{ paginate.next.url }}">{{ settings.feed_load_more | default: 'Xem thêm bài viết' | escape }} <i class="fa-solid fa-arrow-down" aria-hidden="true"></i></a></div>
+  {%- if pc_ig_n > pc_ig_page -%}
+  <div class="pc-ig-more"><button type="button" class="pc-ig-more__btn" data-ig-more data-step="{{ pc_ig_page }}">{{ settings.feed_load_more | default: 'Xem thêm bài viết' | escape }} <i class="fa-solid fa-arrow-down" aria-hidden="true"></i></button></div>
   {%- endif -%}
-  {% endpaginate %}
   <div class="pc-ig-toast" role="status" aria-live="polite" hidden></div>
 </div>
 <script>
@@ -169,6 +195,12 @@
     }
     bind('[data-ig-like]', KEY_L, 'fa-heart', 'fa-heart', '');
     bind('[data-ig-save]', KEY_S, 'fa-bookmark', 'fa-bookmark', {{ settings.feed_saved_toast | default: 'Đã lưu bài viết' | json }});
+    var more = document.querySelector('[data-ig-more]');
+    if (more) more.addEventListener('click', function () {
+      var hidden = [].slice.call(document.querySelectorAll('[data-ig-feed] .pc-ig-post[hidden]')), step = parseInt(more.getAttribute('data-step'), 10) || 12;
+      hidden.slice(0, step).forEach(function (el) { el.hidden = false; });
+      if (hidden.length <= step) more.parentNode.remove();
+    });
     document.querySelectorAll('[data-ig-share]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var url = new URL(btn.closest('[data-ig-post]').getAttribute('data-ig-post'), location.href).href, title = btn.getAttribute('data-title');
