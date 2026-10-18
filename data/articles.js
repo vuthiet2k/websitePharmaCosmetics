@@ -663,13 +663,21 @@ const concernArticles = [
   ['sac-to-khong-dong-deu', 'Sắc tố không đồng đều', 'Hỗ trợ cải thiện các vùng tăng sắc tố nông và vẻ ngoài xỉn màu.', 'fa-circle-half-stroke'],
   ['be-mat-san-rap', 'Bề mặt sần ráp', 'Hỗ trợ loại bỏ tế bào sừng tích tụ, cải thiện độ mịn của bề mặt.', 'fa-layer-group'],
   ['dau-hieu-lao-hoa-som', 'Dấu hiệu lão hóa sớm', 'Hỗ trợ cải thiện vẻ ngoài của nếp nhăn nông, kết cấu da và độ tươi sáng.', 'fa-hourglass-half'],
-].map(([h, t, d, ic], i) => ltArticle(LT_CONCERN_BLOG, 700 + i, h, t, d, { tags: [`icon:${ic}`] }));
+].map(([h, t, d, ic], i) => ltArticle(LT_CONCERN_BLOG, 700 + i, h, t, d, {
+  tags: [`icon:${ic}`],
+  // 2026-10-18: ẢNH MẪU 4:3 (Ảnh bài viết) — chỉ để thấy bố cục; trên Sapo dùng ảnh lâm sàng có bản quyền/khách đồng ý.
+  image: { src: `https://placehold.co/1200x900/E6F2EA/075B40?text=${encodeURIComponent('ẢNH 4:3 · 1200×900')}`, alt: t },
+}));
 const LT_ING_BLOG = { handle: 'hoat-chat', title: 'Thư viện hoạt chất' };
 const peelActiveArticles = [
   ['resorcinol', 'Resorcinol', 'Hỗ trợ bong sừng, cải thiện tình trạng thô ráp và bề mặt da không đồng đều.', 'TÁI TẠO BỀ MẶT', 'Tiêu sừng'],
   ['salicylic-acid', 'Salicylic Acid', 'Hoạt chất BHA có tính ưa lipid, hỗ trợ làm thông thoáng nang lông và cải thiện mụn không viêm.', 'KIỂM SOÁT BÍT TẮC', 'BHA'],
   ['kojic-acid', 'Kojic Acid', 'Hỗ trợ ức chế tyrosinase, góp phần cải thiện thâm và sắc tố không đồng đều.', 'HỖ TRỢ ĐIỀU HÒA SẮC TỐ', 'Làm sáng'],
-].map(([h, t, d, role, nhom], i) => ltArticle(LT_ING_BLOG, 710 + i, h, t, d, { tags: [`nhom:${nhom}`, `vaitro:${role}`] }));
+].map(([h, t, d, role, nhom], i) => ltArticle(LT_ING_BLOG, 710 + i, h, t, d, {
+  tags: [`nhom:${nhom}`, `vaitro:${role}`],
+  // 2026-10-18: ẢNH MẪU vuông (Ảnh bài viết) — ô ảnh nhỏ bên trái thẻ hoạt chất.
+  image: { src: `https://placehold.co/400x400/E6F2EA/075B40?text=${encodeURIComponent('ẢNH 1:1')}`, alt: t },
+}));
 const LT_FAQ_BLOG = { handle: 'cau-hoi-lieu-trinh', title: 'Câu hỏi liệu trình' };
 const treatmentFaqArticles = [
   ['getglowing-co-gay-bong-da-khong', 'GetGlowing Micro-Peel có gây bong da không?', 'Có thể xuất hiện bong da trong những ngày sau trị liệu. Mức độ bong phụ thuộc vào nền da và đáp ứng của từng khách hàng.'],

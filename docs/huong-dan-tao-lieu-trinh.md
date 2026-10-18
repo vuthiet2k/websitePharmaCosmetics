@@ -1,182 +1,350 @@
-# Hướng dẫn tạo sản phẩm LIỆU TRÌNH (Skin Health Beauty)
+# Hướng dẫn tạo 1 trang LIỆU TRÌNH trên Sapo
 
-Áp dụng cho mọi liệu trình/dịch vụ trị liệu da bán dưới dạng **sản phẩm Sapo** trong danh mục liệu trình
-(hiện tại: **Điều trị chuyên nghiệp** — `dieu-tri-chuyen-nghiep`). Trang chi tiết dùng giao diện
-**`product.lieu-trinh`** — bố cục theo hồ sơ thiết kế bàn giao IT của GetGlowing Micro-Peel (2026-10-17), tự co giãn
-**laptop (≥ 992px), tablet và mobile (390px)**. Mẫu chuẩn đã nhập đủ: sản phẩm
-*Elaine Brennan GetGlowing Micro-Peel* (mục 8).
+*Dành cho người quản trị website — không cần biết code. Cập nhật 18/10/2026.*
 
-> **Trang liệu trình là SẢN PHẨM, không phải bài blog hay Trang nội dung.** `http://localhost:3000/?tpl=page.getglowing-micro-peel`
-> chỉ là trang nội dung kiểu cũ hiển thị lại sản phẩm đặt ở cấu hình `lt_page_product`. Trên Sapo (đối soát sitemap 17/10/2026)
-> **không có** trang `/getglowing-micro-peel-ha-noi`; liệu trình mẫu chạy ở URL sản phẩm
-> `/elaine-brennan-getglowing-micro-peel-lieu-trinh-peel-chuyen-nghiep-ho-tro-lam-sang-va-cai-thien-be-mat-da`.
+Làm theo đúng thứ tự các bước dưới đây là có một trang liệu trình đầy đủ như mẫu
+**GetGlowing Micro-Peel**. Thời gian: khoảng 45–60 phút cho liệu trình đầu tiên (đã chuẩn bị sẵn ảnh và chữ),
+những liệu trình sau nhanh hơn vì dùng lại bài "Vấn đề da", "Hoạt chất" đã có.
 
-> Nguyên tắc: **chỉ nhập dữ liệu thật**. Phần nào chưa có dữ liệu thì để trống — trang tự ẩn phần đó, không hiện ô trống,
-> ảnh giả hay số liệu bịa. Ảnh trước–sau chỉ dùng ca thật của chính liệu trình, khách đã đồng ý.
+> **Nguyên tắc vàng:** chỉ nhập **thông tin thật**. Phần nào chưa có dữ liệu thì cứ bỏ trống — trang **tự ẩn** phần đó,
+> không hiện ô trống hay ảnh vỡ. Không dùng ảnh trước–sau của hãng hoặc của liệu trình khác làm "kết quả".
+> Danh xưng luôn là **"Chuyên gia"**, không dùng "Bác sĩ".
 
 ---
 
-## 1. Bố cục trang & nguồn dữ liệu
+## Mục lục
 
-| # | Phần trên trang | Lấy dữ liệu từ | Trống thì |
+1. [Hiểu nhanh 4 khái niệm](#1-hiểu-nhanh-4-khái-niệm)
+2. [Bản đồ trang — mỗi phần lấy dữ liệu ở đâu](#2-bản-đồ-trang--mỗi-phần-lấy-dữ-liệu-ở-đâu)
+3. [Chuẩn bị trước khi nhập](#3-chuẩn-bị-trước-khi-nhập)
+4. [Các bước tạo liệu trình (Bước 1 → 9)](#4-các-bước-tạo-liệu-trình)
+5. [Lỗi thường gặp & cách sửa](#5-lỗi-thường-gặp--cách-sửa)
+6. [Mẫu đã nhập: GetGlowing Micro-Peel](#6-mẫu-đã-nhập-getglowing-micro-peel)
+7. [Cấu hình chung (chỉ làm 1 lần)](#7-cấu-hình-chung-chỉ-làm-1-lần)
+
+---
+
+## 1. Hiểu nhanh 4 khái niệm
+
+| Khái niệm | Nghĩa là | Ví dụ |
+| :-- | :-- | :-- |
+| **Liệu trình = 1 sản phẩm** | Mỗi liệu trình được tạo ở mục **Sản phẩm** của Sapo (không phải Trang nội dung, không phải bài viết). | GetGlowing Micro-Peel là 1 sản phẩm giá 4.000.000 đ. |
+| **Tag "khoá:giá trị"** | Ô **Tag** của sản phẩm/bài viết dùng để điền các thông tin riêng. Mỗi tag viết dạng `khoá:nội dung`, gõ xong bấm **Enter**. | `thoigian:Khoảng 30–60 phút tùy quy trình` |
+| **Khoá ảnh `[...]`** | Ô **Văn bản thay thế (Alt)** của mỗi ảnh bắt đầu bằng một khoá trong ngoặc vuông để trang biết ảnh đặt ở đâu. | `[banner] Banner GetGlowing Micro-Peel` |
+| **Bài viết dùng chung** | Vấn đề da, Hoạt chất, Câu hỏi, Ca Trước & Sau là **bài viết blog** — tạo 1 lần, nhiều liệu trình dùng lại. | Bài "Mụn và bít tắc" dùng cho cả GetGlowing và liệu trình trị mụn khác. |
+
+> ⚠️ **Tag không được chứa dấu phẩy** — Sapo cắt tag tại dấu phẩy. Thay dấu phẩy bằng **"–"** hoặc chữ **"và"**.
+> Ví dụ: ~~`congthuc:Cải thiện kết cấu, bít tắc`~~ → `congthuc:Cải thiện kết cấu – bít tắc`.
+
+---
+
+## 2. Bản đồ trang — mỗi phần lấy dữ liệu ở đâu
+
+Ảnh chụp dưới đây là trang mẫu GetGlowing. Các khung ghi **"ẢNH MẪU · [khoá] kích thước"** là **chỗ bạn đặt ảnh thật**
+— chữ trong khung cho biết khoá alt và kích thước cần chuẩn bị.
+
+### ① Banner toàn ngang
+
+![Banner](images/lieu-trinh/01-banner.jpg)
+
+- **Ảnh sản phẩm** có alt bắt đầu bằng `[banner]` (1920×900). Bản dọc cho điện thoại: `[banner-mobile]` (1080×1350, tuỳ chọn).
+- Không có banner ⇒ phần ② hiện 2 cột, ảnh `[hero]` (vuông) ở bên phải.
+
+### ② Giới thiệu
+
+![Giới thiệu](images/lieu-trinh/02-gioi-thieu.jpg)
+
+| Trên trang | Nhập ở đâu |
+| :-- | :-- |
+| Dòng nhỏ "SKIN HEALTH BEAUTY · TRỊ LIỆU DA 1:1" | Tag `nhan:` (không có thì dùng chữ chung trong Cấu hình theme) |
+| Tiêu đề lớn (H1) | Tag `tieude:` (không có thì dùng **Tên sản phẩm**) |
+| Dòng xanh "Một liệu trình – Nhiều mục tiêu…" | Tag `phude:` |
+| 2 đoạn giới thiệu | Ô **Mô tả ngắn** của sản phẩm |
+| 2 nút | Tự động (nút Đặt lịch mở trang đặt lịch chọn sẵn liệu trình này) |
+
+### ③ Vấn đề da
+
+![Vấn đề da](images/lieu-trinh/03-van-de-da.jpg)
+
+- Mỗi thẻ = 1 **bài viết** trong danh mục **Vấn đề da**: Tiêu đề = tên vấn đề · **Tóm tắt** = câu mô tả · **Ảnh bài viết** = ảnh 4:3 (1200×900).
+- Sản phẩm chọn thẻ nào bằng tag `vande:<đường dẫn bài>` — thứ tự tag = thứ tự thẻ.
+- Bài có **Nội dung** ⇒ thẻ bấm được ("Tìm hiểu thêm →"). Chưa có ảnh ⇒ thẻ hiện icon (tag `icon:` trên bài, xem Bước 1).
+
+### ④ Công nghệ & hoạt chất
+
+![Công nghệ & hoạt chất](images/lieu-trinh/04-cong-nghe-hoat-chat.jpg)
+
+| Trên trang | Nhập ở đâu |
+| :-- | :-- |
+| "ELAINE BRENNAN" | Ô **Nhà cung cấp** của sản phẩm |
+| "GETGLOWING MICRO-PEEL" | Tag `tenngan:` |
+| Câu mô tả | Tag `congthuc:` |
+| Ảnh lớn bên trái | Ảnh sản phẩm alt `[congthuc]` (vuông) |
+| Thẻ hoạt chất (ảnh nhỏ · tên · vai trò · mô tả) | Bài trong danh mục **Thư viện hoạt chất**, chọn bằng tag `hoatchat:<đường dẫn bài>` trên sản phẩm |
+
+### ⑤ Quy trình 1:1 (5 bước)
+
+![Quy trình](images/lieu-trinh/05-quy-trinh.jpg)
+
+- Chữ 5 bước **dùng chung mọi liệu trình** (Cấu hình theme › Trang liệu trình — mục 7).
+- Ảnh từng bước: ảnh sản phẩm alt `[buoc-1]` … `[buoc-5]` (4:3, 1200×900). Bước thiếu ảnh hiện khung icon.
+
+### ⑥ Trước – sau (trình chiếu)
+
+![Trước – sau](images/lieu-trinh/06-truoc-sau.jpg)
+
+- Mỗi ca = 1 bài trong danh mục **Trước & Sau**, gắn tag `lieutrinh:<đường dẫn sản phẩm>`. Hướng dẫn riêng:
+  [huong-dan-tao-ca-truoc-sau.md](./huong-dan-tao-ca-truoc-sau.md). **Chỉ ca thật, khách đã đồng ý.** Chưa có ca ⇒ phần này tự ẩn.
+
+### ⑦ Thông tin dịch vụ & đặt lịch
+
+![Thông tin & đặt lịch](images/lieu-trinh/07-thong-tin-dat-lich.jpg)
+
+| Dòng | Nhập ở đâu |
+| :-- | :-- |
+| Hình thức | Tag `hinhthuc:` (bỏ trống ⇒ "Trị liệu da 1:1") |
+| Thời gian thực hiện | Tag `thoigian:` |
+| Liệu trình | Tag `sobuoi:` (bỏ trống ⇒ "Cá nhân hóa sau khi đánh giá da") |
+| Giá dịch vụ | Ô **Giá** của sản phẩm (để 0 ⇒ "Liên hệ tư vấn") |
+| Địa điểm | Tag `diadiem:` |
+| Link "Thông tin chi tiết liệu trình →" | Tự hiện khi ô **Mô tả chi tiết** có nội dung — bấm vào mở cửa sổ ⑧ |
+
+### ⑧ Cửa sổ "Thông tin chi tiết liệu trình"
+
+![Modal chi tiết](images/lieu-trinh/08-modal-chi-tiet.jpg)
+
+- Toàn bộ ô **Mô tả chi tiết** của sản phẩm: ưu điểm, thành phần, đối tượng phù hợp, **trường hợp cần thận trọng**, phục hồi, chăm sóc sau.
+
+### ⑨ Câu hỏi thường gặp
+
+![FAQ](images/lieu-trinh/09-faq.jpg)
+
+- Mỗi câu = 1 bài trong danh mục **Câu hỏi liệu trình**: Tiêu đề = câu hỏi · Nội dung = câu trả lời · tag `sanpham:<đường dẫn sản phẩm>`.
+
+---
+
+## 3. Chuẩn bị trước khi nhập
+
+### 3.1. Ảnh
+
+| Ảnh | Kích thước | Alt bắt đầu bằng | Bắt buộc? |
 | :-- | :-- | :-- | :-- |
-| 1 | **Banner** toàn ngang | Ảnh sản phẩm có alt chứa `[banner]` (+ `[banner-mobile]`) | Không hiện dải banner |
-| 2 | **Giới thiệu**: nhãn nhỏ · H1 · tiêu đề phụ · đoạn giới thiệu · 2 nút | Tag `nhan:` (mặc định trong cấu hình) · tag `tieude:` (mặc định = tên SP) · tag `phude:` · **Mô tả ngắn** · cấu hình | Ẩn dòng tương ứng |
-| 2b | Ảnh bên phải phần giới thiệu (khi không có banner) | Ảnh alt `[hero]` → ảnh `[sanpham]` → ảnh đầu tiên | Chữ chiếm toàn ngang |
-| 3 | **Vấn đề da** (thẻ, ảnh 4:3, tên CHỮ HOA) | Tag `vande:<handle bài>` → bài trong blog **Vấn đề da** (`van-de-da`) | Ẩn cả phần |
-| 4 | **Công nghệ & hoạt chất**: nhãn = hãng · tiêu đề = tên ngắn (CHỮ HOA) · mô tả · ảnh · thẻ hoạt chất | **Nhà cung cấp/Hãng** · tag `tenngan:` · tag `congthuc:` · ảnh `[congthuc]` (→ `[sanpham]`) · tag `hoatchat:<handle>` → blog **Hoạt chất** (`hoat-chat`) | Ẩn phần/ảnh |
-| 5 | **Quy trình 1:1** (5 bước, dùng chung mọi liệu trình) | Cấu hình theme › "Trang liệu trình (sản phẩm)"; ảnh bước = ảnh SP alt `[buoc-1]`…`[buoc-5]`, không có thì ảnh chung trong cấu hình | Bước thiếu ảnh hiện khung icon |
-| 6 | **Thông tin chi tiết** — không phải section riêng: link "Thông tin chi tiết liệu trình →" ngay dưới dòng Địa điểm (mục 8) mở **modal** | **Mô tả chi tiết** sản phẩm | Ẩn link |
-| 7 | **Trước – sau** (trình chiếu 1 ca/lần, tối đa 8 ca) | Bài blog **Trước & Sau** (`truoc-va-sau-1`) có tag `lieutrinh:<alias SP>` + đủ 2 ảnh (trong nội dung hoặc tag `anhtruoc:`/`anhsau:`) | Ẩn cả phần |
-| 8 | **Thông tin & đặt lịch**: bảng · nút đặt lịch · hotline · dòng thương hiệu | Tag `hinhthuc:` `thoigian:` `sobuoi:` `diadiem:` · **giá sản phẩm** (0 ⇒ "Liên hệ tư vấn") · cấu hình | Dòng trống ẩn / dùng mặc định |
-| 9 | **FAQ** (+ JSON-LD FAQPage cho Google) | Bài blog **Câu hỏi liệu trình** (`cau-hoi-lieu-trinh`) có tag `sanpham:<alias SP>` | Ẩn |
-| — | Thanh đặt lịch bám đáy (mobile) | Cấu hình `lt_sticky_cta` | — |
+| Ảnh đại diện (lọ/sản phẩm, nền sáng) — **đặt làm ảnh đầu tiên** | vuông ≥ 1000px | `[sanpham]` | **Có** (hiện ở danh mục liệu trình) |
+| Banner ngang đã duyệt | 1920×900 | `[banner]` | Nên có |
+| Banner dọc cho điện thoại | 1080×1350 | `[banner-mobile]` | Tuỳ chọn |
+| Ảnh bên phải phần giới thiệu (chỉ dùng khi **không** có banner) | vuông | `[hero]` | Tuỳ chọn |
+| Infographic công thức / hoạt chất | vuông | `[congthuc]` | Nên có |
+| Ảnh thực tế 5 bước tại Skin Health Beauty | 1200×900 (4:3) | `[buoc-1]` … `[buoc-5]` | Nên có |
+| Ảnh minh họa cho mỗi bài Vấn đề da | 1200×900 (4:3) | *(Ảnh bài viết)* | Nên có |
+| Ảnh cho mỗi bài Hoạt chất | vuông | *(Ảnh bài viết)* | Tuỳ chọn |
+| Ảnh trước & sau của ca thật | cùng góc, cùng ánh sáng | *(trong bài Trước & Sau)* | Khi có ca |
 
-Nút **Đặt lịch** tự mở `/dat-lich-tu-van?handle=<alias SP>` ⇒ trang đặt lịch chọn sẵn đúng liệu trình.
+Định dạng nên dùng **WebP hoặc JPG**, mỗi ảnh dưới ~500 KB. Ảnh vấn đề da: ảnh có bản quyền hoặc khách đã đồng ý.
 
----
+### 3.2. Chữ — điền sẵn vào bảng này trước
 
-## 2. Chuẩn bị 1 lần (đã có thì bỏ qua)
-
-1. **Blog** (Website › Bài viết › Danh mục bài viết) — hiện trạng Sapo 17/10/2026:
-
-   | Danh mục | Handle | Trên Sapo |
-   | :-- | :-- | :-- |
-   | Vấn đề da | `van-de-da` | **CHƯA CÓ — cần tạo** (không có ⇒ phần "Vấn đề da" ẩn) |
-   | Câu hỏi liệu trình | `cau-hoi-lieu-trinh` | **CHƯA CÓ — cần tạo** (không có ⇒ FAQ ẩn) |
-   | Thư viện hoạt chất | `hoat-chat` | Đã có |
-   | Trước & Sau | **`truoc-va-sau-1`** | Đã có (alias `truoc-va-sau` thuộc một Trang nội dung) |
-
-   Tạo đúng handle như bảng (ô Đường dẫn khi tạo danh mục). Đổi handle khác thì sửa ở Cấu hình theme › "Trang liệu trình (sản phẩm)".
-2. **Cấu hình theme › "Trang liệu trình (sản phẩm)"**: chữ dùng chung (nhãn, tiêu đề các phần, 5 bước quy trình, nhãn bảng
-   thông tin, nút, dòng thương hiệu). `[ten]` trong chữ tự thay bằng tên ngắn liệu trình. Ảnh chung cho 5 bước (tuỳ chọn).
-
-## 3. Tạo sản phẩm liệu trình
-
-| Trường Sapo | Nhập |
+| Thông tin | Ví dụ (GetGlowing) |
 | :-- | :-- |
-| Tên sản phẩm | Tên đầy đủ (SEO). H1 trên trang dùng tag `tieude:` nếu có. |
-| Mô tả ngắn | **Đoạn giới thiệu** đầu trang (1–2 đoạn, chữ thường, không tô màu). |
-| Mô tả chi tiết | Bài đầy đủ: ưu điểm, thành phần, đối tượng phù hợp, **trường hợp cần thận trọng**, quy trình, phục hồi, chăm sóc sau. Dùng Heading/đậm/gạch đầu dòng; không chỉnh cỡ chữ/màu thủ công. |
-| Nhà cung cấp | Tên hãng (vd `Elaine Brennan`) — hiện thành nhãn nhỏ phần công nghệ. |
-| Giá | Giá liệu trình (0 ⇒ "Liên hệ tư vấn"). |
-| Danh mục | **Điều trị chuyên nghiệp** (và danh mục khác nếu cần). |
-| **Giao diện** | **`product.lieu-trinh`** (bắt buộc — không chọn thì hiện như sản phẩm thường). |
-| SEO | Tiêu đề ≤ 60 ký tự, mô tả ≤ 160 ký tự, đường dẫn ngắn không dấu. |
+| Tên sản phẩm đầy đủ (SEO) | Elaine Brennan GetGlowing Micro-Peel – Liệu Trình Peel Chuyên Nghiệp… |
+| Tên ngắn | GetGlowing Micro-Peel |
+| Tiêu đề lớn trên trang | GetGlowing Micro-Peel – Liệu trình peel da đa mục tiêu tại Hà Nội |
+| Tiêu đề phụ | Một liệu trình – Nhiều mục tiêu cải thiện làn da |
+| Đoạn giới thiệu (1–2 đoạn) | GetGlowing Micro-Peel là liệu trình tái tạo bề mặt đa mục tiêu… |
+| Câu mô tả công nghệ | Công thức peel chuyên nghiệp hướng tới cải thiện kết cấu – bít tắc và sắc tố trên bề mặt da. |
+| Hãng | Elaine Brennan |
+| Hình thức · Thời gian · Số buổi · Địa điểm | Trị liệu da 1:1 · Khoảng 30–60 phút tùy quy trình · *(bỏ trống)* · Skin Health Beauty – Hà Nội |
+| Giá | 4000000 |
+| Danh sách vấn đề da (tối đa 5) | Mụn và bít tắc · Thâm sau mụn · Sắc tố không đồng đều · Bề mặt sần ráp · Dấu hiệu lão hóa sớm |
+| Danh sách hoạt chất | Resorcinol · Salicylic Acid · Kojic Acid |
+| 3–5 câu hỏi thường gặp + trả lời | GetGlowing có gây bong da không? … |
+| Bài mô tả chi tiết | ưu điểm, thành phần, đối tượng, thận trọng, phục hồi, chăm sóc sau |
 
-### 3.1. Ảnh sản phẩm (sửa "Văn bản thay thế/alt" từng ảnh)
+---
 
-Ghi **khoá trong ngoặc vuông** ở đầu alt để theme nhận diện ảnh, sau đó là mô tả thật của ảnh (phần mô tả giúp SEO; trang liệu trình dùng tên liệu trình làm alt hiển thị).
+## 4. Các bước tạo liệu trình
 
-| Khoá alt | Ảnh | Kích thước gợi ý |
-| :-- | :-- | :-- |
-| *(ảnh đầu tiên)* | Ảnh đại diện — hiện ở thẻ sản phẩm danh mục, nên là lọ/sản phẩm nền sáng | 1:1, ≥ 1000px |
-| `[sanpham]` | Lọ sản phẩm chính hãng (không có thì dùng ảnh đầu) | 1:1 |
-| `[banner]` | Banner đã duyệt, toàn ngang | 1920×900, WebP |
-| `[banner-mobile]` | Banner bản dọc cho điện thoại (tuỳ chọn) | ~1080×1350 |
-| `[hero]` | Ảnh bên phải phần giới thiệu khi không có banner | 1:1 |
-| `[congthuc]` | Infographic công thức/hoạt chất | 1:1 |
-| `[buoc-1]`…`[buoc-5]` | Ảnh thực tế từng bước tại Skin Health Beauty | 4:3, 1200×900 |
+> Đăng nhập **Sapo Admin**. Tên nút trên Sapo có thể hơi khác tuỳ phiên bản — tìm theo ý nghĩa.
 
-Ví dụ alt: `[buoc-3] Chuyên viên thực hiện GetGlowing Micro-Peel tại Skin Health Beauty`.
-Ảnh trước–sau **không** đưa vào ảnh sản phẩm để làm kết quả — xem mục 6.
+### Bước 1 — Bài "Vấn đề da" (bỏ qua bài nào đã có)
 
-### 3.2. Tag khoá:giá trị
+1. Vào **Website › Bài viết**, lọc **Blog: Vấn đề da** để xem bài nào đã có. Bài đã có thì **dùng lại**, không tạo trùng.
+2. Bấm **Thêm bài viết**, điền:
 
-Giá trị **không được chứa dấu phẩy** (Sapo tách tag theo dấu phẩy — thay bằng "–" hoặc "và"). Tag SEO thường (không có `:`) vẫn giữ được.
+   | Ô | Nhập |
+   | :-- | :-- |
+   | Tiêu đề | Tên vấn đề, viết thường — vd `Mụn và bít tắc` (trang tự in CHỮ HOA) |
+   | Nội dung | Bài giải thích vấn đề da (có nội dung thì thẻ bấm được). Chưa viết được thì để trống. |
+   | Tóm tắt | 1 câu — vd `Hỗ trợ giảm tích tụ tế bào sừng và tình trạng bít tắc nang lông.` |
+   | Ảnh bài viết | Ảnh 4:3 (1200×900) |
+   | Danh mục (Blog) | **Vấn đề da** |
+   | Tag (tuỳ chọn) | `icon:fa-braille` — icon hiện khi chưa có ảnh. Gợi ý: mụn/bít tắc `fa-braille` · thâm `fa-droplet` · sắc tố `fa-circle-half-stroke` · sần ráp `fa-layer-group` · lão hóa `fa-hourglass-half` |
 
-| Tag | Ý nghĩa | Ví dụ |
-| :-- | :-- | :-- |
-| `tenngan:` | Tên ngắn — tiêu đề phần công nghệ, bảng thông tin, `[ten]` | `tenngan:GetGlowing Micro-Peel` |
-| `tieude:` | H1 (khác tên sản phẩm) | `tieude:GetGlowing Micro-Peel – Liệu trình peel da đa mục tiêu tại Hà Nội` |
-| `nhan:` | Nhãn nhỏ trên H1 | `nhan:SKIN HEALTH BEAUTY · TRỊ LIỆU DA 1:1` |
-| `phude:` | Tiêu đề phụ | `phude:Một liệu trình – Nhiều mục tiêu cải thiện làn da` |
-| `congthuc:` | Mô tả ngắn phần công nghệ | `congthuc:Công thức peel chuyên nghiệp hướng tới cải thiện kết cấu – bít tắc và sắc tố trên bề mặt da.` |
-| `hinhthuc:` | Hình thức (mặc định "Trị liệu da 1:1") | `hinhthuc:Trị liệu da 1:1` |
-| `thoigian:` | Thời gian thực hiện | `thoigian:Khoảng 30–60 phút tùy quy trình` |
-| `sobuoi:` | Liệu trình/số buổi (mặc định "Cá nhân hóa sau khi đánh giá da") | `sobuoi:Tham khảo 6 buổi – cách nhau 2–6 tuần` |
-| `diadiem:` | Địa điểm (mặc định trong cấu hình) | `diadiem:Skin Health Beauty – Hà Nội` |
-| `vande:` | 1 vấn đề da (lặp lại, theo thứ tự hiển thị) | `vande:mun-va-bit-tac` |
-| `hoatchat:` | 1 hoạt chất (lặp lại, theo thứ tự) | `hoatchat:resorcinol` |
+3. Bấm **Lưu**. Kéo xuống phần **Tối ưu SEO** (hoặc "Đường dẫn") → ghi lại **đường dẫn** của bài, vd `mun-va-bit-tac`.
+   👉 Đây là giá trị dùng cho tag `vande:` ở Bước 5.
 
-## 4. Bài "Vấn đề da" (blog `van-de-da`) — dùng chung giữa các liệu trình
+### Bước 2 — Bài "Hoạt chất" (bỏ qua bài nào đã có)
 
-| Trường bài viết | Nhập |
+1. **Website › Bài viết**, lọc **Blog: Thư viện hoạt chất** — có rồi thì dùng lại.
+2. **Thêm bài viết**: Tiêu đề = tên hoạt chất (vd `Resorcinol`) · Tóm tắt = công dụng 1–2 câu · Ảnh bài viết = ảnh vuông ·
+   Danh mục = **Thư viện hoạt chất** · Tag `vaitro:TÁI TẠO BỀ MẶT` (nhãn vai trò hiện cạnh tên).
+   **Chỉ ghi nồng độ khi đã đối chiếu tài liệu kỹ thuật chính thức.**
+3. **Lưu** → ghi lại **đường dẫn** (vd `resorcinol`) cho tag `hoatchat:`.
+
+### Bước 3 — Tạo sản phẩm liệu trình
+
+**Sản phẩm › Thêm sản phẩm**, điền:
+
+| Ô trên Sapo | Nhập |
 | :-- | :-- |
-| Tiêu đề | Tên vấn đề (trang tự in CHỮ HOA) — vd `Mụn và bít tắc` |
-| Đường dẫn (handle) | Không dấu — đúng giá trị gắn ở tag `vande:` — vd `mun-va-bit-tac` |
-| Trích dẫn (tóm tắt) | 1 câu mô tả — vd *Hỗ trợ giảm tích tụ tế bào sừng và tình trạng bít tắc nang lông.* |
-| Ảnh đại diện | 4:3 (1200×900) — ảnh lâm sàng có bản quyền hoặc ảnh khách đồng ý. Có ảnh ⇒ dưới lưới hiện ghi chú "Ảnh minh họa…, không phải kết quả". |
-| Tag `icon:` (tuỳ chọn) | Icon Font Awesome khi **chưa có ảnh** — vd `icon:fa-braille` (mặc định `fa-spa`). Gợi ý: mụn/bít tắc `fa-braille` · thâm `fa-droplet` · sắc tố `fa-circle-half-stroke` · sần ráp `fa-layer-group` · lão hóa `fa-hourglass-half`. |
-| Nội dung | Có nội dung ⇒ thẻ bấm được, hiện "Tìm hiểu thêm →". Để trống ⇒ thẻ không bấm (tránh đưa khách vào trang "đang cập nhật"). |
+| Tên sản phẩm | Tên đầy đủ (SEO) |
+| Mô tả ngắn | Đoạn giới thiệu (phần ②). Chữ thường, không tô màu, không đổi cỡ chữ. |
+| Mô tả chi tiết | Bài đầy đủ (phần ⑧). Dùng Heading / chữ đậm / gạch đầu dòng của trình soạn thảo. |
+| Giá | Giá liệu trình (0 ⇒ "Liên hệ tư vấn") |
+| Nhà cung cấp | Tên hãng — vd `Elaine Brennan` |
+| Danh mục | **Điều trị chuyên nghiệp** |
+| Tối ưu SEO | Tiêu đề ≤ 60 ký tự · Mô tả ≤ 160 ký tự · Đường dẫn ngắn, không dấu |
 
-## 5. Bài "Hoạt chất" (blog `hoat-chat`) — dùng chung với trang sản phẩm
+Bấm **Lưu** một lần, rồi làm tiếp Bước 4–6 trên chính sản phẩm này.
+👉 Ghi lại **đường dẫn sản phẩm** (phần Tối ưu SEO) — dùng cho câu hỏi (Bước 7) và ca trước–sau (Bước 8).
 
-Tiêu đề = tên hoạt chất · handle = giá trị tag `hoatchat:` · Trích dẫn = công dụng 1–2 câu · **Ảnh bài viết** (vuông) = ảnh ô trái thẻ, không có thì icon lọ · có **Nội dung** ⇒ thẻ bấm được · tag `vaitro:` = nhãn vai trò
-(vd `vaitro:TÁI TẠO BỀ MẶT`) · tag `nhom:`/`inci:` như thư viện hoạt chất. **Chỉ ghi nồng độ khi đã đối chiếu INCI/tài liệu kỹ thuật chính thức.**
+### Bước 4 — Tải ảnh và ghi khoá alt
 
-## 6. Bài "Trước – sau" (blog `truoc-va-sau-1`) — chỉ ca thật
+1. Ở khung **Ảnh sản phẩm**, tải lên các ảnh đã chuẩn bị (mục 3.1). Kéo ảnh **lọ sản phẩm** lên **vị trí đầu tiên**.
+2. Với **từng ảnh**: bấm vào ảnh (hoặc biểu tượng sửa) → ô **Văn bản thay thế / Alt** → gõ **khoá** rồi một mô tả ngắn, ví dụ:
 
-Hướng dẫn đầy đủ: [`huong-dan-tao-ca-truoc-sau.md`](./huong-dan-tao-ca-truoc-sau.md) (khung giao diện `article.truoc-va-sau`).
-Tiêu đề = tên ca (vd *Sắc tố và kết cấu da*) · tag `lieutrinh:<alias sản phẩm>` · ảnh: 2 ảnh đầu chèn trong Nội dung (trước, sau)
-hoặc tag `anhtruoc:<link ảnh>` + `anhsau:<link ảnh>` (bắt buộc đủ 2 ảnh, cùng góc chụp/ánh sáng, không chỉnh sửa) · tuỳ chọn `tuan:<số tuần>` · `phacdo:<phương pháp kết hợp>`.
-**Không dùng** ảnh của hãng hay của liệu trình khác (vd Skin Renewal Peeling System) làm kết quả. Tối đa 8 ca/trang (trình chiếu ‹ ›).
+   | Ảnh | Alt |
+   | :-- | :-- |
+   | Lọ sản phẩm | `[sanpham] Lọ Elaine Brennan GetGlowing Micro-Peel` |
+   | Banner ngang | `[banner] GetGlowing Micro-Peel tại Skin Health Beauty` |
+   | Banner dọc | `[banner-mobile] GetGlowing Micro-Peel` |
+   | Infographic | `[congthuc] Công thức Resorcinol – Kojic Acid – Salicylic Acid` |
+   | Ảnh bước 3 | `[buoc-3] Chuyên gia thực hiện GetGlowing Micro-Peel` |
 
-## 7. Bài "Câu hỏi liệu trình" (blog `cau-hoi-lieu-trinh`)
+3. **Lưu**. Ảnh **không có khoá** vẫn lưu được nhưng trang liệu trình sẽ không dùng (hợp với ảnh tham khảo của hãng).
 
-Tiêu đề = câu hỏi · Nội dung = trả lời · tag `sanpham:<alias sản phẩm>` — được ghi **nguyên alias** hoặc **phần đầu alias**
-tính tới dấu `-` (vd `sanpham:elaine-brennan-getglowing-micro-peel` khớp alias `elaine-brennan-getglowing-micro-peel-lieu-trinh-…`).
-1 câu dùng cho nhiều liệu trình thì gắn nhiều tag.
+### Bước 5 — Thêm tag
+
+Ở ô **Tag** của sản phẩm, gõ **từng tag rồi bấm Enter**. Có thể sao chép mẫu dưới, thay phần sau dấu `:` bằng thông tin của bạn
+(dòng nào không có thông tin thì bỏ qua):
+
+```text
+tenngan:GetGlowing Micro-Peel
+tieude:GetGlowing Micro-Peel – Liệu trình peel da đa mục tiêu tại Hà Nội
+nhan:SKIN HEALTH BEAUTY · TRỊ LIỆU DA 1:1
+phude:Một liệu trình – Nhiều mục tiêu cải thiện làn da
+congthuc:Công thức peel chuyên nghiệp hướng tới cải thiện kết cấu – bít tắc và sắc tố trên bề mặt da.
+hinhthuc:Trị liệu da 1:1
+thoigian:Khoảng 30–60 phút tùy quy trình
+sobuoi:Tham khảo 6 buổi – cách nhau 2–6 tuần
+diadiem:Skin Health Beauty – Hà Nội
+vande:mun-va-bit-tac
+vande:tham-sau-mun
+hoatchat:resorcinol
+hoatchat:salicylic-acid
+```
+
+- `vande:` và `hoatchat:` lặp lại được — **mỗi vấn đề / mỗi hoạt chất 1 tag**, giá trị là **đường dẫn bài** đã ghi ở Bước 1–2.
+- Các tag SEO bình thường (không có dấu `:`) vẫn giữ nguyên được.
+
+### Bước 6 — Chọn giao diện liệu trình
+
+Ở cột bên phải trang sửa sản phẩm, ô **Giao diện / Template** → chọn **`product.lieu-trinh`** → **Lưu**.
+Không chọn bước này thì trang hiện như sản phẩm bán lẻ bình thường.
+
+### Bước 7 — Câu hỏi thường gặp
+
+1. **Website › Bài viết › Thêm bài viết**, mỗi câu hỏi 1 bài: Tiêu đề = câu hỏi · Nội dung = câu trả lời ·
+   Danh mục = **Câu hỏi liệu trình** · Tag `sanpham:<đường dẫn sản phẩm>`.
+2. Đường dẫn sản phẩm dài có thể ghi **phần đầu** tính đến một dấu `-`, vd `sanpham:elaine-brennan-getglowing-micro-peel`.
+3. Một câu dùng cho nhiều liệu trình ⇒ gắn nhiều tag `sanpham:`.
+
+### Bước 8 — Ca Trước & Sau (khi có ca thật)
+
+Làm theo [huong-dan-tao-ca-truoc-sau.md](./huong-dan-tao-ca-truoc-sau.md), nhớ gắn tag `lieutrinh:<đường dẫn sản phẩm>` để ca hiện ở phần ⑥.
+
+### Bước 9 — Kiểm tra trước khi công bố
+
+Mở trang sản phẩm trên **máy tính** và **điện thoại** (khi đang thử giao diện, thêm `?previewThemeId=<mã theme>` vào cuối link):
+
+- [ ] Tiêu đề lớn, tiêu đề phụ, đoạn giới thiệu đúng.
+- [ ] Banner hiện (điện thoại hiện bản dọc nếu có).
+- [ ] Đủ thẻ vấn đề da và hoạt chất, đúng thứ tự, có ảnh.
+- [ ] 5 bước quy trình có ảnh.
+- [ ] Bảng thông tin đúng; giá đúng; link "Thông tin chi tiết liệu trình" mở được cửa sổ.
+- [ ] Câu hỏi thường gặp hiện đủ, bấm mở được.
+- [ ] Nút **Đặt lịch** mở trang đặt lịch đã chọn sẵn liệu trình này.
+- [ ] Điện thoại: cuộn xuống thấy thanh "Đặt lịch" bám đáy, không che nút liên hệ.
+- [ ] Trang danh mục **Điều trị chuyên nghiệp** hiện ảnh đại diện gọn, tên không bị cắt xấu.
 
 ---
 
-## 8. Mẫu đã nhập: GetGlowing Micro-Peel (alias `elaine-brennan-getglowing-micro-peel-lieu-trinh-peel-chuyen-nghiep-ho-tro-lam-sang-va-cai-thien-be-mat-da`)
+## 5. Lỗi thường gặp & cách sửa
 
-**Việc cần làm trên Sapo Admin** (preview đã mô phỏng đúng các giá trị dưới):
-
-1. Sản phẩm › Giao diện: `product.lieu-trinh`.
-2. Mô tả ngắn (thay "THƯƠNG HIỆU / XUẤT XỨ" — thông tin này đã có ở Nhà cung cấp và Mô tả chi tiết):
-   > GetGlowing Micro-Peel là liệu trình tái tạo bề mặt đa mục tiêu dành cho nền da phù hợp, hỗ trợ cải thiện bít tắc, thâm mụn, sắc tố không đồng đều, bề mặt thô ráp và các dấu hiệu lão hóa sớm.
-   >
-   > Tại Skin Health Beauty, mỗi làn da được phân tích, cá nhân hóa và theo dõi xuyên suốt liệu trình bởi chuyên gia có hơn 10 năm kinh nghiệm trong lĩnh vực chăm sóc và trị liệu da.
-3. Thêm tag (giữ các tag SEO đang có):
-   `tenngan:GetGlowing Micro-Peel`, `tieude:GetGlowing Micro-Peel – Liệu trình peel da đa mục tiêu tại Hà Nội`,
-   `phude:Một liệu trình – Nhiều mục tiêu cải thiện làn da`,
-   `congthuc:Công thức peel chuyên nghiệp hướng tới cải thiện kết cấu – bít tắc và sắc tố trên bề mặt da.`,
-   `thoigian:Khoảng 30–60 phút tùy quy trình`, `diadiem:Skin Health Beauty – Hà Nội`,
-   `vande:mun-va-bit-tac`, `vande:tham-sau-mun`, `vande:sac-to-khong-dong-deu`, `vande:be-mat-san-rap`, `vande:dau-hieu-lao-hoa-som`,
-   `hoatchat:resorcinol`, `hoatchat:salicylic-acid`, `hoatchat:kojic-acid`.
-4. Alt 8 ảnh hiện có (theo thứ tự trên Sapo):
-
-   | Ảnh | Nội dung | Alt |
-   | :-- | :-- | :-- |
-   | 1 | Lọ sản phẩm nền trắng | `[sanpham] Lọ Elaine Brennan GetGlowing Micro-Peel` |
-   | 2 | Banner GETGLOWING MICRO-PEEL (vuông) | `[hero] GetGlowing Micro-Peel – peel chuyên nghiệp làm sáng và cải thiện bề mặt da` |
-   | 3 | Infographic "Công thức đa tác động" | `[congthuc] Công thức đa tác động: Resorcinol – Kojic Acid – Salicylic Acid` |
-   | 4, 6, 8 | Ảnh trước–sau (không rõ là khách SHB) | Không gắn khoá — **không dùng làm kết quả** |
-   | 5 | Thao tác với lọ, xông hơi | `[buoc-2] Làm sạch và chuẩn bị bề mặt trước khi peel` |
-   | 7 | Thao tác với lọ trên mặt khách | `[buoc-3] Thực hiện GetGlowing Micro-Peel` |
-
-5. Tạo 5 bài **Vấn đề da**: `mun-va-bit-tac` (Mụn và bít tắc), `tham-sau-mun` (Thâm sau mụn), `sac-to-khong-dong-deu`
-   (Sắc tố không đồng đều), `be-mat-san-rap` (Bề mặt sần ráp), `dau-hieu-lao-hoa-som` (Dấu hiệu lão hóa sớm) — trích dẫn
-   theo hồ sơ bàn giao (đã có trong dữ liệu mẫu `data/articles.js`).
-6. Tạo 3 bài **Hoạt chất**: `resorcinol` (`vaitro:TÁI TẠO BỀ MẶT`), `salicylic-acid` (`vaitro:KIỂM SOÁT BÍT TẮC`),
-   `kojic-acid` (`vaitro:HỖ TRỢ ĐIỀU HÒA SẮC TỐ`).
-7. Tạo 4 bài **Câu hỏi liệu trình** (bong da · số buổi · da nhạy cảm · chăm sóc sau peel) với tag `sanpham:<alias>`.
-8. SEO sản phẩm — Tiêu đề: `GetGlowing Micro-Peel tại Hà Nội | Skin Health Beauty`; Mô tả: `GetGlowing Micro-Peel tại Hà Nội.
-   Liệu trình peel đa mục tiêu hỗ trợ cải thiện bít tắc, thâm mụn, sắc tố và bề mặt da. Trị liệu cá nhân hóa 1:1.`
-9. Trang nội dung `/getglowing-micro-peel-ha-noi` **không tồn tại trên Sapo** (17/10/2026) — không cần tạo. Chỉ khi cần giữ link cũ:
-   tạo Trang nội dung đường dẫn đó, giao diện `page.getglowing-micro-peel` (tự hiện sản phẩm ở cấu hình `lt_page_product`, có
-   canonical về URL sản phẩm), hoặc tốt hơn tạo **chuyển hướng 301** → URL sản phẩm (Website › Chuyển hướng URL).
-
-**Ảnh còn thiếu (cần chụp/thiết kế, đặt alt theo bảng 3.1):** banner 1920×900 đã duyệt (`[banner]`), ảnh bước 1/4/5
-(`[buoc-1]`, `[buoc-4]`, `[buoc-5]` hoặc ảnh chung trong cấu hình), ảnh 4:3 cho 5 bài vấn đề da, ảnh trước–sau ca thật đã đồng ý.
+| Hiện tượng | Nguyên nhân thường gặp | Cách sửa |
+| :-- | :-- | :-- |
+| Trang trông như sản phẩm bán lẻ | Chưa chọn giao diện | Bước 6: chọn `product.lieu-trinh` |
+| Không có phần Vấn đề da | Tag `vande:` ghi sai đường dẫn, hoặc bài không thuộc danh mục **Vấn đề da** | So từng chữ với đường dẫn bài (không dấu, gạch nối) |
+| Thiếu 1 thẻ hoạt chất | Tag `hoatchat:` sai, hoặc bài nằm ngoài **Thư viện hoạt chất** | Như trên |
+| Không có Câu hỏi thường gặp | Tag `sanpham:` sai, hoặc bài ngoài danh mục **Câu hỏi liệu trình** | Sửa tag theo đường dẫn sản phẩm |
+| Một tag bị tách làm 2 | Trong tag có **dấu phẩy** | Thay dấu phẩy bằng "–" hoặc "và" |
+| Banner / ảnh bước không hiện | Alt thiếu khoá, gõ sai (vd `[buoc 1]`, `(banner)`) | Alt phải bắt đầu đúng `[banner]`, `[buoc-1]`… |
+| Ảnh lọ không phải ảnh đại diện ở danh mục | Lọ không ở vị trí đầu | Kéo ảnh lọ lên đầu |
+| Thẻ vấn đề da/hoạt chất không bấm được | Bài chưa có **Nội dung** | Viết nội dung cho bài |
+| Không có link "Thông tin chi tiết liệu trình" | Ô **Mô tả chi tiết** trống | Nhập Mô tả chi tiết |
+| Phần Trước – sau không hiện | Chưa có ca thật gắn `lieutrinh:`, hoặc ca thiếu 1 trong 2 ảnh | Xem hướng dẫn ca Trước & Sau |
 
 ---
 
-## 9. Kiểm tra trước khi công bố (laptop + mobile)
+## 6. Mẫu đã nhập: GetGlowing Micro-Peel
 
-1. Mở URL sản phẩm trên laptop và điện thoại: H1 đúng, nút đặt lịch mở trang đặt lịch đã chọn sẵn liệu trình, không có
-   phần trống/ảnh vỡ, tên vấn đề da/hoạt chất CHỮ HOA, thanh đặt lịch bám đáy không che nút liên hệ.
-2. Dev: `npm run preview` rồi `AUDIT_PAGES="/<alias>" npm run audit:ui` (Git Bash: thêm `MSYS_NO_PATHCONV=1`) — 0 lỗi ở 1440px và 390px.
-3. Danh mục liệu trình: thẻ sản phẩm hiện ảnh đầu tiên (ảnh đại diện) gọn, tên không lộ dòng thứ 3.
+Đường dẫn sản phẩm: `elaine-brennan-getglowing-micro-peel-lieu-trinh-peel-chuyen-nghiep-ho-tro-lam-sang-va-cai-thien-be-mat-da`
+
+- **Đã có trên Sapo:** giao diện `product.lieu-trinh`, Mô tả ngắn, tag đầy đủ, 5 bài Vấn đề da, 3 bài Hoạt chất (có `vaitro:`),
+  4 bài Câu hỏi liệu trình (tag `sanpham:elaine-brennan-getglowing-micro-peel`).
+- **Ảnh hiện có (8 ảnh)** — alt nên đặt:
+
+  | Ảnh | Nội dung | Alt |
+  | :-- | :-- | :-- |
+  | 1 | Lọ sản phẩm nền trắng | `[sanpham] Lọ Elaine Brennan GetGlowing Micro-Peel` |
+  | 2 | Banner vuông GETGLOWING MICRO-PEEL | `[hero] GetGlowing Micro-Peel – peel chuyên nghiệp làm sáng và cải thiện bề mặt da` |
+  | 3 | Infographic "Công thức đa tác động" | `[congthuc] Công thức đa tác động: Resorcinol – Kojic Acid – Salicylic Acid` |
+  | 4, 6, 8 | Ảnh trước–sau của hãng | **Không gắn khoá** — không dùng làm kết quả |
+  | 5 | Thao tác với lọ, xông hơi | `[buoc-2] Làm sạch và chuẩn bị bề mặt trước khi peel` |
+  | 7 | Thao tác với lọ trên mặt khách | `[buoc-3] Thực hiện GetGlowing Micro-Peel` |
+
+- **Ảnh còn thiếu — cần chụp/thiết kế** (đúng các khung "ẢNH MẪU" trong ảnh chụp mục 2):
+  `[banner]` 1920×900 · `[banner-mobile]` 1080×1350 · `[buoc-1]`, `[buoc-4]`, `[buoc-5]` 1200×900 ·
+  ảnh 4:3 cho 5 bài Vấn đề da · ảnh vuông cho 3 bài Hoạt chất · ảnh trước–sau ca thật đã đồng ý.
+- **Nội dung còn thiếu:** Nội dung cho 5 bài Vấn đề da và 3 bài Hoạt chất (để thẻ bấm được).
+- **SEO sản phẩm:** Tiêu đề `GetGlowing Micro-Peel tại Hà Nội | Skin Health Beauty`; Mô tả `GetGlowing Micro-Peel tại Hà Nội.
+  Liệu trình peel đa mục tiêu hỗ trợ cải thiện bít tắc, thâm mụn, sắc tố và bề mặt da. Trị liệu cá nhân hóa 1:1.`
+
+---
+
+## 7. Cấu hình chung (chỉ làm 1 lần)
+
+**Website › Giao diện › Tùy chỉnh › nhóm "Trang liệu trình (sản phẩm)"** — chữ dùng chung cho mọi liệu trình:
+nhãn và tiêu đề các phần, 5 bước quy trình (+ ảnh chung cho bước nếu sản phẩm không có `[buoc-N]`), nhãn bảng thông tin,
+chữ nút, dòng thương hiệu, thanh đặt lịch bám đáy. Trong chữ có `[ten]` sẽ tự thay bằng tên ngắn của liệu trình.
+
+Danh mục bài viết cần có (đã có đủ trên Sapo ngày 18/10/2026):
+
+| Danh mục | Đường dẫn |
+| :-- | :-- |
+| Vấn đề da | `van-de-da` |
+| Câu hỏi liệu trình | `cau-hoi-lieu-trinh` |
+| Thư viện hoạt chất | `hoat-chat` |
+| Trước & Sau | `truoc-va-sau-1` |
+
+> Trang liệu trình là **sản phẩm**; `http://localhost:3000/?tpl=page.getglowing-micro-peel` chỉ là trang thử ở máy dev
+> (hiện lại sản phẩm đặt ở cấu hình `lt_page_product`). Trên Sapo không có trang `/getglowing-micro-peel-ha-noi`.
+
+<details>
+<summary>Dành cho dev</summary>
+
+- Ảnh chụp mục 2 lấy từ bản dev (`npm run preview`) với ảnh mẫu khung chỗ trong `data/products.js` (`LT_DEMO_SLOTS`) và
+  `data/articles.js` (ảnh bài Vấn đề da/Hoạt chất). Chụp lại: `docs/images/lieu-trinh/`.
+- Kiểm tra giao diện: `AUDIT_PAGES="/products/<alias>" npm run audit:ui` (Git Bash thêm `MSYS_NO_PATHCONV=1`) — 0 lỗi ở 1440px và 390px.
+- Mã nguồn: `templates/product.lieu-trinh.bwt` → `snippets/lieu_trinh_page.bwt` (+ `lieu_trinh_*.bwt`), CSS `assets/lieu-trinh.css`, JS `assets/lieu-trinh.js`.
+
+</details>
