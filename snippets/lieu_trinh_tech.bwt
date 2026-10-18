@@ -3,12 +3,13 @@
   ảnh [congthuc] (hoặc [sanpham]/ảnh đại diện) bên trái; hoạt chất = bài blog hoạt chất qua tag hoatchat:<handle> (quy ước có sẵn
   của trang sản phẩm), vai trò = tag vaitro: trên bài. Không ảnh + không hoạt chất ⇒ ẩn phần.
 {%- endcomment -%}
-{%- assign lt_iblog = blogs[settings.ingredient_blog_handle] -%}
+{%- comment -%} 2026-10-18: Sapo KHÔNG có article.handle ⇒ handle bài = phần cuối article.url (quy ước product.bwt). {%- endcomment -%}
+{%- assign lt_iblog_handle = settings.ingredient_blog_handle | default: 'hoat-chat' -%}{%- assign lt_iblog = blogs[lt_iblog_handle] -%}
 {%- assign lt_hlist = lt_hoatchat | split: '|' -%}
 {%- assign lt_an = 0 -%}
 {%- capture lt_actives -%}
 {%- for lt_h in lt_hlist -%}{%- assign lt_h = lt_h | strip -%}
-  {%- for lt_a in lt_iblog.articles -%}{%- if lt_a.handle == lt_h -%}
+  {%- for lt_a in lt_iblog.articles -%}{%- assign lt_ah = lt_a.url | split: '/' | last | split: '?' | first -%}{%- if lt_ah == lt_h -%}
   {%- assign lt_an = lt_an | plus: 1 -%}
   {%- assign lt_role = '' -%}
   {%- for lt_t in lt_a.tags -%}{%- if lt_t contains ':' -%}{%- assign lt_tr = lt_t | split: ':' | first -%}{%- assign lt_tk = lt_tr | strip | downcase -%}{%- if lt_tk == 'vaitro' -%}{%- assign lt_role = lt_t | remove_first: lt_tr | remove_first: ':' | strip -%}{%- endif -%}{%- endif -%}{%- endfor -%}

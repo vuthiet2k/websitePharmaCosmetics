@@ -2,12 +2,16 @@
   lieu_trinh_faq — câu hỏi: bài trong blog settings.lt_faq_blog có tag sanpham:<alias sản phẩm> (tiêu đề = câu hỏi, nội dung = trả lời).
   <details>/<summary> (không cần JS) + JSON-LD FAQPage. Không có câu ⇒ ẩn.
 {%- endcomment -%}
-{%- assign lt_fblog = blogs[settings.lt_faq_blog] -%}
+{%- comment -%}
+  2026-10-18: tag sanpham: khớp khi = nguyên alias HOẶC là phần đầu alias tính tới dấu "-" (alias SP thường rất dài,
+  vd bài Sapo gắn sanpham:elaine-brennan-getglowing-micro-peel cho alias elaine-brennan-getglowing-micro-peel-lieu-trinh-…).
+{%- endcomment -%}
+{%- assign lt_fblog_handle = settings.lt_faq_blog | default: 'cau-hoi-lieu-trinh' -%}{%- assign lt_fblog = blogs[lt_fblog_handle] -%}
 {%- assign lt_fn = 0 -%}{%- assign lt_ld = '' -%}
 {%- capture lt_faqs -%}
 {%- for lt_a in lt_fblog.articles limit: 50 -%}
   {%- assign lt_mine = false -%}
-  {%- for lt_t in lt_a.tags -%}{%- if lt_t contains ':' -%}{%- assign lt_tr = lt_t | split: ':' | first -%}{%- assign lt_tk = lt_tr | strip | downcase -%}{%- assign lt_tv = lt_t | remove_first: lt_tr | remove_first: ':' | strip -%}{%- if lt_tk == 'sanpham' and lt_tv == lt_alias -%}{%- assign lt_mine = true -%}{%- endif -%}{%- endif -%}{%- endfor -%}
+  {%- for lt_t in lt_a.tags -%}{%- if lt_t contains ':' -%}{%- assign lt_tr = lt_t | split: ':' | first -%}{%- assign lt_tk = lt_tr | strip | downcase -%}{%- assign lt_tv = lt_t | remove_first: lt_tr | remove_first: ':' | strip -%}{%- if lt_tk == 'sanpham' and lt_tv != blank -%}{%- assign lt_tv = lt_tv | downcase -%}{%- assign lt_pre = lt_tv | append: '-' -%}{%- assign lt_head = lt_alias | slice: 0, lt_pre.size -%}{%- if lt_tv == lt_alias or lt_head == lt_pre -%}{%- assign lt_mine = true -%}{%- endif -%}{%- endif -%}{%- endif -%}{%- endfor -%}
   {%- assign lt_ans = lt_a.content | default: lt_a.summary -%}
   {%- if lt_mine and lt_ans != blank -%}
   {%- assign lt_fn = lt_fn | plus: 1 -%}

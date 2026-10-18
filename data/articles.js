@@ -498,7 +498,7 @@ const beforeAfterArticles = [
   if (a211) a211.content = `<p><img src="${baBefore}" alt="" /></p><p><img src="${baAfter}" alt="" /></p>`
     + story(`<p><img src="${baMid}" alt="Mốc tuần 4" /></p>`);
   const demoCase = (id, handle, title, excerpt, tags, content, extra) => Object.assign({
-    id, title, alias: handle, handle, url: `/blogs/truoc-va-sau-1/${handle}`, excerpt, summary: excerpt, content,
+    id, title, url: `/blogs/truoc-va-sau-1/${handle}`, excerpt, summary: excerpt, content,
     image: { src: baAfter, alt: title }, featured_image: { src: baAfter, alt: title },
     author: 'Chuyên gia Thanh Hằng', published_on: '2026-10-15T08:00:00', created_at: '2026-10-15T08:00:00',
     tags, comments_count: 0, template_suffix: 'truoc-va-sau', blog: { handle: 'truoc-va-sau-1', title: 'Trước & Sau' },
@@ -654,7 +654,8 @@ const treatmentFaqArticles = [
   ['getglowing-can-bao-nhieu-buoi', 'Liệu trình cần bao nhiêu buổi?', 'Số buổi phụ thuộc tình trạng da và mục tiêu cải thiện. Hãng có gợi ý liệu trình tham khảo sáu buổi, cách nhau 2–6 tuần; lịch thực tế cần được cá nhân hóa.'],
   ['getglowing-da-nhay-cam', 'Da nhạy cảm có thực hiện được không?', 'Cần đánh giá riêng. Da đang kích ứng, tổn thương hoặc hàng rào bảo vệ suy yếu có thể cần trì hoãn peel.'],
   ['getglowing-cham-soc-sau-peel', 'Sau peel cần chăm sóc như thế nào?', 'Ưu tiên làm sạch dịu nhẹ, dưỡng phục hồi, chống nắng và tránh tự bóc lớp da đang bong. Chỉ sử dụng lại các hoạt chất treatment khi da đã phục hồi và được hướng dẫn phù hợp.'],
-].map(([h, q, a], i) => ltArticle(LT_FAQ_BLOG, 720 + i, h, q, a, { tags: [`sanpham:${LT_GG}`] }));
+].map(([h, q, a], i) => ltArticle(LT_FAQ_BLOG, 720 + i, h, q, a, { tags: [i % 2 ? `sanpham:${LT_GG}` : 'sanpham:elaine-brennan-getglowing-micro-peel'] }));
+// 2026-10-18: mock KHÔNG có article.handle (Sapo không có) — xen kẽ tag sanpham: nguyên alias / rút gọn như bài thật trên Sapo.
 
 function withBlogMeta(blog) {
   return { ...blog, name: blog.title, description: blog.description || '', articles_count: blog.articles.length };

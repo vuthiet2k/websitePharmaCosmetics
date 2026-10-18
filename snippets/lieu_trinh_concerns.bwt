@@ -2,12 +2,13 @@
   lieu_trinh_concerns — vấn đề da: bài trong blog settings.lt_concern_blog, chọn bằng tag vande:<handle> trên sản phẩm (theo thứ tự tag).
   Tiêu đề bài = tên (hiển thị CHỮ HOA theo bản bàn giao), Trích dẫn = mô tả, ảnh bài 4:3. Không tag nào khớp ⇒ ẩn phần.
 {%- endcomment -%}
-{%- assign lt_cblog = blogs[settings.lt_concern_blog] -%}
+{%- comment -%} 2026-10-18: Sapo KHÔNG có article.handle ⇒ handle bài = phần cuối article.url (quy ước product.bwt). {%- endcomment -%}
+{%- assign lt_cblog_handle = settings.lt_concern_blog | default: 'van-de-da' -%}{%- assign lt_cblog = blogs[lt_cblog_handle] -%}
 {%- assign lt_vlist = lt_vande | split: '|' -%}
 {%- assign lt_cn = 0 -%}{%- assign lt_cimg = false -%}
 {%- capture lt_cards -%}
 {%- for lt_h in lt_vlist -%}{%- assign lt_h = lt_h | strip -%}
-  {%- for lt_a in lt_cblog.articles -%}{%- if lt_a.handle == lt_h -%}
+  {%- for lt_a in lt_cblog.articles -%}{%- assign lt_ah = lt_a.url | split: '/' | last | split: '?' | first -%}{%- if lt_ah == lt_h -%}
   {%- assign lt_cn = lt_cn | plus: 1 -%}
   <article class="lt-card lt-concern">
     {%- if lt_a.image.src != blank -%}{%- assign lt_cimg = true -%}

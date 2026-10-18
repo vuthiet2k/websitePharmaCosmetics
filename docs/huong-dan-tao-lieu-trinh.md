@@ -122,7 +122,9 @@ hoặc tag `anhtruoc:<link ảnh>` + `anhsau:<link ảnh>` (bắt buộc đủ 2
 
 ## 7. Bài "Câu hỏi liệu trình" (blog `cau-hoi-lieu-trinh`)
 
-Tiêu đề = câu hỏi · Nội dung = trả lời · tag `sanpham:<alias sản phẩm>` (1 câu dùng cho nhiều liệu trình thì gắn nhiều tag).
+Tiêu đề = câu hỏi · Nội dung = trả lời · tag `sanpham:<alias sản phẩm>` — được ghi **nguyên alias** hoặc **phần đầu alias**
+tính tới dấu `-` (vd `sanpham:elaine-brennan-getglowing-micro-peel` khớp alias `elaine-brennan-getglowing-micro-peel-lieu-trinh-…`).
+1 câu dùng cho nhiều liệu trình thì gắn nhiều tag.
 
 ---
 
