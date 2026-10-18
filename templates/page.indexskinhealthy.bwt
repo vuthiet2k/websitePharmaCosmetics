@@ -69,6 +69,32 @@
     .sh2-ba-slider { aspect-ratio: 4/5; }
   }
 
+  /* ── Liệu trình dạng thẻ video dọc 9:16 (2026-10-18) — không bo góc ── */
+  .sh-programs__hd--reels { max-width: none; }
+  .sh-programs__hd--reels > div:first-child { max-width: 560px; }
+  .sh-reels { overflow: hidden; }
+  .sh-reels .swiper-slide { height: auto; }
+  .sh-reel { position: relative; display: block; aspect-ratio: 9 / 16; overflow: hidden; background: var(--sh-ivory-dark); color: #fff; text-decoration: none; transition: transform 300ms var(--sh-ease), box-shadow 300ms var(--sh-ease); }
+  .sh-reel:hover, .sh-reel:focus-visible { color: #fff; transform: translateY(-6px); box-shadow: 0 18px 36px rgba(19,36,31,.22); }
+  .sh-reel:focus-visible { outline: 2px solid var(--sh-gold); outline-offset: 2px; }
+  .sh-reel__media, .sh-reel__shade { position: absolute; inset: 0; }
+  .sh-reel__media img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform 600ms var(--sh-ease); }
+  .sh-reel:hover .sh-reel__media img { transform: scale(1.05); }
+  .sh-reel__media iframe { position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; border: 0; transform: translate(-50%, -50%) scale(1.15); pointer-events: none; }
+  .sh-reel.is-playing .sh-reel__media img { opacity: 0; transition: opacity 600ms 400ms; }
+  .sh-reel__shade { background: linear-gradient(180deg, rgba(10,20,17,.18) 0%, rgba(10,20,17,0) 30%, rgba(10,20,17,0) 55%, rgba(10,20,17,.7) 100%); transition: background-color 300ms; pointer-events: none; }
+  .sh-reel:hover .sh-reel__shade { background-color: rgba(10,20,17,.18); }
+  .sh-reel__vid { position: absolute; top: 12px; right: 12px; z-index: 2; font-size: var(--fs-sm); color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.45); }
+  .sh-reel__bag { position: absolute; top: 50%; left: 50%; z-index: 2; display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; font-size: var(--fs-2xl); color: #fff; opacity: 0; transform: translate(-50%, -40%) scale(.85); transition: opacity 250ms, transform 300ms var(--sh-ease); text-shadow: 0 2px 10px rgba(0,0,0,.4); pointer-events: none; }
+  .sh-reel:hover .sh-reel__bag, .sh-reel:focus-visible .sh-reel__bag { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  .sh-reel__prod { position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 2; display: flex; align-items: center; gap: 10px; transition: transform 300ms var(--sh-ease); }
+  .sh-reel:hover .sh-reel__prod { transform: translateY(-8px); }
+  .sh-reel__thumb { flex: none; display: block; width: 44px; height: 44px; padding: 3px; background: #fff; transition: width 300ms var(--sh-ease), height 300ms var(--sh-ease); }
+  .sh-reel:hover .sh-reel__thumb { width: 64px; height: 64px; }
+  .sh-reel__thumb img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .sh-reel__name { min-width: 0; font-family: var(--sh-sans); font-size: var(--fs-xs); font-weight: 500; line-height: 1.35; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.5); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  @media (hover: none) { .sh-reel:hover { transform: none; box-shadow: none; } }
+  @media (prefers-reduced-motion: reduce) { .sh-reel, .sh-reel__media img, .sh-reel__bag, .sh-reel__prod, .sh-reel__thumb { transition: none; } }
   /* ── Triết lý điều trị: ảnh 5 / chữ 7 trên desktop, 1 cột (ảnh trên) trên điện thoại ── */
   .sh-philo { display: grid; grid-template-columns: 1fr; gap: 64px; align-items: center; }
   .sh-philo--img { grid-template-columns: 5fr 7fr; }
@@ -479,22 +505,78 @@
 </div>
 {%- endif -%}
 
-{%- comment -%} ═══ 05. LIỆU TRÌNH ═══ {%- endcomment -%}
+{%- comment -%}
+  ═══ 05. LIỆU TRÌNH ═══ 2026-10-18 (người dùng gửi ảnh mẫu thẻ video dọc): nguồn = sản phẩm trong danh mục liệu trình
+  (settings.lt_collection — cùng danh mục trang liệu trình). Mỗi thẻ 9:16: ưu tiên video tag youtube: > facebook: (quy ước
+  snippets/video_source.bwt), không có ⇒ ảnh đại diện. Video tự phát (tắt tiếng, lặp) khi thẻ vào màn hình — chỉ nạp iframe
+  lúc đó. Đáy thẻ: ảnh nhỏ + tên sản phẩm; rê chuột ⇒ sản phẩm nổi lên + icon túi. Swiper chỉ 2 nút trước/sau, không bo góc.
+  Danh mục trống ⇒ danh sách menu skinhealthy_programs_menu như cũ. Giữ nguyên chữ tiêu đề/mô tả/2 nút.
+{%- endcomment -%}
 {%- assign sh_programs_url = settings.skinhealthy_programs_url | default: sh_book_url -%}
+{%- assign sh_prog_col = collections[settings.lt_collection] -%}
 <section class="sh-programs sh-reveal">
   <div class="container sh-container">
-    <div class="sh-programs__hd">
-      <span class="sh2-eyebrow">Lộ Trình Điều Trị</span>
-      <h2 class="sh2-title" style="font-size:var(--fs-h3);">Liệu Trình</h2>
-      <p class="sh-programs__intro">Mỗi liệu trình được thiết kế theo mục tiêu điều trị cụ thể, từ chăm sóc duy trì đến can thiệp chuyên sâu.</p>
+    <div class="sh-programs__hd{% if sh_prog_col.products.size > 0 %} sh-swiper-head sh-programs__hd--reels{% endif %}">
+      <div>
+        <span class="sh2-eyebrow">Lộ Trình Điều Trị</span>
+        <h2 class="sh2-title" style="font-size:var(--fs-h3);">Liệu Trình</h2>
+        <p class="sh-programs__intro">Mỗi liệu trình được thiết kế theo mục tiêu điều trị cụ thể, từ chăm sóc duy trì đến can thiệp chuyên sâu.</p>
+      </div>
+      {%- if sh_prog_col.products.size > 0 -%}
+      <div class="sh-swiper-nav">
+        <button type="button" class="sh-swiper-btn" data-sh-prev="reel" aria-label="Trước"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+        <button type="button" class="sh-swiper-btn" data-sh-next="reel" aria-label="Sau"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      {%- endif -%}
     </div>
+    {%- if sh_prog_col.products.size > 0 -%}
+    <div class="sh-reels swiper-container" data-sh-reels>
+      <div class="swiper-wrapper">
+      {%- for sh_rp in sh_prog_col.products limit: 12 -%}
+        {%- comment -%} Video: quét tag — YouTube đầu tiên thắng, không có thì Facebook đầu tiên. {%- endcomment -%}
+        {%- assign pc_vs_article = sh_rp -%}{%- include 'video_source' -%}
+        {%- assign sh_rv_src = '' -%}{%- assign sh_rv_id = '' -%}{%- assign sh_rv_fb = '' -%}
+        {%- if pc_vs_list != '' -%}
+          {%- assign sh_rv_items = pc_vs_list | split: '||' -%}
+          {%- for sh_rv_it in sh_rv_items -%}{%- assign sh_rv_p = sh_rv_it | split: '~' -%}
+            {%- if sh_rv_src != 'youtube' and sh_rv_p[0] == 'youtube' -%}{%- assign sh_rv_src = 'youtube' -%}{%- assign sh_rv_id = sh_rv_p[1] -%}{%- endif -%}
+          {%- endfor -%}
+          {%- if sh_rv_src == '' -%}
+            {%- for sh_rv_it in sh_rv_items -%}{%- assign sh_rv_p = sh_rv_it | split: '~' -%}
+              {%- if sh_rv_src == '' and sh_rv_p[0] == 'facebook' -%}{%- assign sh_rv_src = 'facebook' -%}{%- assign sh_rv_fb = sh_rv_p[2] -%}{%- endif -%}
+            {%- endfor -%}
+          {%- endif -%}
+        {%- endif -%}
+        {%- assign sh_rp_img = sh_rp.featured_image.src | default: 'no-image.jpg' -%}
+        <div class="swiper-slide">
+          <a class="sh-reel" href="{{ sh_rp.url }}"{% if sh_rv_src != '' %} data-reel-src="{{ sh_rv_src }}" data-reel-id="{{ sh_rv_id }}" data-reel-fb="{{ sh_rv_fb | escape }}"{% endif %}>
+            <span class="sh-reel__media">
+              {%- if sh_rv_src == 'youtube' -%}
+              <img src="https://i.ytimg.com/vi/{{ sh_rv_id }}/hqdefault.jpg" alt="{{ sh_rp.name | escape }}" width="480" height="360" loading="lazy">
+              {%- else -%}
+              <img src="{{ sh_rp_img | img_url: 'large' }}" alt="{{ sh_rp.featured_image.alt | default: sh_rp.name | escape }}" width="480" height="480" loading="lazy">
+              {%- endif -%}
+            </span>
+            <span class="sh-reel__shade" aria-hidden="true"></span>
+            {%- if sh_rv_src != '' -%}<span class="sh-reel__vid" aria-hidden="true"><i class="fa-solid fa-video"></i></span>{%- endif -%}
+            <span class="sh-reel__bag" aria-hidden="true"><i class="fa-solid fa-bag-shopping"></i></span>
+            <span class="sh-reel__prod">
+              <span class="sh-reel__thumb"><img src="{{ sh_rp_img | img_url: 'small' }}" alt="" width="100" height="100" loading="lazy"></span>
+              <span class="sh-reel__name">{{ sh_rp.name | escape }}</span>
+            </span>
+          </a>
+        </div>
+      {%- endfor -%}
+      </div>
+    </div>
+    {%- else -%}
     {%- assign sh_prog_ll = linklists[settings.skinhealthy_programs_menu] -%}
     <ol class="sh-programs__list">
       {%- if settings.skinhealthy_programs_menu != blank and sh_prog_ll and sh_prog_ll.links.size > 0 -%}
         {%- for link in sh_prog_ll.links -%}
         <li class="sh-program-item">
           <a href="{{ link.url }}" class="sh-program-item__link">
-            <span class="sh-program-item__num">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
+            <span class="sh-program-item__num">{% if forloop.index < 10 %}0{% endif %}{{ forloop.index }}</span>
             <span class="sh-program-item__name">{{ link.title }}</span>
             <svg class="sh-program-item__arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </a>
@@ -505,7 +587,7 @@
         {%- for name in sh_prog_fallback -%}
         <li class="sh-program-item">
           <a href="{{ sh_services_url }}" class="sh-program-item__link">
-            <span class="sh-program-item__num">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
+            <span class="sh-program-item__num">{% if forloop.index < 10 %}0{% endif %}{{ forloop.index }}</span>
             <span class="sh-program-item__name">{{ name }}</span>
             <svg class="sh-program-item__arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </a>
@@ -513,6 +595,7 @@
         {%- endfor -%}
       {%- endif -%}
     </ol>
+    {%- endif -%}
     <div class="sh-programs__cta">
       <a href="{{ sh_programs_url }}" class="sh-programs__cta-btn">
         <span>Xem tất cả liệu trình</span>
@@ -522,6 +605,43 @@
     </div>
   </div>
 </section>
+<script>
+  /* 2026-10-18: swiper thẻ liệu trình + video tự phát (tắt tiếng) khi thẻ vào màn hình — chỉ nạp iframe lúc đó, gỡ khi ra khỏi. */
+  document.addEventListener('DOMContentLoaded', function () {
+    var root = document.querySelector('[data-sh-reels]');
+    if (!root) return;
+    if (typeof Swiper === 'function') {
+      new Swiper(root, {
+        slidesPerView: 1.6, spaceBetween: 12, watchOverflow: true, speed: 500,
+        navigation: { prevEl: '[data-sh-prev="reel"]', nextEl: '[data-sh-next="reel"]' },
+        breakpoints: { 576: { slidesPerView: 2.4 }, 768: { slidesPerView: 3.2 }, 1200: { slidesPerView: 5, spaceBetween: 16 } },
+        a11y: { enabled: false },
+      });
+    }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
+    function src(card) {
+      if (card.dataset.reelSrc === 'youtube') {
+        var id = card.dataset.reelId;
+        return 'https://www.youtube.com/embed/' + id + '?autoplay=1&mute=1&loop=1&playlist=' + id + '&controls=0&playsinline=1&rel=0&modestbranding=1';
+      }
+      return 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(card.dataset.reelFb) + '&show_text=false&autoplay=true&mute=1';
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        var card = en.target, media = card.querySelector('.sh-reel__media'), fr = media.querySelector('iframe');
+        if (en.isIntersecting && !fr) {
+          fr = document.createElement('iframe');
+          fr.src = src(card); fr.title = card.querySelector('.sh-reel__name').textContent;
+          fr.allow = 'autoplay; encrypted-media; picture-in-picture'; fr.setAttribute('tabindex', '-1'); fr.loading = 'lazy';
+          media.appendChild(fr); card.classList.add('is-playing');
+        } else if (!en.isIntersecting && fr) {
+          fr.remove(); card.classList.remove('is-playing');
+        }
+      });
+    }, { threshold: 0.6 });
+    root.querySelectorAll('.sh-reel[data-reel-src]').forEach(function (c) { io.observe(c); });
+  });
+</script>
 
 {%- comment -%} ═══ 06. LIÊN KẾT PHARMA COSMETICS (IV-B) ═══ {%- endcomment -%}
 <section class="sh-reveal" style="padding:64px 0;background:var(--sh-ink);">
