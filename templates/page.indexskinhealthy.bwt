@@ -103,24 +103,45 @@
   .sh-philo { display: grid; grid-template-columns: 1fr; gap: 64px; align-items: center; }
   .sh-philo--img { grid-template-columns: 5fr 7fr; }
   @media (max-width: 767px) { .sh-philo--img { grid-template-columns: 1fr; gap: 32px; } }
-  /* ── Hành trình 6 bước dạng timeline (2026-10-18) — mốc vuông, không bo góc ── */
+  /* ── Hành trình 6 bước: timeline nhảy giai đoạn + card thông tin (2026-10-18) — mốc vuông, không bo góc ── */
   .sh-tl { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 24px; margin: 0; padding: 0; list-style: none; }
-  .sh-tl::before { content: ""; position: absolute; left: 0; right: 0; top: 22px; height: 1px; background: var(--sh-line); }
+  .sh-tl__track { position: absolute; left: 22px; right: calc((100% - 120px) / 6 - 22px); top: 22px; height: 2px; background: var(--sh-line); pointer-events: none; }
+  .sh-tl__progress { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--sh-gold); transition: width 600ms var(--sh-ease), height 600ms var(--sh-ease); }
   .sh-tl__step { position: relative; min-width: 0; }
-  .sh-tl__node { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--sh-gold); background: var(--sh-white); font-family: var(--sh-serif); font-size: var(--fs-sm); font-weight: 400; letter-spacing: .04em; color: var(--sh-gold); transition: background-color 200ms, color 200ms; }
-  .sh-tl__step:hover .sh-tl__node { background: var(--sh-gold); color: var(--sh-white); }
+  .sh-tl__node { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--sh-gold); border-radius: 0; background: var(--sh-white); cursor: pointer; font-family: var(--sh-serif); font-size: var(--fs-sm); font-weight: 400; letter-spacing: .04em; color: var(--sh-gold); transition: background-color 300ms, color 300ms, transform 300ms var(--sh-ease), box-shadow 300ms; }
+  .sh-tl__step.is-done .sh-tl__node { background: var(--sh-clay-soft); }
+  .sh-tl__step.is-active .sh-tl__node { background: var(--sh-gold); color: var(--sh-white); transform: scale(1.12); box-shadow: 0 0 0 6px rgba(215,154,125,.18); }
+  .sh-tl__node:focus-visible { outline: 2px solid var(--sh-ink); outline-offset: 3px; }
   .sh-tl__body { margin-top: 20px; }
-  .sh-tl__title { margin: 0; font-family: var(--sh-serif); font-weight: 500; font-size: var(--fs-md); line-height: 1.35; color: var(--sh-ink); }
-  .sh-tl__body .sh2-journey-step__dur i { font-size: var(--fs-3xs); }
-  .sh-tl__img { margin-top: 14px; aspect-ratio: 4 / 3; overflow: hidden; background: var(--sh-ivory-dark); }
-  .sh-tl__img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .sh-tl__title { margin: 0; font-family: var(--sh-serif); font-weight: 500; font-size: var(--fs-md); line-height: 1.35; color: var(--sh-ink-60); transition: color 300ms; }
+  .sh-tl__step.is-active .sh-tl__title, .sh-tl__step.is-done .sh-tl__title { color: var(--sh-ink); }
+  .sh-tl__body .sh2-journey-step__dur i, .sh-tl-card .sh2-journey-step__dur i { font-size: var(--fs-3xs); }
+  .sh-tl__inline { display: none; }
+  .sh-tl-panel { position: relative; margin-top: 40px; }
+  .sh-tl-card { display: none; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 0; background: var(--sh-ivory); border: 1px solid var(--sh-line); }
+  .sh-tl-card.is-active { display: grid; animation: sh-tl-in 500ms var(--sh-ease) both; }
+  .sh-tl-card__media { display: flex; align-items: center; justify-content: center; aspect-ratio: 4 / 3; overflow: hidden; background: var(--sh-ivory-dark); color: var(--sh-gold); font-size: var(--fs-3xl); }
+  .sh-tl-card__media img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .sh-tl-card__body { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: 32px 40px; }
+  .sh-tl-card__eyebrow { margin-bottom: 10px; }
+  .sh-tl-card__title { margin: 0 0 12px; font-family: var(--sh-serif); font-weight: 500; font-size: var(--fs-xl); line-height: 1.3; color: var(--sh-ink); }
+  .sh-tl-card__desc { margin: 16px 0 0; font-family: var(--sh-sans); font-size: var(--fs-sm); line-height: 1.75; color: var(--sh-ink-60); }
+  @keyframes sh-tl-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
   @media (max-width: 991px) {
     .sh-tl { grid-template-columns: minmax(0, 1fr); gap: 0; }
-    .sh-tl::before { left: 21px; right: auto; top: 0; bottom: 0; width: 1px; height: auto; }
+    .sh-tl__track { left: 21px; right: auto; top: 22px; bottom: 22px; width: 2px; height: auto; }
+    .sh-tl__progress { right: 0; width: auto; height: 0; }
     .sh-tl__step { display: grid; grid-template-columns: 44px 1fr; column-gap: 20px; padding-bottom: 28px; }
     .sh-tl__step:last-child { padding-bottom: 0; }
     .sh-tl__body { margin-top: 10px; }
+    .sh-tl__inline { display: block; }
+    .sh-tl__inline .sh-tl-card { grid-template-columns: minmax(0, 1fr); margin-top: 14px; }
+    .sh-tl__inline .sh-tl-card__body { padding: 16px; }
+    .sh-tl__inline .sh-tl-card__eyebrow, .sh-tl__inline .sh-tl-card__title, .sh-tl__inline .sh-tl-card .sh2-journey-step__dur { display: none; }
+    .sh-tl__inline .sh-tl-card__desc { margin-top: 0; }
+    .sh-tl-panel { display: none; }
   }
+  @media (prefers-reduced-motion: reduce) { .sh-tl-card.is-active { animation: none; } .sh-tl__progress, .sh-tl__node { transition: none; } }
 
   /* ── Virtual Clinic Tour (2026-10-18, theo ảnh mẫu VR360): ảnh phòng phủ toàn ngang, chữ + nút đè lên, dải ảnh nhỏ dưới phải. Không bo góc. ── */
   .sh-vt { position: relative; overflow: hidden; height: min(82vh, 760px); min-height: 520px; background: var(--sh-ink); color: #fff; }
@@ -722,29 +743,104 @@
       <span class="sh2-eyebrow">Quy Trình</span>
       <h2 class="sh2-title" style="font-size:var(--fs-h3);">Hành Trình Điều Trị 6 Bước</h2>
     </div>
-    {%- comment -%} 2026-10-18 (người dùng: "để dạng time line"): desktop = 1 đường ngang nối 6 mốc vuông (không bo góc), điện thoại =
-      timeline dọc. Giữ nguyên chữ/cấu hình (tên bước, thời lượng skinhealthy_journey_dur_*, ảnh skinhealthy_journey_img_* nếu có).
-      Bỏ emoji ⏱ (UI-9 ⇒ icon Font Awesome) và slice số thứ tự (DotLiquid Sapo trả chuỗi rác). {%- endcomment -%}
-    <ol class="sh-tl">
+    {%- comment -%}
+      2026-10-18 (người dùng: "để dạng time line" → "hiệu ứng nhảy giai đoạn — tới giai đoạn nào show card thông tin giai đoạn đó"):
+      timeline 6 mốc vuông (không bo góc). Vào màn hình ⇒ tự nhảy 01→06 (3,5s/mốc, lặp), đường kẻ tô dần tới mốc hiện tại,
+      mốc đã qua tô màu; bấm mốc ⇒ nhảy tới; rê chuột/focus ⇒ dừng. Card giai đoạn: "Giai đoạn 0X" · tên · thời lượng · mô tả
+      (skinhealthy_journey_desc_N) · ảnh (skinhealthy_journey_img_N; trống ⇒ icon minh hoạ). Desktop: card dưới timeline ngang;
+      điện thoại: card mở ngay dưới mốc đang chạy. Bỏ emoji ⏱ (UI-9) và slice số thứ tự (DotLiquid Sapo).
+    {%- endcomment -%}
+    {%- assign sh_journey_icons = 'fa-magnifying-glass,fa-file-medical,fa-pen-ruler,fa-hand-holding-medical,fa-prescription-bottle-medical,fa-chart-line' | split: ',' -%}
+    {%- capture sh_tl_cards -%}
       {%- for n in (1..6) -%}
         {%- capture ik -%}skinhealthy_journey_img_{{ n }}{%- endcapture -%}
         {%- capture dk -%}skinhealthy_journey_dur_{{ n }}{%- endcapture -%}
+        {%- capture ck -%}skinhealthy_journey_desc_{{ n }}{%- endcapture -%}
         {%- assign sh_j_img = settings[ik] -%}
         {%- assign sh_j_dur = settings[dk] | default: sh_journey_durs_default[forloop.index0] -%}
-        <li class="sh-tl__step">
-          <span class="sh-tl__node" aria-hidden="true">{% if forloop.index < 10 %}0{% endif %}{{ forloop.index }}</span>
-          <div class="sh-tl__body">
-            <h3 class="sh-tl__title">{{ sh_journey_titles[forloop.index0] }}</h3>
-            <span class="sh2-journey-step__dur"><i class="fa-solid fa-clock" aria-hidden="true"></i> {{ sh_j_dur }}</span>
+        <article class="sh-tl-card{% if forloop.first %} is-active{% endif %}" data-tl-card="{{ forloop.index0 }}">
+          <div class="sh-tl-card__media">
             {%- if sh_j_img != blank -%}
-            <div class="sh-tl__img"><img src="{{ sh_j_img | img_url: 'grande' }}" alt="{{ sh_journey_titles[forloop.index0] }}" width="600" height="450" loading="lazy"></div>
+            <img src="{{ sh_j_img | img_url: 'grande' }}" alt="{{ sh_journey_titles[forloop.index0] }}" width="600" height="450" loading="lazy">
+            {%- else -%}
+            <i class="fa-solid {{ sh_journey_icons[forloop.index0] }}" aria-hidden="true"></i>
             {%- endif -%}
           </div>
-        </li>
+          <div class="sh-tl-card__body">
+            <span class="sh2-eyebrow sh-tl-card__eyebrow">Giai đoạn {% if forloop.index < 10 %}0{% endif %}{{ forloop.index }} / 06</span>
+            <h3 class="sh-tl-card__title">{{ sh_journey_titles[forloop.index0] }}</h3>
+            <span class="sh2-journey-step__dur"><i class="fa-solid fa-clock" aria-hidden="true"></i> {{ sh_j_dur }}</span>
+            {%- if settings[ck] != blank -%}<p class="sh-tl-card__desc">{{ settings[ck] }}</p>{%- endif -%}
+          </div>
+        </article>
       {%- endfor -%}
-    </ol>
+    {%- endcapture -%}
+    <div class="sh-tl-wrap" data-tl>
+      <ol class="sh-tl">
+        <li class="sh-tl__track" aria-hidden="true"><span class="sh-tl__progress" data-tl-progress></span></li>
+        {%- for n in (1..6) -%}
+          {%- capture dk -%}skinhealthy_journey_dur_{{ n }}{%- endcapture -%}
+          {%- assign sh_j_dur = settings[dk] | default: sh_journey_durs_default[forloop.index0] -%}
+          <li class="sh-tl__step{% if forloop.first %} is-active{% endif %}" data-tl-step="{{ forloop.index0 }}">
+            <button type="button" class="sh-tl__node" data-tl-go="{{ forloop.index0 }}" aria-label="Giai đoạn {{ forloop.index }}: {{ sh_journey_titles[forloop.index0] }}">{% if forloop.index < 10 %}0{% endif %}{{ forloop.index }}</button>
+            <div class="sh-tl__body">
+              <h3 class="sh-tl__title">{{ sh_journey_titles[forloop.index0] }}</h3>
+              <span class="sh2-journey-step__dur"><i class="fa-solid fa-clock" aria-hidden="true"></i> {{ sh_j_dur }}</span>
+              <div class="sh-tl__inline" data-tl-inline="{{ forloop.index0 }}"></div>
+            </div>
+          </li>
+        {%- endfor -%}
+      </ol>
+      <div class="sh-tl-panel" aria-live="polite">{{ sh_tl_cards }}</div>
+    </div>
   </div>
 </section>
+<script>
+  /* 2026-10-18: Hành trình 6 bước — nhảy giai đoạn tự động khi vào màn hình + card thông tin giai đoạn đang chạy. */
+  document.addEventListener('DOMContentLoaded', function () {
+    var root = document.querySelector('[data-tl]');
+    if (!root) return;
+    var steps = [].slice.call(root.querySelectorAll('[data-tl-step]'));
+    var cards = [].slice.call(root.querySelectorAll('[data-tl-card]'));
+    var bar = root.querySelector('[data-tl-progress]');
+    var mq = window.matchMedia('(max-width: 991px)');
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var idx = 0, timer = null, inView = false, paused = false;
+    function show(i) {
+      idx = (i + steps.length) % steps.length;
+      steps.forEach(function (s, k) { s.classList.toggle('is-active', k === idx); s.classList.toggle('is-done', k < idx); });
+      var card = cards[idx];
+      cards.forEach(function (c) { c.classList.toggle('is-active', c === card); });
+      // Điện thoại: card nằm ngay dưới mốc đang chạy; desktop: card trong khung dưới timeline.
+      var target = mq.matches ? root.querySelector('[data-tl-inline="' + idx + '"]') : root.querySelector('.sh-tl-panel');
+      if (card && card.parentNode !== target) target.appendChild(card);
+      if (mq.matches) {
+        // Dọc: tô tới đúng tâm mốc đang chạy (card mở ra làm các bước cao khác nhau ⇒ không dùng %).
+        var t0 = bar.parentNode.getBoundingClientRect().top, n = steps[idx].querySelector('.sh-tl__node').getBoundingClientRect();
+        bar.style.width = ''; bar.style.height = Math.max(0, n.top + n.height / 2 - t0) + 'px';
+      } else {
+        bar.style.height = ''; bar.style.width = (steps.length > 1 ? (idx / (steps.length - 1)) * 100 : 0) + '%';
+      }
+    }
+    function play() {
+      clearInterval(timer);
+      if (reduce || paused || !inView) return;
+      timer = setInterval(function () { show(idx + 1); }, 3500);
+    }
+    root.querySelectorAll('[data-tl-go]').forEach(function (b) {
+      b.addEventListener('click', function () { show(parseInt(b.getAttribute('data-tl-go'), 10) || 0); play(); });
+    });
+    root.addEventListener('mouseenter', function () { paused = true; clearInterval(timer); });
+    root.addEventListener('mouseleave', function () { paused = false; play(); });
+    root.addEventListener('focusin', function () { paused = true; clearInterval(timer); });
+    root.addEventListener('focusout', function () { if (!root.contains(document.activeElement)) { paused = false; play(); } });
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (en) { inView = en[0].isIntersecting; if (inView) play(); else clearInterval(timer); }, { threshold: 0.35 }).observe(root);
+    }
+    (mq.addEventListener ? mq.addEventListener.bind(mq, 'change') : mq.addListener.bind(mq))(function () { show(idx); });
+    show(0);
+  });
+</script>
 
 {%- comment -%} ═══ 09. CÂU CHUYỆN QUYẾT ĐỊNH (IV-E) ═══ 2026-10-18 (người dùng: "bỏ mục này" — khối hiện tiêu đề trống): chỉ hiện khi
   Theme Settings có ít nhất 1 câu chuyện (tiêu đề hoặc nội dung); chưa có ⇒ không render cả khối. {%- endcomment -%}
