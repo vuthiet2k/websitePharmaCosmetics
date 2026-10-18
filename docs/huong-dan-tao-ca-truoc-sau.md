@@ -6,7 +6,7 @@ tự hiện ở 3 nơi:
 | Nơi hiển thị | Hiện gì |
 | :-- | :-- |
 | Trang **/truoc-sau-cham-soc-da-tu-xa** — phần "Kết quả của khách hàng" | Ca được gom theo nhóm vấn đề da (tag `nhom:`), có nút ‹ › chuyển ca, link "Xem chi tiết ca". Ca đầu tiên còn làm ảnh hero nếu chưa cài ảnh hero riêng. |
-| **Trang chi tiết ca** `/<đường dẫn bài>` trên Sapo (bản dev: `/blogs/truoc-va-sau-1/<đường dẫn bài>`) (giao diện `article.truoc-va-sau`) | Nhóm · tiêu đề (H1) · tóm tắt · bảng thông tin ca · cặp ảnh TRƯỚC/SAU · nội dung câu chuyện · ca khác cùng nhóm · khối CTA |
+| **Trang chi tiết ca** `/<đường dẫn bài>` trên Sapo (bản dev: `/blogs/truoc-va-sau-1/<đường dẫn bài>`) (giao diện `article.truoc-va-sau`) 6 khối (18/10/2026): **1** nhãn nhóm + nhãn chung · H1 · tóm tắt · chuyên gia/tỉnh · nhận định chuyên gia → **2** hồ sơ ca 4 ô (tuổi · thời gian · tình trạng ban đầu · phác đồ) → **3** ảnh TRƯỚC/SAU 50/50 có nhãn tuần + ghi chú ảnh → **4** lộ trình diễn tiến → câu chuyện → **5** liệu trình & sản phẩm đồng hành → ca khác cùng nhóm → **6** CTA đặt lịch + hotline (mobile có thanh đặt lịch bám đáy) |
 | Trang **liệu trình** (sản phẩm giao diện `product.lieu-trinh`) — phần "Trước – sau" | Chỉ khi bài có tag `lieutrinh:<alias sản phẩm>` (tối đa 4 ca/trang) |
 
 > **Chỉ đăng ca thật**, đã được khách đồng ý công bố. Ảnh trước và sau phải cùng góc chụp, cùng ánh sáng và không chỉnh sửa.
@@ -79,11 +79,24 @@ Tag thiếu thì dòng tương ứng tự ẩn.
 | `tinh:` | Tỉnh/thành | `tinh:Hà Nội` |
 | `tuan:` | Số tuần theo dõi (chỉ ghi số, chữ "tuần" tự thêm) | `tuan:8` |
 | `phacdo:` | Phác đồ hoặc hoạt chất chính | `phacdo:BHA + Niacinamide` |
-| `lieutrinh:` | Alias **sản phẩm liệu trình**, giúp ca hiện ở trang liệu trình đó và hiện link "Liệu trình" trên trang chi tiết. Có thể gắn nhiều tag. | `lieutrinh:elaine-brennan-getglowing-micro-peel-…` |
+| `lieutrinh:` | Alias **sản phẩm liệu trình**: ca hiện ở trang liệu trình đó, hiện thẻ ở khối "Phác đồ & sản phẩm đồng hành", nút đặt lịch tự chọn sẵn liệu trình. Có thể gắn nhiều tag. | `lieutrinh:elaine-brennan-getglowing-micro-peel-…` |
+| `tinhtrang:` | Ô "Tình trạng ban đầu" của hồ sơ ca (không có thì dùng `nhom:`) | `tinhtrang:Mụn viêm và bít tắc` |
+| `sanpham:` | Alias **sản phẩm** dùng trong phác đồ — thẻ ở khối "Phác đồ & sản phẩm đồng hành" (tối đa 4 thẻ cùng `lieutrinh:`). Lặp được. | `sanpham:toner-niacinamide-5-zinc` |
+| `chupanh:` | Ghi chú cách chụp ảnh, hiện dưới cặp ảnh (chỉ ghi điều **đúng thật** với ca này) | `chupanh:Ảnh chụp bằng máy soi da OBSERV 520x – không chỉnh sửa` |
+| `nhantruoc:` / `nhansau:` | Ghi đè nhãn trên ảnh (mặc định "Tuần 0 · Trước điều trị" / "Tuần <tuan> · Sau điều trị") | `nhansau:Tuần 8 · Sạch nhân mụn` |
 
 Thứ tự nhóm trên trang Trước & Sau theo thứ tự bài mới nhất. Mỗi trang đọc tối đa 50 bài mới nhất của danh mục.
 
-### 2.3. Gợi ý nội dung câu chuyện
+### 2.3. Hai phần đặc biệt trong Nội dung (trình soạn thảo Sapo)
+
+| Nhập trong Nội dung | Nút trên thanh công cụ | Trang hiện thành |
+| :-- | :-- | :-- |
+| Đoạn **Trích dẫn** đầu tiên — nhận định/kết luận của chuyên gia (2–3 câu) | Trích dẫn (dấu ") | Khung "Nhận định của chuyên gia" ngay dưới tiêu đề, kèm tên Tác giả |
+| **Danh sách đánh số** đầu tiên — mỗi dòng `Nhãn: mô tả`, vd `Giai đoạn 1 (Tuần 1–2): Làm dịu, kháng viêm…` | Danh sách số (1. 2. 3.) | Khối "Lộ trình diễn tiến" (thẻ đánh số; mobile thành dòng thời gian) |
+
+Hai phần này được tách khỏi phần câu chuyện (không lặp). Không có thì khối tương ứng tự ẩn.
+
+### 2.4. Gợi ý nội dung câu chuyện
 
 Dùng Heading 2/3, chữ đậm và gạch đầu dòng. Không chỉnh cỡ chữ hoặc màu chữ bằng tay. Gợi ý các mục:
 
@@ -97,15 +110,25 @@ Dùng Heading 2/3, chữ đậm và gạch đầu dòng. Không chỉnh cỡ ch�
 ## 3. Ví dụ hoàn chỉnh
 
 - **Tiêu đề**: `Hành trình 8 tuần cải thiện da mụn viêm`
-- **Nội dung**: [ảnh trước] · [ảnh sau] · *Tình trạng ban đầu… Phác đồ… Diễn tiến…*
-- **Tóm tắt**: `Khách hàng nữ 24 tuổi, da mụn viêm mức độ trung bình, theo dõi 8 tuần với phác đồ BHA + Niacinamide.`
+- **Nội dung** (theo thứ tự):
+  1. [ảnh trước] · [ảnh sau]
+  2. *Trích dẫn*: `Da dầu mụn viêm cần làm dịu và phục hồi hàng rào bảo vệ trước, sau đó mới đưa hoạt chất điều trị vào. Tuân thủ chống nắng và tái khám đúng hẹn là yếu tố quyết định kết quả ổn định.`
+  3. *Danh sách đánh số*:
+     `Giai đoạn 1 (Tuần 1–2): Làm dịu, kháng viêm và phục hồi hàng rào bảo vệ da.`
+     `Giai đoạn 2 (Tuần 3–4): Peel nhẹ tại spa, thông thoáng nang lông và gom cồi mụn.`
+     `Giai đoạn 3 (Tuần 5–8): BHA 2% và Niacinamide 10% duy trì, cấp ẩm phục hồi, mờ thâm sau viêm.`
+  4. Heading 2 *Tình trạng ban đầu* + đoạn văn · Heading 2 *Diễn tiến* + đoạn văn (+ ảnh mốc) · Heading 2 *Lưu ý* + đoạn văn
+- **Tóm tắt**: `Khách hàng nữ 24 tuổi, da dầu mụn viêm mức độ trung bình. Phác đồ 2 giai đoạn: phục hồi hàng rào da rồi kết hợp BHA và Niacinamide; nền da thông thoáng, giảm viêm rõ sau 8 tuần.`
 - **Tác giả**: `Chuyên gia Thanh Hằng` · **Danh mục**: `Trước & Sau` · **Khung giao diện**: `article.truoc-va-sau`
-- **Tag**: `nhom:Mụn`, `tuoi:24`, `tinh:Hà Nội`, `tuan:8`, `phacdo:BHA + Niacinamide`
+- **Tag**: `nhom:Mụn`, `tuoi:24`, `tinh:Hà Nội`, `tuan:8`, `phacdo:BHA + Niacinamide`, `tinhtrang:Mụn viêm và bít tắc`,
+  `chupanh:Ảnh chụp cùng góc và ánh sáng – không chỉnh sửa`, `lieutrinh:<alias liệu trình>`, `sanpham:<alias sản phẩm>`
+
+Bản dev có sẵn ca mẫu này đủ 6 khối: `/blogs/truoc-va-sau-1/hanh-trinh-8-tuan-cai-thien-da-mun-viem`.
 
 ## 4. Kiểm tra trước khi công bố (laptop + điện thoại)
 
 1. Mở **/truoc-sau-cham-soc-da-tu-xa** (Sapo; bản dev là `/clinical-proof`): ca nằm đúng nhóm, ảnh TRƯỚC bên trái và SAU bên phải, số "Case x / y" đúng, link "Xem chi tiết ca" mở được.
-2. Mở trang chi tiết ca: có 1 tiêu đề H1, bảng thông tin đúng, phần nội dung không lặp lại 2 ảnh trước/sau, nút Zalo mở đúng số.
+2. Mở trang chi tiết ca: có 1 tiêu đề H1, hồ sơ ca 4 ô đúng, nhãn tuần trên ảnh đúng, nhận định chuyên gia + lộ trình không lặp lại trong phần câu chuyện, thẻ liệu trình/sản phẩm mở đúng trang, nút đặt lịch + hotline đúng số; điện thoại: cuộn xuống thấy thanh "Đặt lịch tư vấn 1:1" bám đáy.
 3. Nếu có tag `lieutrinh:`: mở trang liệu trình đó và kiểm tra phần "Trước – sau".
 4. Dev: `npm run preview`, sau đó chạy
    `AUDIT_PAGES="/clinical-proof,/blogs/truoc-va-sau-1/<đường dẫn bài>" npm run audit:ui` (route bản dev)

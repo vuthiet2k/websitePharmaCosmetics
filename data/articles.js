@@ -376,6 +376,7 @@ const solutionArticles = solutions.map((sol, i) => ({
 // 6 bài "Trước & Sau" — case study dạng bài viết mô tả bằng chữ (KHÔNG dùng ảnh lâm sàng
 // giả lập/dàn dựng — tuân thủ nguyên tắc không tự tạo bằng chứng y tế; ảnh minh hoạ chỉ là
 // placeholder trung tính, không phải ảnh trước/sau thật).
+const LT_GG_ALIAS = 'elaine-brennan-getglowing-micro-peel-lieu-trinh-peel-chuyen-nghiep-ho-tro-lam-sang-va-cai-thien-be-mat-da';
 const beforeAfterArticles = [
   {
     id: 211, title: 'Hành trình 8 tuần cải thiện da mụn viêm nặng',
@@ -494,9 +495,25 @@ const beforeAfterArticles = [
     + `<h2>Phác đồ</h2><ul><li>Giai đoạn 1 (tuần 1–2): làm sạch dịu nhẹ, phục hồi hàng rào bảo vệ da.</li><li>Giai đoạn 2 (tuần 3–8): đưa hoạt chất điều trị vào routine, tăng dần tần suất.</li></ul>`
     + `<h2>Diễn tiến</h2>${extra || ''}<p>[DEMO] Ghi nhận theo từng mốc tái khám.</p>`
     + `<h2>Kết quả &amp; lưu ý</h2><p>[DEMO] Kết quả khác nhau tùy cơ địa; ca được đăng khi khách đồng ý.</p>`;
+  // 2026-10-18: ca 211 = bản mẫu ĐỦ 6 khối của article.truoc-va-sau (giống bài demo trên Sapo
+  // /demo-hanh-trinh-8-tuan-cai-thien-da-mun-viem): blockquote = nhận định chuyên gia, <ol> = lộ trình diễn tiến,
+  // tag tinhtrang:/chupanh:/lieutrinh:/sanpham:. Chữ ghi [DEMO] — KHÔNG phải ca khách hàng thật.
   const a211 = beforeAfterArticles.find((a) => a.id === 211);
-  if (a211) a211.content = `<p><img src="${baBefore}" alt="" /></p><p><img src="${baAfter}" alt="" /></p>`
-    + story(`<p><img src="${baMid}" alt="Mốc tuần 4" /></p>`);
+  if (a211) {
+    a211.title = '[DEMO] Hành trình 8 tuần cải thiện da mụn viêm';
+    a211.summary = a211.excerpt = '[DEMO] Khách hàng nữ 24 tuổi, da dầu mụn viêm mức độ trung bình. Phác đồ 2 giai đoạn: phục hồi hàng rào da rồi kết hợp BHA và Niacinamide; nền da thông thoáng, giảm viêm rõ sau 8 tuần.';
+    a211.content = `<p><img src="${baBefore}" alt="" /></p><p><img src="${baAfter}" alt="" /></p>`
+      + `<blockquote><p>[DEMO] Da dầu mụn viêm cần làm dịu và phục hồi hàng rào bảo vệ trước, sau đó mới đưa hoạt chất điều trị vào. Tuân thủ chống nắng và tái khám đúng hẹn là yếu tố quyết định kết quả ổn định.</p></blockquote>`
+      + `<ol><li>Giai đoạn 1 (Tuần 1–2): Làm dịu, kháng viêm và phục hồi hàng rào bảo vệ da.</li>`
+      + `<li>Giai đoạn 2 (Tuần 3–4): Peel nhẹ tại spa, thông thoáng nang lông và gom cồi mụn.</li>`
+      + `<li>Giai đoạn 3 (Tuần 5–8): BHA 2% và Niacinamide 10% duy trì, cấp ẩm phục hồi, mờ thâm sau viêm.</li></ol>`
+      + `<h2>Tình trạng ban đầu</h2><p>[DEMO] Da dầu, mụn viêm rải rác hai má và cằm, lỗ chân lông bít tắc; đã tự dùng nhiều sản phẩm trị mụn mạnh khiến da đỏ rát.</p>`
+      + `<h2>Diễn tiến</h2><p><img src="${baMid}" alt="Mốc tuần 4" /></p><p>[DEMO] Tuần 2 giảm đỏ, tuần 4 gom cồi mụn, tuần 8 da thông thoáng, thâm sau viêm mờ dần.</p>`
+      + `<h2>Lưu ý</h2><p>[DEMO] Kết quả khác nhau tùy cơ địa; ca được đăng khi khách đồng ý.</p>`;
+    a211.tags = ['nhom:Mụn', 'tuoi:24', 'tinh:Hà Nội', 'tuan:8', 'phacdo:BHA + Niacinamide',
+      'tinhtrang:Mụn viêm và bít tắc', 'chupanh:Ảnh chụp cùng góc và ánh sáng – không chỉnh sửa',
+      'lieutrinh:' + LT_GG_ALIAS, 'sanpham:toner-niacinamide-5-zinc', 'sanpham:kem-phuc-hoi-ceramide-niacinamide'];
+  }
   const demoCase = (id, handle, title, excerpt, tags, content, extra) => Object.assign({
     id, title, url: `/blogs/truoc-va-sau-1/${handle}`, excerpt, summary: excerpt, content,
     image: { src: baAfter, alt: title }, featured_image: { src: baAfter, alt: title },
