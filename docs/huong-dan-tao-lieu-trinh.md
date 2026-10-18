@@ -107,10 +107,12 @@ Giá trị **không được chứa dấu phẩy** (Sapo tách tag theo dấu ph
 | Đường dẫn (handle) | Không dấu — đúng giá trị gắn ở tag `vande:` — vd `mun-va-bit-tac` |
 | Trích dẫn (tóm tắt) | 1 câu mô tả — vd *Hỗ trợ giảm tích tụ tế bào sừng và tình trạng bít tắc nang lông.* |
 | Ảnh đại diện | 4:3 (1200×900) — ảnh lâm sàng có bản quyền hoặc ảnh khách đồng ý. Có ảnh ⇒ dưới lưới hiện ghi chú "Ảnh minh họa…, không phải kết quả". |
+| Tag `icon:` (tuỳ chọn) | Icon Font Awesome khi **chưa có ảnh** — vd `icon:fa-braille` (mặc định `fa-spa`). Gợi ý: mụn/bít tắc `fa-braille` · thâm `fa-droplet` · sắc tố `fa-circle-half-stroke` · sần ráp `fa-layer-group` · lão hóa `fa-hourglass-half`. |
+| Nội dung | Có nội dung ⇒ thẻ bấm được, hiện "Tìm hiểu thêm →". Để trống ⇒ thẻ không bấm (tránh đưa khách vào trang "đang cập nhật"). |
 
 ## 5. Bài "Hoạt chất" (blog `hoat-chat`) — dùng chung với trang sản phẩm
 
-Tiêu đề = tên hoạt chất · handle = giá trị tag `hoatchat:` · Trích dẫn = công dụng 1–2 câu · tag `vaitro:` = nhãn vai trò
+Tiêu đề = tên hoạt chất · handle = giá trị tag `hoatchat:` · Trích dẫn = công dụng 1–2 câu · **Ảnh bài viết** (vuông) = ảnh ô trái thẻ, không có thì icon lọ · có **Nội dung** ⇒ thẻ bấm được · tag `vaitro:` = nhãn vai trò
 (vd `vaitro:TÁI TẠO BỀ MẶT`) · tag `nhom:`/`inci:` như thư viện hoạt chất. **Chỉ ghi nồng độ khi đã đối chiếu INCI/tài liệu kỹ thuật chính thức.**
 
 ## 6. Bài "Trước – sau" (blog `truoc-va-sau-1`) — chỉ ca thật

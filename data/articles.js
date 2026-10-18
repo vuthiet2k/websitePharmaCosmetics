@@ -636,12 +636,12 @@ const ltArticle = (blog, id, handle, title, summary, extra) => Object.assign({
 }, extra || {});
 const LT_CONCERN_BLOG = { handle: 'van-de-da', title: 'Vấn đề da' };
 const concernArticles = [
-  ['mun-va-bit-tac', 'Mụn và bít tắc', 'Hỗ trợ giảm tích tụ tế bào sừng và tình trạng bít tắc nang lông.'],
-  ['tham-sau-mun', 'Thâm sau mụn', 'Hỗ trợ cải thiện sắc tố tồn dư sau viêm, giúp màu da trông đồng đều hơn.'],
-  ['sac-to-khong-dong-deu', 'Sắc tố không đồng đều', 'Hỗ trợ cải thiện các vùng tăng sắc tố nông và vẻ ngoài xỉn màu.'],
-  ['be-mat-san-rap', 'Bề mặt sần ráp', 'Hỗ trợ loại bỏ tế bào sừng tích tụ, cải thiện độ mịn của bề mặt.'],
-  ['dau-hieu-lao-hoa-som', 'Dấu hiệu lão hóa sớm', 'Hỗ trợ cải thiện vẻ ngoài của nếp nhăn nông, kết cấu da và độ tươi sáng.'],
-].map(([h, t, d], i) => ltArticle(LT_CONCERN_BLOG, 700 + i, h, t, d));
+  ['mun-va-bit-tac', 'Mụn và bít tắc', 'Hỗ trợ giảm tích tụ tế bào sừng và tình trạng bít tắc nang lông.', 'fa-braille'],
+  ['tham-sau-mun', 'Thâm sau mụn', 'Hỗ trợ cải thiện sắc tố tồn dư sau viêm, giúp màu da trông đồng đều hơn.', 'fa-droplet'],
+  ['sac-to-khong-dong-deu', 'Sắc tố không đồng đều', 'Hỗ trợ cải thiện các vùng tăng sắc tố nông và vẻ ngoài xỉn màu.', 'fa-circle-half-stroke'],
+  ['be-mat-san-rap', 'Bề mặt sần ráp', 'Hỗ trợ loại bỏ tế bào sừng tích tụ, cải thiện độ mịn của bề mặt.', 'fa-layer-group'],
+  ['dau-hieu-lao-hoa-som', 'Dấu hiệu lão hóa sớm', 'Hỗ trợ cải thiện vẻ ngoài của nếp nhăn nông, kết cấu da và độ tươi sáng.', 'fa-hourglass-half'],
+].map(([h, t, d, ic], i) => ltArticle(LT_CONCERN_BLOG, 700 + i, h, t, d, { tags: [`icon:${ic}`] }));
 const LT_ING_BLOG = { handle: 'hoat-chat', title: 'Thư viện hoạt chất' };
 const peelActiveArticles = [
   ['resorcinol', 'Resorcinol', 'Hỗ trợ bong sừng, cải thiện tình trạng thô ráp và bề mặt da không đồng đều.', 'TÁI TẠO BỀ MẶT', 'Tiêu sừng'],

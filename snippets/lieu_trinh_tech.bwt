@@ -13,14 +13,24 @@
   {%- assign lt_an = lt_an | plus: 1 -%}
   {%- assign lt_role = '' -%}
   {%- for lt_t in lt_a.tags -%}{%- if lt_t contains ':' -%}{%- assign lt_tr = lt_t | split: ':' | first -%}{%- assign lt_tk = lt_tr | strip | downcase -%}{%- if lt_tk == 'vaitro' -%}{%- assign lt_role = lt_t | remove_first: lt_tr | remove_first: ':' | strip -%}{%- endif -%}{%- endif -%}{%- endfor -%}
-  <article class="lt-card lt-active">
-    <span class="lt-active__mark" aria-hidden="true">{{ lt_a.title | slice: 0, 1 | upcase }}</span>
-    <div>
+  {%- comment -%}
+    2026-10-18: thẻ = link tới bài hoạt chất KHI bài có nội dung (bài trống chỉ hiện "đang cập nhật" ⇒ không dẫn khách vào trang trống).
+    Ô trái = Ảnh bài viết nếu có, không thì icon lọ — bỏ "slice" chữ cái đầu (DotLiquid Sapo trả chuỗi rác làm vỡ chữ dọc).
+  {%- endcomment -%}
+  {%- assign lt_has_body = false -%}{%- if lt_a.content.size > 0 -%}{%- assign lt_has_body = true -%}{%- endif -%}
+  {%- if lt_has_body -%}<a class="lt-card lt-active lt-card--link" href="{{ lt_a.url }}">{%- else -%}<article class="lt-card lt-active">{%- endif -%}
+    {%- if lt_a.image.src != blank -%}
+    <span class="lt-active__mark lt-active__mark--img"><img src="{{ lt_a.image.src | img_url: 'compact' }}" alt="{{ lt_a.image.alt | default: lt_a.title | escape }}" width="160" height="160" loading="lazy" decoding="async"></span>
+    {%- else -%}
+    <span class="lt-active__mark" aria-hidden="true"><i class="fa-solid fa-flask" aria-hidden="true"></i></span>
+    {%- endif -%}
+    <div class="lt-active__body">
       <h4 class="lt-active__name"><span class="lt-upper">{{ lt_a.title | escape }}</span>{% if lt_role != blank %} <span class="lt-active__role">{{ lt_role | escape }}</span>{% endif %}</h4>
       {%- assign lt_sum = lt_a.summary | default: lt_a.excerpt | strip_html | strip -%}
       {%- if lt_sum != blank -%}<p class="lt-card__text">{{ lt_sum }}</p>{%- endif -%}
+      {%- if lt_has_body -%}<span class="lt-more">{{ settings.lt_more_label | default: 'Tìm hiểu thêm' | escape }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>{%- endif -%}
     </div>
-  </article>
+  {%- if lt_has_body -%}</a>{%- else -%}</article>{%- endif -%}
   {%- endif -%}{%- endfor -%}
 {%- endfor -%}
 {%- endcapture -%}

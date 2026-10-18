@@ -10,17 +10,27 @@
 {%- for lt_h in lt_vlist -%}{%- assign lt_h = lt_h | strip -%}
   {%- for lt_a in lt_cblog.articles -%}{%- assign lt_ah = lt_a.url | split: '/' | last | split: '?' | first -%}{%- if lt_ah == lt_h -%}
   {%- assign lt_cn = lt_cn | plus: 1 -%}
-  <article class="lt-card lt-concern">
+  {%- comment -%}
+    2026-10-18: thẻ = link tới bài khi bài có nội dung (như thẻ hoạt chất). Ảnh = Ảnh bài viết; chưa có ảnh ⇒ khung 4:3 cùng cỡ
+    với icon (tag icon:fa-… trên bài, mặc định fa-spa) để lưới 5 thẻ luôn đều.
+  {%- endcomment -%}
+  {%- assign lt_icon = 'fa-spa' -%}
+  {%- for lt_t in lt_a.tags -%}{%- if lt_t contains ':' -%}{%- assign lt_tr = lt_t | split: ':' | first -%}{%- assign lt_tk = lt_tr | strip | downcase -%}{%- if lt_tk == 'icon' -%}{%- assign lt_icon = lt_t | remove_first: lt_tr | remove_first: ':' | downcase | remove: 'fa-solid' | strip -%}{%- endif -%}{%- endif -%}{%- endfor -%}
+  {%- assign lt_has_body = false -%}{%- if lt_a.content.size > 0 -%}{%- assign lt_has_body = true -%}{%- endif -%}
+  {%- if lt_has_body -%}<a class="lt-card lt-concern lt-card--link" href="{{ lt_a.url }}">{%- else -%}<article class="lt-card lt-concern">{%- endif -%}
     {%- if lt_a.image.src != blank -%}{%- assign lt_cimg = true -%}
     <div class="lt-media lt-media--4x3"><img src="{{ lt_a.image.src | img_url: 'large' }}" alt="{{ lt_a.image.alt | default: lt_a.title | escape }}" width="1200" height="900" loading="lazy" decoding="async"></div>
+    {%- else -%}
+    <div class="lt-media lt-media--4x3 lt-media--icon"><i class="fa-solid {{ lt_icon | escape }}" aria-hidden="true"></i></div>
     {%- endif -%}
     <div class="lt-card__body">
       <span class="lt-num">{% if lt_cn < 10 %}0{% endif %}{{ lt_cn }}</span>
       <h3 class="lt-card__title lt-upper">{{ lt_a.title | escape }}</h3>
       {%- assign lt_sum = lt_a.summary | default: lt_a.excerpt | strip_html | strip -%}
       {%- if lt_sum != blank -%}<p class="lt-card__text">{{ lt_sum }}</p>{%- endif -%}
+      {%- if lt_has_body -%}<span class="lt-more">{{ settings.lt_more_label | default: 'Tìm hiểu thêm' | escape }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>{%- endif -%}
     </div>
-  </article>
+  {%- if lt_has_body -%}</a>{%- else -%}</article>{%- endif -%}
   {%- endif -%}{%- endfor -%}
 {%- endfor -%}
 {%- endcapture -%}
