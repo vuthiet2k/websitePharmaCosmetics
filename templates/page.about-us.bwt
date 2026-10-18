@@ -377,7 +377,8 @@
       <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 mt-2 font-heading">{{ settings.about_contact_title }}</h2>
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-      <div class="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 space-y-3 text-sm text-gray-700">
+      {%- comment -%} 2026-10-18: self-start — trước bị kéo cao bằng form bên cạnh ⇒ thẻ trống một khoảng lớn. {%- endcomment -%}
+      <div class="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 space-y-3 text-sm text-gray-700 self-start">
         {%- if settings.about_contact_address != blank -%}<p><i class="fa-solid fa-location-dot text-emerald-600 w-5" aria-hidden="true"></i> {{ settings.about_contact_address }}</p>{%- endif -%}
         {%- if settings.about_contact_phone != blank -%}<p><i class="fa-solid fa-phone text-emerald-600 w-5" aria-hidden="true"></i> <a href="tel:{{ settings.about_contact_phone | remove: ' ' }}" class="hover:text-emerald-700">{{ settings.about_contact_phone }}</a></p>{%- endif -%}
         {%- if settings.about_contact_email != blank -%}<p><i class="fa-solid fa-envelope text-emerald-600 w-5" aria-hidden="true"></i> <a href="mailto:{{ settings.about_contact_email }}" class="hover:text-emerald-700">{{ settings.about_contact_email }}</a></p>{%- endif -%}
@@ -385,35 +386,52 @@
       </div>
 
       {%- comment -%}
-        pii_form_gate (POLICY.yaml#frontend_theme): form thu thập tên/SĐT/email cần mục đích rõ
-        ràng + checkbox consent + link chính sách. Chưa có action backend "contact" chung trong
-        mops-gas/ hoặc dev-server (chỉ có /cart/add, booking riêng) — form này để action="#"
-        (client-side only) và cần bổ sung endpoint thật ở 1 task riêng trước khi go-live.
+        pii_form_gate (POLICY.yaml#frontend_theme): mục đích rõ ràng + checkbox consent + link chính sách.
+        2026-10-18 (rà trang /about-us): trước đây action="#" + onsubmit="return false" ⇒ khách bấm "Gửi tin nhắn" nhưng KHÔNG gửi
+        đi đâu. Nay dùng form liên hệ gốc Sapo ({% form 'contact' %} → /contact, Sapo gửi email về hộp thư cửa hàng — cùng
+        endpoint với snippets/popup_tragop.bwt). Thêm ô Email (form liên hệ Sapo dùng contact[email]); contact[Nguon] ghi trang gửi.
       {%- endcomment -%}
-      <form class="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 space-y-4" action="#" method="post" onsubmit="return false;">
+      <div class="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200">
+      {% form 'contact' %}
+        <div class="space-y-4">
         <h3 class="text-base font-bold text-gray-900">{{ settings.about_contact_form_title | default: 'Gửi tin nhắn cho chúng tôi' }}</h3>
+        {%- if form.posted_successfully -%}
+        <p class="text-sm text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2" role="status"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> {{ settings.about_contact_success | default: 'Cảm ơn bạn! Pharma Cosmetics đã nhận tin nhắn và sẽ liên hệ lại sớm.' }}</p>
+        {%- endif -%}
+        {%- if form.errors.size > 0 -%}
+        <div class="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2" role="alert">
+          {%- for field in form.errors -%}<p><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> {{ form.errors.messages[field] }}</p>{%- endfor -%}
+        </div>
+        {%- endif -%}
         <p class="text-xs text-gray-500">Thông tin bạn gửi chỉ dùng để liên hệ tư vấn, không chia sẻ cho bên thứ ba.</p>
+        <input type="hidden" name="contact[Nguon]" value="Trang Giới thiệu">
         <div>
           <label for="about-contact-name" class="block text-xs font-semibold text-gray-700 mb-1">Họ tên</label>
-          <input id="about-contact-name" name="name" type="text" required class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-emerald-600 focus:ring-emerald-600">
+          <input id="about-contact-name" name="contact[name]" type="text" required autocomplete="name" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-emerald-600 focus:ring-emerald-600">
         </div>
         <div>
           <label for="about-contact-phone" class="block text-xs font-semibold text-gray-700 mb-1">Số điện thoại</label>
-          <input id="about-contact-phone" name="phone" type="tel" required class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-emerald-600 focus:ring-emerald-600">
+          <input id="about-contact-phone" name="contact[phone]" type="tel" required autocomplete="tel" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-emerald-600 focus:ring-emerald-600">
+        </div>
+        <div>
+          <label for="about-contact-email" class="block text-xs font-semibold text-gray-700 mb-1">Email</label>
+          <input id="about-contact-email" name="contact[email]" type="email" required autocomplete="email" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-emerald-600 focus:ring-emerald-600">
         </div>
         <div>
           <label for="about-contact-message" class="block text-xs font-semibold text-gray-700 mb-1">Nội dung</label>
-          <textarea id="about-contact-message" name="message" rows="3" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-emerald-600 focus:ring-emerald-600"></textarea>
+          <textarea id="about-contact-message" name="contact[body]" rows="3" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-emerald-600 focus:ring-emerald-600"></textarea>
         </div>
         <div class="flex items-start gap-2">
-          <input id="about-contact-consent" name="consent" type="checkbox" required class="pc-checkbox-native">
+          <input id="about-contact-consent" type="checkbox" required class="pc-checkbox-native">
           <label for="about-contact-consent" class="text-xs text-gray-600">
             Tôi đồng ý để Pharma Cosmetics thu thập và sử dụng thông tin trên nhằm mục đích liên hệ tư vấn, theo
             <a href="{{ pages['chinh-sach'].url | default: '/chinh-sach' }}" class="text-emerald-700 underline">Chính sách bảo mật</a>.
           </label>
         </div>
         <button type="submit" class="pc-kit-btn-primary w-full justify-center">{{ settings.about_contact_btn_text | default: 'Gửi tin nhắn' }}</button>
-      </form>
+        </div>
+      {% endform %}
+      </div>
     </div>
   </div>
 </section>
