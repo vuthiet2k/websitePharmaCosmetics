@@ -68,6 +68,50 @@
   @media (max-width: 767px) {
     .sh2-ba-slider { aspect-ratio: 4/5; }
   }
+
+  /* ── Virtual Clinic Tour (2026-10-18, theo ảnh mẫu VR360): ảnh phòng phủ toàn ngang, chữ + nút đè lên, dải ảnh nhỏ dưới phải. Không bo góc. ── */
+  .sh-vt { position: relative; overflow: hidden; height: min(82vh, 760px); min-height: 520px; background: var(--sh-ink); color: #fff; }
+  .sh-vt__stage, .sh-vt__shade { position: absolute; inset: 0; }
+  .sh-vt__bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 700ms var(--sh-ease); }
+  .sh-vt__bg.is-active { opacity: 1; }
+  .sh-vt__shade { background: linear-gradient(180deg, rgba(10,20,17,.62) 0%, rgba(10,20,17,.12) 34%, rgba(10,20,17,.12) 58%, rgba(10,20,17,.72) 100%); pointer-events: none; }
+  .sh-vt__top, .sh-vt__bottom { position: absolute; left: 0; right: 0; z-index: 2; margin: 0 auto; display: flex; gap: 24px; }
+  .sh-vt__top { top: 56px; align-items: flex-start; justify-content: space-between; }
+  .sh-vt__bottom { bottom: 40px; align-items: flex-end; justify-content: space-between; }
+  .sh-vt__head { max-width: 560px; }
+  .sh-vt__eyebrow { color: rgba(255,255,255,.78); margin-bottom: 12px; }
+  .sh-vt__title { margin: 0; font-family: var(--sh-serif); font-weight: 600; font-size: var(--fs-3xl); line-height: 1.1; color: #fff; text-shadow: 0 2px 12px rgba(0,0,0,.35); }
+  .sh-vt__desc { margin: 14px 0 0; font-family: var(--sh-sans); font-size: var(--fs-base); line-height: 1.65; color: rgba(255,255,255,.88); text-shadow: 0 1px 6px rgba(0,0,0,.35); }
+  .sh-vt__full { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 1px solid rgba(255,255,255,.55); border-radius: 0; background: rgba(10,20,17,.35); color: #fff; cursor: pointer; font-size: var(--fs-md); transition: background-color 200ms, border-color 200ms; }
+  .sh-vt__full:hover, .sh-vt__full:focus-visible { background: rgba(255,255,255,.18); border-color: #fff; }
+  .sh-vt__links { display: flex; flex-direction: column; gap: 10px; }
+  .sh-vt__link { display: inline-flex; align-items: center; gap: 8px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,.45); font-family: var(--sh-sans); font-size: var(--fs-sm); font-weight: 500; letter-spacing: .02em; color: #fff; text-decoration: none; align-self: flex-start; }
+  .sh-vt__link:hover, .sh-vt__link:focus-visible { color: #fff; border-bottom-color: #fff; }
+  .sh-vt__thumbs { display: flex; gap: 14px; }
+  .sh-vt__thumb { display: flex; flex-direction: column; gap: 8px; width: 150px; padding: 0; border: 0; background: none; color: #fff; cursor: pointer; text-align: left; }
+  .sh-vt__thumb-img { display: block; aspect-ratio: 3 / 2; overflow: hidden; border: 2px solid transparent; transition: border-color 200ms; }
+  .sh-vt__thumb-img img { display: block; width: 100%; height: 100%; object-fit: cover; opacity: .82; transition: opacity 200ms, transform 400ms var(--sh-ease); }
+  .sh-vt__thumb:hover .sh-vt__thumb-img img, .sh-vt__thumb.is-active .sh-vt__thumb-img img { opacity: 1; }
+  .sh-vt__thumb:hover .sh-vt__thumb-img img { transform: scale(1.04); }
+  .sh-vt__thumb.is-active .sh-vt__thumb-img { border-color: #fff; }
+  .sh-vt__thumb:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  .sh-vt__thumb-name { font-family: var(--sh-sans); font-size: var(--fs-xs); font-weight: 600; line-height: 1.35; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.4); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  @media (max-width: 991px) {
+    .sh-vt__bottom { flex-direction: column; align-items: stretch; gap: 20px; }
+    .sh-vt__thumbs { overflow-x: auto; scrollbar-width: none; }
+    .sh-vt__thumbs::-webkit-scrollbar { display: none; }
+    .sh-vt__thumb { flex: none; width: 132px; }
+  }
+  @media (max-width: 767px) {
+    .sh-vt { height: auto; min-height: 640px; }
+    .sh-vt__top { top: 32px; }
+    .sh-vt__shade { background: linear-gradient(180deg, rgba(10,20,17,.78) 0%, rgba(10,20,17,.35) 38%, rgba(10,20,17,.18) 55%, rgba(10,20,17,.78) 100%); }
+    .sh-vt__title { font-size: var(--fs-2xl); }
+    .sh-vt__desc { font-size: var(--fs-sm); }
+    .sh-vt__bottom { bottom: 24px; }
+    .sh-vt__thumb { width: 112px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .sh-vt__bg, .sh-vt__thumb-img img { transition: none; } }
 </style>
 
 {%- comment -%}
@@ -288,7 +332,53 @@
   </div>
 </section>
 
-{%- comment -%} Virtual Clinic Tour — 3 tab, dùng lại đúng ảnh editorial ở trên qua lightbox {%- endcomment -%}
+{%- comment -%}
+  Virtual Clinic Tour — 2026-10-18 (người dùng gửi ảnh mẫu kiểu "VR360 Virtual Tour"; giữ nguyên chữ + cấu hình đang có):
+  ảnh phòng đang chọn phủ toàn ngang · góc trên trái: eyebrow + tiêu đề + mô tả phòng đang chọn · góc trên phải: nút phóng to
+  (mở lightbox sẵn có) · dưới phải: dải ảnh nhỏ 3 phòng (tên phòng bên dưới), bấm để đổi ảnh nền · dưới trái: link video + Thư
+  viện hoạt chất. Ảnh phòng = ảnh Editorial 1–3 (skinhealthy_edit_img*, như trước). Không bo góc. Không có ảnh ⇒ bố cục chữ cũ.
+{%- endcomment -%}
+{%- capture sh_vt_titles -%}{{ settings.skinhealthy_clinic_diag_title | default: 'Phòng Chẩn Đoán 1:1' }}|~|{{ settings.skinhealthy_clinic_lab_title | default: 'Lab Pha Chế Hoạt Chất' }}|~|{{ settings.skinhealthy_clinic_therapy_title | default: 'Phòng Trị Liệu Riêng Tư' }}{%- endcapture -%}
+{%- capture sh_vt_descs -%}{{ settings.skinhealthy_clinic_diag_desc | default: 'Không gian tư vấn độc quyền — chỉ bạn và chuyên gia. Thiết bị phân tích da công nghệ cao, kết quả chính xác đến từng lớp biểu bì.' }}|~|{{ settings.skinhealthy_clinic_lab_desc | default: 'Phòng pha chế hoạt chất đạt chuẩn vô khuẩn y tế — nơi mỗi đơn điều trị được chuẩn bị riêng với nồng độ chính xác đến từng milligram.' }}|~|{{ settings.skinhealthy_clinic_therapy_desc | default: 'Không gian trị liệu khép kín — ánh sáng thiết kế riêng cho từng liệu pháp, âm thanh cách âm hoàn toàn, thiết bị điều trị thế hệ mới.' }}{%- endcapture -%}
+{%- assign sh_vt_titles = sh_vt_titles | split: '|~|' -%}
+{%- assign sh_vt_descs = sh_vt_descs | split: '|~|' -%}
+{%- if sh_edit_imgs.size > 0 -%}
+<section class="sh-vt sh-reveal" data-vt aria-label="Virtual Clinic Tour">
+  <div class="sh-vt__stage">
+    {%- for sh_vt_t in sh_vt_titles -%}
+    {%- assign sh_vt_i = forloop.index0 | modulo: sh_edit_imgs.size -%}
+    <img class="sh-vt__bg{% if forloop.first %} is-active{% endif %}" data-vt-bg="{{ forloop.index0 }}" data-lb="{{ sh_vt_i }}" src="{{ sh_edit_imgs[sh_vt_i] | img_url: '2048x2048' }}" alt="{{ sh_vt_t | strip_html | escape }}" width="1920" height="900" loading="lazy">
+    {%- endfor -%}
+  </div>
+  <div class="sh-vt__shade" aria-hidden="true"></div>
+  <div class="sh-vt__top container sh-container">
+    <div class="sh-vt__head">
+      <span class="sh2-eyebrow sh-vt__eyebrow">Trải Nghiệm Không Gian</span>
+      <h2 class="sh-vt__title">Virtual Clinic Tour</h2>
+      <p class="sh-vt__desc" data-vt-desc aria-live="polite">{{ sh_vt_descs[0] }}</p>
+    </div>
+    <button type="button" class="sh-vt__full" data-vt-full aria-label="Phóng to xem không gian phòng khám"><i class="fa-solid fa-expand" aria-hidden="true"></i></button>
+  </div>
+  <div class="sh-vt__bottom container sh-container">
+    <div class="sh-vt__links">
+      {%- if settings.skinhealthy_clinic_video_id != blank -%}
+      <a href="https://www.youtube.com/watch?v={{ settings.skinhealthy_clinic_video_id }}" target="_blank" rel="noopener" class="sh-vt__link"><i class="fa-solid fa-play" aria-hidden="true"></i><span>{{ settings.skinhealthy_clinic_video_label | default: 'Xem video giới thiệu không gian trị liệu' }}</span></a>
+      {%- endif -%}
+      <a href="{{ settings.skinhealthy_ing_url | default: '/tra-cuu-hoat-chat' }}" class="sh-vt__link"><span>Truy cập Thư viện Hoạt chất Lâm sàng</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+    </div>
+    <div class="sh-vt__thumbs" role="tablist" aria-label="Virtual Clinic Tour">
+      {%- for sh_vt_t in sh_vt_titles -%}
+      {%- assign sh_vt_i = forloop.index0 | modulo: sh_edit_imgs.size -%}
+      <button type="button" class="sh-vt__thumb{% if forloop.first %} is-active{% endif %}" role="tab" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" data-vt-room="{{ forloop.index0 }}" data-vt-text="{{ sh_vt_descs[forloop.index0] | escape }}">
+        <span class="sh-vt__thumb-img"><img src="{{ sh_edit_imgs[sh_vt_i] | img_url: 'medium' }}" alt="" width="240" height="160" loading="lazy"></span>
+        <span class="sh-vt__thumb-name">{{ sh_vt_t }}</span>
+      </button>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+{%- else -%}
+{%- comment -%} Chưa có ảnh Editorial: bố cục chữ cũ (3 tab). {%- endcomment -%}
 <section class="sh-reveal" style="padding:72px 0;background:var(--sh-white);border-top:1px solid var(--sh-line);">
   <div class="container sh-container" style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start;">
     <div>
@@ -323,6 +413,7 @@
     </div>
   </div>
 </section>
+{%- endif -%}
 
 {%- comment -%} Clinic lightbox — 1 instance dùng chung cho zoom icon + 3 tab tour {%- endcomment -%}
 {%- if sh_edit_imgs.size > 0 -%}
@@ -659,6 +750,25 @@ document.addEventListener('DOMContentLoaded', function () {
     lb.classList.remove('is-open');
     lb.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
+  }
+
+  /* ── Virtual Clinic Tour: bấm ảnh nhỏ ⇒ đổi ảnh nền + mô tả; nút phóng to ⇒ lightbox đúng ảnh phòng đang chọn ── */
+  var vt = document.querySelector('[data-vt]');
+  if (vt) {
+    var vtDesc = vt.querySelector('[data-vt-desc]');
+    vt.querySelectorAll('[data-vt-room]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var room = btn.getAttribute('data-vt-room');
+        vt.querySelectorAll('[data-vt-room]').forEach(function (b) { var on = b === btn; b.classList.toggle('is-active', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
+        vt.querySelectorAll('[data-vt-bg]').forEach(function (im) { im.classList.toggle('is-active', im.getAttribute('data-vt-bg') === room); });
+        if (vtDesc) vtDesc.textContent = btn.getAttribute('data-vt-text') || '';
+      });
+    });
+    var vtFull = vt.querySelector('[data-vt-full]');
+    if (vtFull) vtFull.addEventListener('click', function () {
+      var on = vt.querySelector('.sh-vt__bg.is-active');
+      shOpenLightbox(on ? parseInt(on.getAttribute('data-lb'), 10) || 0 : 0);
+    });
   }
 
   var zoomBtn = document.getElementById('sh-clinic-zoom-btn');
