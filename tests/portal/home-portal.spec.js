@@ -377,6 +377,12 @@ test('late app carousel moves and other routes keep their layout', async ({ page
     const response = await page.goto(url, {waitUntil:'domcontentloaded'});
     expect(response.status()).toBe(200);
     await expect(page.locator('body')).not.toHaveClass(/pc-home-v3/);
+    if (url === '/skin-health-beauty') {
+      // 2026-10-18: trang Skin Health Beauty dùng lại Hero trang chủ — home-portal.css chỉ áp trong khung .pc-shb-hero.
+      await expect(page.locator('.pc-home-v3')).toHaveCount(1);
+      await expect(page.locator('.pc-home-v3.pc-shb-hero #section_hero')).toHaveCount(1);
+      continue;
+    }
     await expect(page.locator('link[href*="home-portal"]')).toHaveCount(0);
   }
 });

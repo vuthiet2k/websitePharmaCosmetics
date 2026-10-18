@@ -8,10 +8,24 @@
   Hiệu ứng theo dự án tham khảo của người dùng (xadinhhoa.vercel.app/v2): Ken Burns zoom ảnh slide đang hiện, fade,
   mũi tên kính mờ (2026-10-16: bỏ mũi tên + chấm); tắt khi prefers-reduced-motion. Cập nhật cùng ngày: text "chìm" (trắng trong mờ hoà vào ảnh)
   + nút là link chữ có mũi tên theo ảnh mẫu (bỏ nút viên thuốc).
+  2026-10-18: trang khác dùng lại được (templates/page.indexskinhealthy.bwt): gán trước khi include
+  hero_lead_image / hero_lead_text / hero_lead_btn / hero_lead_url / hero_lead_alt ⇒ thêm 1 slide riêng đứng ĐẦU (giữ <h1>),
+  sau đó là các slide Hero trang chủ. Trang chủ không gán ⇒ không đổi gì.
 {%- endcomment -%}
 {%- assign hero_slide_count = 0 -%}
 {%- assign hero_h1_done = false -%}
 {%- capture hero_slides -%}
+{%- if hero_lead_image != blank -%}
+  {%- assign hero_slide_count = 1 -%}
+  <div class="swiper-slide portal-hero__slide">
+    <img class="portal-hero__image" src="{{ hero_lead_image | img_url: '2048x2048' }}" data-hero-source="{{ hero_lead_image | img_url: '2048x2048' }}"
+      alt="{{ hero_lead_alt | default: hero_lead_text | strip_newlines | escape }}" width="1920" height="1080" loading="eager" fetchpriority="high">
+    <div class="portal-hero__caption">
+      {%- if hero_lead_text != blank -%}{%- assign hero_h1_done = true -%}<h1 class="portal-hero__title" id="portal-hero-title">{{ hero_lead_text | escape | newline_to_br }}</h1>{%- endif -%}
+      <a class="portal-hero__btn" href="{{ hero_lead_url | default: '/dat-lich-tu-van' | escape }}">{{ hero_lead_btn | default: 'Đặt lịch tư vấn' | escape }}<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </div>
+  </div>
+{%- endif -%}
 {%- for i in (1..5) -%}
   {%- if i == 1 -%}
     {%- assign hero_image = settings.home_hero_image -%}
@@ -33,7 +47,7 @@
   <div class="swiper-slide portal-hero__slide">
     <img class="portal-hero__image" src="{{ hero_image | img_url: '2048x2048' }}" data-hero-source="{{ hero_image | img_url: '2048x2048' }}"
       alt="{{ hero_text | default: settings.store_name | default: store.name | strip_newlines | escape }}" width="1920" height="1080"
-      {%- if hero_slide_count == 1 %} loading="eager" fetchpriority="high"{% else %} loading="lazy" fetchpriority="low"{% endif %}>
+      {%- if hero_slide_count == 1 and hero_lead_image == blank %} loading="eager" fetchpriority="high"{% else %} loading="lazy" fetchpriority="low"{% endif %}>
     {%- comment -%} 2026-10-13 (người dùng): slide nào cũng có link — text nút trống ⇒ dùng text nút slide 1 / "Đặt lịch tư vấn",
       link trống ⇒ /dat-lich-tu-van. {%- endcomment -%}
     {%- assign hero_btn = hero_btn | default: settings.home_hero_btn1_text | default: 'Đặt lịch tư vấn' -%}
@@ -49,7 +63,7 @@
 {%- endfor -%}
 {%- endcapture -%}
 {%- if hero_slide_count > 0 -%}
-<section class="hero portal-hero" data-portal-hero data-delay="{{ settings.home_hero_delay | default: 5000 }}" data-autoplay="{{ settings.home_hero_autoplay }}" aria-roledescription="carousel" aria-label="{{ settings.store_name | default: store.name | escape }}">
+<section class="hero portal-hero" data-portal-hero data-delay="{{ settings.home_hero_delay | default: 5000 }}" data-autoplay="{{ settings.home_hero_autoplay }}" aria-roledescription="carousel" aria-label="{{ hero_lead_label | default: settings.store_name | default: store.name | escape }}">
   <div class="portal-hero__media swiper-container" id="portalHeroMedia">
     <div class="swiper-wrapper">{{ hero_slides }}</div>
     {%- comment -%} 2026-10-16 (người dùng): bỏ chấm phân trang + mũi tên trước/sau — slide tự chạy, vuốt để chuyển. {%- endcomment -%}
