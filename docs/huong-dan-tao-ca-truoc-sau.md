@@ -5,7 +5,7 @@ tự hiện ở 3 nơi:
 
 | Nơi hiển thị | Hiện gì |
 | :-- | :-- |
-| Trang **/truoc-sau-cham-soc-da-tu-xa** — phần "Kết quả của khách hàng" | Ca được gom theo nhóm vấn đề da (tag `nhom:`), có nút ‹ › chuyển ca, link "Xem chi tiết ca". Ca đầu tiên còn làm ảnh hero nếu chưa cài ảnh hero riêng. |
+| Trang **/truoc-sau-cham-soc-da-tu-xa** — phần "Kết quả của khách hàng" | Thanh **tab lọc** theo nhóm vấn đề da (tự sinh từ các giá trị tag `nhom:` đang có ca, kèm số ca; "Kết quả khác" luôn cuối) + **lưới thẻ ảnh** (cặp TRƯỚC/SAU chiếm ~75% thẻ, nhãn tuần, dòng thông số, tiêu đề; cả thẻ là link sang trang chi tiết ca). Ca đầu tiên còn làm ảnh hero nếu chưa cài ảnh hero riêng. |
 | **Trang chi tiết ca** `/<đường dẫn bài>` trên Sapo (bản dev: `/blogs/truoc-va-sau-1/<đường dẫn bài>`) (giao diện `article.truoc-va-sau`) | Khung **bài viết blog** như mọi bài khác. Cột chính: thẻ đầu bài (nhãn nhóm · H1 · chuyên gia · ngày/tỉnh · tóm tắt · hồ sơ ca 4 ô) → ảnh TRƯỚC/SAU 50/50 có nhãn tuần → nhận định chuyên gia → lộ trình diễn tiến → câu chuyện. Sidebar: đặt lịch + hotline + Zalo → liệu trình & sản phẩm đồng hành → ca khác cùng nhóm. Mobile: sidebar xuống dưới + thanh đặt lịch bám đáy |
 | Trang **liệu trình** (sản phẩm giao diện `product.lieu-trinh`) — phần "Trước – sau" | Chỉ khi bài có tag `lieutrinh:<alias sản phẩm>` (tối đa 4 ca/trang) |
 

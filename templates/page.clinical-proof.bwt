@@ -14,16 +14,16 @@
     nhom:<vấn đề da> (gom nhóm; không có ⇒ nhóm clinical_group_other), tuoi:<số>, tinh:<tỉnh/thành>,
     tuan:<số tuần theo dõi>, phacdo:<tên phác đồ/sản phẩm chính>. Thiếu tag nào ⇒ ẩn phần đó.
     Chỉ đăng ca thật đã được khách đồng ý công bố — theme không tự sinh ca/số liệu.
-  - Nút tư vấn từng ca: Zalo settings.contact_zalo.
+  - 2026-10-18: kết quả = tab lọc theo nhom: + lưới thẻ ảnh (cả thẻ là link chi tiết ca); không còn nút tư vấn từng ca —
+    lời mời tư vấn chỉ ở hero + khối cuối.
 {%- endcomment -%}
 {%- assign pc_ba_blog_handle = settings.clinical_case_blog_handle | default: 'truoc-va-sau-1' -%}
 {%- assign pc_ba_blog = blogs[pc_ba_blog_handle] -%}
-{%- assign pc_ba_zalo = settings.contact_zalo | remove: ' ' | remove: '.' | strip -%}
 {%- assign pc_ba_cta_link = settings.clinical_hero_cta_link | default: '/kham-da-ai' -%}
 {%- assign pc_ba_group_other = settings.clinical_group_other | default: 'Kết quả khác' -%}
 
 {%- comment -%} Lượt 1: gom tên nhóm (giữ thứ tự xuất hiện) + tìm cặp ảnh dự phòng cho hero. {%- endcomment -%}
-{%- assign pc_ba_groups = '' -%}
+{%- assign pc_ba_groups = '' -%}{%- assign pc_ba_has_other = false -%}
 {%- assign pc_ba_first_before = '' -%}
 {%- assign pc_ba_first_after = '' -%}
 {%- assign pc_ba_first_title = '' -%}
@@ -31,14 +31,17 @@
   {%- assign pc_bs_article = pc_ba -%}{%- include 'ba_case_source' -%}
   {%- assign pc_ba_before = pc_bs_before -%}{%- assign pc_ba_after = pc_bs_after -%}{%- assign pc_ba_group = pc_bs_group -%}
   {%- if pc_ba_before != blank and pc_ba_after != blank -%}
-    {%- if pc_ba_group == blank -%}{%- assign pc_ba_group = pc_ba_group_other -%}{%- endif -%}
+    {%- comment -%} 2026-10-18: ca không gắn nhom: gom vào nhóm "khác" — luôn đứng cuối (tab lọc). {%- endcomment -%}
+    {%- if pc_ba_group == blank or pc_ba_group == pc_ba_group_other -%}{%- assign pc_ba_has_other = true -%}{%- else -%}
     {%- assign pc_ba_wrapped = '|' | append: pc_ba_group | append: '|' -%}
     {%- unless pc_ba_groups contains pc_ba_wrapped -%}{%- assign pc_ba_groups = pc_ba_groups | append: pc_ba_wrapped -%}{%- endunless -%}
+    {%- endif -%}
     {%- if pc_ba_first_before == blank -%}
       {%- assign pc_ba_first_before = pc_ba_before -%}{%- assign pc_ba_first_after = pc_ba_after -%}{%- assign pc_ba_first_title = pc_ba.title -%}
     {%- endif -%}
   {%- endif -%}
 {%- endfor -%}
+{%- if pc_ba_has_other -%}{%- assign pc_ba_groups = pc_ba_groups | append: '|' | append: pc_ba_group_other | append: '|' -%}{%- endif -%}
 {%- assign pc_ba_group_list = pc_ba_groups | split: '|' -%}
 
 {%- if settings.clinical_hero_before != blank and settings.clinical_hero_after != blank -%}
@@ -142,87 +145,79 @@
   {%- endif -%}
 
   {%- if pc_ba_group_list.size > 0 -%}
+  {%- comment -%}
+    2026-10-18 (người dùng: "Proof Gallery"): bỏ khung từng nhóm có nút ‹ › + nút Zalo lặp lại. Thay bằng
+    thanh tab lọc tức thì theo nhóm (tab = các giá trị tag nhom: THẬT đang có ca — không dựng tab rỗng) + lưới thẻ
+    "visual-first": cặp ảnh TRƯỚC/SAU chiếm phần lớn thẻ, 1 dòng thông số + tiêu đề, cả thẻ là link sang trang chi
+    tiết ca. Lời mời tư vấn chỉ còn ở hero và khối cuối trang.
+  {%- endcomment -%}
   <section class="container pc-ba-section" id="pc-ba-results">
-    <h2 class="pc-ba-h2">{{ settings.clinical_results_title | default: 'Kết quả của khách hàng' }}</h2>
-    {%- if settings.clinical_results_sub != blank -%}<p class="pc-ba-sub">{{ settings.clinical_results_sub }}</p>{%- endif -%}
-    <div class="pc-ba-groups">
+    <h2 class="pc-ba-h2">{{ settings.clinical_results_title | default: 'Kết quả của khách hàng' | escape }}</h2>
+    {%- if settings.clinical_results_sub != blank -%}<p class="pc-ba-sub">{{ settings.clinical_results_sub | escape }}</p>{%- endif -%}
+
+    {%- assign pc_ba_total_all = 0 -%}
+    {%- capture pc_ba_cards -%}
+      {%- for pc_ba in pc_ba_blog.articles limit: 50 -%}
+        {%- assign pc_bs_article = pc_ba -%}{%- include 'ba_case_source' -%}
+        {%- if pc_bs_before != blank and pc_bs_after != blank -%}
+        {%- assign pc_ba_total_all = pc_ba_total_all | plus: 1 -%}
+        {%- assign pc_ba_group = pc_bs_group | default: pc_ba_group_other -%}
+        {%- assign pc_ba_cond = pc_bs_cond | default: pc_ba_group -%}
+        {%- assign pc_ba_bl = settings.clinical_card_before_label | default: 'Trước' -%}{%- assign pc_ba_al = settings.clinical_card_after_label | default: 'Sau' -%}
+        {%- if pc_bs_weeks != blank -%}{%- assign pc_ba_bl = pc_ba_bl | append: ' · Tuần 0' -%}{%- assign pc_ba_al = pc_ba_al | append: ' · Tuần ' | append: pc_bs_weeks -%}{%- endif -%}
+        <a class="pc-bg-card" href="{{ pc_ba.url }}" data-ba-cat="{{ pc_ba_group | handleize }}">
+          <span class="pc-bg-card__pair">
+            <span class="pc-bg-card__shot">
+              <img src="{{ pc_bs_before }}" alt="{{ pc_ba.title | escape }} — trước" width="400" height="533" loading="lazy" decoding="async">
+              <span class="pc-bg-card__tag">{{ pc_ba_bl | escape }}</span>
+            </span>
+            <span class="pc-bg-card__shot pc-bg-card__shot--after">
+              <img src="{{ pc_bs_after }}" alt="{{ pc_ba.title | escape }} — sau" width="400" height="533" loading="lazy" decoding="async">
+              <span class="pc-bg-card__tag">{{ pc_ba_al | escape }}</span>
+            </span>
+            <span class="pc-bg-card__more">{{ settings.clinical_case_more_label | default: 'Xem chi tiết ca' | escape }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+          </span>
+          <span class="pc-bg-card__body">
+            <span class="pc-bg-card__meta">
+              <span class="pc-bg-card__cond">{{ pc_ba_cond | escape }}</span>
+              {%- if pc_bs_age != blank -%}{%- assign pc_ba_age_l = pc_bs_age | downcase -%}<span>{{ pc_bs_age | escape }}{% unless pc_ba_age_l contains 'tuổi' %} tuổi{% endunless %}</span>{%- endif -%}
+              {%- if pc_bs_weeks != blank -%}<span>{{ pc_bs_weeks | escape }} tuần</span>{%- endif -%}
+            </span>
+            <span class="pc-bg-card__title">{{ pc_ba.title | escape }}</span>
+          </span>
+        </a>
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endcapture -%}
+
+    {%- assign pc_ba_gn = 0 -%}{%- for pc_ba_g in pc_ba_group_list -%}{%- if pc_ba_g != blank -%}{%- assign pc_ba_gn = pc_ba_gn | plus: 1 -%}{%- endif -%}{%- endfor -%}
+    {%- comment -%} Chỉ 1 nhóm thì không cần tab. {%- endcomment -%}
+    {%- if pc_ba_gn > 1 -%}
+    <div class="pc-bg-tabs" role="toolbar" aria-label="{{ settings.clinical_filter_label | default: 'Lọc theo vấn đề da' | escape }}">
+      <button type="button" class="pc-bg-tab" data-ba-filter="" aria-pressed="true">{{ settings.clinical_filter_all | default: 'Tất cả' | escape }} <span>{{ pc_ba_total_all }}</span></button>
       {%- for pc_ba_group_name in pc_ba_group_list -%}
       {%- if pc_ba_group_name != blank -%}
-      {%- comment -%} Lượt 2: in các ca của nhóm (đủ 2 ảnh). {%- endcomment -%}
-      {%- assign pc_ba_pairs = '' -%}
-      {%- assign pc_ba_infos = '' -%}
-      {%- assign pc_ba_n = 0 -%}
-        {%- for pc_ba in pc_ba_blog.articles limit: 50 -%}
-          {%- assign pc_bs_article = pc_ba -%}{%- include 'ba_case_source' -%}
-          {%- assign pc_ba_before = pc_bs_before -%}{%- assign pc_ba_after = pc_bs_after -%}{%- assign pc_ba_group = pc_bs_group -%}
-          {%- assign pc_ba_age = pc_bs_age -%}{%- assign pc_ba_city = pc_bs_city -%}{%- assign pc_ba_weeks = pc_bs_weeks -%}{%- assign pc_ba_plan = pc_bs_plan -%}
-          {%- if pc_ba_group == blank -%}{%- assign pc_ba_group = pc_ba_group_other -%}{%- endif -%}
-          {%- if pc_ba_before != blank and pc_ba_after != blank and pc_ba_group == pc_ba_group_name -%}
-          {%- assign pc_ba_n = pc_ba_n | plus: 1 -%}
-          {%- comment -%} Ảnh và thông tin ca in thành 2 dãy riêng để nút điều hướng nằm giữa (đúng thiết kế); JS bật cùng chỉ số. {%- endcomment -%}
-          {%- capture pc_ba_one -%}
-            <div class="pc-ba-pair" data-ba-case{% if pc_ba_n > 1 %} hidden{% endif %}>
-              <figure class="pc-ba-frame pc-ba-frame--before">
-                <img src="{{ pc_ba_before }}" alt="{{ pc_ba.title | escape }} — trước" width="280" height="280" loading="lazy">
-                <figcaption class="pc-ba-badge">TRƯỚC</figcaption>
-              </figure>
-              <figure class="pc-ba-frame pc-ba-frame--after">
-                <img src="{{ pc_ba_after }}" alt="{{ pc_ba.title | escape }} — sau" width="280" height="280" loading="lazy">
-                <figcaption class="pc-ba-badge pc-ba-badge--after">SAU</figcaption>
-              </figure>
-            </div>
-          {%- endcapture -%}
-          {%- assign pc_ba_pairs = pc_ba_pairs | append: pc_ba_one -%}
-          {%- capture pc_ba_one -%}
-            <div class="pc-ba-case__info" data-ba-info{% if pc_ba_n > 1 %} hidden{% endif %}>
-              {%- capture pc_ba_meta -%}
-                {%- if pc_ba_age != blank -%}<span>{{ pc_ba_age }} tuổi</span>{%- endif -%}
-                {%- if pc_ba_city != blank -%}<span>{{ pc_ba_city }}</span>{%- endif -%}
-                {%- if pc_ba_weeks != blank -%}<span>Theo dõi {{ pc_ba_weeks }} tuần</span>{%- endif -%}
-              {%- endcapture -%}
-              {%- if pc_ba_meta != blank -%}<p class="pc-ba-case__meta">{{ pc_ba_meta }}</p>{%- endif -%}
-              {%- if pc_ba_plan != blank -%}<p class="pc-ba-case__plan">Phác đồ: {{ pc_ba_plan }}</p>{%- endif -%}
-              {%- comment -%} 2026-10-17: link sang trang chi tiết ca (giao diện article.truoc-va-sau); nhãn trống ⇒ ẩn. {%- endcomment -%}
-              {%- if settings.clinical_case_more_label != blank -%}<a class="pc-ba-case__more" href="{{ pc_ba.url }}">{{ settings.clinical_case_more_label }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>{%- endif -%}
-            </div>
-          {%- endcapture -%}
-          {%- assign pc_ba_infos = pc_ba_infos | append: pc_ba_one -%}
-          {%- endif -%}
-        {%- endfor -%}
-      {%- assign pc_ba_total = pc_ba_n -%}
-      <div class="pc-ba-card pc-ba-group" data-ba-group>
-        <div class="pc-ba-group__head">
-          <p class="pc-ba-group__title">{{ pc_ba_group_name | upcase }}</p>
-          <p class="pc-ba-group__counter" aria-live="polite">Case <span data-ba-current>1</span> / {{ pc_ba_total }}</p>
-        </div>
-        {{ pc_ba_pairs }}
-        {%- if pc_ba_total > 1 -%}
-        <div class="pc-ba-nav">
-          <button type="button" class="pc-ba-nav__btn" data-ba-prev aria-label="Ca trước">‹</button>
-          <div class="pc-ba-nav__dots">
-            {%- for i in (1..pc_ba_total) -%}
-            <button type="button" class="pc-ba-nav__dot" data-ba-dot="{{ i }}" aria-label="Xem ca {{ i }}"{% if i == 1 %} aria-current="true"{% endif %}><span></span></button>
-            {%- endfor -%}
-          </div>
-          <button type="button" class="pc-ba-nav__btn pc-ba-nav__btn--solid" data-ba-next aria-label="Ca sau">›</button>
-        </div>
-        {%- endif -%}
-        {{ pc_ba_infos }}
-        {%- if pc_ba_zalo != blank -%}
-        <a href="https://zalo.me/{{ pc_ba_zalo }}" target="_blank" rel="noopener" class="pc-ba-btn pc-ba-btn--primary pc-ba-group__cta">{{ settings.clinical_case_cta_label | default: 'TƯ VẤN PHÁC ĐỒ QUA ZALO' }}</a>
-        {%- endif -%}
-      </div>
+      {%- assign pc_ba_cnt = 0 -%}
+      {%- for pc_ba in pc_ba_blog.articles limit: 50 -%}
+        {%- assign pc_bs_article = pc_ba -%}{%- include 'ba_case_source' -%}
+        {%- assign pc_ba_group = pc_bs_group | default: pc_ba_group_other -%}
+        {%- if pc_bs_before != blank and pc_bs_after != blank and pc_ba_group == pc_ba_group_name -%}{%- assign pc_ba_cnt = pc_ba_cnt | plus: 1 -%}{%- endif -%}
+      {%- endfor -%}
+      <button type="button" class="pc-bg-tab" data-ba-filter="{{ pc_ba_group_name | handleize }}" aria-pressed="false">{{ pc_ba_group_name | escape }} <span>{{ pc_ba_cnt }}</span></button>
       {%- endif -%}
       {%- endfor -%}
     </div>
-    {%- if settings.clinical_note != blank -%}<p class="pc-ba-note">{{ settings.clinical_note }}</p>{%- endif -%}
+    {%- endif -%}
+
+    <div class="pc-bg-grid" aria-live="polite">{{ pc_ba_cards }}</div>
+    {%- if settings.clinical_note != blank -%}<p class="pc-ba-note">{{ settings.clinical_note | escape }}</p>{%- endif -%}
   </section>
   {%- endif -%}
 
   <section class="container pc-ba-section pc-ba-section--last">
     <div class="pc-ba-final">
       <div class="pc-ba-final__text">
-        <h2 class="pc-ba-final__title">{{ settings.clinical_final_title | default: 'Bắt đầu hành trình làn da của bạn' }}</h2>
+        <h2 class="pc-ba-final__title">{{ settings.clinical_final_title | default: 'Bạn gặp tình trạng da tương tự?' }}</h2>
         {%- if settings.clinical_final_text != blank -%}<p class="pc-ba-final__desc">{{ settings.clinical_final_text }}</p>{%- endif -%}
       </div>
       <div class="pc-ba-actions">
@@ -235,23 +230,16 @@
   </section>
 </main>
 <script>
-  /* 2026-10-07: điều hướng từng ca trong mỗi nhóm kết quả (nút ‹ › + chấm). */
-  document.querySelectorAll('[data-ba-group]').forEach(function (group) {
-    var cases = group.querySelectorAll('[data-ba-case]');
-    var infos = group.querySelectorAll('[data-ba-info]');
-    if (cases.length < 2) return;
-    var dots = group.querySelectorAll('[data-ba-dot]');
-    var current = group.querySelector('[data-ba-current]');
-    var index = 0;
-    function show(i) {
-      index = (i + cases.length) % cases.length;
-      cases.forEach(function (c, k) { c.hidden = k !== index; });
-      infos.forEach(function (c, k) { c.hidden = k !== index; });
-      dots.forEach(function (d, k) { if (k === index) { d.setAttribute('aria-current', 'true'); } else { d.removeAttribute('aria-current'); } });
-      if (current) current.textContent = index + 1;
-    }
-    group.querySelector('[data-ba-prev]').addEventListener('click', function () { show(index - 1); });
-    group.querySelector('[data-ba-next]').addEventListener('click', function () { show(index + 1); });
-    dots.forEach(function (d, k) { d.addEventListener('click', function () { show(k); }); });
-  });
+  /* 2026-10-18: lọc tức thì theo nhóm vấn đề da (không tải lại trang). */
+  (function () {
+    var tabs = document.querySelectorAll('[data-ba-filter]');
+    var cards = document.querySelectorAll('.pc-bg-card[data-ba-cat]');
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        var cat = tab.getAttribute('data-ba-filter');
+        tabs.forEach(function (t) { t.setAttribute('aria-pressed', t === tab ? 'true' : 'false'); });
+        cards.forEach(function (c) { c.hidden = cat !== '' && c.getAttribute('data-ba-cat') !== cat; });
+      });
+    });
+  })();
 </script>
