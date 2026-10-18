@@ -72,17 +72,19 @@
 
 {%- comment -%}
   ═══ 01. HERO ═══ 2026-10-18 (người dùng: "chỉnh hero như trang chủ — ảnh, hiệu ứng, text và button chuyển tranh; khi mới vào
-  header cũng trong suốt"; KHÔNG đổi UI phần khác): dùng NGUYÊN Hero trang chủ (snippets/section_hero.bwt + home-portal.css +
-  home-hero.js) — slide đầu = ảnh/tiêu đề/nút riêng của Skin Health Beauty (skinhealthy_hero_*), tiếp theo là các slide Hero trang
-  chủ. Bọc .pc-home-v3 .pc-portal chỉ quanh Hero ⇒ CSS trang chủ không lan ra phần khác của trang.
+  header cũng trong suốt"; KHÔNG đổi UI phần khác): khung + hiệu ứng Hero trang chủ (snippets/section_hero.bwt + home-portal.css +
+  home-hero.js), NỘI DUNG = cấu hình riêng Skin Health Beauty (Theme Settings › Skin Healthy › Hero: ảnh nền · eyebrow · tiêu đề H1 ·
+  phụ đề · nút CTA). Không lấy slide Hero trang chủ (người dùng: "hero của skin health là khác").
+  Bọc .pc-home-v3 .pc-portal chỉ quanh Hero ⇒ CSS trang chủ không lan ra phần khác của trang.
 {%- endcomment -%}
 {%- assign sh_hero_cta_url = settings.skinhealthy_hero_cta_url | default: sh_services_url -%}
 {%- assign hero_lead_image = settings.skinhealthy_hero_img -%}
 {%- assign hero_lead_text = settings.skinhealthy_hero_title | default: 'Khoa Học Vì Làn Da' -%}
 {%- assign hero_lead_btn = settings.skinhealthy_hero_cta_text | default: 'Khám phá ngay' -%}
 {%- assign hero_lead_url = sh_hero_cta_url -%}
-{%- assign hero_lead_alt = settings.skinhealthy_hero_sub | default: hero_lead_text -%}
-{%- assign hero_lead_label = settings.skinhealthy_hero_eyebrow | default: 'Skin Health Beauty' -%}
+{%- assign hero_lead_eyebrow = settings.skinhealthy_hero_eyebrow | default: 'Skin Health Beauty' -%}
+{%- assign hero_lead_sub = settings.skinhealthy_hero_sub -%}
+{%- assign hero_lead_label = hero_lead_eyebrow -%}
 {{ 'home-portal.css' | asset_url | stylesheet_tag }}
 <script defer src="{{ 'home-hero.js' | asset_url }}"></script>
 <style>
@@ -100,6 +102,10 @@
     body:has(.pc-shb-hero #section_hero) header.header:not(:hover):not(:focus-within):not(.hSticky) .main-header:not(.is-scrolled) .header-menu{background:transparent!important;box-shadow:none!important}
     body:has(.pc-shb-hero #section_hero) header.header:not(:hover):not(:focus-within):not(.hSticky) .main-header:not(.is-scrolled) #nav > .nav-item > .nav-link{color:#fff!important}
   }
+  /* 2026-10-18: eyebrow + phụ đề Hero (cấu hình Skin Health Beauty) — cùng kiểu chữ trắng "chìm" của tiêu đề Hero trang chủ. */
+  .pc-shb-hero .pc-portal .portal-hero__eyebrow{margin:0 0 14px;color:rgba(255,255,255,.82);font:500 var(--fs-xs)/1.4 var(--f-brand);letter-spacing:.24em;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,30,20,.28),0 0 18px rgba(0,30,20,.32)}
+  .pc-shb-hero .pc-portal .portal-hero__sub{max-width:560px;margin:16px auto 0;color:rgba(255,255,255,.82);font:400 var(--fs-base)/1.65 var(--f-body);text-shadow:0 1px 3px rgba(0,30,20,.28),0 0 18px rgba(0,30,20,.32)}
+  @media (max-width:767px){.pc-shb-hero .pc-portal .portal-hero__eyebrow{font-size:var(--fs-2xs);letter-spacing:.18em}.pc-shb-hero .pc-portal .portal-hero__sub{font-size:var(--fs-sm)}}
   /* 2026-10-18: 2 khối "Mua sắm theo…" dạng swiper — chỉ thêm nút trước/sau vuông cạnh tiêu đề, giữ nguyên thẻ ảnh + chữ dưới. */
   .sh-swiper-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px}
   .sh-swiper-nav{display:flex;gap:8px;flex:none}
