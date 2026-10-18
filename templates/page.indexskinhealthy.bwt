@@ -70,8 +70,12 @@
   }
 
   /* ── Liệu trình dạng thẻ video dọc 9:16 (2026-10-18) — không bo góc ── */
-  .sh-programs__hd--reels { max-width: none; }
-  .sh-programs__hd--reels > div:first-child { max-width: 560px; }
+  .sh-reels-wrap { position: relative; }
+  .sh-reels-arrow { position: absolute; top: 50%; z-index: 3; transform: translateY(-50%); background: rgba(255,255,255,.92); border-color: rgba(255,255,255,.92); box-shadow: 0 4px 14px rgba(19,36,31,.18); }
+  .sh-reels-arrow--prev { left: -22px; }
+  .sh-reels-arrow--next { right: -22px; }
+  .sh-reels-arrow.swiper-button-disabled { opacity: 0; }
+  @media (max-width: 1360px) { .sh-reels-arrow--prev { left: 8px; } .sh-reels-arrow--next { right: 8px; } }
   .sh-reels { overflow: hidden; }
   .sh-reels .swiper-slide { height: auto; }
   .sh-reel { position: relative; display: block; aspect-ratio: 9 / 16; overflow: hidden; background: var(--sh-ivory-dark); color: #fff; text-decoration: none; transition: transform 300ms var(--sh-ease), box-shadow 300ms var(--sh-ease); }
@@ -516,20 +520,18 @@
 {%- assign sh_prog_col = collections[settings.lt_collection] -%}
 <section class="sh-programs sh-reveal">
   <div class="container sh-container">
-    <div class="sh-programs__hd{% if sh_prog_col.products.size > 0 %} sh-swiper-head sh-programs__hd--reels{% endif %}">
+    <div class="sh-programs__hd">
       <div>
         <span class="sh2-eyebrow">Lộ Trình Điều Trị</span>
         <h2 class="sh2-title" style="font-size:var(--fs-h3);">Liệu Trình</h2>
         <p class="sh-programs__intro">Mỗi liệu trình được thiết kế theo mục tiêu điều trị cụ thể, từ chăm sóc duy trì đến can thiệp chuyên sâu.</p>
       </div>
-      {%- if sh_prog_col.products.size > 0 -%}
-      <div class="sh-swiper-nav">
-        <button type="button" class="sh-swiper-btn" data-sh-prev="reel" aria-label="Trước"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
-        <button type="button" class="sh-swiper-btn" data-sh-next="reel" aria-label="Sau"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
-      </div>
-      {%- endif -%}
     </div>
     {%- if sh_prog_col.products.size > 0 -%}
+    {%- comment -%} 2026-10-18 (người dùng): 2 nút trước/sau nằm 2 bên khung thẻ (giữa chiều cao), vuốt vẫn dùng được. {%- endcomment -%}
+    <div class="sh-reels-wrap">
+    <button type="button" class="sh-swiper-btn sh-reels-arrow sh-reels-arrow--prev" data-sh-prev="reel" aria-label="Trước"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+    <button type="button" class="sh-swiper-btn sh-reels-arrow sh-reels-arrow--next" data-sh-next="reel" aria-label="Sau"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
     <div class="sh-reels swiper-container" data-sh-reels>
       <div class="swiper-wrapper">
       {%- for sh_rp in sh_prog_col.products limit: 12 -%}
@@ -568,6 +570,7 @@
         </div>
       {%- endfor -%}
       </div>
+    </div>
     </div>
     {%- else -%}
     {%- assign sh_prog_ll = linklists[settings.skinhealthy_programs_menu] -%}
