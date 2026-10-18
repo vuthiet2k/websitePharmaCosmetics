@@ -6,7 +6,7 @@ tự hiện ở 3 nơi:
 | Nơi hiển thị | Hiện gì |
 | :-- | :-- |
 | Trang **/truoc-sau-cham-soc-da-tu-xa** — phần "Kết quả của khách hàng" | Ca được gom theo nhóm vấn đề da (tag `nhom:`), có nút ‹ › chuyển ca, link "Xem chi tiết ca". Ca đầu tiên còn làm ảnh hero nếu chưa cài ảnh hero riêng. |
-| **Trang chi tiết ca** `/<đường dẫn bài>` trên Sapo (bản dev: `/blogs/truoc-va-sau-1/<đường dẫn bài>`) (giao diện `article.truoc-va-sau`) 6 khối (18/10/2026): **1** nhãn nhóm + nhãn chung · H1 · tóm tắt · chuyên gia/tỉnh · nhận định chuyên gia → **2** hồ sơ ca 4 ô (tuổi · thời gian · tình trạng ban đầu · phác đồ) → **3** ảnh TRƯỚC/SAU 50/50 có nhãn tuần + ghi chú ảnh → **4** lộ trình diễn tiến → câu chuyện → **5** liệu trình & sản phẩm đồng hành → ca khác cùng nhóm → **6** CTA đặt lịch + hotline (mobile có thanh đặt lịch bám đáy) |
+| **Trang chi tiết ca** `/<đường dẫn bài>` trên Sapo (bản dev: `/blogs/truoc-va-sau-1/<đường dẫn bài>`) (giao diện `article.truoc-va-sau`) | Khung **bài viết blog** như mọi bài khác. Cột chính: thẻ đầu bài (nhãn nhóm · H1 · chuyên gia · ngày/tỉnh · tóm tắt · hồ sơ ca 4 ô) → ảnh TRƯỚC/SAU 50/50 có nhãn tuần → nhận định chuyên gia → lộ trình diễn tiến → câu chuyện. Sidebar: đặt lịch + hotline + Zalo → liệu trình & sản phẩm đồng hành → ca khác cùng nhóm. Mobile: sidebar xuống dưới + thanh đặt lịch bám đáy |
 | Trang **liệu trình** (sản phẩm giao diện `product.lieu-trinh`) — phần "Trước – sau" | Chỉ khi bài có tag `lieutrinh:<alias sản phẩm>` (tối đa 4 ca/trang) |
 
 > **Chỉ đăng ca thật**, đã được khách đồng ý công bố. Ảnh trước và sau phải cùng góc chụp, cùng ánh sáng và không chỉnh sửa.
