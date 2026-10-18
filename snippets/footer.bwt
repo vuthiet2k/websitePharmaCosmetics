@@ -25,6 +25,13 @@
 					<img class="pc-logo-master-img pc-logo-root pc-logo-root--inverse" src="{{ 'PharmaCosmetics.svg' | asset_url }}" width="270" height="55" alt="{{ settings.store_name | default: store.name | escape }}" loading="lazy">
 					{%- endif -%}
 				</a>
+				{%- comment -%} 2026-10-18 (người dùng): câu giới thiệu thương hiệu đặt ngay dưới logo (trước nằm sau icon mạng xã hội). {%- endcomment -%}
+				{%- comment -%} Thiếu khoá enable_info_foo trong settings_data (nil) ⇒ theo default schema (bật), như footer_payment_enable. {%- endcomment -%}
+				{% unless settings.enable_info_foo == false or settings.enable_info_foo == 'false' %}{% if settings.content_info_foo != blank %}
+				<div class="info_foo_content pc-foot__info">
+					{{settings.content_info_foo}}
+				</div>
+				{% endif %}{% endunless %}
 				{%- assign _ft_addr = settings.store_address -%}
 				{%- if _ft_addr == blank -%}
 				{%- capture _ft_addr -%}{%if store.address!='' %}{{ store.address }}, {%endif%}{%if store.province!='' %}{{store.province}}, {%endif%}{%if store.district!='' %}{{store.district}}, {%endif%}{%if store.country!='' %}{{store.country}}{%endif%}{%- endcapture -%}
@@ -64,12 +71,6 @@
 					{% if settings.footer_social_lazada != blank %}
 					<a href="{{ settings.footer_social_lazada }}" target="_blank" rel="noopener" aria-label="Lazada" title="Mua {{ store.name }} trên Lazada"><i class="fa-solid fa-cube" aria-hidden="true"></i></a>
 					{% endif %}
-				</div>
-				{% endif %}
-
-				{% if settings.enable_info_foo %}
-				<div class="info_foo_content pc-foot__info">
-					{{settings.content_info_foo}}
 				</div>
 				{% endif %}
 
