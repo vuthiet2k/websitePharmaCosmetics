@@ -2,7 +2,7 @@
 {%- comment -%}
   blog.instagram-feed.bwt — 2026-10-18 (người dùng: "lấy theo bài viết mới nhất — ý tưởng từ Instagram — thu hút người dùng vào đọc
   thông tin mới trên mobile"). Sapo Admin → Danh mục bài viết → Khung giao diện: blog.instagram-feed.
-  · Đầu trang kiểu hồ sơ: avatar thương hiệu · tên blog (h1) · số bài · mô tả blog.
+  · Tên blog = h1 ẩn (khối hồ sơ đầu trang đã bỏ theo người dùng 18/10).
   · Story = các blog trong settings.feed_story_blogs (handle, cách nhau dấu phẩy): ảnh bài mới nhất của blog, nhãn MỚI nếu có bài
     trong 7 ngày, blog đang xem được đánh dấu.
   · Feed = bài của blog này (Sapo trả mới nhất trước), 12 bài/trang + nút "Xem thêm bài viết". Mỗi bài: chuyên mục (tag chude: hoặc
@@ -19,16 +19,8 @@
 {%- capture pc_ig_avatar -%}<span class="pc-ig-avatar" aria-hidden="true"><img src="{{ 'favicon.png' | asset_url }}" alt="" width="64" height="64" loading="lazy"></span>{%- endcapture -%}
 
 <div class="pc-ig">
-  {%- comment -%} ═══ Đầu trang kiểu hồ sơ ═══ {%- endcomment -%}
-  <header class="pc-ig-profile">
-    <span class="pc-ig-profile__ring">{{ pc_ig_avatar }}</span>
-    <div class="pc-ig-profile__info">
-      <h1 class="pc-ig-profile__title">{{ blog.title | default: page_title | escape }}</h1>
-      <p class="pc-ig-profile__meta"><strong>{{ blog.articles_count | default: blog.articles.size }}</strong> {{ settings.feed_posts_label | default: 'bài viết' | escape }}</p>
-      {%- assign pc_ig_desc = blog.description | strip_html | strip -%}
-      {%- if pc_ig_desc != blank -%}<p class="pc-ig-profile__desc">{{ pc_ig_desc | truncate: 160 }}</p>{%- endif -%}
-    </div>
-  </header>
+  {%- comment -%} 2026-10-18 (người dùng): bỏ khối hồ sơ đầu trang — giữ h1 ẩn (UI-2.5: mỗi trang 1 h1). {%- endcomment -%}
+  <h1 class="sr-only">{{ blog.title | default: page_title | escape }}</h1>
 
   {%- comment -%} ═══ Story: các chuyên mục ═══ {%- endcomment -%}
   {%- assign pc_ig_story_handles = settings.feed_story_blogs | default: 'tin-tuc-va-kien-thuc,bi-quyet,video,truoc-va-sau-1,hoat-chat,chuyen-gia' | split: ',' -%}
