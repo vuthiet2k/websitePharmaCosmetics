@@ -26,7 +26,7 @@
 | 3 | **Vấn đề da** (thẻ, ảnh 4:3, tên CHỮ HOA) | Tag `vande:<handle bài>` → bài trong blog **Vấn đề da** (`van-de-da`) | Ẩn cả phần |
 | 4 | **Công nghệ & hoạt chất**: nhãn = hãng · tiêu đề = tên ngắn (CHỮ HOA) · mô tả · ảnh · thẻ hoạt chất | **Nhà cung cấp/Hãng** · tag `tenngan:` · tag `congthuc:` · ảnh `[congthuc]` (→ `[sanpham]`) · tag `hoatchat:<handle>` → blog **Hoạt chất** (`hoat-chat`) | Ẩn phần/ảnh |
 | 5 | **Quy trình 1:1** (5 bước, dùng chung mọi liệu trình) | Cấu hình theme › "Trang liệu trình (sản phẩm)"; ảnh bước = ảnh SP alt `[buoc-1]`…`[buoc-5]`, không có thì ảnh chung trong cấu hình | Bước thiếu ảnh hiện khung icon |
-| 6 | **Thông tin chi tiết** (thu gọn, nút "Xem thêm") | **Mô tả chi tiết** sản phẩm | Ẩn |
+| 6 | **Thông tin chi tiết** — không phải section riêng: link "Thông tin chi tiết liệu trình →" ngay dưới dòng Địa điểm (mục 8) mở **modal** | **Mô tả chi tiết** sản phẩm | Ẩn link |
 | 7 | **Trước – sau** (trình chiếu 1 ca/lần, tối đa 8 ca) | Bài blog **Trước & Sau** (`truoc-va-sau-1`) có tag `lieutrinh:<alias SP>` + đủ 2 ảnh (trong nội dung hoặc tag `anhtruoc:`/`anhsau:`) | Ẩn cả phần |
 | 8 | **Thông tin & đặt lịch**: bảng · nút đặt lịch · hotline · dòng thương hiệu | Tag `hinhthuc:` `thoigian:` `sobuoi:` `diadiem:` · **giá sản phẩm** (0 ⇒ "Liên hệ tư vấn") · cấu hình | Dòng trống ẩn / dùng mặc định |
 | 9 | **FAQ** (+ JSON-LD FAQPage cho Google) | Bài blog **Câu hỏi liệu trình** (`cau-hoi-lieu-trinh`) có tag `sanpham:<alias SP>` | Ẩn |

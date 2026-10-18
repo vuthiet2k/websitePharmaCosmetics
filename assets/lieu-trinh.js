@@ -1,13 +1,13 @@
 /**
  * assets/lieu-trinh.js — Trang liệu trình (snippets/lieu_trinh_page.bwt).
- * 2026-10-17: thanh đặt lịch bám đáy mobile (đặt trên bottom-nav, đẩy nút nổi lên để không che), thu gọn "Thông tin chi tiết",
+ * 2026-10-17: thanh đặt lịch bám đáy mobile (đặt trên bottom-nav, đẩy nút nổi lên để không che), modal "Thông tin chi tiết" (18/10),
  * cuộn mượt tới neo. FAQ dùng <details> — không cần JS.
  */
 (function () {
   'use strict';
   document.addEventListener('DOMContentLoaded', function () {
     initStickyCta();
-    initCollapse();
+    initModal();
     initSmoothScroll();
     initCaseSlider();
   });
@@ -43,20 +43,19 @@
     update();
   }
 
-  // "Thông tin chi tiết": chỉ thu gọn khi nội dung cao hơn ~1.4 lần khung thu gọn
-  function initCollapse() {
-    document.querySelectorAll('[data-lt-collapse]').forEach(function (box) {
-      var body = box.querySelector('.lt-details__body');
-      var btn = box.querySelector('[data-lt-toggle]');
-      if (!body || !btn || body.scrollHeight < 720) return;
-      box.classList.add('is-collapsed');
-      btn.hidden = false;
+  // 2026-10-18: "Thông tin chi tiết liệu trình" mở trong <dialog> (nút sau dòng Địa điểm). Esc/nút ×/bấm nền ⇒ đóng.
+  function initModal() {
+    document.querySelectorAll('[data-lt-modal-open]').forEach(function (btn) {
+      var dlg = document.getElementById(btn.getAttribute('data-lt-modal-open'));
+      if (!dlg) return;
+      function close() { if (dlg.open) dlg.close(); }
       btn.addEventListener('click', function () {
-        var open = box.classList.toggle('is-collapsed') === false;
-        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-        btn.querySelector('span').textContent = open ? 'Thu gọn' : 'Xem thêm';
-        if (!open) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+        document.body.classList.add('lt-modal-open');
       });
+      dlg.addEventListener('close', function () { document.body.classList.remove('lt-modal-open'); btn.focus(); });
+      dlg.querySelectorAll('[data-lt-modal-close]').forEach(function (x) { x.addEventListener('click', close); });
+      dlg.addEventListener('click', function (e) { if (e.target === dlg) close(); });
     });
   }
 

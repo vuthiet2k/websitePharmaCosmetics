@@ -1,16 +1,18 @@
 {%- comment -%}
-  lieu_trinh_details — "Thông tin chi tiết" = Mô tả chi tiết sản phẩm (product.content): ưu điểm, thành phần, đối tượng phù hợp,
-  chống chỉ định, phục hồi, chăm sóc sau… Thu gọn khi dài, nút "Xem thêm" (assets/lieu-trinh.js). Trống ⇒ ẩn.
-  h1 trong nội dung soạn thảo hạ thành h2 (mô tả thật của GetGlowing có sẵn <h1> ⇒ trang 2 h1, UI-2.5).
+  lieu_trinh_details — "Thông tin chi tiết liệu trình" = Mô tả chi tiết sản phẩm (product.content): ưu điểm, thành phần, đối tượng
+  phù hợp, chống chỉ định, phục hồi, chăm sóc sau… Trống ⇒ không render.
+  2026-10-18 (người dùng đối chiếu hồ sơ thiết kế — thiết kế KHÔNG có mục chi tiết riêng): bỏ section trên trang, chuyển vào
+  modal <dialog> mở từ link ngay sau dòng "Địa điểm" của bảng thông tin dịch vụ (snippets/lieu_trinh_info.bwt).
+  JS mở/đóng: assets/lieu-trinh.js (initModal). h1 trong nội dung soạn thảo hạ thành h2 (tránh 2 h1, UI-2.5).
 {%- endcomment -%}
 {%- if lt_product.content != blank -%}
-<section id="service-details-section" class="lt-section lt-section--soft">
-  <div class="container">
-    <header class="lt-head"><h2 class="lt-title">{{ settings.lt_details_title | default: 'Thông tin chi tiết liệu trình' | escape }}</h2></header>
-    <div class="lt-details" data-lt-collapse>
-      <div class="lt-rte lt-details__body">{{ lt_product.content | replace: '<h1', '<h2' | replace: '</h1>', '</h2>' }}</div>
-      <button type="button" class="lt-btn lt-btn--light lt-details__toggle" data-lt-toggle hidden aria-expanded="false"><span>Xem thêm</span> <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button>
-    </div>
+<dialog id="lt-details-modal" class="lt-modal" aria-labelledby="lt-details-modal-title">
+  <div class="lt-modal__box">
+    <header class="lt-modal__head">
+      <h2 class="lt-modal__title" id="lt-details-modal-title">{{ settings.lt_details_title | default: 'Thông tin chi tiết liệu trình' | escape }}</h2>
+      <button type="button" class="lt-modal__close" data-lt-modal-close aria-label="Đóng"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    </header>
+    <div class="lt-modal__body lt-rte">{{ lt_product.content | replace: '<h1', '<h2' | replace: '</h1>', '</h2>' }}</div>
   </div>
-</section>
+</dialog>
 {%- endif -%}
