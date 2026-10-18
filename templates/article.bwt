@@ -114,6 +114,24 @@
 							  </div>
 							  {%- endif -%}
 							</div>
+							{%- comment -%}
+							  2026-10-18 (người dùng: "lấy ý tưởng xem chi tiết 1 bài viết Facebook — CHỈ ở mobile, không sửa laptop"):
+							  khối .pc-fbm-* chỉ hiện ≤767px (assets/page_blog.scss.bwt). Dòng tác giả: avatar chuyên gia (byline tag chuyengia:) hoặc
+							  logo thương hiệu · tên đậm + tích · ngày đăng · icon công khai. Trên mobile byline/dải ngày/chia sẻ cũ ẩn.
+							{%- endcomment -%}
+							<div class="pc-fbm-author">
+								<span class="pc-fbm-author__avatar">
+									{%- if article_author_doctor and article_author_doctor.image.src != blank -%}
+									<img src="{{ article_author_doctor.image.src | img_url: 'small' }}" alt="" width="40" height="40" loading="lazy">
+									{%- else -%}
+									<img class="is-logo" src="{{ 'favicon.png' | asset_url }}" alt="" width="40" height="40" loading="lazy">
+									{%- endif -%}
+								</span>
+								<span class="pc-fbm-author__who">
+									<span class="pc-fbm-author__name">{%- if article_author_doctor -%}{{ article_author_doctor.title }}{%- else -%}{{ article.author | default: settings.store_name | default: store.name }}{%- endif -%} <i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
+									<span class="pc-fbm-author__sub">{{ article.published_on | date: 'dd/MM/yyyy' }} · {{ blog.title }} · <i class="fa-solid fa-earth-asia" aria-hidden="true"></i></span>
+								</span>
+							</div>
 							{%- comment -%} 2026-10-07: ngày đăng kiểu "Thứ Bảy, 12/04/2026" — thứ không nhận ra thì chỉ in ngày (trước đây in lặp "Thứ 12/4/2026 12/4/2026"). {%- endcomment -%}
 							{%- assign pc_art_wd = article.published_on | date: '%a' -%}
 							{%- case pc_art_wd -%}
@@ -209,6 +227,21 @@
 								</ul>
 							</div>
 							{%endif%}
+							{%- assign pc_fbm_sum = article.summary | default: article.excerpt | strip_html | strip -%}
+							{%- if pc_fbm_sum != blank -%}<p class="pc-fbm-text">{{ pc_fbm_sum | truncate: 280 }}</p>{%- endif -%}
+							{%- capture pc_fbm_tags -%}{%- for tag in article.tags -%}{%- unless tag contains ':' or tag contains 'duocsi_' or tag contains 'video' -%}<a href="/blogs/all/tagged/(({{ tag | replace: ' ', '%20' }}))">#{{ tag | replace: ' ', '' | replace: '-', '' }}</a> {% endunless -%}{%- endfor -%}{%- endcapture -%}
+							{%- assign pc_fbm_tags_s = pc_fbm_tags | strip -%}
+							{%- if pc_fbm_tags_s != blank -%}<p class="pc-fbm-tags">{{ pc_fbm_tags }}</p>{%- endif -%}
+							{%- comment -%} Ảnh bài tràn ngang (bài có video: khối video ngay dưới đóng vai trò media ⇒ không lặp ảnh). {%- endcomment -%}
+							{%- assign pc_vs_article = article -%}{%- include 'video_source' -%}
+							{%- if pc_vs_src == '' and article.image.src != blank -%}
+							<div class="pc-fbm-media"><img src="{{ article.image.src | img_url: 'grande' }}" alt="{{ article.image.alt | default: article.title | escape }}" width="600" height="600" fetchpriority="high"></div>
+							{%- endif -%}
+							<div class="pc-fbm-actions" data-fbm>
+								<button type="button" class="pc-fbm-act" data-fbm-like aria-pressed="false"><i class="fa-regular fa-thumbs-up" aria-hidden="true"></i> {{ settings.fbm_like_label | default: 'Thích' }}</button>
+								<a class="pc-fbm-act" href="{% if blog.comments_enabled %}#article_comments{% else %}{{ settings.fbm_comment_url | default: '/dat-lich-tu-van' }}{% endif %}"><i class="fa-regular fa-comment" aria-hidden="true"></i> {% if blog.comments_enabled %}{{ settings.fbm_comment_label | default: 'Bình luận' }}{% else %}{{ settings.fbm_ask_label | default: 'Hỏi chuyên gia' }}{% endif %}</a>
+								<button type="button" class="pc-fbm-act" data-fbm-share data-title="{{ article.title | escape }}"><i class="fa-solid fa-share" aria-hidden="true"></i> {{ settings.fbm_share_label | default: 'Chia sẻ' }}</button>
+							</div>
 						</header>
 						<div class="article-details pc-art-card pc-art-body clearfix">
 							{%if mucluc == true%}
@@ -665,4 +698,23 @@
 			localStorage.setItem('pc_read_articles', JSON.stringify(list.slice(0, 10)));
 		} catch (e) {}
 	})();
+</script>
+<script>
+  /* 2026-10-18: thanh Thích / Chia sẻ kiểu Facebook (chỉ hiện mobile) — Thích ghi trên máy người xem, không hiện số lượt. */
+  (function () {
+    var bar = document.querySelector('[data-fbm]'); if (!bar) return;
+    var like = bar.querySelector('[data-fbm-like]'), key = 'pc_fbm_like', url = location.pathname;
+    function read() { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch (e) { return []; } }
+    function paint(on) { like.classList.toggle('is-on', on); like.setAttribute('aria-pressed', on ? 'true' : 'false'); like.querySelector('i').className = (on ? 'fa-solid' : 'fa-regular') + ' fa-thumbs-up'; }
+    paint(read().indexOf(url) > -1);
+    like.addEventListener('click', function () {
+      var l = read(), i = l.indexOf(url), on = i < 0; if (on) l.push(url); else l.splice(i, 1);
+      try { localStorage.setItem(key, JSON.stringify(l)); } catch (e) {} paint(on);
+    });
+    var share = bar.querySelector('[data-fbm-share]');
+    share.addEventListener('click', function () {
+      if (navigator.share) { navigator.share({ title: share.getAttribute('data-title'), url: location.href }).catch(function () {}); return; }
+      if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(function () { share.classList.add('is-on'); setTimeout(function () { share.classList.remove('is-on'); }, 1500); });
+    });
+  })();
 </script>
