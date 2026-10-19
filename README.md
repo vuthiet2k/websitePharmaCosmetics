@@ -28,6 +28,7 @@ Tuỳ chọn: copy `.env.example` → `.env` để nạp `GAS_URL`, `KV_REST_API
 | [`.clinerules/`](./.clinerules) | Rule bắt buộc cho AI agent/dev: `01-quy-chuan-theme-sapo.md` (quy chuẩn nền tảng) và `02-du-an-pharma-cosmetics.md` (vận hành riêng repo: lệnh, quy ước code/commit, thực trạng deploy) |
 | [`design/`](./design) | Mockup & concept giao diện đã chốt (`home-portal-v3/`, `homepage-concepts/`, brand guideline…) |
 | [`phase/`](./phase) | Nhật ký từng giai đoạn: báo cáo kiểm thử, đối chiếu cấu hình, phạm vi thay đổi |
+| [`docs/`](./docs) | Hướng dẫn nhập liệu cho người quản trị Sapo: tạo liệu trình (`huong-dan-tao-lieu-trinh.md`), cấu hình khu Skin Health Beauty (`huong-dan-cau-hinh-skin-health-beauty.md`), tin tức mobile kiểu Instagram/Facebook (`huong-dan-tin-tuc-mobile-instagram.md`), ca Trước & Sau, đăng tin & video, danh mục kê đơn, vận hành Soi da AI |
 | [`mops-gas/docs/`](./mops-gas/docs) | Playbook backend Google Apps Script / MOPS (hiệu năng, ghi chú thiết kế) |
 | [`tests/portal/`](./tests/portal) | Kịch bản Playwright cho Home Portal |
 
