@@ -82,7 +82,7 @@ test('Đầu trang 2 cột, không còn khối cửa hàng; khối niềm tin + 
   await expect(page.locator('section.layout-product .details-product')).not.toContainText('xuatxu');
 });
 
-test('Tab chi tiết tách theo <h2>, bỏ mục rỗng; không có <h2> thì giữ 1 tab cũ', async ({ page }) => {
+test('Tab chi tiết theo tiêu đề mục <h2>, bỏ mục rỗng; không có tiêu đề mục thì giữ 1 tab cũ', async ({ page }) => {
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/serum-vitamin-c-15');
@@ -101,6 +101,25 @@ test('Tab chi tiết tách theo <h2>, bỏ mục rỗng; không có <h2> thì gi
   await page.goto('/kem-chong-nang-mineral-spf50');
   await expect(page.locator('#tab-1')).toHaveCount(1);
   await expect(page.locator('[id^="tab-c"]')).toHaveCount(0);
+});
+
+test('Mô tả thật chia mục bằng đoạn chữ đậm ⇒ 6 tab chuẩn; xuất xứ đọc từ Mô tả ngắn', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/babe-stop-akn-purifying-cleansing-gel-sua-rua-mat-sach-sau-kiem-soat-dau-ho-tro-da-mun');
+  const titles = await page.locator('.product-tab .tabs-title .tab-link h3').allTextContents();
+  expect(titles.slice(0, 5)).toEqual(['Thông tin sản phẩm', 'Thành phần', 'Công dụng', 'Phù hợp với', 'Hướng dẫn sử dụng']);
+  await expect(page.locator('.pc-pdp-trust__origin')).toContainText(/XUẤT XỨ:\s*Tây Ban Nha/);
+  // Tên SP (<h2> đầu mô tả) không lặp trong tab; đoạn đậm kết thúc bằng "." vẫn là nội dung tab 1
+  await expect(page.locator('#tab-c1 .pc-dtab-title')).toHaveText('Thông tin sản phẩm');
+  await expect(page.locator('#tab-c1 h2')).toHaveCount(0);
+  await expect(page.locator('#tab-c1')).toContainText('Công thức không gây mụn');
+  await page.locator('.tab-link[data-tab="#tab-c2"]').click();
+  await expect(page.locator('#tab-c2')).toContainText('THÀNH PHẦN CHI TIẾT');
+  await expect(page.locator('#tab-c2')).not.toContainText('THÀNH PHẦN VÀ CÔNG DỤNG');
+  await page.locator('.tab-link[data-tab="#tab-c5"]').click();
+  await expect(page.locator('#tab-c5')).toContainText('Làm ướt mặt.');
+  expect(errors).toEqual([]);
 });
 
 test('Kê toa: khối niềm tin dùng bộ cam kết riêng, không có cam kết giao hàng', async ({ page }) => {

@@ -569,6 +569,25 @@
 						    {%- break -%}
 						  {%- endif -%}
 						{%- endfor -%}
+						{%- comment -%}
+						  2026-10-19: không có tag xuatxu: ⇒ đọc dòng "XUẤT XỨ: <tên>" trong Mô tả ngắn (product.summary) — đúng cách
+						  nhân viên đang nhập trên store (vd BABE: "<p><strong>XUẤT XỨ</strong>: TÂY BAN NHA</p>"). Giá trị chữ HOA
+						  ⇒ viết hoa đầu mỗi từ ("Tây Ban Nha"). Tag xuatxu: vẫn ưu tiên (ghi đè khi mô tả ngắn sai/thiếu).
+						{%- endcomment -%}
+						{%- if pc_xuatxu == blank and product.summary != blank -%}
+						  {%- assign pc_sum = product.summary | replace: 'Xuất xứ', 'XUẤT XỨ' | replace: 'Xuất Xứ', 'XUẤT XỨ' | replace: 'xuất xứ', 'XUẤT XỨ' -%}
+						  {%- if pc_sum contains 'XUẤT XỨ' -%}
+						    {%- assign pc_sum = pc_sum | replace: '</p>', '~~' | replace: '<br />', '~~' | replace: '<br/>', '~~' | replace: '<br>', '~~' | replace: '</li>', '~~' | replace: '</div>', '~~' | strip_html | strip_newlines -%}
+						    {%- assign pc_xx = pc_sum | split: 'XUẤT XỨ' | last | split: '~~' | first | replace: '&nbsp;', ' ' | remove_first: ':' | strip -%}
+						    {%- assign pc_xx_up = pc_xx | upcase -%}
+						    {%- if pc_xx != blank and pc_xx.size <= 40 -%}
+						      {%- if pc_xx == pc_xx_up -%}
+						        {%- capture pc_xx -%}{%- assign pc_xx_words = pc_xx | downcase | split: ' ' -%}{%- for pc_w in pc_xx_words -%}{%- assign pc_w_rest = pc_w | slice: 1, 40 -%}{{ pc_w | slice: 0, 1 | upcase }}{{ pc_w_rest }}{% unless forloop.last %} {% endunless %}{%- endfor -%}{%- endcapture -%}
+						      {%- endif -%}
+						      {%- assign pc_xuatxu = pc_xx -%}
+						    {%- endif -%}
+						  {%- endif -%}
+						{%- endif -%}
 						{%- if settings.product_trust_enable != false -%}
 						{% unless product.tags contains "liệu trình" %}
 						<div class="pc-pdp-trust" data-pdp-trust>

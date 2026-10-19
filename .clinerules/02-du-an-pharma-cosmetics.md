@@ -486,14 +486,20 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
   2026-10-05). Đã bỏ cột 3 `.box_info_right` (thông tin cửa hàng); field `product_info_*`/`product_link_*` giữ
   trong schema nhưng không render.
 - **Khối niềm tin sau CTA** (PRD mục 5): 3 cam kết `product_trust_{1..3}_title/_desc` + dòng
-  `THƯƠNG HIỆU: product.vendor` (trống ⇒ tên cửa hàng) `| XUẤT XỨ:` từ **tag `xuatxu:<tên>`** (không có ⇒ ẩn
+  `THƯƠNG HIỆU: product.vendor` (trống ⇒ tên cửa hàng) `| XUẤT XỨ:` (tag `xuatxu:<tên>`, dự phòng Mô tả ngắn — xem mục **Xuất xứ** dưới; không có ⇒ ẩn
   phần xuất xứ; tag không hiện trong danh sách thẻ). Kê toa: chỉ dòng thương hiệu/xuất xứ, không cam kết giao
   hàng. Khối 4 icon `product_policy_*` cũ không còn render ở PDP.
-- **Tab chi tiết tách theo `<h2>` trong `product.content`** (PRD mục 10, `snippets/tab_product.bwt`): mỗi `<h2>`
-  = 1 tab (tên tab = chữ trong `<h2>`, in hoa bằng CSS, đúng thứ tự soạn). Chuẩn nhập liệu 6 tiêu đề: Thông tin
-  sản phẩm · Thành phần · Công dụng · Phù hợp với ai · Hướng dẫn sử dụng · Lưu ý. Mục rỗng ⇒ không có tab; đoạn
-  trước `<h2>` đầu ghép vào tab đầu; không có `<h2>` ⇒ 1 tab `product_tab1_title` như cũ. Tab Chính sách
-  (`product_tab2_*`) và Đánh giá (`product_tab3_*`) vẫn đứng sau.
+- **Tab chi tiết = 6 mục chuẩn** (`snippets/tab_product.bwt`, thay cách tách theo `<h2>` từ 2026-10-19): thứ tự cố định
+  Thông tin sản phẩm · Thành phần · Công dụng · Phù hợp với · Hướng dẫn sử dụng · Lưu ý — tên tab `product_dtab_N_title`.
+  **Chuẩn nhập liệu (Sapo Admin → Nội dung SP):** mỗi mục mở đầu bằng 1 dòng tiêu đề — thẻ Heading (H2–H4) **hoặc**
+  dòng chỉ có chữ in đậm (cách nhân viên đang nhập: `<p><strong>THÀNH PHẦN…</strong></p>`) — chữ **bắt đầu bằng từ khoá**
+  của mục (`product_dtab_N_keys`, phân cách `|`, không phân biệt hoa thường, trùng ⇒ từ khoá dài nhất thắng: "TÁC DỤNG PHỤ"
+  → Lưu ý). Dòng đậm kết thúc bằng "." hoặc > 150 ký tự là câu văn, không phải tiêu đề. Nhiều tiêu đề cùng mục ⇒ gộp vào
+  1 tab, tiêu đề sau hiện thành tiêu đề phụ (`.pc-dtab-sub`, giữ nguyên chữ). Nội dung trước tiêu đề đầu ⇒ tab 1;
+  `<h1>/<h2>` lặp tên SP ở đầu bị bỏ (trang đã có `<h1>`). Mục rỗng ⇒ không có tab; không khớp mục nào ⇒ 1 tab
+  `product_tab1_title` như cũ. Tab Chính sách (`product_tab2_*`) và Đánh giá (`product_tab3_*`) vẫn đứng sau.
+- **Xuất xứ** (dòng THƯƠNG HIỆU | XUẤT XỨ): tag `xuatxu:<tên>` ưu tiên; không có ⇒ đọc dòng `XUẤT XỨ: <tên>` trong
+  **Mô tả ngắn** (cách nhập hiện tại trên store); giá trị chữ HOA ⇒ viết hoa đầu mỗi từ. Không có cả hai ⇒ ẩn.
 - Nhãn nút Shopee: `product_shopee_label` (mặc định "ĐẶT HÀNG TẠI SHOPEE MALL"). Dòng phụ dưới "MUA NGAY"
   nằm sẵn trong `product_buynow_title` (span thứ 2).
 - **Kicker trên tên sản phẩm** (PRD mục 3): `product.type` · tối đa 2 tag `hoatchat:<handle>` (bỏ gạch nối,

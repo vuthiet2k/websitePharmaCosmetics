@@ -1,35 +1,163 @@
 {%- comment -%}
-  2026-10-05 (PDP V3 — PRD mục 10, người dùng chốt phương án 1): tab chi tiết tách từ product.content theo
-  tiêu đề <h2> — mỗi <h2> (Thông tin sản phẩm / Thành phần / Công dụng / Phù hợp với ai / Hướng dẫn sử dụng /
-  Lưu ý) thành 1 tab, tên tab = chữ trong <h2>, đúng thứ tự nhân viên soạn. Mục có tiêu đề nhưng không có nội
-  dung ⇒ không tạo tab. Đoạn trước <h2> đầu tiên ghép vào tab đầu. Không có <h2> nào ⇒ giữ nguyên 1 tab
-  settings.product_tab1_title như cũ. Phần <h6> (thông số, cột phải) và <h5> vẫn cắt bỏ như trước.
+  2026-10-19 (thay cách tách theo <h2> của 2026-10-05 — PRD mục 10): tab chi tiết dựng từ product.content theo
+  6 MỤC CHUẨN, thứ tự cố định: Thông tin sản phẩm · Thành phần · Công dụng · Phù hợp với · Hướng dẫn sử dụng · Lưu ý
+  (tên tab: product_dtab_N_title). Đo trên store thật: nhân viên KHÔNG chia mục bằng <h2> (thẻ <h2> duy nhất là tên
+  SP) mà bằng đoạn chỉ có chữ đậm "<p><strong>THÀNH PHẦN…</strong></p>" ⇒ cách cũ ra 1 tab mang tên sản phẩm.
+  Tiêu đề mục = <h1>…<h4> HOẶC đoạn <p> toàn chữ đậm (<strong>/<b>), dài ≤ 150 ký tự, mà chữ (in hoa) BẮT ĐẦU bằng
+  một từ khoá của mục (product_dtab_N_keys, phân cách "|"; trùng nhiều mục ⇒ từ khoá dài nhất thắng, vd "TÁC DỤNG PHỤ"
+  → Lưu ý chứ không phải Công dụng). Đoạn đậm không khớp từ khoá (vd "Công thức không gây mụn.") là nội dung thường.
+  Nội dung trước tiêu đề đầu ⇒ mục 1; <h1>/<h2> lặp tên SP ở đầu bị bỏ (trang đã có <h1>). Tiêu đề đầu của mỗi mục
+  được thay bằng tên tab; tiêu đề phụ sau đó (vd "THÀNH PHẦN CHÍNH:") giữ lại dạng .pc-dtab-sub
+  (giữ nguyên chữ như nhập). Đoạn kết thúc bằng "." là câu văn, không phải tiêu đề. Mục rỗng ⇒ không có tab. Không khớp mục nào ⇒ 1 tab product_tab1_title như cũ. <h5>/<h6> vẫn cắt như trước.
 {%- endcomment -%}
-{%- assign pc_tab_main = '' -%}
-{%- if product.content != blank -%}
-  {%- assign pc_tab_main = product.content | split: '<h5>' | first | split: '<h6>' | first -%}
-{%- endif -%}
-{%- assign pc_tab_parts = pc_tab_main | split: '<h2' -%}
 {%- assign pc_tab_count = 0 -%}
-{%- assign pc_tab_intro = '' -%}
 {%- capture pc_tab_links -%}{%- endcapture -%}
 {%- capture pc_tab_panels -%}{%- endcapture -%}
-{%- if pc_tab_parts.size > 1 -%}
-  {%- for pc_part in pc_tab_parts -%}
-    {%- if forloop.first -%}
-      {%- assign pc_tab_intro = pc_part -%}
+{%- assign pc_dt_t1 = settings.product_dtab_1_title | default: 'Thông tin sản phẩm' -%}
+{%- assign pc_dt_t2 = settings.product_dtab_2_title | default: 'Thành phần' -%}
+{%- assign pc_dt_t3 = settings.product_dtab_3_title | default: 'Công dụng' -%}
+{%- assign pc_dt_t4 = settings.product_dtab_4_title | default: 'Phù hợp với' -%}
+{%- assign pc_dt_t5 = settings.product_dtab_5_title | default: 'Hướng dẫn sử dụng' -%}
+{%- assign pc_dt_t6 = settings.product_dtab_6_title | default: 'Lưu ý' -%}
+{%- capture pc_dt_keys -%}
+{{ settings.product_dtab_1_keys | default: 'THÔNG TIN|MÔ TẢ|GIỚI THIỆU|TỔNG QUAN|ƯU ĐIỂM|ĐIỂM NỔI BẬT|ĐẶC ĐIỂM' }}~~
+{{ settings.product_dtab_2_keys | default: 'THÀNH PHẦN|BẢNG THÀNH PHẦN|HOẠT CHẤT' }}~~
+{{ settings.product_dtab_3_keys | default: 'CÔNG DỤNG|TÁC DỤNG|LỢI ÍCH|HIỆU QUẢ' }}~~
+{{ settings.product_dtab_4_keys | default: 'PHÙ HỢP|ĐỐI TƯỢNG|LOẠI DA|DÀNH CHO|AI NÊN DÙNG' }}~~
+{{ settings.product_dtab_5_keys | default: 'HƯỚNG DẪN|CÁCH SỬ DỤNG|CÁCH DÙNG|LIỀU DÙNG|QUY TRÌNH' }}~~
+{{ settings.product_dtab_6_keys | default: 'LƯU Ý|CẢNH BÁO|THẬN TRỌNG|CHỐNG CHỈ ĐỊNH|TRƯỜNG HỢP CẦN|TÁC DỤNG PHỤ|BẢO QUẢN|CHĂM SÓC SAU|THỜI GIAN PHỤC HỒI' }}
+{%- endcapture -%}
+{%- assign pc_dt_groups = pc_dt_keys | strip_newlines | split: '~~' -%}
+{%- assign pc_dt_name1 = product.name | strip | upcase -%}
+{%- assign pc_dt_name2 = product.name | escape | strip | upcase -%}
+{%- assign pc_dt_src = '' -%}
+{%- if product.content != blank -%}
+  {%- assign pc_dt_src = product.content | split: '<h5>' | first | split: '<h6>' | first -%}
+{%- endif -%}
+{%- assign pc_dt_src = pc_dt_src | replace: '<b>', '<strong>' | replace: '</b>', '</strong>' | replace: '<h1', '<p data-pch' | replace: '<h2', '<p data-pch' | replace: '<h3', '<p data-pch' | replace: '<h4', '<p data-pch' | replace: '</h1>', '</p>' | replace: '</h2>', '</p>' | replace: '</h3>', '</p>' | replace: '</h4>', '</p>' -%}
+{%- assign pc_dt_parts = pc_dt_src | split: '<p' -%}
+{%- assign pc_dt_cur = 1 -%}
+{%- assign pc_dt_seen = '' -%}
+{%- assign pc_dt_heads = 0 -%}
+{%- assign pc_dt_started = false -%}
+{%- capture pc_dt_acc -%}{%- endcapture -%}
+{%- for pc_part in pc_dt_parts -%}
+  {%- if forloop.first -%}
+    {%- if pc_part != blank -%}{%- capture pc_dt_acc -%}{{ pc_dt_acc }}<!--g1-->{{ pc_part }}{%- endcapture -%}{%- endif -%}
+  {%- else -%}
+  {%- assign pc_pel = pc_part | split: '</p>' | first -%}
+  {%- assign pc_prest = pc_part | remove_first: pc_pel | remove_first: '</p>' -%}
+  {%- assign pc_pattr = pc_pel | split: '>' | first -%}
+  {%- assign pc_pin = pc_pel | remove_first: pc_pattr | remove_first: '>' -%}
+  {%- assign pc_ptxt = pc_pin | strip_html | replace: '&nbsp;', ' ' | strip -%}
+  {%- assign pc_is_htag = false -%}
+  {%- if pc_pattr contains 'data-pch' -%}{%- assign pc_is_htag = true -%}{%- endif -%}
+  {%- assign pc_media = false -%}
+  {%- if pc_pin contains '<img' or pc_pin contains '<iframe' or pc_pin contains '<video' -%}{%- assign pc_media = true -%}{%- endif -%}
+  {%- comment -%} Có phải tiêu đề mục? (thẻ h hoặc đoạn toàn chữ đậm) + khớp từ khoá {%- endcomment -%}
+  {%- assign pc_grp = 0 -%}
+  {%- assign pc_bold = false -%}
+  {%- if pc_pin contains '<strong' -%}
+    {%- assign pc_before = pc_pin | prepend: '~' | split: '<strong' | first | remove: '~' | strip_html | replace: '&nbsp;', '' | strip -%}
+    {%- assign pc_after = pc_pin | append: '~' | split: '</strong>' | last | remove: '~' | strip_html | replace: '&nbsp;', '' | strip -%}
+    {%- if pc_before == blank and pc_after == blank -%}{%- assign pc_bold = true -%}{%- endif -%}
+  {%- endif -%}
+  {%- assign pc_tl_i = pc_ptxt.size | minus: 1 -%}
+  {%- assign pc_tl_c = pc_ptxt | slice: pc_tl_i, 1 -%}
+  {%- if pc_ptxt != blank and pc_ptxt.size <= 150 and pc_media == false and pc_tl_c != '.' -%}
+    {%- if pc_is_htag or pc_bold -%}
+      {%- assign pc_up = pc_ptxt | upcase -%}
+      {%- assign pc_best = 0 -%}
+      {%- assign pc_gidx = 0 -%}
+      {%- for pc_g in pc_dt_groups -%}
+        {%- assign pc_gidx = pc_gidx | plus: 1 -%}
+        {%- assign pc_gkeys = pc_g | split: '|' -%}
+        {%- for pc_k in pc_gkeys -%}
+          {%- assign pc_kk = pc_k | strip | upcase -%}
+          {%- assign pc_ks = pc_kk | size -%}
+          {%- if pc_ks > pc_best -%}
+            {%- assign pc_pref = pc_up | slice: 0, pc_ks -%}
+            {%- if pc_pref == pc_kk -%}
+              {%- assign pc_best = pc_ks -%}
+              {%- assign pc_grp = pc_gidx -%}
+            {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endfor -%}
+    {%- endif -%}
+  {%- endif -%}
+  {%- if pc_grp > 0 -%}
+    {%- assign pc_dt_heads = pc_dt_heads | plus: 1 -%}
+    {%- assign pc_dt_cur = pc_grp -%}
+    {%- assign pc_gmark = '[' | append: pc_grp | append: ']' -%}
+    {%- comment -%} giữ làm tiêu đề phụ khi mục đã có tiêu đề trước đó, hoặc mục 1 đã có đoạn giới thiệu đứng trước {%- endcomment -%}
+    {%- assign pc_keep_sub = false -%}
+    {%- if pc_dt_seen contains pc_gmark -%}{%- assign pc_keep_sub = true -%}{%- endif -%}
+    {%- if pc_grp == 1 and pc_dt_started -%}{%- assign pc_keep_sub = true -%}{%- endif -%}
+    {%- assign pc_dt_seen = pc_dt_seen | append: pc_gmark -%}
+    {%- assign pc_sub = pc_ptxt -%}
+    {%- assign pc_last_i = pc_sub.size | minus: 1 -%}
+    {%- assign pc_last_c = pc_sub | slice: pc_last_i, 1 -%}
+    {%- if pc_last_c == ':' -%}{%- assign pc_sub = pc_sub | slice: 0, pc_last_i | strip -%}{%- endif -%}
+    {%- case pc_grp -%}
+    {%- when 1 -%}{%- assign pc_gt_up = pc_dt_t1 | upcase -%}
+    {%- when 2 -%}{%- assign pc_gt_up = pc_dt_t2 | upcase -%}
+    {%- when 3 -%}{%- assign pc_gt_up = pc_dt_t3 | upcase -%}
+    {%- when 4 -%}{%- assign pc_gt_up = pc_dt_t4 | upcase -%}
+    {%- when 5 -%}{%- assign pc_gt_up = pc_dt_t5 | upcase -%}
+    {%- else -%}{%- assign pc_gt_up = pc_dt_t6 | upcase -%}
+    {%- endcase -%}
+    {%- assign pc_sub_up = pc_sub | upcase -%}
+    {%- if pc_sub_up == pc_gt_up -%}{%- assign pc_keep_sub = false -%}{%- endif -%}
+    {%- if pc_keep_sub -%}
+      {%- capture pc_dt_acc -%}{{ pc_dt_acc }}<!--g{{ pc_grp }}--><p class="pc-dtab-sub"><strong>{{ pc_sub }}</strong></p>{{ pc_prest }}{%- endcapture -%}
     {%- else -%}
-      {%- assign pc_sec_head = pc_part | split: '</h2>' | first -%}
-      {%- assign pc_sec_title = '<h2' | append: pc_sec_head | strip_html | strip -%}
-      {%- assign pc_sec_body = pc_part | remove_first: pc_sec_head | remove_first: '</h2>' -%}
-      {%- assign pc_sec_text = pc_sec_body | strip_html | strip -%}
-      {%- assign pc_sec_ok = false -%}
-      {%- if pc_sec_text != blank or pc_sec_body contains '<img' or pc_sec_body contains '<table' or pc_sec_body contains '<iframe' -%}{%- assign pc_sec_ok = true -%}{%- endif -%}
-      {%- if pc_sec_title != blank and pc_sec_ok -%}
-        {%- assign pc_tab_count = pc_tab_count | plus: 1 -%}
-        {%- capture pc_tab_links -%}{{ pc_tab_links }}<li class="tab-link{% if pc_tab_count == 1 %} active{% endif %}" data-tab="#tab-c{{ pc_tab_count }}"><h3>{{ pc_sec_title }}</h3></li>{%- endcapture -%}
-        {%- capture pc_tab_panels -%}{{ pc_tab_panels }}<!--pc-tab-sep--><div class="ba-text-fpt pc-pdp-tab-section">{% if pc_tab_count == 1 %}{{ pc_tab_intro }}{% endif %}{{ pc_sec_body }}</div>{%- endcapture -%}
+      {%- capture pc_dt_acc -%}{{ pc_dt_acc }}<!--g{{ pc_grp }}-->{{ pc_prest }}{%- endcapture -%}
+    {%- endif -%}
+    {%- assign pc_dt_started = true -%}
+  {%- else -%}
+    {%- if pc_ptxt == blank and pc_media == false -%}
+      {%- comment -%} đoạn rỗng (<p>&nbsp;</p>, <h3>&nbsp;</h3>) ⇒ bỏ, giữ phần sau thẻ {%- endcomment -%}
+      {%- capture pc_dt_acc -%}{{ pc_dt_acc }}<!--g{{ pc_dt_cur }}-->{{ pc_prest }}{%- endcapture -%}
+    {%- elsif pc_is_htag -%}
+      {%- assign pc_ptxt_up = pc_ptxt | upcase -%}
+      {%- assign pc_is_name = false -%}
+      {%- if pc_dt_started == false -%}
+        {%- if pc_ptxt_up == pc_dt_name1 or pc_ptxt_up == pc_dt_name2 -%}{%- assign pc_is_name = true -%}{%- endif -%}
       {%- endif -%}
+      {%- if pc_is_name -%}
+        {%- capture pc_dt_acc -%}{{ pc_dt_acc }}<!--g1-->{{ pc_prest }}{%- endcapture -%}
+      {%- else -%}
+        {%- capture pc_dt_acc -%}{{ pc_dt_acc }}<!--g{{ pc_dt_cur }}--><p class="pc-dtab-sub"><strong>{{ pc_pin | strip_html | strip }}</strong></p>{{ pc_prest }}{%- endcapture -%}
+      {%- endif -%}
+      {%- assign pc_dt_started = true -%}
+    {%- else -%}
+      {%- capture pc_dt_acc -%}{{ pc_dt_acc }}<!--g{{ pc_dt_cur }}--><p{{ pc_pel }}</p>{{ pc_prest }}{%- endcapture -%}
+      {%- assign pc_dt_started = true -%}
+    {%- endif -%}
+  {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- if pc_dt_heads > 0 -%}
+  {%- assign pc_dt_chunks = pc_dt_acc | split: '<!--g' -%}
+  {%- for pc_gi in (1..6) -%}
+    {%- assign pc_gtag = pc_gi | append: '-->' -%}
+    {%- capture pc_gbody -%}{%- for pc_c in pc_dt_chunks -%}{%- assign pc_c_head = pc_c | slice: 0, 4 -%}{%- if pc_c_head == pc_gtag -%}{{ pc_c | remove_first: pc_gtag }}{%- endif -%}{%- endfor -%}{%- endcapture -%}
+    {%- assign pc_gtext = pc_gbody | strip_html | replace: '&nbsp;', '' | strip -%}
+    {%- assign pc_gok = false -%}
+    {%- if pc_gtext != blank or pc_gbody contains '<img' or pc_gbody contains '<table' or pc_gbody contains '<iframe' -%}{%- assign pc_gok = true -%}{%- endif -%}
+    {%- if pc_gok -%}
+    {%- case pc_gi -%}
+    {%- when 1 -%}{%- assign pc_gtitle = pc_dt_t1 -%}
+    {%- when 2 -%}{%- assign pc_gtitle = pc_dt_t2 -%}
+    {%- when 3 -%}{%- assign pc_gtitle = pc_dt_t3 -%}
+    {%- when 4 -%}{%- assign pc_gtitle = pc_dt_t4 -%}
+    {%- when 5 -%}{%- assign pc_gtitle = pc_dt_t5 -%}
+    {%- else -%}{%- assign pc_gtitle = pc_dt_t6 -%}
+    {%- endcase -%}
+    {%- assign pc_tab_count = pc_tab_count | plus: 1 -%}
+    {%- capture pc_tab_links -%}{{ pc_tab_links }}<li class="tab-link{% if pc_tab_count == 1 %} active{% endif %}" data-tab="#tab-c{{ pc_tab_count }}"><h3>{{ pc_gtitle }}</h3></li>{%- endcapture -%}
+    {%- capture pc_tab_panels -%}{{ pc_tab_panels }}<!--pc-tab-sep--><div class="ba-text-fpt pc-pdp-tab-section"><h4 class="pc-dtab-title">{{ pc_gtitle }}</h4>{{ pc_gbody }}</div>{%- endcapture -%}
     {%- endif -%}
   {%- endfor -%}
 {%- endif -%}
