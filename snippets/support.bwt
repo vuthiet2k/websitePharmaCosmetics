@@ -36,6 +36,18 @@
 				</a>
 			</div>
 			{%endif%}
+			{%- comment -%} 2026-10-19: mục Soi da AI (miễn phí) — dẫn tới trang khám da AI, tab camera (cùng link nút soi da ở giỏ hàng). {%- endcomment -%}
+			{%- if settings.contact_skinscan_enable -%}
+			<div class="item skinscan">
+				<a href="{{ settings.contact_skinscan_url | default: '/kham-da-ai?tab=camera' | escape }}">
+					<span class="img"><i class="fa-solid fa-camera" aria-hidden="true"></i></span>
+					<div class="detail">
+						<b class="arcu-item-title">{{ settings.contact_skinscan_title | default: 'Soi da AI' }}</b>
+						<span class="arcu-item-subtitle">{{ settings.contact_skinscan_sub | default: 'Phân tích da miễn phí' }}</span>
+					</div>
+				</a>
+			</div>
+			{%- endif -%}
 			{%if settings.contact_messenger_enable%}
 			<div class="item mess">
 				<a target="_blank" href="https://m.me/{{ settings.contact_messenger | remove: 'https://www.facebook.com/' | remove: '/' | split: '?' | first }}">
@@ -240,23 +252,35 @@
 	line-height: 1;
 }
 
-/* Linh vật robot (GIF): 2026-10-19 bỏ nền tròn xanh + vòng sóng — robot đứng tự do, đổ bóng cho nổi;
-   khi mở panel trả lại nền xanh cho nút X. */
+/* Linh vật robot (GIF): 2026-10-19 bỏ nền tròn xanh + vòng sóng — robot đứng tự do, đổ bóng cho nổi.
+   Mở panel vẫn giữ robot (không đổi sang nút X — đóng bằng X trên đầu panel hoặc bấm lại robot). */
 .out-circle.has-mascot { padding: 0; overflow: visible; background: transparent; }
-.out-circle.has-mascot .pregan { display: none; }
+.out-circle.has-mascot .pregan,
+.out-circle.has-mascot .close-icon-main { display: none; }
 .out-circle.has-mascot .pc-support-mascot {
 	position: absolute; left: 50%; top: 50%;
 	display: block; width: 76px; height: 76px; max-width: none;
 	transform: translate(-50%, -50%);
 	filter: drop-shadow(0 6px 8px rgba(0, 46, 35, .35)) drop-shadow(0 2px 2px rgba(0, 0, 0, .18));
-	transition: transform 0.3s ease, opacity 0.3s ease, filter 0.3s ease;
+	transition: transform 0.3s ease, filter 0.3s ease;
 }
-.out-circle.has-mascot:hover .pc-support-mascot {
+.out-circle.has-mascot:hover .pc-support-mascot,
+.main-widget.widget-opened .out-circle.has-mascot .pc-support-mascot {
+	opacity: 1;
 	transform: translate(-50%, -54%) scale(1.06);
 	filter: drop-shadow(0 10px 12px rgba(0, 46, 35, .38)) drop-shadow(0 3px 3px rgba(0, 0, 0, .2));
 }
-.main-widget.widget-opened .out-circle.has-mascot { background: var(--pc-support-color, #3CB371); }
-.main-widget.widget-opened .out-circle.has-mascot .pc-support-mascot { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+/* robot cao hơn khung tròn 60px ⇒ đẩy panel lên để mũi tên panel không đè đầu robot */
+.main-widget:has(.out-circle.has-mascot) .def-content { bottom: 78px; }
+.main-widget .item.skinscan > a .img { background: #075B40; color: #fff; font-size: var(--fs-md); }
+
+/* Mobile/tablet (≤991px — có thanh điều hướng dưới .pc-bottom-nav z-index 9990, cao 57px + safe-area):
+   trước đây cụm liên hệ z-index 3 nằm DƯỚI nav ⇒ robot thò ra bị nav đè; nút lên đầu trang chồng đầu robot. */
+@media (max-width: 991px) {
+	.main-widget { z-index: 9991; right: 12px; bottom: calc(57px + env(safe-area-inset-bottom, 0px) + 16px) !important; }
+	.backtop { bottom: calc(57px + env(safe-area-inset-bottom, 0px) + 100px) !important; right: 22px; }
+	.out-circle.has-mascot .pc-support-mascot { width: 68px; height: 68px; }
+}
 
 /* --- TRẠNG THÁI MỞ MENU (KHI CÓ CLASS .widget-opened) --- */
 
