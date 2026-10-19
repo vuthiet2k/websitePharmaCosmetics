@@ -19,8 +19,8 @@
 		{%- assign pc_ra_keys = pc_ra_keys | append: '|danhmuc:' | append: pc_ra_ch | append: '|' -%}
 	{%- endfor -%}
 	{%- for pc_ra_t in product.tags -%}
-		{%- assign pc_ra_t9 = pc_ra_t | slice: 0, 9 | downcase -%}
-		{%- if pc_ra_t9 == 'hoatchat:' -%}{%- assign pc_ra_keys = pc_ra_keys | append: '|' | append: pc_ra_t | downcase | append: '|' -%}{%- endif -%}
+		{%- assign pc_ra_t9 = pc_ra_t | downcase | prepend: '§' -%}{%- comment -%} 2026-10-19: bỏ slice (Sapo trả dãy ký tự ⇒ so sánh luôn sai) {%- endcomment -%}
+		{%- if pc_ra_t9 contains '§hoatchat:' -%}{%- assign pc_ra_keys = pc_ra_keys | append: '|' | append: pc_ra_t | downcase | append: '|' -%}{%- endif -%}
 	{%- endfor -%}
 	{%- assign pc_ra_own = 'sanpham:' | append: product.alias -%}
 	{%- assign pc_ra_picked = '' -%}

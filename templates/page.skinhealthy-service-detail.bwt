@@ -26,6 +26,18 @@
 {%- assign price = current_variant.price | default: product.variants[0].price -%}
 {%- assign compare_at_price = current_variant.compare_at_price | default: product.variants[0].compare_at_price -%}
 {%- assign svc_services_url = pages[settings.skinhealthy_services_page].url | default: settings.skinhealthy_services_url | default: '/dich-vu-skin-healthy-beauty' -%}
+{%- comment -%}
+  2026-10-19 (rà preview theme 1172841): trên Sapo đây là TRANG NỘI DUNG (/skin-health-beauty-chi-tiet) — không có object product
+  và Liquid không đọc được ?handle= ⇒ trước hiện khung trống + nút "Tạm hết lịch", không h1. Thẻ dịch vụ nay dẫn thẳng trang
+  sản phẩm (snippets/product_grid_skinhealthy.bwt); ai mở trực tiếp trang này thì thấy lời dẫn về danh sách dịch vụ.
+{%- endcomment -%}
+{%- if product.id == blank -%}
+<div class="container py-12 sm:py-16 text-center">
+  <h1 class="text-2xl sm:text-3xl font-bold text-forest-900 mb-3">{{ page.title | default: 'Dịch vụ Skin Health Beauty' | escape }}</h1>
+  <p class="text-gray-600 mb-6">{{ settings.skinhealthy_detail_empty_text | default: 'Chọn một dịch vụ trong danh sách để xem chi tiết và đặt lịch.' | escape }}</p>
+  <a href="{{ svc_services_url }}" class="pc-kit-btn-primary min-h-[44px]">{{ settings.skinhealthy_detail_empty_cta | default: 'Xem danh sách dịch vụ' | escape }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+</div>
+{%- else -%}
 
 <div class="container py-8 sm:py-12">
 
@@ -143,3 +155,4 @@
     </div>
   </div>
 </div>
+{%- endif -%}

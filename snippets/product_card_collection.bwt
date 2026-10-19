@@ -14,12 +14,12 @@
 {%- assign pcc_multi = false -%}{%- if product.variants.size > 1 -%}{%- assign pcc_multi = true -%}{%- endif -%}
 {%- assign pcc_badge = '' -%}{%- assign pcc_voucher = '' -%}{%- assign pcc_freeship = false -%}{%- assign pcc_preorder = false -%}
 {%- for tag in product.tags -%}
-	{%- assign pcc_t5 = tag | slice: 0, 5 | downcase -%}
-	{%- assign pcc_t8 = tag | slice: 0, 8 | downcase -%}
-	{%- if pcc_t5 == 'nhan:' and pcc_badge == blank -%}{%- assign pcc_badge = tag | slice: 5, 40 | strip -%}{%- endif -%}
-	{%- if pcc_t8 == 'voucher:' -%}{%- assign pcc_voucher = tag | slice: 8, 20 | strip -%}{%- endif -%}
+	{%- comment -%} 2026-10-19: KHÔNG so sánh/lọc tiếp kết quả slice — trên Sapo (.NET) slice trả về dãy ký tự (in ra vẫn đúng, nhưng upcase/so sánh ra "System.Linq…" hoặc luôn sai). Tiền tố: '§' + chuỗi contains '§' + khoá; ký tự cuối: chuỗi + '§' contains 'x§'. {%- endcomment -%}
 	{%- assign pcc_tl = tag | downcase -%}
-	{%- if pcc_tl == 'freeship' or pcc_t8 == 'freeship' -%}{%- assign pcc_freeship = true -%}{%- endif -%}
+	{%- assign pcc_tm = pcc_tl | prepend: '§' -%}
+	{%- if pcc_tm contains '§nhan:' and pcc_badge == blank -%}{%- assign pcc_badge = tag | split: ':' | last | strip -%}{%- endif -%}
+	{%- if pcc_tm contains '§voucher:' -%}{%- assign pcc_voucher = tag | split: ':' | last | strip -%}{%- endif -%}
+	{%- if pcc_tl == 'freeship' or pcc_tm contains '§freeship' -%}{%- assign pcc_freeship = true -%}{%- endif -%}
 	{%- if pcc_tl contains 'pre-order' -%}{%- assign pcc_preorder = true -%}{%- endif -%}
 {%- endfor -%}
 {%- include 'pc_is_rx' -%}

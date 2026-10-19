@@ -11,7 +11,7 @@
 {%- capture lt_faqs -%}
 {%- for lt_a in lt_fblog.articles limit: 50 -%}
   {%- assign lt_mine = false -%}
-  {%- for lt_t in lt_a.tags -%}{%- if lt_t contains ':' -%}{%- assign lt_tr = lt_t | split: ':' | first -%}{%- assign lt_tk = lt_tr | strip | downcase -%}{%- assign lt_tv = lt_t | remove_first: lt_tr | remove_first: ':' | strip -%}{%- if lt_tk == 'sanpham' and lt_tv != blank -%}{%- assign lt_tv = lt_tv | downcase -%}{%- assign lt_pre = lt_tv | append: '-' -%}{%- assign lt_head = lt_alias | slice: 0, lt_pre.size -%}{%- if lt_tv == lt_alias or lt_head == lt_pre -%}{%- assign lt_mine = true -%}{%- endif -%}{%- endif -%}{%- endif -%}{%- endfor -%}
+  {%- for lt_t in lt_a.tags -%}{%- if lt_t contains ':' -%}{%- assign lt_tr = lt_t | split: ':' | first -%}{%- assign lt_tk = lt_tr | strip | downcase -%}{%- assign lt_tv = lt_t | remove_first: lt_tr | remove_first: ':' | strip -%}{%- if lt_tk == 'sanpham' and lt_tv != blank -%}{%- assign lt_tv = lt_tv | downcase -%}{%- assign lt_pre = lt_tv | append: '-' -%}{%- assign lt_head = lt_alias | prepend: '§' -%}{%- assign lt_pre_m = lt_pre | prepend: '§' -%}{%- if lt_tv == lt_alias or lt_head contains lt_pre_m -%}{%- assign lt_mine = true -%}{%- endif -%}{%- endif -%}{%- endif -%}{%- endfor -%}
   {%- assign lt_ans = lt_a.content | default: lt_a.summary -%}
   {%- if lt_mine and lt_ans != blank -%}
   {%- assign lt_fn = lt_fn | plus: 1 -%}

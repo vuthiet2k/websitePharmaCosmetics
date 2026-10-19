@@ -62,11 +62,12 @@
     {%- assign pc_after = pc_pin | append: '~' | split: '</strong>' | last | remove: '~' | strip_html | replace: '&nbsp;', '' | strip -%}
     {%- if pc_before == blank and pc_after == blank -%}{%- assign pc_bold = true -%}{%- endif -%}
   {%- endif -%}
-  {%- assign pc_tl_i = pc_ptxt.size | minus: 1 -%}
-  {%- assign pc_tl_c = pc_ptxt | slice: pc_tl_i, 1 -%}
-  {%- if pc_ptxt != blank and pc_ptxt.size <= 150 and pc_media == false and pc_tl_c != '.' -%}
+  {%- comment -%} 2026-10-19: KHÔNG so sánh/lọc tiếp kết quả slice — trên Sapo (.NET) slice trả về dãy ký tự (in ra vẫn đúng, nhưng upcase/so sánh ra "System.Linq…" hoặc luôn sai). Tiền tố: '§' + chuỗi contains '§' + khoá; ký tự cuối: chuỗi + '§' contains 'x§'. {%- endcomment -%}
+  {%- assign pc_ptxt_end = pc_ptxt | append: '§' -%}
+  {%- assign pc_is_sentence = false -%}{%- if pc_ptxt_end contains '.§' -%}{%- assign pc_is_sentence = true -%}{%- endif -%}
+  {%- if pc_ptxt != blank and pc_ptxt.size <= 150 and pc_media == false and pc_is_sentence == false -%}
     {%- if pc_is_htag or pc_bold -%}
-      {%- assign pc_up = pc_ptxt | upcase -%}
+      {%- assign pc_up = pc_ptxt | upcase | prepend: '§' -%}
       {%- assign pc_best = 0 -%}
       {%- assign pc_gidx = 0 -%}
       {%- for pc_g in pc_dt_groups -%}
@@ -75,9 +76,9 @@
         {%- for pc_k in pc_gkeys -%}
           {%- assign pc_kk = pc_k | strip | upcase -%}
           {%- assign pc_ks = pc_kk | size -%}
-          {%- if pc_ks > pc_best -%}
-            {%- assign pc_pref = pc_up | slice: 0, pc_ks -%}
-            {%- if pc_pref == pc_kk -%}
+          {%- assign pc_kmark = pc_kk | prepend: '§' -%}
+          {%- if pc_ks > pc_best and pc_kk != blank -%}
+            {%- if pc_up contains pc_kmark -%}
               {%- assign pc_best = pc_ks -%}
               {%- assign pc_grp = pc_gidx -%}
             {%- endif -%}
@@ -96,9 +97,7 @@
     {%- if pc_grp == 1 and pc_dt_started -%}{%- assign pc_keep_sub = true -%}{%- endif -%}
     {%- assign pc_dt_seen = pc_dt_seen | append: pc_gmark -%}
     {%- assign pc_sub = pc_ptxt -%}
-    {%- assign pc_last_i = pc_sub.size | minus: 1 -%}
-    {%- assign pc_last_c = pc_sub | slice: pc_last_i, 1 -%}
-    {%- if pc_last_c == ':' -%}{%- assign pc_sub = pc_sub | slice: 0, pc_last_i | strip -%}{%- endif -%}
+    {%- assign pc_sub = pc_sub | append: '§' | replace: ':§', '' | remove: '§' | strip -%}
     {%- case pc_grp -%}
     {%- when 1 -%}{%- assign pc_gt_up = pc_dt_t1 | upcase -%}
     {%- when 2 -%}{%- assign pc_gt_up = pc_dt_t2 | upcase -%}
@@ -142,7 +141,7 @@
   {%- assign pc_dt_chunks = pc_dt_acc | split: '<!--g' -%}
   {%- for pc_gi in (1..6) -%}
     {%- assign pc_gtag = pc_gi | append: '-->' -%}
-    {%- capture pc_gbody -%}{%- for pc_c in pc_dt_chunks -%}{%- assign pc_c_head = pc_c | slice: 0, 4 -%}{%- if pc_c_head == pc_gtag -%}{{ pc_c | remove_first: pc_gtag }}{%- endif -%}{%- endfor -%}{%- endcapture -%}
+    {%- capture pc_gbody -%}{%- for pc_c in pc_dt_chunks -%}{%- assign pc_c_m = pc_c | prepend: '§' -%}{%- assign pc_gtag_m = pc_gtag | prepend: '§' -%}{%- if pc_c_m contains pc_gtag_m -%}{{ pc_c | remove_first: pc_gtag }}{%- endif -%}{%- endfor -%}{%- endcapture -%}
     {%- assign pc_gtext = pc_gbody | strip_html | replace: '&nbsp;', '' | strip -%}
     {%- assign pc_gok = false -%}
     {%- if pc_gtext != blank or pc_gbody contains '<img' or pc_gbody contains '<table' or pc_gbody contains '<iframe' -%}{%- assign pc_gok = true -%}{%- endif -%}
@@ -302,7 +301,8 @@
 				{% assign mycontent = product.content | split:'<h5>' %}
 				{% assign mycontents = mycontent[0] | split:'<h6>' %}
 				<div class="ba-text-fpt {% if a > 4000 %}has-height{% endif %}">
-					{{ mycontents[0] }}
+					{%- comment -%} 2026-10-19: mô tả nhập kèm <h1> (D-Tox, Glow-up, Volayon, PRX…) ⇒ trang có 2–3 h1 (UI-2.5) — hạ xuống h2. {%- endcomment -%}
+					{{ mycontents[0] | replace: '<h1', '<h2' | replace: '</h1>', '</h2>' }}
 				</div>
 				{% if a > 4000 %}
 				<div class="show-more hidden-lg hidden-md hidden-sm">

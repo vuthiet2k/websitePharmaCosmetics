@@ -374,12 +374,21 @@
 </script>
 
 {%- comment -%} ═══ 04. EDITORIAL BANNER + VIRTUAL CLINIC TOUR (Swiper fade + lightbox, dùng .sh-edit-swiper/.sh-clinic-lb từ layout) ═══ {%- endcomment -%}
-{%- assign sh_edit_imgs = '' | split: '' -%}
-{%- if settings.skinhealthy_edit_img != blank -%}{%- assign sh_edit_imgs = sh_edit_imgs | push: settings.skinhealthy_edit_img -%}{%- endif -%}
-{%- if settings.skinhealthy_edit_img_2 != blank -%}{%- assign sh_edit_imgs = sh_edit_imgs | push: settings.skinhealthy_edit_img_2 -%}{%- endif -%}
-{%- if settings.skinhealthy_edit_img_3 != blank -%}{%- assign sh_edit_imgs = sh_edit_imgs | push: settings.skinhealthy_edit_img_3 -%}{%- endif -%}
-{%- if settings.skinhealthy_edit_img_4 != blank -%}{%- assign sh_edit_imgs = sh_edit_imgs | push: settings.skinhealthy_edit_img_4 -%}{%- endif -%}
-{%- if settings.skinhealthy_edit_img_5 != blank -%}{%- assign sh_edit_imgs = sh_edit_imgs | push: settings.skinhealthy_edit_img_5 -%}{%- endif -%}
+{%- comment -%}
+  2026-10-19 (rà preview theme 1172841): trước dựng mảng bằng '' | split: '' + push — liquidjs (local) ra [] nhưng Liquid Sapo ra
+  [""] ⇒ phần tử 1 rỗng: slide 1, nền + ảnh nhỏ đầu Virtual Tour hiện "NO IMAGE AVAILABLE", bộ đếm "1 / 6", tên phòng lệch 1 ô.
+  Nay ghép chuỗi chỉ gồm ảnh có giá trị rồi split — không bao giờ có phần tử rỗng.
+{%- endcomment -%}
+{%- capture sh_edit_raw -%}
+{%- if settings.skinhealthy_edit_img != blank -%}|~|{{ settings.skinhealthy_edit_img }}{%- endif -%}
+{%- if settings.skinhealthy_edit_img_2 != blank -%}|~|{{ settings.skinhealthy_edit_img_2 }}{%- endif -%}
+{%- if settings.skinhealthy_edit_img_3 != blank -%}|~|{{ settings.skinhealthy_edit_img_3 }}{%- endif -%}
+{%- if settings.skinhealthy_edit_img_4 != blank -%}|~|{{ settings.skinhealthy_edit_img_4 }}{%- endif -%}
+{%- if settings.skinhealthy_edit_img_5 != blank -%}|~|{{ settings.skinhealthy_edit_img_5 }}{%- endif -%}
+{%- endcapture -%}
+{%- assign sh_edit_raw = sh_edit_raw | strip | remove_first: '|~|' -%}
+{%- assign sh_edit_imgs = nil -%}
+{%- if sh_edit_raw != blank -%}{%- assign sh_edit_imgs = sh_edit_raw | split: '|~|' -%}{%- endif -%}
 {%- assign sh_edit_cta_url = settings.skinhealthy_edit_cta_url | default: sh_book_url -%}
 <section class="sh-editorial sh-reveal">
   {%- if sh_edit_imgs.size > 0 -%}

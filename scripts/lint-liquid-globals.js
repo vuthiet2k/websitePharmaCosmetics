@@ -190,8 +190,14 @@ const badSlice = [];
 for (const { f, src, tags: ts } of parsed) {
   const rel = path.relative(ROOT, f).replace(/\\/g, '/');
   for (const t of ts) {
-    if (/\|\s*slice\s*:\s*-?\d+\s*(?:\||$)/.test(t.text.replace(/'[^']*'|"[^"]*"/g, ' ').trim())) {
-      badSlice.push(`${rel}:${src.slice(0, t.index).split('\n').length}`);
+    const txt = t.text.replace(/'[^']*'|"[^"]*"/g, ' ').trim();
+    if (/\|\s*slice\s*:\s*-?\d+\s*(?:\||$)/.test(txt)) {
+      badSlice.push(`${rel}:${src.slice(0, t.index).split('\n').length} (slice 1 tham số)`);
+    }
+    // 2026-10-19 (đo preview 1172841): kể cả đủ 2 tham số, kết quả slice vẫn là dãy ký tự — lọc tiếp
+    // (`slice: 0, 1 | upcase`) in ra "SYSTEM.LINQ…" (dòng XUẤT XỨ trang sản phẩm). slice phải là filter CUỐI.
+    if (/\|\s*slice\s*:[^|]*\|/.test(txt)) {
+      badSlice.push(`${rel}:${src.slice(0, t.index).split('\n').length} (slice rồi lọc tiếp — đặt slice là filter cuối)`);
     }
   }
 }

@@ -482,6 +482,11 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
   "Sản phẩm liên quan" (danh mục đầu của SP) bỏ alias đã có + bỏ chính SP đang xem (vòng lặp dùng `unless`, không `continue`).
 - **Thẻ "Giải pháp cho từng vấn đề" (trang chủ)** mở danh mục `home_solutions_N_collection`; ô trống ⇒ mặc định
   6 danh mục `giai-phap-*` đã tạo trên Sapo; danh mục không tồn tại/0 SP mới về `/search?query=`.
+- **Sản phẩm liệu trình phải chọn giao diện `product.lieu-trinh`** (Sapo › Sản phẩm › Giao diện). Đối soát preview 1172841
+  ngày 19/10/2026: chỉ 1/10 liệu trình (Elaine Brennan) đã chọn; 9 trang còn lại hiện như sản phẩm bán online (giỏ hàng,
+  "Giao hàng tận nơi", sản phẩm liên quan) — việc nhập liệu theo `docs/huong-dan-tao-lieu-trinh.md` Bước 6.
+- **Thẻ dịch vụ Skin Health** (`snippets/product_grid_skinhealthy.bwt`) dẫn thẳng `product.url`. KHÔNG dẫn
+  `/skin-health-beauty-chi-tiet?handle=…`: đó là trang nội dung, Liquid không đọc được query ⇒ trang trống.
 - **Bố cục đầu trang 2 cột 6:6** (`col-lg-6` ảnh | `col-lg-6` thông tin, PRD mục 3 — người dùng chốt
   2026-10-05). Đã bỏ cột 3 `.box_info_right` (thông tin cửa hàng); field `product_info_*`/`product_link_*` giữ
   trong schema nhưng không render.
@@ -564,8 +569,7 @@ handle để localhost phản ánh đúng Sapo.
 Kiến thức", 3 bài), `y-kien-chuyen-gia` (2), `y-kien-chuyen-gia-1` (3 — trùng tên, nên gộp), **`truoc-va-sau-1`** ("Trước &
 Sau", ca khách hàng; có 1 bài "[DEMO]" cần gỡ trước khi công bố), `chuyen-gia`, `hoat-chat`, `giai-phap-skin-health`,
 `danh-gia-khach-hang`, `cau-hoi-san-pham`, `cau-hoi-dat-lich`, `cau-hoi-tai-khoan`, `tri-lieu-da`, `bi-quyet-1`, `video-1`
-(0 bài). **Chưa có trên Sapo:** `cau-hoi-lieu-trinh` (`lt_faq_blog`), `van-de-da` (`lt_concern_blog`) ⇒ 2 khối ở trang
-liệu trình ẩn cho tới khi tạo.
+(0 bài), `cau-hoi-lieu-trinh` (`lt_faq_blog`), `van-de-da` (`lt_concern_blog`) — 2 blog cuối đã tạo (đối soát 19/10/2026).
 
 **Danh mục sản phẩm hay bị ghi sai:** vấn đề da = `mun-trung-ca-acne`, `nam-va-tan-nhang-melasma-freckles`,
 `da-kho-thieu-am`, `lao-hoa-da-1`, `da-nhay-cam`, `da-mun-dau`, `da-sam-khong-deu-mau` (KHÔNG có `/tri-mun`, `/tri-nam`,

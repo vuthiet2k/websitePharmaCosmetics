@@ -29,13 +29,13 @@
 
 {%- unless show_add == false -%}{%- assign show_add = true -%}{%- endunless -%}
 
-{%- comment -%} Detail URL: dùng setting nếu có, fallback về product.url {%- endcomment -%}
-{%- assign _detail_dest = settings.skinhealthy_detail_url | default: '' -%}
-{%- if _detail_dest != blank -%}
-  {%- assign _detail_url = _detail_dest | append: '?handle=' | append: product.alias -%}
-{%- else -%}
-  {%- assign _detail_url = product.url -%}
-{%- endif -%}
+{%- comment -%}
+  2026-10-19 (rà preview theme 1172841): trước đây thẻ dẫn tới settings.skinhealthy_detail_url + "?handle=<alias>"
+  (/skin-health-beauty-chi-tiet?handle=…). Trang đó là TRANG NỘI DUNG (page.skinhealthy-service-detail) — Liquid Sapo
+  không đọc được ?handle= và không có object product ⇒ khách bấm "Xem chi tiết" gặp trang trống, nút "Tạm hết lịch".
+  Dẫn thẳng về trang sản phẩm của dịch vụ (liệu trình dùng giao diện product.lieu-trinh đầy đủ nội dung).
+{%- endcomment -%}
+{%- assign _detail_url = product.url -%}
 
 <article class="svc-card" data-mops-handle="{{ product.alias }}">
 

@@ -151,7 +151,16 @@ Mỗi lần tải lên Sapo chỉ báo 1 lỗi đầu tiên ⇒ mọi quy tắc 
 - **Chuỗi rỗng `""` vẫn là TRUE**; chỉ `false`/`null` là false ⇒ luôn dùng `{% if x != blank %}`,
   `{% unless settings.k == blank %}` thay vì `{% if x %}` khi xét nội dung.
 - **`slice` luôn ghi đủ 2 tham số** (`| slice: 0, 1`): Liquid .NET của Sapo với `| slice: 0` trả về đối tượng
-  `EnumerablePartition` ⇒ in ra `SYSTEM.LINQ.ENUMERABLE+…` (đo thật 2026-10-13). `npm run lint:liquid-globals` chặn lỗi này.
+  `EnumerablePartition` ⇒ in ra `SYSTEM.LINQ.ENUMERABLE+…` (đo thật 2026-10-13). `npm run lint:liquid-globals` chặn lỗi này
+  (cả dạng 1 tham số lẫn `slice` rồi lọc tiếp).
+  **Kể cả đủ 2 tham số, kết quả `slice` vẫn là dãy ký tự, không phải chuỗi** (đo preview 1172841, 2026-10-19): in thẳng
+  thì đúng, nhưng `slice: 0, 1 | upcase` in ra `SYSTEM.LINQ…` và **so sánh `== 'abc'` luôn sai** (liquidjs ở local trả chuỗi
+  ⇒ test local vẫn xanh). Quy tắc: `slice` chỉ là filter **cuối** của một lần in (`{{ x | upcase | slice: 0, 2 }}`); kiểm tra
+  tiền tố bằng mốc `'§'` (`{% assign t = x | prepend: '§' %}{% if t contains '§nhan:' %}`), ký tự cuối bằng
+  `x | append: '§'` rồi `contains ':§'`, bỏ tiền tố bằng `remove_first` / `split: ':' | last`.
+- **Không khởi tạo mảng bằng `'' | split: ''`**: liquidjs ra `[]` nhưng Sapo ra `[""]` (1 phần tử rỗng) ⇒ ảnh đầu
+  "NO IMAGE AVAILABLE", đếm thừa 1. Ghép chuỗi các giá trị có nội dung bằng dấu phân cách rồi `split` (mẫu:
+  ảnh Editorial trong `templates/page.indexskinhealthy.bwt`).
 - `blank`/`empty` **chỉ dùng để so sánh** (`== blank`, `!= blank`). Không gán làm giá trị (`assign x = blank`),
   không truyền vào filter hay `linklists[...]`: DotLiquid của Sapo báo lỗi "Đối tượng 'DotLiquid.Util.Symbol' không
   hợp lệ". Cần khởi tạo rỗng thì dùng `assign x = ''`.
