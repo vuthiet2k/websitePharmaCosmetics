@@ -89,10 +89,17 @@
 		</button>
 	</div>
 
-	<div class="out-circle" id="toggle-widget-btn">
+	{%- comment -%} 2026-10-19: linh vật robot Pharma Cosmetics vẫy tay (GIF 96px nền trong suốt, ~55KB, cắt từ video CapCut)
+	  thay cụm icon xoay vòng — nút liên hệ sinh động, dễ chú ý hơn. Tắt support_mascot_enable ⇒ về icon cũ;
+	  Ảnh = field image "support_mascot.gif" (Admin tải ảnh mới ⇒ ghi đè assets/support_mascot.gif mặc định). {%- endcomment -%}
+	{%- assign pc_mascot = false -%}
+	{%- if settings.support_mascot_enable -%}{%- assign pc_mascot = true -%}{%- endif -%}
+	<div class="out-circle{% if pc_mascot %} has-mascot{% endif %}" id="toggle-widget-btn">
 		<div class="pregan"></div>
 		<div class="pregan"></div>
-		
+		{%- if pc_mascot -%}
+		<img class="pc-support-mascot widget-toggle-elem" src="{{ 'support_mascot.gif' | asset_url }}" width="96" height="96" loading="lazy" decoding="async" alt="{{ settings.support_mascot_alt | default: 'Liên hệ tư vấn Pharma Cosmetics' | escape }}">
+		{%- else -%}
 		<div class="main-icon widget-toggle-elem">
 			<svg width="20" height="20" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g transform="translate(-825 -308)"><g><path transform="translate(825 308)" fill="#FFFFFF" d="M 19 4L 17 4L 17 13L 4 13L 4 15C 4 15.55 4.45 16 5 16L 16 16L 20 20L 20 5C 20 4.45 19.55 4 19 4ZM 15 10L 15 1C 15 0.45 14.55 0 14 0L 1 0C 0.45 0 0 0.45 0 1L 0 15L 4 11L 14 11C 14.55 11 15 10.55 15 10Z"></path></g></g></svg>
 		</div>
@@ -118,6 +125,7 @@
 				</span>{%endif%}
 			</div>
 		</div>
+		{%- endif -%}
 
 		<div class="close-icon-main close-widget-elem">
 			<i class="fa-solid fa-xmark" aria-hidden="true"></i>
@@ -230,6 +238,15 @@
 	color: #fff;
 	font-size: var(--fs-xl);
 	line-height: 1;
+}
+
+/* Linh vật robot (GIF) lấp đầy nút tròn */
+.out-circle.has-mascot { padding: 0; }
+.out-circle.has-mascot .pc-support-mascot {
+	position: absolute; inset: 0;
+	display: block; width: 100%; height: 100%;
+	object-fit: cover; border-radius: 50%;
+	transition: all 0.3s ease;
 }
 
 /* --- TRẠNG THÁI MỞ MENU (KHI CÓ CLASS .widget-opened) --- */
