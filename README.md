@@ -32,6 +32,32 @@ Tuỳ chọn: copy `.env.example` → `.env` để nạp `GAS_URL`, `KV_REST_API
 | [`mops-gas/docs/`](./mops-gas/docs) | Playbook backend Google Apps Script / MOPS (hiệu năng, ghi chú thiết kế) |
 | [`tests/portal/`](./tests/portal) | Kịch bản Playwright cho Home Portal |
 
+## Hướng dẫn sử dụng cho người quản trị Sapo (`docs/`)
+
+Dành cho người nhập nội dung / vận hành website trên **Sapo Admin** — không cần biết code. Tìm việc cần làm ở cột trái,
+mở tài liệu tương ứng và làm theo từng bước; cuối mỗi tài liệu có danh sách kiểm tra sau khi làm xong.
+
+| Bạn cần làm gì | Đọc tài liệu |
+| :-- | :-- |
+| Cấu hình khu **Skin Health Beauty** (trang `/skin-health-beauty`, trang dịch vụ, chọn giao diện cho từng trang) + danh sách lỗi đang chờ xử lý | [`docs/huong-dan-cau-hinh-skin-health-beauty.md`](docs/huong-dan-cau-hinh-skin-health-beauty.md) |
+| **Thêm 1 liệu trình** mới (sản phẩm dịch vụ, ảnh, tag, FAQ, chọn giao diện `product.lieu-trinh`) | [`docs/huong-dan-tao-lieu-trinh.md`](docs/huong-dan-tao-lieu-trinh.md) |
+| Thêm **ca Trước & Sau** (ảnh khách hàng) | [`docs/huong-dan-tao-ca-truoc-sau.md`](docs/huong-dan-tao-ca-truoc-sau.md) |
+| **Đăng tin tức, bài video** YouTube/Facebook; đưa tin vào "Tin nổi bật" | [`docs/Hướng dẫn đăng bài Tin tức & Video trên Sapo.md`](<docs/Hướng dẫn đăng bài Tin tức & Video trên Sapo.md>) |
+| Bật **bảng tin kiểu Instagram** trên điện thoại; chi tiết bài kiểu bài đăng Facebook | [`docs/huong-dan-tin-tuc-mobile-instagram.md`](docs/huong-dan-tin-tuc-mobile-instagram.md) |
+| Tạo / cập nhật danh mục **thuốc kê đơn** (ẩn mua online, chuyển sang tư vấn) | [`docs/Danh mục Thuốc kê đơn - Hướng dẫn tạo trên Sapo.md`](<docs/Danh mục Thuốc kê đơn - Hướng dẫn tạo trên Sapo.md>) |
+| Danh mục **6 vấn đề da** ở trang chủ ("Giải pháp cho từng vấn đề") | [`docs/Đặc tả Danh mục Vấn đề Da Trang chủ PharmaCosmetics.md`](<docs/Đặc tả Danh mục Vấn đề Da Trang chủ PharmaCosmetics.md>) |
+| Danh mục sản phẩm cho **phác đồ Soi da / Quiz AI** | [`docs/Đặc tả Danh mục Sản phẩm Sapo & Quy tắc Lọc Phác đồ Soi da PharmaCosmetics.md`](<docs/Đặc tả Danh mục Sản phẩm Sapo & Quy tắc Lọc Phác đồ Soi da PharmaCosmetics.md>) |
+| **Soi da AI** gặp sự cố: tạm tắt, khôi phục | [`docs/skin-scan-operations.md`](docs/skin-scan-operations.md) |
+| Danh sách link video YouTube cho blog Bí quyết (tham khảo) | [`docs/Danh sách Link Iframe YouTube - Trang Blogs Bí Quyết (Pharma Cosmetics).md`](<docs/Danh sách Link Iframe YouTube - Trang Blogs Bí Quyết (Pharma Cosmetics).md>) |
+
+Lưu ý chung:
+
+- **Cấu hình theme nằm trong từng theme Sapo.** Upload gói theme mới (`exports/sapo-theme-*.zip`) thì các chỉnh sửa trong
+  *Giao diện › Tuỳ chỉnh* của theme cũ không tự sang — báo dev chép vào `configs/settings_data.json` trước khi đóng gói.
+- Xem trước theme chưa xuất bản: `https://pharmacosmetics-vn.com/?previewThemeId=<mã theme>`; luôn kiểm tra trên **điện thoại thật**.
+- Không nhập số liệu, đánh giá, ảnh trước/sau không có thật; dùng "Chuyên gia", không dùng "Bác sĩ".
+- Tài liệu sai so với màn hình Sapo / trang web ⇒ báo dev cập nhật tài liệu (dev: sửa tính năng nào thì sửa luôn tài liệu đó).
+
 ## Cấu trúc thư mục
 
 | Đường dẫn | Vai trò |
