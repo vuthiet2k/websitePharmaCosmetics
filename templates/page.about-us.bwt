@@ -379,10 +379,28 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
       {%- comment -%} 2026-10-18: self-start — trước bị kéo cao bằng form bên cạnh ⇒ thẻ trống một khoảng lớn. {%- endcomment -%}
       <div class="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 space-y-3 text-sm text-gray-700 self-start">
+        {%- comment -%} 2026-10-19: thẻ liên hệ thiếu nhận diện + lối tư vấn nhanh ⇒ thêm logo (cùng nguồn logo header:
+          header_logo_image khi bật, không thì PharmaCosmetics.svg) và nút Zalo (settings.contact_zalo dùng chung toàn site;
+          trống ⇒ ẩn nút). {%- endcomment -%}
+        <div class="pc-about-contact__logo pb-4 mb-1 border-b border-gray-100">
+          {%- if settings.header_logo_use_image and settings.header_logo_image != blank -%}
+          <img class="h-10 w-auto" src="{{ settings.header_logo_image | img_url: 'large' }}" width="313" height="77" loading="lazy" alt="{{ settings.store_name | default: store.name | escape }}">
+          {%- else -%}
+          <img class="h-10 w-auto" src="{{ 'PharmaCosmetics.svg' | asset_url }}" width="341" height="70" loading="lazy" alt="{{ settings.store_name | default: store.name | escape }}">
+          {%- endif -%}
+        </div>
         {%- if settings.about_contact_address != blank -%}<p><i class="fa-solid fa-location-dot text-emerald-600 w-5" aria-hidden="true"></i> {{ settings.about_contact_address }}</p>{%- endif -%}
         {%- if settings.about_contact_phone != blank -%}<p><i class="fa-solid fa-phone text-emerald-600 w-5" aria-hidden="true"></i> <a href="tel:{{ settings.about_contact_phone | remove: ' ' }}" class="hover:text-emerald-700">{{ settings.about_contact_phone }}</a></p>{%- endif -%}
         {%- if settings.about_contact_email != blank -%}<p><i class="fa-solid fa-envelope text-emerald-600 w-5" aria-hidden="true"></i> <a href="mailto:{{ settings.about_contact_email }}" class="hover:text-emerald-700">{{ settings.about_contact_email }}</a></p>{%- endif -%}
         {%- if settings.about_contact_hours != blank -%}<p><i class="fa-solid fa-clock text-emerald-600 w-5" aria-hidden="true"></i> {{ settings.about_contact_hours }}</p>{%- endif -%}
+        {%- assign pc_ab_zalo = settings.contact_zalo | remove: ' ' | remove: '.' | strip -%}
+        {%- if pc_ab_zalo != blank -%}
+        <div class="pt-3">
+          <a href="https://zalo.me/{{ pc_ab_zalo }}" target="_blank" rel="noopener" class="pc-kit-btn-primary w-full justify-center min-h-[44px]">
+            <i class="fa-solid fa-comments" aria-hidden="true"></i> {{ settings.about_contact_zalo_label | default: 'Chat Zalo với chuyên gia tư vấn' }}
+          </a>
+        </div>
+        {%- endif -%}
       </div>
 
       {%- comment -%}
