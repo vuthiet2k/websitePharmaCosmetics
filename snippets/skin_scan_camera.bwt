@@ -16,7 +16,7 @@
     <!-- LƯỚI 2 CỘT: THÔNG TIN Y KHOA & KHUNG CAMERA VIEWFINDER -->
     <div class="pc-skin-scan__layout" id="pcSkinScanLayout">
       <!-- CỘT TRÁI: TIÊU ĐỀ & LỢI ÍCH Y KHOA -->
-      <div class="pc-skin-scan__col-info">
+      <div class="pc-skin-scan__col-info" id="pcSkinScanInfo">
         <div class="pc-skin-scan__intro">
           <p class="pc-skin-scan__eyebrow">{{ settings.ai_skin_scan_eyebrow | default: 'SOI DA THAM KHẢO TẠI THIẾT BỊ' | escape }}</p>
           <h2>{{ settings.ai_skin_scan_title | default: 'Phân tích ảnh 3 góc tại thiết bị' | escape }}</h2>
@@ -161,6 +161,21 @@
               </svg>
               <span>{{ settings.ai_skin_scan_start_label | default: 'Bắt đầu soi da' | escape }}</span>
             </button>
+            {%- comment -%}
+              2026-10-20 (mobile, 1 chạm): khách ngại dùng vì sợ bị lưu ảnh và phải thao tác nhiều ⇒ đặt cam kết
+              ngắn ngay dưới nút Bắt đầu + link xuống phần giới thiệu chi tiết. Desktop ẩn khối này.
+              Nội dung đúng với code: ảnh chỉ xử lý trong RAM trình duyệt, không lưu/gửi ảnh, không yêu cầu đăng nhập.
+            {%- endcomment -%}
+            {%- assign skin_trust_items = settings.ai_skin_scan_trust_items | default: 'Không lưu ảnh|Xử lý ngay trên máy|Không cần đăng ký' | split: '|' -%}
+            <ul class="pc-skin-standby__trust">
+              {%- for item in skin_trust_items -%}
+              {%- assign item_text = item | strip -%}
+              {%- if item_text != blank -%}
+              <li><i class="fa-solid fa-check" aria-hidden="true"></i>{{ item_text | escape }}</li>
+              {%- endif -%}
+              {%- endfor -%}
+            </ul>
+            <a class="pc-skin-standby__more" href="#pcSkinScanInfo">{{ settings.ai_skin_scan_more_label | default: 'Tìm hiểu cách hoạt động' | escape }} <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></a>
           </div>
 
           <!-- Nút chụp ảnh dạng Floating Shutter khi đang Live Stream -->

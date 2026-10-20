@@ -3360,3 +3360,93 @@ body.pc-camera-fullscreen-active {
     pointer-events: none;
   }
 }
+
+/* ==========================================================================
+   2026-10-20 — Mobile "1 chạm": vào trang thấy ngay khung camera + nút Bắt đầu soi da
+   (không phải lướt), cam kết quyền riêng tư ngay dưới nút, phần giới thiệu dời xuống
+   dưới cho ai cần đọc thêm. Bỏ khung/padding thẻ. Desktop không đổi.
+   ========================================================================== */
+.pc-skin-standby__trust,
+.pc-skin-standby__more {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .pc-skin-scan {
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  /* Sắp lại thứ tự: camera → tải ảnh → xem lại 3 ảnh → giới thiệu chi tiết */
+  .pc-skin-scan__session-view {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .pc-skin-scan__session-view[hidden] {
+    display: none;
+  }
+
+  .pc-skin-scan__layout {
+    display: contents;
+  }
+
+  .pc-skin-scan__col-stage { order: 1; }
+  .pc-skin-scan__bottom-bar { order: 2; margin-top: 0; padding-top: 0; border-top: 0; }
+  .pc-skin-review-stage { order: 3; margin-top: 0; }
+  .pc-skin-scan__col-info { order: 4; padding-top: 8px; scroll-margin-top: 80px; }
+
+  /* Nút "Phân tích" khi chưa đủ ảnh chỉ gây rối — ẩn đến khi bấm được */
+  .pc-skin-scan__bottom-bar .pc-btn-analyze:disabled {
+    display: none;
+  }
+
+  /* Màn chờ: thay câu phụ bằng cam kết ngắn + link xem chi tiết */
+  .pc-skin-scan:not(.is-camera-fullscreen) .pc-skin-scan__stage {
+    min-height: 380px !important;
+  }
+
+  .pc-skin-standby__subtitle,
+  .pc-skin-standby__ring-icon {
+    display: none !important;
+  }
+
+  .pc-skin-standby__trust {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 14px;
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+  }
+
+  .pc-skin-standby__trust li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .pc-skin-standby__trust i {
+    color: #6ee7a8;
+  }
+
+  .pc-skin-standby__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    margin-top: 6px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: var(--fs-xs);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
