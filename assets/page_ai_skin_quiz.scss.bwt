@@ -3100,3 +3100,285 @@ body.pc-camera-fullscreen-active {
   .pc-result-page .pc-result-overview__profile,
   .pc-result-page .pc-result-overview__customer { padding-left: 0; padding-right: 0; }
 }
+
+/* ==========================================================================
+   2026-10-20 — Màn camera soi da CHỈ trên mobile (≤767px) theo mockup người dùng
+   gửi: thanh trên (quay lại · logo · đèn), khung 4 góc, ô gợi ý có icon, thanh dưới
+   (Chọn ảnh · nút chụp tròn · Đổi camera). Desktop giữ nguyên giao diện cũ.
+   ========================================================================== */
+.pc-mcam-top,
+.pc-mcam-frame,
+.pc-mcam-bar,
+.pc-mcam-hint > i {
+  display: none;
+}
+
+.pc-mcam-hint {
+  display: contents;
+}
+
+@media (max-width: 767px) {
+  /* Ẩn phần desktop: cột giới thiệu, màn chờ, nút chụp/lật nổi, thanh nút + 3 ô tải ảnh, elip canvas */
+  .pc-skin-scan .pc-skin-scan__col-info,
+  .pc-skin-scan .pc-skin-scan__bottom-bar,
+  .pc-skin-scan .pc-skin-standby,
+  .pc-skin-scan .pc-skin-stream-controls,
+  .pc-skin-scan .pc-skin-scan__flip-btn,
+  .pc-skin-scan #skinGuidanceCanvas {
+    display: none !important;
+  }
+
+  .pc-skin-scan.has-review .pc-skin-scan__layout {
+    display: none;
+  }
+
+  .pc-skin-scan .pc-skin-scan__stage {
+    aspect-ratio: 3 / 5 !important;
+    min-height: 0 !important;
+    border-radius: 24px !important;
+    background: radial-gradient(circle at 50% 40%, #3a4a42 0%, #16211b 100%) !important;
+  }
+
+  .pc-skin-scan .pc-skin-scan__stage video {
+    height: calc(100% - 112px) !important;
+  }
+
+  .pc-skin-scan.is-camera-fullscreen .pc-skin-scan__stage {
+    border-radius: 0 !important;
+  }
+
+  /* Thanh trên */
+  .pc-mcam-top {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    right: 16px;
+    z-index: 8;
+    display: grid;
+    grid-template-columns: 48px 1fr 48px;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+  }
+
+  .pc-mcam-logo {
+    grid-column: 2;
+    justify-self: center;
+    display: inline-flex;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.86);
+  }
+
+  .pc-mcam-logo img {
+    display: block;
+    width: auto;
+    height: 28px;
+    max-width: 100%;
+  }
+
+  .pc-mcam-round,
+  .pc-skin-scan .pc-camera-modal-close {
+    width: 48px;
+    height: 48px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.86);
+    color: #1f2a24;
+    font-size: var(--fs-lg);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+
+  .pc-mcam-round {
+    grid-column: 3;
+  }
+
+  .pc-mcam-round[hidden],
+  .pc-skin-scan .pc-camera-modal-close[hidden] {
+    display: none;
+  }
+
+  .pc-mcam-round[aria-pressed="true"] {
+    background: var(--mainColorDark);
+    color: white;
+  }
+
+  /* Nút đóng camera sẵn có = nút quay lại góc trái */
+  .pc-skin-scan .pc-camera-modal-close {
+    top: 16px;
+    left: 16px;
+    right: auto;
+    transform: none;
+  }
+
+  .pc-skin-scan .pc-camera-modal-close:hover {
+    background: rgba(255, 255, 255, 0.86);
+    border-color: transparent;
+    transform: none;
+  }
+
+  /* Khung căn mặt 4 góc */
+  .pc-mcam-frame {
+    display: block;
+    position: absolute;
+    top: 21%;
+    bottom: calc(112px + 22%);
+    left: 15%;
+    right: 15%;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .pc-mcam-frame span {
+    position: absolute;
+    width: 22%;
+    height: 18%;
+    border: 0 solid white;
+    transition: border-color 0.2s ease;
+  }
+
+  .pc-mcam-frame span:nth-child(1) { top: 0; left: 0; border-top-width: 4px; border-left-width: 4px; border-top-left-radius: 22px; }
+  .pc-mcam-frame span:nth-child(2) { top: 0; right: 0; border-top-width: 4px; border-right-width: 4px; border-top-right-radius: 22px; }
+  .pc-mcam-frame span:nth-child(3) { bottom: 0; left: 0; border-bottom-width: 4px; border-left-width: 4px; border-bottom-left-radius: 22px; }
+  .pc-mcam-frame span:nth-child(4) { bottom: 0; right: 0; border-bottom-width: 4px; border-right-width: 4px; border-bottom-right-radius: 22px; }
+
+  .pc-skin-scan.is-face-adjust .pc-mcam-frame span { border-color: #f5b544; }
+  .pc-skin-scan.is-face-ready .pc-mcam-frame span { border-color: #6ee7a8; }
+
+  /* Tiến độ 3 góc: dời lên dưới thanh trên */
+  .pc-skin-scan.is-streaming .pc-skin-scan__steps {
+    top: 76px !important;
+    bottom: auto !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%);
+  }
+
+  /* Ô gợi ý có icon, phía trên thanh dưới */
+  .pc-mcam-hint {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: calc(112px + 16px);
+    z-index: 7;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 20px;
+    border-radius: 28px;
+    background: rgba(38, 90, 60, 0.82);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    color: white;
+  }
+
+  .pc-mcam-hint > i {
+    display: inline-block;
+    flex: 0 0 auto;
+    font-size: var(--fs-2xl);
+  }
+
+  .pc-mcam-hint .pc-skin-scan__status {
+    position: static;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    font-size: var(--fs-sm);
+    line-height: 1.45;
+  }
+
+  .pc-mcam-hint .pc-skin-scan__status:empty {
+    display: none;
+  }
+
+  /* Thanh dưới */
+  .pc-mcam-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 8;
+    min-height: 112px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 14px 12px;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    background: white;
+    box-sizing: border-box;
+  }
+
+  .pc-mcam-tool {
+    justify-self: center;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 88px;
+    min-height: 44px;
+    padding: 4px 8px;
+    border: 0;
+    background: none;
+    color: #23302a;
+    cursor: pointer;
+  }
+
+  .pc-mcam-tool i {
+    font-size: var(--fs-xl);
+  }
+
+  .pc-mcam-tool span {
+    font-size: var(--fs-sm);
+    font-weight: 500;
+  }
+
+  .pc-mcam-tool:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .pc-mcam-shutter {
+    width: 80px;
+    height: 80px;
+    padding: 5px;
+    border: 5px solid var(--mainColorDark);
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+  }
+
+  .pc-mcam-shutter span {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--mainColorDark);
+  }
+
+  .pc-mcam-shutter:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* "Đèn" cho camera trước: viền sáng màn hình như đèn vòng */
+  .pc-skin-scan.is-ring-light .pc-skin-scan__stage::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 112px;
+    z-index: 2;
+    border: 22px solid white;
+    box-shadow: inset 0 0 60px 20px rgba(255, 255, 255, 0.75);
+    pointer-events: none;
+  }
+}

@@ -87,6 +87,38 @@
           <video id="skinCameraStream" playsinline muted aria-label="{{ settings.ai_skin_scan_video_label | default: 'Luồng camera soi da' | escape }}"></video>
           <canvas id="skinGuidanceCanvas" aria-hidden="true"></canvas>
 
+          {%- comment -%}
+            2026-10-20: lớp điều khiển CHỈ cho mobile (≤767px) theo mockup người dùng gửi — thanh trên (logo · đèn),
+            khung 4 góc, ô gợi ý, thanh dưới (Chọn ảnh · nút chụp tròn · Đổi camera). Desktop ẩn lớp này, giữ giao
+            diện cũ. Nút quay lại trên mobile = nút đóng camera sẵn có (.pc-camera-modal-close) đặt lại vị trí.
+          {%- endcomment -%}
+          <div class="pc-mcam-top">
+            <span class="pc-mcam-logo">
+              {%- if settings.header_logo_use_image and settings.header_logo_image != blank -%}
+              <img src="{{ settings.header_logo_image | img_url: 'large' }}" width="200" height="49" alt="{{ settings.store_name | default: store.name | escape }}" loading="lazy">
+              {%- else -%}
+              <img src="{{ 'PharmaCosmetics.svg' | asset_url }}" width="200" height="41" alt="{{ settings.store_name | default: store.name | escape }}" loading="lazy">
+              {%- endif -%}
+            </span>
+            <button type="button" class="pc-mcam-round" data-skin-camera-light hidden aria-pressed="false" aria-label="{{ settings.ai_skin_scan_light_label | default: 'Bật/tắt đèn' | escape }}">
+              <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="pc-mcam-frame" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          <div class="pc-mcam-bar">
+            <button type="button" class="pc-mcam-tool" data-skin-mobile-pick title="{{ settings.ai_skin_scan_upload_label | default: 'Tải 3 ảnh từ thiết bị' | escape }}">
+              <i class="fa-regular fa-image" aria-hidden="true"></i>
+              <span>{{ settings.ai_skin_scan_pick_label | default: 'Chọn ảnh' | escape }}</span>
+            </button>
+            <button type="button" class="pc-mcam-shutter" data-skin-mobile-shutter aria-label="{{ settings.ai_skin_scan_start_label | default: 'Bắt đầu soi da' | escape }}" data-label-start="{{ settings.ai_skin_scan_start_label | default: 'Bắt đầu soi da' | escape }}" data-label-capture="{{ settings.ai_skin_scan_capture_label | default: 'Chụp góc này' | escape }}">
+              <span aria-hidden="true"></span>
+            </button>
+            <button type="button" class="pc-mcam-tool" data-skin-mobile-switch>
+              <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+              <span>{{ settings.ai_skin_scan_switch_label | default: 'Đổi camera' | escape }}</span>
+            </button>
+          </div>
+
           <!-- Nút lật camera (Floating Switch) -->
           <button type="button" class="pc-skin-scan__flip-btn" data-skin-camera-switch hidden aria-label="{{ settings.ai_skin_scan_switch_label | default: 'Đổi camera' | escape }}" title="Đổi camera">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -105,7 +137,11 @@
 
           <!-- Trạng thái phản hồi / Cảnh báo -->
           <p class="pc-skin-scan__status" data-skin-mode-unavailable hidden role="status"></p>
-          <p class="pc-skin-scan__status" id="skinCameraStatus" aria-live="polite"></p>
+          {%- comment -%} 2026-10-20: bọc để mobile hiển thị thành ô gợi ý có icon; desktop wrapper = display:contents. {%- endcomment -%}
+          <div class="pc-mcam-hint">
+            <i class="fa-regular fa-face-smile" aria-hidden="true"></i>
+            <p class="pc-skin-scan__status" id="skinCameraStatus" aria-live="polite">{{ settings.ai_skin_scan_hint | default: 'Đưa khuôn mặt vào khung và giữ thẳng, đủ sáng' | escape }}</p>
+          </div>
 
           <!-- GIAO DIỆN CHỜ TRƯỚC KHI BẬT CAMERA (STANDBY STATE) -->
           <div class="pc-skin-standby" id="skinStandbyOverlay">

@@ -53,6 +53,12 @@
   var reviewStage = scan.querySelector('[data-skin-review-stage]');
   var analyzeTrigger = scan.querySelector('[data-skin-analyze-trigger]');
   var retakeAllBtn = scan.querySelector('[data-skin-retake-all]');
+  // 2026-10-20: điều khiển màn camera mobile (theo mockup) — chỉ hiện ở ≤767px, dùng chung luồng chụp với desktop.
+  var mShutter = scan.querySelector('[data-skin-mobile-shutter]');
+  var mPick = scan.querySelector('[data-skin-mobile-pick]');
+  var mSwitch = scan.querySelector('[data-skin-mobile-switch]');
+  var lightBtn = scan.querySelector('[data-skin-camera-light]');
+  var lightOn = false;
 
   var detectionsByAngle = {};
   var modeUnavailable = scan.querySelector('[data-skin-mode-unavailable]');
@@ -120,6 +126,30 @@
     c.ellipse(width / 2, height / 2, width * .24, height * .36, 0, 0, Math.PI * 2);
     c.stroke();
     c.setLineDash([]);
+    // Mobile dùng khung 4 góc thay elip: tư thế chưa đạt ⇒ góc khung đổi màu cảnh báo.
+    scan.classList.toggle('is-face-adjust', Boolean(meshQuality && meshQuality.available && !meshQuality.valid));
+    scan.classList.toggle('is-face-ready', Boolean(meshQuality && meshQuality.valid));
+  }
+
+  // Nút chụp mobile: chưa bật camera = "Bắt đầu soi da"; đang chạy = bám trạng thái nút chụp desktop.
+  function syncMobileShutter() {
+    if (!mShutter) return;
+    mShutter.disabled = stream ? capture.disabled : !modeAvailable;
+    mShutter.setAttribute('aria-label', stream ? (mShutter.dataset.labelCapture || 'Chụp') : (mShutter.dataset.labelStart || 'Bắt đầu soi da'));
+  }
+
+  // Đèn: torch nếu camera hỗ trợ (thường là camera sau); không thì viền sáng màn hình cho camera trước.
+  function setLight(on) {
+    lightOn = on;
+    if (lightBtn) lightBtn.setAttribute('aria-pressed', String(on));
+    var track = stream && stream.getVideoTracks()[0];
+    var caps = track && track.getCapabilities ? track.getCapabilities() : {};
+    if (caps && caps.torch) {
+      track.applyConstraints({ advanced: [{ torch: on }] }).catch(function () {});
+      scan.classList.remove('is-ring-light');
+    } else {
+      scan.classList.toggle('is-ring-light', on);
+    }
   }
 
   function update() {
@@ -148,6 +178,9 @@
     scan.classList.remove('is-camera-fullscreen');
     if (stageEl) stageEl.classList.remove('is-streaming');
     if (exitBtn) exitBtn.hidden = true;
+    if (lightBtn) lightBtn.hidden = true;
+    setLight(false);
+    scan.classList.remove('is-face-adjust', 'is-face-ready');
     document.body.classList.remove('pc-camera-fullscreen-active');
     if (meshSession) meshSession.stop();
     meshSession = null;
@@ -158,6 +191,7 @@
     stream = null;
     video.srcObject = null;
     capture.disabled = true;
+    syncMobileShutter();
   }
 
   function releaseImageBuffers() {
@@ -170,6 +204,7 @@
     inlineReport.hidden = true;
     if (sessionView) sessionView.hidden = false;
     if (reviewStage) reviewStage.hidden = true;
+    scan.classList.remove('has-review');
     if (scanningOverlay) scanningOverlay.hidden = true;
     step = 0;
     isAnalyzing = false;
@@ -243,6 +278,7 @@
     }
     try {
       stop();
+      scan.classList.remove('has-review');
       stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 1920, min: 720 }, height: { ideal: 1080, min: 480 }, facingMode: facing },
         audio: false
@@ -254,6 +290,7 @@
       if (stageEl) stageEl.classList.add('is-streaming');
       if (exitBtn) exitBtn.hidden = false;
       document.body.classList.add('pc-camera-fullscreen-active');
+      if (lightBtn) lightBtn.hidden = false;
       drawGuide();
       capture.disabled = false;
       switcher.hidden = false;
@@ -325,6 +362,7 @@
       }
     });
     reviewStage.hidden = false;
+    scan.classList.add('has-review'); // mobile: ẩn khung camera khi xem lại 3 ảnh
     reviewStage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     if (analyze) analyze.disabled = false;
   }
@@ -362,6 +400,25 @@
   uploadToggle.addEventListener('click', function () {
     upload.hidden = !upload.hidden;
   });
+
+  if (mShutter) {
+    // Nút chụp desktop đổi disabled ở nhiều chỗ ⇒ theo dõi thuộc tính để nút mobile luôn khớp.
+    new MutationObserver(syncMobileShutter).observe(capture, { attributes: true, attributeFilter: ['disabled'] });
+    mShutter.addEventListener('click', function () {
+      if (stream) triggerCapture(); else begin();
+    });
+  }
+  // "Chọn ảnh" (mobile): mở ô tải ảnh của góc còn thiếu đầu tiên; đủ 3 góc thì đổi lại ảnh chính diện.
+  if (mPick) mPick.addEventListener('click', function () {
+    var angle = angles.find(function (item) { return !images[item]; }) || angles[0];
+    var input = upload.querySelector('[data-skin-upload-angle="' + angle + '"]');
+    if (input) input.click();
+  });
+  if (mSwitch) mSwitch.addEventListener('click', function () {
+    facing = facing === 'user' ? 'environment' : 'user';
+    begin();
+  });
+  if (lightBtn) lightBtn.addEventListener('click', function () { setLight(!lightOn); });
 
   upload.querySelectorAll('input[type="file"]').forEach(function (input) {
     input.addEventListener('change', function () {
@@ -816,6 +873,8 @@
     uploadToggle.disabled = true;
     scan.querySelectorAll('[data-skin-upload-angle]').forEach(function (input) { input.disabled = true; });
     analyze.disabled = true;
+    if (mPick) mPick.disabled = true;
+    if (mSwitch) mSwitch.disabled = true;
   }
 
   // 2026-10-10: mở đúng tab theo ?tab=camera|quiz (trang kết quả và nút "Soi da lại" trỏ /ai-skin-quiz?tab=camera —
@@ -828,4 +887,5 @@
   }
   selectMode(initialMode());
   update();
+  syncMobileShutter();
 })(window, document);
