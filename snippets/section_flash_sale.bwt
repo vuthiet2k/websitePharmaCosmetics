@@ -83,6 +83,8 @@
 						</div>
 					</div>
 					{% endfor %}
+					{%- comment -%} 2026-10-20: pc_card_ctx báo cho thẻ SP biết đang ở Flash Sale (hiện "Tiết kiệm …", nút đồng nhất). {%- endcomment -%}
+					{%- assign pc_card_ctx = 'flash' -%}
 					{% for product in collections[settings.home_flashsale_collection].products limit: settings.home_flashsale_limit %}
 					{%capture product_block %}
 					<div class="swiper-slide">
@@ -94,6 +96,7 @@
 					{%assign product_html = product_html | append : product_block%}
 					{%assign checkcol = true%}
 					{% endfor %}
+					{%- assign pc_card_ctx = '' -%}
 					<script type="text/x-custom-template" data-template="section_flash_sale">
 							{{product_html}}
 					</script>
@@ -139,13 +142,14 @@
 						prevEl: '.swiper_sale .swiper-button-prev',
 					},
 					breakpoints: {
+						// 2026-10-20: mobile lộ mép thẻ kế tiếp (2.3 / 2.5) để khách biết còn vuốt được; mũi tên ẩn bằng CSS.
 						280: {
-							slidesPerView: {% if template == 'index' %}2{% else %}1.5{% endif %},
-							spaceBetween: 14
+							slidesPerView: {% if template == 'index' %}2.3{% else %}1.5{% endif %},
+							spaceBetween: 12
 						},
 						480: {
-							slidesPerView: 2,
-							spaceBetween: 14
+							slidesPerView: 2.5,
+							spaceBetween: 12
 						},
 						768: {
 							slidesPerView: 3,
@@ -161,6 +165,8 @@
 						}
 					}
 				});
+				// 2026-10-20: Swiper tính bề rộng thẻ trước khi áp breakpoint (đo được 2 thẻ/màn thay vì 2.3) ⇒ cập nhật lại 1 lần.
+				setTimeout(function () { if (swiper_sale) swiper_sale.update(); }, 0);
 			}
 			function destroySwiperSale() {
 				if (swiper_sale) {

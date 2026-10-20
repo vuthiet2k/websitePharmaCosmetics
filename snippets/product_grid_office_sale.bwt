@@ -188,6 +188,10 @@
 			{%- if awe-compare-price > awe-price -%}
 			<span class="compare-price">{{ awe-compare-price | money }}</span>
 			{%- endif -%}		
+			{%- comment -%} 2026-10-20: Flash Sale — số tiền tiết kiệm (giá gốc − giá bán, dữ liệu thật) là động lực mua chính. {%- endcomment -%}
+			{%- if pc_card_ctx == 'flash' and awe-compare-price > awe-price -%}
+			<span class="pc-card-save">{{ settings.home_flashsale_save_label | default: 'Tiết kiệm' | escape }} {{ awe-compare-price | minus: awe-price | money }}</span>
+			{%- endif -%}
 
 			{%- else -%}
 			<span class="price">{{- awe-price | money -}}</span>
@@ -234,7 +238,13 @@
 		  lại trùng chữ với nút Mua ngay thật (add_to_cart) bên dưới. Đổi nhãn về "Xem chi tiết"
 		  cho khớp hành vi và đồng bộ với product_grid_office.bwt/_lieu_trinh.bwt.
 		{%- endcomment -%}
+		{%- comment -%} 2026-10-20: trong Flash Sale nhãn "Chọn mua" (vẫn sang trang chi tiết để chọn phân loại) + cùng kiểu nút đặc với "Thêm vào giỏ". {%- endcomment -%}
+		{%- if pc_card_ctx == 'flash' -%}
+		{%- assign pc_var_cta = settings.home_flashsale_variant_cta | default: 'Chọn mua' -%}
+		<button class="pc-btn--action pc-btn--choose" title="{{ pc_var_cta | escape }}" type="button" onclick="window.location.href='{{product.url}}'">{{ pc_var_cta | escape }}</button>
+		{%- else -%}
 		<button class="pc-btn--action" title="Xem chi tiết" type="button" onclick="window.location.href='{{product.url}}'">Xem chi tiết</button>
+		{%- endif -%}
 		{%- endif -%}
 		{%- elsif contact -%}
 		<input class="hidden" type="hidden" name="variantId" value="{{ product.variants[0].id }}" />
