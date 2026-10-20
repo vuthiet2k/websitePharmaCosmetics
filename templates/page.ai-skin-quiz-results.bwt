@@ -143,7 +143,7 @@
            phải = hồ sơ da (h1 + tóm tắt). Trước đây là 2 thẻ to riêng, nhiều khoảng trống ít thông tin.
            Chưa có kết quả ⇒ cả thẻ ẩn (data-result-section), h1 đổi thành h2 (showEmptyState). -->
       <div class="pc-result-overview" data-result-section>
-        <div class="pc-result-overview__customer" data-customer-card>
+        <div class="pc-result-overview__customer" id="pcResHoSo" data-customer-card>
           <div class="pc-result-overview__head">
             <div class="pc-result-overview__avatar" aria-hidden="true"><i class="fa-solid fa-user-check" aria-hidden="true"></i></div>
             <div class="pc-result-overview__who">
@@ -186,7 +186,7 @@
         </div>
 
         <!-- Hồ Sơ Da Tổng Quan (h1 duy nhất của trang khi có kết quả) -->
-        <div class="pc-result-overview__profile" data-result-profile>
+        <div class="pc-result-overview__profile" id="pcResKetQua" data-result-profile>
           <div class="pc-result-overview__badges">
             <span class="pc-kit-badge-clinical text-xs font-semibold" data-result-demo-flag hidden>Bản xem trước minh hoạ</span>
             <span class="pc-result-overview__verified" data-result-verified-badge>
@@ -200,11 +200,33 @@
         </div>
       </div>
 
+      {%- comment -%}
+        2026-10-20 (mobile ≤767px): trang dài, khách không biết đọc mục nào ⇒ sắp lại thứ tự bằng CSS order
+        (Kết quả → lưu ý/cảnh báo → Lộ trình → Sản phẩm → Hành động → Chi tiết (gập) → Bài viết → Hồ sơ khách),
+        thêm mục lục dính dưới header và nút gập "phân tích chi tiết". Desktop ẩn 2 phần tử này, bố cục không đổi.
+        Nhãn mục lục theo thứ tự cố định của 5 anchor bên dưới.
+      {%- endcomment -%}
+      {%- assign res_nav_labels = settings.skin_result_nav_items | default: 'Kết quả|Lộ trình|Sản phẩm|Chi tiết|Hồ sơ' | split: '|' -%}
+      {%- assign res_nav_targets = 'pcResKetQua,pcResLoTrinh,pcResSanPham,pcResChiTiet,pcResHoSo' | split: ',' -%}
+      <nav class="pc-result-nav" aria-label="Mục lục kết quả" data-result-nav data-result-section>
+        {%- for target in res_nav_targets -%}
+        {%- assign nav_label = res_nav_labels[forloop.index0] | strip -%}
+        {%- if nav_label != blank -%}
+        <a href="#{{ target }}" data-result-nav-link="{{ target }}">{{ nav_label | escape }}</a>
+        {%- endif -%}
+        {%- endfor -%}
+      </nav>
+      <button type="button" class="pc-result-details-toggle" id="pcResChiTiet" aria-expanded="false" data-result-details-toggle data-label-open="{{ settings.skin_result_details_label | default: 'Xem phân tích chi tiết' | escape }}" data-label-close="{{ settings.skin_result_details_hide_label | default: 'Thu gọn phân tích chi tiết' | escape }}" data-result-section>
+        <i class="fa-solid fa-chart-simple" aria-hidden="true"></i>
+        <span>{{ settings.skin_result_details_label | default: 'Xem phân tích chi tiết' | escape }}</span>
+        <i class="fa-solid fa-chevron-down pc-result-details-toggle__chev" aria-hidden="true"></i>
+      </button>
+
       <!-- 4. Hoạt Chất Đề Xuất & Định Hướng Phác Đồ — 2026-10-10: bố cục theo design/ket-qua-da/dinh-huong-phac-do.png:
            5 thẻ chỉ số → 3 giai đoạn (mỗi giai đoạn 1 dải sản phẩm thật từ danh mục tự động) + cột phải (radar, gợi ý
            chuyên gia, lưu ý) → 3 thẻ "Giai đoạn điều trị khuyến nghị". Chữ lấy từ settings.skin_plan_*. -->
       <div class="pc-plan bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-sm border border-gray-200/90" data-result-section>
-        <div class="pc-plan__head">
+        <div class="pc-plan__head" id="pcResLoTrinh">
           <div>
             <span class="pc-plan__eyebrow">HOẠT CHẤT ĐƯỢC ĐỀ XUẤT</span>
             <h3 class="pc-plan__title">Định Hướng Phác Đồ Tham Khảo</h3>
@@ -304,7 +326,7 @@
       </div>
 
       <!-- 5. BỔ SUNG SECTION 1: Sản Phẩm Sapo Phù Hợp Nền Da -->
-      <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200/90 space-y-6" data-result-products-section data-result-section>
+      <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-200/90 space-y-6" id="pcResSanPham" data-result-products-section data-result-section>
         <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-2">
           <div>
             <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider block">DƯỢC MỸ PHẨM CHÍNH HÃNG</span>
@@ -1442,5 +1464,24 @@
       });
     });
   }
+
+  // 2026-10-20 (mobile): nút gập "phân tích chi tiết" + mục lục — bấm "Chi tiết" thì mở luôn phần gập;
+  // mục nào đang ẩn (vd. khối sản phẩm khi đã có dải sản phẩm theo giai đoạn) thì ẩn link tương ứng.
+  var pageEl = root.closest('.pc-result-page');
+  var detailsToggle = root.querySelector('[data-result-details-toggle]');
+  function setDetailsOpen(open) {
+    if (!pageEl || !detailsToggle) return;
+    pageEl.classList.toggle('is-details-open', open);
+    detailsToggle.setAttribute('aria-expanded', String(open));
+    detailsToggle.querySelector('span').textContent = open ? detailsToggle.dataset.labelClose : detailsToggle.dataset.labelOpen;
+  }
+  if (detailsToggle) detailsToggle.addEventListener('click', function () {
+    setDetailsOpen(!pageEl.classList.contains('is-details-open'));
+  });
+  root.querySelectorAll('[data-result-nav-link]').forEach(function (link) {
+    var target = document.getElementById(link.dataset.resultNavLink);
+    if (!target || target.hidden || target.closest('[hidden]')) { link.hidden = true; return; }
+    if (target === detailsToggle) link.addEventListener('click', function () { setDetailsOpen(true); });
+  });
 })();
 </script>

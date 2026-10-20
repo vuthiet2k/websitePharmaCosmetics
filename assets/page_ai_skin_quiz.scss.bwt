@@ -3539,3 +3539,161 @@ body.pc-camera-fullscreen-active {
     text-underline-offset: 3px;
   }
 }
+
+/* ==========================================================================
+   2026-10-20 — Trang kết quả da, mobile (≤767px): sắp lại thứ tự đọc cho màn nhỏ.
+   Kết quả → mục lục (dính dưới header) → lưu ý/cảnh báo → Lộ trình (routine / 3 giai đoạn)
+   → Sản phẩm → Hành động → [Xem phân tích chi tiết] (gập: hoạt chất, chỉ số, radar,
+   gợi ý chuyên gia, lưu ý dùng) → Bài viết → Hồ sơ khách hàng/CRM.
+   Dùng display:contents + order trên khung sẵn có — không đổi DOM, desktop giữ nguyên.
+   ========================================================================== */
+.pc-result-nav,
+.pc-result-details-toggle {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .pc-result-page > .container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .pc-result-page #pcQuizResultsRoot,
+  .pc-result-page .pc-result-overview:not([hidden]),
+  .pc-result-page .pc-plan:not([hidden]),
+  .pc-result-page .pc-plan__layout {
+    display: contents;
+  }
+
+  /* Khoảng cách do gap lo — bỏ margin space-y / margin riêng của các khối được sắp lại */
+  .pc-result-page > .container > *,
+  .pc-result-page #pcQuizResultsRoot > *,
+  .pc-result-page .pc-result-overview > *,
+  .pc-result-page .pc-plan > *,
+  .pc-result-page .pc-plan__layout > * {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  .pc-result-page .pc-result-overview__profile { order: 1; }
+  .pc-result-page .pc-result-nav { order: 2; }
+  .pc-result-page [data-result-disclaimer],
+  .pc-result-page [data-quiz-alert] { order: 3; }
+  .pc-result-page .pc-plan__head { order: 4; }
+  .pc-result-page [data-quiz-routine],
+  .pc-result-page [data-plan-stages],
+  .pc-result-page .pc-plan__stage-cards { order: 5; }
+  .pc-result-page [data-result-products-section] { order: 6; }
+  .pc-result-page .pc-result-actions { order: 7; }
+  .pc-result-page .pc-result-details-toggle { order: 8; }
+  .pc-result-page .pc-plan__actives,
+  .pc-result-page [data-scan-scores],
+  .pc-result-page [data-scan-age],
+  .pc-result-page .pc-plan__aside { order: 9; }
+  .pc-result-page [data-result-blogs-section] { order: 10; }
+  .pc-result-page [data-profile-prompt],
+  .pc-result-page .pc-result-overview__customer { order: 11; }
+
+  /* Khối hồ sơ khách xuống cuối: bỏ đường kẻ dưới (vốn ngăn với hồ sơ da), thêm kẻ trên */
+  .pc-result-page .pc-result-overview__customer {
+    padding-top: 16px;
+    border-bottom: 0;
+    border-top: 1px solid var(--color-border-clinical, #E2E8F0);
+  }
+
+  .pc-result-page .pc-result-overview__profile {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  /* Mục lục dính ngay dưới header (header mobile sticky, mép dưới 57px) */
+  .pc-result-nav {
+    position: sticky;
+    top: 57px;
+    z-index: 20;
+    display: flex;
+    gap: 8px;
+    margin: 0 -10px;
+    padding: 8px 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    background: rgba(248, 250, 252, 0.96);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--color-border-clinical, #E2E8F0);
+  }
+
+  .pc-result-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pc-result-nav a {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--color-border-clinical, #E2E8F0);
+    border-radius: 9999px;
+    background: var(--white);
+    color: var(--pc-brand-deep);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .pc-result-nav a[hidden] {
+    display: none;
+  }
+
+  #pcResKetQua,
+  #pcResLoTrinh,
+  #pcResSanPham,
+  #pcResChiTiet,
+  #pcResHoSo {
+    scroll-margin-top: 112px;
+  }
+
+  /* Nút gập phân tích chi tiết */
+  .pc-result-details-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 52px;
+    padding: 0 16px;
+    border: 1px solid var(--color-border-clinical, #E2E8F0);
+    border-radius: 12px;
+    background: var(--white);
+    color: var(--pc-brand-deep);
+    font-size: var(--fs-base);
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .pc-result-details-toggle[hidden] {
+    display: none;
+  }
+
+  .pc-result-details-toggle span {
+    flex: 1;
+  }
+
+  .pc-result-details-toggle__chev {
+    transition: transform 0.2s ease;
+  }
+
+  .pc-result-page.is-details-open .pc-result-details-toggle__chev {
+    transform: rotate(180deg);
+  }
+
+  .pc-result-page:not(.is-details-open) .pc-plan__actives,
+  .pc-result-page:not(.is-details-open) [data-scan-scores],
+  .pc-result-page:not(.is-details-open) [data-scan-age],
+  .pc-result-page:not(.is-details-open) .pc-plan__aside {
+    display: none !important;
+  }
+}
