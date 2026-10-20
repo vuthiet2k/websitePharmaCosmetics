@@ -204,7 +204,6 @@
     inlineReport.hidden = true;
     if (sessionView) sessionView.hidden = false;
     if (reviewStage) reviewStage.hidden = true;
-    scan.classList.remove('has-review');
     if (scanningOverlay) scanningOverlay.hidden = true;
     step = 0;
     isAnalyzing = false;
@@ -278,7 +277,6 @@
     }
     try {
       stop();
-      scan.classList.remove('has-review');
       stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 1920, min: 720 }, height: { ideal: 1080, min: 480 }, facingMode: facing },
         audio: false
@@ -291,6 +289,8 @@
       if (exitBtn) exitBtn.hidden = false;
       document.body.classList.add('pc-camera-fullscreen-active');
       if (lightBtn) lightBtn.hidden = false;
+      // 2026-10-20: câu gợi ý của màn đang soi (mobile hiển thị trong ô có icon).
+      if (status.dataset.startHint) message(status.dataset.startHint);
       drawGuide();
       capture.disabled = false;
       switcher.hidden = false;
@@ -362,7 +362,6 @@
       }
     });
     reviewStage.hidden = false;
-    scan.classList.add('has-review'); // mobile: ẩn khung camera khi xem lại 3 ảnh
     reviewStage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     if (analyze) analyze.disabled = false;
   }

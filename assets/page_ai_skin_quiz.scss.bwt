@@ -3102,9 +3102,11 @@ body.pc-camera-fullscreen-active {
 }
 
 /* ==========================================================================
-   2026-10-20 — Màn camera soi da CHỈ trên mobile (≤767px) theo mockup người dùng
-   gửi: thanh trên (quay lại · logo · đèn), khung 4 góc, ô gợi ý có icon, thanh dưới
-   (Chọn ảnh · nút chụp tròn · Đổi camera). Desktop giữ nguyên giao diện cũ.
+   2026-10-20 — Màn camera soi da theo mockup người dùng gửi, CHỈ trên mobile (≤767px)
+   và CHỈ khi đã bấm "Bắt đầu soi da" (camera chạy toàn màn hình, .is-camera-fullscreen).
+   Chưa bấm / thoát camera ⇒ giao diện cũ (giới thiệu, màn chờ, nút tải ảnh). Desktop không đổi.
+   Màn đang soi: thanh trên (quay lại · logo · đèn), khung 4 góc, ô gợi ý có icon,
+   thanh dưới (Chọn ảnh · nút chụp tròn · Đổi camera).
    ========================================================================== */
 .pc-mcam-top,
 .pc-mcam-frame,
@@ -3118,37 +3120,20 @@ body.pc-camera-fullscreen-active {
 }
 
 @media (max-width: 767px) {
-  /* Ẩn phần desktop: cột giới thiệu, màn chờ, nút chụp/lật nổi, thanh nút + 3 ô tải ảnh, elip canvas */
-  .pc-skin-scan .pc-skin-scan__col-info,
-  .pc-skin-scan .pc-skin-scan__bottom-bar,
-  .pc-skin-scan .pc-skin-standby,
-  .pc-skin-scan .pc-skin-stream-controls,
-  .pc-skin-scan .pc-skin-scan__flip-btn,
-  .pc-skin-scan #skinGuidanceCanvas {
+  /* Ẩn điều khiển cũ trong khung đang soi: màn chờ (CSS mobile cũ ép nút Bắt đầu luôn hiện), nút chụp/lật nổi, elip canvas */
+  .pc-skin-scan.is-camera-fullscreen .pc-skin-standby,
+  .pc-skin-scan.is-camera-fullscreen .pc-skin-stream-controls,
+  .pc-skin-scan.is-camera-fullscreen .pc-skin-scan__flip-btn,
+  .pc-skin-scan.is-camera-fullscreen #skinGuidanceCanvas {
     display: none !important;
   }
 
-  .pc-skin-scan.has-review .pc-skin-scan__layout {
-    display: none;
-  }
-
-  .pc-skin-scan .pc-skin-scan__stage {
-    aspect-ratio: 3 / 5 !important;
-    min-height: 0 !important;
-    border-radius: 24px !important;
-    background: radial-gradient(circle at 50% 40%, #3a4a42 0%, #16211b 100%) !important;
-  }
-
-  .pc-skin-scan .pc-skin-scan__stage video {
+  .pc-skin-scan.is-camera-fullscreen .pc-skin-scan__stage video {
     height: calc(100% - 112px) !important;
   }
 
-  .pc-skin-scan.is-camera-fullscreen .pc-skin-scan__stage {
-    border-radius: 0 !important;
-  }
-
   /* Thanh trên */
-  .pc-mcam-top {
+  .pc-skin-scan.is-camera-fullscreen .pc-mcam-top {
     position: absolute;
     top: 16px;
     left: 16px;
@@ -3178,7 +3163,7 @@ body.pc-camera-fullscreen-active {
   }
 
   .pc-mcam-round,
-  .pc-skin-scan .pc-camera-modal-close {
+  .pc-skin-scan.is-camera-fullscreen .pc-camera-modal-close {
     width: 48px;
     height: 48px;
     border: 0;
@@ -3198,7 +3183,7 @@ body.pc-camera-fullscreen-active {
   }
 
   .pc-mcam-round[hidden],
-  .pc-skin-scan .pc-camera-modal-close[hidden] {
+  .pc-skin-scan.is-camera-fullscreen .pc-camera-modal-close[hidden] {
     display: none;
   }
 
@@ -3208,21 +3193,18 @@ body.pc-camera-fullscreen-active {
   }
 
   /* Nút đóng camera sẵn có = nút quay lại góc trái */
-  .pc-skin-scan .pc-camera-modal-close {
+  .pc-skin-scan.is-camera-fullscreen .pc-camera-modal-close,
+  .pc-skin-scan.is-camera-fullscreen .pc-camera-modal-close:hover {
     top: 16px;
     left: 16px;
     right: auto;
-    transform: none;
-  }
-
-  .pc-skin-scan .pc-camera-modal-close:hover {
     background: rgba(255, 255, 255, 0.86);
     border-color: transparent;
     transform: none;
   }
 
   /* Khung căn mặt 4 góc */
-  .pc-mcam-frame {
+  .pc-skin-scan.is-camera-fullscreen .pc-mcam-frame {
     display: block;
     position: absolute;
     top: 21%;
@@ -3250,7 +3232,7 @@ body.pc-camera-fullscreen-active {
   .pc-skin-scan.is-face-ready .pc-mcam-frame span { border-color: #6ee7a8; }
 
   /* Tiến độ 3 góc: dời lên dưới thanh trên */
-  .pc-skin-scan.is-streaming .pc-skin-scan__steps {
+  .pc-skin-scan.is-camera-fullscreen .pc-skin-scan__steps {
     top: 76px !important;
     bottom: auto !important;
     left: 50% !important;
@@ -3259,7 +3241,7 @@ body.pc-camera-fullscreen-active {
   }
 
   /* Ô gợi ý có icon, phía trên thanh dưới */
-  .pc-mcam-hint {
+  .pc-skin-scan.is-camera-fullscreen .pc-mcam-hint {
     position: absolute;
     left: 16px;
     right: 16px;
@@ -3276,13 +3258,13 @@ body.pc-camera-fullscreen-active {
     color: white;
   }
 
-  .pc-mcam-hint > i {
+  .pc-skin-scan.is-camera-fullscreen .pc-mcam-hint > i {
     display: inline-block;
     flex: 0 0 auto;
     font-size: var(--fs-2xl);
   }
 
-  .pc-mcam-hint .pc-skin-scan__status {
+  .pc-skin-scan.is-camera-fullscreen .pc-mcam-hint .pc-skin-scan__status {
     position: static;
     padding: 0;
     border: 0;
@@ -3295,12 +3277,8 @@ body.pc-camera-fullscreen-active {
     line-height: 1.45;
   }
 
-  .pc-mcam-hint .pc-skin-scan__status:empty {
-    display: none;
-  }
-
   /* Thanh dưới */
-  .pc-mcam-bar {
+  .pc-skin-scan.is-camera-fullscreen .pc-mcam-bar {
     position: absolute;
     left: 0;
     right: 0;
@@ -3369,7 +3347,7 @@ body.pc-camera-fullscreen-active {
   }
 
   /* "Đèn" cho camera trước: viền sáng màn hình như đèn vòng */
-  .pc-skin-scan.is-ring-light .pc-skin-scan__stage::before {
+  .pc-skin-scan.is-camera-fullscreen.is-ring-light .pc-skin-scan__stage::before {
     content: '';
     position: absolute;
     top: 0;
