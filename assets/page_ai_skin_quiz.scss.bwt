@@ -44,30 +44,38 @@
    Style: Widescreen Clinical Card, 2-Column Responsive Grid, Floating Controls
    ========================================================================== */
 
+/* 2026-10-20 (người dùng): thanh chọn chế độ dạng NAV TAB (gạch chân) thay cho 2 nút viên thuốc; không padding
+   riêng — dùng gutter của .container chung (nav có sẵn class container). Mọi màn hình dùng chung định nghĩa này. */
 .pc-skin-mode-tabs {
-  /* Bỏ max-width/padding riêng — dùng chung .container chuẩn (global_core.scss.bwt) */
-  margin: 32px auto 16px;
   display: flex;
-  gap: 12px;
+  gap: 0;
+  margin-top: 20px;
+  margin-bottom: 16px;
   font-family: var(--chat-font-sans);
+  /* Đường kẻ nền chạy hết bề rộng nội dung (trong gutter của .container, không lấn ra lề) */
+  background: linear-gradient(#dfe9e3, #dfe9e3) no-repeat bottom / 100% 2px;
+  background-origin: content-box;
+  background-clip: content-box;
 }
 
 .pc-skin-mode-tabs button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  min-height: 46px;
-  padding: 8px 22px;
-  border-radius: 9999px;
-  border: 1.5px solid #d1fae5;
-  background: #ffffff;
-  color: #164834;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: #52655b;
   font: inherit;
-  font-weight: 700;
+  font-weight: 600;
   font-size: var(--fs-body);
+  white-space: nowrap;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: color 0.2s ease, border-color 0.2s ease;
 }
 
 .pc-skin-mode-tabs button .pc-mode-tab-icon {
@@ -78,21 +86,27 @@
 }
 
 .pc-skin-mode-tabs button:hover {
-  background: #f4fbf7;
-  border-color: #3cb371;
-  transform: translateY(-1px);
+  color: #205a3b;
 }
 
 .pc-skin-mode-tabs button[aria-selected="true"] {
-  background: #205a3b;
-  border-color: #205a3b;
-  color: #ffffff;
-  box-shadow: 0 4px 14px rgba(32, 90, 59, 0.28);
+  border-bottom: 3px solid #205a3b;
+  color: #205a3b;
+  font-weight: 700;
 }
 
-.pc-skin-mode-tabs button[aria-selected="true"]:hover {
-  background: #17472e;
-  border-color: #17472e;
+@media (max-width: 767px) {
+  .pc-skin-mode-tabs {
+    margin-top: 12px;
+    margin-bottom: 12px;
+  }
+
+  .pc-skin-mode-tabs button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0 8px;
+    font-size: var(--fs-sm);
+  }
 }
 
 /* MAIN CARD CONTAINER */
@@ -912,9 +926,6 @@
     margin: 0 auto 32px;
   }
 
-  .pc-skin-mode-tabs {
-    margin: 20px auto 12px;
-  }
 
   .pc-dropzone-grid {
     grid-template-columns: 1fr;
@@ -1048,26 +1059,6 @@
     grid-template-columns: 1fr;
   }
 
-  .pc-skin-mode-tabs {
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 8px !important;
-    margin: 14px auto 10px !important;
-    padding: 0 2px !important;
-    width: 100% !important;
-  }
-
-  .pc-skin-mode-tabs button {
-    flex: 1 1 0 !important;
-    min-width: 0 !important;
-    width: 50% !important;
-    padding: 8px 6px !important;
-    font-size: var(--fs-sm) !important;
-    white-space: nowrap !important;
-    justify-content: center !important;
-    gap: 6px !important;
-    min-height: 42px !important;
-  }
 }
 
 /* CRM Intake 2026-09-23: modal scope riêng, không khoá cuộn toàn trang. */
@@ -2051,26 +2042,6 @@ body.pc-camera-fullscreen-active {
 
 /* Mobile UI Refinement (<=767px): Header and 2 Mode Buttons side-by-side */
 @media (max-width: 767px) {
-  .pc-skin-mode-tabs {
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 8px !important;
-    margin: 16px auto 12px !important;
-    padding: 0 4px !important;
-    width: 100% !important;
-  }
-
-  .pc-skin-mode-tabs button {
-    flex: 1 1 0 !important;
-    min-width: 0 !important;
-    width: 50% !important;
-    padding: 8px 8px !important;
-    font-size: var(--fs-sm) !important;
-    white-space: nowrap !important;
-    justify-content: center !important;
-    gap: 6px !important;
-    min-height: 44px !important;
-  }
 
   .chat-app-header {
     padding: 10px 14px;
