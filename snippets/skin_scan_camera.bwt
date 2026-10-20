@@ -144,7 +144,12 @@
           </div>
 
           <!-- GIAO DIỆN CHỜ TRƯỚC KHI BẬT CAMERA (STANDBY STATE) -->
-          <div class="pc-skin-standby" id="skinStandbyOverlay">
+          {%- capture pc_skin_photo -%}{% include 'skin_scan_photo_url' %}{%- endcapture -%}
+          <div class="pc-skin-standby{% if pc_skin_photo != blank %} pc-skin-standby--photo{% endif %}" id="skinStandbyOverlay">
+            {%- comment -%} 2026-10-20: nền màn chờ = ảnh soi da (chung với trang chủ) phủ lớp sáng, thay nền đen. {%- endcomment -%}
+            {%- if pc_skin_photo != blank -%}
+            <img class="pc-skin-standby__photo" src="{{ pc_skin_photo | strip }}" alt="" aria-hidden="true" width="1200" height="800">
+            {%- endif -%}
             <div class="pc-skin-standby__ring-icon">
               <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
