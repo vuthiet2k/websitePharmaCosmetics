@@ -35,6 +35,7 @@
     {%- assign hero_text = settings.home_hero_title -%}
     {%- assign hero_btn = settings.home_hero_btn1_text -%}
     {%- assign hero_url = settings.home_hero_btn1_url -%}
+    {%- assign hero_anim = settings.home_hero_animate -%}
   {%- else -%}
     {%- capture k_img -%}home_hero_image_{{ i }}{%- endcapture -%}
     {%- capture k_text -%}home_hero_title_{{ i }}{%- endcapture -%}
@@ -44,10 +45,14 @@
     {%- assign hero_text = settings[k_text] -%}
     {%- assign hero_btn = settings[k_btn] -%}
     {%- assign hero_url = settings[k_url] -%}
+    {%- capture k_anim -%}home_hero_animate_{{ i }}{%- endcapture -%}
+    {%- assign hero_anim = settings[k_anim] -%}
   {%- endif -%}
   {%- if hero_image != blank -%}
   {%- assign hero_slide_count = hero_slide_count | plus: 1 -%}
-  <div class="swiper-slide portal-hero__slide">
+  {%- comment -%} 2026-10-21 (người dùng): ô "Hiệu ứng zoom ảnh" từng slide — bỏ tick ⇒ ảnh đứng yên (ảnh có chữ/thông tin).
+    So sánh với false: theme cài trước khi có trường (giá trị rỗng) vẫn giữ zoom như cũ. {%- endcomment -%}
+  <div class="swiper-slide portal-hero__slide{% if hero_anim == false or hero_anim == 'false' %} portal-hero__slide--static{% endif %}">
     <img class="portal-hero__image" src="{{ hero_image | img_url: '2048x2048' }}" data-hero-source="{{ hero_image | img_url: '2048x2048' }}"
       alt="{{ hero_text | default: settings.store_name | default: store.name | strip_newlines | escape }}" width="1920" height="1080"
       {%- if hero_slide_count == 1 %} loading="eager" fetchpriority="high"{% else %} loading="lazy" fetchpriority="low"{% endif %}>
