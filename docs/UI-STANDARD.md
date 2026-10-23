@@ -942,9 +942,10 @@ Mục ✅ KHÔNG được sửa lại trừ khi ui-verify báo hồi quy (khi đ
 |-----|-----|------|------------|--------|------|------------------------------|
 | D01 | 0 | Nguồn CSS + build: `ui-src/css/tokens.css`, `components.css`, `main.css` theo M.1/M.3/M.4; | ✅ Đã sửa | 3e09f7c | 23/10/2026 | build:sapo exit 0; pc-ui.css gzip 6 406 B; 47/47 class biên dịch; nút 44px #075B40, bo 12px mobile / 0 desktop, focus 2px (7 khung Chromium + WebKit) |
 | D02 | 0 | Đổi tên 3 class cũ trùng thư viện: `pc-btn`→`pc-btn-v3`, `pc-section`→`pc-section-v3`, `pc | ✅ Đã sửa | 2223508 | 23/10/2026 | grep tên cũ 0; 70 lượt (10 trang × 7 khung Chromium + WebKit): 0 phần tử còn class cũ, 119 phần tử × 20 thuộc tính computed 0 lệch, chiều cao trang trước = sau 70/70; ui-verify --quick 0 lỗi mới |
-| D03 | 0 | Nạp `pc-ui.css` trong `layouts/theme.bwt` (+ `layouts/chat.bwt`) SAU CSS cũ | ⬜ Chưa sửa | — | — | — |
+| D03 | 0 | Nạp `pc-ui.css` trong `layouts/theme.bwt` (+ `layouts/chat.bwt`) SAU CSS cũ | ✅ Đã sửa | (commit D03) | 24/10/2026 | 42 lượt (6 trang Q × 7 khung Chromium + WebKit): pc-ui.css HTTP 200 42/42, 1 link trong head, 0 CSS cũ trong head nạp sau, cssRules 503; chiều cao trang trước = sau 42/42; ui-verify --quick 0 lỗi mới (hồi quy gạch chân link → N02) |
 | D04 | 0 | 12 snippet `ui_*` (button, product_card, field, badge, swiper_nav, action_bar, modal, toas | ⬜ Chưa sửa | — | — | — |
 | N01 | 0 | Thư viện: preflight tắt ⇒ viền pc-* thiếu `border-style: solid`, pc-input thiếu `box-sizing: border-box` | ⬜ Chưa sửa | — | — | D01: btn outset, card none, input inset, input cao 48px |
+| N02 | 0 | Hồi quy của D03: `p a, li a` trong tokens.css gạch chân + đổi màu menu header, breadcrumb, link trong li/p; ảnh "Xem nhiều" 320/768 đổi cỡ | ⬜ Chưa sửa | — | — | D03: 937 lượt underline mới, 235 lượt đổi màu; most-view-product-img 0→195px (320) / 222px (768) |
 | D05 | 0 | `assets/pc-ui.js` (JS thuần, `defer`): `data-pc-modal`, `data-pc-toast`, `data-pc-swiper`, | ⬜ Chưa sửa | — | — | — |
 | D06 | 0 | Thay Tailwind CDN: `tailwind.legacy.config.js` (chép cấu hình CDN trong `layouts/theme.bwt | ⬜ Chưa sửa | — | — | — |
 | D07 | 0 | `snippets/ui_icon.bwt` (SVG Lucide MIT, đủ icon đang dùng ở header/footer/thẻ/form) + `scr | ⬜ Chưa sửa | — | — | — |
@@ -1002,6 +1003,7 @@ Mỗi lỗi mới (từ ui-verify --full, hồi quy, hoặc phát hiện khi ki�
 | Mã | Phát hiện ở vòng / ngày | Mô tả (số đo) | Trang | Nguồn (việc gây ra / quét full) | Trạng thái |
 |-----|-----|-----|-----|-----|-----|
 | N01 | Vòng 1 / 23/10/2026 | Preflight tắt (B.4) ⇒ `border`/`border-2` trong components.css chỉ đặt độ dày + màu: computed border-style `.pc-btn` outset, `.pc-card` none (thẻ mất viền), `.pc-input` inset; `.pc-input` cao 48px thay 44px (content-box). Đo ở 7 khung Chromium + WebKit | trang mẫu ui-loop/checks/D01.mjs; kiểm lại ở /?tpl=page.ui-kit | Phát hiện khi kiểm D01 | ⬜ |
+| N02 | Vòng 3 / 24/10/2026 | Sau khi nạp pc-ui.css (D03): quy tắc nền `p a, li a { text-decoration: underline; color: brand }` (tokens.css) ⇒ 937 lượt phần tử đổi `none → underline`, 235 lượt đổi màu rgb(35,31,32) → rgb(7,91,64) trên 42 lượt (6 trang Q × 7 khung) — menu header desktop `a.nav-link`, breadcrumb; `div.most-view-product-img` trang chủ 0×0 → 195×195 (320) / 222×222 (768). Chiều cao trang không đổi | Q (/, /collections/all, /products/serum-vitamin-c-15, /?tpl=cart, /dat-lich-tu-van, /?tpl=login) | Hồi quy của D03 | ⬜ |
 
 ## **PHẦN F — Kế hoạch sửa và cổng kiểm**
 
