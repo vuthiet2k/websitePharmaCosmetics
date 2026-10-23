@@ -1,0 +1,106 @@
+/* ui-src/css/components.css — THƯ VIỆN PC v1.0 — KHOÁ. Chỉ sửa qua quy trình C.6
+   Changelog: v1.0 (24/10/2026) khởi tạo 13 component (bản Sapo) */
+@layer components {
+  /* 1. Khung trang */
+  .pc-container { @apply mx-auto w-full max-w-content px-4 lg:px-8; }
+  .pc-section   { @apply py-10 lg:py-16; }
+  .pc-skip-link { @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-skip
+                         focus:bg-white focus:px-4 focus:py-3 focus:text-sm focus:font-semibold focus:text-ink; }
+  .pc-has-bottomnav { @apply pb-16 lg:pb-0; }
+
+  /* 2. Nút */
+  .pc-btn { @apply inline-flex min-h-11 items-center justify-center gap-2 px-5 text-sm font-semibold
+                   rounded-xl shadow-none transition-colors duration-150 lg:rounded-none
+                   disabled:pointer-events-none disabled:opacity-40; }
+  .pc-btn--primary   { @apply bg-brand text-white hover:bg-brand-hover active:bg-brand-darkest; }
+  .pc-btn--secondary { @apply border-2 border-brand bg-transparent text-brand hover:bg-brand-tint; }
+  .pc-btn--link      { @apply px-0 text-brand underline underline-offset-4 hover:no-underline; }
+  .pc-btn--lg    { @apply min-h-12 px-6 text-base; }
+  .pc-btn--block { @apply w-full; }
+  .pc-btn[aria-busy="true"] { @apply pointer-events-none opacity-70; }
+
+  /* 3. Thẻ sản phẩm */
+  .pc-card { @apply flex h-full flex-col gap-3 border border-line bg-surface-card p-3 rounded-xl shadow-none lg:rounded-none lg:p-4; }
+  .pc-card__media  { @apply relative aspect-square w-full overflow-hidden bg-slate-100 rounded-xl lg:rounded-none; }
+  .pc-card__media img { @apply h-full w-full object-cover; }
+  .pc-card__badge  { @apply absolute left-2 top-2; }
+  .pc-card__title  { @apply line-clamp-2 text-sm font-medium text-ink lg:text-base; }
+  .pc-card__price  { @apply text-base font-bold text-price; }
+  .pc-card__price-old { @apply ml-2 text-sm font-normal text-ink-secondary line-through; }
+  .pc-card__actions { @apply mt-auto; }
+
+  /* 4. Ô nhập */
+  .pc-field { @apply flex flex-col gap-1.5; }
+  .pc-label { @apply text-sm font-medium text-ink; }
+  .pc-input { @apply h-11 w-full border border-line-control bg-white px-3 text-base text-ink rounded-xl shadow-none
+                     placeholder:text-ink-secondary focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand
+                     aria-[invalid=true]:border-sale lg:rounded-none; }
+  textarea.pc-input { @apply h-auto min-h-[96px] py-2; }
+  .pc-hint  { @apply text-sm text-ink-secondary; }
+  .pc-error { @apply flex items-start gap-1.5 text-sm font-medium text-sale; }
+  .pc-check { @apply inline-flex min-h-11 items-center gap-3 text-sm text-ink; }
+  .pc-check input { @apply h-6 w-6 accent-brand; }
+
+  /* 5. Nhãn */
+  .pc-badge { @apply inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full lg:rounded-none lg:px-2 lg:py-0.5; }
+  .pc-badge--brand   { @apply bg-brand-tint text-brand; }
+  .pc-badge--sale    { @apply bg-sale text-white; }
+  .pc-badge--warning { @apply bg-warning-tint text-warning; }
+  .pc-badge--neutral { @apply bg-slate-100 text-slate-700; }
+
+  /* 6. Điều hướng slider */
+  .pc-swiper { @apply relative; }
+  .pc-swiper-btn { @apply absolute top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center
+                          border border-line-control bg-white text-slate-800 rounded-full shadow-none hover:text-brand lg:rounded-none; }
+  .pc-swiper-btn--prev { @apply left-3; }
+  .pc-swiper-btn--next { @apply right-3; }
+  .pc-swiper-btn.swiper-button-disabled { @apply pointer-events-none opacity-25; }
+  .pc-swiper-btn svg { @apply h-5 w-5; }
+  .pc-dots { @apply mt-4 flex items-center justify-center gap-2; }
+  .pc-dots .swiper-pagination-bullet { @apply m-0 h-2 w-2 rounded-full bg-slate-500 opacity-100 transition-all duration-200; }
+  .pc-dots .swiper-pagination-bullet-active { @apply w-6 bg-brand; }
+
+  /* 7. Header */
+  .pc-topbar { @apply bg-surface-footer py-2 text-center text-xs text-white; }
+  .pc-header { @apply sticky top-0 z-header border-b border-line bg-surface-card shadow-none; }
+  .pc-header__inner { @apply mx-auto flex h-14 w-full max-w-content items-center gap-3 px-4 lg:h-16 lg:px-8; }
+  .pc-header__icon  { @apply inline-flex h-11 w-11 items-center justify-center text-ink; }
+
+  /* 8. Thanh đáy */
+  .pc-bottomnav { @apply fixed inset-x-0 bottom-0 z-bottomnav grid h-16 grid-cols-4 border-t border-line bg-white shadow-none lg:hidden;
+                  padding-bottom: env(safe-area-inset-bottom); }
+  .pc-bottomnav__item { @apply flex min-h-11 flex-col items-center justify-center gap-1 text-xs font-medium text-ink-secondary; }
+  .pc-bottomnav__item[aria-current="page"] { @apply text-brand; }
+
+  /* 9. Thanh mua */
+  .pc-actionbar { @apply fixed inset-x-0 bottom-0 z-bottomnav flex items-center gap-3 border-t border-line bg-white px-4 py-2
+                         shadow-none lg:static lg:border-0 lg:p-0;
+                  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)); }
+  .pc-actionbar__price { @apply text-lg font-bold text-price; }
+  body:has(.pc-actionbar) .pc-bottomnav { @apply hidden; }
+
+  /* 10. Popup / khung trượt */
+  .pc-overlay { @apply fixed inset-0 z-overlay bg-slate-900/50; }
+  .pc-modal { @apply fixed inset-x-0 bottom-0 z-modal max-h-[85vh] overflow-y-auto border-t border-line bg-white p-4 pt-12
+                     rounded-t-2xl shadow-none
+                     lg:inset-auto lg:left-1/2 lg:top-1/2 lg:w-full lg:max-w-lg lg:-translate-x-1/2 lg:-translate-y-1/2
+                     lg:border lg:p-6 lg:pt-12 lg:rounded-none; }
+  .pc-modal__title { @apply text-lg font-semibold text-ink; }
+  .pc-modal__close { @apply absolute right-2 top-2 inline-flex h-11 w-11 items-center justify-center text-ink; }
+
+  /* 11. Thông báo */
+  .pc-toast { @apply fixed inset-x-4 bottom-20 z-toast flex items-center justify-between gap-3 bg-ink px-4 py-3 text-sm text-white
+                     rounded-xl shadow-none lg:bottom-6 lg:left-auto lg:right-6 lg:max-w-sm lg:rounded-none; }
+  .pc-toast a { @apply font-semibold text-white underline; }
+
+  /* 12. Nút nổi */
+  .pc-fab { @apply fixed bottom-20 right-4 z-fab inline-flex h-12 w-12 items-center justify-center border border-line bg-white
+                   rounded-full shadow-none lg:bottom-6 lg:rounded-none; }
+  body:has(.pc-actionbar) .pc-fab { @apply bottom-24; }
+
+  /* Màn ngang / thấp: ẩn thanh đáy, giữ ≤ 15% màn cho phần tử nổi */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .pc-bottomnav, .pc-fab { @apply hidden; }
+    .pc-header { @apply static; }
+  }
+}

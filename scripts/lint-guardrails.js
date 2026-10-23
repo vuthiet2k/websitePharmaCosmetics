@@ -19,8 +19,9 @@ const rootDir = path.resolve(__dirname, '..');
 const baselinePath = path.join(__dirname, 'guardrails-baseline.json');
 const SCAN_DIRS = ['assets', 'layouts', 'snippets', 'templates'];
 const TOKEN_FILE = 'snippets/design_tokens.bwt';
-// Vendor/thư viện bên thứ ba: không sửa, không tính.
-const VENDOR = /(^|\/)(vendor_[^/]*|[^/]*[.-]min\.[^/]*|vue\.global\.prod\.js|jquery[^/]*|swiper\.js\.bwt|sweetalert-min\.js\.bwt|bootstrap-datepicker\.js\.bwt|mops-tailwind\.css)$/i;
+// Vendor/thư viện bên thứ ba + file sinh: không sửa, không tính.
+// pc-ui.css / pc-legacy-tw.css: file sinh từ Tailwind (UI-STANDARD B.5, việc D01 24/10/2026) — cỡ chữ theo thang tailwind.pc.config.js.
+const VENDOR = /(^|\/)(vendor_[^/]*|[^/]*[.-]min\.[^/]*|vue\.global\.prod\.js|jquery[^/]*|swiper\.js\.bwt|sweetalert-min\.js\.bwt|bootstrap-datepicker\.js\.bwt|mops-tailwind\.css|pc-ui\.css|pc-legacy-tw\.css)$/i;
 const STYLE_FILE = /\.(css|scss\.bwt)$/i;
 const MARKUP_FILE = /\.bwt$/i;
 

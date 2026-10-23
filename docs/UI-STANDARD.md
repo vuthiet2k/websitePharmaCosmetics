@@ -940,10 +940,11 @@ Mục ✅ KHÔNG được sửa lại trừ khi ui-verify báo hồi quy (khi đ
 
 | Mã | Đợt | Việc | Trạng thái | Commit | Ngày | Số đo chính (từ trình duyệt) |
 |-----|-----|------|------------|--------|------|------------------------------|
-| D01 | 0 | Nguồn CSS + build: `ui-src/css/tokens.css`, `components.css`, `main.css` theo M.1/M.3/M.4; | ⬜ Chưa sửa | — | — | — |
+| D01 | 0 | Nguồn CSS + build: `ui-src/css/tokens.css`, `components.css`, `main.css` theo M.1/M.3/M.4; | ✅ Đã sửa | (xem commit fix(D01)) | 23/10/2026 | build:sapo exit 0; pc-ui.css gzip 6 406 B; 47/47 class biên dịch; nút 44px #075B40, bo 12px mobile / 0 desktop, focus 2px (7 khung Chromium + WebKit) |
 | D02 | 0 | Đổi tên 3 class cũ trùng thư viện: `pc-btn`→`pc-btn-v3`, `pc-section`→`pc-section-v3`, `pc | ⬜ Chưa sửa | — | — | — |
 | D03 | 0 | Nạp `pc-ui.css` trong `layouts/theme.bwt` (+ `layouts/chat.bwt`) SAU CSS cũ | ⬜ Chưa sửa | — | — | — |
 | D04 | 0 | 12 snippet `ui_*` (button, product_card, field, badge, swiper_nav, action_bar, modal, toas | ⬜ Chưa sửa | — | — | — |
+| N01 | 0 | Thư viện: preflight tắt ⇒ viền pc-* thiếu `border-style: solid`, pc-input thiếu `box-sizing: border-box` | ⬜ Chưa sửa | — | — | D01: btn outset, card none, input inset, input cao 48px |
 | D05 | 0 | `assets/pc-ui.js` (JS thuần, `defer`): `data-pc-modal`, `data-pc-toast`, `data-pc-swiper`, | ⬜ Chưa sửa | — | — | — |
 | D06 | 0 | Thay Tailwind CDN: `tailwind.legacy.config.js` (chép cấu hình CDN trong `layouts/theme.bwt | ⬜ Chưa sửa | — | — | — |
 | D07 | 0 | `snippets/ui_icon.bwt` (SVG Lucide MIT, đủ icon đang dùng ở header/footer/thẻ/form) + `scr | ⬜ Chưa sửa | — | — | — |
@@ -1000,7 +1001,7 @@ Mỗi lỗi mới (từ ui-verify --full, hồi quy, hoặc phát hiện khi ki�
 
 | Mã | Phát hiện ở vòng / ngày | Mô tả (số đo) | Trang | Nguồn (việc gây ra / quét full) | Trạng thái |
 |-----|-----|-----|-----|-----|-----|
-| — | — | (chưa có) | — | — | — |
+| N01 | Vòng 1 / 23/10/2026 | Preflight tắt (B.4) ⇒ `border`/`border-2` trong components.css chỉ đặt độ dày + màu: computed border-style `.pc-btn` outset, `.pc-card` none (thẻ mất viền), `.pc-input` inset; `.pc-input` cao 48px thay 44px (content-box). Đo ở 7 khung Chromium + WebKit | trang mẫu ui-loop/checks/D01.mjs; kiểm lại ở /?tpl=page.ui-kit | Phát hiện khi kiểm D01 | ⬜ |
 
 ## **PHẦN F — Kế hoạch sửa và cổng kiểm**
 
