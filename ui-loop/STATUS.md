@@ -1,5 +1,5 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 6 · Việc vừa làm: N04 → DONE (viền focus thư viện: 8 khung Chromium + WebKit, Tab 17–21 phần tử pc-* 0 sai viền — solid 2px rgb(7,91,64); ô nhập + nút đóng popup 2px brand; 389 lượt focus phần tử cũ đổi 0)
+Vòng: 6 · Việc vừa làm: N04 → DONE (796c8e8; viền focus thư viện: 8 khung Chromium + WebKit, Tab 17–21 phần tử pc-* 0 sai viền — solid 2px rgb(7,91,64); ô nhập + nút đóng popup 2px brand; 389 lượt focus phần tử cũ đổi 0)
 Tổng: 60 việc · DONE 5 · TODO 54 · VERIFY_FAIL 1 · BLOCKED 0 · BLOCKED_OWNER 0
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (2 lỗi webkit390 /collections/all có cả ở HEAD → N07; đã ghi baseline)
 Câu hỏi cho chủ dự án:
