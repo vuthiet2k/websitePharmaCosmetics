@@ -951,9 +951,10 @@ Mục ✅ KHÔNG được sửa lại trừ khi ui-verify báo hồi quy (khi đ
 | N02 | 0 | Hồi quy của D03: `p a, li a` trong tokens.css gạch chân + đổi màu menu header, breadcrumb, link trong li/p; ảnh "Xem nhiều" 320/768 đổi cỡ | ⬜ Chưa sửa | — | — | D03: 937 lượt underline mới, 235 lượt đổi màu; most-view-product-img 0→195px (320) / 222px (768) |
 | N03 | 0 | Thư viện dùng đơn vị rem nhưng CSS cũ đặt `html { font-size }` = 14,4px (< 1024) / 15px (≥ 1024) ⇒ `min-h-11`/`h-11`/`h- | ✅ Đã sửa | bfa0480 | 24/10/2026 | 7 khung Chromium + WebKit: html giữ 14,4 / 15px; pc-btn 44px (trước 39,6 / 41,3), btn--lg 48px, swiper 44×44, fab 48×48, modal close 44×44; quy tắc ngoài .pc-* 589/589 trùng; ui-verify --quick 0 lỗi mới |
 | N04 | 0 | Viền focus của nút thư viện bị CSS cũ tắt: `vendor_bootstrap.css` `button, input { outline: none !important }` + `global | ✅ Đã sửa | 796c8e8 | 24/10/2026 | 8 khung Chromium 1440/390/320/768/1024/844×390 + WebKit 1440/iPhone 13: Tab 17–21 phần tử thư viện 0 sai viền — solid 2px rgb(7,91,64) offset 2px (trước none / 3px #3CB371); Shift+Tab 4/4; ô nhập, nút đóng popup solid 2px brand; 389 lượt focus phần tử ngoài pc-* đổi 0; ui-verify --quick: 2 lỗi webkit390 /collections/all có cả ở HEAD → N07 |
-| N05 | 0 | Phần tử nổi cũ đè thư viện: `nav.pc-bottom-nav` (z 9990) không bị ẩn bởi `body:has(.pc-actionbar) .pc-bottomnav` (tên cl | ⬜ Chưa sửa | — | — | D04 đo 24/10: 768 & 844×390 axe target-size×1 (button[form=kit-buy]); pc-bottom-nav giao nút thanh mua ở 390/768/844×390; toast top 730 / thanh mua top 727 (390) |
+| N05 | 0 | Phần tử nổi cũ đè thư viện: `nav.pc-bottom-nav` (z 9990) không bị ẩn bởi `body:has(.pc-actionbar) .pc-bottomnav` (tên cl | ✅ Đã sửa | (chờ commit) | 24/10/2026 | 8 khung Chromium + WebKit: thanh mua 118,8 → 64px (390), 135 → 64 (320); nút + giá thanh mua trúng 9/9 (trước 0–3/9); toast giao thanh mua 38,8 → 0px; nút nổi 3 → 1; popup 19/25 → 25/25; axe target-size 0 (trước ×1 ở 768/844×390 + popup mở); hồi quy Q 0/72 đổi; ui-verify --quick 0 lỗi mới |
 | N06 | 0 | CSS cũ ẩn checkbox: `input[type=checkbox]` của `ui_field` type checkbox có opacity 0, position absolute ⇒ ô không nhìn t | ⬜ Chưa sửa | — | — | D04 đo 24/10: 1440 & 390 opacity 0, absolute, 23×23 / 22×22px |
 | N07 | 9 | Mốc baseline webkit390 `/collections/all` đếm thiếu thẻ SP (touch<44 90 / noName 24, Chromium 390 cùng trang 120 / 40) | ⬜ Chưa sửa | — | — | Vòng 6: WebKit đo 120 / 40 cả ở HEAD 5390119 lẫn sau N04 (3 lần chạy); lỗi gốc a.pc-pcard__img không tên, button.btn-cart / pc-voucher__take < 44px → L19, L24 |
+| N08 | 0 | Thư viện: toast `.pc-toast` (z 60, `bottom-20`) chồng `.pc-fab` và ô nhập trong `.pc-modal` khi popup mở ở < 1024 | ⬜ Chưa sửa | — | — | N05 đo: fab bị toast che 28px / 48px (320/390/768); ô nhập popup bị che 31px / 44px |
 | D05 | 0 | `assets/pc-ui.js` (JS thuần, `defer`): `data-pc-modal`, `data-pc-toast`, `data-pc-swiper`, | ⬜ Chưa sửa | — | — | — |
 | D06 | 0 | Thay Tailwind CDN: `tailwind.legacy.config.js` (chép cấu hình CDN trong `layouts/theme.bwt | ⬜ Chưa sửa | — | — | — |
 | D07 | 0 | `snippets/ui_icon.bwt` (SVG Lucide MIT, đủ icon đang dùng ở header/footer/thẻ/form) + `scr | ⬜ Chưa sửa | — | — | — |
@@ -1014,9 +1015,10 @@ Mỗi lỗi mới (từ ui-verify --full, hồi quy, hoặc phát hiện khi ki�
 | N02 | Vòng 3 / 24/10/2026 | Sau khi nạp pc-ui.css (D03): quy tắc nền `p a, li a { text-decoration: underline; color: brand }` (tokens.css) ⇒ 937 lượt phần tử đổi `none → underline`, 235 lượt đổi màu rgb(35,31,32) → rgb(7,91,64) trên 42 lượt (6 trang Q × 7 khung) — menu header desktop `a.nav-link`, breadcrumb; `div.most-view-product-img` trang chủ 0×0 → 195×195 (320) / 222×222 (768). Chiều cao trang không đổi | Q (/, /collections/all, /products/serum-vitamin-c-15, /?tpl=cart, /dat-lich-tu-van, /?tpl=login) | Hồi quy của D03 | ⬜ |
 | N03 | Vòng 4 / 24/10/2026 | Thư viện dùng đơn vị rem nhưng CSS cũ đặt `html { font-size }` = 14,4px (< 1024) / 15px (≥ 1024) ⇒ `min-h-11`/`h-11`/`h-12` của pc-btn, pc-swiper-btn, pc-modal__close, pc-fab, pc-input… nhỏ hơn thiết kế. Đo: html 14,4px ⇒ pc-btn 39,6px, swiper 39,6px, fab 43,2px; html 15px ⇒ 41,3 / 41,3 / 45px | /?tpl=page.ui-kit | Phát hiện khi kiểm D04 | ✅ |
 | N04 | Vòng 4 / 24/10/2026 | Viền focus của nút thư viện bị CSS cũ tắt: `vendor_bootstrap.css` `button, input { outline: none !important }` + `global_core.scss` `button:focus { outline: none }` ⇒ `.pc-btn` (thẻ button) khi Tab: outline-style none (liên quan L10). Đo: 7/7 khung Tab → button.pc-btn outline-style none (width 3px, màu trắng) | /?tpl=page.ui-kit | Phát hiện khi kiểm D04 | ✅ |
-| N05 | Vòng 4 / 24/10/2026 | Phần tử nổi cũ đè thư viện: `nav.pc-bottom-nav` (z 9990) không bị ẩn bởi `body:has(.pc-actionbar) .pc-bottomnav` (tên class cũ khác) ⇒ che nút thanh mua + đè popup (z 55); robot `.main-widget` (z 9991) đè `.pc-fab`; `.pc-toast` (bottom 72px) chồng thanh mua cao 117px ở 390 (liên quan L01, L06). Đo: 768 & 844×390 axe target-size×1 (button[form=kit-buy]); pc-bottom-nav giao nút thanh mua ở 390/768/844×390; toast top 730 / thanh mua top 727 (390) | /?tpl=page.ui-kit | Phát hiện khi kiểm D04 | ⬜ |
+| N05 | Vòng 4 / 24/10/2026 | Phần tử nổi cũ đè thư viện: `nav.pc-bottom-nav` (z 9990) không bị ẩn bởi `body:has(.pc-actionbar) .pc-bottomnav` (tên class cũ khác) ⇒ che nút thanh mua + đè popup (z 55); robot `.main-widget` (z 9991) đè `.pc-fab`; `.pc-toast` (bottom 72px) chồng thanh mua cao 117px ở 390 (liên quan L01, L06). Đo: 768 & 844×390 axe target-size×1 (button[form=kit-buy]); pc-bottom-nav giao nút thanh mua ở 390/768/844×390; toast top 730 / thanh mua top 727 (390) | /?tpl=page.ui-kit | Phát hiện khi kiểm D04 | ✅ |
 | N06 | Vòng 4 / 24/10/2026 | CSS cũ ẩn checkbox: `input[type=checkbox]` của `ui_field` type checkbox có opacity 0, position absolute ⇒ ô không nhìn thấy (chỉ thấy chữ nhãn). Đo: 1440 & 390 opacity 0, absolute, 23×23 / 22×22px | /?tpl=page.ui-kit | Phát hiện khi kiểm D04 | ⬜ |
 | N07 | Vòng 6 / 24/10/2026 | ui-verify --quick báo 2 lỗi mới ở webkit390 `/collections/all`: touch<44 90 → 120, noName 24 → 40 (`a.pc-pcard__img` không tên, `button.btn-cart`, `button.pc-voucher__take` 65×32). Có y hệt khi chạy trên bản HEAD 5390119 (không có N04); số mới bằng Chromium 390 trong baseline ⇒ baseline WebKit cũ đếm thiếu thẻ SP, không phải hồi quy. Lỗi gốc thuộc L19 / L24 | /collections/all | Phát hiện khi kiểm N04 (không do N04) | ⬜ |
+| N08 | Vòng 7 / 24/10/2026 | Thư viện: toast `.pc-toast` (z 60, `bottom-20`) chồng `.pc-fab` (`bottom-24` khi có thanh mua) và ô nhập trong `.pc-modal` khi popup mở ở < 1024. Đo: fab 700–748 / toast 720–764 ⇒ che 28px trên 48px (390; 320, 768 cũng 28px); ô nhập popup 707–751 ⇒ che 31px trên 44px | /?tpl=page.ui-kit | Phát hiện khi kiểm N05 (phân tầng nội bộ thư viện, không do N05) | ⬜ |
 
 ## **PHẦN F — Kế hoạch sửa và cổng kiểm**
 
@@ -1277,9 +1279,10 @@ module.exports = {
 ### M.4 `ui-src/css/components.css`
 
 ```css
-/* ui-src/css/components.css — THƯ VIỆN PC v1.1 — KHOÁ. Chỉ sửa qua quy trình C.6
+/* ui-src/css/components.css — THƯ VIỆN PC v1.2 — KHOÁ. Chỉ sửa qua quy trình C.6
    Changelog: v1.0 (24/10/2026) khởi tạo 13 component (bản Sapo)
-              v1.1 (24/10/2026, N04) viền focus chung 2px brand cho phần tử bấm/nhập; .pc-input bỏ ring, dùng viền đó */
+              v1.1 (24/10/2026, N04) viền focus chung 2px brand cho phần tử bấm/nhập; .pc-input bỏ ring, dùng viền đó
+              v1.2 (24/10/2026, N05) thanh mua 1 hàng (giá co, nút giữ cỡ chữ); nhóm 13 — phần tử nổi cũ nhường thư viện */
 @layer components {
   /* 0. Viền focus — `:root` nâng độ ưu tiên (0,3,0) để thắng CSS cũ `.pc-site-v3 :is(a,button,input):focus-visible` (0,2,1)
      và `a/button:focus { outline: none }`; bỏ `:root` ở D09 khi xoá CSS cũ */
@@ -1362,7 +1365,12 @@ module.exports = {
   .pc-actionbar { @apply fixed inset-x-0 bottom-0 z-bottomnav flex items-center gap-3 border-t border-line bg-white px-4 py-2
                          shadow-none lg:static lg:border-0 lg:p-0;
                   padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)); }
-  .pc-actionbar__price { @apply text-lg font-bold text-price; }
+  .pc-actionbar__price { @apply whitespace-nowrap text-lg font-bold text-price; }
+  /* N05: khối giá co lại (nhãn cắt "…"), nút không co — trước đó nút block w-full ép khối giá còn 86px ⇒ giá + nhãn xuống dòng,
+     cộng lề `p` của CSS cũ ⇒ thanh cao 119px (390) và toast bottom-20 đè lên */
+  .pc-actionbar > p { @apply m-0 flex min-w-0 flex-auto flex-col; }
+  .pc-actionbar > p > span:not(.pc-actionbar__price) { @apply truncate; }
+  .pc-actionbar > .pc-btn { @apply w-auto shrink-0 grow whitespace-nowrap; }
   body:has(.pc-actionbar) .pc-bottomnav { @apply hidden; }
 
   /* 10. Popup / khung trượt */
@@ -1384,6 +1392,13 @@ module.exports = {
                    rounded-full shadow-none lg:bottom-6 lg:rounded-none; }
   body:has(.pc-actionbar) .pc-fab { @apply bottom-24; }
 
+  /* 13. Chuyển tiếp (N05, xoá ở D09 cùng CSS cũ): phần tử nổi CŨ nhường phần tử nổi thư viện.
+     Thanh đáy cũ .pc-bottom-nav (z 9990) ẩn khi trang có thanh mua; robot .main-widget (z 9991) + .backtop ẩn khi trang có
+     .pc-fab (tối đa 1 nút nổi, C.2 #12); popup thư viện đang mở ⇒ ẩn cả 3 (z cũ cao hơn z-modal 55, che popup). */
+  body:has(.pc-actionbar) .pc-bottom-nav,
+  body:has(.pc-fab) :is(.main-widget, .backtop),
+  body:has(.pc-modal:not([hidden])) :is(.pc-bottom-nav, .main-widget, .backtop) { @apply hidden; }
+
   /* Màn ngang / thấp: ẩn thanh đáy, giữ ≤ 15% màn cho phần tử nổi */
   @media (orientation: landscape) and (max-height: 500px) {
     .pc-bottomnav, .pc-fab { @apply hidden; }
@@ -1398,3 +1413,7 @@ module.exports = {
 `:where(button, input):where(:not(.pc-btn, .pc-swiper-btn, .pc-modal__close, .pc-input, .pc-header__icon, .pc-bottomnav__item))`
 (độ ưu tiên 0) để viền focus thư viện không bị tắt; phần tử cũ giữ nguyên. Thêm class thư viện có thẻ `<button>`/`<input>` mới
 ⇒ thêm vào danh sách `:not(…)` đó. Xoá cả quy tắc ở D09.
+
+**N05 (24/10/2026):** nhóm 13 "Chuyển tiếp" ẩn phần tử nổi cũ (`.pc-bottom-nav`, `.main-widget`, `.backtop`) khi trang có phần
+tử nổi thư viện tương ứng hoặc popup thư viện đang mở — trang chưa dùng thư viện không đổi. Khi L01 thay thanh đáy cũ bằng
+`pc-bottomnav` và L06 thay robot bằng `ui_fab` trên toàn site thì xoá nhóm 13 (muộn nhất ở D09).

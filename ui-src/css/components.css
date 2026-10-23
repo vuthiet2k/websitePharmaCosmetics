@@ -1,6 +1,7 @@
-/* ui-src/css/components.css — THƯ VIỆN PC v1.1 — KHOÁ. Chỉ sửa qua quy trình C.6
+/* ui-src/css/components.css — THƯ VIỆN PC v1.2 — KHOÁ. Chỉ sửa qua quy trình C.6
    Changelog: v1.0 (24/10/2026) khởi tạo 13 component (bản Sapo)
-              v1.1 (24/10/2026, N04) viền focus chung 2px brand cho phần tử bấm/nhập; .pc-input bỏ ring, dùng viền đó */
+              v1.1 (24/10/2026, N04) viền focus chung 2px brand cho phần tử bấm/nhập; .pc-input bỏ ring, dùng viền đó
+              v1.2 (24/10/2026, N05) thanh mua 1 hàng (giá co, nút giữ cỡ chữ); nhóm 13 — phần tử nổi cũ nhường thư viện */
 @layer components {
   /* 0. Viền focus — `:root` nâng độ ưu tiên (0,3,0) để thắng CSS cũ `.pc-site-v3 :is(a,button,input):focus-visible` (0,2,1)
      và `a/button:focus { outline: none }`; bỏ `:root` ở D09 khi xoá CSS cũ */
@@ -83,7 +84,12 @@
   .pc-actionbar { @apply fixed inset-x-0 bottom-0 z-bottomnav flex items-center gap-3 border-t border-line bg-white px-4 py-2
                          shadow-none lg:static lg:border-0 lg:p-0;
                   padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)); }
-  .pc-actionbar__price { @apply text-lg font-bold text-price; }
+  .pc-actionbar__price { @apply whitespace-nowrap text-lg font-bold text-price; }
+  /* N05: khối giá co lại (nhãn cắt "…"), nút không co — trước đó nút block w-full ép khối giá còn 86px ⇒ giá + nhãn xuống dòng,
+     cộng lề `p` của CSS cũ ⇒ thanh cao 119px (390) và toast bottom-20 đè lên */
+  .pc-actionbar > p { @apply m-0 flex min-w-0 flex-auto flex-col; }
+  .pc-actionbar > p > span:not(.pc-actionbar__price) { @apply truncate; }
+  .pc-actionbar > .pc-btn { @apply w-auto shrink-0 grow whitespace-nowrap; }
   body:has(.pc-actionbar) .pc-bottomnav { @apply hidden; }
 
   /* 10. Popup / khung trượt */
@@ -104,6 +110,13 @@
   .pc-fab { @apply fixed bottom-20 right-4 z-fab inline-flex h-12 w-12 items-center justify-center border border-line bg-white
                    rounded-full shadow-none lg:bottom-6 lg:rounded-none; }
   body:has(.pc-actionbar) .pc-fab { @apply bottom-24; }
+
+  /* 13. Chuyển tiếp (N05, xoá ở D09 cùng CSS cũ): phần tử nổi CŨ nhường phần tử nổi thư viện.
+     Thanh đáy cũ .pc-bottom-nav (z 9990) ẩn khi trang có thanh mua; robot .main-widget (z 9991) + .backtop ẩn khi trang có
+     .pc-fab (tối đa 1 nút nổi, C.2 #12); popup thư viện đang mở ⇒ ẩn cả 3 (z cũ cao hơn z-modal 55, che popup). */
+  body:has(.pc-actionbar) .pc-bottom-nav,
+  body:has(.pc-fab) :is(.main-widget, .backtop),
+  body:has(.pc-modal:not([hidden])) :is(.pc-bottom-nav, .main-widget, .backtop) { @apply hidden; }
 
   /* Màn ngang / thấp: ẩn thanh đáy, giữ ≤ 15% màn cho phần tử nổi */
   @media (orientation: landscape) and (max-height: 500px) {
