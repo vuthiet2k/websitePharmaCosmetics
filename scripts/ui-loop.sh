@@ -39,15 +39,39 @@ ALLOWED=(Read Edit Write Glob Grep
 DENIED=("Bash(git push:*)" "Bash(npx vercel:*)" "Bash(vercel:*)" "Bash(git reset:*)" "Bash(git checkout:*)" "Bash(git clean:*)"
   "Bash(git add -A:*)" "Bash(git add .:*)" "Bash(git add --all:*)" "Bash(rm -rf:*)")
 
-i=0
+# Chờ tới giờ làm mới khi gặp giới hạn sử dụng ("You've hit your session limit · resets 1:10am")
+wait_for_reset() {
+  local msg="$1" t secs
+  t="$(echo "$msg" | grep -oE 'resets [0-9]{1,2}(:[0-9]{2})? ?(am|pm)' | head -1 | sed 's/resets //')"
+  if [ -n "$t" ] && target=$(date -d "$t" +%s 2>/dev/null); then
+    now=$(date +%s); [ "$target" -le "$now" ] && target=$((target + 86400)); secs=$((target - now + 120))
+  else secs=900; fi
+  echo "Giới hạn sử dụng — chờ $((secs/60)) phút (tới $(date -d "@$(( $(date +%s) + secs ))" '+%H:%M'))…" | tee -a ui-loop/run.log
+  sleep "$secs"
+}
+
+i=0; fast_fail=0
 while [ "$i" -lt "$MAX" ]; do
   i=$((i+1)); echo "===== Vòng $i — $(date '+%F %T') =====" | tee -a ui-loop/run.log
+  t0=$(date +%s); before="$(md5sum ui-loop/STATUS.md ui-loop/BACKLOG.md 2>/dev/null)"
   claude -p "$(cat ui-loop/PROMPT.md)" \
     --model "$MODEL" \
     --permission-mode acceptEdits \
     --allowedTools "${ALLOWED[@]}" \
     --disallowedTools "${DENIED[@]}" \
-    2>&1 | tee -a ui-loop/run.log
+    2>&1 | tee ui-loop/last-round.log | tee -a ui-loop/run.log
+  out="$(tail -n 5 ui-loop/last-round.log)"
+  if echo "$out" | grep -qiE "hit your (session|usage|weekly) limit|usage limit|rate limit|overloaded|resets [0-9]"; then
+    i=$((i-1)); wait_for_reset "$out"; continue        # không tính là 1 vòng
+  fi
+  after="$(md5sum ui-loop/STATUS.md ui-loop/BACKLOG.md 2>/dev/null)"
+  if [ $(( $(date +%s) - t0 )) -lt 60 ] && [ "$before" = "$after" ]; then
+    fast_fail=$((fast_fail+1)); i=$((i-1))
+    echo "Vòng hỏng nhanh lần $fast_fail (không tiến triển): $(echo "$out" | tail -1)" | tee -a ui-loop/run.log
+    [ "$fast_fail" -ge 5 ] && { echo "Dừng — 5 vòng liên tiếp hỏng ngay khi chạy, xem ui-loop/last-round.log"; exit 4; }
+    sleep $((fast_fail * 120)); continue
+  fi
+  fast_fail=0
   first="$(head -n 1 ui-loop/STATUS.md 2>/dev/null)"
   # Quét toàn site (~45 phút) do script chạy hộ — lệnh Bash của agent bị cắt sau 10 phút
   if [[ "$first" == "TRẠNG THÁI: CẦN QUÉT FULL"* ]]; then

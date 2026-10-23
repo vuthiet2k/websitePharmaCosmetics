@@ -9,7 +9,7 @@ file khi sửa). KHÔNG tắt, KHÔNG bật server thứ hai. Trong Bash KHÔNG 
    Đọc `ui-loop/BACKLOG.md` và `ui-loop/STATUS.md`. Đọc mục "Tóm tắt nhanh" trong `AGENTS.md`.
 1. Kiểm môi trường: `curl -s -o /dev/null -w "%{http_code}" "http://localhost:3000/?tpl=index"` phải là 200. Không được ⇒
    dòng đầu STATUS `TRẠNG THÁI: DỪNG — LỖI MÔI TRƯỜNG` + mô tả, dừng vòng, không đánh DONE việc nào.
-2. Chọn 1 việc: ưu tiên `VERIFY_FAIL` (Lần thử < 3), rồi `TODO` đầu tiên theo thứ tự Đợt (đợt 0 xong hết mới sang đợt 1).
+2. Chọn 1 việc: ưu tiên việc đang `IN_PROGRESS` (vòng trước bị ngắt giữa chừng — xem `git status`/`git diff`, làm tiếp cho xong, không bỏ dở), rồi `VERIFY_FAIL` (Lần thử < 3), rồi `TODO` đầu tiên theo thứ tự Đợt (đợt 0 xong hết mới sang đợt 1).
    Bỏ qua `BLOCKED`, `BLOCKED_OWNER`, `DONE`. Nếu cột Tiêu chí chưa cụ thể: ghi tiêu chí đạt cụ thể, đo được vào BACKLOG
    TRƯỚC khi sửa (P0 lấy từ G.7; P1/N lấy dòng Do ở Phần D + ngưỡng B.7). Đổi trạng thái `IN_PROGRESS`.
 3. Sửa đúng phạm vi việc đó theo Phần A–C (+ luật Sapo A.6). Không sửa việc khác, không tiện tay đổi giao diện chỗ khác.
