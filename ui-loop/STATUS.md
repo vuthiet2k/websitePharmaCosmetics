@@ -1,9 +1,10 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 7 · Việc vừa làm: N05 → DONE (ab4efc4; phần tử nổi cũ nhường thư viện: 8 khung Chromium + WebKit, thanh mua 118,8 → 64px, nút + giá trúng 9/9, toast giao thanh mua 0px, nút nổi 3 → 1, popup 25/25, axe target-size 0; hồi quy Q 0/72)
-Tổng: 61 việc · DONE 6 · TODO 54 · VERIFY_FAIL 1 · BLOCKED 0 · BLOCKED_OWNER 0
-Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick kit + Q; đã ghi baseline)
+Vòng: 8 · Việc vừa làm: N06 → VERIFY_FAIL lần 1 (checkbox ui_field hiện lại: opacity 0 → 1, 24×24, Tab viền solid 2px brand, 78 checkbox cũ 0 đổi; nhưng ui-verify --quick 2 lỗi mới touch<44 = chính ô 24×24 ở 390 Chromium + WebKit, B.7 cần ≥ 44)
+Tổng: 62 việc · DONE 6 · TODO 54 · VERIFY_FAIL 2 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 2 (ui-verify --quick kit + Q; KHÔNG ghi baseline vì N06 chưa đạt)
 Câu hỏi cho chủ dự án:
-- (không có)
+- (không có — xung đột M.4 `h-6 w-6` / D.7 "checkbox ≥ 24px" với B.7 "vùng chạm mobile ≥ 44px" xử theo A.1: B.7 thắng; nếu chủ dự án
+  muốn giữ ô 24px ở mobile thì báo lại, khi đó ui-verify sẽ luôn đếm ô checkbox là touch<44)
 
 Ghi chú:
 - Vòng 1 thêm N01 (đợt 0, xếp sau D04): viền thư viện thiếu `border-style` / `box-sizing` do preflight tắt.
@@ -16,8 +17,14 @@ Ghi chú:
 - Vòng 7 xong N05: components.css v1.2 — thanh mua 1 hàng; nhóm 13 "Chuyển tiếp" ẩn `.pc-bottom-nav` / `.main-widget` / `.backtop`
   khi trang có thanh mua / nút nổi / popup thư viện mở (trang cũ không đổi). Thêm N08 (đợt 0): toast thư viện che `.pc-fab` 28px
   và ô nhập popup 31px ở < 1024. Cách đo hồi quy `.backtop`: nút tự ẩn 1,4s sau khi ngừng cuộn ⇒ đo sau 2s (N05.mjs).
-- Việc kế tiếp: D04 lần 2 (VERIFY_FAIL, ưu tiên theo bước 2; N03–N05 đã xong). Lưu ý: checkbox `ui_field` còn ẩn (N06) — nếu
-  tiêu chí "field checkbox nhìn thấy" của D04 vì thế chưa đạt thì cân nhắc làm N06 trước. N01, N08 cũng đo trên trang kit.
+- Vòng 8: chạy `ui-loop/checks/D04.mjs` trước khi sửa (không sửa gì của D04, không tính lần thử): 7 khung đạt mọi mục (nút 44px
+  17 nút, swiper 44, fab 48, Tab viền solid 2px brand, axe #pc-kit 0 kể cả popup mở) trừ `ui_fab 0/1` ở 844×390 — fab ẩn đúng M.4
+  (màn ngang thấp) ⇒ lần 2 của D04 cần ghi mục này là "ẩn đúng M.4", không phải lỗi; còn checkbox ẩn (N06) chưa đạt tiêu chí
+  "field checkbox nhìn thấy" ⇒ chuyển làm N06 trước. N06 lần 1: mã để trong cây làm việc (`snippets/ui_field.bwt`,
+  `ui-src/css/components.css` v1.3, `assets/vendor_bootstrap.css`, `assets/pc-ui.css`), chưa commit. Lần 2: ô ≥ 44×44 ở < 1024
+  (giữ 24×24 ≥ 1024) rồi chạy lại `node ui-loop/checks/N06.mjs` (đã có `evidence/N06/before.json` đo trên bản chưa sửa — đừng chạy
+  `--before` trên cây đã sửa). Thêm N09 (đợt 0): `label{display:inline-block!important}` cũ đè `.pc-check` (ô cách chữ 3,7px).
+- Việc kế tiếp: N06 lần 2 (VERIFY_FAIL, sửa xong mới làm lại D04 lần 2).
 
 Ghi chú dựng vòng lặp:
 - Baseline `ui-loop/baseline.json` = quét full bản hiện tại (trước mọi sửa đổi); vòng 1 trộn thêm 18 lượt trang quick, vòng 2 trộn 30 lượt, vòng 3 trộn 18 lượt, vòng 5 trộn 21 lượt, vòng 6 trộn 21 lượt.
