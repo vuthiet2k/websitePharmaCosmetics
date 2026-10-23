@@ -950,9 +950,10 @@ Mục ✅ KHÔNG được sửa lại trừ khi ui-verify báo hồi quy (khi đ
 | N01 | 0 | Thư viện: preflight tắt ⇒ viền pc-* thiếu `border-style: solid`, pc-input thiếu `box-sizing: border-box` | ⬜ Chưa sửa | — | — | D01: btn outset, card none, input inset, input cao 48px |
 | N02 | 0 | Hồi quy của D03: `p a, li a` trong tokens.css gạch chân + đổi màu menu header, breadcrumb, link trong li/p; ảnh "Xem nhiều" 320/768 đổi cỡ | ⬜ Chưa sửa | — | — | D03: 937 lượt underline mới, 235 lượt đổi màu; most-view-product-img 0→195px (320) / 222px (768) |
 | N03 | 0 | Thư viện dùng đơn vị rem nhưng CSS cũ đặt `html { font-size }` = 14,4px (< 1024) / 15px (≥ 1024) ⇒ `min-h-11`/`h-11`/`h- | ✅ Đã sửa | bfa0480 | 24/10/2026 | 7 khung Chromium + WebKit: html giữ 14,4 / 15px; pc-btn 44px (trước 39,6 / 41,3), btn--lg 48px, swiper 44×44, fab 48×48, modal close 44×44; quy tắc ngoài .pc-* 589/589 trùng; ui-verify --quick 0 lỗi mới |
-| N04 | 0 | Viền focus của nút thư viện bị CSS cũ tắt: `vendor_bootstrap.css` `button, input { outline: none !important }` + `global | ⬜ Chưa sửa | — | — | D04 đo 24/10: 7/7 khung Tab → button.pc-btn outline-style none (width 3px, màu trắng) |
+| N04 | 0 | Viền focus của nút thư viện bị CSS cũ tắt: `vendor_bootstrap.css` `button, input { outline: none !important }` + `global | ✅ Đã sửa | (xem commit fix(N04)) | 24/10/2026 | 8 khung Chromium 1440/390/320/768/1024/844×390 + WebKit 1440/iPhone 13: Tab 17–21 phần tử thư viện 0 sai viền — solid 2px rgb(7,91,64) offset 2px (trước none / 3px #3CB371); Shift+Tab 4/4; ô nhập, nút đóng popup solid 2px brand; 389 lượt focus phần tử ngoài pc-* đổi 0; ui-verify --quick: 2 lỗi webkit390 /collections/all có cả ở HEAD → N07 |
 | N05 | 0 | Phần tử nổi cũ đè thư viện: `nav.pc-bottom-nav` (z 9990) không bị ẩn bởi `body:has(.pc-actionbar) .pc-bottomnav` (tên cl | ⬜ Chưa sửa | — | — | D04 đo 24/10: 768 & 844×390 axe target-size×1 (button[form=kit-buy]); pc-bottom-nav giao nút thanh mua ở 390/768/844×390; toast top 730 / thanh mua top 727 (390) |
 | N06 | 0 | CSS cũ ẩn checkbox: `input[type=checkbox]` của `ui_field` type checkbox có opacity 0, position absolute ⇒ ô không nhìn t | ⬜ Chưa sửa | — | — | D04 đo 24/10: 1440 & 390 opacity 0, absolute, 23×23 / 22×22px |
+| N07 | 9 | Mốc baseline webkit390 `/collections/all` đếm thiếu thẻ SP (touch<44 90 / noName 24, Chromium 390 cùng trang 120 / 40) | ⬜ Chưa sửa | — | — | Vòng 6: WebKit đo 120 / 40 cả ở HEAD 5390119 lẫn sau N04 (3 lần chạy); lỗi gốc a.pc-pcard__img không tên, button.btn-cart / pc-voucher__take < 44px → L19, L24 |
 | D05 | 0 | `assets/pc-ui.js` (JS thuần, `defer`): `data-pc-modal`, `data-pc-toast`, `data-pc-swiper`, | ⬜ Chưa sửa | — | — | — |
 | D06 | 0 | Thay Tailwind CDN: `tailwind.legacy.config.js` (chép cấu hình CDN trong `layouts/theme.bwt | ⬜ Chưa sửa | — | — | — |
 | D07 | 0 | `snippets/ui_icon.bwt` (SVG Lucide MIT, đủ icon đang dùng ở header/footer/thẻ/form) + `scr | ⬜ Chưa sửa | — | — | — |
@@ -1012,9 +1013,10 @@ Mỗi lỗi mới (từ ui-verify --full, hồi quy, hoặc phát hiện khi ki�
 | N01 | Vòng 1 / 23/10/2026 | Preflight tắt (B.4) ⇒ `border`/`border-2` trong components.css chỉ đặt độ dày + màu: computed border-style `.pc-btn` outset, `.pc-card` none (thẻ mất viền), `.pc-input` inset; `.pc-input` cao 48px thay 44px (content-box). Đo ở 7 khung Chromium + WebKit | trang mẫu ui-loop/checks/D01.mjs; kiểm lại ở /?tpl=page.ui-kit | Phát hiện khi kiểm D01 | ⬜ |
 | N02 | Vòng 3 / 24/10/2026 | Sau khi nạp pc-ui.css (D03): quy tắc nền `p a, li a { text-decoration: underline; color: brand }` (tokens.css) ⇒ 937 lượt phần tử đổi `none → underline`, 235 lượt đổi màu rgb(35,31,32) → rgb(7,91,64) trên 42 lượt (6 trang Q × 7 khung) — menu header desktop `a.nav-link`, breadcrumb; `div.most-view-product-img` trang chủ 0×0 → 195×195 (320) / 222×222 (768). Chiều cao trang không đổi | Q (/, /collections/all, /products/serum-vitamin-c-15, /?tpl=cart, /dat-lich-tu-van, /?tpl=login) | Hồi quy của D03 | ⬜ |
 | N03 | Vòng 4 / 24/10/2026 | Thư viện dùng đơn vị rem nhưng CSS cũ đặt `html { font-size }` = 14,4px (< 1024) / 15px (≥ 1024) ⇒ `min-h-11`/`h-11`/`h-12` của pc-btn, pc-swiper-btn, pc-modal__close, pc-fab, pc-input… nhỏ hơn thiết kế. Đo: html 14,4px ⇒ pc-btn 39,6px, swiper 39,6px, fab 43,2px; html 15px ⇒ 41,3 / 41,3 / 45px | /?tpl=page.ui-kit | Phát hiện khi kiểm D04 | ✅ |
-| N04 | Vòng 4 / 24/10/2026 | Viền focus của nút thư viện bị CSS cũ tắt: `vendor_bootstrap.css` `button, input { outline: none !important }` + `global_core.scss` `button:focus { outline: none }` ⇒ `.pc-btn` (thẻ button) khi Tab: outline-style none (liên quan L10). Đo: 7/7 khung Tab → button.pc-btn outline-style none (width 3px, màu trắng) | /?tpl=page.ui-kit | Phát hiện khi kiểm D04 | ⬜ |
+| N04 | Vòng 4 / 24/10/2026 | Viền focus của nút thư viện bị CSS cũ tắt: `vendor_bootstrap.css` `button, input { outline: none !important }` + `global_core.scss` `button:focus { outline: none }` ⇒ `.pc-btn` (thẻ button) khi Tab: outline-style none (liên quan L10). Đo: 7/7 khung Tab → button.pc-btn outline-style none (width 3px, màu trắng) | /?tpl=page.ui-kit | Phát hiện khi kiểm D04 | ✅ |
 | N05 | Vòng 4 / 24/10/2026 | Phần tử nổi cũ đè thư viện: `nav.pc-bottom-nav` (z 9990) không bị ẩn bởi `body:has(.pc-actionbar) .pc-bottomnav` (tên class cũ khác) ⇒ che nút thanh mua + đè popup (z 55); robot `.main-widget` (z 9991) đè `.pc-fab`; `.pc-toast` (bottom 72px) chồng thanh mua cao 117px ở 390 (liên quan L01, L06). Đo: 768 & 844×390 axe target-size×1 (button[form=kit-buy]); pc-bottom-nav giao nút thanh mua ở 390/768/844×390; toast top 730 / thanh mua top 727 (390) | /?tpl=page.ui-kit | Phát hiện khi kiểm D04 | ⬜ |
 | N06 | Vòng 4 / 24/10/2026 | CSS cũ ẩn checkbox: `input[type=checkbox]` của `ui_field` type checkbox có opacity 0, position absolute ⇒ ô không nhìn thấy (chỉ thấy chữ nhãn). Đo: 1440 & 390 opacity 0, absolute, 23×23 / 22×22px | /?tpl=page.ui-kit | Phát hiện khi kiểm D04 | ⬜ |
+| N07 | Vòng 6 / 24/10/2026 | ui-verify --quick báo 2 lỗi mới ở webkit390 `/collections/all`: touch<44 90 → 120, noName 24 → 40 (`a.pc-pcard__img` không tên, `button.btn-cart`, `button.pc-voucher__take` 65×32). Có y hệt khi chạy trên bản HEAD 5390119 (không có N04); số mới bằng Chromium 390 trong baseline ⇒ baseline WebKit cũ đếm thiếu thẻ SP, không phải hồi quy. Lỗi gốc thuộc L19 / L24 | /collections/all | Phát hiện khi kiểm N04 (không do N04) | ⬜ |
 
 ## **PHẦN F — Kế hoạch sửa và cổng kiểm**
 
@@ -1275,9 +1277,16 @@ module.exports = {
 ### M.4 `ui-src/css/components.css`
 
 ```css
-/* ui-src/css/components.css — THƯ VIỆN PC v1.0 — KHOÁ. Chỉ sửa qua quy trình C.6
-   Changelog: v1.0 (24/10/2026) khởi tạo 13 component (bản Sapo) */
+/* ui-src/css/components.css — THƯ VIỆN PC v1.1 — KHOÁ. Chỉ sửa qua quy trình C.6
+   Changelog: v1.0 (24/10/2026) khởi tạo 13 component (bản Sapo)
+              v1.1 (24/10/2026, N04) viền focus chung 2px brand cho phần tử bấm/nhập; .pc-input bỏ ring, dùng viền đó */
 @layer components {
+  /* 0. Viền focus — `:root` nâng độ ưu tiên (0,3,0) để thắng CSS cũ `.pc-site-v3 :is(a,button,input):focus-visible` (0,2,1)
+     và `a/button:focus { outline: none }`; bỏ `:root` ở D09 khi xoá CSS cũ */
+  :root :is(.pc-btn, .pc-swiper-btn, .pc-modal__close, .pc-input, .pc-fab, .pc-header__icon, .pc-bottomnav__item):focus-visible {
+    @apply outline outline-2 outline-offset-2 outline-brand;
+  }
+
   /* 1. Khung trang */
   .pc-container { @apply mx-auto w-full max-w-content px-4 lg:px-8; }
   .pc-section   { @apply py-10 lg:py-16; }
@@ -1310,7 +1319,7 @@ module.exports = {
   .pc-field { @apply flex flex-col gap-1.5; }
   .pc-label { @apply text-sm font-medium text-ink; }
   .pc-input { @apply h-11 w-full border border-line-control bg-white px-3 text-base text-ink rounded-xl shadow-none
-                     placeholder:text-ink-secondary focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand
+                     placeholder:text-ink-secondary focus:border-brand
                      aria-[invalid=true]:border-sale lg:rounded-none; }
   textarea.pc-input { @apply h-auto min-h-[96px] py-2; }
   .pc-hint  { @apply text-sm text-ink-secondary; }
@@ -1384,3 +1393,8 @@ module.exports = {
 ```
 
 Đã biên dịch thử bằng Tailwind 3.4 của repo (24/10/2026): đủ 47 class pc-*, không lỗi @apply.
+
+**N04 (24/10/2026):** CSS cũ `assets/vendor_bootstrap.css` `button, input { outline: none !important }` được thu hẹp thành
+`:where(button, input):where(:not(.pc-btn, .pc-swiper-btn, .pc-modal__close, .pc-input, .pc-header__icon, .pc-bottomnav__item))`
+(độ ưu tiên 0) để viền focus thư viện không bị tắt; phần tử cũ giữ nguyên. Thêm class thư viện có thẻ `<button>`/`<input>` mới
+⇒ thêm vào danh sách `:not(…)` đó. Xoá cả quy tắc ở D09.
