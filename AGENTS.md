@@ -5,6 +5,10 @@ Repo: **websitePharmaCosmetics** — theme giao diện **Sapo Web (.bwt)** cho P
 
 ## Bắt buộc đọc trước khi sửa bất kỳ file theme nào
 
+0. [`docs/UI-STANDARD.md`](./docs/UI-STANDARD.md) — **Chuẩn triển khai UX/UI (chốt 24/10/2026)**: nguồn duy nhất về
+   giao diện — luật R1–R10, token, thư viện component `ui_*` / class `pc-*`, Do/Don't, lỗi L01–L44, vòng lặp tự sửa
+   (`bash scripts/ui-loop.sh`, nhánh `ui-fix`). Mâu thuẫn với `.clinerules/03` về giao diện ⇒ UI-STANDARD thắng
+   (vd icon SVG `ui_icon` thay Font Awesome UI-9; chữ mobile ≥ 12px; vùng chạm ≥ 44px).
 1. [`Rule&HDKTXD.md`](./Rule&HDKTXD.md) — **Cẩm nang Quy chế, Rule & Hướng dẫn Kỹ thuật phát triển
    Theme Sapo Web** (nguồn chuẩn duy nhất: checklist review theme, quy chuẩn `theme.bwt`, Liquid,
    38 objects, `settings_schema.json`, kỹ thuật tính năng, hiệu năng/SEO, quy chế đối tác).
