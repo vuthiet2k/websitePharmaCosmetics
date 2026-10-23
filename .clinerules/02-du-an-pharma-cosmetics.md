@@ -389,7 +389,7 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
   trên Sapo thật. Việc còn lại của merchant: tạo Linklist trong Sapo Admin trỏ tới các collection con
   thật (ví dụ nhóm tinh chất/serum: da dầu/mụn, thâm, khô, nhạy cảm, lão hoá) rồi điền 3 field trên.
 - Header: `header.header` là wrapper trong suốt theo thiết kế — màu nằm ở phần tử con: `.main-header`
-  có nền dự phòng `#002E23`, `.pc-topbar` lấy nền từ `--mainColor` (schema-admin, xem dưới),
+  có nền dự phòng `#002E23`, `.pc-topbar-v3` lấy nền từ `--mainColor` (schema-admin, xem dưới),
   `.box-hearder` (logo/menu) nền trắng. Main header desktop cao 68px; khi cuộn chỉ `.header-menu` cao
   48px được fixed với nền trắng đục, stacking riêng và shadow. Logo/icon dùng `mainColorDark` đủ
   tương phản, còn `mainColor` dùng cho accent. Đo `background-color` phải đo đúng tầng con, không đo
@@ -411,7 +411,7 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
   `background:var(--mainColor)` (chuỗi token `settings.theme_main_color` → `--pc-brand-primary` →
   `--mainColor`, xem `storefront_theme.bwt`) — đổi `theme_main_color` ở Admin (Màu sắc) là đổi luôn
   footer, không có setting riêng cho footer.
-- Topbar (`.pc-topbar`) **vẫn giữ setting riêng** `header_topbar_bg` / `header_topbar_text_color`
+- Topbar (`.pc-topbar-v3`) **vẫn giữ setting riêng** `header_topbar_bg` / `header_topbar_text_color`
   (`configs/settings_schema.json`, truyền qua `--pc-topbar-bg`/`--pc-topbar-fg` trong
   `site_topbar.bwt`) — KHÔNG xoá field này. Giá trị mặc định hiện tại: `#3CB371` (khớp `mainColor`)
   + **chữ trắng `#FFFFFF`** — người dùng chủ đích chọn lại chữ trắng ngày 17/09/2026 sau khi đã thử

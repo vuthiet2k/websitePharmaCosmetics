@@ -102,7 +102,7 @@ test('hero honors reduced motion and remains stable at 320px', async ({ page }) 
 test('topbar keeps accessible contrast, vector icons and a readable vertical ticker', async ({ page }) => {
   await page.setViewportSize({ width: 1920, height: 1080 });
   const errors = await openHome(page);
-  const topbar = page.locator('.pc-topbar');
+  const topbar = page.locator('.pc-topbar-v3');
   // edd746c (2026-10-13): trang chủ có Hero đầu ⇒ header/topbar trong suốt đè lên ảnh; rê chuột vào header ⇒ về nền gốc.
   await expect(topbar).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
   await page.locator('header.header').hover();
