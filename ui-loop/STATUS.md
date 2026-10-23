@@ -1,5 +1,5 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 7 · Việc vừa làm: N05 → DONE (phần tử nổi cũ nhường thư viện: 8 khung Chromium + WebKit, thanh mua 118,8 → 64px, nút + giá trúng 9/9, toast giao thanh mua 0px, nút nổi 3 → 1, popup 25/25, axe target-size 0; hồi quy Q 0/72)
+Vòng: 7 · Việc vừa làm: N05 → DONE (ab4efc4; phần tử nổi cũ nhường thư viện: 8 khung Chromium + WebKit, thanh mua 118,8 → 64px, nút + giá trúng 9/9, toast giao thanh mua 0px, nút nổi 3 → 1, popup 25/25, axe target-size 0; hồi quy Q 0/72)
 Tổng: 61 việc · DONE 6 · TODO 54 · VERIFY_FAIL 1 · BLOCKED 0 · BLOCKED_OWNER 0
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick kit + Q; đã ghi baseline)
 Câu hỏi cho chủ dự án:
