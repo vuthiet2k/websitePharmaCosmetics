@@ -1,9 +1,17 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 27 · Việc vừa làm: N18 → VERIFY_FAIL lần 1 (icon ≡ nay SVG ui_icon 20×20, vẽ rõ ở WebKit, desktop không đổi; còn thiếu: WebKit reduce icon trễ hơn link 325–359ms do tokens.css — thử phương án N17 ⇒ 0ms)
-Tổng: 71 việc · DONE 21 · TODO 49 · VERIFY_FAIL 1 · BLOCKED 0 · BLOCKED_OWNER 0
-Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 2 (webkit390 /collections/all touch<44 90 → 120, noName 24 → 40 — dao động N07, không do N18)
+Vòng: 28 · Việc vừa làm: N17 → BLOCKED_OWNER lần 1 (phương án A áp dụng: giảm chuyển động WebKit 1 300–3 411 → 61–137ms, Swiper không đổi; còn 2 điểm cần chủ dự án quyết — xem câu hỏi)
+Tổng: 71 việc · DONE 21 · TODO 48 · VERIFY_FAIL 1 · BLOCKED 0 · BLOCKED_OWNER 1
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 3 (d1440 /collections/all focusNoRing 22 → 23 — mốc đếm nhầm, xem N17-b; webkit390 /collections/all touch<44 90 → 120, noName 24 → 40 — dao động N07)
 Câu hỏi cho chủ dự án:
-- N17: ĐÃ TRẢ LỜI 24/10/2026 — chủ dự án duyệt PHƯƠNG ÁN A (tokens.css .01ms → 0s, xoá khối trùng global_core); N17 về TODO.
+- **N17-a (vòng 28):** WebKit iPhone 13, KHÔNG giảm chuyển động: drawer ☰ hiện sau 203–672ms (3/6 lượt > 400ms B.7) — HEAD đo y hệt
+  (211–466ms, 3/6), không do N17. Nguyên nhân: `.header-menu` `transition: transform .5s, visibility .5s` (global_core.scss.bwt:3323)
+  ⇒ `visibility` đổi ở khung thứ 2; WebKit headless 1 khung ≈ 175–266ms (máy thật 16ms). Chọn: (1) XOÁ `visibility .5s` khỏi transition
+  — drawer mở tức thì nhưng KHI ĐÓNG biến mất ngay, mất hiệu ứng trượt ra; (2) giữ CSS, tiêu chí no-preference WebKit đo theo trạng thái
+  CSS (setTimeout, không theo khung rAF headless) hoặc chỉ áp ngưỡng 400ms cho Chromium; (3) hướng khác. (Áp dụng cả N18 tiêu chí (2).)
+- **N17-b (vòng 28):** ui-verify --quick báo mới `d1440 /collections/all focusNoRing 22 → 23` («Voucher trước»). Mốc 22 đếm nhầm: HEAD đọc
+  ngay sau Tab thấy bóng trang trí còn giữa chuyển tiếp `.01ms`; đọc sau 100ms HEAD cũng 23 (evidence/N17/probe-focus-wait.txt) — nút
+  không có viền focus ở cả 2 bản (lỗi thật thuộc L10). Cho phép ghi mốc mới 23 khi commit N17 (dù ui-verify exit 1 do mục này)?
+- N17 (cũ): ĐÃ TRẢ LỜI 24/10/2026 — chủ dự án duyệt PHƯƠNG ÁN A (tokens.css .01ms → 0s, xoá khối trùng global_core); N17 về TODO.
 - L01: ĐÃ TRẢ LỜI 24/10/2026 — chủ dự án cho sửa luồng ui-verify: mở nhóm đầu cây #header-category-menu rồi đếm link con thật (URL gốc /<handle> như menu Sapo), ngưỡng ≥ 5 giữ nguyên; đã sửa + G.7 cập nhật; luồng L01 đạt 3/3 (11 link).
 - D07: đã trả lời 24/10/2026 và đã xử lý (DONE vòng 21).
 - N15: ĐÃ TRẢ LỜI 24/10/2026 — script vòng lặp tự khởi động lại preview khi agent tạo file ui-loop/RESTART-PREVIEW (xem PROMPT).
@@ -98,3 +106,9 @@ Ghi chú dựng vòng lặp:
   **VÒNG SAU: làm N17 TRƯỚC (đã duyệt — như vòng 5 làm N03 trước D04), rồi chạy lại `node ui-loop/checks/N18.mjs` (không chạy `before`
   — before.json đo trên bản chưa sửa).** Commit N17 không cuốn hunk N18 trong global_core.scss.bwt (lọc patch + `git apply --cached`) —
   hoặc nếu N18 đạt ngay sau N17 thì commit N18 riêng tiếp theo.
+- Vòng 28 N17 → BLOCKED_OWNER lần 1 (câu hỏi N17-a, N17-b ở trên). Mã N17 ĐỂ TRONG CÂY LÀM VIỆC, chưa commit: `ui-src/css/tokens.css`
+  (`transition-duration: 0s`), `assets/global_core.scss.bwt` (xoá khối `*` .01ms cuối file, ~dòng 5566 — cùng file với hunk N18 ~dòng 3440–3530),
+  `assets/pc-ui.css` (sinh). Kiểm: `node ui-loop/checks/N17.mjs` (Swiper so đối chứng chèn `.01ms` trong trang); đối chứng HEAD:
+  `evidence/N17/head-pc-ui.css` + chèn lại khối `.01ms` (probe-nopref/probe-focus/probe-hero/probe-voucher-nav.mjs). Chữ hero 1440 mờ = L11 (như HEAD).
+  Vòng sau: N18 (VERIFY_FAIL lần 1) đo được với mã N17 trong cây, nhưng tiêu chí (2) no-preference WebKit ≤ 400ms vướng đúng N17-a ⇒
+  nếu chủ dự án chưa trả lời N17-a, chạy `node ui-loop/checks/N18.mjs` sẽ lại có thể ✗ ở mục đó.
