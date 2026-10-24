@@ -93,6 +93,11 @@ Xuất `test-results/audit-ui/report.json` + ảnh chụp toàn trang; mã lỗi
 
 ## UI-9. Icon — thư viện dùng chung (RULE CỨNG, 17/10/2026)
 
+> **THAY BẰNG UI-STANDARD R7 (24/10/2026, việc D07):** icon mới = SVG nội tuyến qua `{% include 'ui_icon', name: '…' %}`
+> (`snippets/ui_icon.bwt`, path Lucide ISC / Tabler MIT; `aria-hidden` khi trang trí, `label` khi đứng một mình). KHÔNG thêm
+> `<i class="fa-…">` mới; Font Awesome còn lại được gỡ dần ở đợt Tốc độ (L03). Các dòng UI-9.x dưới đây chỉ còn áp cho mã
+> Font Awesome CŨ chưa gỡ (cú pháp v6, cấm emoji / ảnh làm icon vẫn giữ; `lint:guardrails` vẫn kiểm).
+
 **Thư viện duy nhất: Font Awesome 6 Free** (bản 6.5.0, CDN cdnjs) — nạp **một lần** ở `layouts/theme.bwt` (và
 `layouts/chat.bwt`):
 `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">`.

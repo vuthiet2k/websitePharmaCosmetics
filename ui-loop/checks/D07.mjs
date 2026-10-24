@@ -4,7 +4,7 @@
   lint-guardrails miễn ui_icon.bwt / luật icon ghi R7 + `.clinerules/03` UI-9 ghi "thay bằng UI-STANDARD R7".
     (a) tĩnh: ui_icon có đúng 43 tên (8 cũ + 35 mới), trùng danh sách lưới #pc-kit-icons của trang kit;
     (b) trang kit /?tpl=page.ui-kit, 7 khung (Chromium 390/320/768/1024/1440/844×390 + WebKit iPhone 13):
-        43/43 svg nhìn thấy, 24×24 (size 24), getBBox ≥ 8px mỗi chiều và nằm trong viewBox (−1…25), aria-hidden="true" +
+        43/43 svg nhìn thấy, 24×24 (size 24), getBBox cạnh dài ≥ 12px, cạnh ngắn ≥ 4px (chủ dự án duyệt 24/10/2026 — chevron Lucide giữ hình gốc) và nằm trong viewBox (−1…25), aria-hidden="true" +
         focusable="false" (trang trí), 8 icon có label ⇒ role="img" + aria-label; tương phản nét / nền ≥ 3:1;
     (c) 0 PC-ERROR ngoài #pc-kit-error; axe WCAG 2.2 A/AA trong #pc-kit = 0;
     (d) lint-guardrails: exit 0, 0 dòng nhắc snippets/ui_icon.bwt, không còn "Font Awesome 6 Free"; .clinerules/03 có ghi R7.
@@ -93,19 +93,20 @@ for (const f of FRAMES) {
   await sec.scrollIntoViewIfNeeded();
   const m = await page.evaluate(measure);
   const g = m.grid;
-  const bad = g.filter((i) => !i.svg || !i.visible || i.w !== 24 || i.h !== 24 || i.bb[2] < 8 || i.bb[3] < 8 || i.bb[0] < -1 || i.bb[1] < -1
+  const bad = g.filter((i) => !i.svg || !i.visible || i.w !== 24 || i.h !== 24 || Math.max(i.bb[2], i.bb[3]) < 12 || Math.min(i.bb[2], i.bb[3]) < 4 || i.bb[0] < -1 || i.bb[1] < -1
     || i.bb[0] + i.bb[2] > 25 || i.bb[1] + i.bb[3] > 25 || i.hidden !== 'true' || i.focusable !== 'false' || i.role || i.contrast < 3 || !i.inView);
   ok(g.length === 43 && bad.length === 0, `lưới ${g.length} icon, sai ${bad.length}${bad.length ? ': ' + JSON.stringify(bad.slice(0, 4)) : ''}`);
   const bbMin = Math.min(...g.map((i) => Math.min(i.bb[2], i.bb[3])));
+  const bbLongMin = Math.min(...g.map((i) => Math.max(i.bb[2], i.bb[3])));
   const cMin = Math.min(...g.map((i) => i.contrast));
-  console.log(`    cỡ svg ${[...new Set(g.map((i) => i.w + '×' + i.h))].join(',')} · bbox nhỏ nhất ${bbMin}px · tương phản nhỏ nhất ${cMin}:1 · cuộn ngang ${m.scrollW - m.vw}px`);
+  console.log(`    cỡ svg ${[...new Set(g.map((i) => i.w + '×' + i.h))].join(',')} · bbox cạnh ngắn nhỏ nhất ${bbMin}px · cạnh dài nhỏ nhất ${bbLongMin}px · tương phản nhỏ nhất ${cMin}:1 · cuộn ngang ${m.scrollW - m.vw}px`);
   ok(m.labelled.length === 8 && m.labelled.every((s) => s.role === 'img' && s.label && s.hidden === null), `8 icon có label: role="img" + aria-label (${m.labelled.filter((s) => s.role === 'img' && s.label).length}/8)`);
   ok(m.errs.length === 0, `PC-ERROR ngoài #pc-kit-error: ${m.errs.length}`);
   await page.addScriptTag({ content: AXE_SRC });
   const axe = await page.evaluate(async () => (await axe.run('#pc-kit', { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] } })).violations.map((v) => `${v.id}×${v.nodes.length}`));
   ok(axe.length === 0, `axe #pc-kit: ${axe.length ? axe.join(', ') : '0'}`);
   await sec.screenshot({ path: path.join(EVD, `after-${f.name}.png`) });
-  summary.push({ frame: f.name, icons: g.length, bad: bad.length, bbMin, cMin, axe: axe.length, errs: m.errs.length });
+  summary.push({ frame: f.name, icons: g.length, bad: bad.length, bbMin, bbLongMin, cMin, axe: axe.length, errs: m.errs.length });
   await ctx.close();
 }
 // Ảnh phóng to để mắt xem hình từng icon

@@ -19,6 +19,8 @@ const rootDir = path.resolve(__dirname, '..');
 const baselinePath = path.join(__dirname, 'guardrails-baseline.json');
 const SCAN_DIRS = ['assets', 'layouts', 'snippets', 'templates'];
 const TOKEN_FILE = 'snippets/design_tokens.bwt';
+// Thư viện icon SVG nội tuyến (UI-STANDARD R7, việc D07 24/10/2026): nơi DUY NHẤT được chứa path SVG icon — không đếm inlineSvg.
+const ICON_LIBRARY = 'snippets/ui_icon.bwt';
 // Vendor/thư viện bên thứ ba + file sinh: không sửa, không tính.
 // pc-ui.css / pc-legacy-tw.css: file sinh từ Tailwind (UI-STANDARD B.5, việc D01 24/10/2026) — cỡ chữ theo thang tailwind.pc.config.js.
 const VENDOR = /(^|\/)(vendor_[^/]*|[^/]*[.-]min\.[^/]*|vue\.global\.prod\.js|jquery[^/]*|swiper\.js\.bwt|sweetalert-min\.js\.bwt|bootstrap-datepicker\.js\.bwt|mops-tailwind\.css|pc-ui\.css|pc-legacy-tw\.css)$/i;
@@ -49,7 +51,8 @@ function countMetrics(rel, source) {
   }
   if (isStyle || isMarkup) metrics.important = (source.match(IMPORTANT) || []).length;
   if (isMarkup) {
-    metrics.inlineSvg = (source.match(/<svg[\s>]/gi) || []).length; // UI-9: SVG nhúng tay không được tăng
+    // R7: SVG nhúng tay ngoài ui_icon không được tăng (icon mới gọi {% include 'ui_icon' %}).
+    if (rel !== ICON_LIBRARY) metrics.inlineSvg = (source.match(/<svg[\s>]/gi) || []).length;
     metrics.inlineStyle = [...source.matchAll(STATIC_INLINE_STYLE)].filter((m) => !/\{\{|\{%/.test(m[1])).length;
   }
   metrics.aiComment = (source.match(AI_COMMENT) || []).length;
@@ -108,9 +111,10 @@ if (fontViolations.length && !process.argv.includes('--update-baseline')) {
 }
 
 /*
- * RULE CỨNG UI-9 (2026-10-17, .clinerules/03): icon dùng chung Font Awesome 6 Free (CDN cdnjs trong layouts/theme.bwt).
- * FAIL khi: cú pháp FA cũ (fas/far/fab, "fa fa-x", tên v4/v5 đã đổi ở v6), emoji/ký tự dùng làm icon trong markup,
- * icon dạng ảnh (icon_*.png / *.gif). SVG nhúng tay: không FAIL nhưng là chỉ số baseline "inlineSvg" — không được tăng.
+ * RULE CỨNG icon — UI-STANDARD R7 (thay UI-9 cũ, việc D07 24/10/2026): icon = SVG nội tuyến qua snippets/ui_icon.bwt;
+ * Font Awesome chỉ còn ở mã cũ, gỡ dần ở đợt Tốc độ (L03). Với mã FA cũ còn lại vẫn FAIL khi: cú pháp FA cũ
+ * (fas/far/fab, "fa fa-x", tên v4/v5 đã đổi ở v6); mọi nơi FAIL khi emoji/ký tự làm icon trong markup, icon dạng ảnh
+ * (icon_*.png / *.gif). SVG nhúng tay ngoài ui_icon.bwt: không FAIL nhưng là chỉ số baseline "inlineSvg" — không được tăng.
  * Ngoại lệ: MOPS admin (Material Symbols, layout riêng), vendor, nội dung trong comment.
  */
 const ICON_EXEMPT = /(^|\/)(mops[^/]*|page_mops_admin\.scss\.bwt|page\.mops-admin\.bwt)$/i;
@@ -138,13 +142,13 @@ for (const dir of SCAN_DIRS) {
       FA_LEGACY_PREFIX.lastIndex = 0;
       const v5 = line.match(FA_V5_NAMES);
       if (v5 && /fa-(solid|regular|brands)|class|\.fa-/.test(line)) iconViolations.push(`${at}  tên icon FA v4/v5: ${v5.join(', ')}`);
-      if (/\.bwt$/i.test(rel) && EMOJI_ICON.test(line)) iconViolations.push(`${at}  emoji/ký tự làm icon (dùng <i class="fa-solid …">): ${line.trim().slice(0, 80)}`);
+      if (/\.bwt$/i.test(rel) && EMOJI_ICON.test(line)) iconViolations.push(`${at}  emoji/ký tự làm icon (dùng {% include 'ui_icon', name: … %}): ${line.trim().slice(0, 80)}`);
       if (IMG_ICON.test(line)) iconViolations.push(`${at}  icon dạng ảnh: ${line.trim().slice(0, 80)}`);
     });
   }
 }
 if (iconViolations.length && !process.argv.includes('--update-baseline')) {
-  console.error(`[lint:guardrails] FAIL — ${iconViolations.length} vi phạm quy tắc icon (UI-9: Font Awesome 6 Free):`);
+  console.error(`[lint:guardrails] FAIL — ${iconViolations.length} vi phạm quy tắc icon (UI-STANDARD R7: icon = ui_icon; mã Font Awesome cũ giữ cú pháp v6):`);
   for (const v of iconViolations.slice(0, 60)) console.error(`  ✗ ${v}`);
   process.exit(1);
 }
