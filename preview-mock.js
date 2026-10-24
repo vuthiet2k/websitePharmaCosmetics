@@ -364,11 +364,20 @@ function getContext(templateName = 'index', routeParams = {}) {
   let search;
   if (Object.prototype.hasOwnProperty.call(routeParams, 'searchQuery')) {
     const raw = routeParams.searchQuery || '';
-    const q = raw.toLowerCase().trim();
     const searchType = routeParams.searchType === 'article' ? 'article' : 'product';
-    const results = !q ? [] : (searchType === 'article'
-      ? Object.values(blogsObj).flatMap((b) => b.articles || []).filter((a) => a.title.toLowerCase().includes(q))
-      : products.filter((p) => p.name.toLowerCase().includes(q)));
+    // D08 (24/10/2026): mô phỏng cú pháp truy vấn Sapo mà theme đang dùng — `tags:(x)` / `tags:((x))` lọc theo tag
+    // (snippets/header.bwt, tab_product.bwt; link tag bài viết L08), `(*x*)` = chứa từ khoá (nút chuyển loại ở search.bwt).
+    // Mỗi kết quả mang object_type như Sapo: search.bwt / search.smartjson(ar).bwt lọc theo trường này — thiếu thì trang
+    // bài viết hiện 0 thẻ và gợi ý tìm kiếm trả {} (L14).
+    const tagMatch = raw.trim().match(/^tags:\(+([^()]+)\)+$/i);
+    const q = (tagMatch ? tagMatch[1] : raw.replace(/^\(\*|\*\)$/g, '')).toLowerCase().trim();
+    const pool = searchType === 'article'
+      ? [...new Set(Object.values(blogsObj).flatMap((b) => b.articles || []))]
+      : products;
+    const hit = tagMatch
+      ? (o) => (o.tags || []).some((t) => String(t).toLowerCase() === q)
+      : (o) => String(searchType === 'article' ? o.title : o.name).toLowerCase().includes(q);
+    const results = !q ? [] : pool.filter(hit).map((o) => ({ ...o, object_type: searchType }));
     search = { performed: true, terms: raw, types: [searchType], results, results_count: results.length };
   } else {
     search = { results: products.slice(0, 6), results_count: products.length, terms: 'demo', performed: false, types: ['product'] };

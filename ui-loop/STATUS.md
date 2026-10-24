@@ -1,12 +1,11 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 19 · Việc vừa làm: D07 → BLOCKED_OWNER, lần thử 1 (43 icon ui_icon 24×24 ở 7 khung, aria đúng, axe 0, lint 0 cảnh báo ui_icon, build:sapo exit 0, ui-guard PASS, ui-verify --quick 0 lỗi mới; trượt duy nhất tiêu chí bbox ≥ 8px: chevron 6×12 hình gốc Lucide)
-Tổng: 66 việc · DONE 16 · TODO 49 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 1
-Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick 7 trang; baseline không ghi vì việc chưa DONE)
+Vòng: 20 · Việc vừa làm: D08 → DONE (preview-mock tìm kiếm: `object_type` + cú pháp `tags:(x)`; tag retinol 0 → 1/1 bài; smartjson 0 → 2 SP; overlay gõ "retinol" ⇒ 2 SP + 2 bài ở 7 khung; /chinh-xach-doi-tra 200 + h1; ui-verify --quick 8 trang 0 lỗi mới)
+Tổng: 68 việc · DONE 17 · TODO 51 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick 8 trang; baseline đã ghi sau D08)
 Câu hỏi cho chủ dự án:
-- D07: tiêu chí (b) agent ghi "getBBox ≥ 8px mỗi chiều" nhưng chevron-left/right (6×12) và chevron-down (12×6) là hình gốc Lucide,
-  mắt xem ảnh đúng hình. Cho phép sửa tiêu chí thành "cạnh dài bbox ≥ 12px, cạnh ngắn ≥ 4px" không? Duyệt ⇒ chuyển D07 về TODO,
-  vòng sau sửa ngưỡng trong ui-loop/checks/D07.mjs, chạy lại, commit. Mã D07 (ui_icon.bwt, lint-guardrails.js, .clinerules/03,
-  dev-preview page.ui-kit) để trong cây làm việc, chưa commit — KHÔNG `git restore`.
+- D07: ĐÃ TRẢ LỜI 24/10/2026 — chủ dự án đồng ý đổi tiêu chí thành "cạnh dài bbox ≥ 12px, cạnh ngắn ≥ 4px"; D07 về TODO, sửa ngưỡng trong ui-loop/checks/D07.mjs, chạy lại, commit (mã D07 đang trong cây làm việc).
+- N15 (đợt 9, chưa cần ngay): sửa route trang nội dung trong `dev-server.js` cần khởi động lại server preview (file không được watch) —
+  vòng lặp cấm tắt server. Khi tới N15: cho phép `scripts/ui-loop.sh` khởi động lại preview, hay chủ dự án tự khởi động lại?
 - (không có — xung đột M.4 `h-6 w-6` / D.7 "checkbox ≥ 24px" với B.7 "vùng chạm mobile ≥ 44px" đã xử theo A.1: vùng bấm 44px,
   ô nhìn thấy vẫn 24px; nếu chủ dự án muốn khác thì báo lại)
 
@@ -61,7 +60,12 @@ Ghi chú:
   báo với pc-ui.css (`text-*`, `rounded-xl/2xl`) bản cũ vẫn thắng như thời CDN — `ui-loop/css-inventory.md`. `D06.mjs after` so
   before.json còn lệch do nhiễu: đồng hồ Flash Sale, giờ tin nhắn, `div.container` marginLeft 0↔80px giữa các lần nạp
   (`evidence/D06/probe-margin.mjs`). Class chỉ có trong nội dung Sapo thật (không có trong `data/`) không được sinh ⇒ thêm safelist.
-- Việc kế tiếp: D07 (TODO đầu tiên đợt 0 theo thứ tự BACKLOG; sau đó D08). N12 thuộc đợt 8, N13 đợt 5.
+- Vòng 20 xong D08 (D07 lúc chọn việc còn BLOCKED_OWNER; chủ dự án trả lời trong lúc vòng chạy): chỉ sửa `preview-mock.js` (server
+  tự nạp lại). Mẫu URL tag bài viết cho L08: `/search?query=tags:(<tag>)&type=article` (cú pháp `tags:(…)` theme gốc đã dùng ở
+  header.bwt:235, tab_product.bwt:248 — chưa đối chiếu Sapo thật). Gợi ý tìm kiếm ở local cần chuyển `https://localhost/search…`
+  về http:3000 bằng `page.route` (N14). Thêm N14, N15 (đợt 9). Mã D07 vẫn trong cây làm việc, không nằm trong commit D08.
+- Việc kế tiếp: D07 (TODO đợt 0, lần thử 1 → sửa ngưỡng bbox theo câu trả lời chủ dự án). Xong D07 thì đợt 0 hết ⇒ sang L01.
+  N12 thuộc đợt 8, N13 đợt 5, N14/N15 đợt 9.
 
 Ghi chú dựng vòng lặp:
 - Baseline `ui-loop/baseline.json` = quét full bản hiện tại (trước mọi sửa đổi); vòng 1 trộn thêm 18 lượt trang quick, vòng 2 trộn 30 lượt, vòng 3 trộn 18 lượt, vòng 5 trộn 21 lượt, vòng 6 trộn 21 lượt.
