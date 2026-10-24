@@ -1,6 +1,6 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 11 · Việc vừa làm: N01 → DONE (7 khung Chromium + WebKit: 44–46 phần tử pc-* × 4 cạnh 0 sai — nút phụ solid 2px brand, nút chính hết viền UA, thẻ / slider / fab solid 1px, viền 1 cạnh đúng cạnh; ô nhập viền rgb(100,116,139) border-box 44px; ui-verify --quick 0 lỗi mới)
-Tổng: 64 việc · DONE 9 · TODO 55 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Vòng: 12 · Việc vừa làm: N02 → DONE (42 lượt Q × 7 khung Chromium + WebKit: bật/tắt pc-ui.css 1 093 → 0 phần tử cũ đổi gạch chân/màu; a.nav-link 1024/1440 gạch chân 5/5 → 0; ảnh 1440 bật vs tắt 0 điểm khác; "Xem nhiều" không do pc-ui.css; ui-verify --quick 0 lỗi mới)
+Tổng: 65 việc · DONE 10 · TODO 55 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick kit + Q; baseline đã ghi)
 Câu hỏi cho chủ dự án:
 - (không có — xung đột M.4 `h-6 w-6` / D.7 "checkbox ≥ 24px" với B.7 "vùng chạm mobile ≥ 44px" đã xử theo A.1: vùng bấm 44px,
@@ -33,7 +33,9 @@ Ghi chú:
 - Vòng 11 xong N01: components.css v1.4. Ngoài border-style, ô nhập còn bị CSS cũ global_core `input[type=…]` (0,1,1) đổi màu viền thành
   #EBEBEB ⇒ thêm `:root .pc-input` đặt trước khối .pc-input (focus / aria-invalid vẫn thắng). `.pc-header` chưa được Tailwind sinh trong
   pc-ui.css (chưa template nào dùng — L01) ⇒ N01.mjs biên dịch riêng quy tắc `.pc-header` để đo; khi L01 dùng class này, kiểm lại bằng N01.mjs.
-- Việc kế tiếp: N02 (TODO đầu tiên đợt 0).
+- Vòng 12 xong N02: tokens.css `:where(p a, li a)` (độ ưu tiên 0) + hoãn `a { text-underline-offset }` toàn cục tới D09 (dời gạch chân link cũ "Chính sách bảo mật"); components.css v1.5 `.pc-toast a` underline-offset-4. Kiểm bằng bật/tắt pc-ui.css ngay trong trang (ui-loop/checks/N02.mjs) — so D03 before.json lệch số phần tử nên căn theo tên phần tử. Ảnh 1440: robot `.main-widget` nhấp nháy ⇒ loại vùng widget nới 12px khi so ảnh. Thêm N12 (đợt 8): thẻ "Xem nhiều" TRETINOIN ô ảnh trống.
+- N07 (vòng 12): webkit390 /collections/all 90/24 ↔ 120/40 do khối `.pc-col-bestseller` (8 btn-cart) lúc có lúc không ở WebKit, cùng CSS cho cả 2 kết quả; baseline nay ghi 120/40 (bằng Chromium). Nếu ui-verify báo "2 lỗi mới" kiểu này thì chạy lại / đối chiếu N07 trước khi kết luận.
+- Việc kế tiếp: N09 (TODO đầu tiên đợt 0).
 
 Ghi chú dựng vòng lặp:
 - Baseline `ui-loop/baseline.json` = quét full bản hiện tại (trước mọi sửa đổi); vòng 1 trộn thêm 18 lượt trang quick, vòng 2 trộn 30 lượt, vòng 3 trộn 18 lượt, vòng 5 trộn 21 lượt, vòng 6 trộn 21 lượt.

@@ -37,8 +37,11 @@
     scroll-padding-bottom: calc(var(--pc-bottomnav-h) + 8px);
   }
   :focus-visible { outline: 2px solid var(--pc-color-brand-primary); outline-offset: 2px; }
-  a { text-underline-offset: 3px; }
-  p a, li a { text-decoration: underline; color: var(--pc-color-brand-primary); }
+  /* N02 (24/10/2026): :where() — độ ưu tiên 0 để CSS cũ (`a { text-decoration: none }`, menu, breadcrumb) vẫn thắng
+     trong giai đoạn chuyển; link trong đoạn văn thư viện / sau đợt 12 (xoá CSS cũ) vẫn gạch chân + màu brand.
+     `a { text-underline-offset: 3px }` toàn cục hoãn tới đợt 12 (D09) — CSS cũ không đặt offset nên quy tắc này dời gạch
+     chân link cũ (vd "Chính sách bảo mật" ở /dat-lich-tu-van); link thư viện tự đặt offset trong components.css */
+  :where(p a, li a) { text-decoration: underline; color: var(--pc-color-brand-primary); }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: .01ms !important; animation-iteration-count: 1 !important;
