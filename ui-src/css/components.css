@@ -1,4 +1,4 @@
-/* ui-src/css/components.css — THƯ VIỆN PC v1.7 — KHOÁ. Chỉ sửa qua quy trình C.6
+/* ui-src/css/components.css — THƯ VIỆN PC v1.8 — KHOÁ. Chỉ sửa qua quy trình C.6
    Changelog: v1.0 (24/10/2026) khởi tạo 13 component (bản Sapo)
               v1.1 (24/10/2026, N04) viền focus chung 2px brand cho phần tử bấm/nhập; .pc-input bỏ ring, dùng viền đó
               v1.2 (24/10/2026, N05) thanh mua 1 hàng (giá co, nút giữ cỡ chữ); nhóm 13 — phần tử nổi cũ nhường thư viện
@@ -8,7 +8,8 @@
               v1.5 (24/10/2026, N02) .pc-toast a ghi rõ underline-offset-4 (tokens.css hoãn `a { text-underline-offset }` toàn cục tới D09)
               v1.6 (24/10/2026, N08) thông báo nhường nút nổi (fab nâng lên trên toast khi toast hiện) và popup đang mở (< 1024: thông báo xuống đáy, khung trượt
                                      nâng lên trên nó) — trước đó toast che fab 28px, che ô nhập trong popup 31px
-              v1.7 (24/10/2026, N10) popup đang mở ⇒ header cũ (header.header) xuống z-header 30 trong ngữ cảnh riêng, nằm dưới lớp phủ z 50 */
+              v1.7 (24/10/2026, N10) popup đang mở ⇒ header cũ (header.header) xuống z-header 30 trong ngữ cảnh riêng, nằm dưới lớp phủ z 50
+              v1.8 (24/10/2026, N11) .pc-modal__close bỏ nền / viền outset / padding mặc định của <button> (preflight tắt) */
 @layer components {
   /* 0. Viền focus — `:root` nâng độ ưu tiên (0,3,0) để thắng CSS cũ `.pc-site-v3 :is(a,button,input):focus-visible` (0,2,1)
      và `a/button:focus { outline: none }`; bỏ `:root` ở D09 khi xoá CSS cũ */
@@ -125,7 +126,9 @@
                      lg:inset-auto lg:left-1/2 lg:top-1/2 lg:w-full lg:max-w-lg lg:-translate-x-1/2 lg:-translate-y-1/2
                      lg:border lg:p-6 lg:pt-12 lg:rounded-none; }
   .pc-modal__title { @apply text-lg font-semibold text-ink; }
-  .pc-modal__close { @apply absolute right-2 top-2 inline-flex h-11 w-11 items-center justify-center text-ink; }
+  /* N11: preflight tắt ⇒ <button> còn nền + viền outset + padding của trình duyệt (Chromium #F0F0F0, WebKit #C0C0C0) */
+  .pc-modal__close { @apply absolute right-2 top-2 m-0 inline-flex h-11 w-11 cursor-pointer items-center justify-center border-0 border-none
+                            bg-transparent p-0 text-ink; }
 
   /* 11. Thông báo */
   .pc-toast { @apply fixed inset-x-4 bottom-20 z-toast flex items-center justify-between gap-3 bg-ink px-4 py-3 text-sm text-white

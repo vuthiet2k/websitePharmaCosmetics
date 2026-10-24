@@ -1,6 +1,6 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 15 · Việc vừa làm: N10 → DONE, commit 941a42f (7 khung Chromium + WebKit × cuộn 0/1200: lưới header trúng lớp phủ 0/15 → 15/15; bấm ☰/giỏ/menu khi popup mở → 0 tác dụng; hồi quy Q 36/36 = HEAD; ui-verify --quick 0 lỗi mới)
-Tổng: 65 việc · DONE 13 · TODO 52 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Vòng: 16 · Việc vừa làm: N11 → DONE (7 khung Chromium + WebKit, popup mở: nút đóng nền xám → transparent, viền outset 2px → none, padding → 0, vẫn 44×44, icon X 17,85:1, Tab solid 2px brand; 113 phần tử .pc-* khác HEAD = sau; ui-verify --quick 0 lỗi mới)
+Tổng: 65 việc · DONE 14 · TODO 51 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick kit + Q; baseline đã ghi)
 Câu hỏi cho chủ dự án:
 - (không có — xung đột M.4 `h-6 w-6` / D.7 "checkbox ≥ 24px" với B.7 "vùng chạm mobile ≥ 44px" đã xử theo A.1: vùng bấm 44px,
@@ -43,7 +43,10 @@ Ghi chú:
 - Vòng 15 xong N10: components.css v1.7 — popup mở ⇒ `header.header` `isolate z-header` (30); desktop header static nên cần
   `isolate` để gói `.main-header` z 100 / topbar 10010 / `.header-menu` dính 10020. Đối chứng HEAD bằng `ui-loop/evidence/N10/head-pc-ui.css`.
   Ảnh N10 vẫn thấy nút đóng popup nền xám (N11).
-- Việc kế tiếp: N11 (TODO đầu tiên đợt 0 theo thứ tự BACKLOG).
+- Vòng 16 xong N11: components.css v1.8 — `.pc-modal__close` `m-0 border-0 border-none bg-transparent p-0 cursor-pointer`. Lần đo đầu
+  dùng `border-solid` ra "solid 0px" ⇒ đổi `border-none` cho khớp chữ tiêu chí rồi build + đo lại toàn bộ. Đối chứng HEAD bằng
+  `ui-loop/evidence/N11/head-pc-ui.css`. Nút đóng chưa có hành vi đóng (bấm / Escape) — thuộc D05.
+- Việc kế tiếp: D05 (TODO đầu tiên đợt 0 theo thứ tự BACKLOG; N12 thuộc đợt 8).
 
 Ghi chú dựng vòng lặp:
 - Baseline `ui-loop/baseline.json` = quét full bản hiện tại (trước mọi sửa đổi); vòng 1 trộn thêm 18 lượt trang quick, vòng 2 trộn 30 lượt, vòng 3 trộn 18 lượt, vòng 5 trộn 21 lượt, vòng 6 trộn 21 lượt.
