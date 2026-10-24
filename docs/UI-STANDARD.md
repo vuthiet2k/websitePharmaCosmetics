@@ -1014,7 +1014,7 @@ Mỗi lỗi mới (từ ui-verify --full, hồi quy, hoặc phát hiện khi ki�
 
 | Mã | Phát hiện ở vòng / ngày | Mô tả (số đo) | Trang | Nguồn (việc gây ra / quét full) | Trạng thái |
 |-----|-----|-----|-----|-----|-----|
-| N01 | Vòng 1 / 23/10/2026 | Preflight tắt (B.4) ⇒ `border`/`border-2` trong components.css chỉ đặt độ dày + màu: computed border-style `.pc-btn` outset, `.pc-card` none (thẻ mất viền), `.pc-input` inset; `.pc-input` cao 48px thay 44px (content-box). Đo ở 7 khung Chromium + WebKit | trang mẫu ui-loop/checks/D01.mjs; kiểm lại ở /?tpl=page.ui-kit | Phát hiện khi kiểm D01 | ⬜ |
+| N01 | Vòng 1 / 23/10/2026 | Preflight tắt (B.4) ⇒ `border`/`border-2` trong components.css chỉ đặt độ dày + màu: computed border-style `.pc-btn` outset, `.pc-card` none (thẻ mất viền), `.pc-input` inset; `.pc-input` cao 48px thay 44px (content-box). Đo ở 7 khung Chromium + WebKit | trang mẫu ui-loop/checks/D01.mjs; kiểm lại ở /?tpl=page.ui-kit | Phát hiện khi kiểm D01 | ✅ |
 | N02 | Vòng 3 / 24/10/2026 | Sau khi nạp pc-ui.css (D03): quy tắc nền `p a, li a { text-decoration: underline; color: brand }` (tokens.css) ⇒ 937 lượt phần tử đổi `none → underline`, 235 lượt đổi màu rgb(35,31,32) → rgb(7,91,64) trên 42 lượt (6 trang Q × 7 khung) — menu header desktop `a.nav-link`, breadcrumb; `div.most-view-product-img` trang chủ 0×0 → 195×195 (320) / 222×222 (768). Chiều cao trang không đổi | Q (/, /collections/all, /products/serum-vitamin-c-15, /?tpl=cart, /dat-lich-tu-van, /?tpl=login) | Hồi quy của D03 | ⬜ |
 | N03 | Vòng 4 / 24/10/2026 | Thư viện dùng đơn vị rem nhưng CSS cũ đặt `html { font-size }` = 14,4px (< 1024) / 15px (≥ 1024) ⇒ `min-h-11`/`h-11`/`h-12` của pc-btn, pc-swiper-btn, pc-modal__close, pc-fab, pc-input… nhỏ hơn thiết kế. Đo: html 14,4px ⇒ pc-btn 39,6px, swiper 39,6px, fab 43,2px; html 15px ⇒ 41,3 / 41,3 / 45px | /?tpl=page.ui-kit | Phát hiện khi kiểm D04 | ✅ |
 | N04 | Vòng 4 / 24/10/2026 | Viền focus của nút thư viện bị CSS cũ tắt: `vendor_bootstrap.css` `button, input { outline: none !important }` + `global_core.scss` `button:focus { outline: none }` ⇒ `.pc-btn` (thẻ button) khi Tab: outline-style none (liên quan L10). Đo: 7/7 khung Tab → button.pc-btn outline-style none (width 3px, màu trắng) | /?tpl=page.ui-kit | Phát hiện khi kiểm D04 | ✅ |
@@ -1285,11 +1285,13 @@ module.exports = {
 ### M.4 `ui-src/css/components.css`
 
 ```css
-/* ui-src/css/components.css — THƯ VIỆN PC v1.3 — KHOÁ. Chỉ sửa qua quy trình C.6
+/* ui-src/css/components.css — THƯ VIỆN PC v1.4 — KHOÁ. Chỉ sửa qua quy trình C.6
    Changelog: v1.0 (24/10/2026) khởi tạo 13 component (bản Sapo)
               v1.1 (24/10/2026, N04) viền focus chung 2px brand cho phần tử bấm/nhập; .pc-input bỏ ring, dùng viền đó
               v1.2 (24/10/2026, N05) thanh mua 1 hàng (giá co, nút giữ cỡ chữ); nhóm 13 — phần tử nổi cũ nhường thư viện
-              v1.3 (24/10/2026, N06) checkbox ui_field có class .pc-check__box, hiện lại ô 24px + viền focus; vùng bấm 44×44 < 1024 */
+              v1.3 (24/10/2026, N06) checkbox ui_field có class .pc-check__box, hiện lại ô 24px + viền focus; vùng bấm 44×44 < 1024
+              v1.4 (24/10/2026, N01) preflight tắt ⇒ viền ghi rõ border-solid (+ border-0 trước viền 1 cạnh); .pc-btn bỏ viền UA; .pc-input box-border + màu viền
+                                     line-control thắng `input[type=…]` của CSS cũ */
 @layer components {
   /* 0. Viền focus — `:root` nâng độ ưu tiên (0,3,0) để thắng CSS cũ `.pc-site-v3 :is(a,button,input):focus-visible` (0,2,1)
      và `a/button:focus { outline: none }`; bỏ `:root` ở D09 khi xoá CSS cũ */
@@ -1305,7 +1307,8 @@ module.exports = {
   .pc-has-bottomnav { @apply pb-16 lg:pb-0; }
 
   /* 2. Nút */
-  .pc-btn { @apply inline-flex min-h-11 items-center justify-center gap-2 px-5 text-sm font-semibold
+  /* N01: preflight tắt ⇒ `border` chỉ đặt độ dày; <button> còn viền outset UA. border-0 + border-solid: nút phụ lấy border-2 */
+  .pc-btn { @apply inline-flex min-h-11 items-center justify-center gap-2 border-0 border-solid px-5 text-sm font-semibold
                    rounded-xl shadow-none transition-colors duration-150 lg:rounded-none
                    disabled:pointer-events-none disabled:opacity-40; }
   .pc-btn--primary   { @apply bg-brand text-white hover:bg-brand-hover active:bg-brand-darkest; }
@@ -1316,7 +1319,7 @@ module.exports = {
   .pc-btn[aria-busy="true"] { @apply pointer-events-none opacity-70; }
 
   /* 3. Thẻ sản phẩm */
-  .pc-card { @apply flex h-full flex-col gap-3 border border-line bg-surface-card p-3 rounded-xl shadow-none lg:rounded-none lg:p-4; }
+  .pc-card { @apply flex h-full flex-col gap-3 border border-solid border-line bg-surface-card p-3 rounded-xl shadow-none lg:rounded-none lg:p-4; }
   .pc-card__media  { @apply relative aspect-square w-full overflow-hidden bg-slate-100 rounded-xl lg:rounded-none; }
   .pc-card__media img { @apply h-full w-full object-cover; }
   .pc-card__badge  { @apply absolute left-2 top-2; }
@@ -1328,7 +1331,9 @@ module.exports = {
   /* 4. Ô nhập */
   .pc-field { @apply flex flex-col gap-1.5; }
   .pc-label { @apply text-sm font-medium text-ink; }
-  .pc-input { @apply h-11 w-full border border-line-control bg-white px-3 text-base text-ink rounded-xl shadow-none
+  /* N01: CSS cũ `input[type=…] { border }` (0,1,1) đè màu viền; `:root` (0,2,0) đặt TRƯỚC để :focus / [aria-invalid] vẫn thắng; bỏ ở D09 */
+  :root .pc-input { @apply border-solid border-line-control; }
+  .pc-input { @apply box-border h-11 w-full border border-solid border-line-control bg-white px-3 text-base text-ink rounded-xl shadow-none
                      placeholder:text-ink-secondary focus:border-brand
                      aria-[invalid=true]:border-sale lg:rounded-none; }
   textarea.pc-input { @apply h-auto min-h-[96px] py-2; }
@@ -1356,7 +1361,7 @@ module.exports = {
   /* 6. Điều hướng slider */
   .pc-swiper { @apply relative; }
   .pc-swiper-btn { @apply absolute top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center
-                          border border-line-control bg-white text-slate-800 rounded-full shadow-none hover:text-brand lg:rounded-none; }
+                          border border-solid border-line-control bg-white text-slate-800 rounded-full shadow-none hover:text-brand lg:rounded-none; }
   .pc-swiper-btn--prev { @apply left-3; }
   .pc-swiper-btn--next { @apply right-3; }
   .pc-swiper-btn.swiper-button-disabled { @apply pointer-events-none opacity-25; }
@@ -1367,18 +1372,19 @@ module.exports = {
 
   /* 7. Header */
   .pc-topbar { @apply bg-surface-footer py-2 text-center text-xs text-white; }
-  .pc-header { @apply sticky top-0 z-header border-b border-line bg-surface-card shadow-none; }
+  /* N01: viền 1 cạnh ⇒ border-0 trước (không preflight, style solid làm 3 cạnh còn lại dày medium = 3px) */
+  .pc-header { @apply sticky top-0 z-header border-0 border-b border-solid border-line bg-surface-card shadow-none; }
   .pc-header__inner { @apply mx-auto flex h-14 w-full max-w-content items-center gap-3 px-4 lg:h-16 lg:px-8; }
   .pc-header__icon  { @apply inline-flex h-11 w-11 items-center justify-center text-ink; }
 
   /* 8. Thanh đáy */
-  .pc-bottomnav { @apply fixed inset-x-0 bottom-0 z-bottomnav grid h-16 grid-cols-4 border-t border-line bg-white shadow-none lg:hidden;
+  .pc-bottomnav { @apply fixed inset-x-0 bottom-0 z-bottomnav grid h-16 grid-cols-4 border-0 border-t border-solid border-line bg-white shadow-none lg:hidden;
                   padding-bottom: env(safe-area-inset-bottom); }
   .pc-bottomnav__item { @apply flex min-h-11 flex-col items-center justify-center gap-1 text-xs font-medium text-ink-secondary; }
   .pc-bottomnav__item[aria-current="page"] { @apply text-brand; }
 
   /* 9. Thanh mua */
-  .pc-actionbar { @apply fixed inset-x-0 bottom-0 z-bottomnav flex items-center gap-3 border-t border-line bg-white px-4 py-2
+  .pc-actionbar { @apply fixed inset-x-0 bottom-0 z-bottomnav flex items-center gap-3 border-0 border-t border-solid border-line bg-white px-4 py-2
                          shadow-none lg:static lg:border-0 lg:p-0;
                   padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)); }
   .pc-actionbar__price { @apply whitespace-nowrap text-lg font-bold text-price; }
@@ -1391,7 +1397,7 @@ module.exports = {
 
   /* 10. Popup / khung trượt */
   .pc-overlay { @apply fixed inset-0 z-overlay bg-slate-900/50; }
-  .pc-modal { @apply fixed inset-x-0 bottom-0 z-modal max-h-[85vh] overflow-y-auto border-t border-line bg-white p-4 pt-12
+  .pc-modal { @apply fixed inset-x-0 bottom-0 z-modal max-h-[85vh] overflow-y-auto border-0 border-t border-solid border-line bg-white p-4 pt-12
                      rounded-t-2xl shadow-none
                      lg:inset-auto lg:left-1/2 lg:top-1/2 lg:w-full lg:max-w-lg lg:-translate-x-1/2 lg:-translate-y-1/2
                      lg:border lg:p-6 lg:pt-12 lg:rounded-none; }
@@ -1404,7 +1410,7 @@ module.exports = {
   .pc-toast a { @apply font-semibold text-white underline; }
 
   /* 12. Nút nổi */
-  .pc-fab { @apply fixed bottom-20 right-4 z-fab inline-flex h-12 w-12 items-center justify-center border border-line bg-white
+  .pc-fab { @apply fixed bottom-20 right-4 z-fab inline-flex h-12 w-12 items-center justify-center border border-solid border-line bg-white
                    rounded-full shadow-none lg:bottom-6 lg:rounded-none; }
   body:has(.pc-actionbar) .pc-fab { @apply bottom-24; }
 
