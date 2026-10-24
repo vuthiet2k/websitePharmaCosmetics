@@ -438,7 +438,7 @@ Bộ chuẩn áp cho mọi thay đổi giao diện từ nay; cột Hiện trạn
 
 | Do | Don't | Hiện trạng |
 | :---- | :---- | :---- |
-| Mobile có lối vào danh mục sản phẩm trong menu ☰ hoặc thanh đáy | Menu mobile chỉ có trang giới thiệu | Chưa (L01) |
+| Mobile có lối vào danh mục sản phẩm trong menu ☰ hoặc thanh đáy | Menu mobile chỉ có trang giới thiệu | Đạt (L01) |
 | Menu ☰ nằm trên mọi lớp nổi, Escape đóng, khoá cuộn nền | Thanh đáy + robot đè menu | Một phần (L06) |
 | Thanh đáy 3–5 mục, nhãn đọc trọn, trỏ đúng trang nhãn hứa | Nhãn cắt, link lệch nhãn | Chưa (L34) |
 | Breadcrumb mục cuối = tên trang thật | "PHARMA COSMETICS" | Chưa (L21) |
@@ -659,7 +659,7 @@ Website đạt phần khung (không cuộn ngang, không ảnh vỡ), nhưng ch�
 
 #### **P0 — sửa trước tiên**
 
-##### **L01 · Mức 4 — Mobile không có lối vào danh mục sản phẩm**
+##### **L01 · Mức 4 — Mobile không có lối vào danh mục sản phẩm** — ✅ ĐÃ SỬA 24/10/2026 (7bfa173)
 
 Menu ☰ trên điện thoại chỉ hiện 5 mục giới thiệu; 291 link danh mục có sẵn nhưng bị ẩn hết. Thanh đáy (Trang chủ / Trước Sau / Về chúng tôi / Tài khoản) cũng không có mục Sản phẩm. Desktop thì có mega-menu đầy đủ.
 
@@ -974,8 +974,10 @@ Mục ✅ KHÔNG được sửa lại trừ khi ui-verify báo hồi quy (khi đ
 | D08 | 0 | Dữ liệu mẫu local cho mục trước đây cần Sapo: trang `chinh-xach-doi-tra` (handle Sapo thật | ✅ Đã sửa | dffe9d2 | 24/10/2026 | D08.mjs 61/61, 7 khung Chromium + WebKit: preview-mock tìm kiếm có `object_type` + cú pháp `tags:(x)`; /chinh-xach-doi-tra 200 + h1 nhìn thấy; tags:(retinol) type=article 0 → 1/1 bài có tag; smartjson 0 → 2 SP, smartjsonar hỏng → 2 bài; gõ "retinol" ở overlay ⇒ 2 SP + 2 bài, link SP 200; mẫu URL tag `/search?query=tags:(<tag>)&type=article`; ui-verify --quick 0 lỗi mới (thêm N14, N15) |
 | N14 | 9 | Gợi ý tìm kiếm ép `https://` + bỏ cổng (`theme.bwt:156,162`) ⇒ local luôn "Không có thấy"; listener gắn ô header 0×0 | ⬜ Chưa sửa | — | — | D08 đo: không shim fetch lỗi; có shim 2 SP + 2 bài; `.header_tim_kiem input` 0×0 ở 390–1440 |
 | N15 | 9 | Trang nội dung root-level chưa khai báo (vd `/chinh-xach-doi-tra`) dựng bằng template `collection` ở local; sửa cần `dev-server.js` + khởi động lại server | ⬜ Chưa sửa | — | — | D08 đo: 1440 hiện "Sản phẩm (23)" + bộ lọc + voucher |
-| L01 | 1 | Menu ☰ mobile có cây danh mục SP (menu `main-menu`); thanh đáy 4 mục theo C.2 (Trang chủ · | ⬜ Chưa sửa | — | — | — |
-| L34 | 1 | Thanh đáy: nhãn đọc trọn, `aria-current`, mục trỏ đúng trang nhãn hứa | ⬜ Chưa sửa | — | — | — |
+| L01 | 1 | Menu ☰ mobile có cây danh mục SP (menu `main-menu`); thanh đáy 4 mục theo C.2 (Trang chủ · | ✅ Đã sửa | 7bfa173 | 24/10/2026 | 7 khung Chromium + WebKit: nhóm danh mục trong drawer 0 → 5/5; bấm "MUA SẮM THEO DANH MỤC" ⇒ 11 link danh mục đúng menu; "TẨY TRANG" ⇒ 200 + h1; Escape đóng + focus ☰ 5/5; thanh đáy Trang chủ · Danh mục (/collections/all 200) · Soi da & Dịch vụ (200) · Tài khoản; mega-menu desktop 17 = 17 link; ui-verify --quick 0 lỗi mới (luồng L01-menu-danh-muc đếm `/collections/` còn 1 — URL Sapo là `/<handle>`, chờ chủ dự án) |
+| L34 | 1 | Thanh đáy: nhãn đọc trọn, `aria-current`, mục trỏ đúng trang nhãn hứa | ⬜ Chưa sửa | — | — | L01 đo: "Soi da & Dịch vụ" cắt 92/72px ở 390/320/844×390 |
+| N16 | 1 | Cây danh mục drawer mobile kiểu CSS cũ: mục cấp 1 cao 31px, icon "≡" ở mục con không có con, ô ảnh 72px; 844×390 vùng cuộn 164px | ⬜ Chưa sửa | — | — | L01 đo: 31px (390/320/768/844×390/WebKit); vùng cuộn 618 / 342 / 164px ở 390 / 320 / 844×390 |
+| N17 | 1 | WebKit: nội dung drawer ☰ `visibility:hidden` ~1,3s sau khi bấm (Chromium ~110ms) | ⬜ Chưa sửa | — | — | L01 đo: WebKit iPhone 13 drawer vào khung 505ms + hết ẩn 1 300ms (cả `#nav`); Chromium 108–127ms |
 | L02 | 2 | Tương phản: topbar/footer nền #003F2D; giá, nhãn, link, nút theo token | ⬜ Chưa sửa | — | — | — |
 | L03 | 3 | Tốc độ: JS `defer`, rút font còn 400/500/600/700, gỡ Font Awesome (thay `ui_icon`), ảnh đú | ⬜ Chưa sửa | — | — | — |
 | L11 | 3 | Hero trang chủ: tiêu đề + nút hiện ngay, chữ trên ảnh có lớp phủ ≥ 4,5:1 | ⬜ Chưa sửa | — | — | — |
@@ -1041,6 +1043,8 @@ Mỗi lỗi mới (từ ui-verify --full, hồi quy, hoặc phát hiện khi ki�
 | N13 | Vòng 17 / 24/10/2026 | Nút nổi `.pc-fab` (fixed phải-dưới, 48×48) che nội dung khi cuộn (D.17): form kit gửi sai, ô lỗi đầu giữa màn ⇒ WebKit 390 fab đè chữ lỗi SĐT 47×16px + gợi ý 48×12px; Chromium 390 nhãn Email 48×12 + ô 48×23; 320 ô 48×16 + gợi ý 48×7; 768 nhãn "Tình trạng da" 48×20 (ui-loop/evidence/D05/probe-fab.mjs) | /?tpl=page.ui-kit | Phát hiện khi kiểm D05 (vị trí fab có từ D04, không do D05) | ⬜ |
 | N14 | Vòng 20 / 24/10/2026 | Gợi ý tìm kiếm gọi `'https://' + location.hostname + '/search?…&view=smartjson(ar)'` (`layouts/theme.bwt:156,162`, dùng ở `assets/mobile-ui.js.bwt:261,276`) — ép https + bỏ cổng ⇒ preview local http:3000 luôn "Không có thấy kết quả" (D08.mjs phải chuyển request bằng `page.route`); listener keyup của theme.bwt gắn `.header_tim_kiem input` đo 0×0 ở 390/768/1024/1440 — gợi ý thật chạy qua overlay `#mb-search-popup` | / (overlay tìm kiếm) | Phát hiện khi kiểm D08 (có từ trước, không do D08; liên quan L14) | ⬜ |
 | N15 | Vòng 20 / 24/10/2026 | `/chinh-xach-doi-tra` (Trang nội dung trên Sapo) ở local dựng bằng template `collection`: 1440 hiện "Sản phẩm (23)", bộ lọc, voucher — `dev-server.js#resolvePrettyPath` đưa slug menu chưa khai báo về danh mục placeholder. Sửa cần `dev-server.js` (không được watch) + khởi động lại server preview | /chinh-xach-doi-tra | Phát hiện khi kiểm D08 (có từ trước; ảnh hưởng L07) | ⬜ |
+| N16 | Vòng 22 / 24/10/2026 | Cây danh mục `main-menu` trong drawer mobile (hiện ra sau L01) dùng kiểu CSS cũ của global_core: mục cấp 1 cao 31px (< 44px B.7); icon "≡" (`.open_mnu`) hiện cả ở mục con không có menu con; ô ảnh thay thế (`.pc-mm-noimg`) 72px mỗi mục con; 844×390 vùng cuộn drawer chỉ 164px / 390px (khối Quiz da / Yêu thích / cờ ngôn ngữ + thanh đáy chiếm phần còn lại). Đo ở Chromium 390/320/768/844×390 + WebKit iPhone 13 | / (drawer ☰) | Phát hiện khi kiểm L01 (kiểu CSS có từ trước, lộ ra khi bỏ ẩn cây) | ⬜ |
+| N17 | Vòng 22 / 24/10/2026 | WebKit iPhone 13: bấm ☰ ⇒ drawer vào khung nhìn sau 505ms rồi nội dung còn `visibility:hidden` thêm 1 300ms (cả cây danh mục lẫn menu chính `#nav`); Chromium 108–127ms. B.7: mở panel 250–300ms, tối đa 400ms | / (drawer ☰) | Phát hiện khi kiểm L01 (có từ trước, không do L01 — `#nav` bằng cây danh mục) | ⬜ |
 
 ## **PHẦN F — Kế hoạch sửa và cổng kiểm**
 
