@@ -962,7 +962,8 @@ Mục ✅ KHÔNG được sửa lại trừ khi ui-verify báo hồi quy (khi đ
 | N10 | 0 | Popup thư viện mở nhưng header cũ (`header.header` z 9980 / `.main-header` z 100, `.pc-topbar-v3` z 10010) nằm trên lớp phủ `.pc-overlay` z 50 | ✅ Đã sửa | 941a42f | 24/10/2026 | components.css v1.7 (`header.header` `isolate z-header` khi popup mở); 7 khung Chromium + WebKit × cuộn 0 / 1200: lưới header trúng lớp phủ 0/15 → 15/15; bấm ☰ / giỏ / menu khi popup mở: mở drawer, đổi URL → 0 tác dụng; đóng popup header về z cũ; hồi quy Q 36/36 = HEAD; ui-verify --quick 0 lỗi mới |
 | N11 | 0 | Thư viện: `.pc-modal__close` mang nền + viền mặc định trình duyệt (preflight tắt) — ô xám nổi | ✅ Đã sửa | 0359edd | 24/10/2026 | components.css v1.8; 7 khung Chromium + WebKit, popup mở: nền rgb(240,240,240) / WebKit rgb(192,192,192) → transparent (hover cũng vậy); viền outset 2px → none; padding → 0; 44×44px, icon X 24×24 tương phản 17,85:1; Tab solid 2px rgb(7,91,64); axe #kit-modal 0; 113 phần tử .pc-* khác HEAD = sau; ui-verify --quick 0 lỗi mới |
 | N12 | 8 | "Xem nhiều" trang chủ: thẻ "TRETINOIN CREAM" ô ảnh trống xám, `.most-view-product-img` thẻ 2 lúc 0×0 | ⬜ Chưa sửa | — | — | N02 đo: thẻ 2 0×0 ở Chromium 390/320/768/1440/844×390 (một số lượt); ô ảnh trống ở ảnh 768 |
-| D05 | 0 | `assets/pc-ui.js` (JS thuần, `defer`): `data-pc-modal`, `data-pc-toast`, `data-pc-swiper`, | ⬜ Chưa sửa | — | — | — |
+| N13 | 5 | Thư viện: nút nổi `.pc-fab` che nội dung khi cuộn (chữ lỗi / gợi ý / ô nhập form kit) | ⬜ Chưa sửa | — | — | D05 đo: WebKit 390 đè chữ lỗi SĐT 47×16px; Chromium 390 nhãn + ô Email 48×12 / 48×23; 320 ô 48×16; 768 nhãn 48×20 |
+| D05 | 0 | `assets/pc-ui.js` (JS thuần, `defer`): `data-pc-modal`, `data-pc-toast`, `data-pc-swiper`, | ✅ Đã sửa | 9591e5d | 24/10/2026 | D05.mjs 205/205, 7 khung Chromium + WebKit: popup focus vào trong, Tab/Shift+Tab 24/24 trong popup, Escape / nút đóng / lớp phủ đóng + trả focus, khoá cuộn lệch 0px; toast 1 cái, ẩn 4 954–5 013 ms; form 0 bóng trình duyệt, 2 lỗi tiếng Việt + icon cùng lúc, focus ô sai đầu (nhãn + ô không bị che 10/10); slider nút + phím →/←, 0 chấm bấm được, giảm chuyển động không tự chạy (đối chứng chạy); axe #pc-kit 0; ui-verify --quick 0 lỗi mới |
 | D06 | 0 | Thay Tailwind CDN: `tailwind.legacy.config.js` (chép cấu hình CDN trong `layouts/theme.bwt | ⬜ Chưa sửa | — | — | — |
 | D07 | 0 | `snippets/ui_icon.bwt` (SVG Lucide MIT, đủ icon đang dùng ở header/footer/thẻ/form) + `scr | ⬜ Chưa sửa | — | — | — |
 | D08 | 0 | Dữ liệu mẫu local cho mục trước đây cần Sapo: trang `chinh-xach-doi-tra` (handle Sapo thật | ⬜ Chưa sửa | — | — | — |
@@ -1030,6 +1031,7 @@ Mỗi lỗi mới (từ ui-verify --full, hồi quy, hoặc phát hiện khi ki�
 | N10 | Vòng 10 / 24/10/2026 | Popup thư viện mở (`.pc-overlay` z 50, `.pc-modal` z 55) nhưng header cũ nằm trên lớp phủ: `header.header` z 9980 sticky (< 1024), `.main-header` z 100 sticky + `.pc-topbar-v3` z 10010 (1440). Đo `elementFromPoint` (60,30) và (giữa,30): trúng `.swiper-slide` topbar / `.pc-topbar-v3`, không trúng lớp phủ — Chromium 390, WebKit iPhone 13, Chromium 1440 ⇒ header không bị phủ mờ, bấm được khi popup mở | /?tpl=page.ui-kit | Phát hiện khi kiểm D04 (CSS cũ, không do D04) | ✅ |
 | N11 | Vòng 10 / 24/10/2026 | `.pc-modal__close` (thẻ `<button>`) mang nền + viền mặc định trình duyệt vì preflight tắt (B.4): Chromium nền rgb(240,240,240) viền outset 2px rgb(0,0,0); WebKit nền rgb(192,192,192) viền outset 2px ⇒ nút đóng popup thành ô xám nổi | /?tpl=page.ui-kit | Phát hiện khi kiểm D04 | ✅ |
 | N12 | Vòng 12 / 24/10/2026 | Khối "Sản phẩm xem nhiều nhất" (app chèn bằng JS): thẻ thứ 2 "TRETINOIN CREAM, USP PADAGIS" ô ảnh trống xám; `div.most-view-product-img` thẻ 2 đo 0×0 ở Chromium 390/320/768/1440/844×390 trong một số lượt nạp (lượt khác 195–240px) | / | Phát hiện khi kiểm N02 (không do N02 — chặn hẳn pc-ui.css cho cùng kết quả) | ⬜ |
+| N13 | Vòng 17 / 24/10/2026 | Nút nổi `.pc-fab` (fixed phải-dưới, 48×48) che nội dung khi cuộn (D.17): form kit gửi sai, ô lỗi đầu giữa màn ⇒ WebKit 390 fab đè chữ lỗi SĐT 47×16px + gợi ý 48×12px; Chromium 390 nhãn Email 48×12 + ô 48×23; 320 ô 48×16 + gợi ý 48×7; 768 nhãn "Tình trạng da" 48×20 (ui-loop/evidence/D05/probe-fab.mjs) | /?tpl=page.ui-kit | Phát hiện khi kiểm D05 (vị trí fab có từ D04, không do D05) | ⬜ |
 
 ## **PHẦN F — Kế hoạch sửa và cổng kiểm**
 
@@ -1455,3 +1457,15 @@ z 30 (cả lúc static ở desktop) nên mọi lớp con nằm dưới lớp ph�
 của trình duyệt (Chromium #F0F0F0, WebKit #C0C0C0). Nhóm 10 đổi thành
 `.pc-modal__close { @apply absolute right-2 top-2 m-0 inline-flex h-11 w-11 cursor-pointer items-center justify-center border-0 border-none bg-transparent p-0 text-ink; }`.
 Class thư viện mới dùng thẻ `<button>` mà không có nền/viền riêng phải tự đặt `border-0 border-none bg-transparent p-0` tới D09.
+
+**D05 (24/10/2026, components.css v1.9 + `assets/pc-ui.js`):** hành vi thư viện nạp `<script defer>` sau `pc-ui.css` ở
+`layouts/theme.bwt` + `layouts/chat.bwt`. Không đặt style trong JS: popup ẩn/hiện bằng thuộc tính `hidden`, thông báo / ô lỗi bằng
+class `hidden`; khoá cuộn nền do CSS — nhóm 10 thêm `html:has(.pc-modal:not([hidden])) { @apply overflow-hidden; }` (đặt trên `<html>`
+vì CSS cũ cho html/body `overflow-x: clip` nên overflow của body không truyền lên khung nhìn). Nhóm 6 thêm
+`.pc-swiper > .swiper { @apply relative overflow-hidden; }` — `assets/swiper.js` là Swiper 6.6.2, chỉ có CSS cho `.swiper-container`,
+và bản đóng gói **không có module keyboard / a11y** ⇒ pc-ui.js tự làm phím ←/→ (khi focus trong slider), vai trò region/slide, vùng
+đọc "Slide n / N"; R7 không cho thêm thư viện. `ui_field`: ô lỗi luôn có icon + `<span data-pc-error-text>` (JS chỉ điền chữ).
+API cho template / việc sau: `PC.toast(message, { actionLabel, actionHref })` (dùng lại 1 thông báo duy nhất, tự ẩn 5s, dừng đếm khi
+rê chuột / focus), `PC.openModal(id, opener)` / `PC.closeModal()`, `PC.swiper(el)` (tự chạy chỉ khi có `data-pc-swiper-autoplay="ms"`
+và không giảm chuyển động), `PC.form(form)` (tự gắn cho `form[data-pc-form]`, đặt `novalidate`; lỗi tiếng Việt: thiếu ô bắt buộc,
+email, SĐT 10 số bắt đầu 0, độ dài / khoảng; gửi lỗi ⇒ cuộn khối ô sai đầu ra giữa màn rồi focus — tránh header dính che nhãn).
