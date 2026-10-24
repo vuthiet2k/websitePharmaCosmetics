@@ -50,8 +50,27 @@ wait_for_reset() {
   sleep "$secs"
 }
 
+# Khởi động lại preview theo yêu cầu agent (cờ ui-loop/RESTART-PREVIEW) — cần khi sửa dev-server.js / preview-mock.js
+# (không tự nạp lại). Chủ dự án duyệt 24/10/2026 (N15).
+restart_preview() {
+  echo "Khởi động lại npm run preview (cờ RESTART-PREVIEW)…" | tee -a ui-loop/run.log
+  [ -n "$SERVER_PID" ] && kill "$SERVER_PID" 2>/dev/null
+  port="${BASE##*:}"; port="${port%%/*}"
+  for pid in $(netstat -ano 2>/dev/null | grep -E "[:.]$port[[:space:]].*LISTENING" | awk '{print $NF}' | sort -u); do
+    taskkill //PID "$pid" //T //F >/dev/null 2>&1
+  done
+  sleep 2
+  npm run preview > ui-loop/preview.log 2>&1 &
+  SERVER_PID=$!
+  for _ in $(seq 1 60); do curl -s -o /dev/null -w "%{http_code}" "$BASE/?tpl=index" | grep -q 200 && break; sleep 1; done
+  if curl -s -o /dev/null -w "%{http_code}" "$BASE/?tpl=index" | grep -q 200; then
+    rm -f ui-loop/RESTART-PREVIEW; echo "Preview đã chạy lại." | tee -a ui-loop/run.log
+  else echo "Không bật lại được preview — xem ui-loop/preview.log"; exit 2; fi
+}
+
 i=0; fast_fail=0
 while [ "$i" -lt "$MAX" ]; do
+  [ -f ui-loop/RESTART-PREVIEW ] && restart_preview
   i=$((i+1)); echo "===== Vòng $i — $(date '+%F %T') =====" | tee -a ui-loop/run.log
   t0=$(date +%s); before="$(md5sum ui-loop/STATUS.md ui-loop/BACKLOG.md 2>/dev/null)"
   claude -p "$(cat ui-loop/PROMPT.md)" \

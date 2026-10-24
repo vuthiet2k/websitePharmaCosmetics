@@ -1155,6 +1155,7 @@ Câu hỏi cho chủ dự án:
 - Mọi đề xuất thay đổi thư viện sau đợt 0 (C.6), thêm màu, font, component mới.
 - Nội dung thật thay chữ demo (L20) khi không có trong dữ liệu / settings sẵn có — agent không bịa nội dung.
 - Bất kỳ việc nào phải push, deploy, sửa dữ liệu Sapo thật.
+- (Đã quyết 24/10/2026) Cần khởi động lại preview sau khi sửa `dev-server.js` / `preview-mock.js` / `data/*.js`: agent tạo `ui-loop/RESTART-PREVIEW`, `scripts/ui-loop.sh` tự khởi động lại trước vòng sau.
 
 **Đã quyết, KHÔNG còn là việc chờ (24/10/2026):** L09 — giá Flash Sale đổi thật mỗi ngày ⇒ giữ chu kỳ 24h, chỉ kiểm hiển
 thị · Việc từng cần Sapo thật (L08, link đổi trả L07, gợi ý tìm kiếm L14) — **kiểm ở local**, agent tự chuẩn bị dữ liệu mẫu
@@ -1165,7 +1166,7 @@ mục "Đường dẫn & handle THẬT") · Câu chữ pháp lý — giữ nguy�
 
 | Mã | Kiểm thế nào | Đạt khi |
 | :-- | :-- | :-- |
-| L01 | 390×844: bấm ☰, bấm 1 danh mục; bấm mục Danh mục ở thanh đáy | Menu có ≥ 5 link `/collections/…` nhìn thấy (cây menu Sapo `main-menu` từ `data/sapo-menus.json`); mở đúng trang danh mục; thanh đáy có mục Danh mục; Escape đóng menu và trả focus về nút ☰ |
+| L01 | 390×844: bấm ☰, bấm 1 danh mục; bấm mục Danh mục ở thanh đáy | Mở nhóm đầu của cây danh mục `#header-category-menu` ⇒ ≥ 5 link danh mục nhìn thấy (URL gốc `/<handle>` như menu Sapo `main-menu` trong `data/sapo-menus.json`; chủ dự án duyệt đổi từ "/collections/" 24/10/2026); mở đúng trang danh mục; thanh đáy có mục Danh mục; Escape đóng menu và trả focus về nút ☰ |
 | L02 | axe color-contrast 70 trang × 2 khung; computed style topbar, footer, giá, nút | 0 lỗi `axe:color-contrast`; topbar/footer nền #003F2D; không còn chữ #3CB371 trên nền sáng hay chữ trắng trên #3CB371 |
 | L03 | `ui-verify --perf` (4G chậm, CPU 4×, trung vị 3 lần) | FCP ≤ 1,8s · LCP ≤ 2,5s · TBT < 0,2s · CLS ≤ 0,1 · dung lượng ≤ ngưỡng B.7; 0 request `cdn.tailwindcss.com`; 0 file Font Awesome |
 | L04 | 6 form (đăng nhập, đăng ký, đặt lịch, B2B, liên hệ, tra cứu đơn): gửi trống; nhập SĐT "123" rồi rời ô | Không bóng lỗi trình duyệt; lỗi tiếng Việt ngay dưới từng ô, hiện tất cả cùng lúc; focus nhảy vào ô sai đầu tiên (`aria-invalid="true"`) |

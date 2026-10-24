@@ -3,13 +3,9 @@ Vòng: 23 · Việc vừa làm: L34 → DONE (thanh đáy: "Soi da & Dịch vụ
 Tổng: 70 việc · DONE 20 · TODO 50 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick 6 trang Q + /truoc-sau-cham-soc-da-tu-xa + /account; baseline đã ghi sau L34)
 Câu hỏi cho chủ dự án:
-- L01 (đã DONE theo tiêu chí ghi trước khi sửa): luồng `L01-menu-danh-muc` trong `scripts/ui-verify.mjs` (KHOÁ ngưỡng, R5) chỉ đếm link có
-  `/collections/` — nhưng menu Sapo thật (`data/sapo-menus.json`, cũng là nguồn G.7 nêu) dùng URL gốc `/<handle>` (vd `/top-tay-trang-noi-bat`),
-  nên luồng này luôn báo "1 link" dù drawer đã có 11 link danh mục ⇒ quét full sẽ không bao giờ "sạch". Cho phép sửa luồng đếm link thuộc cây
-  `#header-category-menu` / URL trong sapo-menus.json (thay vì `/collections/`) không? Đồng thời G.7 dòng L01 nên ghi "link danh mục" thay "/collections/".
+- L01: ĐÃ TRẢ LỜI 24/10/2026 — chủ dự án cho sửa luồng ui-verify: mở nhóm đầu cây #header-category-menu rồi đếm link con thật (URL gốc /<handle> như menu Sapo), ngưỡng ≥ 5 giữ nguyên; đã sửa + G.7 cập nhật; luồng L01 đạt 3/3 (11 link).
 - D07: đã trả lời 24/10/2026 và đã xử lý (DONE vòng 21).
-- N15 (đợt 9, chưa cần ngay): sửa route trang nội dung trong `dev-server.js` cần khởi động lại server preview (file không được watch) —
-  vòng lặp cấm tắt server. Khi tới N15: cho phép `scripts/ui-loop.sh` khởi động lại preview, hay chủ dự án tự khởi động lại?
+- N15: ĐÃ TRẢ LỜI 24/10/2026 — script vòng lặp tự khởi động lại preview khi agent tạo file ui-loop/RESTART-PREVIEW (xem PROMPT).
 - (không có — xung đột M.4 `h-6 w-6` / D.7 "checkbox ≥ 24px" với B.7 "vùng chạm mobile ≥ 44px" đã xử theo A.1: vùng bấm 44px,
   ô nhìn thấy vẫn 24px; nếu chủ dự án muốn khác thì báo lại)
 

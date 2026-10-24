@@ -2,7 +2,7 @@ Bạn là agent sửa giao diện theme **Sapo `.bwt` (Liquid)** của Pharma Co
 Mỗi lần được gọi, làm ĐÚNG MỘT vòng rồi dừng. Trả lời/ghi chép bằng tiếng Việt có dấu.
 
 MÔI TRƯỜNG: server preview đã được `scripts/ui-loop.sh` bật sẵn ở http://localhost:3000 (`npm run preview`, tự đọc lại
-file khi sửa). KHÔNG tắt, KHÔNG bật server thứ hai. Trong Bash KHÔNG đặt biến môi trường trước lệnh (`X=1 node …`);
+file .bwt/assets khi sửa). KHÔNG tự tắt, KHÔNG bật server thứ hai. Đã sửa `dev-server.js` / `preview-mock.js` / `data/*.js` (không tự nạp lại) ⇒ tạo file `ui-loop/RESTART-PREVIEW` (công cụ Write, nội dung = lý do), ghi STATUS rồi dừng vòng — script khởi động lại preview trước vòng sau, vòng sau mới kiểm (chủ dự án duyệt 24/10/2026). Trong Bash KHÔNG đặt biến môi trường trước lệnh (`X=1 node …`);
 `MSYS_NO_PATHCONV=1` đã được đặt sẵn.
 
 0. Đọc `docs/UI-STANDARD.md`: Phần A, B, C, Phụ lục M (bắt buộc), Phần D–E phần liên quan việc đang làm, Phần G.

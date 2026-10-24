@@ -172,11 +172,15 @@ async function flows(cr, wk) {
   // L01: menu ☰ có cây danh mục; Escape đóng + trả focus
   { const ctx = await mob(); const p = await ctx.newPage(); try { await p.goto(BASE + '/', { waitUntil: 'load' }); await p.waitForTimeout(800);
     const btn = p.locator('#btn-menu-mobile, [data-pc-menu-open], button[aria-label="Menu"]').first(); await btn.click(); await p.waitForTimeout(600);
-    const cats = await p.evaluate(() => [...document.querySelectorAll('a[href*="/collections/"], a[href^="/"]')].filter((a) => { const b = a.getBoundingClientRect(); if (!b.height) return false; for (let e = a; e; e = e.parentElement) { const s = getComputedStyle(e); if (s.display === 'none' || s.visibility === 'hidden') return false; } return a.closest('.header-menu, .pc-drawer, [data-pc-modal], nav, [role=dialog]') && /\/collections\//.test(a.getAttribute('href')); }).length);
+    // Chủ dự án duyệt 24/10/2026: menu Sapo thật (data/sapo-menus.json) dùng URL gốc "/<handle>", không "/collections/"
+    // ⇒ mở nhóm đầu của cây danh mục trong drawer rồi đếm link con thật nhìn thấy (bỏ "/" và javascript:). Ngưỡng ≥ 5 giữ nguyên.
+    const grp = p.locator('#header-category-menu a[href^="javascript"]:visible, #header-category-menu [aria-expanded]:visible').first();
+    if (await grp.count()) { await grp.click(); await p.waitForTimeout(600); }
+    const cats = await p.evaluate(() => { const tree = document.querySelector('#header-category-menu') || document.querySelector('.header-menu'); if (!tree) return 0; return [...tree.querySelectorAll('a[href]')].filter((a) => { const h = a.getAttribute('href') || ''; if (!/^\/[^/]/.test(h)) return false; const b = a.getBoundingClientRect(); if (!b.height || b.top >= innerHeight) return false; for (let e = a; e; e = e.parentElement) { const s = getComputedStyle(e); if (s.display === 'none' || s.visibility === 'hidden') return false; } return true; }).length; });
     await p.keyboard.press('Escape'); await p.waitForTimeout(400);
     const back = await p.evaluate(() => { const a = document.activeElement; return a && (a.id === 'btn-menu-mobile' || a.hasAttribute('data-pc-menu-open') || a.getAttribute('aria-label') === 'Menu'); });
     const bottomCat = await p.evaluate(() => [...document.querySelectorAll('.pc-bottomnav a, .pc-bottom-nav a')].some((a) => /danh mục/i.test(a.textContent)));
-    ok('L01-menu-danh-muc', cats >= 5, cats + ' link /collections/ nhìn thấy trong menu'); ok('L01-escape-tra-focus', back, 'focus sau Escape về nút ☰: ' + back); ok('L01-thanh-day-danh-muc', bottomCat, 'thanh đáy có mục Danh mục: ' + bottomCat);
+    ok('L01-menu-danh-muc', cats >= 5, cats + ' link danh mục nhìn thấy trong cây menu sau khi mở nhóm đầu'); ok('L01-escape-tra-focus', back, 'focus sau Escape về nút ☰: ' + back); ok('L01-thanh-day-danh-muc', bottomCat, 'thanh đáy có mục Danh mục: ' + bottomCat);
   } catch (e) { ok('L01', false, 'lỗi: ' + e.message.slice(0, 100)); } await ctx.close(); }
   // L04: 6 form gửi trống — không bóng trình duyệt, lỗi tiếng Việt dưới ô, focus ô sai đầu
   for (const [name, url, sel] of [['login', '/account/login', 'form:has(input[type=password])'], ['register', '/account/register', 'form:has(input[type=password])'], ['booking', '/dat-lich-tu-van', 'form:has(#mops-customer-name), form:has([name*="name"])'], ['b2b', '/dai-ly-b2b', 'form:has([name=company_name])'], ['contact', '/about-us', 'form:has([name*="contact"])'], ['order-lookup', '/order-lookup', 'form:has(.pl-submit)']]) {
