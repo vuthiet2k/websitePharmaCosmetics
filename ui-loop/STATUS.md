@@ -1,5 +1,5 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 16 · Việc vừa làm: N11 → DONE (7 khung Chromium + WebKit, popup mở: nút đóng nền xám → transparent, viền outset 2px → none, padding → 0, vẫn 44×44, icon X 17,85:1, Tab solid 2px brand; 113 phần tử .pc-* khác HEAD = sau; ui-verify --quick 0 lỗi mới)
+Vòng: 16 · Việc vừa làm: N11 → DONE, commit 0359edd (7 khung Chromium + WebKit, popup mở: nút đóng nền xám → transparent, viền outset 2px → none, padding → 0, vẫn 44×44, icon X 17,85:1, Tab solid 2px brand; 113 phần tử .pc-* khác HEAD = sau; ui-verify --quick 0 lỗi mới)
 Tổng: 65 việc · DONE 14 · TODO 51 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick kit + Q; baseline đã ghi)
 Câu hỏi cho chủ dự án:
