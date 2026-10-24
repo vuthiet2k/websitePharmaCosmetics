@@ -1,11 +1,12 @@
-/* ui-src/css/components.css — THƯ VIỆN PC v1.2 — KHOÁ. Chỉ sửa qua quy trình C.6
+/* ui-src/css/components.css — THƯ VIỆN PC v1.3 — KHOÁ. Chỉ sửa qua quy trình C.6
    Changelog: v1.0 (24/10/2026) khởi tạo 13 component (bản Sapo)
               v1.1 (24/10/2026, N04) viền focus chung 2px brand cho phần tử bấm/nhập; .pc-input bỏ ring, dùng viền đó
-              v1.2 (24/10/2026, N05) thanh mua 1 hàng (giá co, nút giữ cỡ chữ); nhóm 13 — phần tử nổi cũ nhường thư viện */
+              v1.2 (24/10/2026, N05) thanh mua 1 hàng (giá co, nút giữ cỡ chữ); nhóm 13 — phần tử nổi cũ nhường thư viện
+              v1.3 (24/10/2026, N06) checkbox ui_field có class .pc-check__box, hiện lại ô 24px + viền focus; vùng bấm 44×44 < 1024 */
 @layer components {
   /* 0. Viền focus — `:root` nâng độ ưu tiên (0,3,0) để thắng CSS cũ `.pc-site-v3 :is(a,button,input):focus-visible` (0,2,1)
      và `a/button:focus { outline: none }`; bỏ `:root` ở D09 khi xoá CSS cũ */
-  :root :is(.pc-btn, .pc-swiper-btn, .pc-modal__close, .pc-input, .pc-fab, .pc-header__icon, .pc-bottomnav__item):focus-visible {
+  :root :is(.pc-btn, .pc-swiper-btn, .pc-modal__close, .pc-input, .pc-check__box, .pc-fab, .pc-header__icon, .pc-bottomnav__item):focus-visible {
     @apply outline outline-2 outline-offset-2 outline-brand;
   }
 
@@ -47,7 +48,19 @@
   .pc-hint  { @apply text-sm text-ink-secondary; }
   .pc-error { @apply flex items-start gap-1.5 text-sm font-medium text-sale; }
   .pc-check { @apply inline-flex min-h-11 items-center gap-3 text-sm text-ink; }
-  .pc-check input { @apply h-6 w-6 accent-brand; }
+  /* N06: `.pc-check .pc-check__box` (0,2,0) thắng CSS cũ `input[type="checkbox"]` (0,1,1) ở global_core — quy tắc đó ẩn mọi
+     checkbox (opacity 0, absolute, rộng 100%) để dùng ô tự vẽ.
+     Lần 2: B.7 (vùng chạm mobile ≥ 44px) thắng M.4 `h-6 w-6` (A.1) ⇒ ô bấm 44×44 ở < 1024, 24×24 từ lg; ô nhìn thấy luôn
+     24×24 vẽ bằng ::before (appearance none) để ô không phình to theo vùng chạm */
+  .pc-check .pc-check__box { @apply static m-0 inline-grid h-11 w-11 shrink-0 cursor-pointer appearance-none place-content-center
+                                     border-0 bg-transparent p-0 opacity-100 lg:h-6 lg:w-6; }
+  .pc-check .pc-check__box::before { content: ""; @apply box-border block h-6 w-6 border-2 border-solid border-line-control
+                                     bg-white bg-center bg-no-repeat rounded-none; }
+  .pc-check .pc-check__box:checked::before { @apply border-brand bg-brand;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+    background-size: 16px 16px; }
+  .pc-check .pc-check__box[aria-invalid="true"]::before { @apply border-sale; }
+  .pc-check .pc-check__box:disabled { @apply cursor-not-allowed opacity-40; }
 
   /* 5. Nhãn */
   .pc-badge { @apply inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full lg:rounded-none lg:px-2 lg:py-0.5; }

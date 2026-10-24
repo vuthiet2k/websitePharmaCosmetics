@@ -1,10 +1,10 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 8 · Việc vừa làm: N06 → VERIFY_FAIL lần 1 (checkbox ui_field hiện lại: opacity 0 → 1, 24×24, Tab viền solid 2px brand, 78 checkbox cũ 0 đổi; nhưng ui-verify --quick 2 lỗi mới touch<44 = chính ô 24×24 ở 390 Chromium + WebKit, B.7 cần ≥ 44)
-Tổng: 62 việc · DONE 6 · TODO 54 · VERIFY_FAIL 2 · BLOCKED 0 · BLOCKED_OWNER 0
-Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 2 (ui-verify --quick kit + Q; KHÔNG ghi baseline vì N06 chưa đạt)
+Vòng: 9 · Việc vừa làm: N06 → DONE lần 2 (ô bấm 44×44 < 1024 / 24×24 ≥ 1024, ô vẽ ::before 24×24 viền 2px, tích nền brand; 7 khung Chromium + WebKit đạt; 78 checkbox cũ 0 đổi; ui-verify --quick 0 lỗi mới)
+Tổng: 62 việc · DONE 7 · TODO 54 · VERIFY_FAIL 1 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick kit + Q; baseline đã ghi)
 Câu hỏi cho chủ dự án:
-- (không có — xung đột M.4 `h-6 w-6` / D.7 "checkbox ≥ 24px" với B.7 "vùng chạm mobile ≥ 44px" xử theo A.1: B.7 thắng; nếu chủ dự án
-  muốn giữ ô 24px ở mobile thì báo lại, khi đó ui-verify sẽ luôn đếm ô checkbox là touch<44)
+- (không có — xung đột M.4 `h-6 w-6` / D.7 "checkbox ≥ 24px" với B.7 "vùng chạm mobile ≥ 44px" đã xử theo A.1: vùng bấm 44px,
+  ô nhìn thấy vẫn 24px; nếu chủ dự án muốn khác thì báo lại)
 
 Ghi chú:
 - Vòng 1 thêm N01 (đợt 0, xếp sau D04): viền thư viện thiếu `border-style` / `box-sizing` do preflight tắt.
@@ -24,7 +24,9 @@ Ghi chú:
   `ui-src/css/components.css` v1.3, `assets/vendor_bootstrap.css`, `assets/pc-ui.css`), chưa commit. Lần 2: ô ≥ 44×44 ở < 1024
   (giữ 24×24 ≥ 1024) rồi chạy lại `node ui-loop/checks/N06.mjs` (đã có `evidence/N06/before.json` đo trên bản chưa sửa — đừng chạy
   `--before` trên cây đã sửa). Thêm N09 (đợt 0): `label{display:inline-block!important}` cũ đè `.pc-check` (ô cách chữ 3,7px).
-- Việc kế tiếp: N06 lần 2 (VERIFY_FAIL, sửa xong mới làm lại D04 lần 2).
+- Vòng 9 xong N06 lần 2: components.css v1.3 — `.pc-check__box` `appearance:none` 44×44 (< 1024) / 24×24 (lg), ô vẽ `::before`
+  24×24. Commit gồm `snippets/ui_field.bwt` (file D04, cần cho N06). Lệch ô–chữ (3,7px, lệch dọc ở 1440) vẫn là N09.
+- Việc kế tiếp: D04 lần 2 (VERIFY_FAIL; N03–N06 đã xong; mục `ui_fab` ẩn ở 844×390 ghi "ẩn đúng M.4").
 
 Ghi chú dựng vòng lặp:
 - Baseline `ui-loop/baseline.json` = quét full bản hiện tại (trước mọi sửa đổi); vòng 1 trộn thêm 18 lượt trang quick, vòng 2 trộn 30 lượt, vòng 3 trộn 18 lượt, vòng 5 trộn 21 lượt, vòng 6 trộn 21 lượt.

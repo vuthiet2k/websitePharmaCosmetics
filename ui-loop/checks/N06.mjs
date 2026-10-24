@@ -2,7 +2,7 @@
 /*
   ui-loop/checks/N06.mjs — kiểm việc N06 (checkbox của ui_field bị CSS cũ ẩn) trên trình duyệt thật.
   Trang kit /?tpl=page.ui-kit, 7 khung: Chromium 390 / 320 / 768 / 1024 / 1440 / ngang 844×390 + WebKit iPhone 13.
-  Đo: computed opacity / position / cỡ ô `.pc-check input`; ô nằm trong khung nhãn; bấm ô + bấm chữ nhãn đổi trạng thái;
+  Đo: computed opacity / position / cỡ ô `.pc-check input` (lần 2: ô bấm 44×44 < 1024, 24×24 từ 1024; ô vẽ ::before 24×24); ô nằm trong khung nhãn; bấm ô + bấm chữ nhãn đổi trạng thái;
   Tab tới ô có viền focus; Space đổi trạng thái. Ảnh: ui-loop/evidence/N06/after-<khung>.png (+ ảnh cận vùng ô).
   Hồi quy: mọi input[type=checkbox] ngoài .pc-check trên 8 trang × Chromium 390/1440 + WebKit 390 —
     node ui-loop/checks/N06.mjs --before   (chạy trên bản chưa sửa, ghi evidence/N06/before.json)
@@ -90,10 +90,17 @@ for (const f of KIT_FRAMES) {
     const cx = r.x + r.width / 2; const cy = r.y + r.height / 2; const hit = document.elementFromPoint(cx, cy);
     return { opacity: cs.opacity, position: cs.position, display: cs.display, w: Math.round(r.width * 10) / 10, h: Math.round(r.height * 10) / 10,
       labelH: Math.round(lr.height * 10) / 10, inside: r.left >= lr.left && r.right <= lr.right && r.top >= lr.top && r.bottom <= lr.bottom,
-      hitSelf: hit === inp, accent: cs.accentColor, cls: inp.className };
+      hitSelf: hit === inp, accent: cs.accentColor, cls: inp.className, vw: innerWidth };
   });
+  // Lần 2: ô vẽ nhìn thấy = ::before; ô bấm (chính input) ≥ 44×44 ở < 1024 (B.7), 24×24 từ 1024
+  const vis = await page.evaluate(() => { const inp = document.querySelector('.pc-check input[type=checkbox]'); const b = getComputedStyle(inp, '::before');
+    const st = (x) => ({ w: b.width, h: b.height, border: `${b.borderTopStyle} ${b.borderTopWidth} ${b.borderTopColor}`, bg: b.backgroundColor, img: b.backgroundImage !== 'none' });
+    const off = st(); inp.checked = !inp.checked; const on = st(); inp.checked = !inp.checked; return inp.checked ? { off: on, on: off } : { off, on }; });
   ok(m.opacity === '1' && m.position === 'static', `ô: opacity ${m.opacity}, position ${m.position}, display ${m.display}, class "${m.cls}", accent ${m.accent}`);
-  ok(m.w === 24 && m.h === 24, `cỡ ô ${m.w}×${m.h}px (cần 24×24)`);
+  const need = m.vw < 1024 ? 44 : 24;
+  ok(m.w === need && m.h === need, `ô bấm ${m.w}×${m.h}px (cần ${need}×${need} ở khung ${m.vw}px)`);
+  ok(vis.off.w === '24px' && vis.off.h === '24px' && vis.off.border.startsWith('solid 2px') && vis.on.img && vis.on.bg === 'rgb(7, 91, 64)',
+    `ô vẽ ${vis.off.w}×${vis.off.h}, viền ${vis.off.border}, nền ${vis.off.bg}; đã tích: nền ${vis.on.bg}, dấu tích ${vis.on.img}`);
   ok(m.inside && m.labelH >= 44, `ô nằm trong nhãn: ${m.inside}; nhãn cao ${m.labelH}px`);
   ok(m.hitSelf, `tâm ô trúng chính ô (elementFromPoint): ${m.hitSelf}`);
 
@@ -127,7 +134,7 @@ for (const f of KIT_FRAMES) {
   });
   ok(gap.hitSelf, `nhãn giữa màn: ô top ${gap.boxTop}px không bị che (${gap.hitSelf}); ô → chữ cách ${gap.gap}px`);
   await page.screenshot({ path: path.join(EVD, `after-${f.name}-field.png`) });
-  summary.push({ frame: f.name, ...m, toggle: [s0, s1, s2], focus: fr, space: [s3, s4], gap: gap.gap });
+  summary.push({ frame: f.name, ...m, drawn: vis, toggle: [s0, s1, s2], focus: fr, space: [s3, s4], gap: gap.gap });
   await ctx.close();
 }
 for (const b of Object.values(browsers)) await b.close();
