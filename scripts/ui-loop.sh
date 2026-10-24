@@ -46,8 +46,10 @@ wait_for_reset() {
   if [ -n "$t" ] && target=$(date -d "$t" +%s 2>/dev/null); then
     now=$(date +%s); [ "$target" -le "$now" ] && target=$((target + 86400)); secs=$((target - now + 120))
   else secs=900; fi
-  echo "Giới hạn sử dụng — chờ $((secs/60)) phút (tới $(date -d "@$(( $(date +%s) + secs ))" '+%H:%M'))…" | tee -a ui-loop/run.log
-  sleep "$secs"
+  local until_ts=$(( $(date +%s) + secs ))
+  echo "Giới hạn sử dụng — chờ $((secs/60)) phút (tới $(date -d "@$until_ts" '+%H:%M'))…" | tee -a ui-loop/run.log
+  # Chờ từng phút theo giờ thật: máy ngủ làm `sleep` dài bị treo (sự cố 24/10/2026) — thức dậy là chạy tiếp ≤ 1 phút
+  while [ "$(date +%s)" -lt "$until_ts" ]; do sleep 60; done
 }
 
 # Khởi động lại preview theo yêu cầu agent (cờ ui-loop/RESTART-PREVIEW) — cần khi sửa dev-server.js / preview-mock.js
