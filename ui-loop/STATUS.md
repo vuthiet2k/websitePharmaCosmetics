@@ -1,5 +1,5 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 14 · Việc vừa làm: N08 → DONE (7 khung Chromium + WebKit: toast–fab giao 28/44 → 0px, cách 36px; popup mở: ô nhập bị toast che 30,6 → 0px; hồi quy rect = HEAD 7/7; ui-verify --quick 0 lỗi mới)
+Vòng: 14 · Việc vừa làm: N08 → DONE, commit 887639b (7 khung Chromium + WebKit: toast–fab giao 28/44 → 0px, cách 36px; popup mở: ô nhập bị toast che 30,6 → 0px; hồi quy rect = HEAD 7/7; ui-verify --quick 0 lỗi mới)
 Tổng: 65 việc · DONE 12 · TODO 53 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick kit + Q; baseline đã ghi)
 Câu hỏi cho chủ dự án:
