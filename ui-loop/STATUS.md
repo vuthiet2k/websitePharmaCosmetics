@@ -1,8 +1,12 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 18 · Việc vừa làm: D06 → DONE (gỡ Tailwind CDN, nạp assets/pc-legacy-tw.css dựng sẵn cuối head; 0 request CDN / 186 lượt nạp 7 khung Chromium + WebKit; đổi chỗ CDN ↔ dựng sẵn 0 quy tắc thiếu, 0 phần tử lệch / 68 trang × 2 khung; ảnh trước/sau 20/20 cùng cỡ; ui-verify --quick 68 trang 0 lỗi mới)
-Tổng: 66 việc · DONE 16 · TODO 50 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
-Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick 68 trang theo 9 nhóm; baseline đã ghi)
+Vòng: 19 · Việc vừa làm: D07 → BLOCKED_OWNER, lần thử 1 (43 icon ui_icon 24×24 ở 7 khung, aria đúng, axe 0, lint 0 cảnh báo ui_icon, build:sapo exit 0, ui-guard PASS, ui-verify --quick 0 lỗi mới; trượt duy nhất tiêu chí bbox ≥ 8px: chevron 6×12 hình gốc Lucide)
+Tổng: 66 việc · DONE 16 · TODO 49 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 1
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick 7 trang; baseline không ghi vì việc chưa DONE)
 Câu hỏi cho chủ dự án:
+- D07: tiêu chí (b) agent ghi "getBBox ≥ 8px mỗi chiều" nhưng chevron-left/right (6×12) và chevron-down (12×6) là hình gốc Lucide,
+  mắt xem ảnh đúng hình. Cho phép sửa tiêu chí thành "cạnh dài bbox ≥ 12px, cạnh ngắn ≥ 4px" không? Duyệt ⇒ chuyển D07 về TODO,
+  vòng sau sửa ngưỡng trong ui-loop/checks/D07.mjs, chạy lại, commit. Mã D07 (ui_icon.bwt, lint-guardrails.js, .clinerules/03,
+  dev-preview page.ui-kit) để trong cây làm việc, chưa commit — KHÔNG `git restore`.
 - (không có — xung đột M.4 `h-6 w-6` / D.7 "checkbox ≥ 24px" với B.7 "vùng chạm mobile ≥ 44px" đã xử theo A.1: vùng bấm 44px,
   ô nhìn thấy vẫn 24px; nếu chủ dự án muốn khác thì báo lại)
 
