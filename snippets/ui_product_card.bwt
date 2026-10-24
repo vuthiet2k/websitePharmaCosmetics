@@ -1,0 +1,59 @@
+{%- comment -%}
+  snippets/ui_product_card.bwt — THƯ VIỆN PC (KHOÁ sau đợt 0, R5). Thẻ sản phẩm (C.2 #3).
+  Tham số: product (bắt buộc), context = home | catalog (mặc định catalog), eager (ảnh LCP ⇒ không lazy).
+  Ảnh 1:1 qua img_url; tên 2 dòng; nhãn -X% khi đang giảm; sao CHỈ khi có đánh giá thật (metafields.bpr) — không bịa số.
+  Nút "Thêm vào giỏ": secondary (home) / primary (catalog), form /cart/add + class JS add_to_cart (ajaxCart của theme).
+  Kê toa (pc_is_rx) ⇒ không giá, không giỏ, chỉ link tư vấn. Giá 0 ⇒ "Liên hệ". Hết hàng ⇒ nút vô hiệu. Nhiều phiên bản ⇒ mở trang SP.
+{%- endcomment -%}
+{%- assign pc_pc_ctx = context | default: 'catalog' -%}
+{%- if pc_pc_ctx != 'home' and pc_pc_ctx != 'catalog' -%}<!-- PC-ERROR ui_product_card: context "{{ pc_pc_ctx }}" không hợp lệ -->
+{%- elsif product == blank -%}<!-- PC-ERROR ui_product_card: thiếu product -->
+{%- else -%}
+{%- assign pc_pc_name = product.name | default: product.title -%}
+{%- assign pc_pc_var = product.selected_or_first_available_variant | default: product.variants.first -%}
+{%- assign pc_pc_price = pc_pc_var.price | default: product.price -%}
+{%- assign pc_pc_compare = pc_pc_var.compare_at_price | default: product.compare_at_price | default: 0 -%}
+{%- include 'pc_is_rx' -%}
+{%- assign pc_pc_btn = 'primary' -%}{%- if pc_pc_ctx == 'home' -%}{%- assign pc_pc_btn = 'secondary' -%}{%- endif -%}
+{%- assign pc_pc_off = 0 -%}
+{%- if pc_pc_compare > pc_pc_price and pc_pc_price > 0 and pc_is_rx != true -%}
+  {%- assign pc_pc_off = pc_pc_compare | minus: pc_pc_price | times: 100 | divided_by: pc_pc_compare | round -%}
+  {%- if pc_pc_off < 1 -%}{%- assign pc_pc_off = 1 -%}{%- endif -%}
+{%- endif -%}
+<article class="pc-card">
+  <div class="pc-card__media">
+    {%- comment -%} Ảnh trỏ cùng trang với tên SP ⇒ bỏ khỏi thứ tự Tab + trình đọc màn hình (tránh 2 link trùng), vẫn bấm được bằng tay. {%- endcomment -%}
+    <a class="block h-full w-full" href="{{ product.url }}" tabindex="-1" aria-hidden="true">
+      <img src="{% if product.featured_image.src != blank %}{{ product.featured_image.src | img_url: 'medium' }}{% else %}{% include 'placeholder_img_url' %}{% endif %}" alt="{{ product.featured_image.alt | default: pc_pc_name | escape }}" width="240" height="240"{% unless eager %} loading="lazy"{% endunless %}>
+    </a>
+    {%- if pc_pc_off > 0 -%}<span class="pc-card__badge">{% capture pc_pc_bt %}-{{ pc_pc_off }}%{% endcapture %}{% include 'ui_badge', text: pc_pc_bt, tone: 'sale' %}</span>{%- endif -%}
+  </div>
+  <h3 class="pc-card__title notranslate" translate="no"><a href="{{ product.url }}">{{ pc_pc_name }}</a></h3>
+  {%- if product.metafields.bpr.votes > 0 -%}
+  <p class="flex items-center gap-1 text-sm text-ink-secondary">{% include 'ui_icon', name: 'star', size: 20, label: '' %}<span>{{ product.metafields.bpr.rating }}/5 ({{ product.metafields.bpr.votes }} đánh giá)</span></p>
+  {%- endif -%}
+  <p>
+    {%- if pc_is_rx -%}<span class="pc-card__price">{{ settings.product_rx_card_label | default: 'Liên hệ tư vấn' }}</span>
+    {%- elsif pc_pc_price == 0 -%}<span class="pc-card__price">Liên hệ</span>
+    {%- else -%}<span class="pc-card__price">{{ pc_pc_price | money }}</span>{% if pc_pc_compare > pc_pc_price %}<s class="pc-card__price-old"><span class="sr-only">Giá gốc </span>{{ pc_pc_compare | money }}</s>{% endif %}
+    {%- endif -%}
+  </p>
+  <div class="pc-card__actions">
+    {%- capture pc_pc_aria -%}Thêm vào giỏ: {{ pc_pc_name | strip_html }}{%- endcapture -%}
+    {%- if pc_is_rx or pc_pc_price == 0 -%}
+      {%- capture pc_pc_aria -%}Xem chi tiết: {{ pc_pc_name | strip_html }}{%- endcapture -%}
+      {% include 'ui_button', label: 'Xem chi tiết', variant: pc_pc_btn, href: product.url, type: '', size: 'md', block: true, disabled: false, loading: false, aria_label: pc_pc_aria, id: '', form: '', modal: '', js_class: '' %}
+    {%- elsif product.available != true -%}
+      {% include 'ui_button', label: 'Hết hàng', variant: pc_pc_btn, href: '', type: 'button', size: 'md', block: true, disabled: true, loading: false, aria_label: '', id: '', form: '', modal: '', js_class: '' %}
+    {%- elsif product.variants.size > 1 -%}
+      {%- capture pc_pc_aria -%}Chọn phiên bản: {{ pc_pc_name | strip_html }}{%- endcapture -%}
+      {% include 'ui_button', label: 'Chọn phiên bản', variant: pc_pc_btn, href: product.url, type: '', size: 'md', block: true, disabled: false, loading: false, aria_label: pc_pc_aria, id: '', form: '', modal: '', js_class: '' %}
+    {%- else -%}
+    <form action="/cart/add" method="post" class="variants" data-cart-form data-id="product-actions-{{ product.id }}" enctype="multipart/form-data">
+      <input type="hidden" name="variantId" value="{{ pc_pc_var.id }}">
+      {% include 'ui_button', label: 'Thêm vào giỏ', variant: pc_pc_btn, href: '', type: 'submit', size: 'md', block: true, disabled: false, loading: false, aria_label: pc_pc_aria, id: '', form: '', modal: '', js_class: 'add_to_cart' %}
+    </form>
+    {%- endif -%}
+  </div>
+</article>
+{%- endif -%}

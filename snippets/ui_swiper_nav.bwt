@@ -1,0 +1,27 @@
+{%- comment -%}
+  snippets/ui_swiper_nav.bwt — THƯ VIỆN PC (KHOÁ sau đợt 0, R5). Điều hướng slider (C.2 #6).
+  Tham số: id (bắt buộc, duy nhất trên trang), label_prev, label_next (mặc định "Trước" / "Sau" — nên ghi rõ, vd "Sản phẩm trước"),
+  slides (tuỳ chọn: HTML các .swiper-slide đã capture ⇒ snippet dựng cả khung .pc-swiper > .swiper; trống ⇒ chỉ in nút + chấm,
+  đặt trong khung slider sẵn có).
+  Nút 44 × 44px có aria-label; chấm phân trang chỉ để xem (không bấm). Khởi tạo Swiper qua data-pc-swiper (assets/pc-ui.js, D05):
+  bàn phím, a11y, không tự chạy khi giảm chuyển động.
+{%- endcomment -%}
+{%- if id == blank -%}<!-- PC-ERROR ui_swiper_nav: thiếu id -->
+{%- else -%}
+{%- capture pc_sw_nav -%}
+<button type="button" class="pc-swiper-btn pc-swiper-btn--prev" data-pc-swiper-prev="{{ id }}" aria-label="{{ label_prev | default: 'Trước' | escape }}" aria-controls="{{ id }}">{% include 'ui_icon', name: 'chevron-left', size: 20, label: '' %}</button>
+<button type="button" class="pc-swiper-btn pc-swiper-btn--next" data-pc-swiper-next="{{ id }}" aria-label="{{ label_next | default: 'Sau' | escape }}" aria-controls="{{ id }}">{% include 'ui_icon', name: 'chevron-right', size: 20, label: '' %}</button>
+{%- endcapture -%}
+{%- if slides != blank -%}
+<div class="pc-swiper" data-pc-swiper="{{ id }}">
+  <div class="swiper" id="{{ id }}">
+    <div class="swiper-wrapper">{{ slides }}</div>
+  </div>
+  {{ pc_sw_nav }}
+  <div class="pc-dots" data-pc-swiper-dots="{{ id }}" aria-hidden="true"></div>
+</div>
+{%- else -%}
+{{ pc_sw_nav }}
+<div class="pc-dots" data-pc-swiper-dots="{{ id }}" aria-hidden="true"></div>
+{%- endif -%}
+{%- endif -%}

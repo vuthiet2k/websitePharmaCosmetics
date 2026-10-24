@@ -40,6 +40,12 @@ const ALLOW = {
   skeleton: "tham số tuỳ chọn mops_admin_state_block (mặc định 'table')",
   booking_url: "tham số tuỳ chọn product_grid_skinhealthy (| default: '/dat-lich-tu-van')",
 };
+// 24/10/2026 (D04): tham số tuỳ chọn của thư viện snippets/ui_*.bwt (docs/UI-STANDARD.md C.2) — snippet kiểm != blank
+// hoặc | default khi không truyền; khi chưa có template nào truyền thì lint không thấy nguồn.
+for (const p of ['action_href', 'action_label', 'autocomplete', 'close_label', 'context', 'eager', 'error', 'hint',
+  'inputmode', 'label_next', 'label_prev', 'open', 'placeholder', 'price_label', 'required', 'slides']) {
+  ALLOW[p] = 'tham số tuỳ chọn snippets/ui_*.bwt (UI-STANDARD C.2)';
+}
 const KEYWORDS = new Set([
   'true', 'false', 'nil', 'null', 'empty', 'blank', 'and', 'or', 'not', 'contains', 'in', 'with',
   'as', 'limit', 'offset', 'reversed', 'cols', 'else', 'elsif', 'elseif', 'endif', 'endfor',

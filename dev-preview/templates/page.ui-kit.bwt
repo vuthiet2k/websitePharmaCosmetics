@@ -1,0 +1,119 @@
+{%- comment -%}
+  dev-preview/templates/page.ui-kit.bwt (24/10/2026, D04) — TRANG KIỂM THƯ VIỆN PC, CHỈ chạy trên preview local (/?tpl=page.ui-kit).
+  build / build:sapo chỉ copy 5 thư mục theme ⇒ KHÔNG đóng gói lên Sapo. Hiện mọi snippet ui_* với tham số đúng + 1 ô thử tham số
+  sai (#pc-kit-error: mỗi snippet 1 lệnh gọi sai, chỉ được in chú thích PC-ERROR, không in gì hiển thị).
+  Chỉ dùng utility bố cục A.3 có sẵn trong assets/pc-ui.css (Tailwind chỉ quét layouts/templates/snippets).
+  Kiểm bằng ui-loop/checks/D04.mjs.
+{%- endcomment -%}
+<div id="pc-kit" class="mx-auto w-full max-w-5xl px-4 py-10 lg:px-8">
+  <h1 class="text-2xl font-bold">Thư viện giao diện PC — trang kiểm (chỉ dev)</h1>
+  <p class="mt-2 text-sm text-ink-secondary">Mỗi khối gọi đúng 1 snippet snippets/ui_*.bwt với tham số hợp lệ.</p>
+
+  <section class="mt-10" data-kit="ui_button" aria-labelledby="kit-h-button">
+    <h2 id="kit-h-button" class="text-xl font-semibold">1. Nút — ui_button</h2>
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      {% include 'ui_button', label: 'Thêm vào giỏ', variant: 'primary', type: 'button' %}
+      {% include 'ui_button', label: 'Đặt lịch tư vấn', variant: 'secondary', type: 'button' %}
+      {% include 'ui_button', label: 'Xem tất cả sản phẩm', variant: 'link', href: '/collections/all' %}
+      {% include 'ui_button', label: 'Thanh toán', variant: 'primary', size: 'lg', type: 'button' %}
+      {% include 'ui_button', label: 'Hết hàng', variant: 'primary', type: 'button', disabled: true %}
+      {% include 'ui_button', label: 'Đang gửi…', variant: 'primary', type: 'button', loading: true %}
+    </div>
+    <div class="mt-4">{% include 'ui_button', label: 'Nút rộng hết khối (block)', variant: 'secondary', type: 'button', block: true %}</div>
+  </section>
+
+  <section class="mt-10" data-kit="ui_product_card" aria-labelledby="kit-h-card">
+    <h2 id="kit-h-card" class="text-xl font-semibold">2. Thẻ sản phẩm — ui_product_card</h2>
+    <p class="mt-2 text-sm text-ink-secondary">context: home (nút phụ)</p>
+    <div class="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {%- for kit_p in collections.all.products limit: 4 -%}{% include 'ui_product_card', product: kit_p, context: 'home' %}{%- endfor -%}
+    </div>
+    <p class="mt-6 text-sm text-ink-secondary">context: catalog (nút chính)</p>
+    <div class="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {%- for kit_p in collections.all.products offset: 4 limit: 4 -%}{% include 'ui_product_card', product: kit_p, context: 'catalog' %}{%- endfor -%}
+    </div>
+  </section>
+
+  <section class="mt-10" data-kit="ui_field" aria-labelledby="kit-h-field">
+    <h2 id="kit-h-field" class="text-xl font-semibold">3. Ô nhập — ui_field</h2>
+    <form class="mt-4 grid gap-4 lg:grid-cols-2" action="#" novalidate>
+      {% include 'ui_field', name: 'kit_name', label: 'Họ và tên', type: 'text', autocomplete: 'name', required: true %}
+      {% include 'ui_field', name: 'kit_phone', label: 'Số điện thoại', type: 'tel', inputmode: 'tel', autocomplete: 'tel', required: true, hint: 'Chuyên gia gọi lại trong giờ làm việc', value: '123', error: 'Số điện thoại cần đủ 10 chữ số, bắt đầu bằng 0' %}
+      {% include 'ui_field', name: 'kit_email', label: 'Email', type: 'email', inputmode: 'email', autocomplete: 'email' %}
+      {% include 'ui_field', name: 'kit_note', label: 'Tình trạng da', type: 'textarea', placeholder: 'Mô tả ngắn tình trạng da' %}
+      {% include 'ui_field', name: 'kit_agree', label: 'Nhận tin ưu đãi qua email', type: 'checkbox' %}
+    </form>
+  </section>
+
+  <section class="mt-10" data-kit="ui_badge" aria-labelledby="kit-h-badge">
+    <h2 id="kit-h-badge" class="text-xl font-semibold">4. Nhãn — ui_badge</h2>
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      {% include 'ui_badge', text: 'Hàng mới', tone: 'brand' %}
+      {% include 'ui_badge', text: '-20%', tone: 'sale' %}
+      {% include 'ui_badge', text: 'Sắp hết hàng', tone: 'warning' %}
+      {% include 'ui_badge', text: 'Kê toa', tone: 'neutral' %}
+    </div>
+  </section>
+
+  <section class="mt-10" data-kit="ui_swiper_nav" aria-labelledby="kit-h-swiper">
+    <h2 id="kit-h-swiper" class="text-xl font-semibold">5. Điều hướng slider — ui_swiper_nav</h2>
+    {%- capture kit_slides -%}
+      <div class="swiper-slide"><p class="p-10 text-center">Slide 1 — Phân tích da</p></div>
+      <div class="swiper-slide"><p class="p-10 text-center">Slide 2 — Phác đồ cá nhân hoá</p></div>
+      <div class="swiper-slide"><p class="p-10 text-center">Slide 3 — Trị liệu da 1:1</p></div>
+    {%- endcapture -%}
+    <div class="mt-4">{% include 'ui_swiper_nav', id: 'kit-swiper', label_prev: 'Slide trước', label_next: 'Slide sau', slides: kit_slides %}</div>
+  </section>
+
+  <section class="mt-10" data-kit="ui_modal" aria-labelledby="kit-h-modal">
+    <h2 id="kit-h-modal" class="text-xl font-semibold">6. Popup — ui_modal</h2>
+    {%- capture kit_modal_body -%}
+      <p class="text-sm text-ink-secondary">Chọn khung giờ, Chuyên gia sẽ gọi xác nhận.</p>
+      <div class="mt-4">{% include 'ui_field', name: 'kit_modal_phone', label: 'Số điện thoại', type: 'tel', inputmode: 'tel', autocomplete: 'tel', required: true %}</div>
+      <div class="mt-4">{% include 'ui_button', label: 'Gửi yêu cầu', variant: 'primary', type: 'button', block: true %}</div>
+    {%- endcapture -%}
+    <div class="mt-4">{% include 'ui_button', label: 'Mở popup đặt lịch', variant: 'secondary', type: 'button', modal: 'kit-modal' %}</div>
+    {% include 'ui_modal', id: 'kit-modal', title: 'Đặt lịch tư vấn', content: kit_modal_body %}
+  </section>
+
+  <section class="mt-10" data-kit="ui_icon" aria-labelledby="kit-h-icon">
+    <h2 id="kit-h-icon" class="text-xl font-semibold">7. Icon — ui_icon</h2>
+    <div class="mt-4 flex flex-wrap items-center gap-6">
+      {% include 'ui_icon', name: 'chevron-left', size: 24, label: 'Mũi tên trái' %}
+      {% include 'ui_icon', name: 'chevron-right', size: 24, label: 'Mũi tên phải' %}
+      {% include 'ui_icon', name: 'x', size: 24, label: 'Đóng' %}
+      {% include 'ui_icon', name: 'message-circle', size: 24, label: 'Chat' %}
+      {% include 'ui_icon', name: 'shopping-cart', size: 24, label: 'Giỏ hàng' %}
+      {% include 'ui_icon', name: 'circle-alert', size: 24, label: 'Cảnh báo' %}
+      {% include 'ui_icon', name: 'star', size: 20, label: 'Đánh giá' %}
+      {% include 'ui_icon', name: 'check', size: 20, label: 'Đã xong' %}
+    </div>
+  </section>
+
+  <section class="mt-10" data-kit="ui_action_bar" aria-labelledby="kit-h-actionbar">
+    <h2 id="kit-h-actionbar" class="text-xl font-semibold">8. Thanh mua — ui_action_bar · 9. Thông báo — ui_toast · 10. Nút nổi — ui_fab</h2>
+    <p class="mt-2 text-sm text-ink-secondary">Mobile: thanh mua dính đáy (thay thanh đáy), thông báo và nút nổi nằm trên nó. Desktop: thanh mua nằm trong trang.</p>
+    <form id="kit-buy" class="mt-4" action="/cart/add" method="post" data-cart-form><input type="hidden" name="variantId" value="0"></form>
+    {%- capture kit_price -%}{{ 650000 | money }}{%- endcapture -%}
+    <div class="mt-4">{% include 'ui_action_bar', label: 'Thêm vào giỏ', price: kit_price, price_label: 'Serum Vitamin C 15%', form: 'kit-buy' %}</div>
+  </section>
+  {% include 'ui_toast', message: 'Đã thêm vào giỏ hàng', action_label: 'Xem giỏ', action_href: '/cart', open: true %}
+  {% include 'ui_fab', aria_label: 'Chat với Chuyên gia', href: '#kit-h-button' %}
+
+  <section class="mt-10" aria-labelledby="kit-h-error">
+    <h2 id="kit-h-error" class="text-xl font-semibold">11. Thử tham số sai (chỉ được in chú thích lỗi, không hiện gì)</h2>
+    <div id="pc-kit-error">
+      {% include 'ui_button', label: 'Sai biến thể', variant: 'xyz' %}
+      {% include 'ui_badge', text: 'Sai tone', tone: 'red' %}
+      {% include 'ui_field', name: '', label: 'Thiếu name' %}
+      {% include 'ui_product_card', product: collections.all.products.first, context: 'sidebar' %}
+      {% include 'ui_swiper_nav', id: '' %}
+      {% include 'ui_action_bar', label: 'Thiếu đích', href: '', form: '' %}
+      {% include 'ui_modal', id: 'kit-bad-modal', title: '' %}
+      {% include 'ui_toast', message: '' %}
+      {% include 'ui_fab', aria_label: '' %}
+      {% include 'ui_icon', name: 'khong-co', size: 20, label: '' %}
+      {% include 'ui_icon', name: 'x', size: 'lon', label: '' %}
+    </div>
+  </section>
+</div>

@@ -1,0 +1,13 @@
+{%- comment -%}
+  snippets/ui_toast.bwt — THƯ VIỆN PC (KHOÁ sau đợt 0, R5). Thông báo (C.2 #11).
+  Tham số: message (bắt buộc), action_label + action_href (link hành động, tuỳ chọn), open (true ⇒ hiện sẵn, vd thông báo từ máy chủ).
+  1 kiểu cho mọi xác nhận; vùng role="status" (trình đọc màn hình đọc khi đổi nội dung). Ẩn bằng class hidden.
+  Hành vi (assets/pc-ui.js, data-pc-toast, D05): chỉ 1 thông báo một lúc, tự ẩn sau 5s.
+{%- endcomment -%}
+{%- if message == blank -%}<!-- PC-ERROR ui_toast: thiếu message -->
+{%- else -%}
+<div class="pc-toast{% unless open %} hidden{% endunless %}" role="status" aria-live="polite" data-pc-toast>
+  <span data-pc-toast-message>{{ message }}</span>
+  {%- if action_label != blank and action_href != blank -%}<a href="{{ action_href }}" data-pc-toast-action>{{ action_label }}</a>{%- endif -%}
+</div>
+{%- endif -%}

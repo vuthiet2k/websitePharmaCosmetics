@@ -1,0 +1,18 @@
+{%- comment -%}
+  snippets/ui_action_bar.bwt — THƯ VIỆN PC (KHOÁ sau đợt 0, R5). Thanh mua (C.2 #9).
+  Tham số: label (bắt buộc, nhãn nút chính), price (chuỗi giá đã định dạng, vd {{ variant.price | money }}), price_label
+  (chữ phụ trên giá, tuỳ chọn), href (nút là link) HOẶC form (id <form> mà nút submit), aria_label (vùng, mặc định "Mua nhanh").
+  Mobile: dính đáy, thay thanh đáy (CSS body:has(.pc-actionbar) ẩn .pc-bottomnav); desktop ≥ 1024px: nằm tĩnh trong luồng trang.
+  Luôn hiện giá + 1 nút chính.
+{%- endcomment -%}
+{%- if label == blank -%}<!-- PC-ERROR ui_action_bar: thiếu label -->
+{%- elsif href == blank and form == blank -%}<!-- PC-ERROR ui_action_bar: cần href hoặc form -->
+{%- else -%}
+{%- assign pc_ab_type = 'button' -%}{%- if form != blank -%}{%- assign pc_ab_type = 'submit' -%}{%- endif -%}
+<div class="pc-actionbar" role="region" aria-label="{{ aria_label | default: 'Mua nhanh' | escape }}">
+  {%- if price != blank -%}
+  <p class="flex flex-col">{% if price_label != blank %}<span class="text-xs text-ink-secondary">{{ price_label }}</span>{% endif %}<span class="pc-actionbar__price">{{ price }}</span></p>
+  {%- endif -%}
+  {% include 'ui_button', label: label, variant: 'primary', href: href, type: pc_ab_type, size: 'lg', block: true, disabled: false, loading: false, aria_label: '', id: '', form: form, modal: '', js_class: '' %}
+</div>
+{%- endif -%}

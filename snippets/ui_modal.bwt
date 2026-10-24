@@ -1,0 +1,17 @@
+{%- comment -%}
+  snippets/ui_modal.bwt — THƯ VIỆN PC (KHOÁ sau đợt 0, R5). Popup / khung trượt (C.2 #10).
+  Tham số: id (bắt buộc), title (bắt buộc), content (HTML thân popup đã capture), close_label (mặc định "Đóng").
+  Mobile: khung trượt từ đáy; desktop: hộp giữa màn. Đóng sẵn (thuộc tính hidden). Mở bằng nút ui_button modal: '<id>'.
+  Hành vi (assets/pc-ui.js, data-pc-modal, D05): bỏ hidden, focus vào popup, giữ Tab trong popup, Escape / nút đóng / bấm lớp phủ
+  đóng và trả focus về nút mở, khoá cuộn nền.
+{%- endcomment -%}
+{%- if id == blank -%}<!-- PC-ERROR ui_modal: thiếu id -->
+{%- elsif title == blank -%}<!-- PC-ERROR ui_modal: thiếu title -->
+{%- else -%}
+<div class="pc-overlay" data-pc-modal-overlay="{{ id }}" hidden></div>
+<div class="pc-modal" id="{{ id }}" data-pc-modal role="dialog" aria-modal="true" aria-labelledby="{{ id }}-title" tabindex="-1" hidden>
+  <h2 class="pc-modal__title" id="{{ id }}-title">{{ title }}</h2>
+  <button type="button" class="pc-modal__close" data-pc-modal-close="{{ id }}" aria-label="{{ close_label | default: 'Đóng' | escape }}">{% include 'ui_icon', name: 'x', size: 24, label: '' %}</button>
+  <div class="mt-4">{{ content }}</div>
+</div>
+{%- endif -%}

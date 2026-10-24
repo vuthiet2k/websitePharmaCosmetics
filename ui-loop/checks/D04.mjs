@@ -79,8 +79,12 @@ for (const f of FRAMES) {
     const shown = els.filter((e) => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && cs.display !== 'none'; });
     return [k, `${shown.length}/${els.length}`];
   })), KIT_SEL);
-  const allShown = Object.values(vis).every((v) => +v.split('/')[0] > 0);
-  ok(allShown, 'đủ 10 snippet nhìn thấy: ' + Object.entries(vis).map(([k, v]) => `${k} ${v}`).join(' · '));
+  // Lần 2 (vòng 10): M.4 ẩn .pc-fab ở màn ngang thấp (landscape, cao ≤ 500px) ⇒ ở khung đó fab phải ẨN (display none), không tính thiếu
+  const landscapeLow = await page.evaluate(() => matchMedia('(orientation: landscape) and (max-height: 500px)').matches);
+  const fabDisplay = await page.evaluate(() => getComputedStyle(document.querySelector('.pc-fab')).display);
+  const allShown = Object.entries(vis).every(([k, v]) => (k === 'ui_fab' && landscapeLow) ? fabDisplay === 'none' : +v.split('/')[0] > 0);
+  ok(allShown, 'đủ 10 snippet nhìn thấy: ' + Object.entries(vis).map(([k, v]) => `${k} ${v}`).join(' · ')
+    + (landscapeLow ? ` (màn ngang thấp: ui_fab display ${fabDisplay} — ẩn đúng M.4)` : ''));
 
   // 2) PC-ERROR
   const err = await page.evaluate(() => {
@@ -104,7 +108,7 @@ for (const f of FRAMES) {
     return { btn: h('.pc-btn'), swiper: h('.pc-swiper-btn'), fab: h('.pc-fab'), inp, btnBg: cs.backgroundColor, btnRadius: cs.borderTopLeftRadius, btnFs: cs.fontSize, cardRadius: ccs.borderTopLeftRadius, cardShadow: ccs.boxShadow, scrollX: document.documentElement.scrollWidth - innerWidth };
   });
   const minBtn = Math.min(...m.btn, ...m.swiper, ...m.fab);
-  ok(minBtn >= 44, `[html font-size ${rootFs}] cao nhỏ nhất: pc-btn ${Math.min(...m.btn)}px (${m.btn.length} nút) · swiper ${Math.min(...m.swiper)}px · fab ${m.fab[0]}px`);
+  ok(minBtn >= 44, `[html font-size ${rootFs}] cao nhỏ nhất: pc-btn ${Math.min(...m.btn)}px (${m.btn.length} nút) · swiper ${Math.min(...m.swiper)}px · fab ${m.fab.length ? m.fab[0] + 'px' : 'ẩn'}`);
   ok(m.inp.every((x) => x === '16px'), `ô nhập font-size: ${[...new Set(m.inp)].join(',')} (${m.inp.length} ô)`);
   console.log(`  · nút chính nền ${m.btnBg}, bo ${m.btnRadius}, chữ ${m.btnFs}; thẻ SP bo ${m.cardRadius}, shadow ${m.cardShadow}; cuộn ngang ${m.scrollX}px`);
 

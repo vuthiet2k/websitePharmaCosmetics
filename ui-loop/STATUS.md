@@ -1,6 +1,6 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 9 · Việc vừa làm: N06 → DONE lần 2 (ô bấm 44×44 < 1024 / 24×24 ≥ 1024, ô vẽ ::before 24×24 viền 2px, tích nền brand; 7 khung Chromium + WebKit đạt; 78 checkbox cũ 0 đổi; ui-verify --quick 0 lỗi mới)
-Tổng: 62 việc · DONE 7 · TODO 54 · VERIFY_FAIL 1 · BLOCKED 0 · BLOCKED_OWNER 0
+Vòng: 10 · Việc vừa làm: D04 → DONE lần 2 (7 khung Chromium + WebKit: đủ 10 snippet — fab ẩn ở 844×390 đúng M.4; 17 nút ≥ 44px; Tab solid 2px brand; axe #pc-kit 0 thường + popup mở; ui-verify --quick 0 lỗi mới)
+Tổng: 64 việc · DONE 8 · TODO 56 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick kit + Q; baseline đã ghi)
 Câu hỏi cho chủ dự án:
 - (không có — xung đột M.4 `h-6 w-6` / D.7 "checkbox ≥ 24px" với B.7 "vùng chạm mobile ≥ 44px" đã xử theo A.1: vùng bấm 44px,
@@ -26,7 +26,11 @@ Ghi chú:
   `--before` trên cây đã sửa). Thêm N09 (đợt 0): `label{display:inline-block!important}` cũ đè `.pc-check` (ô cách chữ 3,7px).
 - Vòng 9 xong N06 lần 2: components.css v1.3 — `.pc-check__box` `appearance:none` 44×44 (< 1024) / 24×24 (lg), ô vẽ `::before`
   24×24. Commit gồm `snippets/ui_field.bwt` (file D04, cần cho N06). Lệch ô–chữ (3,7px, lệch dọc ở 1440) vẫn là N09.
-- Việc kế tiếp: D04 lần 2 (VERIFY_FAIL; N03–N06 đã xong; mục `ui_fab` ẩn ở 844×390 ghi "ẩn đúng M.4").
+- Vòng 10 xong D04 lần 2 (không sửa mã snippet; chỉ script kiểm coi fab ẩn ở màn ngang thấp là đúng M.4). Commit gồm 9 snippet
+  `ui_*` còn lại + trang kit + ALLOW lint-liquid-globals. Thêm N10 (đợt 0): header cũ (z 9980 / 100 / topbar 10010) nằm trên
+  lớp phủ popup z 50; N11 (đợt 0): `.pc-modal__close` nền xám + viền outset của trình duyệt. Ảnh full-page WebKit trông mờ là
+  do cách chụp (khung nhìn WebKit bình thường) — đừng coi là lỗi.
+- Việc kế tiếp: N01 (TODO đầu tiên đợt 0; liên quan N11 — viền/nền mặc định do preflight tắt, làm riêng từng việc).
 
 Ghi chú dựng vòng lặp:
 - Baseline `ui-loop/baseline.json` = quét full bản hiện tại (trước mọi sửa đổi); vòng 1 trộn thêm 18 lượt trang quick, vòng 2 trộn 30 lượt, vòng 3 trộn 18 lượt, vòng 5 trộn 21 lượt, vòng 6 trộn 21 lượt.

@@ -1,0 +1,12 @@
+{%- comment -%}
+  snippets/ui_fab.bwt — THƯ VIỆN PC (KHOÁ sau đợt 0, R5). Nút nổi (C.2 #12) — tối đa 1 nút nổi mỗi trang (robot chat).
+  Tham số: aria_label (bắt buộc — nút chỉ có icon), href (có ⇒ <a>, trống ⇒ <button>), icon (tên trong ui_icon, mặc định message-circle),
+  id. Mobile nằm trên thanh đáy / thanh mua; màn ngang thấp tự ẩn (CSS thư viện).
+{%- endcomment -%}
+{%- assign pc_fab_icon = icon | default: 'message-circle' -%}
+{%- if aria_label == blank -%}<!-- PC-ERROR ui_fab: thiếu aria_label -->
+{%- elsif href != blank -%}
+<a class="pc-fab" href="{{ href }}" aria-label="{{ aria_label | escape }}"{% if id != blank %} id="{{ id }}"{% endif %}>{% include 'ui_icon', name: pc_fab_icon, size: 24, label: '' %}</a>
+{%- else -%}
+<button type="button" class="pc-fab" aria-label="{{ aria_label | escape }}"{% if id != blank %} id="{{ id }}"{% endif %}>{% include 'ui_icon', name: pc_fab_icon, size: 24, label: '' %}</button>
+{%- endif -%}
