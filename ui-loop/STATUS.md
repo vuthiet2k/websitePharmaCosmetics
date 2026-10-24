@@ -1,7 +1,7 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 23 · Việc vừa làm: L34 → DONE (thanh đáy: "Soi da & Dịch vụ" hết cắt 72px → đọc trọn, 320 chữ chồng 13,9 → 0px, nhãn trang chủ 11 → 12px, aria-current trang Soi da 0 → 1 mục đúng; bấm 4 mục 200 + h1; 7 khung Chromium + WebKit; ui-verify --quick 0 lỗi mới)
-Tổng: 70 việc · DONE 20 · TODO 50 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
-Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick 6 trang Q + /truoc-sau-cham-soc-da-tu-xa + /account; baseline đã ghi sau L34)
+Vòng: 24 · Việc vừa làm: N16 → DONE (cây danh mục drawer: link cấp 1 30,5 → 44,1px, link con 30,5–72 → 44,1–49,5px, ô ảnh 64 → ≤ 27px, icon ≡ thừa → 0, 844×390 vùng cuộn 164 → 334px, TRANG CHỦ 2 → 1; desktop giữ cỡ; 7 khung Chromium + WebKit 97/97; ui-verify --quick 0 lỗi mới)
+Tổng: 71 việc · DONE 21 · TODO 50 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick 6 trang Q; baseline đã ghi sau N16)
 Câu hỏi cho chủ dự án:
 - L01: ĐÃ TRẢ LỜI 24/10/2026 — chủ dự án cho sửa luồng ui-verify: mở nhóm đầu cây #header-category-menu rồi đếm link con thật (URL gốc /<handle> như menu Sapo), ngưỡng ≥ 5 giữ nguyên; đã sửa + G.7 cập nhật; luồng L01 đạt 3/3 (11 link).
 - D07: đã trả lời 24/10/2026 và đã xử lý (DONE vòng 21).
@@ -83,3 +83,4 @@ Ghi chú:
 Ghi chú dựng vòng lặp:
 - Baseline `ui-loop/baseline.json` = quét full bản hiện tại (trước mọi sửa đổi); vòng 1 trộn thêm 18 lượt trang quick, vòng 2 trộn 30 lượt, vòng 3 trộn 18 lượt, vòng 5 trộn 21 lượt, vòng 6 trộn 21 lượt.
 - Mốc ui-guard `ui-loop/guard-baseline.json` ghi nợ cũ: inlineStyle 244 · faIcon 356 · extCdn 11 · rawButton 260 · tailwindCdn 1 · styleTag 26 · important 1237 · hexInMarkup 62 · arbitrary 34 · smallText 22 · shadow 24.
+- Vòng 24 xong N16: bean-menu-cate.bwt bỏ TRANG CHỦ khỏi cây danh mục (cả mega-menu desktop — cùng markup), icon ≡ link con chỉ khi menu con có link, utility A.3 (py-3 … lg:p-0) thay padding cũ đã xoá ở global_core; ô thay thế bỏ min-height 64px (storefront-v3), desktop giữ bằng lg:min-h-16; header.bwt dời khối Quiz da / ngôn ngữ vào vùng cuộn drawer + mb-16 chừa thanh đáy. Thêm N18 (đợt 1): WebKit không thấy icon ≡. Lượt --write-baseline gặp `a.backtop` WebKit 390 trang chủ lúc có lúc không (touch<44 64 → 65, noName 42 → 43 trong mốc) — nút tự ẩn 1,4s sau cuộn, không do N16.
