@@ -1,5 +1,5 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 15 · Việc vừa làm: N10 → DONE (7 khung Chromium + WebKit × cuộn 0/1200: lưới header trúng lớp phủ 0/15 → 15/15; bấm ☰/giỏ/menu khi popup mở → 0 tác dụng; hồi quy Q 36/36 = HEAD; ui-verify --quick 0 lỗi mới)
+Vòng: 15 · Việc vừa làm: N10 → DONE, commit 941a42f (7 khung Chromium + WebKit × cuộn 0/1200: lưới header trúng lớp phủ 0/15 → 15/15; bấm ☰/giỏ/menu khi popup mở → 0 tác dụng; hồi quy Q 36/36 = HEAD; ui-verify --quick 0 lỗi mới)
 Tổng: 65 việc · DONE 13 · TODO 52 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick kit + Q; baseline đã ghi)
 Câu hỏi cho chủ dự án:
