@@ -3,7 +3,7 @@
   build / build:sapo chỉ copy 5 thư mục theme ⇒ KHÔNG đóng gói lên Sapo. Hiện mọi snippet ui_* với tham số đúng + 1 ô thử tham số
   sai (#pc-kit-error: mỗi snippet 1 lệnh gọi sai, chỉ được in chú thích PC-ERROR, không in gì hiển thị).
   Chỉ dùng utility bố cục A.3 có sẵn trong assets/pc-ui.css (Tailwind chỉ quét layouts/templates/snippets).
-  Kiểm bằng ui-loop/checks/D04.mjs.
+  Kiểm bằng ui-loop/checks/D04.mjs; hành vi assets/pc-ui.js (popup, thông báo, slider, form data-pc-form) bằng ui-loop/checks/D05.mjs.
 {%- endcomment -%}
 <div id="pc-kit" class="mx-auto w-full max-w-5xl px-4 py-10 lg:px-8">
   <h1 class="text-2xl font-bold">Thư viện giao diện PC — trang kiểm (chỉ dev)</h1>
@@ -36,12 +36,13 @@
 
   <section class="mt-10" data-kit="ui_field" aria-labelledby="kit-h-field">
     <h2 id="kit-h-field" class="text-xl font-semibold">3. Ô nhập — ui_field</h2>
-    <form class="mt-4 grid gap-4 lg:grid-cols-2" action="#" novalidate>
+    <form id="kit-form" class="mt-4 grid gap-4 lg:grid-cols-2" action="#kit-sent" novalidate data-pc-form>
       {% include 'ui_field', name: 'kit_name', label: 'Họ và tên', type: 'text', autocomplete: 'name', required: true %}
       {% include 'ui_field', name: 'kit_phone', label: 'Số điện thoại', type: 'tel', inputmode: 'tel', autocomplete: 'tel', required: true, hint: 'Chuyên gia gọi lại trong giờ làm việc', value: '123', error: 'Số điện thoại cần đủ 10 chữ số, bắt đầu bằng 0' %}
       {% include 'ui_field', name: 'kit_email', label: 'Email', type: 'email', inputmode: 'email', autocomplete: 'email' %}
       {% include 'ui_field', name: 'kit_note', label: 'Tình trạng da', type: 'textarea', placeholder: 'Mô tả ngắn tình trạng da' %}
       {% include 'ui_field', name: 'kit_agree', label: 'Nhận tin ưu đãi qua email', type: 'checkbox' %}
+      <div>{% include 'ui_button', label: 'Gửi', variant: 'primary', type: 'submit' %}</div>
     </form>
   </section>
 

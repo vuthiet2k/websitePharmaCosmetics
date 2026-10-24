@@ -9,7 +9,9 @@
               v1.6 (24/10/2026, N08) thông báo nhường nút nổi (fab nâng lên trên toast khi toast hiện) và popup đang mở (< 1024: thông báo xuống đáy, khung trượt
                                      nâng lên trên nó) — trước đó toast che fab 28px, che ô nhập trong popup 31px
               v1.7 (24/10/2026, N10) popup đang mở ⇒ header cũ (header.header) xuống z-header 30 trong ngữ cảnh riêng, nằm dưới lớp phủ z 50
-              v1.8 (24/10/2026, N11) .pc-modal__close bỏ nền / viền outset / padding mặc định của <button> (preflight tắt) */
+              v1.8 (24/10/2026, N11) .pc-modal__close bỏ nền / viền outset / padding mặc định của <button> (preflight tắt)
+              v1.9 (24/10/2026, D05) popup đang mở ⇒ khoá cuộn nền (html overflow hidden); khung .pc-swiper > .swiper cắt slide tràn
+                                     (Swiper 6.6.2 chỉ có CSS cho .swiper-container) — hành vi ở assets/pc-ui.js */
 @layer components {
   /* 0. Viền focus — `:root` nâng độ ưu tiên (0,3,0) để thắng CSS cũ `.pc-site-v3 :is(a,button,input):focus-visible` (0,2,1)
      và `a/button:focus { outline: none }`; bỏ `:root` ở D09 khi xoá CSS cũ */
@@ -84,6 +86,8 @@
 
   /* 6. Điều hướng slider */
   .pc-swiper { @apply relative; }
+  /* D05: Swiper 6.6.2 (assets/swiper.js) chỉ đặt overflow:hidden cho .swiper-container ⇒ khung .swiper của ui_swiper_nav tự cắt */
+  .pc-swiper > .swiper { @apply relative overflow-hidden; }
   .pc-swiper-btn { @apply absolute top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center
                           border border-solid border-line-control bg-white text-slate-800 rounded-full shadow-none hover:text-brand lg:rounded-none; }
   .pc-swiper-btn--prev { @apply left-3; }
@@ -126,6 +130,9 @@
                      lg:inset-auto lg:left-1/2 lg:top-1/2 lg:w-full lg:max-w-lg lg:-translate-x-1/2 lg:-translate-y-1/2
                      lg:border lg:p-6 lg:pt-12 lg:rounded-none; }
   .pc-modal__title { @apply text-lg font-semibold text-ink; }
+  /* D05: khoá cuộn nền khi popup mở (pc-ui.js chỉ bỏ thuộc tính hidden). Đặt trên <html> vì CSS cũ cho html/body overflow-x: clip
+     ⇒ overflow của body không truyền lên khung nhìn; vị trí cuộn giữ nguyên khi đóng */
+  html:has(.pc-modal:not([hidden])) { @apply overflow-hidden; }
   /* N11: preflight tắt ⇒ <button> còn nền + viền outset + padding của trình duyệt (Chromium #F0F0F0, WebKit #C0C0C0) */
   .pc-modal__close { @apply absolute right-2 top-2 m-0 inline-flex h-11 w-11 cursor-pointer items-center justify-center border-0 border-none
                             bg-transparent p-0 text-ink; }

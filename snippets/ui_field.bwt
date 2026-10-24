@@ -3,7 +3,8 @@
   Tham số: name, label (bắt buộc), type = text | email | tel | password | number | search | date | textarea | checkbox (mặc định text),
   id (mặc định pc-f-<name>), value, placeholder, required, autocomplete, inputmode, hint, error (lỗi tiếng Việt có sẵn từ máy chủ).
   Nhãn trên ô; ô 16px cao 44px (class pc-input); lỗi ngay dưới ô, nối bằng aria-describedby. Ô lỗi luôn có sẵn (ẩn bằng class
-  hidden khi trống) để assets/pc-ui.js (data-pc-form, D05) điền lỗi và bỏ hidden. Form chứa ô phải có novalidate.
+  hidden khi trống; icon + <span data-pc-error-text>) để assets/pc-ui.js (data-pc-form, D05) điền chữ lỗi và bỏ hidden.
+  Form chứa ô phải có novalidate (data-pc-form tự đặt).
 {%- endcomment -%}
 {%- assign pc_ft = type | default: 'text' -%}
 {%- assign pc_fid = name | prepend: 'pc-f-' -%}{%- if id != blank -%}{%- assign pc_fid = id -%}{%- endif -%}
@@ -26,6 +27,6 @@
     {%- endif -%}
   {%- endif -%}
     {%- if hint != blank -%}<p id="{{ pc_fid }}-hint" class="pc-hint">{{ hint }}</p>{%- endif -%}
-    <p id="{{ pc_fid }}-error" class="pc-error{% if error == blank %} hidden{% endif %}" data-pc-error>{% if error != blank %}{% include 'ui_icon', name: 'circle-alert', size: 20, label: '' %}<span>{{ error }}</span>{% endif %}</p>
+    <p id="{{ pc_fid }}-error" class="pc-error{% if error == blank %} hidden{% endif %}" data-pc-error>{% include 'ui_icon', name: 'circle-alert', size: 20, label: '' %}<span data-pc-error-text>{{ error }}</span></p>
   </div>
 {%- endif -%}

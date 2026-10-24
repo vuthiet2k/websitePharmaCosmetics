@@ -1,6 +1,6 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 16 · Việc vừa làm: N11 → DONE, commit 0359edd (7 khung Chromium + WebKit, popup mở: nút đóng nền xám → transparent, viền outset 2px → none, padding → 0, vẫn 44×44, icon X 17,85:1, Tab solid 2px brand; 113 phần tử .pc-* khác HEAD = sau; ui-verify --quick 0 lỗi mới)
-Tổng: 65 việc · DONE 14 · TODO 51 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Vòng: 17 · Việc vừa làm: D05 → DONE (assets/pc-ui.js; 7 khung Chromium + WebKit, D05.mjs 205/205: popup giữ focus 24/24, Escape/nút đóng/lớp phủ trả focus, khoá cuộn lệch 0px; toast 1 cái, ẩn ~5,0s; form 2 lỗi tiếng Việt cùng lúc, 0 bóng trình duyệt, focus ô sai đầu không bị che; slider nút + phím, không tự chạy khi giảm chuyển động; axe #pc-kit 0; ui-verify --quick 0 lỗi mới)
+Tổng: 66 việc · DONE 15 · TODO 51 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick kit + Q; baseline đã ghi)
 Câu hỏi cho chủ dự án:
 - (không có — xung đột M.4 `h-6 w-6` / D.7 "checkbox ≥ 24px" với B.7 "vùng chạm mobile ≥ 44px" đã xử theo A.1: vùng bấm 44px,
@@ -46,7 +46,13 @@ Ghi chú:
 - Vòng 16 xong N11: components.css v1.8 — `.pc-modal__close` `m-0 border-0 border-none bg-transparent p-0 cursor-pointer`. Lần đo đầu
   dùng `border-solid` ra "solid 0px" ⇒ đổi `border-none` cho khớp chữ tiêu chí rồi build + đo lại toàn bộ. Đối chứng HEAD bằng
   `ui-loop/evidence/N11/head-pc-ui.css`. Nút đóng chưa có hành vi đóng (bấm / Escape) — thuộc D05.
-- Việc kế tiếp: D05 (TODO đầu tiên đợt 0 theo thứ tự BACKLOG; N12 thuộc đợt 8).
+- Vòng 17 xong D05: `assets/pc-ui.js` (nạp defer ở theme.bwt + chat.bwt), components.css v1.9 (khoá cuộn `html:has(.pc-modal:not([hidden]))`,
+  `.pc-swiper > .swiper` overflow hidden), `ui_field` ô lỗi luôn có icon + `[data-pc-error-text]`, form kit có `data-pc-form` + nút "Gửi"
+  (D04.mjs đếm nút sẽ thấy thêm 1 nút). Swiper 6.6.2 đóng gói thiếu module keyboard/a11y ⇒ pc-ui.js tự làm phím mũi tên. API cho
+  việc sau: `PC.toast(msg, {actionLabel, actionHref})`, `PC.openModal(id, opener)` / `PC.closeModal()`, `PC.swiper(el)`, `PC.form(form)`.
+  Thêm N13 (đợt 5): `.pc-fab` che chữ lỗi / ô nhập trang kit khi cuộn. Lượt `--write-baseline` lại gặp dao động N07 (webkit390
+  /collections/all 90 → 120) — baseline ghi 120/40.
+- Việc kế tiếp: D06 (TODO đầu tiên đợt 0 theo thứ tự BACKLOG; N12 thuộc đợt 8, N13 đợt 5). D06 so sánh toàn site: `--quick` theo nhóm ≤ 8 trang.
 
 Ghi chú dựng vòng lặp:
 - Baseline `ui-loop/baseline.json` = quét full bản hiện tại (trước mọi sửa đổi); vòng 1 trộn thêm 18 lượt trang quick, vòng 2 trộn 30 lượt, vòng 3 trộn 18 lượt, vòng 5 trộn 21 lượt, vòng 6 trộn 21 lượt.
