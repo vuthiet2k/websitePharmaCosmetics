@@ -236,6 +236,11 @@ inline đè chéo. Chuyển theo thứ tự:
 1. **Thay CDN không đổi giao diện:** chép cấu hình `tailwind.config` trong `layouts/theme.bwt` ra `tailwind.legacy.config.js`
    (giữ nguyên `corePlugins`, `theme.extend`, map cỡ chữ về `--fs-*`), build ra `assets/pc-legacy-tw.css` quét `.bwt`, rồi
    gỡ CDN. Đạt khi ảnh chụp 390/1440 của 10 trang chính không đổi so với trước (ui-verify so baseline).
+   **Đã làm (D06, 24/10/2026):** `npm run build:tw-legacy` (`scripts/build-tw-legacy.mjs`, đầu vào `ui-src/css/legacy-tw.css`,
+   chạy trong `build` và `build:sapo`) quét `.bwt` + `assets/*.js` + `configs/settings_data.json` + `data/` (CDN quét DOM lúc
+   chạy nên cần cả nội dung chèn bằng JS / dữ liệu), safelist class ghép động `bg-{emerald,teal,cyan}-100`
+   `text-…-700` (about-us), autoprefixer như CDN, không minify. Nạp CUỐI `<head>` sau `content_for_header` — đúng chỗ CDN chèn
+   `<style>` — nên ở 36 class trùng tên khác khai báo với `pc-ui.css` bản cũ vẫn thắng như trước (`ui-loop/css-inventory.md`).
 2. **Kiểm kê:** liệt kê class cũ (`.btn-mua`, `.pc-pcard`…) mỗi trang đang dùng → `ui-loop/css-inventory.md`.
 3. **Ánh xạ & thay** theo đợt F.2: mỗi class cũ → 1 component `pc-*` hoặc utility A.3.
 4. **Xoá:** chỉ xoá quy tắc/file CSS cũ khi grep không còn tham chiếu và cổng F.3 đạt trên 70 trang.
@@ -565,7 +570,7 @@ Bộ chuẩn áp cho mọi thay đổi giao diện từ nay; cột Hiện trạn
 | Do | Don't | Hiện trạng |
 | :---- | :---- | :---- |
 | Mobile 4G: FCP ≤ 1,8s, LCP ≤ 2,5s, TBT < 0,2s, CLS ≤ 0,1; trang ≤ 1,5MB (trang chủ ≤ 2,5MB) | — | Chưa (L03) |
-| CSS dựng sẵn, không biên dịch Tailwind trên trình duyệt | Tailwind chạy trên trình duyệt | Chưa (L03) |
+| CSS dựng sẵn, không biên dịch Tailwind trên trình duyệt | Tailwind chạy trên trình duyệt | Đạt (D06) |
 | JS không thiết yếu tải sau; chỉ nạp CSS trang đang dùng | 17–19 file chặn hiển thị | Chưa (L03) |
 | Giữ chỗ cho khối nạp sau để bố cục không nhảy | CLS 0,24–0,39 | Chưa (L12, L29) |
 
@@ -964,7 +969,7 @@ Mục ✅ KHÔNG được sửa lại trừ khi ui-verify báo hồi quy (khi đ
 | N12 | 8 | "Xem nhiều" trang chủ: thẻ "TRETINOIN CREAM" ô ảnh trống xám, `.most-view-product-img` thẻ 2 lúc 0×0 | ⬜ Chưa sửa | — | — | N02 đo: thẻ 2 0×0 ở Chromium 390/320/768/1440/844×390 (một số lượt); ô ảnh trống ở ảnh 768 |
 | N13 | 5 | Thư viện: nút nổi `.pc-fab` che nội dung khi cuộn (chữ lỗi / gợi ý / ô nhập form kit) | ⬜ Chưa sửa | — | — | D05 đo: WebKit 390 đè chữ lỗi SĐT 47×16px; Chromium 390 nhãn + ô Email 48×12 / 48×23; 320 ô 48×16; 768 nhãn 48×20 |
 | D05 | 0 | `assets/pc-ui.js` (JS thuần, `defer`): `data-pc-modal`, `data-pc-toast`, `data-pc-swiper`, | ✅ Đã sửa | 9591e5d | 24/10/2026 | D05.mjs 205/205, 7 khung Chromium + WebKit: popup focus vào trong, Tab/Shift+Tab 24/24 trong popup, Escape / nút đóng / lớp phủ đóng + trả focus, khoá cuộn lệch 0px; toast 1 cái, ẩn 4 954–5 013 ms; form 0 bóng trình duyệt, 2 lỗi tiếng Việt + icon cùng lúc, focus ô sai đầu (nhãn + ô không bị che 10/10); slider nút + phím →/←, 0 chấm bấm được, giảm chuyển động không tự chạy (đối chứng chạy); axe #pc-kit 0; ui-verify --quick 0 lỗi mới |
-| D06 | 0 | Thay Tailwind CDN: `tailwind.legacy.config.js` (chép cấu hình CDN trong `layouts/theme.bwt | ⬜ Chưa sửa | — | — | — |
+| D06 | 0 | Thay Tailwind CDN: `tailwind.legacy.config.js` (chép cấu hình CDN trong `layouts/theme.bwt | ✅ Đã sửa | (commit) | 24/10/2026 | 0 request cdn.tailwindcss.com / 186 lượt (68 trang × Chromium 390 + 1440, 10 trang × WebKit iPhone 13 / 320 / 768 / 1024 / 844×390); pc-legacy-tw.css HTTP 200, cuối head 186/186; đổi chỗ CDN ↔ dựng sẵn trong trang 0 quy tắc thiếu, 0 phần tử lệch (68 × 2 khung); ảnh trước/sau 20/20 cùng cỡ, khác 0,006–0,112 % (đồng hồ, phần tử nổi); 56 KB (gzip 8,6 KB); ui-verify --quick 68 trang 0 lỗi mới |
 | D07 | 0 | `snippets/ui_icon.bwt` (SVG Lucide MIT, đủ icon đang dùng ở header/footer/thẻ/form) + `scr | ⬜ Chưa sửa | — | — | — |
 | D08 | 0 | Dữ liệu mẫu local cho mục trước đây cần Sapo: trang `chinh-xach-doi-tra` (handle Sapo thật | ⬜ Chưa sửa | — | — | — |
 | L01 | 1 | Menu ☰ mobile có cây danh mục SP (menu `main-menu`); thanh đáy 4 mục theo C.2 (Trang chủ · | ⬜ Chưa sửa | — | — | — |
