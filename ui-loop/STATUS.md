@@ -1,6 +1,6 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 28 · Việc vừa làm: N17 → BLOCKED_OWNER lần 1 (phương án A áp dụng: giảm chuyển động WebKit 1 300–3 411 → 61–137ms, Swiper không đổi; còn 2 điểm cần chủ dự án quyết — xem câu hỏi)
-Tổng: 71 việc · DONE 21 · TODO 48 · VERIFY_FAIL 1 · BLOCKED 0 · BLOCKED_OWNER 1
+Vòng: 29 · Việc vừa làm: N18 → BLOCKED_OWNER lần 2 (lượt 3 đạt toàn bộ; lượt 4 chỉ ✗ WebKit no-preference 433ms > 400 = câu hỏi N17-a; icon cùng lúc link 0ms mọi khung). Thêm N19 (đợt 3)
+Tổng: 72 việc · DONE 21 · TODO 49 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 2
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 3 (d1440 /collections/all focusNoRing 22 → 23 — mốc đếm nhầm, xem N17-b; webkit390 /collections/all touch<44 90 → 120, noName 24 → 40 — dao động N07)
 Câu hỏi cho chủ dự án:
 - **N17-a (vòng 28):** WebKit iPhone 13, KHÔNG giảm chuyển động: drawer ☰ hiện sau 203–672ms (3/6 lượt > 400ms B.7) — HEAD đo y hệt
@@ -8,6 +8,8 @@ Câu hỏi cho chủ dự án:
   ⇒ `visibility` đổi ở khung thứ 2; WebKit headless 1 khung ≈ 175–266ms (máy thật 16ms). Chọn: (1) XOÁ `visibility .5s` khỏi transition
   — drawer mở tức thì nhưng KHI ĐÓNG biến mất ngay, mất hiệu ứng trượt ra; (2) giữ CSS, tiêu chí no-preference WebKit đo theo trạng thái
   CSS (setTimeout, không theo khung rAF headless) hoặc chỉ áp ngưỡng 400ms cho Chromium; (3) hướng khác. (Áp dụng cả N18 tiêu chí (2).)
+  **Vòng 29 — N18 cũng chờ câu này (BLOCKED_OWNER lần 2):** N18.mjs lượt 3 ĐẠT toàn bộ (WebKit 191ms), lượt 4 ✗ duy nhất WebKit
+  no-preference 433ms (link cùng 433ms). Trả lời N17-a xong ⇒ chuyển N17 + N18 về TODO; mã cả hai đang trong cây làm việc.
 - **N17-b (vòng 28):** ui-verify --quick báo mới `d1440 /collections/all focusNoRing 22 → 23` («Voucher trước»). Mốc 22 đếm nhầm: HEAD đọc
   ngay sau Tab thấy bóng trang trí còn giữa chuyển tiếp `.01ms`; đọc sau 100ms HEAD cũng 23 (evidence/N17/probe-focus-wait.txt) — nút
   không có viền focus ở cả 2 bản (lỗi thật thuộc L10). Cho phép ghi mốc mới 23 khi commit N17 (dù ui-verify exit 1 do mục này)?
@@ -112,3 +114,8 @@ Ghi chú dựng vòng lặp:
   `evidence/N17/head-pc-ui.css` + chèn lại khối `.01ms` (probe-nopref/probe-focus/probe-hero/probe-voucher-nav.mjs). Chữ hero 1440 mờ = L11 (như HEAD).
   Vòng sau: N18 (VERIFY_FAIL lần 1) đo được với mã N17 trong cây, nhưng tiêu chí (2) no-preference WebKit ≤ 400ms vướng đúng N17-a ⇒
   nếu chủ dự án chưa trả lời N17-a, chạy `node ui-loop/checks/N18.mjs` sẽ lại có thể ✗ ở mục đó.
+- Vòng 29 N18 → BLOCKED_OWNER lần 2 (không sửa mã; build:sapo + ui-guard PASS; N18.mjs after-run3 đạt hết, after-run4 ✗ WebKit no-preference
+  433ms). Thêm N19 (đợt 3): chữ drawer/thanh đáy WebKit vẽ mảnh dù computed Montserrat 600 (evidence/N18/probe-font-weight.mjs).
+  **Cây làm việc vẫn giữ mã N17 + N18 chưa commit** (tokens.css, global_core.scss.bwt 2 vùng ~3440–3530 và ~5566, bean-menu-cate.bwt,
+  pc-ui.css / pc-legacy-tw.css sinh). Vòng sau làm L02 (đợt 2): KHÔNG cuốn các hunk này vào commit L02 (lọc patch + `git apply --cached`
+  nếu L02 phải sửa cùng file); file sinh pc-ui.css/pc-legacy-tw.css sẽ chứa cả phần N17/N18 — ghi rõ trong báo cáo L02.
