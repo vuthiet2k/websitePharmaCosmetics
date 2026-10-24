@@ -440,7 +440,7 @@ Bộ chuẩn áp cho mọi thay đổi giao diện từ nay; cột Hiện trạn
 | :---- | :---- | :---- |
 | Mobile có lối vào danh mục sản phẩm trong menu ☰ hoặc thanh đáy | Menu mobile chỉ có trang giới thiệu | Đạt (L01) |
 | Menu ☰ nằm trên mọi lớp nổi, Escape đóng, khoá cuộn nền | Thanh đáy + robot đè menu | Một phần (L06) |
-| Thanh đáy 3–5 mục, nhãn đọc trọn, trỏ đúng trang nhãn hứa | Nhãn cắt, link lệch nhãn | Chưa (L34) |
+| Thanh đáy 3–5 mục, nhãn đọc trọn, trỏ đúng trang nhãn hứa | Nhãn cắt, link lệch nhãn | Đạt (L34) |
 | Breadcrumb mục cuối = tên trang thật | "PHARMA COSMETICS" | Chưa (L21) |
 | Link nội bộ 0 lỗi trên Sapo thật | Link tag bài viết về trang chủ | Chưa (L08) |
 | Link nói rõ đích đến | "Xem chi tiết", "Đọc tiếp ..." trơ trọi | Chưa (L19) |
@@ -846,7 +846,7 @@ Khoảng trắng ~120px dưới nhãn chương "KHÁM PHÁ"; nút "lên đầu" 
 | L25 | 2 | Chữ 10–11px trên mobile: topbar, chọn ngôn ngữ, nhãn giảm giá, "Trước/Sau", nút dịch vụ | Chuẩn ≥ 12px |
 | L26 | 2 | 92 kiểu nút; 6 màu nút hành động; "Thêm vào giỏ" ≥ 5 kiểu; trang sản phẩm desktop có 2 nút đặc cùng cấp | Heuristic 4 |
 | L31 | 2 | Trang sản phẩm mobile: hàng mã / đánh giá vỡ dòng ("4. / 5") | Đọc hiểu |
-| L34 | 2 | Thanh đáy "Trước Sau" trỏ trang phản hồi chung, không phải trang Trước & Sau; nhãn "Về chúng t…" bị cắt | Information scent |
+| ✅ L34 | 2 | Thanh đáy "Trước Sau" trỏ trang phản hồi chung, không phải trang Trước & Sau; nhãn "Về chúng t…" bị cắt | Information scent |
 | L35 | 2 | Trộn trục căn giữa/trái ở đặt lịch; form đăng nhập sát mép 10px | Gestalt |
 | L36 | 2 | Tiêu đề chữ HOA (footer, menu, nhóm lọc) và Hoa Từa Chữ ("Câu Hỏi Thường Gặp") | Typography |
 | L37 | 2 | Ảnh quá cỡ: 3163px hiển thị 390px; trang Skin Health Beauty 2,9MB ảnh | Hiệu năng |
@@ -976,7 +976,7 @@ Mục ✅ KHÔNG được sửa lại trừ khi ui-verify báo hồi quy (khi đ
 | N15 | 9 | Trang nội dung root-level chưa khai báo (vd `/chinh-xach-doi-tra`) dựng bằng template `collection` ở local; sửa cần `dev-server.js` + khởi động lại server | ⬜ Chưa sửa | — | — | D08 đo: 1440 hiện "Sản phẩm (23)" + bộ lọc + voucher |
 | L01 | 1 | Menu ☰ mobile có cây danh mục SP (menu `main-menu`); thanh đáy 4 mục theo C.2 (Trang chủ · | ✅ Đã sửa | 7bfa173 | 24/10/2026 | 7 khung Chromium + WebKit: nhóm danh mục trong drawer 0 → 5/5; bấm "MUA SẮM THEO DANH MỤC" ⇒ 11 link danh mục đúng menu; "TẨY TRANG" ⇒ 200 + h1; Escape đóng + focus ☰ 5/5; thanh đáy Trang chủ · Danh mục (/collections/all 200) · Soi da & Dịch vụ (200) · Tài khoản; mega-menu desktop 17 = 17 link; ui-verify --quick 0 lỗi mới (luồng L01-menu-danh-muc đếm `/collections/` còn 1 — URL Sapo là `/<handle>`, chờ chủ dự án) |
 | L34 | 1 | Thanh đáy: nhãn đọc trọn, `aria-current`, mục trỏ đúng trang nhãn hứa | ⬜ Chưa sửa | — | — | L01 đo: "Soi da & Dịch vụ" cắt 92/72px ở 390/320/844×390 |
-| N16 | 1 | Cây danh mục drawer mobile kiểu CSS cũ: mục cấp 1 cao 31px, icon "≡" ở mục con không có con, ô ảnh 72px; 844×390 vùng cuộn 164px | ⬜ Chưa sửa | — | — | L01 đo: 31px (390/320/768/844×390/WebKit); vùng cuộn 618 / 342 / 164px ở 390 / 320 / 844×390 |
+| N16 | 1 | Cây danh mục drawer mobile kiểu CSS cũ: mục cấp 1 cao 31px, icon "≡" ở mục con không có con, ô ảnh 72px; 844×390 vùng cuộn 164px; drawer có 2 mục "TRANG CHỦ" — chỉ giữ 1 (chủ dự án ghi 24/10) | ⬜ Chưa sửa | — | — | L01 đo: 31px (390/320/768/844×390/WebKit); vùng cuộn 618 / 342 / 164px ở 390 / 320 / 844×390 |
 | N17 | 1 | WebKit: nội dung drawer ☰ `visibility:hidden` ~1,3s sau khi bấm (Chromium ~110ms) | ⬜ Chưa sửa | — | — | L01 đo: WebKit iPhone 13 drawer vào khung 505ms + hết ẩn 1 300ms (cả `#nav`); Chromium 108–127ms |
 | L02 | 2 | Tương phản: topbar/footer nền #003F2D; giá, nhãn, link, nút theo token | ⬜ Chưa sửa | — | — | — |
 | L03 | 3 | Tốc độ: JS `defer`, rút font còn 400/500/600/700, gỡ Font Awesome (thay `ui_icon`), ảnh đú | ⬜ Chưa sửa | — | — | — |
@@ -1043,7 +1043,7 @@ Mỗi lỗi mới (từ ui-verify --full, hồi quy, hoặc phát hiện khi ki�
 | N13 | Vòng 17 / 24/10/2026 | Nút nổi `.pc-fab` (fixed phải-dưới, 48×48) che nội dung khi cuộn (D.17): form kit gửi sai, ô lỗi đầu giữa màn ⇒ WebKit 390 fab đè chữ lỗi SĐT 47×16px + gợi ý 48×12px; Chromium 390 nhãn Email 48×12 + ô 48×23; 320 ô 48×16 + gợi ý 48×7; 768 nhãn "Tình trạng da" 48×20 (ui-loop/evidence/D05/probe-fab.mjs) | /?tpl=page.ui-kit | Phát hiện khi kiểm D05 (vị trí fab có từ D04, không do D05) | ⬜ |
 | N14 | Vòng 20 / 24/10/2026 | Gợi ý tìm kiếm gọi `'https://' + location.hostname + '/search?…&view=smartjson(ar)'` (`layouts/theme.bwt:156,162`, dùng ở `assets/mobile-ui.js.bwt:261,276`) — ép https + bỏ cổng ⇒ preview local http:3000 luôn "Không có thấy kết quả" (D08.mjs phải chuyển request bằng `page.route`); listener keyup của theme.bwt gắn `.header_tim_kiem input` đo 0×0 ở 390/768/1024/1440 — gợi ý thật chạy qua overlay `#mb-search-popup` | / (overlay tìm kiếm) | Phát hiện khi kiểm D08 (có từ trước, không do D08; liên quan L14) | ⬜ |
 | N15 | Vòng 20 / 24/10/2026 | `/chinh-xach-doi-tra` (Trang nội dung trên Sapo) ở local dựng bằng template `collection`: 1440 hiện "Sản phẩm (23)", bộ lọc, voucher — `dev-server.js#resolvePrettyPath` đưa slug menu chưa khai báo về danh mục placeholder. Sửa cần `dev-server.js` (không được watch) + khởi động lại server preview | /chinh-xach-doi-tra | Phát hiện khi kiểm D08 (có từ trước; ảnh hưởng L07) | ⬜ |
-| N16 | Vòng 22 / 24/10/2026 | Cây danh mục `main-menu` trong drawer mobile (hiện ra sau L01) dùng kiểu CSS cũ của global_core: mục cấp 1 cao 31px (< 44px B.7); icon "≡" (`.open_mnu`) hiện cả ở mục con không có menu con; ô ảnh thay thế (`.pc-mm-noimg`) 72px mỗi mục con; 844×390 vùng cuộn drawer chỉ 164px / 390px (khối Quiz da / Yêu thích / cờ ngôn ngữ + thanh đáy chiếm phần còn lại). Đo ở Chromium 390/320/768/844×390 + WebKit iPhone 13 | / (drawer ☰) | Phát hiện khi kiểm L01 (kiểu CSS có từ trước, lộ ra khi bỏ ẩn cây) | ⬜ |
+| N16 | Vòng 22 / 24/10/2026 | Cây danh mục `main-menu` trong drawer mobile (hiện ra sau L01) dùng kiểu CSS cũ của global_core: mục cấp 1 cao 31px (< 44px B.7); icon "≡" (`.open_mnu`) hiện cả ở mục con không có menu con; ô ảnh thay thế (`.pc-mm-noimg`) 72px mỗi mục con; 844×390 vùng cuộn drawer chỉ 164px / 390px (khối Quiz da / Yêu thích / cờ ngôn ngữ + thanh đáy chiếm phần còn lại). Đo ở Chromium 390/320/768/844×390 + WebKit iPhone 13; drawer có 2 mục "TRANG CHỦ" — chỉ giữ 1 (chủ dự án ghi 24/10) | / (drawer ☰) | Phát hiện khi kiểm L01 (kiểu CSS có từ trước, lộ ra khi bỏ ẩn cây) | ⬜ |
 | N17 | Vòng 22 / 24/10/2026 | WebKit iPhone 13: bấm ☰ ⇒ drawer vào khung nhìn sau 505ms rồi nội dung còn `visibility:hidden` thêm 1 300ms (cả cây danh mục lẫn menu chính `#nav`); Chromium 108–127ms. B.7: mở panel 250–300ms, tối đa 400ms | / (drawer ☰) | Phát hiện khi kiểm L01 (có từ trước, không do L01 — `#nav` bằng cây danh mục) | ⬜ |
 
 ## **PHẦN F — Kế hoạch sửa và cổng kiểm**

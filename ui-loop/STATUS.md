@@ -1,7 +1,7 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 22 · Việc vừa làm: L01 → DONE (drawer ☰ mobile có cây danh mục main-menu: 0 → 5/5 nhóm, 11 link danh mục đúng menu, Escape trả focus ☰; thanh đáy Trang chủ · Danh mục · Soi da & Dịch vụ · Tài khoản; 7 khung Chromium + WebKit; ui-verify --quick 0 lỗi mới)
-Tổng: 70 việc · DONE 19 · TODO 51 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
-Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick 6 trang Q; baseline đã ghi sau L01)
+Vòng: 23 · Việc vừa làm: L34 → DONE (thanh đáy: "Soi da & Dịch vụ" hết cắt 72px → đọc trọn, 320 chữ chồng 13,9 → 0px, nhãn trang chủ 11 → 12px, aria-current trang Soi da 0 → 1 mục đúng; bấm 4 mục 200 + h1; 7 khung Chromium + WebKit; ui-verify --quick 0 lỗi mới)
+Tổng: 70 việc · DONE 20 · TODO 50 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick 6 trang Q + /truoc-sau-cham-soc-da-tu-xa + /account; baseline đã ghi sau L34)
 Câu hỏi cho chủ dự án:
 - L01 (đã DONE theo tiêu chí ghi trước khi sửa): luồng `L01-menu-danh-muc` trong `scripts/ui-verify.mjs` (KHOÁ ngưỡng, R5) chỉ đếm link có
   `/collections/` — nhưng menu Sapo thật (`data/sapo-menus.json`, cũng là nguồn G.7 nêu) dùng URL gốc `/<handle>` (vd `/top-tay-trang-noi-bat`),
@@ -76,7 +76,12 @@ Ghi chú:
   thanh đáy của settings_data (`git apply --cached`), phần `home_skin_scan_image` của chủ dự án vẫn để trong cây làm việc.
   WebKit: nội dung drawer `visibility:hidden` ~1,3s sau khi bấm ☰ ⇒ L01.mjs chờ hết ẩn rồi mới đo (ghi số ms) — N17. Thêm N16 (kiểu cây
   danh mục drawer: mục 31px, icon ≡, ô ảnh 72px), N17 (đợt 1).
-- Việc kế tiếp: L34 (nhãn "Soi da & Dịch vụ" đang cắt 92/72px), rồi N16, N17.
+- Vòng 23 xong L34: chỉ XOÁ khai báo cũ cắt nhãn (`comp_mobile_nav.scss.bwt` nowrap/ellipsis/max-width 72px + padding link; nhãn 11px trang
+  chủ trong `home-portal-integration.css`) + snippet so `page.url` với `mobile_nav_blog_url` để tô/`aria-current` trang "Soi da & Dịch vụ".
+  Preview trả `page.url` theo tên template (`/clinical-proof`) ⇒ `preview-mock.js` thêm `SAPO_PAGE_HANDLE` (page.clinical-proof →
+  `truoc-sau-cham-soc-da-tu-xa`) như Sapo thật. Nhãn "Soi da & Dịch vụ" xuống 2 dòng ở 390/320 (đọc trọn; ngắt dòng gọn hơn khi chuyển
+  sang `pc-bottomnav` — C.2 #8). Thanh đáy còn hiện ở 844×390 (L06), icon còn Font Awesome (L03).
+- Việc kế tiếp: N16, rồi N17 (đợt 1), sau đó đợt 2 (L02).
   N12 thuộc đợt 8, N13 đợt 5, N14/N15 đợt 9.
 
 Ghi chú dựng vòng lặp:

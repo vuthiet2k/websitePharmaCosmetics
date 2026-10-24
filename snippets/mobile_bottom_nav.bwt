@@ -2,8 +2,9 @@
   Mobile Bottom Navigation — 5 tab cố định, mỗi tab tự đặt nhãn/url/icon.
   Admin bật/tắt từng tab + tự đặt nhãn, đường dẫn, icon trong Tùy chỉnh → Mobile.
   Icon: nhập class Font Awesome 6 (vd: fa-solid fa-house) → render <i>; để trống → icon FA mặc định (fa-solid, cùng 1 kiểu cho cả 5 tab — .clinerules/03 UI-9).
-  Nhãn dài tự cắt "..." — không xuống dòng. Cuộn ngang nếu tab tràn.
-  Active state: Tab blog/article khớp blog.url; Tab wishlist khớp URL setting hoặc wishlist_page.
+  Nhãn dài xuống dòng, không cắt "..." (L34 24/10/2026 — UI-STANDARD D.8 "nhãn đọc trọn").
+  Active state: Tab blog/article khớp blog.url; Tab wishlist khớp URL setting hoặc wishlist_page;
+  tab "blog" (nay là "Soi da & Dịch vụ", trỏ trang nội dung) còn khớp page.url == mobile_nav_blog_url (L34).
 {%- endcomment -%}
 {%- if settings.mobile_bottom_nav_enable -%}
 
@@ -22,6 +23,8 @@
   {%- assign mb_active = 'account' -%}
 {%- endif -%}
 {%- if template contains 'page' -%}
+  {%- comment -%} L34: tab blog trỏ trang nội dung (vd /truoc-sau-cham-soc-da-tu-xa) ⇒ đang ở đúng trang đó thì tô + aria-current {%- endcomment -%}
+  {%- if settings.mobile_nav_blog_url != blank and page.url == settings.mobile_nav_blog_url -%}{%- assign mb_active = 'blog' -%}{%- endif -%}
   {%- comment -%} Wishlist: ưu tiên mobile_nav_wishlist_url nếu admin đã đặt URL tùy chỉnh {%- endcomment -%}
   {%- if settings.mobile_nav_wishlist_url != blank -%}
     {%- if page.url == settings.mobile_nav_wishlist_url -%}{%- assign mb_active = 'wishlist' -%}{%- endif -%}

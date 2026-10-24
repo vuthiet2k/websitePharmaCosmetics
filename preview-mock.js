@@ -339,12 +339,19 @@ function getContext(templateName = 'index', routeParams = {}) {
     'page.mops-admin':               'MOPS Admin',
     'page.tin-tuc':                  'Tin tức & Kiến thức',
   };
+  // L34 (24/10/2026): template chỉ gắn với 1 trang nội dung THẬT trên Sapo ⇒ page.alias/url = handle Sapo (Sapo trả
+  // page.url = '/<handle>', không phải tên template) — để snippet so page.url với URL trong settings như trên Sapo.
+  // Chỉ ghi template 1-1 (alias dev-server PAGE_HANDLE_MAP); template dùng cho nhiều trang giữ tên template.
+  const SAPO_PAGE_HANDLE = {
+    'page.clinical-proof': 'truoc-sau-cham-soc-da-tu-xa',
+  };
+  const pageHandle = SAPO_PAGE_HANDLE[templateName] || templateName.replace(/^page\.?/, '');
   const currentPage = (templateName === 'page' || templateName.startsWith('page.'))
     ? {
         name:    PAGE_NAMES[templateName] || templateName,
         content: '<p>Nội dung trang demo.</p>',
-        alias:   templateName.replace(/^page\.?/, '') || 'page',
-        url:     '/' + (templateName.replace(/^page\.?/, '') || ''),
+        alias:   pageHandle || 'page',
+        url:     '/' + (pageHandle || ''),
       }
     : null;
 
