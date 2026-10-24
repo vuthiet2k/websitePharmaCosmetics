@@ -1,6 +1,6 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 14 · Việc vừa làm: N08 → DONE, commit 887639b (7 khung Chromium + WebKit: toast–fab giao 28/44 → 0px, cách 36px; popup mở: ô nhập bị toast che 30,6 → 0px; hồi quy rect = HEAD 7/7; ui-verify --quick 0 lỗi mới)
-Tổng: 65 việc · DONE 12 · TODO 53 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Vòng: 15 · Việc vừa làm: N10 → DONE (7 khung Chromium + WebKit × cuộn 0/1200: lưới header trúng lớp phủ 0/15 → 15/15; bấm ☰/giỏ/menu khi popup mở → 0 tác dụng; hồi quy Q 36/36 = HEAD; ui-verify --quick 0 lỗi mới)
+Tổng: 65 việc · DONE 13 · TODO 52 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick kit + Q; baseline đã ghi)
 Câu hỏi cho chủ dự án:
 - (không có — xung đột M.4 `h-6 w-6` / D.7 "checkbox ≥ 24px" với B.7 "vùng chạm mobile ≥ 44px" đã xử theo A.1: vùng bấm 44px,
@@ -40,7 +40,10 @@ Ghi chú:
 - Vòng 14 xong N08 (vòng trước bị ngắt sau lần kiểm, chưa commit ⇒ build + kiểm lại toàn bộ trong vòng này): components.css v1.6 —
   fab nâng lên trên toast khi toast hiện; popup mở + toast ở < 1024: toast xuống đáy, khung trượt nâng lên. Đối chứng HEAD bằng
   `ui-loop/evidence/N08/head-pc-ui.css` (page.route) — sau khi thư viện đổi tiếp, file này chỉ còn đúng cho N08.
-- Việc kế tiếp: N10 (TODO đầu tiên đợt 0 theo thứ tự BACKLOG).
+- Vòng 15 xong N10: components.css v1.7 — popup mở ⇒ `header.header` `isolate z-header` (30); desktop header static nên cần
+  `isolate` để gói `.main-header` z 100 / topbar 10010 / `.header-menu` dính 10020. Đối chứng HEAD bằng `ui-loop/evidence/N10/head-pc-ui.css`.
+  Ảnh N10 vẫn thấy nút đóng popup nền xám (N11).
+- Việc kế tiếp: N11 (TODO đầu tiên đợt 0 theo thứ tự BACKLOG).
 
 Ghi chú dựng vòng lặp:
 - Baseline `ui-loop/baseline.json` = quét full bản hiện tại (trước mọi sửa đổi); vòng 1 trộn thêm 18 lượt trang quick, vòng 2 trộn 30 lượt, vòng 3 trộn 18 lượt, vòng 5 trộn 21 lượt, vòng 6 trộn 21 lượt.

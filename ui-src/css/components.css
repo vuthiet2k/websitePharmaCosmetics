@@ -1,4 +1,4 @@
-/* ui-src/css/components.css — THƯ VIỆN PC v1.6 — KHOÁ. Chỉ sửa qua quy trình C.6
+/* ui-src/css/components.css — THƯ VIỆN PC v1.7 — KHOÁ. Chỉ sửa qua quy trình C.6
    Changelog: v1.0 (24/10/2026) khởi tạo 13 component (bản Sapo)
               v1.1 (24/10/2026, N04) viền focus chung 2px brand cho phần tử bấm/nhập; .pc-input bỏ ring, dùng viền đó
               v1.2 (24/10/2026, N05) thanh mua 1 hàng (giá co, nút giữ cỡ chữ); nhóm 13 — phần tử nổi cũ nhường thư viện
@@ -7,7 +7,8 @@
                                      line-control thắng `input[type=…]` của CSS cũ
               v1.5 (24/10/2026, N02) .pc-toast a ghi rõ underline-offset-4 (tokens.css hoãn `a { text-underline-offset }` toàn cục tới D09)
               v1.6 (24/10/2026, N08) thông báo nhường nút nổi (fab nâng lên trên toast khi toast hiện) và popup đang mở (< 1024: thông báo xuống đáy, khung trượt
-                                     nâng lên trên nó) — trước đó toast che fab 28px, che ô nhập trong popup 31px */
+                                     nâng lên trên nó) — trước đó toast che fab 28px, che ô nhập trong popup 31px
+              v1.7 (24/10/2026, N10) popup đang mở ⇒ header cũ (header.header) xuống z-header 30 trong ngữ cảnh riêng, nằm dưới lớp phủ z 50 */
 @layer components {
   /* 0. Viền focus — `:root` nâng độ ưu tiên (0,3,0) để thắng CSS cũ `.pc-site-v3 :is(a,button,input):focus-visible` (0,2,1)
      và `a/button:focus { outline: none }`; bỏ `:root` ở D09 khi xoá CSS cũ */
@@ -149,6 +150,10 @@
   body:has(.pc-actionbar) .pc-bottom-nav,
   body:has(.pc-fab) :is(.main-widget, .backtop),
   body:has(.pc-modal:not([hidden])) :is(.pc-bottom-nav, .main-widget, .backtop) { @apply hidden; }
+  /* N10: header cũ là gốc xếp lớp cao hơn lớp phủ z 50 (header.header sticky z 9980 < 1024; .main-header sticky z 100 + topbar
+     z 10010, .header-menu cuộn dính z 10020 ≥ 1024) ⇒ popup mở mà header vẫn sáng, bấm được. Khi popup mở: header.header thành
+     ngữ cảnh xếp lớp riêng (isolate — kể cả lúc static ở desktop) ở z-header 30, mọi lớp con nằm dưới lớp phủ */
+  body:has(.pc-modal:not([hidden])) header.header { @apply isolate z-header; }
 
   /* Màn ngang / thấp: ẩn thanh đáy, giữ ≤ 15% màn cho phần tử nổi */
   @media (orientation: landscape) and (max-height: 500px) {
