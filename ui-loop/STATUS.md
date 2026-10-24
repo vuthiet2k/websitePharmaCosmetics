@@ -1,8 +1,12 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 21 · Việc vừa làm: D07 → DONE, commit c336e40 (ngưỡng bbox theo duyệt chủ dự án: cạnh ngắn nhỏ nhất 6px ≥ 4, cạnh dài nhỏ nhất 12px ≥ 12; 43/43 icon 24×24, axe 0, tương phản 13,75:1 ở 7 khung; ui-verify --quick 7 trang 0 lỗi mới)
-Tổng: 68 việc · DONE 18 · TODO 50 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
-Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick 7 trang; baseline đã ghi sau D07)
+Vòng: 22 · Việc vừa làm: L01 → DONE (drawer ☰ mobile có cây danh mục main-menu: 0 → 5/5 nhóm, 11 link danh mục đúng menu, Escape trả focus ☰; thanh đáy Trang chủ · Danh mục · Soi da & Dịch vụ · Tài khoản; 7 khung Chromium + WebKit; ui-verify --quick 0 lỗi mới)
+Tổng: 70 việc · DONE 19 · TODO 51 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick 6 trang Q; baseline đã ghi sau L01)
 Câu hỏi cho chủ dự án:
+- L01 (đã DONE theo tiêu chí ghi trước khi sửa): luồng `L01-menu-danh-muc` trong `scripts/ui-verify.mjs` (KHOÁ ngưỡng, R5) chỉ đếm link có
+  `/collections/` — nhưng menu Sapo thật (`data/sapo-menus.json`, cũng là nguồn G.7 nêu) dùng URL gốc `/<handle>` (vd `/top-tay-trang-noi-bat`),
+  nên luồng này luôn báo "1 link" dù drawer đã có 11 link danh mục ⇒ quét full sẽ không bao giờ "sạch". Cho phép sửa luồng đếm link thuộc cây
+  `#header-category-menu` / URL trong sapo-menus.json (thay vì `/collections/`) không? Đồng thời G.7 dòng L01 nên ghi "link danh mục" thay "/collections/".
 - D07: đã trả lời 24/10/2026 và đã xử lý (DONE vòng 21).
 - N15 (đợt 9, chưa cần ngay): sửa route trang nội dung trong `dev-server.js` cần khởi động lại server preview (file không được watch) —
   vòng lặp cấm tắt server. Khi tới N15: cho phép `scripts/ui-loop.sh` khởi động lại preview, hay chủ dự án tự khởi động lại?
@@ -66,7 +70,13 @@ Ghi chú:
   về http:3000 bằng `page.route` (N14). Thêm N14, N15 (đợt 9). Mã D07 vẫn trong cây làm việc, không nằm trong commit D08.
 - Vòng 21 xong D07: chỉ sửa ngưỡng bbox trong `ui-loop/checks/D07.mjs` theo duyệt chủ dự án (mã snippet/lint/rule/kit từ vòng 19
   đi vào commit c336e40). Đợt 0 đã DONE hết.
-- Việc kế tiếp: L01 (TODO đầu tiên đợt 1), rồi L34.
+- Vòng 22 xong L01: chỉ XOÁ quy tắc `.header-menu .sudes-cate-header { display:none!important }` (global_core ≤ 991px — cây danh mục đã
+  được main.js / shim header dựng vào drawer, chỉ bị ẩn) + đổi GIÁ TRỊ thanh đáy trong settings_data (products bật, nhãn "Danh mục"; tắt
+  "Trước Sau"; slot blog → "Soi da & Dịch vụ" /truoc-sau-cham-soc-da-tu-xa = trang "DỊCH VỤ" của menu header). Commit chỉ stage đúng các dòng
+  thanh đáy của settings_data (`git apply --cached`), phần `home_skin_scan_image` của chủ dự án vẫn để trong cây làm việc.
+  WebKit: nội dung drawer `visibility:hidden` ~1,3s sau khi bấm ☰ ⇒ L01.mjs chờ hết ẩn rồi mới đo (ghi số ms) — N17. Thêm N16 (kiểu cây
+  danh mục drawer: mục 31px, icon ≡, ô ảnh 72px), N17 (đợt 1).
+- Việc kế tiếp: L34 (nhãn "Soi da & Dịch vụ" đang cắt 92/72px), rồi N16, N17.
   N12 thuộc đợt 8, N13 đợt 5, N14/N15 đợt 9.
 
 Ghi chú dựng vòng lặp:
