@@ -1,9 +1,9 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 20 · Việc vừa làm: D08 → DONE (preview-mock tìm kiếm: `object_type` + cú pháp `tags:(x)`; tag retinol 0 → 1/1 bài; smartjson 0 → 2 SP; overlay gõ "retinol" ⇒ 2 SP + 2 bài ở 7 khung; /chinh-xach-doi-tra 200 + h1; ui-verify --quick 8 trang 0 lỗi mới)
-Tổng: 68 việc · DONE 17 · TODO 51 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
-Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick 8 trang; baseline đã ghi sau D08)
+Vòng: 21 · Việc vừa làm: D07 → DONE, commit c336e40 (ngưỡng bbox theo duyệt chủ dự án: cạnh ngắn nhỏ nhất 6px ≥ 4, cạnh dài nhỏ nhất 12px ≥ 12; 43/43 icon 24×24, axe 0, tương phản 13,75:1 ở 7 khung; ui-verify --quick 7 trang 0 lỗi mới)
+Tổng: 68 việc · DONE 18 · TODO 50 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick 7 trang; baseline đã ghi sau D07)
 Câu hỏi cho chủ dự án:
-- D07: ĐÃ TRẢ LỜI 24/10/2026 — chủ dự án đồng ý đổi tiêu chí thành "cạnh dài bbox ≥ 12px, cạnh ngắn ≥ 4px"; D07 về TODO, sửa ngưỡng trong ui-loop/checks/D07.mjs, chạy lại, commit (mã D07 đang trong cây làm việc).
+- D07: đã trả lời 24/10/2026 và đã xử lý (DONE vòng 21).
 - N15 (đợt 9, chưa cần ngay): sửa route trang nội dung trong `dev-server.js` cần khởi động lại server preview (file không được watch) —
   vòng lặp cấm tắt server. Khi tới N15: cho phép `scripts/ui-loop.sh` khởi động lại preview, hay chủ dự án tự khởi động lại?
 - (không có — xung đột M.4 `h-6 w-6` / D.7 "checkbox ≥ 24px" với B.7 "vùng chạm mobile ≥ 44px" đã xử theo A.1: vùng bấm 44px,
@@ -64,7 +64,9 @@ Ghi chú:
   tự nạp lại). Mẫu URL tag bài viết cho L08: `/search?query=tags:(<tag>)&type=article` (cú pháp `tags:(…)` theme gốc đã dùng ở
   header.bwt:235, tab_product.bwt:248 — chưa đối chiếu Sapo thật). Gợi ý tìm kiếm ở local cần chuyển `https://localhost/search…`
   về http:3000 bằng `page.route` (N14). Thêm N14, N15 (đợt 9). Mã D07 vẫn trong cây làm việc, không nằm trong commit D08.
-- Việc kế tiếp: D07 (TODO đợt 0, lần thử 1 → sửa ngưỡng bbox theo câu trả lời chủ dự án). Xong D07 thì đợt 0 hết ⇒ sang L01.
+- Vòng 21 xong D07: chỉ sửa ngưỡng bbox trong `ui-loop/checks/D07.mjs` theo duyệt chủ dự án (mã snippet/lint/rule/kit từ vòng 19
+  đi vào commit c336e40). Đợt 0 đã DONE hết.
+- Việc kế tiếp: L01 (TODO đầu tiên đợt 1), rồi L34.
   N12 thuộc đợt 8, N13 đợt 5, N14/N15 đợt 9.
 
 Ghi chú dựng vòng lặp:
