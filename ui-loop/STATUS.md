@@ -1,11 +1,9 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 25 · Việc vừa làm: N17 → BLOCKED_OWNER (drawer chỉ chậm hiện khi giảm chuyển động: WebKit 3 411ms / Chromium 123ms; nguyên nhân ở tokens.css KHOÁ — đề xuất ui-loop/proposals/N17.md; không sửa mã)
-Tổng: 71 việc · DONE 21 · TODO 49 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 1
-Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (vòng 25 không sửa mã; baseline ghi sau N16)
+Vòng: 27 · Việc vừa làm: N18 → VERIFY_FAIL lần 1 (icon ≡ nay SVG ui_icon 20×20, vẽ rõ ở WebKit, desktop không đổi; còn thiếu: WebKit reduce icon trễ hơn link 325–359ms do tokens.css — thử phương án N17 ⇒ 0ms)
+Tổng: 71 việc · DONE 21 · TODO 49 · VERIFY_FAIL 1 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 2 (webkit390 /collections/all touch<44 90 → 120, noName 24 → 40 — dao động N07, không do N18)
 Câu hỏi cho chủ dự án:
-- N17: duyệt đổi `ui-src/css/tokens.css` (KHOÁ, R5) — quy tắc giảm chuyển động `transition-duration: .01ms` → `0s` cho `*`
-  (+ xoá khối trùng ở global_core.scss.bwt:5581–5590)? Thử trong trang: drawer hết ẩn 3 411 → 0ms (WebKit), 123 → 0ms (Chromium),
-  Swiper trang chủ không đổi hành vi. Chi tiết + phương án B: ui-loop/proposals/N17.md. Duyệt ⇒ chuyển N17 về TODO.
+- N17: ĐÃ TRẢ LỜI 24/10/2026 — chủ dự án duyệt PHƯƠNG ÁN A (tokens.css .01ms → 0s, xoá khối trùng global_core); N17 về TODO.
 - L01: ĐÃ TRẢ LỜI 24/10/2026 — chủ dự án cho sửa luồng ui-verify: mở nhóm đầu cây #header-category-menu rồi đếm link con thật (URL gốc /<handle> như menu Sapo), ngưỡng ≥ 5 giữ nguyên; đã sửa + G.7 cập nhật; luồng L01 đạt 3/3 (11 link).
 - D07: đã trả lời 24/10/2026 và đã xử lý (DONE vòng 21).
 - N15: ĐÃ TRẢ LỜI 24/10/2026 — script vòng lặp tự khởi động lại preview khi agent tạo file ui-loop/RESTART-PREVIEW (xem PROMPT).
@@ -91,3 +89,12 @@ Ghi chú dựng vòng lặp:
   `probe-swiper.mjs`) cho thấy độ trễ chỉ có khi `prefers-reduced-motion: reduce` — quy tắc `*{transition-duration:.01ms!important}`
   (tokens.css KHOÁ + global_core) tạo chuyển tiếp `visibility` từng tầng. Các script L01/N16 chạy `reducedMotion: 'reduce'` nên luôn
   thấy độ trễ này. Vòng sau làm N18.
+- Vòng 26 (bị ngắt): ghi tiêu chí N18 + probe; chủ dự án duyệt N17 phương án A trong lúc đó (proposals/N17.md, N17 về TODO).
+- Vòng 27 N18 → VERIFY_FAIL lần 1. Mã N18 ĐỂ TRONG CÂY LÀM VIỆC, chưa commit: `snippets/bean-menu-cate.bwt` (icon ui_icon 'menu' + lg:hidden),
+  `assets/global_core.scss.bwt` (xoá `.down_icon:before`, `.current:before`, `transition .5s all` — khối cây danh mục drawer, ~dòng 3440–3530),
+  `assets/pc-ui.css` + `assets/pc-legacy-tw.css` (sinh). Mọi mục N18.mjs đạt trừ (2) WebKit: reduce chênh icon–link 325–359ms (tầng SVG thêm
+  1 bước chuyển tiếp `.01ms` của tokens.css), no-preference 403/433ms (= thời điểm link hết ẩn, nhiễu WebKit). `evidence/N18/probe-n17fix.mjs`:
+  phương án A ⇒ chênh 0ms, link 127–266ms.
+  **VÒNG SAU: làm N17 TRƯỚC (đã duyệt — như vòng 5 làm N03 trước D04), rồi chạy lại `node ui-loop/checks/N18.mjs` (không chạy `before`
+  — before.json đo trên bản chưa sửa).** Commit N17 không cuốn hunk N18 trong global_core.scss.bwt (lọc patch + `git apply --cached`) —
+  hoặc nếu N18 đạt ngay sau N17 thì commit N18 riêng tiếp theo.
