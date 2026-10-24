@@ -1,6 +1,6 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 13 · Việc vừa làm: N09 → DONE (7 khung Chromium + WebKit: label.pc-check display block → flex; ô → chữ 3,7 → 12px; lệch tâm dọc 7 → 0px; 225 label/checkbox cũ × 24 lượt 0 khác; ui-verify --quick 0 lỗi mới)
-Tổng: 65 việc · DONE 11 · TODO 54 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Vòng: 14 · Việc vừa làm: N08 → DONE (7 khung Chromium + WebKit: toast–fab giao 28/44 → 0px, cách 36px; popup mở: ô nhập bị toast che 30,6 → 0px; hồi quy rect = HEAD 7/7; ui-verify --quick 0 lỗi mới)
+Tổng: 65 việc · DONE 12 · TODO 53 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (ui-verify --quick kit + Q; baseline đã ghi)
 Câu hỏi cho chủ dự án:
 - (không có — xung đột M.4 `h-6 w-6` / D.7 "checkbox ≥ 24px" với B.7 "vùng chạm mobile ≥ 44px" đã xử theo A.1: vùng bấm 44px,
@@ -37,7 +37,10 @@ Ghi chú:
 - N07 (vòng 12): webkit390 /collections/all 90/24 ↔ 120/40 do khối `.pc-col-bestseller` (8 btn-cart) lúc có lúc không ở WebKit, cùng CSS cho cả 2 kết quả; baseline nay ghi 120/40 (bằng Chromium). Nếu ui-verify báo "2 lỗi mới" kiểu này thì chạy lại / đối chiếu N07 trước khi kết luận.
 - Vòng 13 xong N09: global_core.scss.bwt `label` → `label:where(:not(.pc-check))` (độ ưu tiên giữ 0,0,1, cùng cách N04). libsass 3.6.6
   biên dịch được `:where` (check:libsass PASS). Ảnh trước sửa không giữ (công cụ không cho đổi tên file) — số đo trước ở reports/N09.md.
-- Việc kế tiếp: N08 (TODO đầu tiên đợt 0 theo thứ tự BACKLOG).
+- Vòng 14 xong N08 (vòng trước bị ngắt sau lần kiểm, chưa commit ⇒ build + kiểm lại toàn bộ trong vòng này): components.css v1.6 —
+  fab nâng lên trên toast khi toast hiện; popup mở + toast ở < 1024: toast xuống đáy, khung trượt nâng lên. Đối chứng HEAD bằng
+  `ui-loop/evidence/N08/head-pc-ui.css` (page.route) — sau khi thư viện đổi tiếp, file này chỉ còn đúng cho N08.
+- Việc kế tiếp: N10 (TODO đầu tiên đợt 0 theo thứ tự BACKLOG).
 
 Ghi chú dựng vòng lặp:
 - Baseline `ui-loop/baseline.json` = quét full bản hiện tại (trước mọi sửa đổi); vòng 1 trộn thêm 18 lượt trang quick, vòng 2 trộn 30 lượt, vòng 3 trộn 18 lượt, vòng 5 trộn 21 lượt, vòng 6 trộn 21 lượt.

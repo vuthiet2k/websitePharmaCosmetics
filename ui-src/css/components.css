@@ -1,11 +1,13 @@
-/* ui-src/css/components.css — THƯ VIỆN PC v1.5 — KHOÁ. Chỉ sửa qua quy trình C.6
+/* ui-src/css/components.css — THƯ VIỆN PC v1.6 — KHOÁ. Chỉ sửa qua quy trình C.6
    Changelog: v1.0 (24/10/2026) khởi tạo 13 component (bản Sapo)
               v1.1 (24/10/2026, N04) viền focus chung 2px brand cho phần tử bấm/nhập; .pc-input bỏ ring, dùng viền đó
               v1.2 (24/10/2026, N05) thanh mua 1 hàng (giá co, nút giữ cỡ chữ); nhóm 13 — phần tử nổi cũ nhường thư viện
               v1.3 (24/10/2026, N06) checkbox ui_field có class .pc-check__box, hiện lại ô 24px + viền focus; vùng bấm 44×44 < 1024
               v1.4 (24/10/2026, N01) preflight tắt ⇒ viền ghi rõ border-solid (+ border-0 trước viền 1 cạnh); .pc-btn bỏ viền UA; .pc-input box-border + màu viền
                                      line-control thắng `input[type=…]` của CSS cũ
-              v1.5 (24/10/2026, N02) .pc-toast a ghi rõ underline-offset-4 (tokens.css hoãn `a { text-underline-offset }` toàn cục tới D09) */
+              v1.5 (24/10/2026, N02) .pc-toast a ghi rõ underline-offset-4 (tokens.css hoãn `a { text-underline-offset }` toàn cục tới D09)
+              v1.6 (24/10/2026, N08) thông báo nhường nút nổi (fab nâng lên trên toast khi toast hiện) và popup đang mở (< 1024: thông báo xuống đáy, khung trượt
+                                     nâng lên trên nó) — trước đó toast che fab 28px, che ô nhập trong popup 31px */
 @layer components {
   /* 0. Viền focus — `:root` nâng độ ưu tiên (0,3,0) để thắng CSS cũ `.pc-site-v3 :is(a,button,input):focus-visible` (0,2,1)
      và `a/button:focus { outline: none }`; bỏ `:root` ở D09 khi xoá CSS cũ */
@@ -128,6 +130,13 @@
   .pc-toast { @apply fixed inset-x-4 bottom-20 z-toast flex items-center justify-between gap-3 bg-ink px-4 py-3 text-sm text-white
                      rounded-xl shadow-none lg:bottom-6 lg:left-auto lg:right-6 lg:max-w-sm lg:rounded-none; }
   .pc-toast a { @apply font-semibold text-white underline underline-offset-4; }
+  /* N08: toast (z 60) không đè nút nổi — toast giữ nguyên chỗ và bề rộng (320px không xuống 2 hàng), fab nâng lên trên toast khi
+     toast hiện: < 1024 đáy toast 80px + cao 44–64px + cách 16px = 160px; ≥ 1024 đáy toast 24px + 44–64px ⇒ fab bottom-24 (96px) */
+  body:has(.pc-toast:not(.hidden)) .pc-fab { @apply bottom-40 lg:bottom-24; }
+  /* N08: < 1024 popup là khung trượt đáy ⇒ toast đè ô nhập / nút trong popup. Khi cả hai cùng hiện: toast xuống bottom-4,
+     khung trượt nâng lên bottom-24 (toast cao 44–64px ⇒ cách ≥ 16px), chiều cao trừ phần nâng để đỉnh popup vẫn ≥ 0 */
+  body:has(.pc-modal:not([hidden])) .pc-toast { @apply max-lg:bottom-4; }
+  body:has(.pc-toast:not(.hidden)) .pc-modal { @apply max-lg:bottom-24 max-lg:max-h-[calc(85vh-96px)] max-lg:rounded-b-2xl; }
 
   /* 12. Nút nổi */
   .pc-fab { @apply fixed bottom-20 right-4 z-fab inline-flex h-12 w-12 items-center justify-center border border-solid border-line bg-white
