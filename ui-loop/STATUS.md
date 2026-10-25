@@ -1,5 +1,14 @@
-TRẠNG THÁI: ĐANG CHẠY
-Vòng: 32 · Việc vừa làm: L02 → IN_PROGRESS (axe color-contrast 4 264 → chỉ còn select thanh dev; đã sửa dev-server.js ⇒ tạo ui-loop/RESTART-PREVIEW, dừng vòng; vòng sau kiểm đủ rồi commit)
+TRẠNG THÁI: DỪNG — LỖI MÔI TRƯỜNG
+Lỗi (vòng 33, 25/10/2026): khởi động lại preview theo cờ RESTART-PREVIEW KHÔNG thành công. `ui-loop/preview.log`: tiến trình
+mới chết ngay `EADDRINUSE :::3001` (WebSocket dev-server.js:1455) vì server CŨ không bị tắt; server cũ vẫn trả 200 ở :3000
+nên `restart_preview` (scripts/ui-loop.sh) báo nhầm "Preview đã chạy lại" và xoá cờ. Bằng chứng: HTML :3000 vẫn là
+`#dev-toolbar select { background: #313244; …}` (không có bản sửa L02), quét `node ui-loop/checks/L02.mjs scan after`
+136/136 lượt vẫn 1 nút `select` thanh dev #cdd6f4 trên #ffffff 1,44:1 (evidence/L02/after.json) — mọi lỗi theme khác = 0.
+Cần chủ dự án: tắt hẳn tiến trình node đang giữ cổng 3000 + 3001 rồi chạy lại `bash scripts/ui-loop.sh` (agent không được
+tự tắt server). Nên sửa `restart_preview`: kiểm cổng 3000/3001 đã trống trước khi `npm run preview`, và kiểm tiến trình mới
+còn sống (không chỉ curl 200). L02 giữ IN_PROGRESS, Lần thử 0 (không phải kiểm chưa đạt — môi trường chưa nạp mã).
+Vòng: 33 · Việc vừa làm: L02 → IN_PROGRESS (không đổi mã; chỉ quét lại scan, phát hiện preview chưa khởi động lại)
+Vòng 32: L02 → IN_PROGRESS (axe color-contrast 4 264 → chỉ còn select thanh dev; đã sửa dev-server.js ⇒ tạo ui-loop/RESTART-PREVIEW, dừng vòng; vòng sau kiểm đủ rồi commit)
 Tổng: 72 việc · DONE 23 · TODO 48 · IN_PROGRESS 1 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (lượt --write-baseline N18 lại gặp webkit390 /collections/all 90 → 120 / 24 → 40 = dao động N07, baseline ghi 120/40)
 Câu hỏi cho chủ dự án:
