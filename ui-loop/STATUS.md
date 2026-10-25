@@ -111,7 +111,7 @@ Ghi chú dựng vòng lặp:
   **Cây làm việc vẫn giữ mã N17 + N18 chưa commit** (tokens.css, global_core.scss.bwt 2 vùng ~3440–3530 và ~5566, bean-menu-cate.bwt,
   pc-ui.css / pc-legacy-tw.css sinh). Vòng sau làm L02 (đợt 2): KHÔNG cuốn các hunk này vào commit L02 (lọc patch + `git apply --cached`
   nếu L02 phải sửa cùng file); file sinh pc-ui.css/pc-legacy-tw.css sẽ chứa cả phần N17/N18 — ghi rõ trong báo cáo L02.
-- Vòng 30 N17 → DONE (commit fix(N17)). Owner chuyển N17/N18 về TODO trong lúc vòng chạy ⇒ đổi việc từ L02 sang N17 (đợt 1 trước đợt 2).
+- Vòng 30 N17 → DONE (commit 1c2f1f9). Owner chuyển N17/N18 về TODO trong lúc vòng chạy ⇒ đổi việc từ L02 sang N17 (đợt 1 trước đợt 2).
   L02 chỉ mới ghi tiêu chí cụ thể + viết `ui-loop/checks/L02.mjs` (chưa sửa, chưa có số đo — lượt quét `scan before` bị dừng giữa chừng, file
   evidence/L02/before-scan.txt không dùng được). Commit N17 chỉ mang phần N17 (stage bằng `ui-loop/evidence/N17/stage-n17.mjs`).
   **Cây làm việc vẫn giữ mã N18 chưa commit** (global_core.scss.bwt ~3440–3530, bean-menu-cate.bwt, pc-ui.css `lg:hidden`, pc-legacy-tw.css).
