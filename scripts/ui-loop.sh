@@ -57,17 +57,21 @@ wait_for_reset() {
 restart_preview() {
   echo "Khởi động lại npm run preview (cờ RESTART-PREVIEW)…" | tee -a ui-loop/run.log
   [ -n "$SERVER_PID" ] && kill "$SERVER_PID" 2>/dev/null
-  port="${BASE##*:}"; port="${port%%/*}"
-  for pid in $(netstat -ano 2>/dev/null | grep -E "[:.]$port[[:space:]].*LISTENING" | awk '{print $NF}' | sort -u); do
-    taskkill //PID "$pid" //T //F >/dev/null 2>&1
-  done
-  sleep 2
+  port="${BASE##*:}"; port="${port%%/*}"; wsport=$((port + 1))   # dev-server: HTTP 3000 + WebSocket live-reload 3001
+  listeners() { netstat -ano 2>/dev/null | grep -E "[:.]($port|$wsport)[[:space:]].*LISTENING" | awk '{print $NF}' | sort -u; }
+  old="$(listeners)"
+  # taskkill qua Git Bash từng không tắt được server do phiên khác bật (sự cố 25/10/2026) ⇒ dùng Stop-Process
+  for pid in $old; do powershell.exe -NoProfile -Command "Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue" >/dev/null 2>&1; done
+  for _ in $(seq 1 30); do [ -z "$(listeners)" ] && break; sleep 1; done
+  [ -n "$(listeners)" ] && { echo "Không giải phóng được cổng $port/$wsport (PID: $(listeners | tr '\n' ' ')) — xem ui-loop/preview.log"; exit 2; }
   npm run preview > ui-loop/preview.log 2>&1 &
   SERVER_PID=$!
   for _ in $(seq 1 60); do curl -s -o /dev/null -w "%{http_code}" "$BASE/?tpl=index" | grep -q 200 && break; sleep 1; done
-  if curl -s -o /dev/null -w "%{http_code}" "$BASE/?tpl=index" | grep -q 200; then
-    rm -f ui-loop/RESTART-PREVIEW; echo "Preview đã chạy lại." | tee -a ui-loop/run.log
-  else echo "Không bật lại được preview — xem ui-loop/preview.log"; exit 2; fi
+  new="$(netstat -ano 2>/dev/null | grep -E "[:.]$port[[:space:]].*LISTENING" | awk '{print $NF}' | sort -u)"
+  # Chỉ báo thành công khi cổng do tiến trình MỚI giữ (không phải server cũ còn sống) và trả 200
+  if curl -s -o /dev/null -w "%{http_code}" "$BASE/?tpl=index" | grep -q 200 && [ -n "$new" ] && ! echo "$old" | grep -qx "$new"; then
+    rm -f ui-loop/RESTART-PREVIEW; echo "Preview đã chạy lại (PID cổng $port: $new)." | tee -a ui-loop/run.log
+  else echo "Không bật lại được preview (cổng $port: '$new', cũ: '$(echo $old)') — xem ui-loop/preview.log"; exit 2; fi
 }
 
 i=0; fast_fail=0
