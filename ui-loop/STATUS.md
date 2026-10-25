@@ -1,7 +1,7 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 30 · Việc vừa làm: N17 → DONE lần 2 (chủ dự án trả lời N17-a/b 25/10; WebKit reduce 70–71ms, no-preference đo setTimeout+getComputedStyle 194/312ms; Chromium ≤ 185ms; mốc focusNoRing 23 đã ghi)
-Tổng: 72 việc · DONE 22 · TODO 50 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
-Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (sau khi ghi mốc focusNoRing 23 theo N17-b; webkit390 /collections/all 90 → 120 / 24 → 40 xuất hiện 1/3 lượt = dao động N07)
+Vòng: 31 · Việc vừa làm: N18 → DONE lần 3 (icon ≡ SVG 20×20 hiện cùng lúc link ở mọi khung; WebKit no-preference 264/91ms đo setTimeout+getComputedStyle theo N17-a, reduce 27/28ms; Chromium 22–51ms; 2 lượt 88 ✔ / 0 ✗)
+Tổng: 72 việc · DONE 23 · TODO 49 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (lượt --write-baseline N18 lại gặp webkit390 /collections/all 90 → 120 / 24 → 40 = dao động N07, baseline ghi 120/40)
 Câu hỏi cho chủ dự án:
 - N17-a: ĐÃ TRẢ LỜI 25/10/2026 — chọn (2): giữ CSS, tiêu chí WebKit no-preference đo theo trạng thái CSS (không theo khung rAF headless); ngưỡng 400ms giữ cho Chromium; áp dụng cả N18. N17, N18 về TODO.
 - N17-b: ĐÃ TRẢ LỜI 25/10/2026 — cho ghi mốc mới 23 (d1440 /collections/all focusNoRing) khi commit N17.
@@ -117,3 +117,7 @@ Ghi chú dựng vòng lặp:
   **Cây làm việc vẫn giữ mã N18 chưa commit** (global_core.scss.bwt ~3440–3530, bean-menu-cate.bwt, pc-ui.css `lg:hidden`, pc-legacy-tw.css).
   **Vòng sau: N18 (TODO, Lần thử 2)** — chạy `node ui-loop/checks/N18.mjs` (KHÔNG chạy `before`); tiêu chí (2) WebKit no-preference đo
   setTimeout + getComputedStyle theo N17-a (sửa N18.mjs như N17.mjs vòng 30). Sau đó N19 thuộc đợt 3 ⇒ L02 (đợt 2) trước.
+- Vòng 31 N18 → DONE lần 3: không sửa mã; checks/N18.mjs đo WebKit no-preference bằng setTimeout + getComputedStyle (N17-a). Commit gồm mã N18
+  từ vòng 27 (bean-menu-cate.bwt, global_core.scss.bwt chỉ hunk N18, pc-ui.css / pc-legacy-tw.css sinh). Cây làm việc hết mã N17/N18 chưa commit.
+  **Vòng sau: L02 (đợt 2, TODO, Lần thử 0)** — tiêu chí + `ui-loop/checks/L02.mjs` đã viết vòng 30 (chưa commit, chưa đo); chạy
+  `node ui-loop/checks/L02.mjs` ghi số đo trước khi sửa (evidence/L02/before-scan.txt cũ không dùng được).

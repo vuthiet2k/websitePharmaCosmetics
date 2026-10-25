@@ -13,7 +13,9 @@
 				<a {%if  linklists[link.alias].links.size > 0%}href="javascript:void(0)"{%else%}href="{{link.url}}"{%endif%} title="{{ link.title }}" class="py-3 pl-2.5 pr-12 lg:p-0">
 					{{ link.title }}<i class="icon_mask"></i>
 			</a>
-				<i class="open_mnu down_icon h-12 w-12 lg:h-auto lg:w-auto"></i>
+				{%- comment -%} N18 (24/10/2026): icon ≡ = SVG ui_icon 20px (thay ảnh nền ::before 10px đã xoá ở global_core) — WebKit không vẽ kịp ::before khi giảm chuyển động;
+				  lg:hidden — mega-menu desktop không có icon (trước là ô rỗng 0×0). {%- endcomment -%}
+				<i class="open_mnu down_icon h-12 w-12 lg:hidden">{% include 'ui_icon', name: 'menu' %}</i>
 				<ul class="menu-child sub-menu sudes-sub-mega-menu">
 					{% for childlink in linklists[link.alias].links %}
 					{% if linklists[childlink.alias] %}
@@ -25,7 +27,7 @@
 						<span class="line-clamp line-clamp-2">{{ childlink.title }} </span> <i class="icon_mask"></i></a>
 						{%- comment -%} N16 (24/10/2026): icon ≡ chỉ khi menu con có link — linklists[x] của menu rỗng vẫn TRUE ⇒ icon thừa ở mục không có con.
 						  Giữ nguyên li/ul như cũ để mega-menu desktop không đổi cỡ ô. {%- endcomment -%}
-						{%- if linklists[childlink.alias].links.size > 0 -%}<i class="open_mnu down_icon h-12 w-12 lg:h-auto lg:w-auto"></i>{%- endif -%}
+						{%- if linklists[childlink.alias].links.size > 0 -%}<i class="open_mnu down_icon h-12 w-12 lg:hidden">{% include 'ui_icon', name: 'menu' %}</i>{%- endif -%}
 						<ul class="menu-child menu-child-2 sub-menu clearfix">
 							{% for childlink2 in linklists[childlink.alias].links %}
 							<li>

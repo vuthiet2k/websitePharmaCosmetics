@@ -4,6 +4,7 @@
     < 1024 (Chromium 390 / 320 / 768 / 844×390 + WebKit iPhone 13), mỗi khung 2 chế độ reducedMotion no-preference + reduce, bấm ☰:
       (1) mục cấp 1 có con: đúng 1 SVG `ui_icon` nhìn thấy trong `.open_mnu`, khung vẽ ≥ 20×20px; mục không con 0 icon;
       (2) no-preference: icon nhìn thấy ≤ 400ms sau khi bấm ☰; reduce: chênh với link cấp 1 ≤ 50ms (ghi số ms);
+          đo bằng rAF; riêng WebKit no-preference đo setTimeout + getComputedStyle (quyết định N17-a 25/10/2026);
       (3) ảnh ô icon có ≥ 20 điểm ảnh tương phản ≥ 3:1 với nền; màu nét / nền ≥ 3:1;
       (4) `.open_mnu::before` cây danh mục background-image none;
       (5) tâm dọc icon lệch tâm link ≤ 2px;
@@ -87,22 +88,26 @@ for (const f of FRAMES) {
     try {
       await open(page, '/');
       if (w < 1024) {
-        // đo thời điểm nhìn thấy (rAF) tính từ lúc bấm ☰
-        await page.evaluate(`(() => { const hid = ${HID}; window.__t = {}; let t0 = 0;
+        // đo thời điểm nhìn thấy tính từ lúc bấm ☰ — rAF; riêng WebKit no-preference vòng setTimeout + getComputedStyle
+        // theo quyết định N17-a của chủ dự án 25/10/2026 (khung rAF WebKit headless 175–266ms, không phản ánh trạng thái CSS)
+        const cssMode = f.br === 'webkit' && rm === 'no-preference';
+        const how = cssMode ? 'setTimeout+getComputedStyle' : 'rAF';
+        await page.evaluate(`(() => { const hid = ${HID}; window.__t = {}; let t0 = 0; const next = ${cssMode} ? (fn) => setTimeout(fn, 5) : requestAnimationFrame;
           const tick = () => { if (t0) { const now = Math.round(performance.now() - t0);
               const a = document.querySelector('${TOP} > a'), s = document.querySelector('${TOP} > .open_mnu svg'), i = document.querySelector('${TOP} > .open_mnu');
               if (a && !hid(a) && window.__t.link == null) window.__t.link = now;
               if (s && !hid(s) && window.__t.svg == null) window.__t.svg = now;
               if (i && !hid(i) && getComputedStyle(i, '::before').visibility !== 'hidden' && getComputedStyle(i, '::before').content !== 'none' && window.__t.before == null) window.__t.before = now; }
-            requestAnimationFrame(tick); };
-          requestAnimationFrame(tick);
+            next(tick); };
+          next(tick);
           document.querySelector('#btn-menu-mobile').addEventListener('click', () => { t0 = performance.now(); }, { capture: true }); })()`);
         await page.click('#btn-menu-mobile');
         await page.waitForFunction(() => window.__t.link != null && (window.__t.svg != null || window.__t.before != null), null, { timeout: 8000 }).catch(() => {});
         await page.waitForTimeout(300);
         const t = await page.evaluate(() => window.__t);
         rec.t = t;
-        console.log(`  thời điểm nhìn thấy sau khi bấm ☰: link cấp 1 ${t.link ?? '—'}ms · icon SVG ${t.svg ?? '—'}ms · ::before ${t.before ?? '—'}ms`);
+        rec.how = how;
+        console.log(`  [${how}] thời điểm nhìn thấy sau khi bấm ☰: link cấp 1 ${t.link ?? '—'}ms · icon SVG ${t.svg ?? '—'}ms · ::before ${t.before ?? '—'}ms`);
 
         const top = await page.evaluate(`(() => { const vis = ${VIS}, txt = ${TXT};
           return [...document.querySelectorAll('${TOP}')].filter((li) => vis(li.querySelector(':scope > a'))).map((li) => {
@@ -122,7 +127,7 @@ for (const f of FRAMES) {
         if (AFTER) {
           ok(kidsTop.length > 0 && kidsTop.every((x) => x.svg === 1 && x.sw >= 20 && x.sh >= 20) && noKid.every((x) => x.svg === 0),
             `(1) ${kidsTop.length} mục có con, mỗi mục 1 icon SVG ≥ 20×20 (nhỏ nhất ${Math.min(...kidsTop.map((x) => x.sw))}×${Math.min(...kidsTop.map((x) => x.sh))}); ${noKid.length} mục không con 0 icon`);
-          if (rm === 'no-preference') ok(t.svg != null && t.svg <= 400, `(2) no-preference: icon nhìn thấy sau ${t.svg}ms ≤ 400ms`);
+          if (rm === 'no-preference') ok(t.svg != null && t.svg <= 400, `(2) no-preference [${how}]: icon nhìn thấy sau ${t.svg}ms ≤ 400ms (link ${t.link}ms)`);
           else ok(t.svg != null && t.link != null && t.svg - t.link <= 50, `(2) reduce: icon ${t.svg}ms − link ${t.link}ms = ${t.svg - t.link}ms ≤ 50ms (phần trễ chung của link thuộc N17)`);
           ok(top.every((x) => x.beforeBg === 'none'), `(4) .open_mnu::before cây danh mục không còn ảnh nền (${top.filter((x) => x.beforeBg !== 'none').length} còn)`);
           ok(kidsTop.every((x) => x.off != null && x.off <= 2), `(5) tâm icon lệch tâm link ≤ 2px (lớn nhất ${Math.max(...kidsTop.map((x) => x.off ?? 99))}px)`);
