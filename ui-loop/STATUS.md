@@ -1,6 +1,6 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 31 · Việc vừa làm: N18 → DONE lần 3 (icon ≡ SVG 20×20 hiện cùng lúc link ở mọi khung; WebKit no-preference 264/91ms đo setTimeout+getComputedStyle theo N17-a, reduce 27/28ms; Chromium 22–51ms; 2 lượt 88 ✔ / 0 ✗)
-Tổng: 72 việc · DONE 23 · TODO 49 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Vòng: 32 · Việc vừa làm: L02 → IN_PROGRESS (axe color-contrast 4 264 → chỉ còn select thanh dev; đã sửa dev-server.js ⇒ tạo ui-loop/RESTART-PREVIEW, dừng vòng; vòng sau kiểm đủ rồi commit)
+Tổng: 72 việc · DONE 23 · TODO 48 · IN_PROGRESS 1 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (lượt --write-baseline N18 lại gặp webkit390 /collections/all 90 → 120 / 24 → 40 = dao động N07, baseline ghi 120/40)
 Câu hỏi cho chủ dự án:
 - N17-a: ĐÃ TRẢ LỜI 25/10/2026 — chọn (2): giữ CSS, tiêu chí WebKit no-preference đo theo trạng thái CSS (không theo khung rAF headless); ngưỡng 400ms giữ cho Chromium; áp dụng cả N18. N17, N18 về TODO.
@@ -13,6 +13,12 @@ Câu hỏi cho chủ dự án:
   ô nhìn thấy vẫn 24px; nếu chủ dự án muốn khác thì báo lại)
 
 Ghi chú:
+- Vòng 32 (L02, chưa commit mã): cây làm việc có ~28 file sửa của L02 (xem BACKLOG). `configs/settings_data.json`: L02 chỉ đổi 5 dòng
+  màu (`theme_main_color`, `color_price`, `contact_us_color`, `header_topbar_bg`, `skinhealthy_main_color`) — khi commit phải tách
+  riêng (vd `git diff` → patch chỉ 5 dòng → `git apply --cached`), KHÔNG cuốn dòng `home_skin_scan_image` / newline của chủ dự án.
+  `snippets/section_flash_sale.bwt` không thuộc L02. Quét `scan` không được chạy trong lúc sửa file (preview tự nạp lại ⇒ lượt lỗi
+  "Execution context was destroyed"). Đổi giá trị trong CSS cũ / design_tokens (đóng băng R1/B.3) là cách duy nhất đạt L02 khi
+  không được thêm CSS — ghi rõ ở báo cáo L02.
 - Vòng 1 thêm N01 (đợt 0, xếp sau D04): viền thư viện thiếu `border-style` / `box-sizing` do preflight tắt.
 - Vòng 3 thêm N02 (đợt 0, hồi quy của D03): quy tắc nền `p a, li a` trong tokens.css gạch chân + đổi màu menu header desktop, breadcrumb, link trong li/p (937 lượt underline mới / 42 lượt đo); ảnh "Xem nhiều" trang chủ 320/768 đổi cỡ. ui-verify không bắt được loại thay đổi này — kiểm bằng ui-loop/checks/D03.mjs (so before.json).
 - ui-verify có thể báo lỗi mới giả `axe:color-contrast` ở topbar trang chủ 1440 (slider tự chạy — L38); chạy lại để xác nhận.
