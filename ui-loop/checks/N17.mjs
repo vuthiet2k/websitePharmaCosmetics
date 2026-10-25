@@ -3,7 +3,8 @@
   ui-loop/checks/N17.mjs — kiểm việc N17: drawer ☰ hiện trễ khi giảm chuyển động (D.19 + B.7, phương án A đã duyệt 24/10/2026).
     < 1024 (Chromium 390 / 320 / 768 / 844×390 + WebKit iPhone 13), mỗi khung 2 chế độ reducedMotion no-preference + reduce, bấm ☰:
       (1) link đầu cây danh mục `#header-category-menu .sudes-main-cate > li > a` và `#nav > li > a` nhìn thấy
-          (không tổ tiên visibility:hidden / display:none / opacity 0) ≤ 400ms sau sự kiện click (đo trong trang bằng rAF);
+          (không tổ tiên visibility:hidden / display:none / opacity 0) ≤ 400ms sau sự kiện click (đo trong trang bằng rAF;
+          riêng WebKit no-preference đo bằng setTimeout + getComputedStyle theo quyết định N17-a 25/10/2026);
       (2) Escape đóng drawer (link hết nhìn thấy) + focus về ☰.
     Mọi khung (reduce): (3) 4 Swiper đầu trang chủ slideNext ×3 cho chuỗi chỉ số giống hệt khi chèn lại quy tắc cũ `.01ms`
         (đối chứng HEAD trong cùng trang, kể cả cờ `animating`); (4) 0 lỗi JS.
@@ -65,15 +66,20 @@ for (const f of FRAMES) {
     if (mobile) {
       await p.evaluate(() => { window.__t0 = null; document.addEventListener('click', (e) => { if (e.target.closest('#btn-menu-mobile') && window.__t0 == null) window.__t0 = performance.now(); }, true); });
       await p.click('#btn-menu-mobile');
-      const r = await p.evaluate((sel) => new Promise((done) => {
-        const seen = sel.map(() => null);
+      // N17-a (chủ dự án 25/10/2026): WebKit KHÔNG giảm chuyển động đo theo trạng thái CSS — vòng setTimeout + getComputedStyle,
+      // không theo khung rAF của WebKit headless (1 khung 175–266ms); ghi thêm lúc `.header-menu` nhận class `current`. Chromium giữ rAF.
+      const cssMode = f.br === 'webkit' && rm === 'no-preference';
+      const r = await p.evaluate(([sel, css]) => new Promise((done) => {
+        const seen = sel.map(() => null); let cls = null;
         const tick = () => { const t = performance.now() - (window.__t0 ?? performance.now());
+          if (cls == null && document.querySelector('.header-menu.current')) cls = Math.round(t);
           sel.forEach((s, i) => { if (seen[i] == null && window.__vis(document.querySelector(s))) seen[i] = Math.round(t); });
-          if (seen.every((x) => x != null) || t > 5000) done(seen); else requestAnimationFrame(tick); };
-        tick(); }), SEL);
-      ok(r[0] != null && r[0] <= 400, `(1) [${rm}] cây danh mục nhìn thấy sau ${r[0] ?? '> 5000'}ms (≤ 400)`);
-      ok(r[1] != null && r[1] <= 400, `(1) [${rm}] #nav nhìn thấy sau ${r[1] ?? '> 5000'}ms (≤ 400)`);
-      summary.push(`${f.br}-${f.name} ${rm}: cây ${r[0] ?? '>5000'}ms · #nav ${r[1] ?? '>5000'}ms`);
+          if (seen.every((x) => x != null) || t > 5000) done([...seen, cls]); else if (css) setTimeout(tick, 5); else requestAnimationFrame(tick); };
+        tick(); }), [SEL, cssMode]);
+      const how = cssMode ? 'setTimeout+getComputedStyle' : 'rAF';
+      ok(r[0] != null && r[0] <= 400, `(1) [${rm}, ${how}] cây danh mục nhìn thấy sau ${r[0] ?? '> 5000'}ms (≤ 400; class current ${r[2]}ms)`);
+      ok(r[1] != null && r[1] <= 400, `(1) [${rm}, ${how}] #nav nhìn thấy sau ${r[1] ?? '> 5000'}ms (≤ 400)`);
+      summary.push(`${f.br}-${f.name} ${rm} (${how}): cây ${r[0] ?? '>5000'}ms · #nav ${r[1] ?? '>5000'}ms · class current ${r[2]}ms`);
       await p.waitForTimeout(500);
       if (rm === 'reduce') await p.screenshot({ path: path.join(EVD, `after-${f.br}-${f.name}.png`) });
       await p.keyboard.press('Escape'); await p.waitForTimeout(700);

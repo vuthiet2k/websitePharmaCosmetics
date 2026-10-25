@@ -1,18 +1,10 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 29 · Việc vừa làm: N18 → BLOCKED_OWNER lần 2 (lượt 3 đạt toàn bộ; lượt 4 chỉ ✗ WebKit no-preference 433ms > 400 = câu hỏi N17-a; icon cùng lúc link 0ms mọi khung). Thêm N19 (đợt 3)
-Tổng: 72 việc · DONE 21 · TODO 49 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 2
-Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 3 (d1440 /collections/all focusNoRing 22 → 23 — mốc đếm nhầm, xem N17-b; webkit390 /collections/all touch<44 90 → 120, noName 24 → 40 — dao động N07)
+Vòng: 30 · Việc vừa làm: N17 → DONE lần 2 (chủ dự án trả lời N17-a/b 25/10; WebKit reduce 70–71ms, no-preference đo setTimeout+getComputedStyle 194/312ms; Chromium ≤ 185ms; mốc focusNoRing 23 đã ghi)
+Tổng: 72 việc · DONE 22 · TODO 50 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (sau khi ghi mốc focusNoRing 23 theo N17-b; webkit390 /collections/all 90 → 120 / 24 → 40 xuất hiện 1/3 lượt = dao động N07)
 Câu hỏi cho chủ dự án:
-- **N17-a (vòng 28):** WebKit iPhone 13, KHÔNG giảm chuyển động: drawer ☰ hiện sau 203–672ms (3/6 lượt > 400ms B.7) — HEAD đo y hệt
-  (211–466ms, 3/6), không do N17. Nguyên nhân: `.header-menu` `transition: transform .5s, visibility .5s` (global_core.scss.bwt:3323)
-  ⇒ `visibility` đổi ở khung thứ 2; WebKit headless 1 khung ≈ 175–266ms (máy thật 16ms). Chọn: (1) XOÁ `visibility .5s` khỏi transition
-  — drawer mở tức thì nhưng KHI ĐÓNG biến mất ngay, mất hiệu ứng trượt ra; (2) giữ CSS, tiêu chí no-preference WebKit đo theo trạng thái
-  CSS (setTimeout, không theo khung rAF headless) hoặc chỉ áp ngưỡng 400ms cho Chromium; (3) hướng khác. (Áp dụng cả N18 tiêu chí (2).)
-  **Vòng 29 — N18 cũng chờ câu này (BLOCKED_OWNER lần 2):** N18.mjs lượt 3 ĐẠT toàn bộ (WebKit 191ms), lượt 4 ✗ duy nhất WebKit
-  no-preference 433ms (link cùng 433ms). Trả lời N17-a xong ⇒ chuyển N17 + N18 về TODO; mã cả hai đang trong cây làm việc.
-- **N17-b (vòng 28):** ui-verify --quick báo mới `d1440 /collections/all focusNoRing 22 → 23` («Voucher trước»). Mốc 22 đếm nhầm: HEAD đọc
-  ngay sau Tab thấy bóng trang trí còn giữa chuyển tiếp `.01ms`; đọc sau 100ms HEAD cũng 23 (evidence/N17/probe-focus-wait.txt) — nút
-  không có viền focus ở cả 2 bản (lỗi thật thuộc L10). Cho phép ghi mốc mới 23 khi commit N17 (dù ui-verify exit 1 do mục này)?
+- N17-a: ĐÃ TRẢ LỜI 25/10/2026 — chọn (2): giữ CSS, tiêu chí WebKit no-preference đo theo trạng thái CSS (không theo khung rAF headless); ngưỡng 400ms giữ cho Chromium; áp dụng cả N18. N17, N18 về TODO.
+- N17-b: ĐÃ TRẢ LỜI 25/10/2026 — cho ghi mốc mới 23 (d1440 /collections/all focusNoRing) khi commit N17.
 - N17 (cũ): ĐÃ TRẢ LỜI 24/10/2026 — chủ dự án duyệt PHƯƠNG ÁN A (tokens.css .01ms → 0s, xoá khối trùng global_core); N17 về TODO.
 - L01: ĐÃ TRẢ LỜI 24/10/2026 — chủ dự án cho sửa luồng ui-verify: mở nhóm đầu cây #header-category-menu rồi đếm link con thật (URL gốc /<handle> như menu Sapo), ngưỡng ≥ 5 giữ nguyên; đã sửa + G.7 cập nhật; luồng L01 đạt 3/3 (11 link).
 - D07: đã trả lời 24/10/2026 và đã xử lý (DONE vòng 21).
@@ -119,3 +111,9 @@ Ghi chú dựng vòng lặp:
   **Cây làm việc vẫn giữ mã N17 + N18 chưa commit** (tokens.css, global_core.scss.bwt 2 vùng ~3440–3530 và ~5566, bean-menu-cate.bwt,
   pc-ui.css / pc-legacy-tw.css sinh). Vòng sau làm L02 (đợt 2): KHÔNG cuốn các hunk này vào commit L02 (lọc patch + `git apply --cached`
   nếu L02 phải sửa cùng file); file sinh pc-ui.css/pc-legacy-tw.css sẽ chứa cả phần N17/N18 — ghi rõ trong báo cáo L02.
+- Vòng 30 N17 → DONE (commit fix(N17)). Owner chuyển N17/N18 về TODO trong lúc vòng chạy ⇒ đổi việc từ L02 sang N17 (đợt 1 trước đợt 2).
+  L02 chỉ mới ghi tiêu chí cụ thể + viết `ui-loop/checks/L02.mjs` (chưa sửa, chưa có số đo — lượt quét `scan before` bị dừng giữa chừng, file
+  evidence/L02/before-scan.txt không dùng được). Commit N17 chỉ mang phần N17 (stage bằng `ui-loop/evidence/N17/stage-n17.mjs`).
+  **Cây làm việc vẫn giữ mã N18 chưa commit** (global_core.scss.bwt ~3440–3530, bean-menu-cate.bwt, pc-ui.css `lg:hidden`, pc-legacy-tw.css).
+  **Vòng sau: N18 (TODO, Lần thử 2)** — chạy `node ui-loop/checks/N18.mjs` (KHÔNG chạy `before`); tiêu chí (2) WebKit no-preference đo
+  setTimeout + getComputedStyle theo N17-a (sửa N18.mjs như N17.mjs vòng 30). Sau đó N19 thuộc đợt 3 ⇒ L02 (đợt 2) trước.

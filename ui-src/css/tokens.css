@@ -42,10 +42,13 @@
      `a { text-underline-offset: 3px }` toàn cục hoãn tới đợt 12 (D09) — CSS cũ không đặt offset nên quy tắc này dời gạch
      chân link cũ (vd "Chính sách bảo mật" ở /dat-lich-tu-van); link thư viện tự đặt offset trong components.css */
   :where(p a, li a) { text-decoration: underline; color: var(--pc-color-brand-primary); }
+  /* N17 (24/10/2026, chủ dự án duyệt C.6 — ui-loop/proposals/N17.md): transition-duration .01ms → 0s. Chuyển tiếp .01ms
+     (property mặc định `all`) làm `visibility` kế thừa đổi trễ từng tầng — drawer ☰ hiện sau 1,3–3,4s ở WebKit khi giảm
+     chuyển động; 0s ⇒ không tạo chuyển tiếp. Animation giữ nguyên .01ms. */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: .01ms !important; animation-iteration-count: 1 !important;
-      transition-duration: .01ms !important; scroll-behavior: auto !important;
+      transition-duration: 0s !important; scroll-behavior: auto !important;
     }
   }
 }
