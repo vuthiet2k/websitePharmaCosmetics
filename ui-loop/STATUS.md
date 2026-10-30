@@ -2,7 +2,7 @@ TRẠNG THÁI: ĐANG CHẠY
 Vòng: 39 (30/10/2026) · Việc vừa làm: N21 → DONE — đổi giá trị 300→400 / 800→700 trong home-portal.css,
 home-portal-integration.css, page_collection.scss.bwt (đúng mặt font đang vẽ sau N19). 6 trang Q × 7 khung: phần tử chữ ngoài
 400–700 / 33 → 0, /collections/all 38–43 → 0; bề rộng chữ 12 nhóm trước = sau (0px) ⇒ giao diện không đổi; ui-verify --quick
-0 lỗi mới (lượt 1 dao động N07) — reports/N21.md. Việc tiếp theo: L03a (TODO đầu đợt 3), rồi L03b / L03c, L11, L37.
+0 lỗi mới (lượt 1 dao động N07) — commit 02ea258, reports/N21.md. Việc tiếp theo: L03a (TODO đầu đợt 3), rồi L03b / L03c, L11, L37.
 Tổng: 77 việc · DONE 27 · TODO 50 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0
 Vòng: 38 (30/10/2026) · Việc vừa làm: N19 → DONE (phương án 2 — Montserrat tĩnh tự host 400/500/600/700, gỡ Google Fonts ở
