@@ -1,4 +1,11 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 43 (30/10/2026) · Việc vừa làm: N24 → DONE: quy tắc cũ `vendor_bootstrap.css` `:where(button,input)… outline:none!important`
+tắt viền focus 2 nút topbar ⇒ loại `.lang-btn`, `.topbar-account-btn` khỏi quy tắc (cách N04/N06), viền 2px có sẵn ở site-topbar.css hiện lại.
+8 khung × 2 trang Chromium+WebKit: outline 2px trắng / nền rgb(0,63,45) = 12,01:1; Enter mở, Escape đóng + trả focus; 0 lỗi JS.
+ui-verify --quick d1440 /dat-lich-tu-van focusNoRing 10·10·10·10 (4/4 lượt), 0 lỗi mới — reports/N24.md. Đợt 0–2 đã xong hết.
+Việc tiếp theo: L03b (phần còn lại, đợt 3), L03c, N23, L11, L37.
+Tổng: 81 việc · DONE 30 · TODO 51 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick)
 Vòng: 42 (30/10/2026) · Việc vừa làm: L03a → DONE (phương án 2): swiper.js + lazy.js `defer`, jQuery giữ đồng bộ; bọc DOMContentLoaded
 6 khối khởi tạo lúc parse (product.bwt 2, article.bwt, cart.bwt 2, page_tin_tuc_hub.bwt); section_flash_sale.bwt không đụng.
 7 khung × 7 trang so bản đồng bộ: script đồng bộ head 3 → 1, lỗi JS 0 → 0, Swiper khởi tạo bằng nhau (198), slider bấm next như cũ;
