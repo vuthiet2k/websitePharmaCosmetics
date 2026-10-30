@@ -3,7 +3,7 @@ Vòng: 44 (30/10/2026) · Việc vừa làm: L03b2 → DONE (việc con mới c�
 quickview — 23 lượt / 7 snippet; ui_icon thêm info, square-pen, youtube, heart-filled, star-filled). 7 khung × 4 trang Chromium+WebKit:
 `<i fa->` /collections/all 99 → 0, icon nhìn thấy before = after, lệch tâm ≤ 2,5px, cha đổi cỡ ≤ 3,7px; lượt 1 chưa đạt (X popup bị
 CSS cũ tô đặc, link "Xem tất cả" +4,1px) ⇒ sửa ⇒ lượt 2 đạt; tim bật/tắt đúng, popup voucher mở/đóng 7/7; 0 lỗi JS; ui-verify --quick
-0 lỗi mới — reports/L03b2.md. Việc tiếp theo: N23 (đợt 3), L03b (phần còn lại: PDP, giỏ, blog, trang nội dung, tài khoản… + 38 trường
+0 lỗi mới — commit d4c2852, reports/L03b2.md. Việc tiếp theo: N23 (đợt 3), L03b (phần còn lại: PDP, giỏ, blog, trang nội dung, tài khoản… + 38 trường
 settings + quickview.js + gỡ CDN), L03c, L11, L37.
 Tổng: 82 việc · DONE 31 · TODO 51 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick)
