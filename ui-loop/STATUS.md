@@ -1,13 +1,18 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 35 (30/10/2026) · Việc vừa làm: N20 → DONE (page.about-us.bwt: class `underline` cho 3 link `.pc-about-seo p a`; 7/7 khung
-3/3 link gạch chân, link/nền 16,3:1, axe link-in-text-block m390 3 → 0, d1440 3 → 0; ui-verify --quick 0 lỗi mới) — commit 82ff619, reports/N20.md.
-Việc tiếp theo: N19 (TODO đầu tiên đợt 3), rồi L03 / L11 / L37.
+Vòng: 36 (30/10/2026) · Việc vừa làm: N19 → BLOCKED_OWNER (không sửa mã). Nguyên nhân đo được (checks/N19.mjs): Google Fonts trả
+1 file Montserrat variable cho mọi độ đậm; WebKit Playwright (Windows) không vẽ trục wght ⇒ MỌI chữ Montserrat mảnh (mực 300/600/800 =
+1 075/1 091/1 104; file tĩnh 2 674/5 601/7 759). Sửa = tự host font tĩnh, chạm tokens.css KHOÁ + R7 ⇒ đề xuất ui-loop/proposals/N19.md.
+Việc tiếp theo: L03 (TODO đầu tiên đợt 3), rồi L11 / L37.
+Vòng 35: N20 → DONE — commit 82ff619, reports/N20.md.
 Vòng 34: L02 → DONE — commit 04c14de, reports/L02.md. Thêm N20 (đợt 2).
 Vòng 33: L02 giữ IN_PROGRESS — preview khởi động lại thất bại (EADDRINUSE :3001), đã khắc phục ở commit 1c9f36f.
 Vòng 32: L02 → IN_PROGRESS (axe color-contrast 4 264 → chỉ còn select thanh dev; đã sửa dev-server.js ⇒ tạo ui-loop/RESTART-PREVIEW, dừng vòng; vòng sau kiểm đủ rồi commit)
-Tổng: 73 việc · DONE 25 · TODO 48 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Tổng: 73 việc · DONE 25 · TODO 47 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 1
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (lượt --write-baseline N18 lại gặp webkit390 /collections/all 90 → 120 / 24 → 40 = dao động N07, baseline ghi 120/40)
 Câu hỏi cho chủ dự án:
+- N19 (MỚI 30/10/2026): chữ Montserrat mảnh ở WebKit kiểm là do file font variable của Google Fonts (xem ui-loop/proposals/N19.md). Chọn:
+  (1) đóng N19, ghi nhận giới hạn công cụ kiểm (nên thử 1 lần trên iPhone thật); hoặc (2) tự host Montserrat tĩnh 400/500/600/700
+  trong assets/ + `@font-face` ở tokens.css (KHOÁ), gỡ link Google Fonts — gộp vào L03.
 - N17-a: ĐÃ TRẢ LỜI 25/10/2026 — chọn (2): giữ CSS, tiêu chí WebKit no-preference đo theo trạng thái CSS (không theo khung rAF headless); ngưỡng 400ms giữ cho Chromium; áp dụng cả N18. N17, N18 về TODO.
 - N17-b: ĐÃ TRẢ LỜI 25/10/2026 — cho ghi mốc mới 23 (d1440 /collections/all focusNoRing) khi commit N17.
 - N17 (cũ): ĐÃ TRẢ LỜI 24/10/2026 — chủ dự án duyệt PHƯƠNG ÁN A (tokens.css .01ms → 0s, xoá khối trùng global_core); N17 về TODO.
