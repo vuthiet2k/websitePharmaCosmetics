@@ -1,10 +1,11 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 34 (30/10/2026) · Việc vừa làm: L02 → DONE (preview đã nạp bản sửa dev-server.js; axe color-contrast 136 lượt 4 264 → 0;
-topbar/footer #003F2D 35/35 ở 7 khung; ui-verify --quick 0 lỗi mới) — commit 04c14de, reports/L02.md. Thêm N20 (đợt 2): axe link-in-text-block /about-us 3 link × 2 khung.
-Việc tiếp theo: N20 (TODO đầu tiên theo Đợt — đợt 2), rồi N19 / L03 (đợt 3).
+Vòng: 35 (30/10/2026) · Việc vừa làm: N20 → DONE (page.about-us.bwt: class `underline` cho 3 link `.pc-about-seo p a`; 7/7 khung
+3/3 link gạch chân, link/nền 16,3:1, axe link-in-text-block m390 3 → 0, d1440 3 → 0; ui-verify --quick 0 lỗi mới) — reports/N20.md.
+Việc tiếp theo: N19 (TODO đầu tiên đợt 3), rồi L03 / L11 / L37.
+Vòng 34: L02 → DONE — commit 04c14de, reports/L02.md. Thêm N20 (đợt 2).
 Vòng 33: L02 giữ IN_PROGRESS — preview khởi động lại thất bại (EADDRINUSE :3001), đã khắc phục ở commit 1c9f36f.
 Vòng 32: L02 → IN_PROGRESS (axe color-contrast 4 264 → chỉ còn select thanh dev; đã sửa dev-server.js ⇒ tạo ui-loop/RESTART-PREVIEW, dừng vòng; vòng sau kiểm đủ rồi commit)
-Tổng: 73 việc · DONE 24 · TODO 49 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Tổng: 73 việc · DONE 25 · TODO 48 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (lượt --write-baseline N18 lại gặp webkit390 /collections/all 90 → 120 / 24 → 40 = dao động N07, baseline ghi 120/40)
 Câu hỏi cho chủ dự án:
 - N17-a: ĐÃ TRẢ LỜI 25/10/2026 — chọn (2): giữ CSS, tiêu chí WebKit no-preference đo theo trạng thái CSS (không theo khung rAF headless); ngưỡng 400ms giữ cho Chromium; áp dụng cả N18. N17, N18 về TODO.
