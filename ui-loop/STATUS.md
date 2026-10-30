@@ -1,6 +1,6 @@
 TRẠNG THÁI: ĐANG CHẠY
 Vòng: 35 (30/10/2026) · Việc vừa làm: N20 → DONE (page.about-us.bwt: class `underline` cho 3 link `.pc-about-seo p a`; 7/7 khung
-3/3 link gạch chân, link/nền 16,3:1, axe link-in-text-block m390 3 → 0, d1440 3 → 0; ui-verify --quick 0 lỗi mới) — reports/N20.md.
+3/3 link gạch chân, link/nền 16,3:1, axe link-in-text-block m390 3 → 0, d1440 3 → 0; ui-verify --quick 0 lỗi mới) — commit 82ff619, reports/N20.md.
 Việc tiếp theo: N19 (TODO đầu tiên đợt 3), rồi L03 / L11 / L37.
 Vòng 34: L02 → DONE — commit 04c14de, reports/L02.md. Thêm N20 (đợt 2).
 Vòng 33: L02 giữ IN_PROGRESS — preview khởi động lại thất bại (EADDRINUSE :3001), đã khắc phục ở commit 1c9f36f.
