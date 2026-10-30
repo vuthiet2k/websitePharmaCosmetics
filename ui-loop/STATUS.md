@@ -1,5 +1,14 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 36 (30/10/2026) · Việc vừa làm: N19 → BLOCKED_OWNER (không sửa mã). Nguyên nhân đo được (checks/N19.mjs): Google Fonts trả
+Vòng: 37 (30/10/2026) · Việc vừa làm: L03 → BLOCKED_OWNER (không sửa mã). Kiểm kê: Font Awesome 338 lượt / 103 icon / 72 file +
+38 giá trị `fa-…` trong settings_data.json; `ui_icon.bwt` (KHOÁ) có 43 icon, THIẾU 59 ⇒ tiêu chí "0 file Font Awesome" cần thêm
+icon thư viện + đổi trường settings (G.6) ⇒ đề xuất ui-loop/proposals/L03.md. N19 đã được chủ dự án đưa về TODO (phương án 2 —
+font tự host) ⇒ việc tiếp theo: N19 (TODO đầu đợt 3), rồi L11 / L37.
+Tổng: 73 việc · DONE 25 · TODO 47 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 1 (L03)
+Câu hỏi MỚI cho chủ dự án (L03, xem ui-loop/proposals/L03.md):
+  (1) thêm 59 icon (Lucide) vào snippets/ui_icon.bwt hay duyệt danh sách thay icon gần nghĩa có sẵn?
+  (2) cho đổi 38 giá trị trường settings `fa-…` sang tên ui_icon + sửa mô tả schema (không xoá trường)?
+  (3) cho tách L03 → L03a (font tự host + JS defer) / L03b (gỡ FA) / L03c (ảnh, trùng L37) để làm dần?
+Vòng 36 (30/10/2026) · Việc vừa làm: N19 → BLOCKED_OWNER (không sửa mã). Nguyên nhân đo được (checks/N19.mjs): Google Fonts trả
 1 file Montserrat variable cho mọi độ đậm; WebKit Playwright (Windows) không vẽ trục wght ⇒ MỌI chữ Montserrat mảnh (mực 300/600/800 =
 1 075/1 091/1 104; file tĩnh 2 674/5 601/7 759). Sửa = tự host font tĩnh, chạm tokens.css KHOÁ + R7 ⇒ đề xuất ui-loop/proposals/N19.md.
 Việc tiếp theo: L03 (TODO đầu tiên đợt 3), rồi L11 / L37.
@@ -10,9 +19,7 @@ Vòng 32: L02 → IN_PROGRESS (axe color-contrast 4 264 → chỉ còn select th
 Tổng: 73 việc · DONE 25 · TODO 47 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 1
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (lượt --write-baseline N18 lại gặp webkit390 /collections/all 90 → 120 / 24 → 40 = dao động N07, baseline ghi 120/40)
 Câu hỏi cho chủ dự án:
-- N19 (MỚI 30/10/2026): chữ Montserrat mảnh ở WebKit kiểm là do file font variable của Google Fonts (xem ui-loop/proposals/N19.md). Chọn:
-  (1) đóng N19, ghi nhận giới hạn công cụ kiểm (nên thử 1 lần trên iPhone thật); hoặc (2) tự host Montserrat tĩnh 400/500/600/700
-  trong assets/ + `@font-face` ở tokens.css (KHOÁ), gỡ link Google Fonts — gộp vào L03.
+- N19: ĐÃ TRẢ LỜI 30/10/2026 — chọn (2) tự host Montserrat tĩnh 400/500/600/700, sửa tokens.css (đã duyệt), gỡ Google Fonts, gộp vào L03. N19 về TODO.
 - N17-a: ĐÃ TRẢ LỜI 25/10/2026 — chọn (2): giữ CSS, tiêu chí WebKit no-preference đo theo trạng thái CSS (không theo khung rAF headless); ngưỡng 400ms giữ cho Chromium; áp dụng cả N18. N17, N18 về TODO.
 - N17-b: ĐÃ TRẢ LỜI 25/10/2026 — cho ghi mốc mới 23 (d1440 /collections/all focusNoRing) khi commit N17.
 - N17 (cũ): ĐÃ TRẢ LỜI 24/10/2026 — chủ dự án duyệt PHƯƠNG ÁN A (tokens.css .01ms → 0s, xoá khối trùng global_core); N17 về TODO.
