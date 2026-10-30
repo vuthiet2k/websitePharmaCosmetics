@@ -1,4 +1,12 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 45 (30/10/2026) · Việc đang làm: N23 → IN_PROGRESS (chờ khởi động lại preview — đã tạo ui-loop/RESTART-PREVIEW). Chẩn đoán đo
+được (evidence/N23/before.json, probe-timing.mjs, probe-ab.mjs): login chậm do 3 script hệ thống Sapo `bizweb_asset_url` nạp đồng bộ
+trong head — ở local 404 và dev-server trả NGUYÊN TRANG HTML ≈ 500 KB/file ⇒ FCP 16 036 / LCP 16 500 ms; A/B trả JS rỗng ⇒ FCP 5 804,
+LCP 7 228 ms. Đặt lịch LCP 11 076 ms = GIF widget nạp sau HTML 557 KB (byte tăng từ 23/10: font tự host 238 KB, 248 SVG menu ≈ 117 KB).
+Đã sửa dev-server.js (stub JS 3 file), CHƯA kiểm. Vòng sau: chạy N23.mjs after + ui-verify --perf; nếu đặt lịch vẫn > 8 483 ms ⇒ xét
+phần HTML menu / font (có thể cần chủ dự án vì ui_icon / tokens.css KHOÁ).
+Tổng: 82 việc · DONE 31 · TODO 50 · IN_PROGRESS 1 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: chưa đo vòng này
 Vòng: 44 (30/10/2026) · Việc vừa làm: L03b2 → DONE (việc con mới của L03b: gỡ Font Awesome ở thẻ SP, dải voucher / mã giảm giá,
 quickview — 23 lượt / 7 snippet; ui_icon thêm info, square-pen, youtube, heart-filled, star-filled). 7 khung × 4 trang Chromium+WebKit:
 `<i fa->` /collections/all 99 → 0, icon nhìn thấy before = after, lệch tâm ≤ 2,5px, cha đổi cỡ ≤ 3,7px; lượt 1 chưa đạt (X popup bị
