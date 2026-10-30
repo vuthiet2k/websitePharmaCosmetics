@@ -800,6 +800,8 @@
 					</div>
 				</div>
 				<script>
+					// L03a (30/10/2026): swiper.js nạp defer ⇒ khởi tạo sau khi DOM xong.
+					document.addEventListener('DOMContentLoaded', function () {
 					var swiper_related = new Swiper('.swiper_product_related', {
 						slidesPerView: 4,
 						spaceBetween: 20,
@@ -830,6 +832,7 @@
 								spaceBetween: 20
 							}
 						}
+					});
 					});
 				</script>
 				{%- endif -%}
@@ -1158,7 +1161,11 @@
 		activeTab(this);
 		return false;
 	});
-	var galleryThumbs = new Swiper('.gallery-thumbs', {
+	// L03a (30/10/2026): swiper.js nạp defer ⇒ khởi tạo khi DOM xong. Nghe pha capture trên window để chạy TRƯỚC
+	// jQuery ready (jQuery 2.2.3 gắn DOMContentLoaded từ <head>) — selectCallback lúc ready dùng galleryTop.slideTo.
+	var galleryThumbs, galleryTop, swiper;
+	window.addEventListener('DOMContentLoaded', function () {
+	galleryThumbs = new Swiper('.gallery-thumbs', {
 		spaceBetween: 5,
 		slidesPerView: 10,
 		freeMode: true,
@@ -1206,7 +1213,7 @@
 			prevEl: '.gallery-thumbs .swiper-button-prev',
 		},
 	});
-	var galleryTop = new Swiper('.gallery-top', {
+	galleryTop = new Swiper('.gallery-top', {
 		spaceBetween: 10,
 		lazy: true,
 		hashNavigation: true,
@@ -1214,7 +1221,7 @@
 			swiper: galleryThumbs
 		}
 	});
-	var swiper = new Swiper('.product-relate-swiper', {
+	swiper = new Swiper('.product-relate-swiper', {
 		slidesPerView: 4,
 		loop: false,
 		grabCursor: true,
@@ -1253,6 +1260,7 @@
 			}
 		}
 	});
+	}, true);
 	$(document).ready(function() {
 		$("#lightgallery").lightGallery({
 			thumbnail: false

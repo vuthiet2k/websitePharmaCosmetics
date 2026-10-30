@@ -1,4 +1,13 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 42 (30/10/2026) · Việc vừa làm: L03a → DONE (phương án 2): swiper.js + lazy.js `defer`, jQuery giữ đồng bộ; bọc DOMContentLoaded
+6 khối khởi tạo lúc parse (product.bwt 2, article.bwt, cart.bwt 2, page_tin_tuc_hub.bwt); section_flash_sale.bwt không đụng.
+7 khung × 7 trang so bản đồng bộ: script đồng bộ head 3 → 1, lỗi JS 0 → 0, Swiper khởi tạo bằng nhau (198), slider bấm next như cũ;
+/ FCP 7 768 → 7 496 ms. ui-verify --quick 0 lỗi mới — reports/L03a.md. LƯU Ý cho chủ dự án: ui-verify --perf báo /dat-lich-tu-van
++ /?tpl=login LCP vượt baseline 23/10 > 10 %, nhưng A/B cùng mã (tạm đổi về đồng bộ) cũng vậy ⇒ không do L03a, ghi N23; nếu muốn hiểu
+tiêu chí "--perf không tăng so baseline" theo nghĩa đen thì chuyển L03a về VERIFY_FAIL. Thêm N22 (đợt 9: nút next slider cũ không
+chạy — Flash Sale bàn phím, ảnh thẻ cảm nhận, PDP liên quan 844×390), N23 (đợt 3), N24 (đợt 2: viền focus topbar d1440 đặt lịch dao động 10 → 12, có cả khi đồng bộ). Việc tiếp theo: N24 (đợt 2), L03b (phần còn lại), L03c, N23, L11, L37.
+Tổng: 81 việc · DONE 29 · TODO 52 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick)
 Vòng: 41 (30/10/2026) · Việc vừa làm: L03b1 → DONE (việc con mới của L03b: gỡ Font Awesome ở KHUNG CHUNG — header, topbar, menu,
 footer, thanh đáy, breadcrumb, widget liên hệ, popup giỏ, tìm kiếm). Mã đã có sẵn trong cây làm việc từ lượt trước bị ngắt (chưa ghi
 BACKLOG) ⇒ đăng ký L03b1, kiểm lại toàn bộ. Lượt 1 CHƯA ĐẠT: CSS cũ `svg path {fill}` tô đặc icon nét — tim + giỏ header 1024/1440
