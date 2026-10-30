@@ -1,4 +1,13 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 40 (30/10/2026) · Việc vừa làm: L03a → BLOCKED_OWNER (không sửa mã theme). Phần font đã đạt (N19, N21). Phần JS: thử defer
+trần jquery/swiper/lazy bằng page.route (evidence/L03a/probe-defer-gain.mjs, 390 4G CPU 4×): FCP nhanh 0,4–1,5 s nhưng 3–5 lỗi JS
+mỗi trang — 45 script nội tuyến gọi jQuery + 8 `new Swiper` chạy lúc parse (≈ 40 file, gồm section_flash_sale.bwt đang sửa dở);
+B.5 giữ jQuery cho plugin Sapo (không kiểm được ở local) ⇒ đề xuất ui-loop/proposals/L03a.md. Việc tiếp theo: L03b, rồi L03c, L11, L37.
+Tổng: 77 việc · DONE 27 · TODO 49 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 1 (L03a)
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0
+Câu hỏi MỚI cho chủ dự án (L03a, xem ui-loop/proposals/L03a.md):
+  Chọn (1) defer cả 3 + bọc 53 script nội tuyến trong DOMContentLoaded (≈ 40 file, tách việc con theo nhóm trang, được sửa
+  section_flash_sale.bwt) · (2) chỉ defer Swiper + LazyLoad, giữ jQuery đồng bộ (đúng B.5) · (3) bỏ phần JS khỏi L03a?
 Vòng: 39 (30/10/2026) · Việc vừa làm: N21 → DONE — đổi giá trị 300→400 / 800→700 trong home-portal.css,
 home-portal-integration.css, page_collection.scss.bwt (đúng mặt font đang vẽ sau N19). 6 trang Q × 7 khung: phần tử chữ ngoài
 400–700 / 33 → 0, /collections/all 38–43 → 0; bề rộng chữ 12 nhóm trước = sau (0px) ⇒ giao diện không đổi; ui-verify --quick
