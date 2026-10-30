@@ -1,4 +1,13 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 41 (30/10/2026) · Việc vừa làm: L03b1 → DONE (việc con mới của L03b: gỡ Font Awesome ở KHUNG CHUNG — header, topbar, menu,
+footer, thanh đáy, breadcrumb, widget liên hệ, popup giỏ, tìm kiếm). Mã đã có sẵn trong cây làm việc từ lượt trước bị ngắt (chưa ghi
+BACKLOG) ⇒ đăng ký L03b1, kiểm lại toàn bộ. Lượt 1 CHƯA ĐẠT: CSS cũ `svg path {fill}` tô đặc icon nét — tim + giỏ header 1024/1440
+(pharma_ui_kit.bwt) và 1 icon widget liên hệ (global_core) ⇒ giới hạn `svg:not([fill="none"])`. Lượt 3 ĐẠT 7 khung × 6 trang: `<i fa->`
+khung chung 36 → 0 (trang chủ) / 45 → 0 (tìm kiếm rỗng), icon nhìn thấy before = after, lệch tâm ≤ 4px, tô đặc 0, 0 lỗi JS; ui-verify
+--quick 0 lỗi mới — reports/L03b1.md. Đồng bộ E.7: L03 + L03a ❓ → ⬜ (chủ dự án đã trả lời). Việc tiếp theo: L03a (TODO, phương án 2),
+rồi L03b (phần còn lại: 299 lượt FA ngoài khung chung + 38 trường settings + gỡ CDN), L03c, L11, L37.
+Tổng: 78 việc · DONE 28 · TODO 50 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0
 Vòng: 40 (30/10/2026) · Việc vừa làm: L03a → BLOCKED_OWNER (không sửa mã theme). Phần font đã đạt (N19, N21). Phần JS: thử defer
 trần jquery/swiper/lazy bằng page.route (evidence/L03a/probe-defer-gain.mjs, 390 4G CPU 4×): FCP nhanh 0,4–1,5 s nhưng 3–5 lỗi JS
 mỗi trang — 45 script nội tuyến gọi jQuery + 8 `new Swiper` chạy lúc parse (≈ 40 file, gồm section_flash_sale.bwt đang sửa dở);
@@ -40,6 +49,7 @@ Vòng 32: L02 → IN_PROGRESS (axe color-contrast 4 264 → chỉ còn select th
 Tổng: 73 việc · DONE 25 · TODO 47 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 1
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (lượt --write-baseline N18 lại gặp webkit390 /collections/all 90 → 120 / 24 → 40 = dao động N07, baseline ghi 120/40)
 Câu hỏi cho chủ dự án:
+- L03a: ĐÃ TRẢ LỜI 30/10/2026 — chọn PHƯƠNG ÁN 2: defer swiper + lazy, giữ jQuery đồng bộ; bọc 8 khối Swiper nội tuyến. L03a về TODO.
 - L03: ĐÃ TRẢ LỜI 30/10/2026 — (1) ưu tiên icon gần nghĩa có sẵn, thiếu mới thêm Lucide, logo MXH dùng SVG logo; (2) cho đổi 38 trường settings FA sang tên ui_icon + sửa mô tả schema, không xoá trường, snippet hiểu cả giá trị cũ; (4) tách L03a/b/c. L03 về TODO.
 - N19: ĐÃ TRẢ LỜI 30/10/2026 — chọn (2) tự host Montserrat tĩnh 400/500/600/700, sửa tokens.css (đã duyệt), gỡ Google Fonts, gộp vào L03. N19 về TODO.
 - N17-a: ĐÃ TRẢ LỜI 25/10/2026 — chọn (2): giữ CSS, tiêu chí WebKit no-preference đo theo trạng thái CSS (không theo khung rAF headless); ngưỡng 400ms giữ cho Chromium; áp dụng cả N18. N17, N18 về TODO.

@@ -7,13 +7,52 @@
 {%- endcomment -%}
 {%- comment -%} Preview LiquidJS: `size` không truyền đọc ra SỐ khoá của scope (Sapo/DotLiquid ra nil) ⇒ số khác 24 coi như mặc định 20;
   chỉ chuỗi không phải số (vd 'lon') mới là tham số sai. {%- endcomment -%}
+{%- comment -%} L03b (30/10/2026, chủ dự án duyệt — ui-loop/proposals/L03.md):
+  · size = 'em' ⇒ 1em theo cỡ chữ phần tử cha (bằng hộp glyph FA — không dãn dòng) — thay thẳng icon Font Awesome cũ (FA cỡ theo font-size) mà CSS cỡ/màu cũ
+    của thẻ bọc vẫn áp dụng (CSS cũ đóng băng R1, không viết lại được).
+  · name nhận cả giá trị cũ dạng class FA (vd "fa-solid fa-house", "fa-house") — cấu hình settings đang lưu trên Sapo không vỡ:
+    lấy từ cuối, bỏ tiền tố "fa-", rồi đổi tên FA sang tên ui_icon theo bảng dưới. {%- endcomment -%}
+{%- assign pc_icon_name = name | strip | split: ' ' | last | remove_first: 'fa-' -%}
+{%- case pc_icon_name -%}
+{%- when 'xmark' -%}{%- assign pc_icon_name = 'x' -%}
+{%- when 'magnifying-glass' -%}{%- assign pc_icon_name = 'search' -%}
+{%- when 'bars' -%}{%- assign pc_icon_name = 'menu' -%}
+{%- when 'cart-shopping' -%}{%- assign pc_icon_name = 'shopping-cart' -%}
+{%- when 'bag-shopping' -%}{%- assign pc_icon_name = 'shopping-bag' -%}
+{%- when 'clock-rotate-left' -%}{%- assign pc_icon_name = 'history' -%}
+{%- when 'arrow-trend-up' -%}{%- assign pc_icon_name = 'trending-up' -%}
+{%- when 'location-dot' -%}{%- assign pc_icon_name = 'map-pin' -%}
+{%- when 'envelope' -%}{%- assign pc_icon_name = 'mail' -%}
+{%- when 'facebook-f' -%}{%- assign pc_icon_name = 'facebook' -%}
+{%- when 'cube' -%}{%- assign pc_icon_name = 'box' -%}
+{%- when 'truck-fast' -%}{%- assign pc_icon_name = 'truck' -%}
+{%- when 'question' -%}{%- assign pc_icon_name = 'circle-help' -%}
+{%- when 'user-doctor' -%}{%- assign pc_icon_name = 'stethoscope' -%}
+{%- when 'user-nurse' -%}{%- assign pc_icon_name = 'stethoscope' -%}
+{%- when 'comments' -%}{%- assign pc_icon_name = 'messages-square' -%}
+{%- when 'comment-dots' -%}{%- assign pc_icon_name = 'message-circle' -%}
+{%- when 'comment' -%}{%- assign pc_icon_name = 'message-circle' -%}
+{%- when 'circle-exclamation' -%}{%- assign pc_icon_name = 'circle-alert' -%}
+{%- when 'triangle-exclamation' -%}{%- assign pc_icon_name = 'triangle-alert' -%}
+{%- when 'angle-down' -%}{%- assign pc_icon_name = 'chevron-down' -%}
+{%- when 'angle-right' -%}{%- assign pc_icon_name = 'chevron-right' -%}
+{%- when 'angle-left' -%}{%- assign pc_icon_name = 'chevron-left' -%}
+{%- when 'home' -%}{%- assign pc_icon_name = 'house' -%}
+{%- when 'rotate-right' -%}{%- assign pc_icon_name = 'rotate-cw' -%}
+{%- when 'face-frown-open' -%}{%- assign pc_icon_name = 'frown' -%}
+{%- when 'hourglass-half' -%}{%- assign pc_icon_name = 'hourglass' -%}
+{%- when 'wand-magic-sparkles' -%}{%- assign pc_icon_name = 'wand-sparkles' -%}
+{%- when 'layer-group' -%}{%- assign pc_icon_name = 'layers' -%}
+{%- when 'spa' -%}{%- assign pc_icon_name = 'leaf' -%}
+{%- endcase -%}
 {%- assign pc_icon_s = size | append: '' -%}{%- assign pc_icon_n = size | plus: 0 | append: '' -%}
 {%- assign pc_icon_size = 20 -%}{%- assign pc_icon_bad = false -%}
 {%- if pc_icon_s == '24' -%}{%- assign pc_icon_size = 24 -%}
+{%- elsif pc_icon_s == 'em' -%}{%- assign pc_icon_size = '1em' -%}
 {%- elsif pc_icon_s != blank and pc_icon_s != '20' and pc_icon_s != pc_icon_n -%}{%- assign pc_icon_bad = true -%}
 {%- endif -%}
 {%- capture pc_icon_paths -%}
-{%- case name -%}
+{%- case pc_icon_name -%}
 {%- when 'chevron-left' -%}<path d="m15 18-6-6 6-6"/>
 {%- when 'chevron-right' -%}<path d="m9 18 6-6-6-6"/>
 {%- when 'x' -%}<path d="M18 6 6 18"/><path d="m6 6 12 12"/>
@@ -66,6 +105,18 @@
 {%- when 'circle-check' -%}<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>
 {%- when 'microscope' -%}<path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/>
 {%- when 'triangle-alert' -%}<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>
+{%- comment -%} L03b — khung chung (menu danh mục, hỗ trợ, chat, tìm kiếm rỗng): layer-group → layers, camera,
+  rotate-right → rotate-cw, face-frown-open → frown, circle-dot, sun, hourglass-half → hourglass, droplet,
+  wand-magic-sparkles → wand-sparkles (user-nurse → stethoscope ở trên) {%- endcomment -%}
+{%- when 'layers' -%}<path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>
+{%- when 'camera' -%}<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>
+{%- when 'rotate-cw' -%}<path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
+{%- when 'frown' -%}<circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/>
+{%- when 'circle-dot' -%}<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="1"/>
+{%- when 'sun' -%}<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+{%- when 'hourglass' -%}<path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>
+{%- when 'droplet' -%}<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>
+{%- when 'wand-sparkles' -%}<path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/>
 {%- endcase -%}
 {%- endcapture -%}
 {%- if name == blank -%}<!-- PC-ERROR ui_icon: thiếu name -->

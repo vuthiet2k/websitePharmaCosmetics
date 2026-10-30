@@ -1,7 +1,8 @@
 {%- comment -%}
   Mobile Bottom Navigation — 5 tab cố định, mỗi tab tự đặt nhãn/url/icon.
   Admin bật/tắt từng tab + tự đặt nhãn, đường dẫn, icon trong Tùy chỉnh → Mobile.
-  Icon: nhập class Font Awesome 6 (vd: fa-solid fa-house) → render <i>; để trống → icon FA mặc định (fa-solid, cùng 1 kiểu cho cả 5 tab — .clinerules/03 UI-9).
+  Icon (L03b 30/10/2026): tên icon ui_icon (vd: house) — vẫn nhận giá trị cũ dạng class FA (vd: "… fa-house", tự ánh xạ);
+  để trống hoặc tên không có trong snippets/ui_icon.bwt → icon mặc định của tab (SVG nội tuyến, cỡ theo chữ — size em).
   Nhãn dài xuống dòng, không cắt "..." (L34 24/10/2026 — UI-STANDARD D.8 "nhãn đọc trọn").
   Active state: Tab blog/article khớp blog.url; Tab wishlist khớp URL setting hoặc wishlist_page;
   tab "blog" (nay là "Soi da & Dịch vụ", trỏ trang nội dung) còn khớp page.url == mobile_nav_blog_url (L34).
@@ -52,7 +53,7 @@
 {%- assign nav_account_label  = settings.mobile_nav_account_label  | default: 'Tài khoản' -%}
 {%- assign nav_account_url    = settings.mobile_nav_account_url    | default: '/account' -%}
 
-{%- comment -%} Icons — FA class nếu có, fallback về SVG {%- endcomment -%}
+{%- comment -%} Icons — tên ui_icon (hoặc class FA cũ) từ settings; không vẽ được ⇒ icon mặc định {%- endcomment -%}
 {%- assign nav_home_icon     = settings.mobile_nav_home_icon     | strip -%}
 {%- assign nav_products_icon = settings.mobile_nav_products_icon | strip -%}
 {%- assign nav_wishlist_icon = settings.mobile_nav_wishlist_icon | strip -%}
@@ -66,11 +67,9 @@
     <li class="pc-bottom-nav__item{% if mb_active == 'home' %} is-active{% endif %}">
       <a href="{{ nav_home_url }}" title="{{ nav_home_label }}" aria-label="{{ nav_home_label }}"{% if mb_active == 'home' %} aria-current="page"{% endif %}>
         <span class="pc-bottom-nav__icon">
-          {%- if nav_home_icon != blank -%}
-            <i class="{{ nav_home_icon }}" aria-hidden="true"></i>
-          {%- else -%}
-            <i class="fa-solid fa-house" aria-hidden="true"></i>
-          {%- endif -%}
+          {%- capture mb_ico -%}{% include 'ui_icon', name: nav_home_icon, size: 'em' %}{%- endcapture -%}
+          {%- unless mb_ico contains '<svg' -%}{%- capture mb_ico -%}{% include 'ui_icon', name: 'house', size: 'em' %}{%- endcapture -%}{%- endunless -%}
+          <i class="inline-block leading-none" aria-hidden="true">{{ mb_ico }}</i>
         </span>
         <span class="pc-bottom-nav__label">{{ nav_home_label }}</span>
       </a>
@@ -81,11 +80,9 @@
     <li class="pc-bottom-nav__item{% if mb_active == 'products' %} is-active{% endif %}">
       <a href="{{ nav_products_url }}" title="{{ nav_products_label }}" aria-label="{{ nav_products_label }}"{% if mb_active == 'products' %} aria-current="page"{% endif %}>
         <span class="pc-bottom-nav__icon">
-          {%- if nav_products_icon != blank -%}
-            <i class="{{ nav_products_icon }}" aria-hidden="true"></i>
-          {%- else -%}
-            <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
-          {%- endif -%}
+          {%- capture mb_ico -%}{% include 'ui_icon', name: nav_products_icon, size: 'em' %}{%- endcapture -%}
+          {%- unless mb_ico contains '<svg' -%}{%- capture mb_ico -%}{% include 'ui_icon', name: 'shopping-bag', size: 'em' %}{%- endcapture -%}{%- endunless -%}
+          <i class="inline-block leading-none" aria-hidden="true">{{ mb_ico }}</i>
         </span>
         <span class="pc-bottom-nav__label">{{ nav_products_label }}</span>
       </a>
@@ -96,11 +93,9 @@
     <li class="pc-bottom-nav__item{% if mb_active == 'wishlist' %} is-active{% endif %}">
       <a href="{{ wishlist_url }}" title="{{ nav_wishlist_label }}" aria-label="{{ nav_wishlist_label }}"{% if mb_active == 'wishlist' %} aria-current="page"{% endif %}>
         <span class="pc-bottom-nav__icon">
-          {%- if nav_wishlist_icon != blank -%}
-            <i class="{{ nav_wishlist_icon }}" aria-hidden="true"></i>
-          {%- else -%}
-            <i class="fa-solid fa-heart" aria-hidden="true"></i>
-          {%- endif -%}
+          {%- capture mb_ico -%}{% include 'ui_icon', name: nav_wishlist_icon, size: 'em' %}{%- endcapture -%}
+          {%- unless mb_ico contains '<svg' -%}{%- capture mb_ico -%}{% include 'ui_icon', name: 'heart', size: 'em' %}{%- endcapture -%}{%- endunless -%}
+          <i class="inline-block leading-none" aria-hidden="true">{{ mb_ico }}</i>
         </span>
         <span class="pc-bottom-nav__label">{{ nav_wishlist_label }}</span>
       </a>
@@ -111,11 +106,9 @@
     <li class="pc-bottom-nav__item{% if mb_active == 'blog' %} is-active{% endif %}">
       <a href="{{ nav_blog_url }}" title="{{ nav_blog_label }}" aria-label="{{ nav_blog_label }}"{% if mb_active == 'blog' %} aria-current="page"{% endif %}>
         <span class="pc-bottom-nav__icon">
-          {%- if nav_blog_icon != blank -%}
-            <i class="{{ nav_blog_icon }}" aria-hidden="true"></i>
-          {%- else -%}
-            <i class="fa-solid fa-newspaper" aria-hidden="true"></i>
-          {%- endif -%}
+          {%- capture mb_ico -%}{% include 'ui_icon', name: nav_blog_icon, size: 'em' %}{%- endcapture -%}
+          {%- unless mb_ico contains '<svg' -%}{%- capture mb_ico -%}{% include 'ui_icon', name: 'newspaper', size: 'em' %}{%- endcapture -%}{%- endunless -%}
+          <i class="inline-block leading-none" aria-hidden="true">{{ mb_ico }}</i>
         </span>
         <span class="pc-bottom-nav__label">{{ nav_blog_label }}</span>
       </a>
@@ -126,11 +119,9 @@
     <li class="pc-bottom-nav__item{% if mb_active == 'account' %} is-active{% endif %}">
       <a href="{{ nav_account_url }}" title="{{ nav_account_label }}" aria-label="{{ nav_account_label }}"{% if mb_active == 'account' %} aria-current="page"{% endif %}>
         <span class="pc-bottom-nav__icon">
-          {%- if nav_account_icon != blank -%}
-            <i class="{{ nav_account_icon }}" aria-hidden="true"></i>
-          {%- else -%}
-            <i class="fa-solid fa-user" aria-hidden="true"></i>
-          {%- endif -%}
+          {%- capture mb_ico -%}{% include 'ui_icon', name: nav_account_icon, size: 'em' %}{%- endcapture -%}
+          {%- unless mb_ico contains '<svg' -%}{%- capture mb_ico -%}{% include 'ui_icon', name: 'user', size: 'em' %}{%- endcapture -%}{%- endunless -%}
+          <i class="inline-block leading-none" aria-hidden="true">{{ mb_ico }}</i>
         </span>
         <span class="pc-bottom-nav__label">{{ nav_account_label }}</span>
       </a>
