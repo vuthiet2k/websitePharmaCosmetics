@@ -1,4 +1,10 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 38 (30/10/2026) · Việc vừa làm: N19 → DONE (phương án 2 — Montserrat tĩnh tự host 400/500/600/700, gỡ Google Fonts ở
+theme.bwt + chat.bwt). WebKit mực 600/400 1,01 → 1,68 (Chromium 1,72), 0 request Google Fonts, 12 woff2 /assets 200, ui-verify
+--quick 0 lỗi mới — reports/N19.md. Phần font của L03a đã xong (L03a còn JS defer). Thêm N21 (đợt 3): chữ đặt 300/800 ngoài thang
+(h1 hero /, 70 phần tử 800 ở / + /collections/all) nay vẽ bằng 400/700. Việc tiếp theo: N21, rồi L03a / L03b / L03c, L11, L37.
+Tổng: 77 việc · DONE 26 · TODO 51 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0
 Vòng: 37 (30/10/2026) · Việc vừa làm: L03 → BLOCKED_OWNER (không sửa mã). Kiểm kê: Font Awesome 338 lượt / 103 icon / 72 file +
 38 giá trị `fa-…` trong settings_data.json; `ui_icon.bwt` (KHOÁ) có 43 icon, THIẾU 59 ⇒ tiêu chí "0 file Font Awesome" cần thêm
 icon thư viện + đổi trường settings (G.6) ⇒ đề xuất ui-loop/proposals/L03.md. N19 đã được chủ dự án đưa về TODO (phương án 2 —
@@ -19,6 +25,7 @@ Vòng 32: L02 → IN_PROGRESS (axe color-contrast 4 264 → chỉ còn select th
 Tổng: 73 việc · DONE 25 · TODO 47 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 1
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (lượt --write-baseline N18 lại gặp webkit390 /collections/all 90 → 120 / 24 → 40 = dao động N07, baseline ghi 120/40)
 Câu hỏi cho chủ dự án:
+- L03: ĐÃ TRẢ LỜI 30/10/2026 — (1) ưu tiên icon gần nghĩa có sẵn, thiếu mới thêm Lucide, logo MXH dùng SVG logo; (2) cho đổi 38 trường settings FA sang tên ui_icon + sửa mô tả schema, không xoá trường, snippet hiểu cả giá trị cũ; (4) tách L03a/b/c. L03 về TODO.
 - N19: ĐÃ TRẢ LỜI 30/10/2026 — chọn (2) tự host Montserrat tĩnh 400/500/600/700, sửa tokens.css (đã duyệt), gỡ Google Fonts, gộp vào L03. N19 về TODO.
 - N17-a: ĐÃ TRẢ LỜI 25/10/2026 — chọn (2): giữ CSS, tiêu chí WebKit no-preference đo theo trạng thái CSS (không theo khung rAF headless); ngưỡng 400ms giữ cho Chromium; áp dụng cả N18. N17, N18 về TODO.
 - N17-b: ĐÃ TRẢ LỜI 25/10/2026 — cho ghi mốc mới 23 (d1440 /collections/all focusNoRing) khi commit N17.
