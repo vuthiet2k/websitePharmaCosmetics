@@ -4,7 +4,7 @@ footer, thanh đáy, breadcrumb, widget liên hệ, popup giỏ, tìm kiếm). M
 BACKLOG) ⇒ đăng ký L03b1, kiểm lại toàn bộ. Lượt 1 CHƯA ĐẠT: CSS cũ `svg path {fill}` tô đặc icon nét — tim + giỏ header 1024/1440
 (pharma_ui_kit.bwt) và 1 icon widget liên hệ (global_core) ⇒ giới hạn `svg:not([fill="none"])`. Lượt 3 ĐẠT 7 khung × 6 trang: `<i fa->`
 khung chung 36 → 0 (trang chủ) / 45 → 0 (tìm kiếm rỗng), icon nhìn thấy before = after, lệch tâm ≤ 4px, tô đặc 0, 0 lỗi JS; ui-verify
---quick 0 lỗi mới — reports/L03b1.md. Đồng bộ E.7: L03 + L03a ❓ → ⬜ (chủ dự án đã trả lời). Việc tiếp theo: L03a (TODO, phương án 2),
+--quick 0 lỗi mới — commit 5f38dbb, reports/L03b1.md. Đồng bộ E.7: L03 + L03a ❓ → ⬜ (chủ dự án đã trả lời). Việc tiếp theo: L03a (TODO, phương án 2),
 rồi L03b (phần còn lại: 299 lượt FA ngoài khung chung + 38 trường settings + gỡ CDN), L03c, L11, L37.
 Tổng: 78 việc · DONE 28 · TODO 50 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0
