@@ -1,6 +1,6 @@
 TRẠNG THÁI: ĐANG CHẠY
 Vòng: 34 (30/10/2026) · Việc vừa làm: L02 → DONE (preview đã nạp bản sửa dev-server.js; axe color-contrast 136 lượt 4 264 → 0;
-topbar/footer #003F2D 35/35 ở 7 khung; ui-verify --quick 0 lỗi mới) — reports/L02.md. Thêm N20 (đợt 2): axe link-in-text-block /about-us 3 link × 2 khung.
+topbar/footer #003F2D 35/35 ở 7 khung; ui-verify --quick 0 lỗi mới) — commit 04c14de, reports/L02.md. Thêm N20 (đợt 2): axe link-in-text-block /about-us 3 link × 2 khung.
 Việc tiếp theo: N20 (TODO đầu tiên theo Đợt — đợt 2), rồi N19 / L03 (đợt 3).
 Vòng 33: L02 giữ IN_PROGRESS — preview khởi động lại thất bại (EADDRINUSE :3001), đã khắc phục ở commit 1c9f36f.
 Vòng 32: L02 → IN_PROGRESS (axe color-contrast 4 264 → chỉ còn select thanh dev; đã sửa dev-server.js ⇒ tạo ui-loop/RESTART-PREVIEW, dừng vòng; vòng sau kiểm đủ rồi commit)
