@@ -396,10 +396,10 @@ Bộ chuẩn áp cho mọi thay đổi giao diện từ nay; cột Hiện trạn
 
 | Do | Don't | Hiện trạng |
 | :---- | :---- | :---- |
-| Chữ thường ≥ 4,5 : 1; chữ lớn, icon, viền ô ≥ 3 : 1 | Chữ dưới ngưỡng | Chưa (L02) |
-| #3CB371 chỉ cho mảng trang trí, icon lớn, viền, nền nhạt; chữ/giá/link xanh và nút đặc dùng #075B40 hoặc #003F2D | #3CB371 làm màu chữ hoặc nền chữ trắng | Chưa (L02) |
-| Topbar, footer nền Deep Forest #003F2D chữ trắng | Chữ trắng trên #3CB371 | Chưa (L02) |
-| Link trong đoạn văn có gạch chân hoặc tương phản ≥ 3 : 1 với chữ thường | Link chỉ khác màu rất nhẹ | Chưa (L02) |
+| Chữ thường ≥ 4,5 : 1; chữ lớn, icon, viền ô ≥ 3 : 1 | Chữ dưới ngưỡng | Đạt (L02) |
+| #3CB371 chỉ cho mảng trang trí, icon lớn, viền, nền nhạt; chữ/giá/link xanh và nút đặc dùng #075B40 hoặc #003F2D | #3CB371 làm màu chữ hoặc nền chữ trắng | Đạt (L02) |
+| Topbar, footer nền Deep Forest #003F2D chữ trắng | Chữ trắng trên #3CB371 | Đạt (L02) |
+| Link trong đoạn văn có gạch chân hoặc tương phản ≥ 3 : 1 với chữ thường | Link chỉ khác màu rất nhẹ | Chưa (N20 — /about-us) |
 | Chữ trên ảnh có lớp phủ đảm bảo tương phản | Chữ xanh trên ảnh xanh | Chưa (L11) |
 | Thông tin không chỉ truyền bằng màu (kèm chữ/icon) | Viền đỏ không chữ | Một phần |
 
@@ -464,7 +464,7 @@ Bộ chuẩn áp cho mọi thay đổi giao diện từ nay; cột Hiện trạn
 | Do | Don't | Hiện trạng |
 | :---- | :---- | :---- |
 | Đúng 2 họ thẻ: thẻ trang chủ & thẻ danh mục | Họ thẻ thứ 3 | Chưa (L27) |
-| Ảnh cùng tỉ lệ, tên 2 dòng, giá đậm dễ đọc, giá gốc gạch đủ tương phản | Giá xanh nhạt | Một phần (L02) |
+| Ảnh cùng tỉ lệ, tên 2 dòng, giá đậm dễ đọc, giá gốc gạch đủ tương phản | Giá xanh nhạt | Một phần (tương phản giá đạt — L02) |
 | Thẻ cùng hàng cao bằng nhau, nút thẳng hàng | — | Đạt |
 | Đánh giá sao chỉ khi có dữ liệu thật | Bịa sao, % đã bán | Đạt |
 | Hero danh mục mobile ≤ 1/3 màn | 1,6 màn trước sản phẩm đầu | Chưa (L12) |
@@ -667,7 +667,7 @@ Menu ☰ trên điện thoại chỉ hiện 5 mục giới thiệu; 291 link dan
 
 ![Desktop có mega-menu danh mục đầy đủ](images/ux-ui/d-mega-menu.jpg)
 
-##### **L02 · Mức 3 — Màu xanh thương hiệu #3CB371 thiếu tương phản**
+##### **L02 · Mức 3 — Màu xanh thương hiệu #3CB371 thiếu tương phản** — ✅ ĐÃ SỬA 30/10/2026 (COMMIT_L02)
 
 Chữ trắng trên nền #3CB371 (topbar, toàn bộ footer, nút "Lấy mã", "Mua ngay") và chữ màu #3CB371 (giá, "Còn hàng", mã sản phẩm) chỉ đạt 2,5–2,7 : 1, chuẩn là ≥ 4,5 : 1\. Lỗi có trên cả 68/68 trang. Thêm: giá gốc xám 2,1 : 1, nhãn màu đào 2,4 : 1, link trong đoạn văn trang Giới thiệu 1,1 : 1 so với chữ thường.
 
@@ -980,7 +980,8 @@ Mục ✅ KHÔNG được sửa lại trừ khi ui-verify báo hồi quy (khi đ
 | N17 | 1 | WebKit: nội dung drawer ☰ `visibility:hidden` ~1,3s sau khi bấm (Chromium ~110ms) | ✅ Đã sửa | 1c2f1f9 | 25/10/2026 | Lần 2 (vòng 30, checks/N17.mjs 2 lượt, 0 ✗): reduce WebKit 71/70ms (trước 1 300–3 411ms), Chromium 31–108ms; no-preference Chromium 30–185ms (rAF), WebKit 194/312ms đo setTimeout + getComputedStyle theo quyết định N17-a (class current 47/61ms); Escape đóng + focus ☰ 10/10; Swiper 4 slider = đối chứng .01ms ở 7 khung; 0 lỗi JS; ui-verify --quick chỉ focusNoRing d1440 /collections/all 22 → 23 (mốc được duyệt N17-b, đã ghi). Phương án A: tokens.css transition-duration 0s + xoá khối trùng global_core |
 | N18 | 1 | WebKit: icon ≡ (`.open_mnu`) cây danh mục drawer không thấy trong ảnh dù phần tử 43×43 nhìn thấy; Chromium icon chỉ ~10px | ✅ Đã sửa | ab11917 | 25/10/2026 | Lần 3 (vòng 31, checks/N18.mjs 2 lượt after-run5/6, 0 ✗, 88 ✔ mỗi lượt): icon SVG `ui_icon` 20×20 ở 4/4 nhóm, hiện CÙNG lúc link cấp 1 (chênh 0ms) ở 5 khung × 2 chế độ — Chromium 390/320/768/844×390 22–51ms (rAF), WebKit reduce 27/28ms, WebKit no-preference 264/91ms đo setTimeout + getComputedStyle theo N17-a; 84 điểm ảnh (WebKit 768) tương phản ≥ 3:1, nét/nền 14,84:1; `::before` ảnh nền 0/4; lệch tâm ≤ 0,5px; bấm icon mở 12 / đóng 0 link con; desktop 1024/1440 menu ngang 5 + mega-menu 16 link ±1px, `.open_mnu` 0; 0 lỗi JS; build:sapo + ui-guard PASS; ui-verify --quick 0 lỗi mới (lượt ghi baseline gặp dao động N07 webkit390 /collections/all 90 → 120). Vòng 29 (mã N17 trong cây, checks/N18.mjs 2 lượt): lượt 3 ĐẠT toàn bộ — icon hiện cùng lúc link (chênh 0ms ở 5 khung × 2 chế độ; WebKit reduce 229ms, no-preference 191ms); lượt 4 ✗ chỉ WebKit no-preference 433ms > 400 (link cùng 433ms — dao động `.header-menu` visibility .5s = N17-a, HEAD 211–466ms). Vòng 27: icon SVG `ui_icon` 20×20 ở 4/4 nhóm (trước ảnh nền 10px), điểm ảnh vẽ 14 → 84 (Chromium) / 156 → 768 (WebKit), tương phản 14,84:1, lệch tâm ≤ 0,5px, desktop không đổi; no-preference icon hiện cùng lúc link. Chưa đạt: WebKit reduce icon trễ hơn link 325–359ms (tầng chuyển tiếp của tokens.css — N17), thử phương án N17 ⇒ 0ms; làm N17 trước rồi kiểm lại |
 | N19 | 3 | WebKit: chữ drawer ☰ + thanh đáy vẽ mảnh (như 300) dù computed Montserrat 600 giống Chromium | ⬜ Chưa sửa | — | — | — |
-| L02 | 2 | Tương phản: topbar/footer nền #003F2D; giá, nhãn, link, nút theo token | 🔧 Đang sửa | — | 25/10/2026 | Vòng 32: axe color-contrast Chromium 136 lượt (68 trang × 390/1440) 4 264 → 141 nút; 3 trang còn lại sau sửa tiếp: chỉ còn `select` thanh dev preview (1,44:1, sửa `dev-server.js`, chờ khởi động lại preview); chưa đo computed 7 khung, chưa ui-verify. Vòng 33: quét đủ 136 lượt = 136 nút, tất cả là `select` thanh dev (preview khởi động lại thất bại, EADDRINUSE :3001 — server cũ chưa nạp sửa); dừng do lỗi môi trường |
+| N20 | 2 | axe link-in-text-block: 3 link trong đoạn văn /about-us không gạch chân, chỉ khác màu | ⬜ Chưa sửa | — | — | m390 3 · d1440 3 (vòng 34) |
+| L02 | 2 | Tương phản: topbar/footer nền #003F2D; giá, nhãn, link, nút theo token | ✅ Đã sửa | COMMIT_L02 | 30/10/2026 | Vòng 34 ĐẠT: axe color-contrast 136 lượt (68 trang × 390/1440) 4 264 → **0**; 7 khung (Chromium 390/320/768/1024/1440/844×390 + WebKit iPhone 13) × 5 trang: topbar + footer nền rgb(0,63,45) 35/35, chữ #3CB371 trên nền sáng 0, chữ trắng trên #3CB371 0, nút < 4,5:1 0; giá thẻ SP 14,84:1, PDP 7,54:1, giá sale trang chủ 4,76:1; ui-verify --quick 0 lỗi mới. Vòng 32: axe color-contrast Chromium 136 lượt (68 trang × 390/1440) 4 264 → 141 nút; 3 trang còn lại sau sửa tiếp: chỉ còn `select` thanh dev preview (1,44:1, sửa `dev-server.js`, chờ khởi động lại preview); chưa đo computed 7 khung, chưa ui-verify. Vòng 33: quét đủ 136 lượt = 136 nút, tất cả là `select` thanh dev (preview khởi động lại thất bại, EADDRINUSE :3001 — server cũ chưa nạp sửa); dừng do lỗi môi trường |
 | L03 | 3 | Tốc độ: JS `defer`, rút font còn 400/500/600/700, gỡ Font Awesome (thay `ui_icon`), ảnh đú | ⬜ Chưa sửa | — | — | — |
 | L11 | 3 | Hero trang chủ: tiêu đề + nút hiện ngay, chữ trên ảnh có lớp phủ ≥ 4,5:1 | ⬜ Chưa sửa | — | — | — |
 | L37 | 3 | Ảnh quá cỡ / nặng (`img_url` đúng cỡ, srcset, ảnh nội dung ≤ 200KB) | ⬜ Chưa sửa | — | — | — |
@@ -1049,6 +1050,7 @@ Mỗi lỗi mới (từ ui-verify --full, hồi quy, hoặc phát hiện khi ki�
 | N17 | Vòng 22 / 24/10/2026 | WebKit iPhone 13: bấm ☰ ⇒ drawer vào khung nhìn sau 505ms rồi nội dung còn `visibility:hidden` thêm 1 300ms (cả cây danh mục lẫn menu chính `#nav`); Chromium 108–127ms. B.7: mở panel 250–300ms, tối đa 400ms | / (drawer ☰) | Phát hiện khi kiểm L01 (có từ trước, không do L01 — `#nav` bằng cây danh mục). Vòng 25: chỉ khi giảm chuyển động — quy tắc `transition-duration: .01ms` cho `*` (tokens.css + global_core) làm `visibility` chuyển tiếp từng tầng | ✅ (lần 2 vòng 30, 25/10/2026) |
 | N18 | Vòng 24 / 24/10/2026 | WebKit iPhone 13: icon mở/đóng ≡ của cây danh mục drawer (`.open_mnu`, ảnh nền `icon-list.svg` qua ::before) không thấy trong ảnh chụp dù phần tử nhìn thấy 43×43; Chromium icon hiện nhưng ~10×10px | / (drawer ☰) | Phát hiện khi kiểm N16 (có từ trước — ảnh before-webkit-iphone13.png) | ✅ (lần 3 vòng 31, 25/10/2026) |
 | N19 | Vòng 29 / 25/10/2026 | WebKit iPhone 13: chữ drawer ☰ (cây danh mục, `#nav`, khối Quiz da) và thanh đáy vẽ nét mảnh như Montserrat 300 trong ảnh chụp, Chromium 390 vẽ đậm 600 — computed giống nhau ở cả 2 (`#nav > li > a`, `.pc-bottom-nav a`: Montserrat 600 15px; `document.fonts` Montserrat 300–800 đều có mặt `loaded`), nguyên nhân chưa rõ (evidence/N18/probe-font-weight.mjs, ảnh before/after-webkit-iphone13-*.png) | / (drawer ☰, thanh đáy) | Phát hiện khi kiểm N18 (có từ trước — ảnh before cũng mảnh) | ⬜ |
+| N20 | Vòng 34 / 30/10/2026 | axe `link-in-text-block` /about-us: 3 link trong đoạn văn (`kham-da-ai`, `dieu-tri-chuyen-nghiep`, `dat-lich-tu-van`) chỉ khác chữ thường bằng màu, không gạch chân — m390 3 nút, d1440 3 nút | /about-us | Phát hiện khi kiểm L02 (có từ trước — đã có trong baseline) | ⬜ |
 
 ## **PHẦN F — Kế hoạch sửa và cổng kiểm**
 

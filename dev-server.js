@@ -562,8 +562,9 @@ function devToolbarStyle() {
   }
   #dev-toolbar .dot.error { background: #f38ba8; animation: none; }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+  /* L02 25/10/2026: CSS cũ của theme đè nền select thành #fff ⇒ chữ #cdd6f4 1,4:1 (axe color-contrast mọi trang) — ép nền tối */
   #dev-toolbar select {
-    background: #313244; color: #cdd6f4; border: 1px solid #45475a;
+    background: #313244 !important; color: #cdd6f4 !important; border: 1px solid #45475a;
     border-radius: 4px; padding: 2px 6px; font-size: 12px; cursor: pointer;
   }
   #dev-toolbar .tpl-badge {
@@ -1346,7 +1347,7 @@ function _buildPage(renderedHeader, renderedBody, activeTemplate) {
     color: #89b4fa; font-size: 12px;
   }
   #dev-toolbar select {
-    background: #313244; color: #cdd6f4; border: 1px solid #45475a;
+    background: #313244 !important; color: #cdd6f4 !important; border: 1px solid #45475a;
     border-radius: 4px; padding: 2px 6px; font-size: 12px; cursor: pointer;
   }
   #reload-badge {
