@@ -1,5 +1,7 @@
 {% assign count_images = product.images | size %}
 {% assign column_center = 'col-sm-12 col-md-12' %}
+{%- comment -%} L03b2 (30/10/2026): icon "Đánh giá" chèn bằng JS ⇒ dựng SVG ui_icon sẵn (thay Font Awesome fa-pen-to-square). {%- endcomment -%}
+{%- capture pc_qv_pen_icon -%}{%- include 'ui_icon', name: 'square-pen', size: 'em' -%}{%- endcapture -%}
 <div id="quick-view-product" class="quickview-product" style="display:none;">
 	<div class="quickview-overlay fancybox-overlay fancybox-overlay-fixed"></div>
 	<div class="quick-view-product"></div>
@@ -70,7 +72,7 @@
 			</div>
 		</div>      
 		<a title="Close" class="quickview-close close-window" href="javascript:;">
-			<i class="fa-regular fa-xmark" aria-hidden="true"></i>
+			<i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'x', size: 'em' %}</i>
 		</a>
 	</div>    
 </div>
@@ -347,7 +349,7 @@
 					quickview.find(".variants select").attr("id", "product-select-" + product.id);
 
 					quickview.find(".qwp-name").html('<a class="text2line" href="'+ product.url +'" title="'+product.name+'">'+product.name +'</a>');
-					quickview.find(".reviews_qv .text_revi").html('<a href="'+ product.url +'" title="Đánh giá '+product.name+'"><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>&nbsp;Đánh giá</a>');
+					quickview.find(".reviews_qv .text_revi").html('<a href="'+ product.url +'" title="Đánh giá '+product.name+'"><i class="inline-block leading-none" aria-hidden="true">{{ pc_qv_pen_icon | strip_newlines }}</i>&nbsp;Đánh giá</a>');
 
 					if(product.vendor){
 						quickview.find(".vend-qv .vendor_").append(product.vendor);
