@@ -48,7 +48,10 @@
               {%- elsif pc_ig_story_yt != blank -%}
               <img src="https://i.ytimg.com/vi/{{ pc_ig_story_yt }}/mqdefault.jpg" alt="" width="100" height="100" loading="lazy">
               {%- else -%}
-              <span class="pc-ig-story__ph" aria-hidden="true"><i class="fa-solid {% if pc_vs_src != '' %}fa-video{% else %}fa-newspaper{% endif %}"></i></span>
+              {%- comment -%} L03b12 (01/11/2026): icon FA → ui_icon size 'em' trong <i> bọc cũ (comment → message-circle, paper-plane → send);
+                tim / lưu đã bật = heart-filled / bookmark-filled, JS lấy SVG từ <template data-ig-icons>. {%- endcomment -%}
+              {%- assign pc_ig_ph_icon = 'newspaper' -%}{%- if pc_vs_src != '' -%}{%- assign pc_ig_ph_icon = 'video' -%}{%- endif -%}
+              <span class="pc-ig-story__ph" aria-hidden="true"><i class="inline-block leading-none">{% include 'ui_icon', name: pc_ig_ph_icon, size: 'em' %}</i></span>
               {%- endif -%}
               {%- if pc_ig_new -%}<span class="pc-ig-story__new">{{ settings.feed_new_label | default: 'Mới' | escape }}</span>{%- endif -%}
             </span>
@@ -133,7 +136,7 @@
             <header class="pc-ig-post__head">
               <span class="pc-ig-post__avatar">{{ pc_ig_avatar }}</span>
               <div class="pc-ig-post__who">
-                <span class="pc-ig-post__name">{{ pc_ig_name | escape }} <i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
+                <span class="pc-ig-post__name">{{ pc_ig_name | escape }} <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'circle-check', size: 'em' %}</i></span>
                 <span class="pc-ig-post__sub">{{ pc_ig_topic | default: pc_ig_kb.title | escape }}</span>
               </div>
               <time class="pc-ig-post__time" datetime="{{ article.published_on | date: '%Y-%m-%dT%H:%M:%S' }}">{{ pc_ig_ago }}</time>
@@ -144,16 +147,16 @@
               {%- elsif article.image.src != blank -%}
               <img src="{{ article.image.src | img_url: 'grande' }}" alt="{{ article.image.alt | default: article.title | escape }}" width="600" height="750" {% if pc_ig_n > 1 %}loading="lazy" {% endif %}decoding="async">
               {%- else -%}
-              <span class="pc-ig-post__ph" aria-hidden="true"><i class="fa-solid fa-newspaper"></i><span>{{ article.title | escape }}</span></span>
+              <span class="pc-ig-post__ph" aria-hidden="true"><i class="inline-block leading-none">{% include 'ui_icon', name: 'newspaper', size: 'em' %}</i><span>{{ article.title | escape }}</span></span>
               {%- endif -%}
-              {%- if pc_ig_yt != blank or pc_ig_fb != blank -%}<span class="pc-ig-post__play" aria-hidden="true"><i class="fa-solid fa-play"></i></span><span class="pc-ig-post__vid" aria-hidden="true"><i class="fa-solid fa-video"></i></span>{%- endif -%}
+              {%- if pc_ig_yt != blank or pc_ig_fb != blank -%}<span class="pc-ig-post__play" aria-hidden="true"><i class="inline-block leading-none">{% include 'ui_icon', name: 'play', size: 'em' %}</i></span><span class="pc-ig-post__vid" aria-hidden="true"><i class="inline-block leading-none">{% include 'ui_icon', name: 'video', size: 'em' %}</i></span>{%- endif -%}
               {%- if pc_ig_fresh -%}<span class="pc-ig-post__new">{{ settings.feed_new_label | default: 'Mới' | escape }}</span>{%- endif -%}
             </a>
             <div class="pc-ig-post__actions">
-              <button type="button" class="pc-ig-act" data-ig-like aria-pressed="false" aria-label="{{ settings.feed_like_label | default: 'Thích' | escape }}"><i class="fa-regular fa-heart" aria-hidden="true"></i></button>
-              <a class="pc-ig-act" href="{{ article.url }}{% if pc_ig_kb.comments_enabled %}#article_comments{% endif %}" aria-label="{{ settings.feed_comment_label | default: 'Bình luận' | escape }}"><i class="fa-solid fa-comment" aria-hidden="true"></i></a>
-              <button type="button" class="pc-ig-act" data-ig-share data-title="{{ article.title | escape }}" aria-label="{{ settings.feed_share_label | default: 'Chia sẻ' | escape }}"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
-              <button type="button" class="pc-ig-act pc-ig-act--save" data-ig-save aria-pressed="false" aria-label="{{ settings.feed_save_label | default: 'Lưu bài' | escape }}"><i class="fa-regular fa-bookmark" aria-hidden="true"></i></button>
+              <button type="button" class="pc-ig-act" data-ig-like aria-pressed="false" aria-label="{{ settings.feed_like_label | default: 'Thích' | escape }}"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'heart', size: 'em' %}</i></button>
+              <a class="pc-ig-act" href="{{ article.url }}{% if pc_ig_kb.comments_enabled %}#article_comments{% endif %}" aria-label="{{ settings.feed_comment_label | default: 'Bình luận' | escape }}"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'message-circle', size: 'em' %}</i></a>
+              <button type="button" class="pc-ig-act" data-ig-share data-title="{{ article.title | escape }}" aria-label="{{ settings.feed_share_label | default: 'Chia sẻ' | escape }}"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'send', size: 'em' %}</i></button>
+              <button type="button" class="pc-ig-act pc-ig-act--save" data-ig-save aria-pressed="false" aria-label="{{ settings.feed_save_label | default: 'Lưu bài' | escape }}"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'bookmark', size: 'em' %}</i></button>
             </div>
             <div class="pc-ig-post__caption">
               <a class="pc-ig-post__title" href="{{ article.url }}"><strong>{{ pc_ig_name | escape }}</strong> {{ article.title | escape }}</a>
@@ -176,9 +179,11 @@
     {%- if pc_ig_n == 0 -%}<p class="pc-ig-empty">{{ settings.feed_empty_text | default: 'Chuyên mục đang cập nhật bài viết.' | escape }}</p>{%- endif -%}
   </div>
   {%- if pc_ig_n > pc_ig_page -%}
-  <div class="pc-ig-more"><button type="button" class="pc-ig-more__btn" data-ig-more data-step="{{ pc_ig_page }}">{{ settings.feed_load_more | default: 'Xem thêm bài viết' | escape }} <i class="fa-solid fa-arrow-down" aria-hidden="true"></i></button></div>
+  <div class="pc-ig-more"><button type="button" class="pc-ig-more__btn" data-ig-more data-step="{{ pc_ig_page }}">{{ settings.feed_load_more | default: 'Xem thêm bài viết' | escape }} <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-down', size: 'em' %}</i></button></div>
   {%- endif -%}
   <div class="pc-ig-toast" role="status" aria-live="polite" hidden></div>
+  {%- comment -%} L03b12 (01/11/2026): SVG icon tim / lưu (viền + tô đặc) cho JS đổi trạng thái — thay cách đổi class Font Awesome (viền/đặc) cũ. {%- endcomment -%}
+  <template data-ig-icons><span data-k="heart">{% include 'ui_icon', name: 'heart', size: 'em' %}</span><span data-k="heart-filled">{% include 'ui_icon', name: 'heart-filled', size: 'em' %}</span><span data-k="bookmark">{% include 'ui_icon', name: 'bookmark', size: 'em' %}</span><span data-k="bookmark-filled">{% include 'ui_icon', name: 'bookmark-filled', size: 'em' %}</span></template>
 </div>
 <script>
   /* 2026-10-18: tim / lưu ghi trên máy người xem (localStorage, không hiện số lượt); chia sẻ = Web Share API, không có ⇒ chép link. */
@@ -188,12 +193,14 @@
     function write(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
     var toast = document.querySelector('.pc-ig-toast'), tt;
     function say(msg) { if (!toast) return; toast.textContent = msg; toast.hidden = false; clearTimeout(tt); tt = setTimeout(function () { toast.hidden = true; }, 1800); }
+    var tplIcons = document.querySelector('template[data-ig-icons]');
+    function svgOf(k) { var s = tplIcons && tplIcons.content.querySelector('[data-k="' + k + '"]'); return s ? s.innerHTML : ''; }
     function bind(sel, key, on, off, msgOn) {
       var list = read(key);
       document.querySelectorAll('[data-ig-post]').forEach(function (post) {
         var btn = post.querySelector(sel), url = post.getAttribute('data-ig-post'), icon = btn && btn.querySelector('i');
         if (!btn) return;
-        function paint(v) { btn.setAttribute('aria-pressed', v ? 'true' : 'false'); btn.classList.toggle('is-on', v); icon.className = (v ? 'fa-solid ' : 'fa-regular ') + (v ? on : off); }
+        function paint(v) { btn.setAttribute('aria-pressed', v ? 'true' : 'false'); btn.classList.toggle('is-on', v); var h = svgOf(v ? on : off); if (icon && h) icon.innerHTML = h; }
         paint(list.indexOf(url) > -1);
         btn.addEventListener('click', function () {
           list = read(key); var i = list.indexOf(url), v = i < 0;
@@ -203,8 +210,8 @@
         });
       });
     }
-    bind('[data-ig-like]', KEY_L, 'fa-heart', 'fa-heart', '');
-    bind('[data-ig-save]', KEY_S, 'fa-bookmark', 'fa-bookmark', {{ settings.feed_saved_toast | default: 'Đã lưu bài viết' | json }});
+    bind('[data-ig-like]', KEY_L, 'heart-filled', 'heart', '');
+    bind('[data-ig-save]', KEY_S, 'bookmark-filled', 'bookmark', {{ settings.feed_saved_toast | default: 'Đã lưu bài viết' | json }});
     /* 2026-10-18: video tự phát (tắt tiếng, lặp) khi bài vào màn hình — chỉ nạp iframe lúc đó, gỡ khi ra khỏi; tắt khi giảm chuyển động. */
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
       var vio = new IntersectionObserver(function (entries) {

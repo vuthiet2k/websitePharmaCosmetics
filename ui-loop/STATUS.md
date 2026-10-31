@@ -1,4 +1,12 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 69 (01/11/2026) · Việc vừa làm: L03b12 → DONE (lần thử đầu) — L03b phần 12: gỡ Font Awesome ở trang blog dạng Instagram (blog.instagram-feed, 12 lượt trong mã / 73 phần tử trên trang).
+checks/L03b12.mjs 84 ✔ / 0 ✗ (7 khung): `<i fa->` 73 → 0; icon nhìn thấy before = after (73/74); lệch tâm ≤ 2,1px; cha đổi cỡ ≤ 2,0px; cao icon 1,00; màu ΔRGB 0; cao trang lệch 0px;
+tim / lưu (viền ↔ đặc, toast, giữ sau tải lại) + Tab = before; 0 lỗi JS; ảnh đã xem. ui_icon thêm path Lucide bookmark + bookmark-filled; JS lấy SVG từ <template data-ig-icons>. build:sapo + ui-guard PASS (faIcon 94 → 82, --tighten 1 mốc);
+--quick 7 trang 0 lỗi mới, --write-baseline. Thêm N35 (đợt 7: nút hành động bài .pc-ig-act không có viền focus — có từ trước).
+Việc tiếp theo: L03b (phần 13 — còn 82 lượt FA: article 11, product 6, page.skinhealthy-service-detail 5, page.order-lookup 5, page.clinical-proof 5, page.chuyen-gia-detail 5…), L03c, L11, L37.
+Tổng (đếm cột Trạng thái BACKLOG): 103 việc · DONE 46 · TODO 57 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick 7 trang)
+Câu hỏi cho chủ dự án: không có mới.
 Vòng: 68 (01/11/2026) · Việc vừa làm: L03b11 → DONE 3c03ca6 (lần thử đầu) — L03b phần 11: gỡ Font Awesome ở trang Giới thiệu /about-us (page.about-us, 13 lượt trong mã / 20 phần tử trên trang).
 checks/L03b11.mjs 84 ✔ / 0 ✗ (7 khung): `<i fa->` 20 → 0; icon nhìn thấy before = after (20/21); lệch tâm ≤ 2,9px; cha đổi cỡ ≤ 3,7px; cao icon 1,00; màu ΔRGB 0; cao trang lệch 0px;
 rail «Đội ngũ» + Tab nút hero/Zalo = before; 0 lỗi JS; ảnh đã xem. ui_icon thêm path Lucide hospital + ánh xạ clinic-medical/house-medical/shield-virus. build:sapo + ui-guard PASS (faIcon 108 → 94, --tighten 1 mốc);
