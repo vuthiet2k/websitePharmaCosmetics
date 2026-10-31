@@ -1,4 +1,13 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 70 (01/11/2026) · Việc vừa làm: L03b13 → DONE (lần thử đầu) — L03b phần 13: gỡ Font Awesome ở trang bài viết (templates/article.bwt, 10 lượt faIcon; 3 bài: chuyên gia flagship / chuyên gia khác / không chuyên gia).
+checks/L03b13.mjs 252 ✔ / 0 ✗ (3 bài × 7 khung): `<i fa->` 7/6/6 → 0; icon nhìn thấy before = after; lệch tâm ≤ 1,4px; cha đổi cỡ ≤ 1,5px; cao icon 1,00; màu ΔRGB 0; cao trang lệch 0px;
+nút Thích (viền ↔ đặc, tải lại giữ) + Tab + link hồ sơ = before; 0 lỗi JS; ảnh đã xem. ui_icon thêm path Lucide thumbs-up + thumbs-up-filled, globe. build:sapo + ui-guard PASS (faIcon 82 → 72, --tighten 1 mốc).
+--quick 9 trang: 2 lỗi «mới» chỉ ở webkit390 /collections/all (touch<44 90 → 120, noName 24 → 40) ở 5/5 lượt, lượt đối chứng bản HEAD 559a87f cũng vậy ⇒ không do L03b13; --write-baseline nâng mốc đó ⇒ đã git restore baseline, vòng này KHÔNG ghi baseline.
+Thêm N36 (đợt 7: nút Thích/Chia sẻ `.pc-fbm-act` không có viền focus — có từ trước), N37 (đợt 2: mốc baseline webkit390 /collections/all 90/24 lệch số đo ổn định 120/40 = m390).
+Việc tiếp theo: N37 (đợt 2 — TODO đầu tiên theo đợt, chặn cổng --quick của mọi việc có /collections/all), L03b (phần 14 — còn 72 lượt FA: product 6, page.skinhealthy-service-detail 5, page.order-lookup 5, page.clinical-proof 5, page.chuyen-gia-detail 5…), L03c, L11, L37.
+Tổng (đếm cột Trạng thái BACKLOG): 106 việc · DONE 47 · TODO 59 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 2 (webkit390 /collections/all — có cả ở HEAD, N37)
+Câu hỏi cho chủ dự án: N37 — mốc webkit390 /collections/all trong baseline (90/24) thấp hơn số đo ổn định hiện nay (120/40 = Chromium m390, đúng như N28 nhắm tới); cho phép ghi mốc 120/40 bằng --write-baseline (thực chất là nâng mốc) hay phải tìm vì sao trước đây WebKit đếm 90?
 Vòng: 69 (01/11/2026) · Việc vừa làm: L03b12 → DONE 559a87f (lần thử đầu) — L03b phần 12: gỡ Font Awesome ở trang blog dạng Instagram (blog.instagram-feed, 12 lượt trong mã / 73 phần tử trên trang).
 checks/L03b12.mjs 84 ✔ / 0 ✗ (7 khung): `<i fa->` 73 → 0; icon nhìn thấy before = after (73/74); lệch tâm ≤ 2,1px; cha đổi cỡ ≤ 2,0px; cao icon 1,00; màu ΔRGB 0; cao trang lệch 0px;
 tim / lưu (viền ↔ đặc, toast, giữ sau tải lại) + Tab = before; 0 lỗi JS; ảnh đã xem. ui_icon thêm path Lucide bookmark + bookmark-filled; JS lấy SVG từ <template data-ig-icons>. build:sapo + ui-guard PASS (faIcon 94 → 82, --tighten 1 mốc);

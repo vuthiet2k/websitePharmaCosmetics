@@ -98,15 +98,15 @@
 							    <div class="flex items-center gap-2 flex-wrap">
 							      <span class="text-sm font-bold text-forest-900 font-heading">{{ article_author_doctor.title }}</span>
 							      {%- if pc_ex_handle == pc_ex_flagship -%}
-							      <span class="pc-kit-badge-clinical text-[10px]"><i class="fa-solid fa-check" aria-hidden="true"></i> Hội đồng Chuyên môn</span>
+							      <span class="pc-kit-badge-clinical text-[10px]"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'check', size: 'em' %}</i> Hội đồng Chuyên môn</span>
 							      {%- endif -%}
 							    </div>
 							    {%- if pc_ex_title != blank -%}<p class="text-xs text-gray-500">{{ pc_ex_title }}</p>{%- endif -%}
-							    <a href="{% if pc_ex_handle == pc_ex_flagship %}/chuyen-gia-detail{% else %}{{ article_author_doctor.url }}{% endif %}" class="text-xs font-semibold text-emerald-700 hover:underline">Xem hồ sơ đầy đủ <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+							    <a href="{% if pc_ex_handle == pc_ex_flagship %}/chuyen-gia-detail{% else %}{{ article_author_doctor.url }}{% endif %}" class="text-xs font-semibold text-emerald-700 hover:underline">Xem hồ sơ đầy đủ <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-right', size: 'em' %}</i></a>
 							  </div>
 							  {%- else -%}
 							  <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center flex-shrink-0">
-							    <i class="fa-solid fa-user-doctor" aria-hidden="true"></i>
+							    <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'stethoscope', size: 'em' %}</i>
 							  </div>
 							  <div>
 							    <span class="text-sm font-bold text-forest-900 font-heading">{{ article.author }}</span>
@@ -128,8 +128,8 @@
 									{%- endif -%}
 								</span>
 								<span class="pc-fbm-author__who">
-									<span class="pc-fbm-author__name">{%- if article_author_doctor -%}{{ article_author_doctor.title }}{%- else -%}{{ article.author | default: settings.store_name | default: store.name }}{%- endif -%} <i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
-									<span class="pc-fbm-author__sub">{{ article.published_on | date: 'dd/MM/yyyy' }} · {{ blog.title }} · <i class="fa-solid fa-earth-asia" aria-hidden="true"></i></span>
+									<span class="pc-fbm-author__name">{%- if article_author_doctor -%}{{ article_author_doctor.title }}{%- else -%}{{ article.author | default: settings.store_name | default: store.name }}{%- endif -%} <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'circle-check', size: 'em' %}</i></span>
+									<span class="pc-fbm-author__sub">{{ article.published_on | date: 'dd/MM/yyyy' }} · {{ blog.title }} · <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'globe', size: 'em' %}</i></span>
 								</span>
 							</div>
 							{%- comment -%} 2026-10-07: ngày đăng kiểu "Thứ Bảy, 12/04/2026" — thứ không nhận ra thì chỉ in ngày (trước đây in lặp "Thứ 12/4/2026 12/4/2026"). {%- endcomment -%}
@@ -237,10 +237,13 @@
 							{%- if pc_vs_src == '' and article.image.src != blank -%}
 							<div class="pc-fbm-media"><img src="{{ article.image.src | img_url: 'grande' }}" alt="{{ article.image.alt | default: article.title | escape }}" width="600" height="600" fetchpriority="high"></div>
 							{%- endif -%}
+							{%- comment -%} L03b13 (01/11/2026): icon FA → ui_icon size 'em' trong <i> bọc cũ (comment → message-circle, share → forward, earth-asia → globe,
+							  user-doctor → stethoscope); nút Thích đã bật = thumbs-up-filled, JS lấy SVG từ <template data-fbm-icons>. {%- endcomment -%}
 							<div class="pc-fbm-actions" data-fbm>
-								<button type="button" class="pc-fbm-act" data-fbm-like aria-pressed="false"><i class="fa-regular fa-thumbs-up" aria-hidden="true"></i> {{ settings.fbm_like_label | default: 'Thích' }}</button>
-								<a class="pc-fbm-act" href="{% if blog.comments_enabled %}#article_comments{% else %}{{ settings.fbm_comment_url | default: '/dat-lich-tu-van' }}{% endif %}"><i class="fa-regular fa-comment" aria-hidden="true"></i> {% if blog.comments_enabled %}{{ settings.fbm_comment_label | default: 'Bình luận' }}{% else %}{{ settings.fbm_ask_label | default: 'Hỏi chuyên gia' }}{% endif %}</a>
-								<button type="button" class="pc-fbm-act" data-fbm-share data-title="{{ article.title | escape }}"><i class="fa-solid fa-share" aria-hidden="true"></i> {{ settings.fbm_share_label | default: 'Chia sẻ' }}</button>
+								<template data-fbm-icons><span data-k="thumbs-up">{% include 'ui_icon', name: 'thumbs-up', size: 'em' %}</span><span data-k="thumbs-up-filled">{% include 'ui_icon', name: 'thumbs-up-filled', size: 'em' %}</span></template>
+								<button type="button" class="pc-fbm-act" data-fbm-like aria-pressed="false"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'thumbs-up', size: 'em' %}</i> {{ settings.fbm_like_label | default: 'Thích' }}</button>
+								<a class="pc-fbm-act" href="{% if blog.comments_enabled %}#article_comments{% else %}{{ settings.fbm_comment_url | default: '/dat-lich-tu-van' }}{% endif %}"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'message-circle', size: 'em' %}</i> {% if blog.comments_enabled %}{{ settings.fbm_comment_label | default: 'Bình luận' }}{% else %}{{ settings.fbm_ask_label | default: 'Hỏi chuyên gia' }}{% endif %}</a>
+								<button type="button" class="pc-fbm-act" data-fbm-share data-title="{{ article.title | escape }}"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'forward', size: 'em' %}</i> {{ settings.fbm_share_label | default: 'Chia sẻ' }}</button>
 							</div>
 						</header>
 						<div class="article-details pc-art-card pc-art-body clearfix">
@@ -707,8 +710,11 @@
   (function () {
     var bar = document.querySelector('[data-fbm]'); if (!bar) return;
     var like = bar.querySelector('[data-fbm-like]'), key = 'pc_fbm_like', url = location.pathname;
+    /* L03b13 (01/11/2026): icon Thích viền ↔ đặc = SVG ui_icon lấy từ <template data-fbm-icons> (thay đổi class Font Awesome). */
+    var ico = {}, tpl = bar.querySelector('template[data-fbm-icons]');
+    if (tpl) [].forEach.call(tpl.content.querySelectorAll('[data-k]'), function (e) { ico[e.getAttribute('data-k')] = e.innerHTML; });
     function read() { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch (e) { return []; } }
-    function paint(on) { like.classList.toggle('is-on', on); like.setAttribute('aria-pressed', on ? 'true' : 'false'); like.querySelector('i').className = (on ? 'fa-solid' : 'fa-regular') + ' fa-thumbs-up'; }
+    function paint(on) { like.classList.toggle('is-on', on); like.setAttribute('aria-pressed', on ? 'true' : 'false'); like.querySelector('i').innerHTML = ico[on ? 'thumbs-up-filled' : 'thumbs-up'] || ''; }
     paint(read().indexOf(url) > -1);
     like.addEventListener('click', function () {
       var l = read(), i = l.indexOf(url), on = i < 0; if (on) l.push(url); else l.splice(i, 1);
