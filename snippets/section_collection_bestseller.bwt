@@ -313,7 +313,9 @@ $(document).ready(function($) {
       observer.unobserve(entry.target);
       afterInject();
     });
-  }, { rootMargin: '0px 0px -200px 0px' });
+  // N28 (31/10/2026): trước đây '0px 0px -200px 0px' — chỉ chèn khi khối đã vào sâu 200px trong màn ⇒ dải kích hoạt
+  // ~726px (iPhone 13), cuộn nhanh/WebKit bỏ lỡ khung vẽ là khối trống (5/10 lượt). Nạp trước 600px để thẻ sẵn sàng khi tới.
+  }, { rootMargin: '0px 0px 600px 0px' });
 
   observer.observe($section[0]);
 });

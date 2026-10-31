@@ -1,4 +1,13 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 57 (31/10/2026) · Việc vừa làm: N28 → DONE (áp proposals/N28-bestseller.patch theo quyết định chủ dự án 31/10 — rootMargin khối «Bán chạy» −200px → +600px).
+checks/N28.mjs: WebKit iPhone 13 chèn 10/10, Chromium 390 10/10, 320/768/1024/1440/WebKit 1440/844×390 3/3; cuộn thật 8 thẻ; 0 lỗi JS; ảnh 8 khung đã xem.
+ui-verify --quick 3 lượt webkit390 /collections/all 120/40 = m390; 5 trang khác 0 lỗi mới; --write-baseline chỉ đổi mục đã duyệt (90/24 → 120/40). build:sapo + ui-guard PASS.
+Việc tiếp theo: L03b5, L03c, L11, L37 (đợt 3).
+Tổng: 91 việc · DONE 36 · TODO 52 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 1 · BLOCKED_OWNER 2
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (sau ghi mốc N28)
+Câu hỏi cho chủ dự án (giữ từ vòng 54):
+- N25 (proposals/N25.md): cho sửa `snippets/ui_icon.bwt` (KHOÁ) thêm chế độ sprite cho menu `header_nav_cate`? Hay ghi lại mốc perf và đóng N25?
+- N23 (câu 3 proposals/N23.md): LCP đặt lịch = ảnh mascot widget — cho sửa, hay gộp vào N25/L03c?
 Vòng: 56 (31/10/2026) · Việc vừa làm: L03b4 → DONE ae6e18e (L03b phần 4 — gỡ Font Awesome ở trang sản phẩm: sao đầy/nửa, nút Mua ngay, nút khối chuyên gia, popup trả góp).
 7 khung Chromium + WebKit × 2 trang SP + popup trả góp mở: `<i fa->` 6/7 + 2 → 0; icon nhìn thấy before = after; lệch tâm ≤ 2,6px; cha đổi cỡ ≤ 3,7px;
 màu ΔRGB 0; sao đầy tô 1/1, sao nửa 1/2; lượt 1 chưa đạt (hàng sao co 8,8px) ⇒ `px-px` ⇒ đạt; X popup trước là ô thiếu glyph → nay X. ui_icon thêm zap, banknote,
