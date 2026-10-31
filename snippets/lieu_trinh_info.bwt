@@ -24,14 +24,16 @@
         </dl>
         {%- comment -%} 2026-10-18: mô tả chi tiết sản phẩm mở trong modal (snippets/lieu_trinh_details.bwt). {%- endcomment -%}
         {%- if lt_product.content != blank -%}
-        <button type="button" class="lt-spec__more" data-lt-modal-open="lt-details-modal" aria-haspopup="dialog"><i class="fa-solid fa-file-lines" aria-hidden="true"></i> {{ settings.lt_details_title | default: 'Thông tin chi tiết liệu trình' | escape }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+        {%- comment -%} L03b6 (31/10/2026): icon ui_icon thay FA — `text-xs` thay quy tắc cũ `.lt-spec__more .fa-arrow-right` (12px),
+          `-mx-px` bù hộp SVG 1em rộng hơn glyph FA 0,75em ⇒ nút giữ bề rộng cũ. {%- endcomment -%}
+        <button type="button" class="lt-spec__more" data-lt-modal-open="lt-details-modal" aria-haspopup="dialog"><i class="inline-block leading-none -mx-px" aria-hidden="true">{% include 'ui_icon', name: 'file-text', size: 'em' %}</i> {{ settings.lt_details_title | default: 'Thông tin chi tiết liệu trình' | escape }} <i class="inline-block leading-none text-xs -mx-px" aria-hidden="true">{% include 'ui_icon', name: 'arrow-right', size: 'em' %}</i></button>
         {%- endif -%}
       </div>
       <div class="lt-booking">
         <h3 class="lt-booking__title">{{ settings.lt_booking_title | escape }}</h3>
         <div class="lt-actions">
-          <a href="{{ lt_cta_url | escape }}" class="lt-btn lt-btn--primary"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> {{ lt_cta_text | escape }}</a>
-          {%- if lt_phone != blank -%}<a href="tel:{{ lt_phone | remove: ' ' | remove: '.' }}" class="lt-btn lt-btn--light"><i class="fa-solid fa-phone" aria-hidden="true"></i> {{ lt_phone | escape }}</a>{%- endif -%}
+          <a href="{{ lt_cta_url | escape }}" class="lt-btn lt-btn--primary"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'calendar-check', size: 'em' %}</i> {{ lt_cta_text | escape }}</a>
+          {%- if lt_phone != blank -%}<a href="tel:{{ lt_phone | remove: ' ' | remove: '.' }}" class="lt-btn lt-btn--light"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'phone', size: 'em' %}</i> {{ lt_phone | escape }}</a>{%- endif -%}
         </div>
         {%- if settings.lt_brand_lines != blank -%}
         <div class="lt-brand">
@@ -45,7 +47,7 @@
 </section>
 {%- if settings.lt_sticky_cta -%}
 <div id="peel-mobile-sticky-cta" class="lt-sticky" aria-hidden="true">
-  {%- if lt_phone != blank -%}<a href="tel:{{ lt_phone | remove: ' ' | remove: '.' }}" class="lt-btn lt-btn--light" tabindex="-1"><i class="fa-solid fa-phone" aria-hidden="true"></i> Hotline</a>{%- endif -%}
-  <a href="{{ lt_cta_url | escape }}" class="lt-btn lt-btn--primary" tabindex="-1"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> {{ lt_cta_text | escape }}</a>
+  {%- if lt_phone != blank -%}<a href="tel:{{ lt_phone | remove: ' ' | remove: '.' }}" class="lt-btn lt-btn--light" tabindex="-1"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'phone', size: 'em' %}</i> Hotline</a>{%- endif -%}
+  <a href="{{ lt_cta_url | escape }}" class="lt-btn lt-btn--primary" tabindex="-1"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'calendar-check', size: 'em' %}</i> {{ lt_cta_text | escape }}</a>
 </div>
 {%- endif -%}

@@ -1,4 +1,17 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 59 (31/10/2026) · Việc vừa làm: L03b6 → DONE (L03b phần 6 — gỡ Font Awesome ở trang liệu trình: 9 snippet lieu_trinh_*, gồm thẻ danh mục liệu trình).
+checks/L03b6.mjs 658 ✔ / 0 ✗ (lượt 2): 7 khung Chromium + WebKit × 2 trang × 3 trạng thái + /collections/dieu-tri-chuyen-nghiep — <i fa-> 31/9/1 → 0; icon nhìn thấy before = after;
+lệch tâm ≤ 2,3px; cha đổi cỡ ≤ 3,4px; màu ΔRGB 0; cao trang lệch ≤ 2px; thanh dính, FAQ, popup X, Tab/Enter nút banner như before; 0 lỗi JS; ảnh đã xem.
+Lượt 1 chưa đạt (nút «Thông tin chi tiết» +7px, 320px ô phác đồ hết xuống dòng −19px) ⇒ utility -mx-px / text-xs / px-0.5 ⇒ đạt. faIcon 239 → 214; build:sapo + ui-guard PASS;
+--quick 9 trang 0 lỗi mới 2/2 lượt (lượt 2 --write-baseline). ui_icon thêm 7 path Lucide (phạm vi L03b đã duyệt).
+Việc tiếp theo: L03b tiếp (phần 7: còn 214 lượt FA — trang nội dung, khảo sát da, PDP phần chưa có dữ liệu mẫu…), L03c, L11, L37 (đợt 3).
+Tổng (đếm cột Trạng thái BACKLOG): 93 việc · DONE 39 · TODO 54 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+LỆCH SỔ cần vòng sau đối chiếu trước khi chọn việc (bước 10): BACKLOG N23 = DONE nhưng E.7 = ⛔ Bị chặn (lần 4); BACKLOG N25 = TODO nhưng E.7 = ❓ Chờ chủ dự án
+(STATUS các vòng trước ghi BLOCKED 1 · BLOCKED_OWNER 2 — không khớp cột BACKLOG). Xem ui-loop/reports/N23*, N25* + proposals/N25.md.
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick 9 trang)
+Câu hỏi cho chủ dự án: ĐÃ TRẢ LỜI 31/10/2026 (thấy ở vòng 59, ghi trong proposals N23.md / N25.md — chủ dự án chưa commit, vòng 59 không add):
+- N25: phương án (a) — được sửa `snippets/ui_icon.bwt` thêm chế độ sprite (`<symbol>` 1 lần + `<use>`) cho menu `header_nav_cate` ⇒ N25 làm được (TODO).
+- N23: đóng N23 (phần login đạt); ảnh mascot đặt lịch gộp vào L03c; dung lượng HTML/menu thuộc N25 ⇒ vòng sau đồng bộ BACKLOG/E.7 N23 theo quyết định.
 Vòng: 58 (31/10/2026) · Việc vừa làm: L03b5 → DONE (L03b phần 5 — gỡ Font Awesome ở trang giỏ hàng: cart.bwt + khối phác đồ cart_skin_plan, kể cả icon JS qua <template>).
 checks/L03b5.mjs 196 ✔ / 0 ✗: 7 khung Chromium + WebKit × 2 trạng thái khối phác đồ, giỏ 2 SP mẫu — <i fa-> 16/17 → 0; icon nhìn thấy before = after; lệch tâm ≤ 2,5px; cha đổi cỡ ≤ 3,8px;
 màu ΔRGB 0; ship JS «Miễn phí» SVG 14px; Tab «Tiếp tục mua hàng» viền 2px, Enter đúng href; 0 lỗi JS; ảnh đã xem. ui_icon thêm 9 path Lucide; settings_data không đổi (chỉ info schema cart_trust_icons).
@@ -7,8 +20,8 @@ Việc tiếp theo: L03b tiếp (phần 6: liệu trình, trang nội dung, kh�
 Tổng: 92 việc · DONE 37 · TODO 52 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 1 · BLOCKED_OWNER 2
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick 6 trang)
 Câu hỏi cho chủ dự án (giữ từ vòng 54):
-- N25 (proposals/N25.md): cho sửa `snippets/ui_icon.bwt` (KHOÁ) thêm chế độ sprite cho menu `header_nav_cate`? Hay ghi lại mốc perf và đóng N25?
-- N23 (câu 3 proposals/N23.md): LCP đặt lịch = ảnh mascot widget — cho sửa, hay gộp vào N25/L03c?
+- N25: ĐÃ TRẢ LỜI 31/10/2026 — chọn (a): được sửa ui_icon.bwt thêm chế độ sprite cho menu header_nav_cate. N25 về TODO.
+- N23: ĐÃ TRẢ LỜI 31/10/2026 — đóng N23 (login đạt); phần ảnh mascot đặt lịch gộp vào L03c.
 Vòng: 57 (31/10/2026) · Việc vừa làm: N28 → DONE 1f1ae41 (áp proposals/N28-bestseller.patch theo quyết định chủ dự án 31/10 — rootMargin khối «Bán chạy» −200px → +600px).
 checks/N28.mjs: WebKit iPhone 13 chèn 10/10, Chromium 390 10/10, 320/768/1024/1440/WebKit 1440/844×390 3/3; cuộn thật 8 thẻ; 0 lỗi JS; ảnh 8 khung đã xem.
 ui-verify --quick 3 lượt webkit390 /collections/all 120/40 = m390; 5 trang khác 0 lỗi mới; --write-baseline chỉ đổi mục đã duyệt (90/24 → 120/40). build:sapo + ui-guard PASS.

@@ -6,7 +6,8 @@
 {%- assign lt_any = false -%}
 {%- if lt_buoc1 != blank or lt_buoc2 != blank or lt_buoc3 != blank or lt_buoc4 != blank or lt_buoc5 != blank -%}{%- assign lt_any = true -%}{%- endif -%}
 {%- if settings.lt_step_1_image != blank or settings.lt_step_2_image != blank or settings.lt_step_3_image != blank or settings.lt_step_4_image != blank or settings.lt_step_5_image != blank -%}{%- assign lt_any = true -%}{%- endif -%}
-{%- assign lt_icons = 'fa-microscope,fa-pump-soap,fa-wand-magic-sparkles,fa-shield-heart,fa-chart-line' | split: ',' -%}
+{%- comment -%} L03b6 (31/10/2026): icon bước = SVG ui_icon (bỏ Font Awesome: microscope, pump-soap, wand-magic-sparkles, shield-heart,
+  chart-line) — chọn theo số bước bằng case (A.6: không truy cập mảng bằng chỉ số biến). {%- endcomment -%}
 <section id="service-steps-section" class="lt-section lt-section--white">
   <div class="container">
     <header class="lt-head">
@@ -23,7 +24,7 @@
       {%- if settings[k_title] != blank -%}
       {%- assign lt_st = settings[k_title] | replace: '[ten]', lt_short -%}
       <li class="lt-card lt-step">
-        {%- if lt_si != blank -%}<div class="lt-media lt-media--4x3"><img src="{{ lt_si | img_url: 'large' }}" alt="{{ lt_st | escape }}" width="1200" height="900" loading="lazy" decoding="async"></div>{%- elsif lt_any -%}{%- assign lt_ix = i | minus: 1 -%}<div class="lt-media lt-media--4x3 lt-media--icon"><i class="fa-solid {{ lt_icons[lt_ix] }}" aria-hidden="true"></i></div>{%- endif -%}
+        {%- if lt_si != blank -%}<div class="lt-media lt-media--4x3"><img src="{{ lt_si | img_url: 'large' }}" alt="{{ lt_st | escape }}" width="1200" height="900" loading="lazy" decoding="async"></div>{%- elsif lt_any -%}{%- case i -%}{%- when 1 -%}{%- assign lt_sicon = 'microscope' -%}{%- when 2 -%}{%- assign lt_sicon = 'soap-dispenser-droplet' -%}{%- when 3 -%}{%- assign lt_sicon = 'wand-sparkles' -%}{%- when 4 -%}{%- assign lt_sicon = 'shield-check' -%}{%- else -%}{%- assign lt_sicon = 'chart-line' -%}{%- endcase -%}<div class="lt-media lt-media--4x3 lt-media--icon"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: lt_sicon, size: 'em' %}</i></div>{%- endif -%}
         <div class="lt-card__body">
           <span class="lt-num">Bước 0{{ i }}</span>
           <h3 class="lt-card__title">{{ lt_st | escape }}</h3>
