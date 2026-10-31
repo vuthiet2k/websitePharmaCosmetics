@@ -1,5 +1,5 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 68 (01/11/2026) · Việc vừa làm: L03b11 → DONE (lần thử đầu) — L03b phần 11: gỡ Font Awesome ở trang Giới thiệu /about-us (page.about-us, 13 lượt trong mã / 20 phần tử trên trang).
+Vòng: 68 (01/11/2026) · Việc vừa làm: L03b11 → DONE 3c03ca6 (lần thử đầu) — L03b phần 11: gỡ Font Awesome ở trang Giới thiệu /about-us (page.about-us, 13 lượt trong mã / 20 phần tử trên trang).
 checks/L03b11.mjs 84 ✔ / 0 ✗ (7 khung): `<i fa->` 20 → 0; icon nhìn thấy before = after (20/21); lệch tâm ≤ 2,9px; cha đổi cỡ ≤ 3,7px; cao icon 1,00; màu ΔRGB 0; cao trang lệch 0px;
 rail «Đội ngũ» + Tab nút hero/Zalo = before; 0 lỗi JS; ảnh đã xem. ui_icon thêm path Lucide hospital + ánh xạ clinic-medical/house-medical/shield-virus. build:sapo + ui-guard PASS (faIcon 108 → 94, --tighten 1 mốc);
 --quick 7 trang 0 lỗi mới, --write-baseline. Thông báo gửi form thành công/lỗi không dựng được ở preview — chỉ kiểm qua mã.
