@@ -1,4 +1,15 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 49 (31/10/2026) · Việc vừa làm: N26 → DONE: nút header «Danh mục», «Tìm kiếm» bị tắt viền focus (vendor_bootstrap outline:none!important);
+viền cũ #3CB371 chỉ 2,67:1 ⇒ thu hẹp 5 quy tắc cũ bằng :not(:where(…)) (độ ưu tiên giữ) để viền thư viện tokens.css áp dụng: 2px rgb(7,91,64),
+nền trắng 8,14:1, nền nút 7,38:1 ở 8 khung Chromium+WebKit; Enter/Escape trả focus đúng; 0 lỗi JS. focusNoRing d1440 /collections/all 19 (4/4 lượt,
+trước 21); --quick 6 trang 0 lỗi mới — reports/N26.md. Thêm N27 (đợt 2: viền focus chung #3CB371 2,67:1 trên nền trắng), N28 (đợt 2: webkit390
+/collections/all touch<44 / noName dao động cùng mã — có cả khi gỡ N26).
+Việc tiếp theo: N27, N28 (đợt 2), rồi N25, L03b, L03c, L11, L37.
+Tổng: 86 việc · DONE 32 · TODO 53 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 1 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick)
+Câu hỏi cho chủ dự án (giữ từ vòng 48):
+- N23: áp dụng bản vá chỉ-môi-trường `ui-loop/proposals/N23-dev-server.patch` (stub JS 3 script Sapo ở preview) không?
+- N23/N25: số đo tốc độ local dao động > 45 % cùng mã. Chạy vòng lặp khi máy rảnh, hay cho phép --perf ≥ 2 lượt cách nhau, lấy lượt tốt nhất?
 Vòng: 48 (31/10/2026) · Việc vừa làm: N23 → BLOCKED (lần 3 chưa đạt, không sửa mã theme). probe-ttfb: đặt lịch 2 096–2 259, login
 2 094–2 159, / 2 568–2 958 ms; ui-verify --perf 03:26 (có stub, chạy > 10 phút): 10/10 trang vượt baseline — login LCP 16 204 > 14 507,
 đặt lịch 22 768 > 8 483, /soi-da 35 544 ms ⇒ máy đo vẫn nhiễu. Đã `git restore dev-server.js`; bản vá stub (login LCP 16 652 → 11 280 ms
