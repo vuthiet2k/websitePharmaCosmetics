@@ -1,4 +1,14 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 60 (31/10/2026) · Việc vừa làm: N25 → VERIFY_FAIL (lần thử 2) — ui_icon chế độ sprite (defs|use, chủ dự án duyệt (a)) cho menu header_nav_cate.
+Đồng bộ sổ đầu vòng: E.7 N23 → ✅ đóng theo quyết định chủ dự án 31/10 (BACKLOG đã DONE); N25 E.7 ❓ → theo BACKLOG; C.2 #13 thêm tham số sprite.
+Đạt: (a) HTML 10 trang −104 KB (/ 724,2 → 620,1 KB; template 235,2 → 130,4 KB; 1 khối sprite, 0 id trùng, 0 PC-ERROR); (b) checks/N25s.mjs 8 khung (Chromium 390/320/768/1024/1440/844×390
++ WebKit iPhone 13/1440): icon menu before = after, lệch 0,00px, ảnh khác 0,00 %, aria-hidden 100 %, Escape + trả focus như before, 0 lỗi JS, ảnh đã xem; (d) build:sapo + ui-guard PASS, --quick 8 trang 0 lỗi mới.
+Chưa đạt: (c) --perf 13:30 + 13:39 lấy tốt nhất — 6/9 trang còn vượt baseline ×1,1 (/ 11 088, giỏ 9 304, PDP 9 588, /tin-tuc 9 912, retinol 9 436, /skinhealthy-services 8 456);
+FCP 7,1–10,3 s chậm hơn vòng 54 (~6,7 s) dù HTML nhỏ hơn ⇒ nghi máy đo bận. Mã ui_icon.bwt + bean-menu-cate.bwt GIỮ trong cây làm việc, CHƯA commit.
+Việc tiếp theo: N25 lần 3 — đo TTFB + A/B xen kẽ (HTML có/không đệm 104 KB) rồi --perf ≥ 2 lượt; sau đó L03b (phần 7), L03c, L11, L37.
+Tổng (đếm cột Trạng thái BACKLOG): 93 việc · DONE 39 · TODO 53 · IN_PROGRESS 0 · VERIFY_FAIL 1 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick 8 trang); --perf: lỗi tốc độ so baseline 23/10 như trên
+Câu hỏi cho chủ dự án: không có mới. (proposals/N23.md, N25.md có quyết định 31/10 chưa commit — vòng này không add.)
 Vòng: 59 (31/10/2026) · Việc vừa làm: L03b6 → DONE (L03b phần 6 — gỡ Font Awesome ở trang liệu trình: 9 snippet lieu_trinh_*, gồm thẻ danh mục liệu trình).
 checks/L03b6.mjs 658 ✔ / 0 ✗ (lượt 2): 7 khung Chromium + WebKit × 2 trang × 3 trạng thái + /collections/dieu-tri-chuyen-nghiep — <i fa-> 31/9/1 → 0; icon nhìn thấy before = after;
 lệch tâm ≤ 2,3px; cha đổi cỡ ≤ 3,4px; màu ΔRGB 0; cao trang lệch ≤ 2px; thanh dính, FAQ, popup X, Tab/Enter nút banner như before; 0 lỗi JS; ảnh đã xem.
