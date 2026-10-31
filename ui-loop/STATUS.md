@@ -1,5 +1,5 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 69 (01/11/2026) · Việc vừa làm: L03b12 → DONE (lần thử đầu) — L03b phần 12: gỡ Font Awesome ở trang blog dạng Instagram (blog.instagram-feed, 12 lượt trong mã / 73 phần tử trên trang).
+Vòng: 69 (01/11/2026) · Việc vừa làm: L03b12 → DONE 559a87f (lần thử đầu) — L03b phần 12: gỡ Font Awesome ở trang blog dạng Instagram (blog.instagram-feed, 12 lượt trong mã / 73 phần tử trên trang).
 checks/L03b12.mjs 84 ✔ / 0 ✗ (7 khung): `<i fa->` 73 → 0; icon nhìn thấy before = after (73/74); lệch tâm ≤ 2,1px; cha đổi cỡ ≤ 2,0px; cao icon 1,00; màu ΔRGB 0; cao trang lệch 0px;
 tim / lưu (viền ↔ đặc, toast, giữ sau tải lại) + Tab = before; 0 lỗi JS; ảnh đã xem. ui_icon thêm path Lucide bookmark + bookmark-filled; JS lấy SVG từ <template data-ig-icons>. build:sapo + ui-guard PASS (faIcon 94 → 82, --tighten 1 mốc);
 --quick 7 trang 0 lỗi mới, --write-baseline. Thêm N35 (đợt 7: nút hành động bài .pc-ig-act không có viền focus — có từ trước).
