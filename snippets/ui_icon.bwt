@@ -12,7 +12,21 @@
     của thẻ bọc vẫn áp dụng (CSS cũ đóng băng R1, không viết lại được).
   · name nhận cả giá trị cũ dạng class FA (vd "fa-solid fa-house", "fa-house") — cấu hình settings đang lưu trên Sapo không vỡ:
     lấy từ cuối, bỏ tiền tố "fa-", rồi đổi tên FA sang tên ui_icon theo bảng dưới. {%- endcomment -%}
-{%- assign pc_icon_name = name | strip | split: ' ' | last | remove_first: 'fa-' -%}
+{%- comment -%} N25 (31/10/2026, chủ dự án duyệt phương án (a) — ui-loop/proposals/N25.md): chế độ sprite cho nơi lặp nhiều icon (menu header_nav_cate
+  252 SVG nội tuyến ≈ 235 KB HTML trên mọi trang).
+  · sprite = 'defs', name = 'menu,layers' (nhiều tên, phẩy) ⇒ 1 khối <svg data-pc-sprite> ẩn (sr-only) chứa <symbol id="pc-i-<tên>"> — khai báo 1 LẦN/trang,
+    đặt NGOÀI template JS (template chèn bằng innerHTML phải thấy symbol trong DOM thật). Thuộc tính nét (fill/stroke…) nằm trên <symbol>.
+  · sprite = 'use' ⇒ <svg …><use href="#pc-i-<tên>"/></svg> (cùng class/cỡ/aria như chế độ thường) — trang phải có khối defs chứa tên đó.
+    Bỏ viewBox (symbol đã có, tự co theo width/height của svg) và focusable (chỉ IE) để gọn HTML — mỗi byte nhân 252 lần.
+  · Không truyền sprite ⇒ SVG nội tuyến như cũ. {%- endcomment -%}
+{%- assign pc_icon_mode = sprite | append: '' -%}
+{%- if name == blank -%}{%- assign pc_icon_list = '' | split: ',' -%}{%- elsif pc_icon_mode == 'defs' -%}{%- assign pc_icon_list = name | split: ',' -%}{%- else -%}{%- assign pc_icon_list = name | split: '~~' -%}{%- endif -%}
+{%- if name == blank -%}<!-- PC-ERROR ui_icon: thiếu name -->
+{%- elsif pc_icon_mode != '' and pc_icon_mode != 'defs' and pc_icon_mode != 'use' -%}<!-- PC-ERROR ui_icon: sprite "{{ pc_icon_mode }}" không hợp lệ -->
+{%- else -%}
+{%- if pc_icon_mode == 'defs' -%}<svg data-pc-sprite class="sr-only" width="0" height="0" aria-hidden="true" focusable="false">{%- endif -%}
+{%- for pc_icon_raw in pc_icon_list -%}
+{%- assign pc_icon_name = pc_icon_raw | strip | split: ' ' | last | remove_first: 'fa-' -%}
 {%- case pc_icon_name -%}
 {%- when 'xmark' -%}{%- assign pc_icon_name = 'x' -%}
 {%- when 'magnifying-glass' -%}{%- assign pc_icon_name = 'search' -%}
@@ -198,9 +212,14 @@
 {%- when 'loader-circle' -%}<path d="M21 12a9 9 0 1 1-6.219-8.56"/>
 {%- endcase -%}
 {%- endcapture -%}
-{%- if name == blank -%}<!-- PC-ERROR ui_icon: thiếu name -->
-{%- elsif pc_icon_paths == blank -%}<!-- PC-ERROR ui_icon: name "{{ name }}" không có trong bộ icon -->
+{%- if pc_icon_paths == blank -%}<!-- PC-ERROR ui_icon: name "{{ pc_icon_raw }}" không có trong bộ icon -->
+{%- elsif pc_icon_mode == 'defs' -%}<symbol id="pc-i-{{ pc_icon_name }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{{ pc_icon_paths }}</symbol>
 {%- elsif pc_icon_bad -%}<!-- PC-ERROR ui_icon: size "{{ pc_icon_s }}" không hợp lệ -->
+{%- elsif pc_icon_mode == 'use' -%}
+<svg class="shrink-0" width="{{ pc_icon_size }}" height="{{ pc_icon_size }}"{% if label != blank %} role="img" aria-label="{{ label | escape }}"{% else %} aria-hidden="true"{% endif %}><use href="#pc-i-{{ pc_icon_name }}"/></svg>
 {%- else -%}
 <svg xmlns="http://www.w3.org/2000/svg" class="shrink-0" width="{{ pc_icon_size }}" height="{{ pc_icon_size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"{% if label != blank %} role="img" aria-label="{{ label | escape }}"{% else %} aria-hidden="true" focusable="false"{% endif %}>{{ pc_icon_paths }}</svg>
+{%- endif -%}
+{%- endfor -%}
+{%- if pc_icon_mode == 'defs' -%}</svg>{%- endif -%}
 {%- endif -%}

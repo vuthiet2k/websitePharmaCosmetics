@@ -1,4 +1,12 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 65 (01/11/2026) · Việc vừa làm: N25 → DONE (đóng theo quyết định chủ dự án 31/10, lần 2) — áp lại proposals/N25-sprite.patch: ui_icon chế độ sprite (defs|use) cho menu header_nav_cate.
+checks/N25s.mjs 139 ✔ / 0 ✗ (before đo lại trên HEAD 44010f2 trong vòng này): (a) HTML 10 trang −102,9…−103,0 KB (/ 722,0 → 619,0 KB), template menu 233,0 → 129,3 KB, 1 khối sprite, 0 id trùng, 0 PC-ERROR;
+(b) 8 khung Chromium + WebKit: icon menu before = after, lệch 0,00px, ảnh khác 0,00 %, aria-hidden 100 %, Escape + focus như before, 0 lỗi JS; ảnh đã xem. (d) build:sapo exit 0, ui-guard PASS (--tighten 0 mốc);
+--quick 8 trang 0 lỗi mới (4 chỉ số giảm), --write-baseline. Tốc độ (c) không đo — chuyển L03c/D09 theo quyết định chủ dự án.
+Việc tiếp theo: L03 (đợt 3, TODO đầu tiên theo thứ tự BACKLOG — việc tổng, xem các phần con), L03b (phần 9 — còn 140 lượt FA), L03c, L11, L37.
+Tổng (đếm cột Trạng thái BACKLOG): 97 việc · DONE 42 · TODO 55 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick 8 trang)
+Câu hỏi cho chủ dự án: không có mới (N25 đã đóng theo quyết định 31/10, lần 2).
 Vòng: 64 (31/10/2026) · Việc vừa làm: L03b8 → DONE (lần thử đầu) — L03b phần 8: gỡ Font Awesome ở /ai-skin-quiz-results (41 lượt, kể cả icon JS).
 checks/L03b8.mjs 289 ✔ / 0 ✗ (7 khung × 4 trạng thái: trống / soi da / mở chi tiết / khảo sát): `<i fa->` 73/78/78/43 → 0; icon nhìn thấy before = after; lệch tâm ≤ 2,9px; cha đổi cỡ ≤ 3,8px;
 cao icon 0,80–1,00; màu ΔRGB 0; cao trang lệch ≤ 1px; tương tác (X cảnh báo, mở phân tích chi tiết, Tab) = before; 0 lỗi JS; ảnh đã xem. build:sapo + ui-guard PASS (faIcon 188 → 140, --tighten 2 mốc);
@@ -7,7 +15,7 @@ Việc tiếp theo: L03b (phần 9 — còn 140 lượt FA: page.indexskinhealth
 Tổng (đếm cột Trạng thái BACKLOG): 97 việc · DONE 41 · TODO 55 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 1 · BLOCKED_OWNER 0
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick 7 trang)
 Câu hỏi cho chủ dự án (giữ từ vòng 61):
-- N25: áp lại ui-loop/proposals/N25-sprite.patch (HTML −104 KB/trang, icon không đổi) dù tiêu chí tốc độ (c) chưa đạt — hay giữ BLOCKED tới khi L03c/D09 giảm CSS/JS chặn?
+- N25: ĐÃ TRẢ LỜI 31/10/2026 (lần 2) — chọn (a): áp lại N25-sprite.patch, kiểm (a)(b)(d) rồi đóng N25; tốc độ còn lại chuyển L03c/D09. N25 về TODO (BACKLOG).
 Vòng: 63 (31/10/2026) · Việc vừa làm: L03b7 → DONE 1f64e2c (lần thử 2) — L03b phần 7: gỡ Font Awesome ở /ai-skin-quiz.
 Lần 2: XOÁ quy tắc cũ `.pc-skin-scan .pc-skin-standby .pc-btn-start-pill svg{24px}` (R1 — CSS cũ chỉ được xoá); icon camera của nút giữ cỡ bằng thuộc tính 24 + md:w-5 md:h-5; bỏ -mr-2.
 checks/L03b7.mjs 238 ✔ / 0 ✗ (7 khung × 3 trạng thái): mũi tên nút «Bắt đầu soi da» 14×14 (= glyph 14), lệch tâm 2,7px; icon camera 24 (< 768) / 18 (768) / 18,8 (≥ 1024, trước 18 — gốc chữ 15px);
