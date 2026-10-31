@@ -17,12 +17,12 @@
 {%- endcomment -%}
 <section class="pc-cart-skin bg-shadow margin-bottom-20" data-cart-skin hidden aria-labelledby="pcCartSkinTitle">
   <div class="pc-cart-skin__head">
-    <span class="pc-cart-skin__icon" aria-hidden="true"><i class="fa-solid fa-seedling" aria-hidden="true"></i></span>
+    <span class="pc-cart-skin__icon" aria-hidden="true"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'sprout', size: 'em' %}</i></span>
     <div class="pc-cart-skin__heading">
       <h2 id="pcCartSkinTitle" class="pc-cart-skin__title">{{ settings.cart_skin_title | default: 'Phác đồ cho làn da của bạn' | escape }}</h2>
       <p class="pc-cart-skin__basis" data-cart-skin-basis></p>
     </div>
-    <a class="pc-cart-skin__profile" href="{{ settings.cart_skin_profile_url | default: '/ai-skin-quiz-results' | escape }}" data-cart-skin-profile hidden>{{ settings.cart_skin_profile_label | default: 'Xem hồ sơ da' | escape }} <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
+    <a class="pc-cart-skin__profile" href="{{ settings.cart_skin_profile_url | default: '/ai-skin-quiz-results' | escape }}" data-cart-skin-profile hidden>{{ settings.cart_skin_profile_label | default: 'Xem hồ sơ da' | escape }} <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'chevron-right', size: 'em' %}</i></a>
   </div>
 
   <div class="pc-cart-skin__alerts" data-cart-skin-alerts hidden></div>
@@ -34,7 +34,7 @@
     <ol class="pc-cart-skin__stages" data-cart-skin-stages></ol>
     <div class="pc-cart-skin__foot">
       <p class="pc-cart-skin__progress" data-cart-skin-progress></p>
-      <span class="pc-cart-skin__badge"><i class="fa-solid fa-shield-heart" aria-hidden="true"></i> {{ settings.skin_scan_recommendation_badge | default: 'Gợi ý tham khảo' | escape }}</span>
+      <span class="pc-cart-skin__badge"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'shield-check', size: 'em' %}</i> {{ settings.skin_scan_recommendation_badge | default: 'Gợi ý tham khảo' | escape }}</span>
       <a class="pc-cart-skin__solution" data-cart-skin-solution hidden></a>
     </div>
   </div>
@@ -43,10 +43,13 @@
     <p class="pc-cart-skin__empty-title">{{ settings.cart_skin_empty_title | default: 'Giỏ hàng đã hợp với làn da của bạn chưa?' | escape }}</p>
     <p class="pc-cart-skin__empty-text" data-cart-skin-empty-text>{{ settings.cart_skin_empty_text | default: 'Soi da AI hoặc khảo sát da vài phút để nhận phác đồ 3 giai đoạn — giỏ hàng sẽ tự đối chiếu và gợi ý bước còn thiếu.' | escape }}</p>
     <div class="pc-cart-skin__empty-actions">
-      <a class="pc-cart-skin__btn pc-cart-skin__btn--primary" href="{{ settings.cart_skin_scan_url | default: '/kham-da-ai?tab=camera' | escape }}" data-cart-skin-scan><i class="fa-solid fa-camera" aria-hidden="true"></i> {{ settings.cart_skin_scan_label | default: 'Soi da AI' | escape }}</a>
-      <a class="pc-cart-skin__btn" href="{{ settings.cart_skin_quiz_url | default: '/kham-da-ai' | escape }}" data-cart-skin-quiz><i class="fa-regular fa-comment-dots" aria-hidden="true"></i> {{ settings.cart_skin_quiz_label | default: 'Khảo sát da' | escape }}</a>
+      <a class="pc-cart-skin__btn pc-cart-skin__btn--primary" href="{{ settings.cart_skin_scan_url | default: '/kham-da-ai?tab=camera' | escape }}" data-cart-skin-scan><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'camera', size: 'em' %}</i> {{ settings.cart_skin_scan_label | default: 'Soi da AI' | escape }}</a>
+      <a class="pc-cart-skin__btn" href="{{ settings.cart_skin_quiz_url | default: '/kham-da-ai' | escape }}" data-cart-skin-quiz><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'message-circle', size: 'em' %}</i> {{ settings.cart_skin_quiz_label | default: 'Khảo sát da' | escape }}</a>
     </div>
   </div>
+  {%- comment -%} L03b5 (31/10/2026): icon JS dựng (đã có trong giỏ / link giải pháp) lấy SVG ui_icon từ template — không dùng Font Awesome. {%- endcomment -%}
+  <template data-cart-skin-ic="check">{% include 'ui_icon', name: 'circle-check', size: 'em' %}</template>
+  <template data-cart-skin-ic="arrow">{% include 'ui_icon', name: 'arrow-right', size: 'em' %}</template>
 </section>
 {%- capture pc_cs_solutions -%}
   oily:{{ settings.cart_skin_solution_oily | default: 'giai-phap-mun-trung-ca' }},
@@ -182,6 +185,13 @@
   }
   function allowed(p, r) { return !engine || engine.isProductAllowed(p, r.excluded); }
 
+  function icon(k) {
+    var i = el('i', 'inline-block leading-none');
+    i.setAttribute('aria-hidden', 'true');
+    var t = root.querySelector('template[data-cart-skin-ic="' + k + '"]');
+    if (t) i.appendChild(t.content.cloneNode(true));
+    return i;
+  }
   function el(tag, cls, text) {
     var n = document.createElement(tag);
     if (cls) n.className = cls;
@@ -278,8 +288,7 @@
         covered++;
         li.classList.add('is-done');
         var ok = el('p', 'pc-cart-skin__have');
-        ok.appendChild(el('i', 'fa-solid fa-circle-check'));
-        ok.firstChild.setAttribute('aria-hidden', 'true');
+        ok.appendChild(icon('check'));
         ok.appendChild(document.createTextNode(' ' + copy.inCart + ': '));
         ok.appendChild(el('strong', 'notranslate', have.map(function (it) { return it.title || it.name || ''; }).join(', ')));
         body.appendChild(ok);
@@ -385,9 +394,7 @@
     var s = (copy.solutions || {})[r.skinKey];
     if (s) {
       sol.textContent = copy.solutionLabel + ': ' + s.title + ' ';
-      var ic = el('i', 'fa-solid fa-arrow-right');
-      ic.setAttribute('aria-hidden', 'true');
-      sol.appendChild(ic);
+      sol.appendChild(icon('arrow'));
       sol.href = s.url;
     }
     sol.hidden = !s;
