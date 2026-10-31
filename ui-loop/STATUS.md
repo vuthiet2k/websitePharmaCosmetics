@@ -1,4 +1,16 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 50 (31/10/2026) · Việc vừa làm: N27 → DONE (f9b2938): viền focus #3CB371 (2,67:1 trên trắng) thu hẹp về 13 khối nền tối
+(footer, .dark-zone, .portal-hero, .sh-*, .svcs-*, .lt-booking, .pc-ncta, .pc-ba-final, .pc-vcta); xoá `a:focus{outline:none}` + 2 khối
+outline:none global_core (đè :focus-visible thư viện) và viền .pc-brand / .portal-hero__btn ở home-portal.css. 4 trang × 8 khung, 3 lần:
+viền #3CB371 trên nền sáng d1440 209/114/88/54 → 0; viền mới 2px rgb(7,91,64) 8,1:1; footer min 4,5:1; số phần tử có viền trước = sau
+32/32 — reports/N27.md. --quick 6 trang 0 lỗi mới 2 lượt; baseline KHÔNG đổi (lượt ghi 1 có fatal do máy chậm, lượt 2 dính dao động N28 —
+đã git restore). Thêm N29 (đợt 6: viền focus < 3:1 có từ trước ở 6 trang + thư viện thiếu viền sáng cho nền tối).
+Việc tiếp theo: N28 (đợt 2), rồi N25, L03b, L03c, L11, L37.
+Tổng: 87 việc · DONE 33 · TODO 53 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 1 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick)
+Câu hỏi cho chủ dự án (giữ từ vòng 48):
+- N23: áp dụng bản vá chỉ-môi-trường `ui-loop/proposals/N23-dev-server.patch` (stub JS 3 script Sapo ở preview) không?
+- N23/N25: số đo tốc độ local dao động > 45 % cùng mã. Chạy vòng lặp khi máy rảnh, hay cho phép --perf ≥ 2 lượt cách nhau, lấy lượt tốt nhất?
 Vòng: 49 (31/10/2026) · Việc vừa làm: N26 → DONE: nút header «Danh mục», «Tìm kiếm» bị tắt viền focus (vendor_bootstrap outline:none!important);
 viền cũ #3CB371 chỉ 2,67:1 ⇒ thu hẹp 5 quy tắc cũ bằng :not(:where(…)) (độ ưu tiên giữ) để viền thư viện tokens.css áp dụng: 2px rgb(7,91,64),
 nền trắng 8,14:1, nền nút 7,38:1 ở 8 khung Chromium+WebKit; Enter/Escape trả focus đúng; 0 lỗi JS. focusNoRing d1440 /collections/all 19 (4/4 lượt,
