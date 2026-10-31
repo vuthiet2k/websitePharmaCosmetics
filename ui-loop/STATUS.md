@@ -1,5 +1,5 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 56 (31/10/2026) · Việc vừa làm: L03b4 → DONE (L03b phần 4 — gỡ Font Awesome ở trang sản phẩm: sao đầy/nửa, nút Mua ngay, nút khối chuyên gia, popup trả góp).
+Vòng: 56 (31/10/2026) · Việc vừa làm: L03b4 → DONE ae6e18e (L03b phần 4 — gỡ Font Awesome ở trang sản phẩm: sao đầy/nửa, nút Mua ngay, nút khối chuyên gia, popup trả góp).
 7 khung Chromium + WebKit × 2 trang SP + popup trả góp mở: `<i fa->` 6/7 + 2 → 0; icon nhìn thấy before = after; lệch tâm ≤ 2,6px; cha đổi cỡ ≤ 3,7px;
 màu ΔRGB 0; sao đầy tô 1/1, sao nửa 1/2; lượt 1 chưa đạt (hàng sao co 8,8px) ⇒ `px-px` ⇒ đạt; X popup trước là ô thiếu glyph → nay X. ui_icon thêm zap, banknote,
 star-half-filled. faIcon 261 → 255; build:sapo PASS; --quick lượt 4 0 lỗi mới (lượt 1–3 dính N28 webkit390 /collections/all); baseline ghi 6 trang, không kèm /collections/all.
