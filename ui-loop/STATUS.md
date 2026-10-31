@@ -1,4 +1,11 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 52 (31/10/2026) · Việc vừa làm: N23 → IN_PROGRESS. Chủ dự án duyệt 31/10 áp bản vá stub JS (preview local) ⇒ đã áp
+ui-loop/proposals/N23-dev-server.patch vào dev-server.js (node --check OK), tạo ui-loop/RESTART-PREVIEW để script nạp lại preview. Chưa kiểm, chưa commit.
+Việc tiếp theo: N23 (kiểm: checks/N23a.mjs 8 khung, ui-verify --perf ≥ 2 lượt cách nhau lấy lượt tốt nhất, --quick; đạt ⇒ commit dev-server.js), rồi N25, L03b, L03c, L11, L37.
+Tổng: 88 việc · DONE 33 · TODO 52 · IN_PROGRESS 1 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 1
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: chưa đo vòng này
+Câu hỏi cho chủ dự án:
+- N28: áp bản vá ui-loop/proposals/N28-bestseller.patch và chấp nhận ghi lại mốc webkit390 /collections/all 90/24 → 120/40 không? (proposals/N28.md)
 Vòng: 51 (31/10/2026) · Việc vừa làm: N28 → BLOCKED_OWNER. Nguyên nhân đo được: khối «Bán chạy» (section_collection_bestseller)
 chèn thẻ bằng IntersectionObserver rootMargin −200px ⇒ WebKit 390 chỉ 5/10 lượt chèn sau settle(). rootMargin +600px ⇒ WebKit 390 10/10,
 Chromium 390 10/10, 6 khung khác 3/3, cuộn thật chèn 8 thẻ, 0 lỗi JS; build:sapo + ui-guard PASS; --quick 3/3 lượt webkit390 120/40 = m390.
@@ -9,7 +16,8 @@ Tổng: 88 việc · DONE 33 · TODO 53 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLO
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 2 (webkit390 /collections/all — chỉ khi áp bản vá N28; chưa áp thì dao động)
 Câu hỏi cho chủ dự án:
 - N28: áp bản vá `ui-loop/proposals/N28-bestseller.patch` và chấp nhận ghi lại mốc webkit390 /collections/all 90/24 → 120/40 (bằng Chromium 390) không? (chi tiết proposals/N28.md)
-- N23: áp dụng bản vá chỉ-môi-trường `ui-loop/proposals/N23-dev-server.patch` (stub JS 3 script Sapo ở preview) không?
+- N23: ĐÃ TRẢ LỜI 31/10/2026 — CÓ áp dụng bản vá N23-dev-server.patch (preview local). N23 về TODO (BACKLOG).
+- N23/N25: ĐÃ TRẢ LỜI 31/10/2026 — --perf đo ≥ 2 lượt cách nhau, lấy lượt tốt nhất từng trang.
 Vòng: 50 (31/10/2026) · Việc vừa làm: N27 → DONE (f9b2938): viền focus #3CB371 (2,67:1 trên trắng) thu hẹp về 13 khối nền tối
 (footer, .dark-zone, .portal-hero, .sh-*, .svcs-*, .lt-booking, .pc-ncta, .pc-ba-final, .pc-vcta); xoá `a:focus{outline:none}` + 2 khối
 outline:none global_core (đè :focus-visible thư viện) và viền .pc-brand / .portal-hero__btn ở home-portal.css. 4 trang × 8 khung, 3 lần:
