@@ -1,4 +1,14 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 62 (31/10/2026) · Việc vừa làm: L03b7 → VERIFY_FAIL (lần thử 1) — L03b phần 7: gỡ Font Awesome ở /ai-skin-quiz (page.ai-skin-quiz kể cả icon JS, skin_scan_camera, skin_profile_notice).
+checks/L03b7.mjs 228 ✔ / 3 ✗ (7 khung × 3 trạng thái): `<i fa->` 20/20/87 → 0; icon nhìn thấy before = after; lệch tâm ≤ 3,5px; cha đổi cỡ ≤ 3,8px; màu ΔRGB 0; 19 câu ⇒ thẻ kết quả như before;
+thanh hồ sơ bấm X ẩn; 0 lỗi JS; faIcon 214 → 188; build:sapo + ui-guard PASS. ✗: mũi tên nút «Bắt đầu soi da» (390/320/WebKit) hộp SVG 24px vs glyph 14px = 1,71× > 1,6 —
+CSS cũ `.pc-skin-scan .pc-skin-standby .pc-btn-start-pill svg{width:24px}` nạp sau utility ép cỡ (scale-75 bị transform cũ đè). Mã sửa GIỮ trong cây làm việc, CHƯA commit.
+Thêm N32 (đợt 7: #btnSendChat không có viền focus — có từ trước). File tạm ui-loop/checks/_dbg-L03b7.mjs chưa xoá được (không commit).
+Việc tiếp theo: L03b7 lần 2 (hộp mũi tên ≤ 22px bằng cách hợp lệ hoặc đề xuất chủ dự án), rồi L03b (phần 8), L03c, L11, L37.
+Tổng (đếm cột Trạng thái BACKLOG): 95 việc · DONE 39 · TODO 54 · IN_PROGRESS 0 · VERIFY_FAIL 1 · BLOCKED 1 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: --quick chưa chạy (việc chưa đạt kiểm trình duyệt)
+Câu hỏi cho chủ dự án (giữ từ vòng 61):
+- N25: áp lại ui-loop/proposals/N25-sprite.patch (HTML −104 KB/trang, icon không đổi) dù tiêu chí tốc độ (c) chưa đạt — hay giữ BLOCKED tới khi L03c/D09 giảm CSS/JS chặn?
 Vòng: 61 (31/10/2026) · Việc vừa làm: N25 → BLOCKED (lần thử 3) — --perf 13:55 + 14:04 lấy tốt nhất còn 3 trang vượt baseline ×1,1: / 11 080 > 10 613, giỏ 9 248 > 8 576,
 /tin-tuc 9 852 > 9 777 (6 trang đạt; đặt lịch 7 416 thuộc L03c). TTFB 1,5–1,9 s (vòng 54: 1,0–1,6). A/B checks/N25ab.mjs: FCP 6,9–8,7 s khi HTML đã xong ~1,9 s ⇒ đường găng là CSS/JS chặn + CPU.
 Đã `git restore snippets/ui_icon.bwt snippets/bean-menu-cate.bwt`; mã sprite (vòng 60 đạt (a) −104 KB/trang, (b) icon y hệt 8 khung) lưu ui-loop/proposals/N25-sprite.patch.
