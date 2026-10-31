@@ -1,5 +1,5 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 55 (31/10/2026) · Việc vừa làm: L03b3 → DONE (L03b phần 3 — gỡ Font Awesome ở 9 khối trang chủ home_portal, trừ section_flash_sale).
+Vòng: 55 (31/10/2026) · Việc vừa làm: L03b3 → DONE b53aa9d (L03b phần 3 — gỡ Font Awesome ở 9 khối trang chủ home_portal, trừ section_flash_sale).
 7 khung Chromium + WebKit, /?tpl=index: `<i fa->` 15 → 0; icon nhìn thấy 14 = 14; lệch tâm ≤ 2,0px; phần tử cha đổi cỡ ≤ 1,7px; cao trang lệch 0px;
 lượt 1 chưa đạt (CSS cũ home-portal.css `.shb2__tile svg` ẩn 4 icon chip spa, `.chan svg` tô đặc icon chia sẻ) ⇒ thu hẹp `> svg`, xoá `.chan svg` ⇒ đạt.
 ui_icon thêm 6 path Lucide; settings_data KHÔNG đổi (ui_icon ánh xạ giá trị "fa-…" cũ). ui-guard faIcon 272 → 261; build:sapo PASS; --quick 0 lỗi mới.
