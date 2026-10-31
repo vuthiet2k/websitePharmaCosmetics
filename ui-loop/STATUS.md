@@ -1,4 +1,14 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 48 (31/10/2026) · Việc vừa làm: N23 → BLOCKED (lần 3 chưa đạt, không sửa mã theme). probe-ttfb: đặt lịch 2 096–2 259, login
+2 094–2 159, / 2 568–2 958 ms; ui-verify --perf 03:26 (có stub, chạy > 10 phút): 10/10 trang vượt baseline — login LCP 16 204 > 14 507,
+đặt lịch 22 768 > 8 483, /soi-da 35 544 ms ⇒ máy đo vẫn nhiễu. Đã `git restore dev-server.js`; bản vá stub (login LCP 16 652 → 11 280 ms
+ở vòng 46) lưu ui-loop/proposals/N23-dev-server.patch + câu hỏi proposals/N23.md; đã tạo ui-loop/RESTART-PREVIEW (preview nạp lại dev-server.js).
+Việc tiếp theo: N26 (đợt 2), rồi N25, L03b, L03c, L11, L37.
+Tổng: 84 việc · DONE 31 · TODO 52 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 1 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 10 (--perf, máy nhiễu — không ghi baseline)
+Câu hỏi cho chủ dự án:
+- N23: áp dụng bản vá chỉ-môi-trường `ui-loop/proposals/N23-dev-server.patch` (stub JS 3 script Sapo ở preview) không?
+- N23/N25: số đo tốc độ local dao động > 45 % cùng mã. Chạy vòng lặp khi máy rảnh, hay cho phép --perf ≥ 2 lượt cách nhau, lấy lượt tốt nhất?
 Vòng: 47 (31/10/2026) · Việc vừa làm: N23 → VERIFY_FAIL (lần 2), không sửa mã. Đo lại ui-verify --perf (03:10): cùng mã vòng 46 nhưng 10/10
 trang vượt baseline, chậm hơn vòng 46 — login LCP 11 280 → 16 748, đặt lịch 14 644 → 20 176 ms; server render (probe-ttfb) 2,1–3,0 s/trang
 (vòng 46: 1,8–2,8) ⇒ máy đo nhiễu/bận, tiêu chí (a) chưa đo được tin cậy. evidence/N23/perf-v47-1.txt, reports/N23.md.

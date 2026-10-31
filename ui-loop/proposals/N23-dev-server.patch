@@ -1,0 +1,21 @@
+diff --git a/dev-server.js b/dev-server.js
+index 3958c0c..bcb0a8b 100644
+--- a/dev-server.js
++++ b/dev-server.js
+@@ -1646,6 +1646,16 @@ async function requestHandler(req, res) {
+     return;
+   }
+ 
++  // ── Route: script hệ thống Sapo nạp qua `bizweb_asset_url` (layouts/theme.bwt, template customer*).
++  // N23 (30/10/2026): trên Sapo thật đây là file JS của Sapo; preview không có filter này nên URL thành /<tên>.js và rơi xuống
++  // nhánh 404 cuối handler — trả NGUYÊN TRANG HTML 404 (≈ 500 KB/file × 3, nạp đồng bộ trong <head>) ⇒ trang đăng nhập/đăng ký
++  // chậm giả 7–8 s ở 4G (đo ui-loop/evidence/N23). Trả stub JS rỗng: hành vi như cũ (không hàm nào được định nghĩa), đúng loại file.
++  if (/^\/(bizweb-api|common|customer)\.js$/.test(pathname)) {
++    res.writeHead(200, { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-cache' });
++    res.end(`/* preview: stub ${pathname} — file hệ thống Sapo (bizweb_asset_url), không có ở local */\n`);
++    return;
++  }
++
+   // ── Route: /cart.js — Sapo Cart API (giỏ hàng thật lưu cookie, xem đầu file)
+   if (pathname === '/cart.js') {
+     const cart = buildCartFromLines(readCartLines(req));
