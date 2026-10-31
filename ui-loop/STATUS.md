@@ -1,4 +1,15 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 51 (31/10/2026) · Việc vừa làm: N28 → BLOCKED_OWNER. Nguyên nhân đo được: khối «Bán chạy» (section_collection_bestseller)
+chèn thẻ bằng IntersectionObserver rootMargin −200px ⇒ WebKit 390 chỉ 5/10 lượt chèn sau settle(). rootMargin +600px ⇒ WebKit 390 10/10,
+Chromium 390 10/10, 6 khung khác 3/3, cuộn thật chèn 8 thẻ, 0 lỗi JS; build:sapo + ui-guard PASS; --quick 3/3 lượt webkit390 120/40 = m390.
+Nhưng mốc baseline.json ghi webkit390 /collections/all 90/24 (trạng thái trượt, ghi ở N26) ⇒ bước 7 exit 1 "2 lỗi mới"; không được tự nới
+mốc ⇒ đã lưu bản vá ui-loop/proposals/N28-bestseller.patch, git restore snippet. Thêm N30 (đợt 9: next slider «Bán chạy» 320 / 844×390 không đổi slide).
+Việc tiếp theo: N25, L03b, L03c, L11, L37 (đợt 3).
+Tổng: 88 việc · DONE 33 · TODO 53 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 1 · BLOCKED_OWNER 1
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 2 (webkit390 /collections/all — chỉ khi áp bản vá N28; chưa áp thì dao động)
+Câu hỏi cho chủ dự án:
+- N28: áp bản vá `ui-loop/proposals/N28-bestseller.patch` và chấp nhận ghi lại mốc webkit390 /collections/all 90/24 → 120/40 (bằng Chromium 390) không? (chi tiết proposals/N28.md)
+- N23: áp dụng bản vá chỉ-môi-trường `ui-loop/proposals/N23-dev-server.patch` (stub JS 3 script Sapo ở preview) không?
 Vòng: 50 (31/10/2026) · Việc vừa làm: N27 → DONE (f9b2938): viền focus #3CB371 (2,67:1 trên trắng) thu hẹp về 13 khối nền tối
 (footer, .dark-zone, .portal-hero, .sh-*, .svcs-*, .lt-booking, .pc-ncta, .pc-ba-final, .pc-vcta); xoá `a:focus{outline:none}` + 2 khối
 outline:none global_core (đè :focus-visible thư viện) và viền .pc-brand / .portal-hero__btn ở home-portal.css. 4 trang × 8 khung, 3 lần:
@@ -9,8 +20,8 @@ Việc tiếp theo: N28 (đợt 2), rồi N25, L03b, L03c, L11, L37.
 Tổng: 87 việc · DONE 33 · TODO 53 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 1 · BLOCKED_OWNER 0
 Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick)
 Câu hỏi cho chủ dự án (giữ từ vòng 48):
-- N23: áp dụng bản vá chỉ-môi-trường `ui-loop/proposals/N23-dev-server.patch` (stub JS 3 script Sapo ở preview) không?
-- N23/N25: số đo tốc độ local dao động > 45 % cùng mã. Chạy vòng lặp khi máy rảnh, hay cho phép --perf ≥ 2 lượt cách nhau, lấy lượt tốt nhất?
+- N23: ĐÃ TRẢ LỜI 31/10/2026 — CÓ áp dụng bản vá N23-dev-server.patch (preview local). N23 về TODO.
+- N23/N25: ĐÃ TRẢ LỜI 31/10/2026 — --perf đo ≥ 2 lượt cách nhau, lấy lượt tốt nhất từng trang.
 Vòng: 49 (31/10/2026) · Việc vừa làm: N26 → DONE: nút header «Danh mục», «Tìm kiếm» bị tắt viền focus (vendor_bootstrap outline:none!important);
 viền cũ #3CB371 chỉ 2,67:1 ⇒ thu hẹp 5 quy tắc cũ bằng :not(:where(…)) (độ ưu tiên giữ) để viền thư viện tokens.css áp dụng: 2px rgb(7,91,64),
 nền trắng 8,14:1, nền nút 7,38:1 ở 8 khung Chromium+WebKit; Enter/Escape trả focus đúng; 0 lỗi JS. focusNoRing d1440 /collections/all 19 (4/4 lượt,
