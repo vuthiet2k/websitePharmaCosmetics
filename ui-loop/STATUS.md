@@ -1,5 +1,5 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 57 (31/10/2026) · Việc vừa làm: N28 → DONE (áp proposals/N28-bestseller.patch theo quyết định chủ dự án 31/10 — rootMargin khối «Bán chạy» −200px → +600px).
+Vòng: 57 (31/10/2026) · Việc vừa làm: N28 → DONE 1f1ae41 (áp proposals/N28-bestseller.patch theo quyết định chủ dự án 31/10 — rootMargin khối «Bán chạy» −200px → +600px).
 checks/N28.mjs: WebKit iPhone 13 chèn 10/10, Chromium 390 10/10, 320/768/1024/1440/WebKit 1440/844×390 3/3; cuộn thật 8 thẻ; 0 lỗi JS; ảnh 8 khung đã xem.
 ui-verify --quick 3 lượt webkit390 /collections/all 120/40 = m390; 5 trang khác 0 lỗi mới; --write-baseline chỉ đổi mục đã duyệt (90/24 → 120/40). build:sapo + ui-guard PASS.
 Việc tiếp theo: L03b5, L03c, L11, L37 (đợt 3).
