@@ -1,4 +1,12 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 47 (31/10/2026) · Việc vừa làm: N23 → VERIFY_FAIL (lần 2), không sửa mã. Đo lại ui-verify --perf (03:10): cùng mã vòng 46 nhưng 10/10
+trang vượt baseline, chậm hơn vòng 46 — login LCP 11 280 → 16 748, đặt lịch 14 644 → 20 176 ms; server render (probe-ttfb) 2,1–3,0 s/trang
+(vòng 46: 1,8–2,8) ⇒ máy đo nhiễu/bận, tiêu chí (a) chưa đo được tin cậy. evidence/N23/perf-v47-1.txt, reports/N23.md.
+Việc tiếp theo: N23 lần 3 chỉ nên đo khi máy rảnh (lần 3 chưa đạt ⇒ BLOCKED); cân nhắc làm N25 (ổn định máy đo) trước. Sau đó N26, L03b, L03c, L11, L37.
+Tổng: 84 việc · DONE 31 · TODO 52 · IN_PROGRESS 0 · VERIFY_FAIL 1 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 10 (--perf, nhiễu máy — không ghi baseline)
+Câu hỏi cho chủ dự án:
+- N23/N25: số đo tốc độ local dao động > 45 % cùng mã (máy dev bận?). Chạy vòng lặp khi máy rảnh, hay cho phép đo --perf ≥ 2 lượt cách nhau và lấy lượt tốt nhất?
 Vòng: 46 (31/10/2026) · Việc vừa làm: N23 → VERIFY_FAIL (lần 1). Stub JS ở dev-server.js ĐẠT phần login: 3 script Sapo trả JS 99–103 B,
 0 `.js` trả HTML, ui-verify --perf login LCP 16 652 → 11 280 ms (≤ 14 507); 8 khung Chromium+WebKit form login (gõ, Tab, Shift+Tab,
 gửi trống) và đặt lịch đúng, 0 lỗi JS; build:sapo + ui-guard PASS. CHƯA ĐẠT: /dat-lich-tu-van LCP 14 644 ms > 8 483 — nhưng cùng lượt
