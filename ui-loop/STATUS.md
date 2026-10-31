@@ -1,4 +1,12 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 67 (01/11/2026) · Việc vừa làm: L03b10 → DONE (lần thử đầu) — L03b phần 10: gỡ Font Awesome ở bài ca Trước & Sau (article.truoc-va-sau, 16 lượt trong mã / 18 phần tử trên trang).
+checks/L03b10.mjs 133 ✔ / 0 ✗ (7 khung): `<i fa->` 18 → 0; icon nhìn thấy before = after (13 / 16; thanh đáy 2/2); lệch tâm ≤ 2,3px; cha đổi cỡ ≤ 3,3px; cao icon 1,00; màu ΔRGB 0; cao trang lệch 0px;
+thanh bám đáy + Tab = before; 0 lỗi JS; ảnh đã xem. ui_icon thêm path Lucide quote + ánh xạ quote-left/user-tie/images/calendar. build:sapo + ui-guard PASS (faIcon 124 → 108, --tighten 1 mốc);
+--quick 7 trang 0 lỗi mới, --write-baseline. Thêm N34 (đợt 7: thanh đặt lịch bám đáy bài ca bị thanh đáy mobile che — có từ trước).
+Việc tiếp theo: L03b (phần 11 — còn 108 lượt FA: page.about-us 13, blog.instagram-feed 10, article 9, product 6…), L03c, L11, L37.
+Tổng (đếm cột Trạng thái BACKLOG): 100 việc · DONE 44 · TODO 56 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick 7 trang)
+Câu hỏi cho chủ dự án: không có mới.
 Vòng: 66 (01/11/2026) · Việc vừa làm: L03b9 → DONE (lần thử đầu) — L03b phần 9: gỡ Font Awesome ở /skin-health-beauty (page.indexskinhealthy, 15 lượt trong mã / 31 phần tử trên trang).
 checks/L03b9.mjs 84 ✔ / 0 ✗ (7 khung): `<i fa->` 31 → 0; icon nhìn thấy before = after (19 / 20); lệch tâm ≤ 1,7px; cha đổi cỡ ≤ 1,6px; cao icon 1,00; màu ΔRGB 0; cao trang lệch 0px;
 Virtual Tour + lightbox + 3 dải trượt + Tab = before; 0 lỗi JS; ảnh đã xem. ui_icon thêm 5 path Lucide (maximize, play, video, pill-bottle, hand-heart). build:sapo + ui-guard PASS (faIcon 140 → 124, --tighten 1 mốc);

@@ -122,7 +122,7 @@
             <h1 class="article-title pc-art-title">{{ article.title }}</h1>
             {%- if article.author != blank -%}
             <div class="pc41-author-byline pc-art-byline flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-user-tie" aria-hidden="true"></i></div>
+              <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center flex-shrink-0"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'user', size: 'em' %}</i></div>
               <div>
                 <span class="text-sm font-bold text-forest-900 font-heading">{{ article.author | escape }}</span>
                 <p class="text-xs text-gray-500">{{ settings.clinical_article_expert_label | default: 'Chuyên gia phụ trách' | escape }}</p>
@@ -130,22 +130,25 @@
             </div>
             {%- endif -%}
             <div class="pc-art-meta">
-              <span class="pc-art-meta__item"><i class="fa-solid fa-calendar" aria-hidden="true"></i>{{ article.published_on | date: 'dd/MM/yyyy' }}</span>
-              {%- if pc_bd_city != blank -%}<span class="pc-art-meta__item" title="{{ settings.clinical_article_city_label | default: 'Tỉnh/thành' | escape }}"><i class="fa-solid fa-location-dot" aria-hidden="true"></i>{{ pc_bd_city | escape }}</span>{%- endif -%}
+              <span class="pc-art-meta__item"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'calendar-days', size: 'em' %}</i>{{ article.published_on | date: 'dd/MM/yyyy' }}</span>
+              {%- if pc_bd_city != blank -%}<span class="pc-art-meta__item" title="{{ settings.clinical_article_city_label | default: 'Tỉnh/thành' | escape }}"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'map-pin', size: 'em' %}</i>{{ pc_bd_city | escape }}</span>{%- endif -%}
             </div>
             {%- if pc_bd_summary != blank -%}<p class="pc-bd-lead">{{ pc_bd_summary }}</p>{%- endif -%}
+            {%- comment -%} L03b10 (01/11/2026): icon FA → ui_icon size 'em' trong <i> bọc cũ. <i> ô thông tin ca KHÔNG thêm inline-block (CSS cũ
+              .pc-bd-profile i = ô vuông inline-flex 36px căn giữa); icon tiêu đề «Ca khác» thêm [&>svg]:text-current để giữ màu chữ tiêu đề như glyph FA
+              (quy tắc cũ .pc-art-widget__title svg tô màu khác). {%- endcomment -%}
             {%- capture pc_bd_profile -%}
               {%- if pc_bd_age != blank -%}{%- assign pc_bd_age_l = pc_bd_age | downcase -%}
-              <li><i class="fa-solid fa-user" aria-hidden="true"></i><span>{{ settings.clinical_article_age_label | default: 'Tuổi' | escape }}</span><strong>{{ pc_bd_age | escape }}{% unless pc_bd_age_l contains 'tuổi' %} tuổi{% endunless %}</strong></li>
+              <li><i aria-hidden="true">{% include 'ui_icon', name: 'user', size: 'em' %}</i><span>{{ settings.clinical_article_age_label | default: 'Tuổi' | escape }}</span><strong>{{ pc_bd_age | escape }}{% unless pc_bd_age_l contains 'tuổi' %} tuổi{% endunless %}</strong></li>
               {%- endif -%}
               {%- if pc_bd_weeks != blank -%}
-              <li><i class="fa-solid fa-calendar-days" aria-hidden="true"></i><span>{{ settings.clinical_article_weeks_label | default: 'Thời gian theo dõi' | escape }}</span><strong>{{ pc_bd_weeks | escape }} tuần</strong></li>
+              <li><i aria-hidden="true">{% include 'ui_icon', name: 'calendar-days', size: 'em' %}</i><span>{{ settings.clinical_article_weeks_label | default: 'Thời gian theo dõi' | escape }}</span><strong>{{ pc_bd_weeks | escape }} tuần</strong></li>
               {%- endif -%}
               {%- if pc_bd_cond != blank -%}
-              <li><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span>{{ settings.clinical_article_condition_label | default: 'Tình trạng ban đầu' | escape }}</span><strong>{{ pc_bd_cond | escape }}</strong></li>
+              <li><i aria-hidden="true">{% include 'ui_icon', name: 'search', size: 'em' %}</i><span>{{ settings.clinical_article_condition_label | default: 'Tình trạng ban đầu' | escape }}</span><strong>{{ pc_bd_cond | escape }}</strong></li>
               {%- endif -%}
               {%- if pc_bd_plan != blank -%}
-              <li><i class="fa-solid fa-flask-vial" aria-hidden="true"></i><span>{{ settings.clinical_article_plan_label | default: 'Phác đồ' | escape }}</span><strong>{{ pc_bd_plan | escape }}</strong></li>
+              <li><i aria-hidden="true">{% include 'ui_icon', name: 'test-tubes', size: 'em' %}</i><span>{{ settings.clinical_article_plan_label | default: 'Phác đồ' | escape }}</span><strong>{{ pc_bd_plan | escape }}</strong></li>
               {%- endif -%}
             {%- endcapture -%}
             {%- assign pc_bd_profile_s = pc_bd_profile | strip -%}
@@ -170,14 +173,14 @@
               </figure>
             </div>
             {%- if pc_bd_photo != blank or settings.clinical_note != blank -%}
-            <p class="pc-bd-photo-note"><i class="fa-solid fa-camera" aria-hidden="true"></i> {% if pc_bd_photo != blank %}{{ pc_bd_photo | escape }}{% if settings.clinical_note != blank %}. {% endif %}{% endif %}{{ settings.clinical_note | escape }}</p>
+            <p class="pc-bd-photo-note"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'camera', size: 'em' %}</i> {% if pc_bd_photo != blank %}{{ pc_bd_photo | escape }}{% if settings.clinical_note != blank %}. {% endif %}{% endif %}{{ settings.clinical_note | escape }}</p>
             {%- endif -%}
           </section>
           {%- endif -%}
 
           {%- if pc_bd_quote != blank -%}
           <figure class="pc-art-card pc-bd-card pc-bd-quote">
-            <i class="fa-solid fa-quote-left" aria-hidden="true"></i>
+            <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'quote', size: 'em' %}</i>
             <blockquote>{{ pc_bd_quote }}</blockquote>
             <figcaption>{{ settings.clinical_article_quote_title | default: 'Nhận định của chuyên gia' | escape }}{% if article.author != blank %} · {{ article.author | escape }}{% endif %}</figcaption>
           </figure>
@@ -204,9 +207,9 @@
           <section class="pc-art-card pc-art-widget pc-bd-book" id="pc-bd-cta">
             <h2 class="pc-bd-book__title">{{ settings.clinical_article_cta_title | default: 'Làn da của bạn cũng đang gặp tình trạng tương tự?' | escape }}</h2>
             {%- if settings.clinical_article_cta_text != blank -%}<p class="pc-bd-book__text">{{ settings.clinical_article_cta_text | escape }}</p>{%- endif -%}
-            <a href="{{ pc_bd_book | escape }}" class="pc-ba-btn pc-ba-btn--primary pc-bd-book__btn"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> {{ settings.clinical_article_cta_label | default: 'Đặt lịch soi da & tư vấn 1:1' | escape }}</a>
-            {%- if pc_bd_tel != blank -%}<a href="tel:{{ pc_bd_tel }}" class="pc-ba-btn pc-ba-btn--outline pc-bd-book__btn"><i class="fa-solid fa-phone" aria-hidden="true"></i> {{ pc_bd_hotline | escape }}</a>{%- endif -%}
-            {%- if pc_bd_zalo != blank -%}<a href="https://zalo.me/{{ pc_bd_zalo }}" target="_blank" rel="noopener" class="pc-bd-book__zalo">{{ settings.clinical_case_cta_label | default: 'Tư vấn phác đồ qua Zalo' | escape }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>{%- endif -%}
+            <a href="{{ pc_bd_book | escape }}" class="pc-ba-btn pc-ba-btn--primary pc-bd-book__btn"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'calendar-check', size: 'em' %}</i> {{ settings.clinical_article_cta_label | default: 'Đặt lịch soi da & tư vấn 1:1' | escape }}</a>
+            {%- if pc_bd_tel != blank -%}<a href="tel:{{ pc_bd_tel }}" class="pc-ba-btn pc-ba-btn--outline pc-bd-book__btn"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'phone', size: 'em' %}</i> {{ pc_bd_hotline | escape }}</a>{%- endif -%}
+            {%- if pc_bd_zalo != blank -%}<a href="https://zalo.me/{{ pc_bd_zalo }}" target="_blank" rel="noopener" class="pc-bd-book__zalo">{{ settings.clinical_case_cta_label | default: 'Tư vấn phác đồ qua Zalo' | escape }} <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-right', size: 'em' %}</i></a>{%- endif -%}
           </section>
 
           {%- comment -%} Liệu trình & sản phẩm đồng hành (tag lieutrinh: rồi sanpham:) — khung widget sản phẩm theo phác đồ của trang bài viết. {%- endcomment -%}
@@ -228,7 +231,7 @@
                     <div class="pc-cmp-prescription-widget__item-name">{{ pc_bd_p.name }}</div>
                     <div class="pc-cmp-prescription-widget__item-price">{% if pc_bd_p.price > 0 %}{{ pc_bd_p.price | money }}{% else %}{{ settings.lt_info_price_contact | default: 'Liên hệ tư vấn' | escape }}{% endif %}</div>
                   </div>
-                  <span class="pc-cmp-prescription-widget__go" aria-hidden="true"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span>
+                  <span class="pc-cmp-prescription-widget__go" aria-hidden="true"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'chevron-right', size: 'em' %}</i></span>
                 </a>
                 {%- endif -%}
               {%- endunless -%}{%- endif -%}
@@ -266,7 +269,7 @@
           {%- if pc_bd_rel_n > 0 -%}
           <section class="pc-art-card pc-art-widget">
             <div class="pc-art-widget__head">
-              <h2 class="pc-art-widget__title"><i class="fa-solid fa-images" aria-hidden="true"></i>{{ settings.clinical_article_related_title | default: 'Ca khác cùng nhóm' | escape }}</h2>
+              <h2 class="pc-art-widget__title"><i class="inline-block leading-none [&>svg]:text-current" aria-hidden="true">{% include 'ui_icon', name: 'image', size: 'em' %}</i>{{ settings.clinical_article_related_title | default: 'Ca khác cùng nhóm' | escape }}</h2>
               <a class="pc-art-widget__more" href="{{ pc_bd_back_link }}">{{ settings.clinical_article_back_label | default: 'Xem tất cả kết quả' | escape }} ›</a>
             </div>
             {{ pc_bd_related }}
@@ -279,8 +282,8 @@
 
   {%- comment -%} Mobile: thanh đặt lịch bám đáy — hiện khi đã cuộn qua thẻ đầu bài, ẩn khi thẻ đặt lịch đang trong màn hình. {%- endcomment -%}
   <div class="pc-bd-sticky" id="pc-bd-sticky" aria-hidden="true">
-    <a href="{{ pc_bd_book | escape }}" class="pc-ba-btn pc-ba-btn--primary" tabindex="-1"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> {{ settings.clinical_article_sticky_label | default: 'Đặt lịch tư vấn 1:1' | escape }}</a>
-    {%- if pc_bd_tel != blank -%}<a href="tel:{{ pc_bd_tel }}" class="pc-ba-btn pc-ba-btn--outline" tabindex="-1" aria-label="{{ pc_bd_hotline | escape }}"><i class="fa-solid fa-phone" aria-hidden="true"></i></a>{%- endif -%}
+    <a href="{{ pc_bd_book | escape }}" class="pc-ba-btn pc-ba-btn--primary" tabindex="-1"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'calendar-check', size: 'em' %}</i> {{ settings.clinical_article_sticky_label | default: 'Đặt lịch tư vấn 1:1' | escape }}</a>
+    {%- if pc_bd_tel != blank -%}<a href="tel:{{ pc_bd_tel }}" class="pc-ba-btn pc-ba-btn--outline" tabindex="-1" aria-label="{{ pc_bd_hotline | escape }}"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'phone', size: 'em' %}</i></a>{%- endif -%}
   </div>
 </section>
 <script>
