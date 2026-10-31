@@ -8,6 +8,9 @@ import fs from 'node:fs';
 const MODE = process.argv[2] || 'after';
 const OUT = 'ui-loop/evidence/L03b7';
 fs.mkdirSync(OUT, { recursive: true });
+// Ghi kèm log ra file (<mode>-run.txt) để đọc lại số đo.
+const LOG = `${OUT}/${MODE}-run.txt`; fs.writeFileSync(LOG, '');
+const _log = console.log; console.log = (...a) => { _log(...a); fs.appendFileSync(LOG, a.join(' ') + '\n'); };
 const BASE = 'http://localhost:3000';
 const URL_ = '/ai-skin-quiz';
 const ZONES = ['#pcSkinScan', '#aiSkinChatApp', '[data-skin-profile-notice]'];
@@ -54,8 +57,10 @@ const compare = (key, bm, m, checkH) => {
   ok(av.length >= bv.length, `${key}: icon nhìn thấy before ${bv.length} → after ${av.length}`);
   let worst = 0, worstK = '', minR = 9, maxR = 0, parD = 0, parK = '', colD = 0, colK = '', rK = '';
   bv.forEach((x, i) => { const y = av[i]; if (!y) return;
-    const d = Math.hypot(x.rx - y.rx, x.ry - y.ry); if (d > worst) { worst = d; worstK = x.zone + ' ' + x.cls; }
-    const pd = Math.max(Math.abs(x.pw - y.pw), Math.abs(x.ph - y.ph)); if (pd > parD) { parD = pd; parK = x.zone + ' ' + x.cls; }
+    // Lần 2: giờ tin nhắn (getCurrentTime) đổi theo phút ⇒ bề rộng chữ «hh:mm» đổi giữa before/after; icon ✓✓ đứng SAU chữ ⇒ so khoảng cách tới mép phải cha, bỏ qua bề rộng cha.
+    const ts = x.zone === 'message-timestamp';
+    const d = ts ? Math.hypot((x.pw - x.rx) - (y.pw - y.rx), x.ry - y.ry) : Math.hypot(x.rx - y.rx, x.ry - y.ry); if (d > worst) { worst = d; worstK = x.zone + ' ' + x.cls; }
+    const pd = ts ? Math.abs(x.ph - y.ph) : Math.max(Math.abs(x.pw - y.pw), Math.abs(x.ph - y.ph)); if (pd > parD) { parD = pd; parK = x.zone + ' ' + x.cls; }
     const rr = (y.h || 0.01) / (x.h || 0.01); if (rr < minR) { minR = rr; rK = x.zone; } maxR = Math.max(maxR, rr);
     const a = rgb(x.color), b = rgb(y.color); const cd = Math.max(...a.map((v, k) => Math.abs(v - b[k]))); if (cd > colD) { colD = cd; colK = `${x.zone} ${x.cls} ${x.color} → ${y.color}`; } });
   const badFill = av.filter((y) => y.filled).map((y) => y.zone + ' ' + y.cls);
@@ -93,6 +98,11 @@ for (const [brn, fr, br, opt] of FRAMES) {
   await shot(p, '#pcSkinScan', `${OUT}/${MODE}-${brn}-${fr}-cam.png`);
   await shot(p, '.pc-skin-standby__trust', `${OUT}/${MODE}-${brn}-${fr}-trust.png`);
   await shot(p, '.pc-btn-start-pill', `${OUT}/${MODE}-${brn}-${fr}-start.png`);
+  // Lần 2: quy tắc cũ `.pc-btn-start-pill svg {24px}` (mobile) đã xoá — icon camera giữ 24px < 768, 18px ≥ 768 (thuộc tính) bằng utility.
+  const camSvg = await p.evaluate(() => { const b = document.querySelector('.pc-btn-start-pill'); const s = b?.querySelector(':scope > svg'); if (!s) return null; const r = s.getBoundingClientRect(); const br = b.getBoundingClientRect(); const ch = b.querySelector('.pc-btn-start-pill__chevron svg'); const cr = ch?.getBoundingClientRect(); return { w: Math.round(r.width * 10) / 10, h: Math.round(r.height * 10) / 10, vw: innerWidth, btnH: Math.round(br.height), chev: cr && cr.width ? { w: Math.round(cr.width * 10) / 10, h: Math.round(cr.height * 10) / 10, right: Math.round((br.right - cr.right) * 10) / 10, cy: Math.round(((cr.top + cr.bottom) / 2 - (br.top + br.bottom) / 2) * 10) / 10 } : null }; });
+  data[`${key}|camSvg`] = camSvg;
+  console.log(`   ${key}: icon camera nút Bắt đầu ${JSON.stringify(camSvg)}`);
+  if (MODE === 'after' && camSvg) { const exp = camSvg.vw < 768 ? 24 : 18; ok(Math.abs(camSvg.w - exp) <= 1 && Math.abs(camSvg.h - exp) <= 1, `${key}: icon camera nút Bắt đầu ${camSvg.w}×${camSvg.h} vs trước ${exp}×${exp} (sai ≤ 1px)`); }
   await shot(p, '.pc-mcam-bar', `${OUT}/${MODE}-${brn}-${fr}-mcam-bar.png`);
   if (['390', '1440', 'iphone13'].includes(fr)) await p.screenshot({ path: `${OUT}/${MODE}-${brn}-${fr}-cam-full.png`, fullPage: true });
   // 2) tab khảo sát — câu 1

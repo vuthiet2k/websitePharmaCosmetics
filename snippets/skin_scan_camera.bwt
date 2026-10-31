@@ -101,20 +101,21 @@
               {%- endif -%}
             </span>
             <button type="button" class="pc-mcam-round" data-skin-camera-light hidden aria-pressed="false" aria-label="{{ settings.ai_skin_scan_light_label | default: 'Bật/tắt đèn' | escape }}">
-              <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+              {%- comment -%} L03b7 (31/10/2026): icon SVG ui_icon thay Font Awesome (R7) trong thẻ <i> bọc cũ. {%- endcomment -%}
+              <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'zap', size: 'em' %}</i>
             </button>
           </div>
           <div class="pc-mcam-frame" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
           <div class="pc-mcam-bar">
             <button type="button" class="pc-mcam-tool" data-skin-mobile-pick title="{{ settings.ai_skin_scan_upload_label | default: 'Tải 3 ảnh từ thiết bị' | escape }}">
-              <i class="fa-regular fa-image" aria-hidden="true"></i>
+              <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'image', size: 'em' %}</i>
               <span>{{ settings.ai_skin_scan_pick_label | default: 'Chọn ảnh' | escape }}</span>
             </button>
             <button type="button" class="pc-mcam-shutter" data-skin-mobile-shutter aria-label="{{ settings.ai_skin_scan_start_label | default: 'Bắt đầu soi da' | escape }}" data-label-start="{{ settings.ai_skin_scan_start_label | default: 'Bắt đầu soi da' | escape }}" data-label-capture="{{ settings.ai_skin_scan_capture_label | default: 'Chụp góc này' | escape }}">
               <span aria-hidden="true"></span>
             </button>
             <button type="button" class="pc-mcam-tool" data-skin-mobile-switch>
-              <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+              <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'refresh-cw', size: 'em' %}</i>
               <span>{{ settings.ai_skin_scan_switch_label | default: 'Đổi camera' | escape }}</span>
             </button>
           </div>
@@ -139,7 +140,8 @@
           <p class="pc-skin-scan__status" data-skin-mode-unavailable hidden role="status"></p>
           {%- comment -%} 2026-10-20: bọc để mobile hiển thị thành ô gợi ý có icon; desktop wrapper = display:contents. {%- endcomment -%}
           <div class="pc-mcam-hint">
-            <i class="fa-regular fa-face-smile" aria-hidden="true"></i>
+            {%- comment -%} Không gắn `inline-block` (global_core đặt !important) — CSS cũ ẩn/hiện thẻ <i> này theo trạng thái camera. {%- endcomment -%}
+            <i class="leading-none" aria-hidden="true">{% include 'ui_icon', name: 'smile', size: 'em' %}</i>
             <p class="pc-skin-scan__status" id="skinCameraStatus" aria-live="polite" data-start-hint="{{ settings.ai_skin_scan_hint | default: 'Đưa khuôn mặt vào khung và giữ thẳng, đủ sáng' | escape }}"></p>
           </div>
 
@@ -163,12 +165,13 @@
             <p class="pc-skin-standby__m-title">{{ settings.ai_skin_scan_mobile_title | default: 'Soi da AI ngay trên điện thoại' | escape }}</p>
             <p class="pc-skin-standby__m-sub">{{ settings.ai_skin_scan_mobile_sub | default: 'Chụp 3 góc mặt, nhận gợi ý chăm sóc tham khảo' | escape }}</p>
             <button type="button" class="pc-skin-scan__primary pc-btn-start-pill" data-skin-camera-start>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              {%- comment -%} L03b7 (31/10/2026): cỡ 24px mobile chuyển từ quy tắc CSS cũ `.pc-btn-start-pill svg` (đã xoá — nó ép cả mũi tên ui_icon) sang thuộc tính width/height 24; desktop ≥ 768 giữ 18px bằng md:w-5 (1,25rem × gốc 14,4px). {%- endcomment -%}
+              <svg class="md:w-5 md:h-5" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
                 <circle cx="12" cy="13" r="4"/>
               </svg>
               <span>{{ settings.ai_skin_scan_start_label | default: 'Bắt đầu soi da' | escape }}</span>
-              <i class="fa-solid fa-chevron-right pc-btn-start-pill__chevron" aria-hidden="true"></i>
+              <i class="pc-btn-start-pill__chevron leading-none" aria-hidden="true">{% include 'ui_icon', name: 'chevron-right', size: 'em' %}</i>
             </button>
             {%- comment -%}
               2026-10-20 (mobile, 1 chạm): khách ngại dùng vì sợ bị lưu ảnh và phải thao tác nhiều ⇒ đặt cam kết
@@ -176,17 +179,17 @@
               Nội dung đúng với code: ảnh chỉ xử lý trong RAM trình duyệt, không lưu/gửi ảnh, không yêu cầu đăng nhập.
               Icon theo thứ tự mục: khoá (không lưu ảnh) · điện thoại (xử lý trên máy) · người (không cần đăng ký).
             {%- endcomment -%}
-            {%- assign skin_trust_icons = 'fa-lock,fa-mobile-screen-button,fa-user-check' | split: ',' -%}
+            {%- assign skin_trust_icons = 'lock,smartphone,user-check' | split: ',' -%}
             {%- assign skin_trust_items = settings.ai_skin_scan_trust_items | default: 'Không lưu ảnh|Xử lý ngay trên máy|Không cần đăng ký' | split: '|' -%}
             <ul class="pc-skin-standby__trust">
               {%- for item in skin_trust_items -%}
               {%- assign item_text = item | strip -%}
               {%- if item_text != blank -%}
-              <li><span class="pc-skin-standby__trust-icon"><i class="fa-solid {{ skin_trust_icons[forloop.index0] | default: 'fa-check' }}" aria-hidden="true"></i></span>{{ item_text | escape }}</li>
+              <li><span class="pc-skin-standby__trust-icon">{%- assign skin_trust_icon = skin_trust_icons[forloop.index0] | default: 'check' -%}<i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: skin_trust_icon, size: 'em' %}</i></span>{{ item_text | escape }}</li>
               {%- endif -%}
               {%- endfor -%}
             </ul>
-            <a class="pc-skin-standby__more" href="#pcSkinScanInfo">{{ settings.ai_skin_scan_more_label | default: 'Xem cách hoạt động' | escape }} <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></a>
+            <a class="pc-skin-standby__more" href="#pcSkinScanInfo">{{ settings.ai_skin_scan_more_label | default: 'Xem cách hoạt động' | escape }} <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down', size: 'em' %}</i></a>
           </div>
 
           <!-- Nút chụp ảnh dạng Floating Shutter khi đang Live Stream -->

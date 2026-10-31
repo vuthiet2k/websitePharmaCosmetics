@@ -1,4 +1,13 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 63 (31/10/2026) · Việc vừa làm: L03b7 → DONE (lần thử 2) — L03b phần 7: gỡ Font Awesome ở /ai-skin-quiz.
+Lần 2: XOÁ quy tắc cũ `.pc-skin-scan .pc-skin-standby .pc-btn-start-pill svg{24px}` (R1 — CSS cũ chỉ được xoá); icon camera của nút giữ cỡ bằng thuộc tính 24 + md:w-5 md:h-5; bỏ -mr-2.
+checks/L03b7.mjs 238 ✔ / 0 ✗ (7 khung × 3 trạng thái): mũi tên nút «Bắt đầu soi da» 14×14 (= glyph 14), lệch tâm 2,7px; icon camera 24 (< 768) / 18 (768) / 18,8 (≥ 1024, trước 18 — gốc chữ 15px);
+`<i fa->` 0; lệch tâm ≤ 2,7px; cha đổi cỡ ≤ 2,1px; màu ΔRGB 0; thẻ kết quả + thanh hồ sơ = before; 0 lỗi JS; ảnh đã xem. build:sapo + ui-guard PASS (--tighten 3 mốc); --quick 7 trang 0 lỗi mới, --write-baseline.
+Việc tiếp theo: L03b (phần 8 — còn 188 lượt FA), L03c, L11, L37 (TODO đầu tiên theo đợt).
+Tổng (đếm cột Trạng thái BACKLOG): 95 việc · DONE 40 · TODO 54 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 1 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick 7 trang)
+Câu hỏi cho chủ dự án (giữ từ vòng 61):
+- N25: áp lại ui-loop/proposals/N25-sprite.patch (HTML −104 KB/trang, icon không đổi) dù tiêu chí tốc độ (c) chưa đạt — hay giữ BLOCKED tới khi L03c/D09 giảm CSS/JS chặn?
 Vòng: 62 (31/10/2026) · Việc vừa làm: L03b7 → VERIFY_FAIL (lần thử 1) — L03b phần 7: gỡ Font Awesome ở /ai-skin-quiz (page.ai-skin-quiz kể cả icon JS, skin_scan_camera, skin_profile_notice).
 checks/L03b7.mjs 228 ✔ / 3 ✗ (7 khung × 3 trạng thái): `<i fa->` 20/20/87 → 0; icon nhìn thấy before = after; lệch tâm ≤ 3,5px; cha đổi cỡ ≤ 3,8px; màu ΔRGB 0; 19 câu ⇒ thẻ kết quả như before;
 thanh hồ sơ bấm X ẩn; 0 lỗi JS; faIcon 214 → 188; build:sapo + ui-guard PASS. ✗: mũi tên nút «Bắt đầu soi da» (390/320/WebKit) hộp SVG 24px vs glyph 14px = 1,71× > 1,6 —
