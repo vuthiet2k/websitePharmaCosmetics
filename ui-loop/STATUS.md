@@ -1,5 +1,5 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 70 (01/11/2026) · Việc vừa làm: L03b13 → DONE (lần thử đầu) — L03b phần 13: gỡ Font Awesome ở trang bài viết (templates/article.bwt, 10 lượt faIcon; 3 bài: chuyên gia flagship / chuyên gia khác / không chuyên gia).
+Vòng: 70 (01/11/2026) · Việc vừa làm: L03b13 → DONE 4959879 (lần thử đầu) — L03b phần 13: gỡ Font Awesome ở trang bài viết (templates/article.bwt, 10 lượt faIcon; 3 bài: chuyên gia flagship / chuyên gia khác / không chuyên gia).
 checks/L03b13.mjs 252 ✔ / 0 ✗ (3 bài × 7 khung): `<i fa->` 7/6/6 → 0; icon nhìn thấy before = after; lệch tâm ≤ 1,4px; cha đổi cỡ ≤ 1,5px; cao icon 1,00; màu ΔRGB 0; cao trang lệch 0px;
 nút Thích (viền ↔ đặc, tải lại giữ) + Tab + link hồ sơ = before; 0 lỗi JS; ảnh đã xem. ui_icon thêm path Lucide thumbs-up + thumbs-up-filled, globe. build:sapo + ui-guard PASS (faIcon 82 → 72, --tighten 1 mốc).
 --quick 9 trang: 2 lỗi «mới» chỉ ở webkit390 /collections/all (touch<44 90 → 120, noName 24 → 40) ở 5/5 lượt, lượt đối chứng bản HEAD 559a87f cũng vậy ⇒ không do L03b13; --write-baseline nâng mốc đó ⇒ đã git restore baseline, vòng này KHÔNG ghi baseline.
