@@ -1,0 +1,141 @@
+diff --git a/snippets/bean-menu-cate.bwt b/snippets/bean-menu-cate.bwt
+index f8df33a..9af1663 100644
+--- a/snippets/bean-menu-cate.bwt
++++ b/snippets/bean-menu-cate.bwt
+@@ -1,51 +1,56 @@
+ {%- comment -%} 2026-10-19: danh mục con chưa có ảnh ⇒ icon thay thế (trước: Sapo trả noimage.gif "NO IMAGE AVAILABLE" — 17 ô trên preview 1172841). {%- endcomment -%}
+ {%- comment -%} 2026-10-07: bỏ icon cate-icon-N.png + cate-icon.png — nhóm "Icon Danh mục sản phẩm" đã xoá khỏi cấu hình theo yêu cầu (sheet cấu hình). {%- endcomment -%}
+-{%if linklists[settings.header_nav_cate].links.size > 0 %}
++{%- if linklists[settings.header_nav_cate].links.size > 0 -%}
++{%- comment -%} N25 (31/10/2026, chủ dự án duyệt phương án (a)): icon trong template dùng ui_icon sprite 'use' — khai báo symbol 1 lần ở đây, NGOÀI div bên dưới
++  (main.js / shim header thay innerHTML của div bằng template ⇒ đặt trong div sẽ mất). Trước: 252 SVG nội tuyến ≈ 235 KB HTML mỗi trang.
++  Cùng việc: thẻ Liquid đứng riêng dòng dùng dấu gạch cắt khoảng trắng (bỏ dòng trống + thụt lề giữa các <li> — template lặp ~290 lần) và bỏ aria-hidden thừa trên <i>
++  bọc icon layers (span cha đã aria-hidden). {%- endcomment -%}
++{% include 'ui_icon', sprite: 'defs', name: 'menu,layers' %}
+ <div id="header-category-menu" class="sudes-list-cate" data-section="header_nav_cate">
+ 	<script type="text/x-custom-template" data-template="header_nav_cate">
+ 		<ul class="sudes-main-cate">
+-			{% for link in linklists[settings.header_nav_cate].links %}
++			{%- for link in linklists[settings.header_nav_cate].links -%}
+ 			{%- comment -%} N16 (24/10/2026): bỏ link về trang chủ khỏi cây danh mục — drawer ☰ đã có TRANG CHỦ của menu chính (#nav), đây không phải danh mục sản phẩm.
+ 			  Utility py-3/pl-2.5/pr-12 (+ lg:p-0) thay padding 4px cũ của drawer (đã xoá ở global_core) ⇒ mục cao ≥ 44px (B.7); desktop giữ quy tắc cũ. {%- endcomment -%}
+-			{% unless link.url == '/' %}
+-			{% if linklists[link.alias] %}
++			{%- unless link.url == '/' -%}
++			{%- if linklists[link.alias] -%}
+ 			<li class="sudes-main-cate-has-child menu-item-count {%if link.active%}active{%endif%}">
+ 				<a {%if  linklists[link.alias].links.size > 0%}href="javascript:void(0)"{%else%}href="{{link.url}}"{%endif%} title="{{ link.title }}" class="py-3 pl-2.5 pr-12 lg:p-0">
+ 					{{ link.title }}<i class="icon_mask"></i>
+ 			</a>
+ 				{%- comment -%} N18 (24/10/2026): icon ≡ = SVG ui_icon 20px (thay ảnh nền ::before 10px đã xoá ở global_core) — WebKit không vẽ kịp ::before khi giảm chuyển động;
+ 				  lg:hidden — mega-menu desktop không có icon (trước là ô rỗng 0×0). {%- endcomment -%}
+-				<i class="open_mnu down_icon h-12 w-12 lg:hidden">{% include 'ui_icon', name: 'menu' %}</i>
++				<i class="open_mnu down_icon h-12 w-12 lg:hidden">{% include 'ui_icon', name: 'menu', sprite: 'use' %}</i>
+ 				<ul class="menu-child sub-menu sudes-sub-mega-menu">
+-					{% for childlink in linklists[link.alias].links %}
+-					{% if linklists[childlink.alias] %}
++					{%- for childlink in linklists[link.alias].links -%}
++					{%- if linklists[childlink.alias] -%}
+ 					<li class="sudes-main-cate-has-child-2 clearfix">
+ 						<a class="image_thumb gap-3 py-3 pl-2.5 pr-12 lg:gap-0 lg:p-0" href="{{ childlink.url }}" title="{{ childlink.title }}">
+ 						<div class="image">
+-						{%- if childlink.object.image.src != blank -%}<img  class="lazyload image1" src="{{ 'lazy.png' | asset_url}}"  data-src="{{ childlink.object.image.src | img_url: 'large'}}" alt="{{ childlink.title }}">{%- else -%}<span class="pc-mm-noimg lg:min-h-16" aria-hidden="true"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'layers', size: 'em' %}</i></span>{%- endif -%}
++						{%- if childlink.object.image.src != blank -%}<img  class="lazyload image1" src="{{ 'lazy.png' | asset_url}}"  data-src="{{ childlink.object.image.src | img_url: 'large'}}" alt="{{ childlink.title }}">{%- else -%}<span class="pc-mm-noimg lg:min-h-16" aria-hidden="true"><i class="inline-block leading-none">{% include 'ui_icon', name: 'layers', size: 'em', sprite: 'use' %}</i></span>{%- endif -%}
+ 											</div>
+ 						<span class="line-clamp line-clamp-2">{{ childlink.title }} </span> <i class="icon_mask"></i></a>
+ 						{%- comment -%} N16 (24/10/2026): icon ≡ chỉ khi menu con có link — linklists[x] của menu rỗng vẫn TRUE ⇒ icon thừa ở mục không có con.
+ 						  Giữ nguyên li/ul như cũ để mega-menu desktop không đổi cỡ ô. {%- endcomment -%}
+-						{%- if linklists[childlink.alias].links.size > 0 -%}<i class="open_mnu down_icon h-12 w-12 lg:hidden">{% include 'ui_icon', name: 'menu' %}</i>{%- endif -%}
++						{%- if linklists[childlink.alias].links.size > 0 -%}<i class="open_mnu down_icon h-12 w-12 lg:hidden">{% include 'ui_icon', name: 'menu', sprite: 'use' %}</i>{%- endif -%}
+ 						<ul class="menu-child menu-child-2 sub-menu clearfix">
+-							{% for childlink2 in linklists[childlink.alias].links %}
++							{%- for childlink2 in linklists[childlink.alias].links -%}
+ 							<li>
+ 								<a href="{{ childlink2.url }}" title="{{ childlink2.title }}">{{ childlink2.title }}</a>
+ 			</li>
+-							{% endfor %}
++							{%- endfor -%}
+ 			</ul>
+ 			</li>
+-					{% else %}
++					{%- else -%}
+ 					<li class="sudes-main-cate-has-child-2">
+ 						<a class="image_thumb gap-3 py-3 pl-2.5 pr-12 lg:gap-0 lg:p-0" href="{{ childlink.url }}" title="{{ childlink.title }}">
+ 						<div class="image">
+-						{%- if childlink.object.image.src != blank -%}<img  class="lazyload image1" src="{{ 'lazy.png' | asset_url}}"  data-src="{{ childlink.object.image.src | img_url: 'large'}}" alt="{{ childlink.title }}">{%- else -%}<span class="pc-mm-noimg lg:min-h-16" aria-hidden="true"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'layers', size: 'em' %}</i></span>{%- endif -%}
++						{%- if childlink.object.image.src != blank -%}<img  class="lazyload image1" src="{{ 'lazy.png' | asset_url}}"  data-src="{{ childlink.object.image.src | img_url: 'large'}}" alt="{{ childlink.title }}">{%- else -%}<span class="pc-mm-noimg lg:min-h-16" aria-hidden="true"><i class="inline-block leading-none">{% include 'ui_icon', name: 'layers', size: 'em', sprite: 'use' %}</i></span>{%- endif -%}
+ 											</div>
+ 						<span class="line-clamp line-clamp-2">{{ childlink.title }} </span></a>
+ 			</li>
+-					{% endif %}
+-					{% endfor %}
++					{%- endif -%}
++					{%- endfor -%}
+ 					<li class="sudes-main-cate-has-child-2">
+ 						<a class="image_thumb gap-3 py-3 pl-2.5 pr-12 lg:gap-0 lg:p-0" href="{{ link.url }}" title="XEM TẤT CẢ">
+ 						<div class="image allcol">
+@@ -55,15 +60,15 @@
+ 			</li>
+ 			</ul>
+ 			</li>
+-			{% else %}
++			{%- else -%}
+ 			<li class="sudes-main-cate-has-child menu-item-count {%if link.active%}active{%endif%}">
+ 				<a href="{{ link.url }}" title="{{ link.title }}" class="py-3 px-2.5 lg:p-0">{{ link.title }}</a>
+ 			</li>
+-			{% endif %}
+-			{% endunless %}
+-			{% endfor %}
++			{%- endif -%}
++			{%- endunless -%}
++			{%- endfor -%}
+ 			
+ 			</ul>
+ 	</script>
+ </div>
+-{%endif%}
++{%- endif -%}
+diff --git a/snippets/ui_icon.bwt b/snippets/ui_icon.bwt
+index 7be0946..9594427 100644
+--- a/snippets/ui_icon.bwt
++++ b/snippets/ui_icon.bwt
+@@ -12,7 +12,21 @@
+     của thẻ bọc vẫn áp dụng (CSS cũ đóng băng R1, không viết lại được).
+   · name nhận cả giá trị cũ dạng class FA (vd "fa-solid fa-house", "fa-house") — cấu hình settings đang lưu trên Sapo không vỡ:
+     lấy từ cuối, bỏ tiền tố "fa-", rồi đổi tên FA sang tên ui_icon theo bảng dưới. {%- endcomment -%}
+-{%- assign pc_icon_name = name | strip | split: ' ' | last | remove_first: 'fa-' -%}
++{%- comment -%} N25 (31/10/2026, chủ dự án duyệt phương án (a) — ui-loop/proposals/N25.md): chế độ sprite cho nơi lặp nhiều icon (menu header_nav_cate
++  252 SVG nội tuyến ≈ 235 KB HTML trên mọi trang).
++  · sprite = 'defs', name = 'menu,layers' (nhiều tên, phẩy) ⇒ 1 khối <svg data-pc-sprite> ẩn (sr-only) chứa <symbol id="pc-i-<tên>"> — khai báo 1 LẦN/trang,
++    đặt NGOÀI template JS (template chèn bằng innerHTML phải thấy symbol trong DOM thật). Thuộc tính nét (fill/stroke…) nằm trên <symbol>.
++  · sprite = 'use' ⇒ <svg …><use href="#pc-i-<tên>"/></svg> (cùng class/cỡ/aria như chế độ thường) — trang phải có khối defs chứa tên đó.
++    Bỏ viewBox (symbol đã có, tự co theo width/height của svg) và focusable (chỉ IE) để gọn HTML — mỗi byte nhân 252 lần.
++  · Không truyền sprite ⇒ SVG nội tuyến như cũ. {%- endcomment -%}
++{%- assign pc_icon_mode = sprite | append: '' -%}
++{%- if name == blank -%}{%- assign pc_icon_list = '' | split: ',' -%}{%- elsif pc_icon_mode == 'defs' -%}{%- assign pc_icon_list = name | split: ',' -%}{%- else -%}{%- assign pc_icon_list = name | split: '~~' -%}{%- endif -%}
++{%- if name == blank -%}<!-- PC-ERROR ui_icon: thiếu name -->
++{%- elsif pc_icon_mode != '' and pc_icon_mode != 'defs' and pc_icon_mode != 'use' -%}<!-- PC-ERROR ui_icon: sprite "{{ pc_icon_mode }}" không hợp lệ -->
++{%- else -%}
++{%- if pc_icon_mode == 'defs' -%}<svg data-pc-sprite class="sr-only" width="0" height="0" aria-hidden="true" focusable="false">{%- endif -%}
++{%- for pc_icon_raw in pc_icon_list -%}
++{%- assign pc_icon_name = pc_icon_raw | strip | split: ' ' | last | remove_first: 'fa-' -%}
+ {%- case pc_icon_name -%}
+ {%- when 'xmark' -%}{%- assign pc_icon_name = 'x' -%}
+ {%- when 'magnifying-glass' -%}{%- assign pc_icon_name = 'search' -%}
+@@ -180,9 +194,14 @@
+ {%- when 'grip' -%}<circle cx="12" cy="5" r="1"/><circle cx="19" cy="5" r="1"/><circle cx="5" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="12" cy="19" r="1"/><circle cx="19" cy="19" r="1"/><circle cx="5" cy="19" r="1"/>
+ {%- endcase -%}
+ {%- endcapture -%}
+-{%- if name == blank -%}<!-- PC-ERROR ui_icon: thiếu name -->
+-{%- elsif pc_icon_paths == blank -%}<!-- PC-ERROR ui_icon: name "{{ name }}" không có trong bộ icon -->
++{%- if pc_icon_paths == blank -%}<!-- PC-ERROR ui_icon: name "{{ pc_icon_raw }}" không có trong bộ icon -->
++{%- elsif pc_icon_mode == 'defs' -%}<symbol id="pc-i-{{ pc_icon_name }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{{ pc_icon_paths }}</symbol>
+ {%- elsif pc_icon_bad -%}<!-- PC-ERROR ui_icon: size "{{ pc_icon_s }}" không hợp lệ -->
++{%- elsif pc_icon_mode == 'use' -%}
++<svg class="shrink-0" width="{{ pc_icon_size }}" height="{{ pc_icon_size }}"{% if label != blank %} role="img" aria-label="{{ label | escape }}"{% else %} aria-hidden="true"{% endif %}><use href="#pc-i-{{ pc_icon_name }}"/></svg>
+ {%- else -%}
+ <svg xmlns="http://www.w3.org/2000/svg" class="shrink-0" width="{{ pc_icon_size }}" height="{{ pc_icon_size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"{% if label != blank %} role="img" aria-label="{{ label | escape }}"{% else %} aria-hidden="true" focusable="false"{% endif %}>{{ pc_icon_paths }}</svg>
+ {%- endif -%}
++{%- endfor -%}
++{%- if pc_icon_mode == 'defs' -%}</svg>{%- endif -%}
++{%- endif -%}

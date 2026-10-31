@@ -1,4 +1,12 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 61 (31/10/2026) · Việc vừa làm: N25 → BLOCKED (lần thử 3) — --perf 13:55 + 14:04 lấy tốt nhất còn 3 trang vượt baseline ×1,1: / 11 080 > 10 613, giỏ 9 248 > 8 576,
+/tin-tuc 9 852 > 9 777 (6 trang đạt; đặt lịch 7 416 thuộc L03c). TTFB 1,5–1,9 s (vòng 54: 1,0–1,6). A/B checks/N25ab.mjs: FCP 6,9–8,7 s khi HTML đã xong ~1,9 s ⇒ đường găng là CSS/JS chặn + CPU.
+Đã `git restore snippets/ui_icon.bwt snippets/bean-menu-cate.bwt`; mã sprite (vòng 60 đạt (a) −104 KB/trang, (b) icon y hệt 8 khung) lưu ui-loop/proposals/N25-sprite.patch.
+Việc tiếp theo: L03b (phần 7), L03c, L11, L37 (TODO đầu tiên theo đợt).
+Tổng (đếm cột Trạng thái BACKLOG): 93 việc · DONE 39 · TODO 53 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 1 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: --perf 4–5 dòng tốc độ (như trên); --quick không chạy (không còn thay đổi file theme)
+Câu hỏi cho chủ dự án:
+- N25: áp lại ui-loop/proposals/N25-sprite.patch (HTML −104 KB/trang, icon không đổi) dù tiêu chí tốc độ (c) chưa đạt — rồi chuyển N25 về TODO/đóng như N23 — hay giữ BLOCKED tới khi L03c/D09 giảm CSS/JS chặn?
 Vòng: 60 (31/10/2026) · Việc vừa làm: N25 → VERIFY_FAIL (lần thử 2) — ui_icon chế độ sprite (defs|use, chủ dự án duyệt (a)) cho menu header_nav_cate.
 Đồng bộ sổ đầu vòng: E.7 N23 → ✅ đóng theo quyết định chủ dự án 31/10 (BACKLOG đã DONE); N25 E.7 ❓ → theo BACKLOG; C.2 #13 thêm tham số sprite.
 Đạt: (a) HTML 10 trang −104 KB (/ 724,2 → 620,1 KB; template 235,2 → 130,4 KB; 1 khối sprite, 0 id trùng, 0 PC-ERROR); (b) checks/N25s.mjs 8 khung (Chromium 390/320/768/1024/1440/844×390
