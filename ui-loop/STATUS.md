@@ -1,4 +1,15 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 55 (31/10/2026) · Việc vừa làm: L03b3 → DONE (L03b phần 3 — gỡ Font Awesome ở 9 khối trang chủ home_portal, trừ section_flash_sale).
+7 khung Chromium + WebKit, /?tpl=index: `<i fa->` 15 → 0; icon nhìn thấy 14 = 14; lệch tâm ≤ 2,0px; phần tử cha đổi cỡ ≤ 1,7px; cao trang lệch 0px;
+lượt 1 chưa đạt (CSS cũ home-portal.css `.shb2__tile svg` ẩn 4 icon chip spa, `.chan svg` tô đặc icon chia sẻ) ⇒ thu hẹp `> svg`, xoá `.chan svg` ⇒ đạt.
+ui_icon thêm 6 path Lucide; settings_data KHÔNG đổi (ui_icon ánh xạ giá trị "fa-…" cũ). ui-guard faIcon 272 → 261; build:sapo PASS; --quick 0 lỗi mới.
+Việc tiếp theo: L03b tiếp (tách phần 4: khối không ở trang chủ + template trang), L03c, L11, L37 (đợt 3).
+Tổng: 89 việc · DONE 34 · TODO 52 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 1 · BLOCKED_OWNER 2
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick 7 trang)
+Câu hỏi cho chủ dự án (giữ từ vòng 54):
+- N25 (proposals/N25.md): cho sửa `snippets/ui_icon.bwt` (KHOÁ) thêm chế độ sprite (`<symbol>` 1 lần + `<use>`) cho menu `header_nav_cate`? Hay ghi lại mốc perf và đóng N25?
+- N23 (câu 3 proposals/N23.md): LCP đặt lịch = ảnh mascot widget — cho sửa, hay gộp vào N25/L03c?
+- N28: áp bản vá ui-loop/proposals/N28-bestseller.patch và ghi lại mốc webkit390 /collections/all 90/24 → 120/40? (proposals/N28.md)
 Vòng: 54 (31/10/2026) · Việc vừa làm: N25 → BLOCKED_OWNER (đã xác định nguyên nhân bằng đo, không sửa file theme). Máy ổn định (TTFB 0,9–1,6 s);
 --perf 08:40 + 09:01 lấy tốt nhất: 6/10 đạt, còn vượt giỏ 8 760, /soi-da 13 276, /skinhealthy-services 9 080, đặt lịch 11 448 ms ⇒ do MÃ: HTML 516–720 KB
 + 16–18 file chặn 540–702 KB / 4G 200 KB/s; template menu `header_nav_cate` 235 KB trên mọi trang (252 SVG ui_icon nội tuyến). A/B chặn font

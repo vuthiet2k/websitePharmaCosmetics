@@ -41,7 +41,9 @@
         {%- for chip in pc_shb_chips -%}
         {%- assign pc_shb_u = pc_shb_urls[forloop.index0] | strip | default: pc_shb_cta_url -%}
         <a class="shb2__tile" href="{{ pc_shb_u | escape }}" data-reveal>
-          <i class="fas {{ pc_shb_icons[forloop.index0] | strip | default: 'fa-circle-check' }}" aria-hidden="true"></i>
+          {%- comment -%} L03b3 (31/10/2026): bỏ Font Awesome — ui_icon tự đổi giá trị cũ "fa-…" trong portal_clinic_chip_icons sang icon SVG. {%- endcomment -%}
+          {%- assign pc_shb_icon = pc_shb_icons[forloop.index0] | strip | default: 'circle-check' -%}
+          <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: pc_shb_icon, size: 'em' %}</i>
           <span>{{ chip | strip | escape }}</span>
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
         </a>
