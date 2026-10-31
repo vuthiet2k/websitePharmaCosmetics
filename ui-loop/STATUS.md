@@ -1,4 +1,13 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 46 (31/10/2026) · Việc vừa làm: N23 → VERIFY_FAIL (lần 1). Stub JS ở dev-server.js ĐẠT phần login: 3 script Sapo trả JS 99–103 B,
+0 `.js` trả HTML, ui-verify --perf login LCP 16 652 → 11 280 ms (≤ 14 507); 8 khung Chromium+WebKit form login (gõ, Tab, Shift+Tab,
+gửi trống) và đặt lịch đúng, 0 lỗi JS; build:sapo + ui-guard PASS. CHƯA ĐẠT: /dat-lich-tu-van LCP 14 644 ms > 8 483 — nhưng cùng lượt
+--perf 8/10 trang vượt baseline (/ 13 400, vòng 42 là 8 772), server render 1,8–2,8 s/trang ⇒ chậm chung, ghi N25 (đợt 3);
+ui-verify --quick 1 lỗi mới d1440 /collections/all focusNoRing 20 → 21 (2/2 lượt, trang không nạp 3 script) ⇒ N26 (đợt 2).
+dev-server.js chưa commit (để trong cây làm việc). reports/N23.md. Việc tiếp theo: N23 lần 2 (VERIFY_FAIL ưu tiên — nên đo lặp
+--perf để tách nhiễu máy), N26 (đợt 2), rồi N25, L03b, L03c, L11, L37.
+Tổng: 84 việc · DONE 31 · TODO 52 · IN_PROGRESS 0 · VERIFY_FAIL 1 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 1 (--quick, → N26)
 Vòng: 45 (30/10/2026) · Việc đang làm: N23 → IN_PROGRESS (chờ khởi động lại preview — đã tạo ui-loop/RESTART-PREVIEW). Chẩn đoán đo
 được (evidence/N23/before.json, probe-timing.mjs, probe-ab.mjs): login chậm do 3 script hệ thống Sapo `bizweb_asset_url` nạp đồng bộ
 trong head — ở local 404 và dev-server trả NGUYÊN TRANG HTML ≈ 500 KB/file ⇒ FCP 16 036 / LCP 16 500 ms; A/B trả JS rỗng ⇒ FCP 5 804,
