@@ -1,4 +1,15 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 53 (31/10/2026) · Việc vừa làm: N23 → BLOCKED (lần 4, sau khi chủ dự án duyệt bản vá stub). checks/N23a.mjs 8 khung × 2 trang ĐẠT
+(stub 3 script 99–103 B JS, 0 .js trả HTML, Tab/Shift+Tab, gửi trống, 0 lỗi JS; ảnh đã xem). ui-verify --perf 2 lượt (08:13, 08:22) lấy tốt nhất:
+login LCP 9 196 ≤ 14 507 ✔; đặt lịch 9 980 > 8 483 ✗; 6 trang không nạp 3 script cũng vượt baseline (/ 10 836, PDP 9 764, giỏ 9 340, /soi-da 13 500,
+retinol 10 084, /skinhealthy-services 9 268) ⇒ chậm chung (N25). --quick 6 trang: login/đặt lịch 0 lỗi mới; 2 lỗi mới webkit390 /collections/all = dao động N28.
+dev-server.js (stub) commit riêng theo quyết định chủ dự án 31/10 — không git restore. reports/N23.md.
+Việc tiếp theo: N25 (đợt 3 — đo chậm chung), rồi L03b, L03c, L11, L37.
+Tổng: 88 việc · DONE 33 · TODO 53 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 1 · BLOCKED_OWNER 1
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 2 (--quick, webkit390 /collections/all — N28) · --perf 7 trang (chậm chung N25)
+Câu hỏi cho chủ dự án:
+- N23 (câu 3 proposals/N23.md): đặt lịch LCP 9 980 ms (ngưỡng 8 483) phụ thuộc HTML 557 KB (template menu 238 KB, file KHOÁ) + ảnh mascot widget nạp sau HTML — cho sửa file KHOÁ, hay gộp hướng xử lý vào N25/L03b và đóng N23 phần login?
+- N28: áp bản vá ui-loop/proposals/N28-bestseller.patch và chấp nhận ghi lại mốc webkit390 /collections/all 90/24 → 120/40 không? (proposals/N28.md)
 Vòng: 52 (31/10/2026) · Việc vừa làm: N23 → IN_PROGRESS. Chủ dự án duyệt 31/10 áp bản vá stub JS (preview local) ⇒ đã áp
 ui-loop/proposals/N23-dev-server.patch vào dev-server.js (node --check OK), tạo ui-loop/RESTART-PREVIEW để script nạp lại preview. Chưa kiểm, chưa commit.
 Việc tiếp theo: N23 (kiểm: checks/N23a.mjs 8 khung, ui-verify --perf ≥ 2 lượt cách nhau lấy lượt tốt nhất, --quick; đạt ⇒ commit dev-server.js), rồi N25, L03b, L03c, L11, L37.
