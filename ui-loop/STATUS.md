@@ -1,4 +1,12 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 66 (01/11/2026) · Việc vừa làm: L03b9 → DONE (lần thử đầu) — L03b phần 9: gỡ Font Awesome ở /skin-health-beauty (page.indexskinhealthy, 15 lượt trong mã / 31 phần tử trên trang).
+checks/L03b9.mjs 84 ✔ / 0 ✗ (7 khung): `<i fa->` 31 → 0; icon nhìn thấy before = after (19 / 20); lệch tâm ≤ 1,7px; cha đổi cỡ ≤ 1,6px; cao icon 1,00; màu ΔRGB 0; cao trang lệch 0px;
+Virtual Tour + lightbox + 3 dải trượt + Tab = before; 0 lỗi JS; ảnh đã xem. ui_icon thêm 5 path Lucide (maximize, play, video, pill-bottle, hand-heart). build:sapo + ui-guard PASS (faIcon 140 → 124, --tighten 1 mốc);
+--quick 7 trang 0 lỗi mới, --write-baseline.
+Việc tiếp theo: L03b (phần 10 — còn 124 lượt FA: article.truoc-va-sau 16, page.about-us 12, article 8, blog.instagram-feed 8…), L03c, L11, L37.
+Tổng (đếm cột Trạng thái BACKLOG): 98 việc · DONE 43 · TODO 55 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick 7 trang)
+Câu hỏi cho chủ dự án: không có mới.
 Vòng: 65 (01/11/2026) · Việc vừa làm: N25 → DONE (đóng theo quyết định chủ dự án 31/10, lần 2) — áp lại proposals/N25-sprite.patch: ui_icon chế độ sprite (defs|use) cho menu header_nav_cate.
 checks/N25s.mjs 139 ✔ / 0 ✗ (before đo lại trên HEAD 44010f2 trong vòng này): (a) HTML 10 trang −102,9…−103,0 KB (/ 722,0 → 619,0 KB), template menu 233,0 → 129,3 KB, 1 khối sprite, 0 id trùng, 0 PC-ERROR;
 (b) 8 khung Chromium + WebKit: icon menu before = after, lệch 0,00px, ảnh khác 0,00 %, aria-hidden 100 %, Escape + focus như before, 0 lỗi JS; ảnh đã xem. (d) build:sapo exit 0, ui-guard PASS (--tighten 0 mốc);
