@@ -1,4 +1,12 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 68 (01/11/2026) · Việc vừa làm: L03b11 → DONE (lần thử đầu) — L03b phần 11: gỡ Font Awesome ở trang Giới thiệu /about-us (page.about-us, 13 lượt trong mã / 20 phần tử trên trang).
+checks/L03b11.mjs 84 ✔ / 0 ✗ (7 khung): `<i fa->` 20 → 0; icon nhìn thấy before = after (20/21); lệch tâm ≤ 2,9px; cha đổi cỡ ≤ 3,7px; cao icon 1,00; màu ΔRGB 0; cao trang lệch 0px;
+rail «Đội ngũ» + Tab nút hero/Zalo = before; 0 lỗi JS; ảnh đã xem. ui_icon thêm path Lucide hospital + ánh xạ clinic-medical/house-medical/shield-virus. build:sapo + ui-guard PASS (faIcon 108 → 94, --tighten 1 mốc);
+--quick 7 trang 0 lỗi mới, --write-baseline. Thông báo gửi form thành công/lỗi không dựng được ở preview — chỉ kiểm qua mã.
+Việc tiếp theo: L03b (phần 12 — còn 94 lượt FA: blog.instagram-feed 12, article 11, product 6, page.skinhealthy-service-detail 5, page.order-lookup 5…), L03c, L11, L37.
+Tổng (đếm cột Trạng thái BACKLOG): 101 việc · DONE 45 · TODO 56 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick 7 trang)
+Câu hỏi cho chủ dự án: không có mới.
 Vòng: 67 (01/11/2026) · Việc vừa làm: L03b10 → DONE ed2710f + adf3661 (lần thử đầu) — L03b phần 10: gỡ Font Awesome ở bài ca Trước & Sau (article.truoc-va-sau, 16 lượt trong mã / 18 phần tử trên trang).
 checks/L03b10.mjs 133 ✔ / 0 ✗ (7 khung): `<i fa->` 18 → 0; icon nhìn thấy before = after (13 / 16; thanh đáy 2/2); lệch tâm ≤ 2,3px; cha đổi cỡ ≤ 3,3px; cao icon 1,00; màu ΔRGB 0; cao trang lệch 0px;
 thanh bám đáy + Tab = before; 0 lỗi JS; ảnh đã xem. ui_icon thêm path Lucide quote + ánh xạ quote-left/user-tie/images/calendar. build:sapo + ui-guard PASS (faIcon 124 → 108, --tighten 1 mốc);

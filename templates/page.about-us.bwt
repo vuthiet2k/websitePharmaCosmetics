@@ -24,7 +24,7 @@
     <div class="max-w-3xl">
       {%- if settings.about_hero_badge != blank -%}
       <div class="inline-block px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-semibold mb-4">
-        <i class="fa-solid fa-leaf" aria-hidden="true"></i> {{ settings.about_hero_badge }}
+        <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'leaf', size: 'em' %}</i> {{ settings.about_hero_badge }}
       </div>
       {%- endif -%}
       <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight font-heading mb-6 {% if settings.about_hero_bg_img != blank %}text-white{% else %}text-forest-900{% endif %}">
@@ -36,7 +36,7 @@
       <div class="flex flex-wrap gap-4">
         {%- if settings.about_hero_btn1_text != blank -%}
         <a href="{{ settings.about_hero_btn1_url | default: '/dat-lich-tu-van' }}" class="pc-kit-btn-primary">
-          {{ settings.about_hero_btn1_text }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+          {{ settings.about_hero_btn1_text }} <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-right', size: 'em' %}</i>
         </a>
         {%- endif -%}
         {%- if settings.about_hero_btn2_text != blank -%}
@@ -143,7 +143,9 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      {%- assign pillar_icons = 'fa-home,fa-clinic-medical,fa-shield-virus' | split: ',' -%}
+      {%- comment -%} L03b11 (01/11/2026): icon FA → ui_icon size 'em' trong <i> bọc cũ (home → house, clinic-medical → hospital,
+        shield-virus → shield-check; user-doctor → stethoscope, envelope → mail, comments → messages-square, circle-exclamation → circle-alert). {%- endcomment -%}
+      {%- assign pillar_icons = 'house,hospital,shield-check' | split: ',' -%}
       {%- assign pillar_colors = 'emerald,teal,cyan' | split: ',' -%}
       {%- for i in (1..3) -%}
       {%- capture k_title -%}about_pillar_{{ i }}_title{%- endcapture -%}
@@ -153,7 +155,7 @@
       {%- assign idx0 = i | minus: 1 -%}
       <div class="bg-gray-50 rounded-2xl p-8 border border-gray-100 hover:shadow-md transition">
         <div class="w-14 h-14 rounded-xl bg-{{ pillar_colors[idx0] }}-100 text-{{ pillar_colors[idx0] }}-700 flex items-center justify-center text-2xl mb-6">
-          <i class="fa-solid {{ pillar_icons[idx0] }}" aria-hidden="true"></i>
+          <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: pillar_icons[idx0], size: 'em' %}</i>
         </div>
         <span class="text-xs font-bold text-{{ pillar_colors[idx0] }}-700 uppercase tracking-widest">TRỤ CỘT 0{{ i }}</span>
         <h3 class="text-lg font-bold text-gray-900 mt-2 mb-3">{{ v_title }}</h3>
@@ -191,7 +193,7 @@
       là link; ô link trống thì in chữ trơn. Nay luôn là nút dẫn tới trang đặt lịch (ô trống ⇒ /dat-lich-tu-van).
     {%- endcomment -%}
     <div class="text-center mt-10">
-      <a href="{{ settings.about_method_cert_url | default: '/dat-lich-tu-van' }}" class="pc-kit-btn-secondary"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> {{ settings.about_method_cert_text }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+      <a href="{{ settings.about_method_cert_url | default: '/dat-lich-tu-van' }}" class="pc-kit-btn-secondary"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'calendar-check', size: 'em' %}</i> {{ settings.about_method_cert_text }} <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-right', size: 'em' %}</i></a>
     </div>
     {%- endif -%}
   </div>
@@ -216,7 +218,7 @@
         {%- if settings[k_img] != blank -%}
         <img src="{{ settings[k_img] | img_url: 'medium' }}" alt="{{ v_name | escape }}" width="80" height="80" class="w-20 h-20 rounded-xl object-cover mx-auto mb-4 shadow">
         {%- else -%}
-        <div class="w-20 h-20 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fa-solid fa-user-doctor" aria-hidden="true"></i></div>
+        <div class="w-20 h-20 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-4 text-2xl"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'stethoscope', size: 'em' %}</i></div>
         {%- endif -%}
         <h3 class="text-sm font-bold text-gray-900">{{ v_name }}</h3>
         <p class="text-xs text-emerald-700 font-semibold mb-2">{{ settings[k_role] }}</p>
@@ -242,7 +244,7 @@
           {%- for i in (1..4) -%}
           {%- capture k_badge -%}about_lab_badge_{{ i }}{%- endcapture -%}
           {%- assign v_badge = settings[k_badge] -%}
-          {%- if v_badge != blank -%}<span class="pc-kit-badge-clinical text-xs"><i class="fa-solid fa-check" aria-hidden="true"></i> {{ v_badge }}</span>{%- endif -%}
+          {%- if v_badge != blank -%}<span class="pc-kit-badge-clinical text-xs"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'check', size: 'em' %}</i> {{ v_badge }}</span>{%- endif -%}
           {%- endfor -%}
         </div>
       </div>
@@ -389,15 +391,15 @@
           <img class="h-10 w-auto" src="{{ 'PharmaCosmetics.svg' | asset_url }}" width="341" height="70" loading="lazy" alt="{{ settings.store_name | default: store.name | escape }}">
           {%- endif -%}
         </div>
-        {%- if settings.about_contact_address != blank -%}<p><i class="fa-solid fa-location-dot text-emerald-600 w-5" aria-hidden="true"></i> {{ settings.about_contact_address }}</p>{%- endif -%}
-        {%- if settings.about_contact_phone != blank -%}<p><i class="fa-solid fa-phone text-emerald-600 w-5" aria-hidden="true"></i> <a href="tel:{{ settings.about_contact_phone | remove: ' ' }}" class="hover:text-emerald-700">{{ settings.about_contact_phone }}</a></p>{%- endif -%}
-        {%- if settings.about_contact_email != blank -%}<p><i class="fa-solid fa-envelope text-emerald-600 w-5" aria-hidden="true"></i> <a href="mailto:{{ settings.about_contact_email }}" class="hover:text-emerald-700">{{ settings.about_contact_email }}</a></p>{%- endif -%}
-        {%- if settings.about_contact_hours != blank -%}<p><i class="fa-solid fa-clock text-emerald-600 w-5" aria-hidden="true"></i> {{ settings.about_contact_hours }}</p>{%- endif -%}
+        {%- if settings.about_contact_address != blank -%}<p><i class="inline-block leading-none text-emerald-600 w-5" aria-hidden="true">{% include 'ui_icon', name: 'map-pin', size: 'em' %}</i> {{ settings.about_contact_address }}</p>{%- endif -%}
+        {%- if settings.about_contact_phone != blank -%}<p><i class="inline-block leading-none text-emerald-600 w-5" aria-hidden="true">{% include 'ui_icon', name: 'phone', size: 'em' %}</i> <a href="tel:{{ settings.about_contact_phone | remove: ' ' }}" class="hover:text-emerald-700">{{ settings.about_contact_phone }}</a></p>{%- endif -%}
+        {%- if settings.about_contact_email != blank -%}<p><i class="inline-block leading-none text-emerald-600 w-5" aria-hidden="true">{% include 'ui_icon', name: 'mail', size: 'em' %}</i> <a href="mailto:{{ settings.about_contact_email }}" class="hover:text-emerald-700">{{ settings.about_contact_email }}</a></p>{%- endif -%}
+        {%- if settings.about_contact_hours != blank -%}<p><i class="inline-block leading-none text-emerald-600 w-5" aria-hidden="true">{% include 'ui_icon', name: 'clock', size: 'em' %}</i> {{ settings.about_contact_hours }}</p>{%- endif -%}
         {%- assign pc_ab_zalo = settings.contact_zalo | remove: ' ' | remove: '.' | strip -%}
         {%- if pc_ab_zalo != blank -%}
         <div class="pt-3">
           <a href="https://zalo.me/{{ pc_ab_zalo }}" target="_blank" rel="noopener" class="pc-kit-btn-primary w-full justify-center min-h-[44px]">
-            <i class="fa-solid fa-comments" aria-hidden="true"></i> {{ settings.about_contact_zalo_label | default: 'Chat Zalo với chuyên gia tư vấn' }}
+            <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'messages-square', size: 'em' %}</i> {{ settings.about_contact_zalo_label | default: 'Chat Zalo với chuyên gia tư vấn' }}
           </a>
         </div>
         {%- endif -%}
@@ -414,11 +416,11 @@
         <div class="space-y-4">
         <h3 class="text-base font-bold text-gray-900">{{ settings.about_contact_form_title | default: 'Gửi tin nhắn cho chúng tôi' }}</h3>
         {%- if form.posted_successfully -%}
-        <p class="text-sm text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2" role="status"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> {{ settings.about_contact_success | default: 'Cảm ơn bạn! Pharma Cosmetics đã nhận tin nhắn và sẽ liên hệ lại sớm.' }}</p>
+        <p class="text-sm text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2" role="status"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'circle-check', size: 'em' %}</i> {{ settings.about_contact_success | default: 'Cảm ơn bạn! Pharma Cosmetics đã nhận tin nhắn và sẽ liên hệ lại sớm.' }}</p>
         {%- endif -%}
         {%- if form.errors.size > 0 -%}
         <div class="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2" role="alert">
-          {%- for field in form.errors -%}<p><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> {{ form.errors.messages[field] }}</p>{%- endfor -%}
+          {%- for field in form.errors -%}<p><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'circle-alert', size: 'em' %}</i> {{ form.errors.messages[field] }}</p>{%- endfor -%}
         </div>
         {%- endif -%}
         <p class="text-xs text-gray-500">Thông tin bạn gửi chỉ dùng để liên hệ tư vấn, không chia sẻ cho bên thứ ba.</p>
