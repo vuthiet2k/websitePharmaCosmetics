@@ -1,4 +1,15 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 54 (31/10/2026) · Việc vừa làm: N25 → BLOCKED_OWNER (đã xác định nguyên nhân bằng đo, không sửa file theme). Máy ổn định (TTFB 0,9–1,6 s);
+--perf 08:40 + 09:01 lấy tốt nhất: 6/10 đạt, còn vượt giỏ 8 760, /soi-da 13 276, /skinhealthy-services 9 080, đặt lịch 11 448 ms ⇒ do MÃ: HTML 516–720 KB
++ 16–18 file chặn 540–702 KB / 4G 200 KB/s; template menu `header_nav_cate` 235 KB trên mọi trang (252 SVG ui_icon nội tuyến). A/B chặn font
+Montserrat: ΔLCP −1 232…+1 088 ms ⇒ không phải font. checks/N25.mjs 8 khung (ảnh đã xem), build:sapo + ui-guard PASS. reports/N25.md, proposals/N25.md.
+Việc tiếp theo: L03b (đợt 3), rồi L03c, L11, L37.
+Tổng: 88 việc · DONE 33 · TODO 52 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 1 · BLOCKED_OWNER 2
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 4 (--perf, tốt nhất 2 lượt — N25) · --quick không chạy (không đổi file theme)
+Câu hỏi cho chủ dự án:
+- N25 (proposals/N25.md): cho sửa `snippets/ui_icon.bwt` (KHOÁ) thêm chế độ sprite (`<symbol>` 1 lần + `<use>`) dùng cho menu `header_nav_cate` (ước HTML −110…−120 KB/trang)? Hay ghi lại mốc perf theo kiến trúc hiện tại (baseline 23/10 còn Tailwind CDN + Google Fonts) và đóng N25, để L03b/L03c/D09 lo dung lượng theo B.7?
+- N23 (câu 3 proposals/N23.md): đặt lịch LCP = ảnh mascot widget (support_mascot.gif, xong 11 482 ms) — cho sửa, hay gộp vào N25/L03c?
+- N28: áp bản vá ui-loop/proposals/N28-bestseller.patch và chấp nhận ghi lại mốc webkit390 /collections/all 90/24 → 120/40 không? (proposals/N28.md)
 Vòng: 53 (31/10/2026) · Việc vừa làm: N23 → BLOCKED (lần 4, sau khi chủ dự án duyệt bản vá stub). checks/N23a.mjs 8 khung × 2 trang ĐẠT
 (stub 3 script 99–103 B JS, 0 .js trả HTML, Tab/Shift+Tab, gửi trống, 0 lỗi JS; ảnh đã xem). ui-verify --perf 2 lượt (08:13, 08:22) lấy tốt nhất:
 login LCP 9 196 ≤ 14 507 ✔; đặt lịch 9 980 > 8 483 ✗; 6 trang không nạp 3 script cũng vượt baseline (/ 10 836, PDP 9 764, giỏ 9 340, /soi-da 13 500,
