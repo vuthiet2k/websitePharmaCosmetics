@@ -1,5 +1,5 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 63 (31/10/2026) · Việc vừa làm: L03b7 → DONE (lần thử 2) — L03b phần 7: gỡ Font Awesome ở /ai-skin-quiz.
+Vòng: 63 (31/10/2026) · Việc vừa làm: L03b7 → DONE 1f64e2c (lần thử 2) — L03b phần 7: gỡ Font Awesome ở /ai-skin-quiz.
 Lần 2: XOÁ quy tắc cũ `.pc-skin-scan .pc-skin-standby .pc-btn-start-pill svg{24px}` (R1 — CSS cũ chỉ được xoá); icon camera của nút giữ cỡ bằng thuộc tính 24 + md:w-5 md:h-5; bỏ -mr-2.
 checks/L03b7.mjs 238 ✔ / 0 ✗ (7 khung × 3 trạng thái): mũi tên nút «Bắt đầu soi da» 14×14 (= glyph 14), lệch tâm 2,7px; icon camera 24 (< 768) / 18 (768) / 18,8 (≥ 1024, trước 18 — gốc chữ 15px);
 `<i fa->` 0; lệch tâm ≤ 2,7px; cha đổi cỡ ≤ 2,1px; màu ΔRGB 0; thẻ kết quả + thanh hồ sơ = before; 0 lỗi JS; ảnh đã xem. build:sapo + ui-guard PASS (--tighten 3 mốc); --quick 7 trang 0 lỗi mới, --write-baseline.
