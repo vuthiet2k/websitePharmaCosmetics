@@ -1,5 +1,5 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 72 (01/11/2026) · Việc vừa làm: N37 → DONE (vòng 71 sửa + đo nhưng bị ngắt trước commit; vòng 72 kiểm lại rồi commit) — ghi lại mốc baseline webkit390 /collections/all 90/24 → 120/40 (= m390, đúng quyết định N28; mốc bị 559a87f hạ nhầm). Không sửa mã theme.
+Vòng: 72 (01/11/2026) · Việc vừa làm: N37 → DONE 37f1168 (vòng 71 sửa + đo nhưng bị ngắt trước commit; vòng 72 kiểm lại rồi commit) — ghi lại mốc baseline webkit390 /collections/all 90/24 → 120/40 (= m390, đúng quyết định N28; mốc bị 559a87f hạ nhầm). Không sửa mã theme.
 checks/N37.mjs baseline 4 ✔ (chỉ mục đó đổi, 342 → 342 mục), shots 7 ✔ (7 khung chèn 8 thẻ, 0 lỗi JS; ảnh đã xem); --quick 6 trang (2026-11-01T11-05-11): 0 lỗi mới, webkit390 120/40 = m390. build:sapo + ui-guard PASS, --tighten 0 mốc.
 Thêm N38 (đợt 2: WebKit /collections/all đôi khi đo 90/24 — 3/19 lượt — gốc làm mốc bị hạ).
 Việc tiếp theo: N38 (đợt 2 — TODO đầu tiên theo đợt), L03b (phần 14 — còn 72 lượt FA), L03c, L11, L37.
