@@ -1,4 +1,11 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 83 (02/11/2026) · Việc vừa làm: L03b20 → DONE (mã commit ghi ở commit docs kế tiếp; lần thử đầu) — L03b phần 20: gỡ Font Awesome ở trang tra cứu hoạt chất /tra-cuu-hoat-chat (templates/page.tra-cuu-hoat-chat.bwt, 3 lượt / 5 phần tử: microscope, triangle-exclamation → triangle-alert ×4 trên trang).
+checks/L03b20.mjs 91 ✔ / 0 ✗ (7 khung): `<i fa->` 5 → 0; icon nhìn thấy 5 = 5; lệch tâm ≤ 1,3px; cha đổi cỡ 0px; cao icon 1,00; ΔRGB 0; cao trang lệch 0px; link cỡ bằng; focus/Tab/Shift+Tab/bấm = before; 0 lỗi JS; ảnh đã xem.
+build:sapo + ui-guard PASS (faIcon 45 → 42, --tighten 1 mốc); --quick 7 trang: 0 lỗi mới do việc; d1440 /collections/all focusNoRing 18 → 19 = mốc bị hạ bởi lượt dao động 17-16-18 (7 lượt trước đều 19) → thêm N43 (đợt 2); --write-baseline chỉ 6 trang còn lại.
+Việc tiếp theo: N43 (đợt 2 — TODO đầu tiên theo đợt), rồi L03 (đợt 3, việc tổng), L03b (phần 21 — còn 42 lượt FA: product 6, customers/account 3, section_why_us 3, section_collection_cta 3…), L03c, L11, L37.
+Tổng (đếm cột Trạng thái BACKLOG): 119 việc (thêm L03b20, N43) · DONE 56 · TODO 63 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 1 (d1440 /collections/all — N43, không do việc)
+Câu hỏi cho chủ dự án: không có mới.
 Vòng: 82 (02/11/2026) · Việc vừa làm: L03b19 → DONE 10236e0 (lần thử đầu; vòng 81 thêm dữ liệu mẫu `?svc=none|noimg|free` — dev-server.js + preview-mock.js, preview đã khởi động lại) — L03b phần 19: gỡ Font Awesome ở trang chi tiết dịch vụ Skin Health Beauty /skinhealthy-service-detail (templates/page.skinhealthy-service-detail.bwt, 5 lượt / 4 nhánh: arrow-right, spa → leaf, calendar-check, phone, user-doctor → stethoscope).
 checks/L03b19.mjs 364 ✔ / 0 ✗ (4 trạng thái × 7 khung): `<i fa->` 2/1/3/2 → 0; icon nhìn thấy = before; lệch tâm ≤ 2,0px; cha đổi cỡ ≤ 0,9px; cao icon 1,00; ΔRGB 0; cao trang lệch 0px; nút «Đặt dịch vụ ngay» 192×43 bằng (lần đo đầu +1,9px ⇒ thêm -mx-px); focus/Tab/Shift+Tab/bấm (giỏ 0 → 1) = before; 0 lỗi JS; ảnh đã xem.
 build:sapo + ui-guard PASS (faIcon 50 → 45, --tighten 1 mốc); --quick 7 trang 0 lỗi mới, --write-baseline. Thêm N42 (đợt 7: nút submit «Đặt dịch vụ ngay» không viền focus, 2 nút chính cao 42,5px — có từ trước).
