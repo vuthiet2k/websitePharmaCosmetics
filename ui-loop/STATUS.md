@@ -1,5 +1,5 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 83 (02/11/2026) · Việc vừa làm: L03b20 → DONE (mã commit ghi ở commit docs kế tiếp; lần thử đầu) — L03b phần 20: gỡ Font Awesome ở trang tra cứu hoạt chất /tra-cuu-hoat-chat (templates/page.tra-cuu-hoat-chat.bwt, 3 lượt / 5 phần tử: microscope, triangle-exclamation → triangle-alert ×4 trên trang).
+Vòng: 83 (02/11/2026) · Việc vừa làm: L03b20 → DONE b078b8c (lần thử đầu) — L03b phần 20: gỡ Font Awesome ở trang tra cứu hoạt chất /tra-cuu-hoat-chat (templates/page.tra-cuu-hoat-chat.bwt, 3 lượt / 5 phần tử: microscope, triangle-exclamation → triangle-alert ×4 trên trang).
 checks/L03b20.mjs 91 ✔ / 0 ✗ (7 khung): `<i fa->` 5 → 0; icon nhìn thấy 5 = 5; lệch tâm ≤ 1,3px; cha đổi cỡ 0px; cao icon 1,00; ΔRGB 0; cao trang lệch 0px; link cỡ bằng; focus/Tab/Shift+Tab/bấm = before; 0 lỗi JS; ảnh đã xem.
 build:sapo + ui-guard PASS (faIcon 45 → 42, --tighten 1 mốc); --quick 7 trang: 0 lỗi mới do việc; d1440 /collections/all focusNoRing 18 → 19 = mốc bị hạ bởi lượt dao động 17-16-18 (7 lượt trước đều 19) → thêm N43 (đợt 2); --write-baseline chỉ 6 trang còn lại.
 Việc tiếp theo: N43 (đợt 2 — TODO đầu tiên theo đợt), rồi L03 (đợt 3, việc tổng), L03b (phần 21 — còn 42 lượt FA: product 6, customers/account 3, section_why_us 3, section_collection_cta 3…), L03c, L11, L37.
