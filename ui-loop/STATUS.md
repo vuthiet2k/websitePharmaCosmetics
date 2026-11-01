@@ -1,5 +1,5 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 75 (01/11/2026) · Việc vừa làm: L03b15 → DONE (lần thử đầu) — L03b phần 15: gỡ Font Awesome ở trang Trước & Sau tổng hợp /clinical-proof (templates/page.clinical-proof.bwt, 5 lượt: 2 nút trượt ca, tuổi, số tuần, mũi tên «Xem chi tiết ca»).
+Vòng: 75 (01/11/2026) · Việc vừa làm: L03b15 → DONE 92d0a78 (lần thử đầu) — L03b phần 15: gỡ Font Awesome ở trang Trước & Sau tổng hợp /clinical-proof (templates/page.clinical-proof.bwt, 5 lượt: 2 nút trượt ca, tuổi, số tuần, mũi tên «Xem chi tiết ca»).
 checks/L03b15.mjs 84 ✔ / 0 ✗ (7 khung): `<i fa->` 23 → 0; icon nhìn thấy 5 = 5; lệch tâm ≤ 2,3px; cha đổi cỡ ≤ 2,3px; cao icon 1,00; màu ΔRGB 0; cao trang lệch ≤ 1px; trượt ca (Ca sau ×2 / Ca trước / Enter), Tab/Shift+Tab, tab lọc = before; 0 lỗi JS; ảnh đã xem. ui_icon không đổi (đủ icon sẵn).
 build:sapo + ui-guard PASS (faIcon 67 → 62, --tighten 1 mốc); --quick 7 trang 0 lỗi mới, 3 chỉ số giảm, --write-baseline (chỉ giảm, /clinical-proof). Không có việc mới.
 Việc tiếp theo: L03 (đợt 3, việc tổng), L03b (phần 16 — còn 62 lượt FA: product 6, page.skinhealthy-service-detail 5, page.chuyen-gia-detail 5, section_feedback 5, page.patient-portal 4…), L03c, L11, L37.
