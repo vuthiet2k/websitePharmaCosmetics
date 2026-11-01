@@ -1,4 +1,11 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 80 (01/11/2026) · Việc vừa làm: L03b18 → DONE (mã commit) (lần thử đầu) — L03b phần 18: gỡ Font Awesome ở trang đội ngũ chuyên gia /chuyen-gia (templates/page.chuyen-gia.bwt, 3 lượt / 7 phần tử: huy hiệu user-doctor → stethoscope, arrow-right ×6).
+checks/L03b18.mjs 91 ✔ / 0 ✗ (7 khung): `<i fa->` 7 → 0; icon nhìn thấy 7 = 7; lệch tâm ≤ 1,9px; cha đổi cỡ ≤ 1,9px; cao icon 1,00; ΔRGB 0; cao trang lệch 0px; nút +1px rộng, cao bằng; focus/Tab/Shift+Tab/bấm = before; 0 lỗi JS; ảnh đã xem.
+build:sapo + ui-guard PASS (faIcon 53 → 50, --tighten 1 mốc); --quick 7 trang 0 lỗi mới, 3 chỉ số giảm, --write-baseline. Thêm N41 (đợt 7: nút «Đặt Lịch Khám» /chuyen-gia nền trùng nền khối — có từ trước).
+Việc tiếp theo: L03 (đợt 3, việc tổng), L03b (phần 19 — còn 50 lượt FA: product 6, page.skinhealthy-service-detail 5, section_feedback 5, page.tra-cuu-hoat-chat 3…), L03c, L11, L37.
+Tổng (đếm cột Trạng thái BACKLOG): 114 việc (thêm L03b18, N41) · DONE 54 · TODO 60 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick 7 trang)
+Câu hỏi cho chủ dự án: không có mới.
 Vòng: 79 (01/11/2026) · Việc vừa làm: L03b17 → DONE eb99d76 (lần thử đầu; vòng 78 thêm dữ liệu mẫu `?guest=1` — dev-server.js + preview-mock.js, preview đã khởi động lại) — L03b phần 17: gỡ Font Awesome ở cổng bệnh nhân /patient-portal (templates/page.patient-portal.bwt, 4 lượt: arrow-right ×2, truck-fast → truck, stethoscope).
 checks/L03b17.mjs 182 ✔ / 0 ✗ (2 trạng thái × 7 khung): `<i fa->` 3 → 0 / 1 → 0; icon nhìn thấy 3 = 3 / 1 = 1; lệch tâm ≤ 1,6px; cha đổi cỡ ≤ 0,9px; cao icon 1,00; ΔRGB 0; cao trang lệch 0px; nút rộng +≤ 1px, cao bằng; focus/Tab/Shift+Tab/bấm = before; 0 lỗi JS; ảnh đã xem.
 build:sapo + ui-guard PASS (faIcon 57 → 53, --tighten 1 mốc); --quick 8 trang 0 lỗi mới, 6 chỉ số giảm, --write-baseline. Thêm N40 (đợt 7: 2 nút viền cổng bệnh nhân cao 25px, không kiểu nút — có từ trước).
