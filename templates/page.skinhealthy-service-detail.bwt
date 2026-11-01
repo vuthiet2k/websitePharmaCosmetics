@@ -18,6 +18,8 @@
   bỏ "Thành Phần Hoạt Chất" (dịch vụ spa không có hoạt chất như sản phẩm bôi), thay bằng khối
   "Dịch vụ bao gồm" dùng product.tags thật (không bịa field không tồn tại).
 {%- endcomment -%}
+{%- comment -%} L03b19 (02/11/2026): 5 icon (mũi tên «Xem danh sách dịch vụ», ô ảnh dự phòng, nút «Đặt dịch vụ ngay», nút «Đặt lịch tư vấn miễn phí», dòng «Thực hiện bởi chuyên gia»)
+  = SVG ui_icon size em (leaf thay spa, stethoscope thay user-doctor như L03b11/L03b18) thay Font Awesome. arrow-right / calendar-check FA rộng 0,875em ⇒ -ml-px / -mx-px bù bề rộng để nút không xê dịch. {%- endcomment -%}
 
 {%- assign variantCount = product.variants | size -%}
 {%- assign on_var = false -%}
@@ -35,7 +37,7 @@
 <div class="container py-12 sm:py-16 text-center">
   <h1 class="text-2xl sm:text-3xl font-bold text-forest-900 mb-3">{{ page.title | default: 'Dịch vụ Skin Health Beauty' | escape }}</h1>
   <p class="text-gray-600 mb-6">{{ settings.skinhealthy_detail_empty_text | default: 'Chọn một dịch vụ trong danh sách để xem chi tiết và đặt lịch.' | escape }}</p>
-  <a href="{{ svc_services_url }}" class="pc-kit-btn-primary min-h-[44px]">{{ settings.skinhealthy_detail_empty_cta | default: 'Xem danh sách dịch vụ' | escape }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+  <a href="{{ svc_services_url }}" class="pc-kit-btn-primary min-h-[44px]">{{ settings.skinhealthy_detail_empty_cta | default: 'Xem danh sách dịch vụ' | escape }} <i class="inline-block leading-none -ml-px" aria-hidden="true">{% include 'ui_icon', name: 'arrow-right', size: 'em' %}</i></a>
 </div>
 {%- else -%}
 
@@ -66,7 +68,7 @@
       {%- endif -%}
       {%- else -%}
       <div class="rounded-2xl bg-mint-50 border border-gray-200 h-[360px] flex items-center justify-center text-clinical-700">
-        <i class="fa-solid fa-spa text-5xl" aria-hidden="true"></i>
+        <i class="inline-block leading-none text-5xl" aria-hidden="true">{% include 'ui_icon', name: 'leaf', size: 'em' %}</i>
       </div>
       {%- endif -%}
     </div>
@@ -127,11 +129,11 @@
         <div class="flex flex-wrap gap-3 pt-2">
           {%- if product.available and price > 0 -%}
           <button type="submit" class="pc-kit-btn-primary">
-            <i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Đặt dịch vụ ngay
+            <i class="inline-block leading-none -mx-px" aria-hidden="true">{% include 'ui_icon', name: 'calendar-check', size: 'em' %}</i> Đặt dịch vụ ngay
           </button>
           {%- elsif price == 0 -%}
           <a href="{{ settings.skinhealthy_booking_page | default: '/dat-lich-tu-van' }}" class="pc-kit-btn-primary">
-            <i class="fa-solid fa-phone" aria-hidden="true"></i> Đặt lịch tư vấn miễn phí
+            <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'phone', size: 'em' %}</i> Đặt lịch tư vấn miễn phí
           </a>
           {%- else -%}
           <button type="button" disabled class="pc-kit-btn-primary is-disabled">Tạm hết lịch — vui lòng quay lại sau</button>
@@ -149,7 +151,7 @@
       {%- endif -%}
 
       <div class="mt-6 flex items-center gap-2 text-xs text-gray-500">
-        <i class="fa-solid fa-user-doctor text-clinical-600" aria-hidden="true"></i>
+        <i class="inline-block leading-none text-clinical-600" aria-hidden="true">{% include 'ui_icon', name: 'stethoscope', size: 'em' %}</i>
         Thực hiện bởi chuyên gia Skin Health Beauty — tư vấn 1:1 trước mỗi liệu trình.
       </div>
     </div>

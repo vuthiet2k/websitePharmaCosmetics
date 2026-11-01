@@ -1,4 +1,17 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 82 (02/11/2026) · Việc vừa làm: L03b19 → DONE (lần thử đầu; vòng 81 thêm dữ liệu mẫu `?svc=none|noimg|free` — dev-server.js + preview-mock.js, preview đã khởi động lại) — L03b phần 19: gỡ Font Awesome ở trang chi tiết dịch vụ Skin Health Beauty /skinhealthy-service-detail (templates/page.skinhealthy-service-detail.bwt, 5 lượt / 4 nhánh: arrow-right, spa → leaf, calendar-check, phone, user-doctor → stethoscope).
+checks/L03b19.mjs 364 ✔ / 0 ✗ (4 trạng thái × 7 khung): `<i fa->` 2/1/3/2 → 0; icon nhìn thấy = before; lệch tâm ≤ 2,0px; cha đổi cỡ ≤ 0,9px; cao icon 1,00; ΔRGB 0; cao trang lệch 0px; nút «Đặt dịch vụ ngay» 192×43 bằng (lần đo đầu +1,9px ⇒ thêm -mx-px); focus/Tab/Shift+Tab/bấm (giỏ 0 → 1) = before; 0 lỗi JS; ảnh đã xem.
+build:sapo + ui-guard PASS (faIcon 50 → 45, --tighten 1 mốc); --quick 7 trang 0 lỗi mới, --write-baseline. Thêm N42 (đợt 7: nút submit «Đặt dịch vụ ngay» không viền focus, 2 nút chính cao 42,5px — có từ trước).
+Việc tiếp theo: L03 (đợt 3, việc tổng), L03b (phần 20 — còn 45 lượt FA: product 6, section_feedback 5, page.tra-cuu-hoat-chat 3…), L03c, L11, L37.
+Tổng (đếm cột Trạng thái BACKLOG): 117 việc (thêm N42) · DONE 55 · TODO 62 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick 7 trang)
+Câu hỏi cho chủ dự án: không có mới.
+Vòng: 81 (01/11/2026) · Việc đang làm: L03b19 → IN_PROGRESS (lần thử 0) — L03b phần 19: gỡ Font Awesome ở trang chi tiết dịch vụ Skin Health Beauty /skinhealthy-service-detail (templates/page.skinhealthy-service-detail.bwt, 5 lượt / 4 nhánh).
+Vòng này: thêm dữ liệu mẫu ?svc=none|noimg|free (dev-server.js renderFullPage + preview-mock.js getContext, bản sao SP — không sửa SP demo dùng chung) để dựng 3 nhánh mà SP demo che mất; kiểm offline getContext đúng (none ⇒ product null, noimg ⇒ 0 ảnh, free ⇒ giá 0, mặc định 2 ảnh). Đã tạo ui-loop/RESTART-PREVIEW ⇒ dừng vòng. CHƯA sửa template, chưa đo.
+Việc tiếp theo: L03b19 (làm tiếp — đo before trên mã HEAD ở 4 trạng thái, rồi sửa 5 lượt FA ⇒ ui_icon size em; faIcon 50 → 45), sau đó L03b phần 20, L03c, L11, L37.
+Tổng (đếm cột Trạng thái BACKLOG): 115 việc (thêm L03b19) · DONE 54 · TODO 60 · IN_PROGRESS 1 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: chưa đo vòng này
+Câu hỏi cho chủ dự án: không có mới.
 Vòng: 80 (01/11/2026) · Việc vừa làm: L03b18 → DONE 61ab7d2 (lần thử đầu) — L03b phần 18: gỡ Font Awesome ở trang đội ngũ chuyên gia /chuyen-gia (templates/page.chuyen-gia.bwt, 3 lượt / 7 phần tử: huy hiệu user-doctor → stethoscope, arrow-right ×6).
 checks/L03b18.mjs 91 ✔ / 0 ✗ (7 khung): `<i fa->` 7 → 0; icon nhìn thấy 7 = 7; lệch tâm ≤ 1,9px; cha đổi cỡ ≤ 1,9px; cao icon 1,00; ΔRGB 0; cao trang lệch 0px; nút +1px rộng, cao bằng; focus/Tab/Shift+Tab/bấm = before; 0 lỗi JS; ảnh đã xem.
 build:sapo + ui-guard PASS (faIcon 53 → 50, --tighten 1 mốc); --quick 7 trang 0 lỗi mới, 3 chỉ số giảm, --write-baseline. Thêm N41 (đợt 7: nút «Đặt Lịch Khám» /chuyen-gia nền trùng nền khối — có từ trước).

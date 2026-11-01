@@ -1242,6 +1242,10 @@ async function renderFullPage(tpl = 'index', queryParams = null, routeParams = {
   // L03b17 (01/11/2026): `?guest=1` ⇒ xem trang customer-gated (vd /patient-portal) ở trạng thái KHÁCH chưa
   // đăng nhập (customer = null như Sapo thật) — để kiểm nhánh `{% else %}` mà mock customer mặc định che mất.
   if (queryParams && queryParams.get('guest') === '1') finalRouteParams.guest = true;
+  // L03b19 (01/11/2026): `?svc=none|noimg|free` ⇒ dựng 3 nhánh của page.skinhealthy-service-detail mà SP demo mặc định
+  // che mất (không có product / SP không ảnh / giá 0 ⇒ nút tư vấn) — xử lý trong preview-mock.js getContext.
+  const svcState = queryParams && queryParams.get('svc');
+  if (svcState && /^(none|noimg|free)$/.test(svcState)) finalRouteParams.svcState = svcState;
   if (tpl === 'search' && queryParams && !Object.prototype.hasOwnProperty.call(finalRouteParams, 'searchQuery')) {
     finalRouteParams.searchQuery = queryParams.get('query') || queryParams.get('q') || '';
     finalRouteParams.searchType = queryParams.get('type') || 'product';

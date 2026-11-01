@@ -291,7 +291,7 @@ const mockCustomer = buildMockCustomer();
 // toolbar) → giữ nguyên hành vi cũ hoàn toàn (suy luận từ templateName).
 function getContext(templateName = 'index', routeParams = {}) {
   // Sản phẩm đơn dùng cho template product.bwt — ưu tiên alias thật từ URL.
-  const currentProduct = routeParams.productAlias
+  let currentProduct = routeParams.productAlias
     ? (byAlias[routeParams.productAlias] || products[0])
     : (byAlias[templateName] || products[0]);
 
@@ -302,6 +302,24 @@ function getContext(templateName = 'index', routeParams = {}) {
     currentProduct.collections = Object.values(collectionsData)
       .filter(c => c.alias !== 'all' && (c.products || []).some(p => p.id === currentProduct.id))
       .map(({ id, name, alias, url, products_count }) => ({ id, name, alias, url, products_count }));
+  }
+
+  // L03b19 (01/11/2026): routeParams.svcState (dev-server `?svc=`) — chỉ cho page.skinhealthy-service-detail; bản sao,
+  // không sửa SP demo dùng chung. none = không có product (trang nội dung Sapo); noimg = SP không ảnh; free = giá 0.
+  if (templateName === 'page.skinhealthy-service-detail' && routeParams.svcState && currentProduct) {
+    if (routeParams.svcState === 'none') {
+      currentProduct = null;
+    } else if (routeParams.svcState === 'noimg') {
+      currentProduct = { ...currentProduct, images: [], featured_image: null };
+    } else if (routeParams.svcState === 'free') {
+      const zero = (v) => ({ ...v, price: 0, compare_at_price: 0 });
+      currentProduct = {
+        ...currentProduct, price: 0, compare_at_price: 0,
+        variants: (currentProduct.variants || []).map(zero),
+        selected_or_first_available_variant: currentProduct.selected_or_first_available_variant
+          ? zero(currentProduct.selected_or_first_available_variant) : null,
+      };
+    }
   }
 
   // `collection` chỉ có giá trị khi đang xem trang /collection — đúng hành vi Sapo thực.
