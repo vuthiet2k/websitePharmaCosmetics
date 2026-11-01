@@ -8,6 +8,9 @@
   nhập), đây là template "page.*" (trang CMS thường) — Sapo KHÔNG tự áp auth cho loại này, nên
   phải tự guard thủ công. Route login theo đúng href đã dùng ở snippets/header.bwt:82.
 {%- endcomment -%}
+{%- comment -%} L03b17 (01/11/2026): 4 icon (mũi tên 2 nút «Tài Khoản & Đơn Hàng» / «Theo Dõi Vận Đơn», nhãn Đang giao, huy hiệu Khu vực riêng tư)
+  = SVG ui_icon size em (arrow-right, truck, stethoscope) thay Font Awesome. Bù bề rộng glyph FA cũ để nút/nhãn không xê dịch:
+  arrow-right FA rộng 0,875em ⇒ -ml-px; truck-fast FA rộng 1,25em ⇒ px-0.5; stethoscope FA rộng 1,125em ⇒ px-px. {%- endcomment -%}
 {%- if customer -%}
 {%- assign latest_order = customer.orders | first -%}
 
@@ -27,7 +30,7 @@
 				<p class="pc-pp-hero-note">Hồ sơ soi da, phác đồ và lịch hẹn của bạn sẽ hiển thị tại đây sau buổi tư vấn đầu tiên với Chuyên gia.</p>
 				<div class="pc-pp-hero-actions">
 					<a href="/dat-lich-tu-van" class="pc-cg-cta-btn">Đặt Lịch Tư Vấn 1:1</a>
-					<a href="/account" class="pc-cg-cta-btn pc-pp-btn-outline">Tài Khoản &amp; Đơn Hàng <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+					<a href="/account" class="pc-cg-cta-btn pc-pp-btn-outline">Tài Khoản &amp; Đơn Hàng <i class="inline-block leading-none -ml-px" aria-hidden="true">{% include 'ui_icon', name: 'arrow-right', size: 'em' %}</i></a>
 				</div>
 			</div>
 		</div>
@@ -36,14 +39,14 @@
 		<section class="pc-hub-block pc-pp-order-block">
 			<div class="pc-hub-block__head">
 				<h2 class="pc-hub-block__title">Đơn Hàng Dược Mỹ Phẩm Gần Nhất ({{ latest_order.name }})</h2>
-				{% if latest_order.shipping_status == 'delivering' %}<span class="pc-pp-order-status"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i> Đang giao hoả tốc</span>{% endif %}
+				{% if latest_order.shipping_status == 'delivering' %}<span class="pc-pp-order-status"><i class="inline-block leading-none px-0.5" aria-hidden="true">{% include 'ui_icon', name: 'truck', size: 'em' %}</i> Đang giao hoả tốc</span>{% endif %}
 			</div>
 			<div class="pc-pp-order-items">
 				{% for li in latest_order.line_items %}• {{ li.title }} (x{{ li.quantity }}) {% unless forloop.last %}&nbsp;&nbsp;{% endunless %}{% endfor %}
 				&nbsp;&nbsp;TỔNG TIỀN: {{ latest_order.total_price | money }}
 			</div>
 			<div class="pc-pp-order-actions">
-				<a href="{{ latest_order.customer_url }}" class="pc-cg-cta-btn pc-pp-btn-outline">Theo Dõi Vận Đơn Thời Gian Thực <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+				<a href="{{ latest_order.customer_url }}" class="pc-cg-cta-btn pc-pp-btn-outline">Theo Dõi Vận Đơn Thời Gian Thực <i class="inline-block leading-none -ml-px" aria-hidden="true">{% include 'ui_icon', name: 'arrow-right', size: 'em' %}</i></a>
 				<a href="#" class="pc-pp-btn-ghost">Mua Lại Đơn Này</a>
 			</div>
 		</section>
@@ -55,7 +58,7 @@
 <section class="pc-pp-wrap">
 	<div class="container">
 		<div class="bg-white rounded-3xl p-10 shadow-sm border border-gray-200 text-center max-w-lg mx-auto my-10">
-			<div class="pc-kit-badge-clinical inline-flex mb-4"><i class="fa-solid fa-stethoscope" aria-hidden="true"></i> Khu vực riêng tư</div>
+			<div class="pc-kit-badge-clinical inline-flex mb-4"><i class="inline-block leading-none px-px" aria-hidden="true">{% include 'ui_icon', name: 'stethoscope', size: 'em' %}</i> Khu vực riêng tư</div>
 			<h1 class="text-xl font-bold text-forest-900 font-heading mb-2">Cổng Bệnh Nhân Lâm Sàng</h1>
 			<p class="text-sm text-gray-600 mb-6">Vui lòng đăng nhập tài khoản Sapo để xem hồ sơ sức khoẻ, lịch hẹn và đơn hàng của bạn.</p>
 			<a href="/account/login" class="pc-kit-btn-primary inline-flex text-sm px-6 py-3">Đăng nhập ngay</a>

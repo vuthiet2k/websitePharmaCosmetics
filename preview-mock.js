@@ -315,7 +315,8 @@ function getContext(templateName = 'index', routeParams = {}) {
 
   // Customer chỉ inject khi đang preview trang account/orders/addresses…
   // Trên các trang khác giữ null để khớp behavior Sapo thực (guest).
-  const currentCustomer = CUSTOMER_TEMPLATES.has(templateName) ? mockCustomer : null;
+  // L03b17 (01/11/2026): routeParams.guest (dev-server `?guest=1`) ⇒ null để dựng nhánh khách chưa đăng nhập.
+  const currentCustomer = (CUSTOMER_TEMPLATES.has(templateName) && !routeParams.guest) ? mockCustomer : null;
 
   // Order context cho template 'order' (chi tiết đơn) — Sapo inject vào ctx.order
   const currentOrder = templateName === 'order' ? mockCustomer.orders[0] : null;

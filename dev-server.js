@@ -1239,6 +1239,9 @@ function detectLayout(tpl) {
 // — chỉ router pretty-URL (resolvePrettyPath) hoặc route /search truyền vào.
 async function renderFullPage(tpl = 'index', queryParams = null, routeParams = {}) {
   const finalRouteParams = { ...routeParams };
+  // L03b17 (01/11/2026): `?guest=1` ⇒ xem trang customer-gated (vd /patient-portal) ở trạng thái KHÁCH chưa
+  // đăng nhập (customer = null như Sapo thật) — để kiểm nhánh `{% else %}` mà mock customer mặc định che mất.
+  if (queryParams && queryParams.get('guest') === '1') finalRouteParams.guest = true;
   if (tpl === 'search' && queryParams && !Object.prototype.hasOwnProperty.call(finalRouteParams, 'searchQuery')) {
     finalRouteParams.searchQuery = queryParams.get('query') || queryParams.get('q') || '';
     finalRouteParams.searchType = queryParams.get('type') || 'product';
