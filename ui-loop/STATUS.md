@@ -1,4 +1,11 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 75 (01/11/2026) · Việc vừa làm: L03b15 → DONE (lần thử đầu) — L03b phần 15: gỡ Font Awesome ở trang Trước & Sau tổng hợp /clinical-proof (templates/page.clinical-proof.bwt, 5 lượt: 2 nút trượt ca, tuổi, số tuần, mũi tên «Xem chi tiết ca»).
+checks/L03b15.mjs 84 ✔ / 0 ✗ (7 khung): `<i fa->` 23 → 0; icon nhìn thấy 5 = 5; lệch tâm ≤ 2,3px; cha đổi cỡ ≤ 2,3px; cao icon 1,00; màu ΔRGB 0; cao trang lệch ≤ 1px; trượt ca (Ca sau ×2 / Ca trước / Enter), Tab/Shift+Tab, tab lọc = before; 0 lỗi JS; ảnh đã xem. ui_icon không đổi (đủ icon sẵn).
+build:sapo + ui-guard PASS (faIcon 67 → 62, --tighten 1 mốc); --quick 7 trang 0 lỗi mới, 3 chỉ số giảm, --write-baseline (chỉ giảm, /clinical-proof). Không có việc mới.
+Việc tiếp theo: L03 (đợt 3, việc tổng), L03b (phần 16 — còn 62 lượt FA: product 6, page.skinhealthy-service-detail 5, page.chuyen-gia-detail 5, section_feedback 5, page.patient-portal 4…), L03c, L11, L37.
+Tổng (đếm cột Trạng thái BACKLOG): 110 việc · DONE 51 · TODO 59 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick 7 trang)
+Câu hỏi cho chủ dự án: không có mới.
 Vòng: 74 (01/11/2026) · Việc vừa làm: L03b14 → DONE fe87296 (lần thử đầu) — L03b phần 14: gỡ Font Awesome ở trang tra cứu đơn /order-lookup (templates/page.order-lookup.bwt, 5 lượt: nút Tìm kiếm, mũi tên link đăng nhập, 3 ô trợ giúp).
 checks/L03b14.mjs 84 ✔ / 0 ✗ (7 khung): `<i fa->` 5 → 0; icon nhìn thấy 5 = 5; lệch tâm ≤ 1,5px; cha đổi cỡ ≤ 1,5px; cao icon 1,00; màu ΔRGB 0; cao trang lệch 0px; nút Tìm kiếm (aria-label, cỡ), Tab/Shift+Tab, bấm + Enter ⇒ #pl-notfound, href đăng nhập = before; 0 lỗi JS mới; ảnh đã xem. ui_icon không đổi (đủ icon sẵn).
 build:sapo + ui-guard PASS (faIcon 72 → 67, --tighten 1 mốc); --quick 7 trang 0 lỗi mới, 3 chỉ số giảm, --write-baseline (chỉ giảm). Thêm N39 (đợt 7: nút Tìm kiếm .pl-submit không có viền focus — có từ trước).
