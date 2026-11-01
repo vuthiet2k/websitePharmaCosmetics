@@ -1,4 +1,11 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 77 (01/11/2026) · Việc vừa làm: L03b16 → DONE (lần thử đầu; vòng 76 sửa + đo nhưng bị ngắt trước commit — vòng 77 đo lại toàn bộ, before trên mã HEAD) — L03b phần 16: gỡ Font Awesome ở trang hồ sơ chuyên gia /chuyen-gia-detail (templates/page.chuyen-gia-detail.bwt, 5 lượt: huy hiệu CHUYÊN GIA, sao đánh giá, 2 nút hero, tiêu đề Học vấn; ui_icon thêm graduation-cap — duyệt 30/10).
+checks/L03b16.mjs 91 ✔ / 0 ✗ (7 khung): `<i fa->` 5 → 0; icon nhìn thấy 5 = 5; lệch tâm ≤ 2,0px; cha đổi cỡ ≤ 1,5px; cao icon 1,00; ΔRGB 0; cao trang lệch 0px; nút Đặt lịch +1px rộng; focus/Tab/Shift+Tab/bấm = before; 0 lỗi JS; ảnh đã xem.
+build:sapo + ui-guard PASS (faIcon 62 → 57, --tighten 1 mốc); --quick 7 trang 0 lỗi mới, 3 chỉ số giảm, --write-baseline. Không có việc mới (toast giỏ trong ảnh WebKit nằm ngoài khung nhìn — artefact chụp phần tử, có cả before).
+Việc tiếp theo: L03 (đợt 3, việc tổng), L03b (phần 17 — còn 57 lượt FA: product 6, page.skinhealthy-service-detail 5, section_feedback 5, page.patient-portal 4…), L03c, L11, L37.
+Tổng (đếm cột Trạng thái BACKLOG): 111 việc (thêm dòng L03b16) · DONE 52 · TODO 59 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick 7 trang)
+Câu hỏi cho chủ dự án: không có mới.
 Vòng: 75 (01/11/2026) · Việc vừa làm: L03b15 → DONE 92d0a78 (lần thử đầu) — L03b phần 15: gỡ Font Awesome ở trang Trước & Sau tổng hợp /clinical-proof (templates/page.clinical-proof.bwt, 5 lượt: 2 nút trượt ca, tuổi, số tuần, mũi tên «Xem chi tiết ca»).
 checks/L03b15.mjs 84 ✔ / 0 ✗ (7 khung): `<i fa->` 23 → 0; icon nhìn thấy 5 = 5; lệch tâm ≤ 2,3px; cha đổi cỡ ≤ 2,3px; cao icon 1,00; màu ΔRGB 0; cao trang lệch ≤ 1px; trượt ca (Ca sau ×2 / Ca trước / Enter), Tab/Shift+Tab, tab lọc = before; 0 lỗi JS; ảnh đã xem. ui_icon không đổi (đủ icon sẵn).
 build:sapo + ui-guard PASS (faIcon 67 → 62, --tighten 1 mốc); --quick 7 trang 0 lỗi mới, 3 chỉ số giảm, --write-baseline (chỉ giảm, /clinical-proof). Không có việc mới.
