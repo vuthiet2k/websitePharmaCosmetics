@@ -1,4 +1,11 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 73 (01/11/2026) · Việc vừa làm: N38 → DONE (lần thử đầu) — khối «Bán chạy» /collections/all: WebKit có lúc không chạy callback IntersectionObserver khi cuộn nhanh (probe 1/20 lượt) ⇒ thêm chèn dự phòng sau load khi rảnh (snippets/section_collection_bestseller.bwt, chỉ script).
+checks/N38.mjs ĐẠT: settle() WebKit iPhone 13 20/20, Chromium 390 10/10, 320/768/1024/1440/844×390 3/3 chèn 8 thẻ; không cuộn chèn sau load (+516ms WebKit, +19…57ms Chromium); cuộn thật 7 khung 8 thẻ; 0 lỗi JS; ảnh đã xem.
+checks/N38-quick.mjs: --quick /collections/all 10/10 lượt webkit390 120/40 = m390, 0 lỗi mới. build:sapo + ui-guard PASS (--tighten 0 mốc); bước 7 (6 trang) 0 lỗi mới, --write-baseline 0 chỉ số đổi.
+Việc tiếp theo: L03 (đợt 3, việc tổng), L03b (phần 14 — còn 72 lượt FA), L03c, L11, L37.
+Tổng (đếm cột Trạng thái BACKLOG): 107 việc · DONE 49 · TODO 58 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick 6 trang)
+Câu hỏi cho chủ dự án: không có mới.
 Vòng: 72 (01/11/2026) · Việc vừa làm: N37 → DONE 37f1168 (vòng 71 sửa + đo nhưng bị ngắt trước commit; vòng 72 kiểm lại rồi commit) — ghi lại mốc baseline webkit390 /collections/all 90/24 → 120/40 (= m390, đúng quyết định N28; mốc bị 559a87f hạ nhầm). Không sửa mã theme.
 checks/N37.mjs baseline 4 ✔ (chỉ mục đó đổi, 342 → 342 mục), shots 7 ✔ (7 khung chèn 8 thẻ, 0 lỗi JS; ảnh đã xem); --quick 6 trang (2026-11-01T11-05-11): 0 lỗi mới, webkit390 120/40 = m390. build:sapo + ui-guard PASS, --tighten 0 mốc.
 Thêm N38 (đợt 2: WebKit /collections/all đôi khi đo 90/24 — 3/19 lượt — gốc làm mốc bị hạ).

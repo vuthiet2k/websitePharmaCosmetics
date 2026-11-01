@@ -306,18 +306,34 @@ $(document).ready(function($) {
     return;
   }
 
+  var injected = false;
+  function inject() {
+    if (injected) return;
+    injected = true;
+    observer.unobserve($section[0]);
+    $('div[data-section="section_col_bestseller"]', $section).html(template);
+    afterInject();
+  }
+
   var observer = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
-      if (!entry.isIntersecting) return;
-      $('div[data-section="section_col_bestseller"]', entry.target).html(template);
-      observer.unobserve(entry.target);
-      afterInject();
+      if (entry.isIntersecting) inject();
     });
   // N28 (31/10/2026): trước đây '0px 0px -200px 0px' — chỉ chèn khi khối đã vào sâu 200px trong màn ⇒ dải kích hoạt
   // ~726px (iPhone 13), cuộn nhanh/WebKit bỏ lỡ khung vẽ là khối trống (5/10 lượt). Nạp trước 600px để thẻ sẵn sàng khi tới.
   }, { rootMargin: '0px 0px 600px 0px' });
 
   observer.observe($section[0]);
+
+  // N38 (01/11/2026): WebKit có lúc không chạy callback IntersectionObserver khi trang cuộn nhanh qua khối (đo 1/20 lượt:
+  // khối đã observe nhưng không nhận entry nào) ⇒ khối trống tới khi cuộn lại. Dự phòng: chèn khi trình duyệt rảnh sau
+  // sự kiện load (khối nằm dưới màn đầu, ảnh vẫn tải chậm qua awe_lazyloadImage) — không ảnh hưởng hiển thị màn đầu.
+  function injectWhenIdle() {
+    if (window.requestIdleCallback) window.requestIdleCallback(inject, { timeout: 600 });
+    else setTimeout(inject, 300);
+  }
+  if (document.readyState === 'complete') injectWhenIdle();
+  else $(window).on('load', injectWhenIdle);
 });
 </script>
 {%- endif -%}
