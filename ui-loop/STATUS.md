@@ -1,5 +1,5 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 80 (01/11/2026) · Việc vừa làm: L03b18 → DONE (mã commit) (lần thử đầu) — L03b phần 18: gỡ Font Awesome ở trang đội ngũ chuyên gia /chuyen-gia (templates/page.chuyen-gia.bwt, 3 lượt / 7 phần tử: huy hiệu user-doctor → stethoscope, arrow-right ×6).
+Vòng: 80 (01/11/2026) · Việc vừa làm: L03b18 → DONE 61ab7d2 (lần thử đầu) — L03b phần 18: gỡ Font Awesome ở trang đội ngũ chuyên gia /chuyen-gia (templates/page.chuyen-gia.bwt, 3 lượt / 7 phần tử: huy hiệu user-doctor → stethoscope, arrow-right ×6).
 checks/L03b18.mjs 91 ✔ / 0 ✗ (7 khung): `<i fa->` 7 → 0; icon nhìn thấy 7 = 7; lệch tâm ≤ 1,9px; cha đổi cỡ ≤ 1,9px; cao icon 1,00; ΔRGB 0; cao trang lệch 0px; nút +1px rộng, cao bằng; focus/Tab/Shift+Tab/bấm = before; 0 lỗi JS; ảnh đã xem.
 build:sapo + ui-guard PASS (faIcon 53 → 50, --tighten 1 mốc); --quick 7 trang 0 lỗi mới, 3 chỉ số giảm, --write-baseline. Thêm N41 (đợt 7: nút «Đặt Lịch Khám» /chuyen-gia nền trùng nền khối — có từ trước).
 Việc tiếp theo: L03 (đợt 3, việc tổng), L03b (phần 19 — còn 50 lượt FA: product 6, page.skinhealthy-service-detail 5, section_feedback 5, page.tra-cuu-hoat-chat 3…), L03c, L11, L37.
