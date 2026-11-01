@@ -1,5 +1,5 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 79 (01/11/2026) · Việc vừa làm: L03b17 → DONE (lần thử đầu; vòng 78 thêm dữ liệu mẫu `?guest=1` — dev-server.js + preview-mock.js, preview đã khởi động lại) — L03b phần 17: gỡ Font Awesome ở cổng bệnh nhân /patient-portal (templates/page.patient-portal.bwt, 4 lượt: arrow-right ×2, truck-fast → truck, stethoscope).
+Vòng: 79 (01/11/2026) · Việc vừa làm: L03b17 → DONE eb99d76 (lần thử đầu; vòng 78 thêm dữ liệu mẫu `?guest=1` — dev-server.js + preview-mock.js, preview đã khởi động lại) — L03b phần 17: gỡ Font Awesome ở cổng bệnh nhân /patient-portal (templates/page.patient-portal.bwt, 4 lượt: arrow-right ×2, truck-fast → truck, stethoscope).
 checks/L03b17.mjs 182 ✔ / 0 ✗ (2 trạng thái × 7 khung): `<i fa->` 3 → 0 / 1 → 0; icon nhìn thấy 3 = 3 / 1 = 1; lệch tâm ≤ 1,6px; cha đổi cỡ ≤ 0,9px; cao icon 1,00; ΔRGB 0; cao trang lệch 0px; nút rộng +≤ 1px, cao bằng; focus/Tab/Shift+Tab/bấm = before; 0 lỗi JS; ảnh đã xem.
 build:sapo + ui-guard PASS (faIcon 57 → 53, --tighten 1 mốc); --quick 8 trang 0 lỗi mới, 6 chỉ số giảm, --write-baseline. Thêm N40 (đợt 7: 2 nút viền cổng bệnh nhân cao 25px, không kiểu nút — có từ trước).
 Việc tiếp theo: L03 (đợt 3, việc tổng), L03b (phần 18 — còn 53 lượt FA: product 6, page.skinhealthy-service-detail 5, section_feedback 5…), L03c, L11, L37.
