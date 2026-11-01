@@ -1,4 +1,11 @@
 TRẠNG THÁI: ĐANG CHẠY
+Vòng: 72 (01/11/2026) · Việc vừa làm: N37 → DONE (vòng 71 sửa + đo nhưng bị ngắt trước commit; vòng 72 kiểm lại rồi commit) — ghi lại mốc baseline webkit390 /collections/all 90/24 → 120/40 (= m390, đúng quyết định N28; mốc bị 559a87f hạ nhầm). Không sửa mã theme.
+checks/N37.mjs baseline 4 ✔ (chỉ mục đó đổi, 342 → 342 mục), shots 7 ✔ (7 khung chèn 8 thẻ, 0 lỗi JS; ảnh đã xem); --quick 6 trang (2026-11-01T11-05-11): 0 lỗi mới, webkit390 120/40 = m390. build:sapo + ui-guard PASS, --tighten 0 mốc.
+Thêm N38 (đợt 2: WebKit /collections/all đôi khi đo 90/24 — 3/19 lượt — gốc làm mốc bị hạ).
+Việc tiếp theo: N38 (đợt 2 — TODO đầu tiên theo đợt), L03b (phần 14 — còn 72 lượt FA), L03c, L11, L37.
+Tổng (đếm cột Trạng thái BACKLOG): 107 việc · DONE 48 · TODO 59 · IN_PROGRESS 0 · VERIFY_FAIL 0 · BLOCKED 0 · BLOCKED_OWNER 0
+Quét full sạch liên tiếp: 0/2 (clean_runs = 0) · Lỗi mới so với baseline: 0 (--quick 6 trang)
+Câu hỏi cho chủ dự án: không có mới (câu N37 vòng 70 đã tự giải theo quyết định N28 31/10).
 Vòng: 70 (01/11/2026) · Việc vừa làm: L03b13 → DONE 4959879 (lần thử đầu) — L03b phần 13: gỡ Font Awesome ở trang bài viết (templates/article.bwt, 10 lượt faIcon; 3 bài: chuyên gia flagship / chuyên gia khác / không chuyên gia).
 checks/L03b13.mjs 252 ✔ / 0 ✗ (3 bài × 7 khung): `<i fa->` 7/6/6 → 0; icon nhìn thấy before = after; lệch tâm ≤ 1,4px; cha đổi cỡ ≤ 1,5px; cao icon 1,00; màu ΔRGB 0; cao trang lệch 0px;
 nút Thích (viền ↔ đặc, tải lại giữ) + Tab + link hồ sơ = before; 0 lỗi JS; ảnh đã xem. ui_icon thêm path Lucide thumbs-up + thumbs-up-filled, globe. build:sapo + ui-guard PASS (faIcon 82 → 72, --tighten 1 mốc).
