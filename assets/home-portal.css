@@ -591,3 +591,22 @@ body.pc-home-v3:has(#portal-main > #section_hero:first-child) header.header:not(
 }
 /* 2026-10-21 (người dùng): slide Hero bỏ tick "Hiệu ứng zoom ảnh" ⇒ ảnh tĩnh, không Ken Burns (ảnh có chữ/thông tin). */
 .pc-home-v3 .pc-portal .portal-hero__slide--static .portal-hero__image{animation:none!important;transform:none!important;will-change:auto}
+/* 2026-11-03 (người dùng): slide Hero có video (snippets/section_hero.bwt + assets/home-hero.js). Ảnh chờ nằm dưới, video phủ kín
+   Hero (cover theo khung — container query, iframe 16:9 luôn lớn hơn khung nên không có viền đen), hiện dần khi video thật sự chạy
+   (.is-playing). Video không nhận chuột (vuốt vẫn chuyển slide); lớp tối mờ mép trên để chữ menu trắng đọc rõ như ảnh.
+   Nút bật/tắt tiếng góc TRÁI dưới (góc phải là nút chatbot nổi), vùng chạm 44px (UI-STANDARD). */
+.pc-home-v3 .pc-portal .portal-hero__video{position:absolute;inset:0;z-index:1;overflow:hidden;container-type:size;opacity:0;transition:opacity .6s ease;pointer-events:none}
+.pc-home-v3 .pc-portal .portal-hero__slide.is-playing .portal-hero__video{opacity:1}
+.pc-home-v3 .pc-portal .portal-hero__video::after{content:"";position:absolute;inset:0 0 auto;height:180px;background:linear-gradient(rgba(0,20,12,.45),rgba(0,20,12,0))}
+.pc-home-v3 .pc-portal .portal-hero__video iframe{position:absolute;top:50%;left:50%;width:max(100cqw,177.78cqh);height:max(100cqh,56.25cqw);border:0;transform:translate(-50%,-50%)}
+.pc-home-v3 .pc-portal .portal-hero__video video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pc-home-v3 .pc-portal .portal-hero__slide.is-video-failed .portal-hero__video{display:none}
+.pc-home-v3 .pc-portal .portal-hero__sound{position:absolute;z-index:3;left:clamp(16px,3vw,40px);bottom:clamp(40px,5vw,72px);display:none;align-items:center;justify-content:center;width:44px;height:44px;padding:0;border:1px solid rgba(255,255,255,.45);border-radius:50%;background:rgba(0,20,12,.35);color:rgba(255,255,255,.92);cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:background-color .2s ease}
+.pc-home-v3 .pc-portal .portal-hero__slide.is-playing .portal-hero__sound{display:inline-flex}
+.pc-home-v3 .pc-portal .portal-hero__sound:hover{background:rgba(0,20,12,.55)}
+.pc-home-v3 .pc-portal .portal-hero__sound .portal-hero__sound-on,.pc-home-v3 .pc-portal .portal-hero__sound[aria-pressed="true"] .portal-hero__sound-off{display:none}
+.pc-home-v3 .pc-portal .portal-hero__sound[aria-pressed="true"] .portal-hero__sound-on{display:inline-flex}
+.pc-home-v3 .pc-portal .portal-hero__sound-off{display:inline-flex}
+@media (max-width:767px){
+  .pc-home-v3 .pc-portal .portal-hero__sound{left:12px;bottom:12px}
+}

@@ -11,6 +11,10 @@
   2026-10-18: trang khác dùng lại được (templates/page.indexskinhealthy.bwt): gán trước khi include hero_lead_image /
   hero_lead_eyebrow / hero_lead_text / hero_lead_sub / hero_lead_btn / hero_lead_url / hero_lead_label ⇒ Hero CHỈ gồm slide đó
   (cấu hình riêng của trang, không lấy slide trang chủ). Trang chủ không gán ⇒ không đổi gì.
+  2026-11-03 (người dùng): mỗi slide thêm ô Video (home_hero_video / home_hero_video_N) — dán nguyên mã <iframe> YouTube, link YouTube
+  (watch / youtu.be / embed / shorts) hoặc link file .mp4/.webm. Slide có video: ảnh (nếu có) làm ảnh chờ, video tắt tiếng tự chạy phủ kín
+  Hero; autoplay Swiper DỪNG trong lúc video chạy, video chạy HẾT mới sang slide kế (assets/home-hero.js). Video nạp khi slide được
+  hiện (data-src) để không chặn LCP. Slide chỉ có video (không ảnh) vẫn hiện — ảnh chờ YouTube lấy thumbnail của video.
 {%- endcomment -%}
 {%- assign hero_slide_count = 0 -%}
 {%- assign hero_h1_done = false -%}
@@ -36,6 +40,7 @@
     {%- assign hero_btn = settings.home_hero_btn1_text -%}
     {%- assign hero_url = settings.home_hero_btn1_url -%}
     {%- assign hero_anim = settings.home_hero_animate -%}
+    {%- assign hero_video = settings.home_hero_video -%}
   {%- else -%}
     {%- capture k_img -%}home_hero_image_{{ i }}{%- endcapture -%}
     {%- capture k_text -%}home_hero_title_{{ i }}{%- endcapture -%}
@@ -47,15 +52,45 @@
     {%- assign hero_url = settings[k_url] -%}
     {%- capture k_anim -%}home_hero_animate_{{ i }}{%- endcapture -%}
     {%- assign hero_anim = settings[k_anim] -%}
+    {%- capture k_video -%}home_hero_video_{{ i }}{%- endcapture -%}
+    {%- assign hero_video = settings[k_video] -%}
   {%- endif -%}
-  {%- if hero_image != blank -%}
+  {%- comment -%} Tách video: lấy src="…" nếu dán cả <iframe>, rồi nhận dạng YouTube (lấy mã video) hoặc file .mp4/.webm. {%- endcomment -%}
+  {%- assign hv = hero_video | strip -%}
+  {%- assign hv_kind = '' -%}
+  {%- assign hv_id = '' -%}
+  {%- if hv != blank -%}
+    {%- if hv contains 'src="' -%}{%- assign hv = hv | split: 'src="' | last | split: '"' | first -%}
+    {%- elsif hv contains "src='" -%}{%- assign hv = hv | split: "src='" | last | split: "'" | first -%}{%- endif -%}
+    {%- if hv contains '/embed/' -%}{%- assign hv_id = hv | split: '/embed/' | last -%}
+    {%- elsif hv contains 'youtu.be/' -%}{%- assign hv_id = hv | split: 'youtu.be/' | last -%}
+    {%- elsif hv contains '/shorts/' -%}{%- assign hv_id = hv | split: '/shorts/' | last -%}
+    {%- elsif hv contains 'youtube.com' and hv contains 'v=' -%}{%- assign hv_id = hv | split: 'v=' | last -%}
+    {%- elsif hv contains '.mp4' or hv contains '.webm' -%}{%- assign hv_kind = 'file' -%}{%- endif -%}
+    {%- if hv_id != blank -%}{%- assign hv_id = hv_id | split: '?' | first | split: '&' | first | split: '/' | first | split: '#' | first | strip -%}{%- endif -%}
+    {%- if hv_id != blank -%}{%- assign hv_kind = 'yt' -%}{%- endif -%}
+  {%- endif -%}
+  {%- if hero_image != blank or hv_kind != '' -%}
   {%- assign hero_slide_count = hero_slide_count | plus: 1 -%}
   {%- comment -%} 2026-10-21 (người dùng): ô "Hiệu ứng zoom ảnh" từng slide — bỏ tick ⇒ ảnh đứng yên (ảnh có chữ/thông tin).
     So sánh với false: theme cài trước khi có trường (giá trị rỗng) vẫn giữ zoom như cũ. {%- endcomment -%}
-  <div class="swiper-slide portal-hero__slide{% if hero_anim == false or hero_anim == 'false' %} portal-hero__slide--static{% endif %}">
-    <img class="portal-hero__image" src="{{ hero_image | img_url: '2048x2048' }}" data-hero-source="{{ hero_image | img_url: '2048x2048' }}"
+  {%- if hero_image != blank -%}{%- assign hero_poster = hero_image | img_url: '2048x2048' -%}
+  {%- elsif hv_kind == 'yt' -%}{%- assign hero_poster = 'https://i.ytimg.com/vi/' | append: hv_id | append: '/maxresdefault.jpg' -%}
+  {%- else -%}{%- assign hero_poster = '' -%}{%- endif -%}
+  <div class="swiper-slide portal-hero__slide{% if hero_anim == false or hero_anim == 'false' or hv_kind != '' %} portal-hero__slide--static{% endif %}{% if hv_kind != '' %} portal-hero__slide--video{% endif %}"
+    {%- if hv_kind == 'yt' %} data-hero-video="yt" data-video-src="https://www.youtube.com/embed/{{ hv_id | escape }}?autoplay=1&amp;mute=1&amp;controls=0&amp;playsinline=1&amp;rel=0&amp;modestbranding=1&amp;iv_load_policy=3&amp;disablekb=1&amp;enablejsapi=1"
+    {%- elsif hv_kind == 'file' %} data-hero-video="file" data-video-src="{{ hv | escape }}"{% endif %}>
+    {%- if hero_poster != blank -%}
+    <img class="portal-hero__image" src="{{ hero_poster }}" data-hero-source="{{ hero_poster }}"
       alt="{{ hero_text | default: settings.store_name | default: store.name | strip_newlines | escape }}" width="1920" height="1080"
       {%- if hero_slide_count == 1 %} loading="eager" fetchpriority="high"{% else %} loading="lazy" fetchpriority="low"{% endif %}>
+    {%- endif -%}
+    {%- if hv_kind != '' -%}
+    <div class="portal-hero__video" data-hero-video-box></div>
+    <button class="portal-hero__sound" type="button" data-hero-sound aria-pressed="false" aria-label="Bật tiếng video">
+      <span class="portal-hero__sound-off">{% include 'ui_icon', name: 'volume-x' %}</span><span class="portal-hero__sound-on">{% include 'ui_icon', name: 'volume-2' %}</span>
+    </button>
+    {%- endif -%}
     {%- comment -%} 2026-10-13 (người dùng): slide nào cũng có link — text nút trống ⇒ dùng text nút slide 1 / "Đặt lịch tư vấn",
       link trống ⇒ /dat-lich-tu-van. {%- endcomment -%}
     {%- assign hero_btn = hero_btn | default: settings.home_hero_btn1_text | default: 'Đặt lịch tư vấn' -%}
