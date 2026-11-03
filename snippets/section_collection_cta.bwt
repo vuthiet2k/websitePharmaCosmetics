@@ -9,8 +9,11 @@
       <div class="pc-col-cta__decor pc-col-cta__decor--1" aria-hidden="true"></div>
       <div class="pc-col-cta__decor pc-col-cta__decor--2" aria-hidden="true"></div>
 
+      {%- comment -%} L03b22 (03/11/2026): gỡ Font Awesome — ui_icon size em trong <i> bọc cũ (cỡ theo font-size của ô icon như glyph FA);
+        settings col_cta_icon nhận cả tên ui_icon lẫn giá trị cũ "fa-solid fa-…" (ui_icon tự ánh xạ, user-doctor → stethoscope). {%- endcomment -%}
+      {%- assign pc_col_cta_icon = settings.col_cta_icon | default: 'stethoscope' -%}
       <div class="pc-col-cta__icon" aria-hidden="true">
-        <i class="{{ settings.col_cta_icon | default: 'fa-solid fa-user-doctor' }}"></i>
+        <i class="inline-block leading-none">{%- include 'ui_icon', name: pc_col_cta_icon, size: 'em' -%}</i>
       </div>
 
       <div class="pc-col-cta__body">
@@ -26,7 +29,7 @@
       <div class="pc-col-cta__actions">
         <a class="pc-col-cta__btn pc-col-cta__btn--primary"
            href="{{ settings.col_cta_btn1_url | default: '/dat-lich-tu-van' }}">
-          <i class="fa-solid fa-stethoscope" aria-hidden="true"></i>
+          <i class="pc-col-cta__btn-ico inline-block leading-none" aria-hidden="true">{%- include 'ui_icon', name: 'stethoscope', size: 'em' -%}</i>
           {{ settings.col_cta_btn1_text | default: 'Tư vấn miễn phí' }}
         </a>
         {%- comment -%} 2026-10-03: settings.hotline không tồn tại → dùng hotline cửa hàng; bỏ fallback số giả 1900xxxx. {%- endcomment -%}
@@ -34,7 +37,7 @@
         {%- if pc_col_cta_phone != blank -%}
         <a class="pc-col-cta__btn pc-col-cta__btn--ghost"
            href="tel:{{ pc_col_cta_phone | remove: '.' | remove: ' ' }}">
-          <i class="fa-solid fa-phone" aria-hidden="true"></i>
+          <i class="inline-block leading-none" aria-hidden="true">{%- include 'ui_icon', name: 'phone', size: 'em' -%}</i>
           {{ pc_col_cta_phone }}
         </a>
         {%- endif -%}
@@ -146,6 +149,12 @@
               box-shadow var(--dur-fast, 150ms) var(--ease-out, ease),
               background var(--dur-base, 300ms) var(--ease-out, ease);
   white-space: nowrap;
+}
+/* L03b22 (03/11/2026): glyph FA stethoscope cũ rộng 1,125em (SVG ui_icon vuông 1em) — giữ hộp icon bằng cũ để nút không đổi rộng. */
+.pc-col-cta__btn-ico {
+  display: inline-flex;
+  justify-content: center;
+  width: 1.125em;
 }
 .pc-col-cta__btn--primary {
   background: var(--mainColorDark);
