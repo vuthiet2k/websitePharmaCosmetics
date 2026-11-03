@@ -1663,6 +1663,30 @@ async function requestHandler(req, res) {
     return;
   }
 
+  // ── Route: /products/<alias>.js — JSON sản phẩm kiểu Sapo (Bizweb.getProduct ⇒ popup xem nhanh assets/quickview.js.bwt).
+  // L03b34 (03/11/2026): trước đây 404 ⇒ popup xem nhanh mở ra trống ở local, không kiểm được nội dung popup.
+  // Hình dạng theo API Sapo: featured_image / images là chuỗi URL, options là [{ name, position }].
+  const pcProdJs = pathname.match(/^\/products\/([^/]+)\.js$/);
+  if (pcProdJs && mockModule && mockModule.byAlias[decodeURIComponent(pcProdJs[1])]) {
+    const p = mockModule.byAlias[decodeURIComponent(pcProdJs[1])];
+    const src = (x) => (x ? (typeof x === 'string' ? x : x.src) : null);
+    const vs = (p.variants || []).map((v) => Object.assign({}, v, { featured_image: null }));
+    const prices = vs.map((v) => v.price).filter((n) => typeof n === 'number');
+    const cmp = vs.map((v) => v.compare_at_price || 0).concat([p.compare_at_price || 0]);
+    const json = {
+      id: p.id, name: p.name, alias: p.alias, url: p.url, summary: p.summary || '', content: p.content || '', vendor: p.vendor || '',
+      type: p.type || '', tags: p.tags || [], available: p.available !== false, price: p.price,
+      price_min: prices.length ? Math.min(...prices) : p.price, price_max: prices.length ? Math.max(...prices) : p.price,
+      compare_at_price_min: Math.min(...cmp), compare_at_price_max: Math.max(...cmp),
+      featured_image: src(p.featured_image), images: (p.images || []).map(src).filter(Boolean),
+      options: (p.options || []).map((o, i) => ({ name: typeof o === 'string' ? o : o.name, position: i + 1 })),
+      variants: vs,
+    };
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache' });
+    res.end(JSON.stringify(json));
+    return;
+  }
+
   // ── Route: /cart.js — Sapo Cart API (giỏ hàng thật lưu cookie, xem đầu file)
   if (pathname === '/cart.js') {
     const cart = buildCartFromLines(readCartLines(req));
