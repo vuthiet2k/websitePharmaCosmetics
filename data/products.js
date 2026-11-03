@@ -448,4 +448,21 @@ demoL03b28.demo_settings = { product_store_enable: true };
 byId[demoL03b28.id] = demoL03b28;
 byAlias[demoL03b28.alias] = demoL03b28;
 
+// 2026-11-03 (L03b30): SP DEMO thứ 2 — content + description RỖNG (tab mô tả hiện ghi chú «đang được chuyên gia biên soạn»
+// + link «Hỏi chuyên gia về sản phẩm này», snippets/tab_product.bwt) và bật popup banner (snippets/popup_banner.bwt, qua
+// `demo_settings`, độ trễ 300ms). Như demoL03b28: CHỈ byAlias/byId (/products/demo-l03b30-mo-ta-trong), không vào mảng `products`.
+const demoL03b30 = makeProduct({
+  id: 9990330, name: 'SP Demo Kiểm Mô Tả Trống', alias: 'demo-l03b30-mo-ta-trong', votes: 8,
+  variants: [variant(99903301, 'Default Title', 320000, 0, 'DEMO-L03B30', true, 10)],
+  images: ['https://bizweb.dktcdn.net/100/415/053/products/147b41054668444ba1200b9405b9c9f7-jpeg.jpg?v=1772270474973'],
+});
+demoL03b30.description = ''; // makeProduct tự điền mô tả mặc định khi rỗng ⇒ ghi đè sau
+demoL03b30.demo_settings = {
+  popup_banner_enable: true,
+  popup_banner_delay_time: '300',
+  popup_banner_image: 'https://bizweb.dktcdn.net/100/415/053/products/147b41054668444ba1200b9405b9c9f7-jpeg.jpg?v=1772270474973',
+};
+byId[demoL03b30.id] = demoL03b30;
+byAlias[demoL03b30.alias] = demoL03b30;
+
 module.exports = { products, byId, byAlias };
