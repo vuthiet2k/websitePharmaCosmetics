@@ -432,4 +432,20 @@ const products = [
 const byId    = Object.fromEntries(products.map(p => [p.id, p]));
 const byAlias = Object.fromEntries(products.map(p => [p.alias, p]));
 
+// 2026-11-03 (L03b28): SP DEMO RIÊNG để kiểm các nhánh trang SP chỉ hiện khi có dữ liệu — tag `video:` (nút xem video +
+// popup video), mô tả có <h6> (popup "Thông tin chi tiết"), điểm 4.0 (sao rỗng), bật hệ thống cửa hàng (popup cửa hàng,
+// qua `demo_settings` — preview-mock.js chỉ gộp vào settings khi render đúng SP này). CHỈ có trong byAlias/byId (mở được
+// bằng /products/demo-l03b28-trang-sp) — KHÔNG nằm trong mảng `products` ⇒ không vào danh mục, tìm kiếm, trang chủ, mốc kiểm.
+const demoL03b28 = makeProduct({
+  id: 9990328, name: 'SP Demo Kiểm Popup Trang Sản Phẩm', alias: 'demo-l03b28-trang-sp', votes: 12,
+  tags: ['video:4B9RN_wcl_I'],
+  content: '<p>Mô tả ngắn của sản phẩm demo.</p><h6>Thông tin chi tiết</h6><p>Thành phần: Aqua, Glycerin, Niacinamide 5%. Quy cách: chai 30ml.</p>',
+  variants: [variant(99903281, 'Default Title', 450000, 0, 'DEMO-L03B28', true, 10)],
+  images: ['https://bizweb.dktcdn.net/100/415/053/products/147b41054668444ba1200b9405b9c9f7-jpeg.jpg?v=1772270474973'],
+});
+demoL03b28.metafields.bpr.rating = 4;
+demoL03b28.demo_settings = { product_store_enable: true };
+byId[demoL03b28.id] = demoL03b28;
+byAlias[demoL03b28.alias] = demoL03b28;
+
 module.exports = { products, byId, byAlias };

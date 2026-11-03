@@ -411,7 +411,10 @@ function getContext(templateName = 'index', routeParams = {}) {
 
   return {
     // Core Sapo globals
-    settings,
+    // 2026-11-03 (L03b28): SP demo có `demo_settings` (data/products.js) ⇒ chỉ trang của SP đó thấy settings bật thêm.
+    settings: (currentProduct && currentProduct.demo_settings && routeParams.productAlias === currentProduct.alias)
+      ? { ...settings, ...currentProduct.demo_settings }
+      : settings,
     store,
     template:         sapoTemplate,
     page_title:       store.name,
