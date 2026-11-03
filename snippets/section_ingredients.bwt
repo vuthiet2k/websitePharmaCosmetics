@@ -1,25 +1,16 @@
 {%- comment -%}
-  2026-10-13 (người dùng: "làm như mục Thương hiệu"): nguồn = Menu settings.home_ing_menu (mỗi mục trỏ tới danh mục
-  hoạt chất). Chưa có menu ⇒ dùng 9 ô nhập tay ing_N_title/url/tag như trước.
-  2026-10-16 (người dùng: "giao diện tương tự mục thương hiệu"): bỏ dải viên bo tròn .pc-bm — dùng đúng markup/CSS/JS của
-  "Thương hiệu tiêu biểu" (.pc-brands): mỗi hoạt chất 1 cột không bo góc/đổ bóng, ảnh danh mục lớn (không có ảnh ⇒ tên cỡ lớn),
-  tên + số sản phẩm (hoặc nhãn nhập tay) bên dưới, kẻ dọc mảnh, Swiper tự chạy liên tục + mũi tên 2 bên.
-  data-pc-reverse: giữ yêu cầu 2026-10-13 — dải hoạt chất chạy ngược chiều dải thương hiệu.
+  03/11/2026 (chủ dự án: trang chủ theo Figma "travel" node 5:2): lưới 8 cột × 2 hàng ô hoạt chất (tên + "N SP"), bỏ carousel.
+  Nguồn giữ nguyên: Menu settings.home_ing_menu (tối đa 16 mục, số SP = products_count của danh mục link trỏ tới — 0 ⇒ ẩn dòng số).
+  Chưa có menu ⇒ 9 ô nhập tay ing_N_title / _url / _tag như trước (nhãn ing_N_tag thay dòng số).
+  CSS: ui-src/css/components.css mục 14.5.
 {%- endcomment -%}
 {%- assign ing_ll = linklists[settings.home_ing_menu] -%}
 {%- capture pc_ing_items -%}
 {%- if settings.home_ing_menu != blank and ing_ll.links.size > 0 -%}
   {%- for link in ing_ll.links limit: 16 -%}
-    <a class="swiper-slide pc-brand pc-brand--ing" href="{{ link.url | escape }}" title="{{ link.title | escape }}">
-      <span class="pc-brand__logo">
-        {%- if link.object.image.src != blank -%}
-        <img src="{{ link.object.image.src | img_url: 'large' }}" alt="{{ link.title | escape }}" width="240" height="96" loading="lazy">
-        {%- else -%}
-        <span class="pc-brand__name">{{ link.title | escape }}</span>
-        {%- endif -%}
-      </span>
-      {%- if link.object.image.src != blank -%}<span class="pc-brand__title">{{ link.title | escape }}</span>{%- endif -%}
-      {%- if link.object.products_count > 0 -%}<span class="pc-brand__text">{{ link.object.products_count }} sản phẩm</span>{%- endif -%}
+    <a class="pc-h4-ing" href="{{ link.url | escape }}">
+      <span class="pc-h4-ing__t block">{{ link.title | escape }}</span>
+      {%- if link.object.products_count > 0 -%}<span class="pc-h4-ing__n block">{{ link.object.products_count }} SP</span>{%- endif -%}
     </a>
   {%- endfor -%}
 {%- else -%}
@@ -29,25 +20,23 @@
     {%- if i == 1 -%}{%- assign ingredient_name = ingredient_name | default: 'Retinol' -%}{%- elsif i == 2 -%}{%- assign ingredient_name = ingredient_name | default: 'Hyaluronic Acid' -%}{%- elsif i == 3 -%}{%- assign ingredient_name = ingredient_name | default: 'Ceramides' -%}{%- endif -%}
     {%- if ingredient_name != blank -%}
     {%- capture fallback_url -%}/search?query={{ ingredient_name | url_encode }}&type=product{%- endcapture -%}
-    <a class="swiper-slide pc-brand pc-brand--ing" href="{{ settings[url] | default: fallback_url | escape }}" title="{{ ingredient_name | escape }}">
-      <span class="pc-brand__logo"><span class="pc-brand__name">{{ ingredient_name | escape }}</span></span>
-      {%- if settings[tag] != blank -%}<span class="pc-brand__text">{{ settings[tag] | escape }}</span>{%- endif -%}
+    <a class="pc-h4-ing" href="{{ settings[url] | default: fallback_url | escape }}">
+      <span class="pc-h4-ing__t block">{{ ingredient_name | escape }}</span>
+      {%- if settings[tag] != blank -%}<span class="pc-h4-ing__n block">{{ settings[tag] | escape }}</span>{%- endif -%}
     </a>
     {%- endif -%}
   {%- endfor -%}
 {%- endif -%}
 {%- endcapture -%}
-{%- assign pc_ing_count = pc_ing_items | split: 'class="swiper-slide pc-brand' | size | minus: 1 -%}
-<section class="portal-actives"><div class="wrap">
-  <div class="section-head"><div><p class="eyebrow">{{ settings.home_ing_eyebrow | default: 'Thấu hiểu làn da bằng khoa học' | escape }}</p><h2>{{ settings.home_ing_title | default: 'Tìm theo hoạt chất' | escape }}</h2>{%- if settings.home_ing_subtitle != blank -%}<p class="lead pc-brands__lead">{{ settings.home_ing_subtitle | escape }}</p>{%- endif -%}</div></div>
-  {%- if pc_ing_count > 0 -%}
-  <div class="pc-brands pc-brands--ing" data-pc-brands data-pc-reverse>
-    <button type="button" class="pc-brands__nav pc-brands__nav--prev" aria-label="Hoạt chất trước"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
-    <div class="pc-brands__viewport swiper-container">
-      <div class="swiper-wrapper">{{ pc_ing_items }}</div>
+<section class="pc-h4 pc-h4-sec pc-h4-sec--soft" aria-labelledby="pc-h4-ing-title">
+  <div class="pc-h4-wrap">
+    <div class="pc-h4-head">
+      <div>
+        <p class="pc-h4-eyebrow">{{ settings.home_ing_eyebrow | default: 'Thấu hiểu làn da bằng khoa học' | escape }}</p>
+        <h2 class="pc-h4-title" id="pc-h4-ing-title">{{ settings.home_ing_title | default: 'Tìm theo hoạt chất' | escape }}</h2>
+      </div>
+      {%- if settings.home_ing_subtitle != blank -%}<p class="pc-h4-lead">{{ settings.home_ing_subtitle | escape }}</p>{%- endif -%}
     </div>
-    <button type="button" class="pc-brands__nav pc-brands__nav--next" aria-label="Hoạt chất sau"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    {%- if pc_ing_items != blank -%}<div class="pc-h4-ings">{{ pc_ing_items }}</div>{%- endif -%}
   </div>
-  {%- include 'pc_brands_carousel_script' -%}
-  {%- endif -%}
-</div></section>
+</section>

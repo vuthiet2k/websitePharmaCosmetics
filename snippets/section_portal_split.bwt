@@ -1,13 +1,43 @@
-<div class="chapter"><div class="wrap"><div class="tag"><b>I</b> {{ settings.portal_chapter_1 | default: 'Khám phá' | escape }}</div><div class="rule"></div></div></div>
-<section class="split"><div class="wrap"><div class="split-grid">
-  <a class="entry entry-shop" href="{{ settings.portal_shop_url | default: '/collections/all' | escape }}">
-    <div class="kicker">{{ settings.store_name | default: store.name | escape }}</div>
-    <h2>{{ settings.portal_shop_title | default: 'Mua dược mỹ phẩm chính hãng' | escape }}</h2>
-    <p>{{ settings.portal_shop_desc | escape }}</p><span class="go">{{ settings.portal_shop_btn_text | default: 'Vào cửa hàng' | escape }} <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-right', size: 'em' %}</i></span>
-  </a>
-  <a class="entry entry-clinic" href="{{ settings.home_spa_btn_url | default: '/skin-health-beauty' | escape }}">
-    <div class="kicker">Skin Health Beauty</div>
-    <h2>{{ settings.portal_clinic_title | default: 'Trị liệu da 1:1 tại Hà Nội' | escape }}</h2>
-    <p>{{ settings.portal_clinic_desc | escape }}</p><span class="go">{{ settings.portal_clinic_btn_text | default: 'Khám phá trị liệu' | escape }} <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-right', size: 'em' %}</i></span>
-  </a>
-</div></div></section>
+{%- comment -%}
+  03/11/2026 (chủ dự án: dựng trang chủ theo Figma "travel" node 5:2 — design/home-v4/full.png): khối ngay sau Hero gồm
+  (1) dải 4 cam kết (home_trust_N_title / _desc, tắt cả dải bằng home_trust_enable) và (2) chương I "Khám phá" với 2 thẻ lối vào
+  (giữ nguyên trường cũ portal_shop_* / portal_clinic_* / home_spa_btn_url). CSS: ui-src/css/components.css mục 14.2–14.3.
+{%- endcomment -%}
+{%- unless settings.home_trust_enable == false or settings.home_trust_enable == 'false' -%}
+<div class="pc-h4 pc-h4-trust"><div class="pc-h4-wrap">
+  <ul class="pc-h4-trust__list">
+    {%- for i in (1..4) -%}
+      {%- capture k_t -%}home_trust_{{ i }}_title{%- endcapture -%}{%- capture k_d -%}home_trust_{{ i }}_desc{%- endcapture -%}
+      {%- case i -%}
+        {%- when 1 -%}{%- assign tr_t = settings[k_t] | default: 'Chính hãng, nhập khẩu' -%}{%- assign tr_d = settings[k_d] | default: 'Nguồn gốc rõ ràng' -%}
+        {%- when 2 -%}{%- assign tr_t = settings[k_t] | default: 'Giao hàng toàn quốc' -%}{%- assign tr_d = settings[k_d] | default: 'Đặt online, nhận tận nhà' -%}
+        {%- when 3 -%}{%- assign tr_t = settings[k_t] | default: 'Chuyên gia da 10+ năm' -%}{%- assign tr_d = settings[k_d] | default: 'Tư vấn & trị liệu 1:1' -%}
+        {%- else -%}{%- assign tr_t = settings[k_t] | default: 'Đổi trả rõ ràng' -%}{%- assign tr_d = settings[k_d] | default: 'Theo chính sách công khai' -%}
+      {%- endcase -%}
+      <li class="pc-h4-trust__item">
+        <span class="pc-h4-trust__icon">{% include 'ui_icon', name: 'check' %}</span>
+        <span><span class="pc-h4-trust__t block">{{ tr_t | escape }}</span><span class="pc-h4-trust__d block">{{ tr_d | escape }}</span></span>
+      </li>
+    {%- endfor -%}
+  </ul>
+</div></div>
+{%- endunless -%}
+<section class="pc-h4 pc-h4-sec pc-h4-sec--tight-b" aria-labelledby="pc-h4-explore">
+  <div class="pc-h4-wrap">
+    <div class="pc-h4-chap"><p class="pc-h4-chap__tag" id="pc-h4-explore">I · {{ settings.portal_chapter_1 | default: 'Khám phá' | escape }}</p><span class="pc-h4-chap__rule" aria-hidden="true"></span></div>
+    <div class="pc-h4-split">
+      <a class="pc-h4-entry" href="{{ settings.portal_shop_url | default: '/collections/all' | escape }}">
+        <p class="pc-h4-entry__k">{{ settings.portal_shop_kicker | default: 'Pharma Cosmetics' | escape }}</p>
+        <h2 class="pc-h4-entry__t">{{ settings.portal_shop_title | default: 'Mua dược mỹ phẩm chính hãng' | escape }}</h2>
+        {%- if settings.portal_shop_desc != blank -%}<p class="pc-h4-entry__d">{{ settings.portal_shop_desc | escape }}</p>{%- endif -%}
+        <span class="pc-h4-go">{{ settings.portal_shop_btn_text | default: 'Vào cửa hàng' | escape }}{% include 'ui_icon', name: 'arrow-right' %}</span>
+      </a>
+      <a class="pc-h4-entry pc-h4-entry--dark" href="{{ settings.home_spa_btn_url | default: '/skin-health-beauty' | escape }}" title="{{ settings.home_spa_btn_text | default: 'Khám phá Skin Health Beauty' | escape }}">
+        <p class="pc-h4-entry__k">{{ settings.portal_clinic_kicker | default: 'Skin Health Beauty' | escape }}</p>
+        <h2 class="pc-h4-entry__t">{{ settings.portal_clinic_title | default: 'Trị liệu da 1:1 tại Hà Nội' | escape }}</h2>
+        {%- if settings.portal_clinic_desc != blank -%}<p class="pc-h4-entry__d">{{ settings.portal_clinic_desc | escape }}</p>{%- endif -%}
+        <span class="pc-h4-go">{{ settings.portal_clinic_btn_text | default: 'Khám phá trị liệu' | escape }}{% include 'ui_icon', name: 'arrow-right' %}</span>
+      </a>
+    </div>
+  </div>
+</section>

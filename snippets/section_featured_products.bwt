@@ -1,245 +1,71 @@
-{%- assign feat_col    = settings.home_featured_collection   | default: 'san-pham-ban-chay-noi-bat' -%}
-{%- assign feat_limit  = settings.home_featured_limit | default: 10 -%}
-{%- assign feat_count  = collections[feat_col].products_count -%}
+{%- comment -%}
+  03/11/2026 (chủ dự án: trang chủ theo Figma "travel" node 5:2): nền xanh nhạt, eyebrow + tiêu đề + "Xem tất cả", hàng tab lọc theo
+  nhu cầu, 1 hàng 5 thẻ (home_product_card; mobile vuốt ngang). Bỏ carousel Swiper + khối <style> cũ.
+  - Tab "Tất cả" = danh mục home_featured_collection (giữ nguyên), số thẻ home_featured_limit (tối đa 10, desktop hiện 5).
+  - Tab còn lại = các mục của Menu settings.home_featured_tabs_menu (mặc định giai-phap-dieu-tri), mỗi mục trỏ tới 1 danh mục;
+    nhãn ngắn theo thứ tự ở home_featured_tab_labels (phân cách ";", trống ⇒ tên mục menu). Danh mục không có SP ⇒ bỏ tab.
+  Tab là link danh mục (chưa có JS vẫn dùng được) — JS chung snippets/home_tabs_script.bwt. CSS: components.css mục 14.6.
+{%- endcomment -%}
+{%- assign feat_col = settings.home_featured_collection | default: 'san-pham-ban-chay-noi-bat' -%}
+{%- assign feat_limit = settings.home_featured_limit | plus: 0 -%}
+{%- if feat_limit < 1 or feat_limit > 10 -%}{%- assign feat_limit = 10 -%}{%- endif -%}
+{%- assign feat_count = collections[feat_col].products_count -%}
 {%- if feat_count > 0 -%}
-<section class="pc-section-v3 section--light section_featured_products pc-featured-products">
-  <div class="container">
-    <div class="pc-featured__header">
-      <div class="pc-section-header pc-section-header--left">
-        {%- if settings.home_featured_eyebrow != blank -%}
-        <p class="pc-section-eyebrow">{{ settings.home_featured_eyebrow }}</p>
-        {%- endif -%}
-        <h2 class="pc-section-title">{{ settings.home_featured_title | default: 'Sản phẩm nổi bật' }} <span class="pc-kit-badge-clinical align-middle ml-1"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'check', size: 'em' %}</i> Kiểm định lâm sàng</span></h2>
-        {%- if settings.home_featured_subtitle != blank -%}
-        <p class="pc-section-subtitle">{{ settings.home_featured_subtitle }}</p>
-        {%- endif -%}
+{%- assign feat_tabs_handle = settings.home_featured_tabs_menu | default: 'giai-phap-dieu-tri' -%}
+{%- assign feat_tabs_ll = linklists[feat_tabs_handle] -%}
+{%- assign feat_labels = settings.home_featured_tab_labels | split: ';' -%}
+{%- comment -%} Mục menu trỏ tới DANH MỤC có SP ⇒ tab lọc tại chỗ. Có mục nào là link khác (vd /search?query=…, menu mặc định
+  giai-phap-dieu-tri) ⇒ cả hàng là link chuyển trang ("Tất cả" đánh dấu đang chọn) — không trộn tab với link trong cùng tablist. {%- endcomment -%}
+{%- assign feat_tab_html = '' -%}
+{%- assign feat_link_html = '' -%}
+{%- assign feat_panel_html = '' -%}
+{%- assign feat_all_cols = true -%}
+{%- for link in feat_tabs_ll.links limit: 8 -%}
+  {%- assign feat_lbl = feat_labels[forloop.index0] | strip | default: link.title -%}
+  {%- assign feat_h = '' -%}{%- unless link.url contains '?' -%}{%- assign feat_h = link.url | remove_first: '/' | remove_first: 'collections/' -%}{%- endunless -%}
+  {%- assign feat_c = collections[feat_h] -%}
+  {%- if feat_h == blank or feat_c.products_count < 1 -%}{%- assign feat_all_cols = false -%}{%- endif -%}
+  {%- capture feat_one_link -%}<a class="pc-h4-tab" href="{{ link.url | escape }}">{{ feat_lbl | escape }}</a>{%- endcapture -%}
+  {%- assign feat_link_html = feat_link_html | append: feat_one_link -%}
+  {%- if feat_all_cols -%}
+    {%- capture feat_one_tab -%}<a class="pc-h4-tab" role="tab" id="pc-h4-ft-{{ forloop.index }}" aria-controls="pc-h4-fp-{{ forloop.index }}" aria-selected="false" tabindex="-1" href="{{ link.url | escape }}">{{ feat_lbl | escape }}</a>{%- endcapture -%}
+    {%- capture feat_one_panel -%}<div class="pc-h4-prow" role="tabpanel" id="pc-h4-fp-{{ forloop.index }}" aria-labelledby="pc-h4-ft-{{ forloop.index }}" hidden>
+      {%- for product in feat_c.products limit: feat_limit -%}{%- include 'home_product_card', product: product, eager: false -%}{%- endfor -%}
+    </div>{%- endcapture -%}
+    {%- assign feat_tab_html = feat_tab_html | append: feat_one_tab -%}
+    {%- assign feat_panel_html = feat_panel_html | append: feat_one_panel -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- unless feat_all_cols -%}{%- assign feat_tab_html = '' -%}{%- assign feat_panel_html = '' -%}{%- endunless -%}
+{%- assign feat_all_url = collections[feat_col].url | default: feat_col -%}
+<section class="pc-h4 pc-h4-sec pc-h4-sec--soft section_featured_products" aria-labelledby="pc-h4-feat-title">
+  <div class="pc-h4-wrap">
+    <div class="pc-h4-head">
+      <div>
+        {%- if settings.home_featured_eyebrow != blank -%}<p class="pc-h4-eyebrow">{{ settings.home_featured_eyebrow | escape }}</p>{%- endif -%}
+        <h2 class="pc-h4-title" id="pc-h4-feat-title">{{ settings.home_featured_title | default: 'Sản phẩm bán chạy' | escape }}</h2>
+        {%- if settings.home_featured_subtitle != blank -%}<p class="pc-h4-lead mt-3">{{ settings.home_featured_subtitle | escape }}</p>{%- endif -%}
       </div>
-	  <div class="pc-featured__actions">
-		<a href="{{ collections[feat_col].url | default: feat_col | escape }}" class="pc-featured__viewall pc-viewall" title="{{ settings.home_featured_viewall_text | default: 'Xem tất cả' }}"><span>{{ settings.home_featured_viewall_text | default: 'Xem tất cả' }}</span><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-right', size: 'em' %}</i>
-		</a>
-	  </div>
+      <a class="pc-h4-more" href="{{ feat_all_url | escape }}">{{ settings.home_featured_viewall_text | default: 'Xem tất cả' | escape }}{% include 'ui_icon', name: 'arrow-right' %}</a>
     </div>
-
-    {%- comment -%} 2026-10-13: nút trước/sau nằm 2 bên sườn danh sách (không còn ở góc phải tiêu đề), bỏ chấm phân trang. {%- endcomment -%}
-    <div class="pc-featured__stage">
-    <div class="pc-featured__swiper swiper_featured swiper-container">
-      <div class="swiper-wrapper load-after" data-section="section_featured_products">
-        {%- for i in (1..5) -%}
-        <div class="swiper-slide item_null">
-          <div class="item_product_main"></div>
-        </div>
-        {%- endfor -%}
-
-        {%- assign feat_html = '' -%}
-        {%- for product in collections[feat_col].products limit: feat_limit -%}
-        {%- capture feat_block -%}
-        <div class="swiper-slide">
-          <div class="item_product_main">
-            {%- include 'product_grid_office_sale' -%}
-          </div>
-        </div>
-        {%- endcapture -%}
-        {%- assign feat_html = feat_html | append: feat_block -%}
-        {%- endfor -%}
-        <script type="text/x-custom-template" data-template="section_featured_products">
-          {{ feat_html }}
-        </script>
+    <div data-h4-tabs>
+      {%- if feat_tab_html != blank -%}
+      <div class="pc-h4-tabs" role="tablist" aria-label="Lọc theo nhu cầu">
+        <a class="pc-h4-tab" role="tab" id="pc-h4-ft-0" aria-controls="pc-h4-fp-0" aria-selected="true" tabindex="0" href="{{ feat_all_url | escape }}">{{ settings.home_featured_tab_all | default: 'Tất cả' | escape }}</a>
+        {{- feat_tab_html -}}
       </div>
-
+      {%- elsif feat_link_html != blank -%}
+      <nav class="pc-h4-tabs" aria-label="Lọc theo nhu cầu">
+        <a class="pc-h4-tab" aria-current="true" href="{{ feat_all_url | escape }}">{{ settings.home_featured_tab_all | default: 'Tất cả' | escape }}</a>
+        {{- feat_link_html -}}
+      </nav>
+      {%- endif -%}
+      <div class="pc-h4-prow"{% if feat_tab_html != blank %} role="tabpanel" id="pc-h4-fp-0" aria-labelledby="pc-h4-ft-0"{% endif %}>
+        {%- for product in collections[feat_col].products limit: feat_limit -%}{%- include 'home_product_card', product: product, eager: false -%}{%- endfor -%}
+      </div>
+      {{- feat_panel_html -}}
     </div>
-      <button type="button" aria-label="Sản phẩm trước" class="swiper-button-prev pc-featured__prev">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-      <button type="button" aria-label="Sản phẩm tiếp theo" class="swiper-button-next pc-featured__next">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-    </div>
-    {%- comment -%} 2026-10-17: bỏ link "Xem tất cả" riêng cho mobile ở cuối khối — dùng chung nút .pc-viewall ở tiêu đề. {%- endcomment -%}
-
   </div>
 </section>
-
-<style>
-/* ── Section Featured Products ── */
-.pc-featured-products {
-  overflow: hidden;
-}
-
-/* Header: title trái + link "xem tất cả" phải */
-.pc-featured__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 32px;
-}
-.pc-featured__header .pc-section-header {
-  margin-bottom: 0; /* override global 32px — spacing handled by parent flex gap */
-}
-.pc-featured__header .pc-section-title {
-  margin-bottom: 4px;
-}
-.pc-featured__header .pc-section-subtitle {
-  margin: 0;
-}
-.pc-featured__actions,
-.pc-featured__controls {
-  display: flex;
-  align-items: center;
-}
-.pc-featured__actions { gap: 18px; flex-shrink: 0; }
-.pc-featured__controls { gap: 8px; }
-
-/* "Xem tất cả" — desktop (bên phải header) */
-.pc-featured__viewall {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-primary);
-  font-size: var(--fs-base);
-  font-weight: 600;
-  color: var(--mainColorDark);
-  text-decoration: none;
-  white-space: nowrap;
-  border-bottom: 1.5px solid var(--mainColorDark);
-  padding-bottom: 2px;
-  transition: color .2s, border-color .2s;
-  flex-shrink: 0;
-}
-.pc-featured__viewall:hover {
-  color: var(--mainColor);
-  border-color: var(--mainColor);
-}
-
-/* Swiper wrapper */
-.pc-featured__swiper {
-  overflow: hidden;
-  padding-bottom: 6px; /* chừa bóng thẻ sản phẩm (đã bỏ chấm phân trang) */
-}
-
-/* Nút trước/sau: 2 bên sườn danh sách sản phẩm (2026-10-13) */
-.pc-featured__stage {
-  position: relative;
-}
-.pc-featured__prev,
-.pc-featured__next {
-  position: absolute !important;
-  top: 50% !important;
-  z-index: 5;
-  width: 44px;
-  height: 44px;
-  margin: 0 !important;
-  transform: translateY(-50%) !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  background: #fff;
-  border: 1.5px solid var(--lineColor);
-  border-radius: 50%;
-  color: var(--mainColorDark);
-  box-shadow: 0 2px 8px rgba(0,0,0,.12);
-  transition: background .2s, border-color .2s, color .2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-/* Lệch ra ngoài mép danh sách đến 58px khi màn hình còn lề (không đè ảnh sản phẩm); màn hẹp thì sát mép. */
-.pc-featured__prev { left: calc(-1 * clamp(10px, (100vw - 1236px) / 2, 58px)) !important; right: auto !important; }
-.pc-featured__next { right: calc(-1 * clamp(10px, (100vw - 1236px) / 2, 58px)) !important; left: auto !important; }
-.pc-featured__prev.swiper-button-disabled,
-.pc-featured__next.swiper-button-disabled { opacity: .35 !important; cursor: default; }
-.pc-featured__prev::after,
-.pc-featured__next::after { display: none; } /* ẩn text mặc định của Swiper */
-.pc-featured__prev:hover,
-.pc-featured__next:hover {
-  background: var(--mainColorDark);
-  border-color: var(--mainColorDark);
-  color: #fff;
-}
-@media (max-width: 767px) {
-  .pc-featured__prev, .pc-featured__next { display: none !important; } /* mobile: vuốt ngang */
-}
-
-/* "Xem tất cả" — mobile (giữa, dưới swiper) */
-.pc-featured__footer {
-  text-align: center;
-  margin-top: 8px;
-}
-.pc-featured__viewall-mobile {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-primary);
-  font-size: var(--fs-base);
-  font-weight: 600;
-  color: var(--mainColorDark);
-  text-decoration: none;
-  transition: color .2s;
-}
-.pc-featured__viewall-mobile:hover {
-  color: var(--mainColor);
-}
-
-/* ── Featured context: override card's flash-sale colors ── */
-.pc-featured-products .pc-btn--action {
-  background: var(--mainColorDark);
-}
-.pc-featured-products .pc-btn--action:hover {
-  background: var(--mainColor);
-  transform: translateY(-1px);
-}
-.pc-featured-products .pc-btn--action--disabled:hover {
-  transform: none;
-}
-/* E01 (phase home-shopping-ux, 2026-09-20): bỏ override xanh — badge % giảm giá dùng chung 1 màu
-   đỏ (--flashsale-badge-bg) ở mọi nơi tái dùng .pc-flashsale__badge, theo yêu cầu người dùng. */
-.pc-featured-products .pc-flashsale__progress {
-  display: none;
-}
-
-/* Responsive header */
-@media (max-width: 767px) {
-  .pc-featured__header {
-    flex-direction: column;
-    align-items: flex-start;
-    margin-bottom: 20px;
-  }
-}
-</style>
-
-<script>
-$(document).ready(function($) {
-  function runSwiperFeatured() {
-    var swiperFeatured = null;
-
-    function init() {
-      swiperFeatured = new Swiper('.swiper_featured', {
-        slidesPerView: 4,
-        spaceBetween: 20,
-        slidesPerGroup: 1,
-        navigation: {
-          nextEl: '.pc-featured__stage .pc-featured__next',
-          prevEl: '.pc-featured__stage .pc-featured__prev',
-        },
-        breakpoints: {
-          280: { slidesPerView: 2, spaceBetween: 12 },
-          480: { slidesPerView: 2,   spaceBetween: 12 },
-          768: { slidesPerView: 3,   spaceBetween: 16 },
-          993: { slidesPerView: 4,   spaceBetween: 20 },
-        }
-      });
-    }
-
-    function destroy() {
-      if (swiperFeatured) { swiperFeatured.destroy(true, true); swiperFeatured = null; }
-    }
-
-    init();
-    $(window).on('resize', function() {
-      destroy(); init();
-    });
-  }
-
-  lazyBlockProduct('section_featured_products', '0px 0px -200px 0px', runSwiperFeatured);
-});
-</script>
+{%- if feat_tab_html != blank -%}{%- include 'home_tabs_script' -%}{%- endif -%}
 {%- endif -%}

@@ -39,6 +39,9 @@ const ALLOW = {
   // Tham số tuỳ chọn của snippet, đã có giá trị mặc định khi không truyền:
   skeleton: "tham số tuỳ chọn mops_admin_state_block (mặc định 'table')",
   booking_url: "tham số tuỳ chọn product_grid_skinhealthy (| default: '/dat-lich-tu-van')",
+  // 03/11/2026: trang chủ v4 bỏ nơi gán (section_flash_sale / section_spa) — nil = nhánh mặc định (thẻ thường / sơ đồ da thường).
+  pc_card_ctx: "tham số tuỳ chọn product_grid_office_sale (== 'flash' mới hiện «Tiết kiệm»; nil = thẻ thường)",
+  portal_diagram_clinic: 'tham số tuỳ chọn portal_skin_diagram (nil = nhãn sơ đồ da thường)',
 };
 // 24/10/2026 (D04): tham số tuỳ chọn của thư viện snippets/ui_*.bwt (docs/UI-STANDARD.md C.2) — snippet kiểm != blank
 // hoặc | default khi không truyền; khi chưa có template nào truyền thì lint không thấy nguồn.

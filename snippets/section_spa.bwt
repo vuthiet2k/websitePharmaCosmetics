@@ -1,114 +1,53 @@
 {%- comment -%}
   section_spa.bwt — chương II "Tin cậy": Pharma Cosmetics × Skin Health Beauty.
-  2026-10-16 (người dùng, theo ảnh thiết kế mới): ít chữ, mọi thứ có chức năng, không bo góc/đổ bóng, có trượt + animate.
-  - Lockup "PHARMA COSMETICS › SKIN HEALTH BEAUTY" = link tới trang Skin Health Beauty (home_spa_btn_url, tiêu đề
-    = home_spa_btn_text).
-  - Tiêu đề 2 màu: home_spa_title (trắng) + home_spa_title_accent (xanh). Dòng phụ: home_spa_desc.
-  - 4 chip (portal_clinic_chips) GIỮ NGUYÊN, gắn chức năng (người dùng: "vẫn vậy - chỉ gán thêm chức năng"): mỗi chip là ô
-    bấm được (icon + mũi tên), link/icon theo đúng thứ tự trong portal_clinic_chip_urls / portal_clinic_chip_icons.
-  - Nút chính full-width: home_spa_cta_text / home_spa_cta_url (mặc định theo nút 1 Hero).
-  - Ảnh chính: home_spa_img_1 (chưa có ⇒ sơ đồ lớp da). 3 thẻ ảnh = 3 bước portal_step_N + ảnh home_spa_img_2..4: chữ nằm
-    TRÊN ảnh (không rời rạc), cả thẻ là link portal_step_N_url; mô tả bước = tooltip + đọc cho trình đọc màn hình.
-    Thẻ chạy bằng Swiper (thanh phân trang + mũi tên). Các khối hiện dần khi cuộn tới (CSS .shb2 [data-reveal]).
-  CSS: assets/home-portal.css (.shb2*).
+  03/11/2026 (chủ dự án: trang chủ theo Figma "travel" node 5:2): nền xanh đậm, trái = eyebrow + tiêu đề 2 dòng
+  (home_spa_title / home_spa_title_accent) + mô tả (home_spa_desc) + nhãn (portal_clinic_chips phân cách ";"; link / icon cùng thứ tự ở portal_clinic_chip_urls / portal_clinic_chip_icons — trống ⇒ nhãn chữ) + nút đặt lịch
+  (home_spa_cta_text / _url, mặc định link nút 1 Hero) + địa chỉ (home_spa_address, trống ⇒ ẩn); phải = 4 thẻ bước đánh số
+  portal_step_N_title / _desc (N = 1..4, có _url ⇒ thẻ là link). Bỏ ảnh / chip / carousel cũ (các trường đó giữ trong schema).
+  CSS: ui-src/css/components.css mục 14.7.
 {%- endcomment -%}
-{%- assign pc_shb_chips = settings.portal_clinic_chips | split: ';' -%}
-{%- assign pc_shb_urls = settings.portal_clinic_chip_urls | default: '/kham-da-ai?tab=camera;/ai-skin-quiz-results;/phuc-hoi-hang-rao-bao-ve-da;/dat-lich-tu-van' | split: ';' -%}
-{%- assign pc_shb_icons = settings.portal_clinic_chip_icons | default: 'fa-face-smile;fa-file-lines;fa-shield-halved;fa-comments' | split: ';' -%}
-{%- assign pc_shb_cta_url = settings.home_spa_cta_url | default: settings.home_hero_btn1_url | default: '/dat-lich-tu-van' -%}
-<section class="dark-zone shb2" data-shb2>
-  <div class="chapter on-dark"><div class="wrap"><div class="tag"><b>II</b> {{ settings.portal_chapter_2 | default: 'Tin cậy' | escape }}</div><div class="rule"></div></div></div>
-  <div class="wrap shb2__top">
-    <div class="shb2__copy">
-      <a class="shb2__lock" href="{{ settings.home_spa_btn_url | default: '/skin-health-beauty' | escape }}" title="{{ settings.home_spa_btn_text | default: 'Khám phá Skin Health Beauty' | escape }}" data-reveal>
-        <span>Pharma Cosmetics</span><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 6 6 6-6 6"/></svg><b>Skin Health Beauty</b>
-      </a>
-      <p class="eyebrow" data-reveal>{{ settings.home_spa_eyebrow | default: 'Khi routine tại nhà chưa đủ' | escape }}</p>
-      <h2 class="shb2__title" data-reveal>{{ settings.home_spa_title | default: 'Làn da cần lộ trình đúng,' | escape }}{%- if settings.home_spa_title_accent != blank %} <em>{{ settings.home_spa_title_accent | escape }}</em>{%- endif -%}</h2>
-      {%- assign pc_shb_desc = settings.home_spa_desc | default: settings.portal_clinic_desc -%}
-      {%- if pc_shb_desc != blank -%}<p class="shb2__lead" data-reveal>{{ pc_shb_desc | escape }}</p>{%- endif -%}
-    </div>
-    <div class="shb2__visual" data-reveal>
-      {%- if settings.home_spa_img_1 != blank -%}
-      <img src="{{ settings.home_spa_img_1 | img_url: '1024x1024' }}" alt="{{ settings.home_spa_title | append: ' ' | append: settings.home_spa_title_accent | strip | default: 'Trị liệu da tại Skin Health Beauty' | escape }}" width="800" height="900" loading="lazy">
-      {%- else -%}
-      {% assign portal_diagram_clinic = true %}{% include 'portal_skin_diagram' %}{% assign portal_diagram_clinic = false %}
-      {%- endif -%}
-    </div>
-    <div class="shb2__actions">
-      {%- if pc_shb_chips.size > 0 and settings.portal_clinic_chips != blank -%}
-      <div class="shb2__tiles shb2__tiles--{{ pc_shb_chips.size }}">
-        {%- for chip in pc_shb_chips -%}
-        {%- assign pc_shb_u = pc_shb_urls[forloop.index0] | strip | default: pc_shb_cta_url -%}
-        <a class="shb2__tile" href="{{ pc_shb_u | escape }}" data-reveal>
-          {%- comment -%} L03b3 (31/10/2026): bỏ Font Awesome — ui_icon tự đổi giá trị cũ "fa-…" trong portal_clinic_chip_icons sang icon SVG. {%- endcomment -%}
-          {%- assign pc_shb_icon = pc_shb_icons[forloop.index0] | strip | default: 'circle-check' -%}
-          <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: pc_shb_icon, size: 'em' %}</i>
-          <span>{{ chip | strip | escape }}</span>
-          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </a>
+{%- assign spa_cta_url = settings.home_spa_cta_url | default: settings.home_hero_btn1_url | default: '/dat-lich-tu-van' -%}
+{%- assign spa_tags = settings.portal_clinic_chips | split: ';' -%}
+{%- assign spa_tag_urls = settings.portal_clinic_chip_urls | split: ';' -%}
+{%- assign spa_tag_icons = settings.portal_clinic_chip_icons | split: ';' -%}
+<section class="pc-h4 pc-h4-sec pc-h4-sec--dark" aria-labelledby="pc-h4-spa-title">
+  <div class="pc-h4-wrap">
+    <div class="pc-h4-chap"><p class="pc-h4-chap__tag">II · {{ settings.portal_chapter_2 | default: 'Tin cậy' | escape }}</p><span class="pc-h4-chap__rule" aria-hidden="true"></span></div>
+    <div class="pc-h4-trust2">
+      <div>
+        <p class="pc-h4-eyebrow">{{ settings.home_spa_eyebrow | default: 'Khi routine tại nhà chưa đủ' | escape }}</p>
+        <h2 class="pc-h4-trust2__t" id="pc-h4-spa-title">{{ settings.home_spa_title | default: 'Làn da cần lộ trình đúng,' | escape }}{%- if settings.home_spa_title_accent != blank -%}<br>{{ settings.home_spa_title_accent | escape }}{%- endif -%}</h2>
+        {%- assign spa_desc = settings.home_spa_desc | default: settings.portal_clinic_desc -%}
+        {%- if spa_desc != blank -%}<p class="pc-h4-trust2__d">{{ spa_desc | escape }}</p>{%- endif -%}
+        {%- if settings.portal_clinic_chips != blank -%}
+        <ul class="pc-h4-tags">
+          {%- for t in spa_tags -%}{%- if t != blank -%}
+          {%- assign spa_u = spa_tag_urls[forloop.index0] | strip -%}{%- assign spa_i = spa_tag_icons[forloop.index0] | strip -%}
+          <li>{%- if spa_u != blank -%}<a href="{{ spa_u | escape }}">{%- endif -%}{%- if spa_i != blank -%}{% include 'ui_icon', name: spa_i, size: 'em' %} {% endif -%}{{ t | strip | escape }}{%- if spa_u != blank -%}</a>{%- endif -%}</li>
+          {%- endif -%}{%- endfor -%}
+        </ul>
+        {%- endif -%}
+        <div class="pc-h4-trust2__act">
+          <a class="pc-h4-cta" href="{{ spa_cta_url | escape }}">{{ settings.home_spa_cta_text | default: 'Đặt lịch phân tích da' | escape }}</a>
+          {%- if settings.home_spa_address != blank -%}<p class="pc-h4-trust2__addr">{{ settings.home_spa_address | escape | newline_to_br }}</p>{%- endif -%}
+        </div>
+      </div>
+      <ol class="pc-h4-steps">
+        {%- assign spa_n = 0 -%}
+        {%- for i in (1..4) -%}
+          {%- capture k_t -%}portal_step_{{ i }}_title{%- endcapture -%}{%- capture k_d -%}portal_step_{{ i }}_desc{%- endcapture -%}{%- capture k_u -%}portal_step_{{ i }}_url{%- endcapture -%}
+          {%- if settings[k_t] != blank -%}
+          {%- assign spa_n = spa_n | plus: 1 -%}
+          <li class="m-0">
+            {%- if settings[k_u] != blank -%}<a class="pc-h4-step" href="{{ settings[k_u] | escape }}">{%- else -%}<div class="pc-h4-step">{%- endif -%}
+              <span class="pc-h4-step__n block" aria-hidden="true">0{{ spa_n }}</span>
+              <span class="pc-h4-step__t block">{{ settings[k_t] | escape }}</span>
+              {%- if settings[k_d] != blank -%}<span class="pc-h4-step__d block">{{ settings[k_d] | escape }}</span>{%- endif -%}
+            {%- if settings[k_u] != blank -%}</a>{%- else -%}</div>{%- endif -%}
+          </li>
+          {%- endif -%}
         {%- endfor -%}
-      </div>
-      {%- endif -%}
-      <a class="shb2__cta" href="{{ pc_shb_cta_url | escape }}" data-reveal>{{ settings.home_spa_cta_text | default: 'Phân tích da ngay' | escape }}<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </ol>
     </div>
   </div>
-  {%- comment -%} 3 thẻ ảnh — chỉ hiện bước có cả tiêu đề lẫn ảnh (không để thẻ chữ trơn / ảnh không chữ). {%- endcomment -%}
-  {%- assign spa_imgs = 'home_spa_img_2,home_spa_img_3,home_spa_img_4' | split: ',' -%}
-  {%- assign spa_step_urls = '/kham-da-ai?tab=camera,/dat-lich-tu-van,/ai-skin-quiz-results' | split: ',' -%}
-  {%- capture pc_shb_cards -%}
-  {%- for i in (1..3) -%}
-    {%- capture k_title -%}portal_step_{{ i }}_title{%- endcapture -%}{%- capture k_desc -%}portal_step_{{ i }}_desc{%- endcapture -%}{%- capture k_url -%}portal_step_{{ i }}_url{%- endcapture -%}
-    {%- assign pc_img = settings[spa_imgs[forloop.index0]] -%}
-    {%- if settings[k_title] != blank and pc_img != blank -%}
-    <a class="swiper-slide shb2__card" href="{{ settings[k_url] | default: spa_step_urls[forloop.index0] | escape }}" title="{{ settings[k_desc] | escape }}">
-      <img src="{{ pc_img | img_url: 'large' }}" alt="{{ settings[k_title] | escape }} — Skin Health Beauty" width="480" height="320" loading="lazy">
-      <span class="shb2__card-cap"><span class="shb2__card-n">0{{ i }}</span><span class="shb2__card-t">{{ settings[k_title] | escape }}</span><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-      {%- if settings[k_desc] != blank -%}<span class="shb2__sr">{{ settings[k_desc] | escape }}</span>{%- endif -%}
-    </a>
-    {%- endif -%}
-  {%- endfor -%}
-  {%- endcapture -%}
-  {%- if pc_shb_cards != blank -%}
-  <div class="wrap shb2__slider" data-reveal>
-    <div class="shb2__bar">
-      <div class="shb2__dots"></div>
-      <div class="shb2__navs">
-        <button type="button" class="shb2__nav shb2__nav--prev" aria-label="Trước"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m15 6-6 6 6 6"/></svg></button>
-        <button type="button" class="shb2__nav shb2__nav--next" aria-label="Sau"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m9 6 6 6-6 6"/></svg></button>
-      </div>
-    </div>
-    <div class="shb2__viewport swiper-container"><div class="swiper-wrapper">{{ pc_shb_cards }}</div></div>
-  </div>
-  {%- endif -%}
-  <script>
-  (function () {
-    var root = document.querySelector('[data-shb2]');
-    if (!root || root.dataset.ready) return;
-    root.dataset.ready = '1';
-    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    // Hiện dần khi cuộn tới (thêm .is-in); không có IntersectionObserver / giảm chuyển động ⇒ hiện ngay.
-    var items = root.querySelectorAll('[data-reveal]');
-    if (reduce || !('IntersectionObserver' in window)) { items.forEach(function (el) { el.classList.add('is-in'); }); }
-    else {
-      root.classList.add('shb2--anim');
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('is-in'); io.unobserve(en.target); } });
-      }, { threshold: 0.15 });
-      items.forEach(function (el) { io.observe(el); });
-    }
-    function initSlider() {
-      var vp = root.querySelector('.shb2__viewport');
-      if (!vp || typeof Swiper !== 'function' || vp.swiper) return;
-      new Swiper(vp, {
-        slidesPerView: 1.25, spaceBetween: 14, speed: 600, watchOverflow: true,
-        autoplay: reduce ? false : { delay: 4500, disableOnInteraction: false, pauseOnMouseEnter: true },
-        navigation: { prevEl: root.querySelector('.shb2__nav--prev'), nextEl: root.querySelector('.shb2__nav--next') },
-        pagination: { el: root.querySelector('.shb2__dots'), clickable: true },
-        breakpoints: { 576: { slidesPerView: 2, spaceBetween: 16 }, 992: { slidesPerView: 3, spaceBetween: 20 } }
-      });
-    }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initSlider); else initSlider();
-  })();
-  </script>
 </section>

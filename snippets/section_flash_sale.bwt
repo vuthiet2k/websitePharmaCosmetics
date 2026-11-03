@@ -1,195 +1,43 @@
-<style>
-/* Flash Sale — edge-to-edge via section--brand */
-.section_flash_sale.pc-flashsale {
-  border-radius: 0;
-  padding-left: 0;
-  padding-right: 0;
-}
-/* REOPEN 2026-09-13 — đổi chrome (nền/tiêu đề/đếm ngược) từ tông đỏ sang
-   tối + vàng gold theo design/homepage-concepts/v2-clinical-dashboard.html
-   người dùng chọn. Không đụng Swiper/product loop/countdown script bên dưới. */
-.pc-flashsale {
-  background: var(--primary-forest-900, #0F2318);
-  border-top: none;
-  border-bottom: none;
-}
-.pc-flashsale__header-inner { padding: 20px 0 12px; }
-.pc-flashsale__title { display: flex; align-items: center; gap: 10px; }
-.pc-flashsale__title a {
-  display: flex; align-items: center; gap: 10px;
-  color: #fff;
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 800; text-transform: uppercase; letter-spacing: -0.01em;
-  font-size: var(--fs-card);
-}
-.pc-flashsale__title img { border-radius: 8px; background: var(--color-gold-dark, #B8860B); padding: 4px; }
-.pc-flashsale__countdown { display: flex; align-items: center; gap: 10px; }
-.pc-flashsale__countdown-label { font-size: var(--fs-2xs); font-weight: 700; text-transform: uppercase; color: rgba(255,255,255,.65); }
-.pc-flashsale__countdown-timer {
-  background: rgba(255,255,255,.12); color: #fff; font-weight: 700;
-  font-size: var(--fs-sm); padding: 8px 14px; border-radius: 8px; font-family: 'Montserrat', sans-serif;
-}
-.pc-flashsale__countdown-timer .block-timer p { color: var(--color-gold-sand, #DFBA73); }
-.pc-flashsale__viewall a, .pc-flashsale__viewmore a { color: var(--color-gold-sand, #DFBA73) !important; font-weight: 700; }
-.pc-flashsale .swiper-button-next, .pc-flashsale .swiper-button-prev { background-color: rgba(255,255,255,.12) !important; }
-.pc-flashsale .swiper-button-next svg path, .pc-flashsale .swiper-button-prev svg path { stroke: #fff !important; }
-.pc-flashsale .swiper-button-next:hover, .pc-flashsale .swiper-button-prev:hover { background-color: var(--color-gold-dark, #B8860B) !important; }
-</style>
+{%- comment -%}
+  03/11/2026 (chủ dự án: trang chủ theo Figma "travel" node 5:2): tiêu đề "Flash sale" + viên tối "Kết thúc sau [đồng hồ]" + "Xem tất cả",
+  1 hàng 5 thẻ (home_product_card) — desktop lưới 5 cột (thẻ thứ 6+ ẩn), mobile vuốt ngang tối đa 10 thẻ. Bỏ carousel Swiper,
+  khối <style> cũ (nền tối/vàng gold) và tia sét. Giữ nguyên dữ liệu: danh mục home_flashsale_collection, số lượng home_flashsale_limit, phần chữ tô đỏ home_flashsale_title_hl (trống ⇒ không tô),
+  bộ đếm ngược chu kỳ (data-countdown + home_flashsale_countdown_end / _cycle_hours, L09), khối mã giảm giá coupon_products.
+  CSS: ui-src/css/components.css mục 14.6.
+{%- endcomment -%}
 {% assign flash_collection = collections[settings.home_flashsale_collection] %}
 {% capture flash_fallback_url %}/{{ settings.home_flashsale_collection }}{% endcapture %}
 {% assign flash_collection_url = flash_collection.url | default: flash_fallback_url %}
 {% assign count = collections[settings.home_flashsale_collection].products_count %}
 {%- assign pc_fs_viewall = settings.home_flashsale_viewall_text | default: 'Xem tất cả' -%}
-<section class="pc-section-v3 section--brand section_flash_sale pc-flashsale">
-	<div class="pc-flashsale__body {%if settings.home_flashsale_countdown_enable%}has-deal-time{%endif%}">
-		<div class="pc-flashsale__header">
-			<div class="container">
-				<div class="pc-flashsale__header-inner">
-					<h2 class="pc-flashsale__title">
-						{%- comment -%} 2026-10-16 (người dùng: thiếu thu hút, thiếu đỏ kích thích): tia sét flash_-1.png có hiệu ứng nháy;
-						  phần chữ settings.home_flashsale_title_hl (mặc định "Flash Sale") tô đỏ, phần còn lại màu thương hiệu. {%- endcomment -%}
-						{%- assign pc_fs_title = settings.home_flashsale_title | escape -%}
-						{%- assign pc_fs_hl = settings.home_flashsale_title_hl | default: 'Flash Sale' | escape -%}
-						{%- capture pc_fs_hl_html -%}<em>{{ pc_fs_hl }}</em>{%- endcapture -%}
-						<a href="{{ flash_collection_url | escape }}" title="{{ pc_fs_title }}">
-							<span class="pc-flashsale__bolt" aria-hidden="true"><img width="32" height="32" alt="" src="{{'flash_-1.png' | asset_url}}"></span>
-							<span class="pc-flashsale__title-text">{%- if pc_fs_hl != blank and pc_fs_title contains pc_fs_hl -%}{{ pc_fs_title | replace_first: pc_fs_hl, pc_fs_hl_html }}{%- else -%}{{ pc_fs_title }}{%- endif -%}</span>
-						</a>
-					</h2>
-					{%if settings.home_flashsale_countdown_enable%}
-					{%- comment -%} 2026-10-21 (người dùng): bỏ chữ "Kết thúc sau" + đồng hồ báo thức — chỉ còn dãy ô số đỏ, gọn như thiết kế;
-					  tiêu đề cấu hình vẫn dùng làm aria-label cho trình đọc màn hình. {%- endcomment -%}
-					<div class="pc-flashsale__countdown">
-						<div class="pc-flashsale__countdown-timer" role="timer" aria-label="{{ settings.home_flashsale_countdown_title | default: 'Kết thúc sau' | escape }}" data-countdown="countdown" data-date="{{settings.home_flashsale_countdown_end}}" data-cycle-hours="{{settings.home_flashsale_countdown_cycle_hours | default: 0}}">
-						</div>
-					</div>
-					{%endif%}
-
-					{% if count > 0 %}
-					<div class="pc-flashsale__viewall">
-						<a href="{{ flash_collection_url | escape }}" title="{{ pc_fs_viewall | escape }}" class="ssmore action pc-viewall pc-viewall--sale"><span>{{ pc_fs_viewall | escape }}</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
-					</div>
-					{%endif%}
-				</div>
-			</div>
-		</div>
-		{% if count > 0 %}
-		<div class="container">
-			<div class="pc-flashsale__carousel swiper_sale swiper-container">
-				<div class="swiper-wrapper load-after" data-section="section_flash_sale">
-					{%assign product_html = ''%}
-					{% for i in (1..5) %}
-					<div class="col-xl-20 col-lg-3 col-md-4 col-sm-6 col-xs-6 swiper-slide item_null">
-						<div class="item_product_main">
-						</div>
-					</div>
-					{% endfor %}
-					{%- comment -%} 2026-10-20: pc_card_ctx báo cho thẻ SP biết đang ở Flash Sale (hiện "Tiết kiệm …", nút đồng nhất). {%- endcomment -%}
-					{%- assign pc_card_ctx = 'flash' -%}
-					{% for product in collections[settings.home_flashsale_collection].products limit: settings.home_flashsale_limit %}
-					{%capture product_block %}
-					<div class="swiper-slide">
-						<div class="item_product_main">
-							{% include 'product_grid_office_sale' %}
-						</div>
-					</div>
-					{%endcapture%}
-					{%assign product_html = product_html | append : product_block%}
-					{%assign checkcol = true%}
-					{% endfor %}
-					{%- assign pc_card_ctx = '' -%}
-					<script type="text/x-custom-template" data-template="section_flash_sale">
-							{{product_html}}
-					</script>
-				</div>
-				<button type="button" aria-label="Sản phẩm trước" class="swiper-button-prev">
-					<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-						<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-					</svg>
-				</button>
-				<button type="button" aria-label="Sản phẩm tiếp theo" class="swiper-button-next">
-					<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-						<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-					</svg>
-				</button>
-				{%- comment -%} 2026-10-17: bỏ nút "Xem tất cả" riêng cho mobile ở cuối khối — dùng chung nút .pc-viewall ở tiêu đề mọi màn hình. {%- endcomment -%}
-			</div>
-		</div>
-		{% else %}
-		<div class="alert alert-warning alert-dismissible show margin-bottom-0" role="alert">
-			<span>Danh mục đang cập nhật sản phẩm.</span>
-		</div>
-		{% endif %}
-		{%- if settings.promo_coupon_home_enable -%}
-		<div class="pc-flashsale__coupons">{% include 'coupon_products' %}</div>
-		{%- endif -%}
-	</div>
+{%- assign pc_fs_limit = settings.home_flashsale_limit | plus: 0 -%}
+{%- if pc_fs_limit < 1 or pc_fs_limit > 10 -%}{%- assign pc_fs_limit = 10 -%}{%- endif -%}
+<section class="pc-h4 pc-h4-sec section_flash_sale" aria-labelledby="pc-h4-fs-title">
+  <div class="pc-h4-wrap">
+    <div class="pc-h4-head lg:items-center">
+      <div class="pc-h4-fs__top">
+        {%- assign pc_fs_title = settings.home_flashsale_title | default: 'Flash sale' | escape -%}
+        {%- assign pc_fs_hl = settings.home_flashsale_title_hl | escape -%}
+        {%- capture pc_fs_hl_html -%}<em class="pc-h4-hl">{{ pc_fs_hl }}</em>{%- endcapture -%}
+        <h2 class="pc-h4-title" id="pc-h4-fs-title">{%- if pc_fs_hl != blank and pc_fs_title contains pc_fs_hl -%}{{ pc_fs_title | replace_first: pc_fs_hl, pc_fs_hl_html }}{%- else -%}{{ pc_fs_title }}{%- endif -%}</h2>
+        {%- if settings.home_flashsale_countdown_enable -%}
+        <p class="pc-h4-timer m-0"><span>{{ settings.home_flashsale_countdown_title | default: 'Kết thúc sau' | escape }}</span><span class="pc-h4-timer__clock" role="timer" data-countdown="countdown" data-date="{{ settings.home_flashsale_countdown_end }}" data-cycle-hours="{{ settings.home_flashsale_countdown_cycle_hours | default: 0 }}"></span></p>
+        {%- endif -%}
+      </div>
+      {%- if count > 0 -%}<a class="pc-h4-more" href="{{ flash_collection_url | escape }}">{{ pc_fs_viewall | escape }}{% include 'ui_icon', name: 'arrow-right' %}</a>{%- endif -%}
+    </div>
+    {%- if count > 0 -%}
+    <div class="pc-h4-prow pc-h4-prow--one">
+      {%- for product in collections[settings.home_flashsale_collection].products limit: pc_fs_limit -%}
+        {%- include 'home_product_card', product: product, eager: false -%}
+      {%- endfor -%}
+    </div>
+    {%- else -%}
+    <p class="text-sm text-ink-secondary">{{ settings.home_flashsale_empty_text | default: 'Danh mục đang cập nhật sản phẩm.' | escape }}</p>
+    {%- endif -%}
+    {%- if settings.promo_coupon_home_enable -%}<div class="pc-flashsale__coupons mt-6">{% include 'coupon_products' %}</div>{%- endif -%}
+  </div>
 </section>
-{%- assign count = collections[settings.home_flashsale_collection].products_count -%}
-{%- if count > 0 -%}
-<script>
-	$(document).ready(function ($) {
-		function runSwiperSale() {
-			var swiper_sale = null;
-			function initSwiperSale() {
-				swiper_sale = new Swiper('.swiper_sale', {
-					slidesPerView: 5,
-					spaceBetween: 20,
-					slidesPerGroup: 1,
-					navigation: {
-						nextEl: '.swiper_sale .swiper-button-next',
-						prevEl: '.swiper_sale .swiper-button-prev',
-					},
-					breakpoints: {
-						// 2026-10-20: mobile lộ mép thẻ kế tiếp (2.3 / 2.5) để khách biết còn vuốt được; mũi tên ẩn bằng CSS.
-						280: {
-							slidesPerView: {% if template == 'index' %}2.3{% else %}1.5{% endif %},
-							spaceBetween: 12
-						},
-						480: {
-							slidesPerView: 2.5,
-							spaceBetween: 12
-						},
-						768: {
-							slidesPerView: 3,
-							spaceBetween: 20
-						},
-						993: {
-							slidesPerView: 4,
-							spaceBetween: 20
-						},
-						1025: {
-							slidesPerView: {% if template == 'index' %}4{% else %}5{% endif %},
-							spaceBetween: 20
-						}
-					}
-				});
-				// 2026-10-20: Swiper tính bề rộng thẻ trước khi áp breakpoint (đo được 2 thẻ/màn thay vì 2.3) ⇒ cập nhật lại 1 lần.
-				setTimeout(function () { if (swiper_sale) swiper_sale.update(); }, 0);
-			}
-			function destroySwiperSale() {
-				if (swiper_sale) {
-					swiper_sale.destroy(true, true);
-					swiper_sale = null;
-				}
-			}
-			function toggleSwiperSale() {
-				if ($(window).width() <= 0 && swiper_sale) {
-					destroySwiperSale();
-				} else if ($(window).width() > 0 && !swiper_sale) {
-					initSwiperSale();
-				}
-			}
-			toggleSwiperSale();
-			$(window).resize(toggleSwiperSale);
-		}
-		lazyBlockProduct('section_flash_sale','0px 0px -250px 0px',runSwiperSale);
-	});
-
-</script>
-{%- endif -%}
 {%- if settings.home_flashsale_countdown_enable -%}
 <script>
 	(function($){
@@ -276,8 +124,8 @@
 				var targetStr = pad2(target.getMonth()+1)+"/"+pad2(target.getDate())+"/"+target.getFullYear()+" "+pad2(target.getHours())+":"+pad2(target.getMinutes())+":"+pad2(target.getSeconds());
 				$this.Dqdt_CountDown({
 					TargetDate: targetStr,
-					DisplayFormat:"<div class=\"block-timer\"><p>%%D%%</p><span>Ngày</span></div><div class=\"block-timer\"><p>%%H%%</p><span>Giờ</span></div><div class=\"block-timer\"><p>%%M%%</p><span>Phút</span></div><div class=\"block-timer\"><p>%%S%%</p><span>Giây</span></div>",
-					FinishMessage: "Hết hạn"
+					DisplayFormat:"<span class=\"block-timer\"><b>%%D%%</b><span class=\"sr-only\"> ngày</span></span><span class=\"block-timer\"><b>%%H%%</b><span class=\"sr-only\"> giờ</span></span><span class=\"block-timer\"><b>%%M%%</b><span class=\"sr-only\"> phút</span></span><span class=\"block-timer\"><b>%%S%%</b><span class=\"sr-only\"> giây</span></span>",
+					FinishMessage: {{ settings.home_flashsale_finish_text | default: 'Hết hạn' | escape | json }}
 				});
 			});
 		});

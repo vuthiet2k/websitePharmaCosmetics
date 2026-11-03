@@ -1,178 +1,62 @@
 {%- comment -%}
-  FOOTER SEO — gộp 3 khối hiển thị cuối trang (mọi template).
-
-  Thứ tự render: brands → categories → keywords
-  (2026-10-13: bỏ khối từ khoá thứ 2 "Có thể bạn đang tìm kiếm" — đang tắt, không dùng.)
-
-  Mỗi khối điều khiển độc lập qua setting "display":
-    footer_brands_display   — thương hiệu + loại (inline)
-    footer_cate_display     — danh mục SEO (grid 4 nhóm)
-    footer_search_display   — từ khóa xu hướng
-
-  Giá trị display: all | desktop | mobile | none
-    all     → hiện cả desktop & mobile
-    desktop → sm-hidden (ẩn mobile, hiện desktop)
-    mobile  → md-hidden (ẩn desktop, hiện mobile)
-    none    → không render
-
-  Linklist-first: Brands/Types/Cate đọc linklists[handle].links trực tiếp.
-  Admin tạo menu trong Sapo Admin → điền handle vào settings.
-  CSS: Assets/comp_footer_categories.scss.bwt
+  FOOTER SEO — "Danh mục nhanh" ngay trên chân trang — CHỈ trang chủ (03/11/2026: include bọc điều kiện ở layouts/theme.bwt).
+  03/11/2026 (chủ dự án: trang chủ theo Figma "travel" node 5:2 — design/home-v4/full.png): 1 khối nền xanh nhạt, tiêu đề
+  footer_cate_title + lưới 4 cột danh sách link thường (bỏ gạch "|", bỏ nút gập mobile — mobile 2 cột):
+    - Cột nhóm 1..4: footer_cate_group_N_title + Menu footer_cate_group_N_menu (menu trống ⇒ bỏ cột).
+    - Cột từ khoá: footer_search_title_2 + danh sách footer_search_menu (phân cách ";") ⇒ /search?query=…
+      (footer_search_display = none ⇒ bỏ cột).
+    - Dòng thương hiệu / loại (footer_brands_menu / footer_types_menu) giữ làm khối phụ dưới lưới khi footer_brands_display ≠ none.
+  Hiển thị: footer_cate_display / footer_brands_display / footer_search_display = all | desktop | mobile | none
+  (desktop ⇒ ẩn < 1024, mobile ⇒ ẩn ≥ 1024). CSS: ui-src/css/components.css mục 14.11.
 {%- endcomment -%}
-{%- comment %} ══════ BLOCK 1: TOP THƯƠNG HIỆU + MUA SẮM THEO LOẠI ══════ {%- endcomment -%}
-{%- assign _fbd = settings.footer_brands_display | default: 'all' -%}
-{%- unless _fbd == 'none' -%}
-  {%- assign _fb_menu = settings.footer_brands_menu | default: '' -%}
-  {%- assign _ft_menu = settings.footer_types_menu  | default: '' -%}
-  {%- assign _fb_ll = linklists[_fb_menu] -%}
-  {%- assign _ft_ll = linklists[_ft_menu] -%}
-  {%- assign _fb_has = false -%}
-  {%- assign _ft_has = false -%}
-  {%- if _fb_menu != blank and _fb_ll.links.size > 0 -%}{%- assign _fb_has = true -%}{%- endif -%}
-  {%- if _ft_menu != blank and _ft_ll.links.size > 0 -%}{%- assign _ft_has = true -%}{%- endif -%}
-  {%- if _fb_has or _ft_has -%}
-    {%- assign _fbd_cls = '' -%}
-    {%- if _fbd == 'desktop' -%}{%- assign _fbd_cls = ' sm-hidden' -%}{%- endif -%}
-    {%- if _fbd == 'mobile'  -%}{%- assign _fbd_cls = ' md-hidden' -%}{%- endif -%}
-<section class="pc-footer-brands{{ _fbd_cls }}"
-         aria-label="{{ settings.footer_brands_title | default: 'Top thương hiệu nổi bật' | escape }}">
-  <div class="container">
-    {%- if _fb_has -%}
-    <div class="pc-footer-brands__block">
-      <h2 class="pc-footer-brands__title">{{ settings.footer_brands_title | default: 'TOP THƯƠNG HIỆU NỔI BẬT' }}</h2>
-      <div class="pc-footer-brands__list">
-        {%- assign fb_first = true -%}
-        {%- for link in _fb_ll.links -%}
-          {%- unless fb_first -%}<span class="pc-footer-brands__sep" aria-hidden="true">|</span>{%- endunless -%}
-          <a href="{{ link.url }}">{{ link.title }}</a>
-          {%- assign fb_first = false -%}
-        {%- endfor -%}
-        {%- if settings.footer_brands_viewall != blank -%}
-        <a class="pc-footer-brands__more" href="{{ settings.footer_brands_viewall }}">Xem tất cả thương hiệu »</a>
-        {%- endif -%}
-      </div>
-    </div>
-    {%- endif -%}
-    {%- if _ft_has -%}
-    <div class="pc-footer-brands__block">
-      <h2 class="pc-footer-brands__title">{{ settings.footer_types_title | default: 'MUA SẮM THEO LOẠI' }}</h2>
-      <div class="pc-footer-brands__list">
-        {%- assign ft_first = true -%}
-        {%- for link in _ft_ll.links -%}
-          {%- unless ft_first -%}<span class="pc-footer-brands__sep" aria-hidden="true">|</span>{%- endunless -%}
-          <a href="{{ link.url }}">{{ link.title }}</a>
-          {%- assign ft_first = false -%}
-        {%- endfor -%}
-        {%- if settings.footer_types_viewall != blank -%}
-        <a class="pc-footer-brands__more" href="{{ settings.footer_types_viewall }}">Xem tất cả »</a>
-        {%- endif -%}
-      </div>
-    </div>
-    {%- endif -%}
-  </div>
-</section>
-  {%- endif -%}
-{%- endunless -%}
-{%- comment %} ══════ BLOCK 2: DANH MỤC SẢN PHẨM (SEO grid 4 nhóm) ══════ {%- endcomment -%}
 {%- assign _fcd = settings.footer_cate_display | default: 'all' -%}
-{%- unless _fcd == 'none' -%}
-  {%- assign fc_has_data = false -%}
+{%- assign _fsd = settings.footer_search_display | default: 'all' -%}
+{%- assign _fbd = settings.footer_brands_display | default: 'all' -%}
+{%- capture _fq_cols -%}
+  {%- unless _fcd == 'none' -%}
   {%- for i in (1..4) -%}
-    {%- capture _km %}footer_cate_group_{{ i }}_menu{% endcapture -%}
+    {%- capture _kt -%}footer_cate_group_{{ i }}_title{%- endcapture -%}{%- capture _km -%}footer_cate_group_{{ i }}_menu{%- endcapture -%}
     {%- assign _fc_h = settings[_km] | default: '' -%}
-    {%- if _fc_h != blank -%}
-      {%- assign _fc_ll = linklists[_fc_h] -%}
-      {%- if _fc_ll.links.size > 0 -%}{%- assign fc_has_data = true -%}{%- endif -%}
+    {%- if _fc_h != blank -%}{%- assign _fc_ll = linklists[_fc_h] -%}
+    {%- if _fc_ll.links.size > 0 -%}
+    <div class="{% if _fcd == 'desktop' %}pc-h4-lg-only{% elsif _fcd == 'mobile' %}pc-h4-sm-only{% endif %}">
+      <h3 class="pc-h4-quick__h">{{ settings[_kt] | default: _fc_ll.title | escape }}</h3>
+      <ul class="pc-h4-quick__list">{%- for link in _fc_ll.links -%}<li><a href="{{ link.url }}">{{ link.title }}</a></li>{%- endfor -%}</ul>
+    </div>
+    {%- endif -%}{%- endif -%}
+  {%- endfor -%}
+  {%- endunless -%}
+  {%- unless _fsd == 'none' -%}{%- if settings.footer_search_menu != blank -%}
+    <div class="{% if _fsd == 'desktop' %}pc-h4-lg-only{% elsif _fsd == 'mobile' %}pc-h4-sm-only{% endif %}">
+      <h3 class="pc-h4-quick__h">{{ settings.footer_search_title_2 | default: 'Được tìm nhiều' | escape }}</h3>
+      <ul class="pc-h4-quick__list">
+        {%- assign _fsk = settings.footer_search_menu | split: ';' -%}
+        {%- for _fsi in _fsk -%}{%- assign _fskw = _fsi | strip -%}{%- if _fskw != blank -%}<li><a href="/search?query={{ _fskw | url_encode }}&amp;type=product">{{ _fskw }}</a></li>{%- endif -%}{%- endfor -%}
+      </ul>
+    </div>
+  {%- endif -%}{%- endunless -%}
+{%- endcapture -%}
+{%- capture _fq_brands -%}
+  {%- unless _fbd == 'none' -%}
+  {%- for j in (1..2) -%}
+    {%- if j == 1 -%}{%- assign _fx_ll = linklists[settings.footer_brands_menu] -%}{%- assign _fx_t = settings.footer_brands_title | default: 'Top thương hiệu nổi bật' -%}{%- assign _fx_more = settings.footer_brands_viewall -%}
+    {%- else -%}{%- assign _fx_ll = linklists[settings.footer_types_menu] -%}{%- assign _fx_t = settings.footer_types_title | default: 'Mua sắm theo loại' -%}{%- assign _fx_more = settings.footer_types_viewall -%}{%- endif -%}
+    {%- if _fx_ll.links.size > 0 -%}
+    <div class="pc-h4-quick__extra {% if _fbd == 'desktop' %}pc-h4-lg-only{% elsif _fbd == 'mobile' %}pc-h4-sm-only{% endif %}">
+      <h3 class="pc-h4-quick__h">{{ _fx_t | escape }}</h3>
+      <ul class="pc-h4-quick__list pc-h4-quick__list--inline">{%- for link in _fx_ll.links -%}<li><a href="{{ link.url }}">{{ link.title }}</a></li>{%- endfor -%}{%- if _fx_more != blank -%}<li><a href="{{ _fx_more }}">{{ settings.footer_quick_viewall_text | default: 'Xem tất cả' | escape }}</a></li>{%- endif -%}</ul>
+    </div>
     {%- endif -%}
   {%- endfor -%}
-  {%- if fc_has_data -%}
-    {%- assign _fcd_cls = '' -%}
-    {%- if _fcd == 'desktop' -%}{%- assign _fcd_cls = ' sm-hidden' -%}{%- endif -%}
-    {%- if _fcd == 'mobile'  -%}{%- assign _fcd_cls = ' md-hidden' -%}{%- endif -%}
-  <section class="pc-footer-cats{{ _fcd_cls }}"
-           aria-label="{{ settings.footer_cate_title | default: 'Khám phá theo nhu cầu' | escape }}">
-    <div class="container">
-      {%- if settings.footer_cate_title != blank or settings.footer_cate_subtitle != blank -%}
-      <div class="pc-footer-cats__header">
-        {%- if settings.footer_cate_title != blank -%}
-        <h2 class="pc-footer-cats__heading">{{ settings.footer_cate_title }}</h2>
-        {%- endif -%}
-        {%- if settings.footer_cate_subtitle != blank -%}
-        <p class="pc-footer-cats__sub">{{ settings.footer_cate_subtitle }}</p>
-        {%- endif -%}
-      </div>
-      {%- endif -%}
-      <div class="pc-footer-cats__grid">
-        {%- for i in (1..4) -%}
-          {%- capture _kt %}footer_cate_group_{{ i }}_title{% endcapture -%}
-          {%- capture _km %}footer_cate_group_{{ i }}_menu{% endcapture -%}
-          {%- assign fc_group_title  = settings[_kt] | default: '' -%}
-          {%- assign fc_menu_handle  = settings[_km] | default: '' -%}
-          {%- if fc_menu_handle != blank -%}
-            {%- assign fc_ll = linklists[fc_menu_handle] -%}
-            {%- if fc_ll.links.size > 0 -%}
-            <div class="pc-footer-cats__col">
-              {%- if fc_group_title != blank -%}
-              <div class="pc-footer-cats__head">
-                <span class="pc-footer-cats__title">{{ fc_group_title }}</span>
-                <button type="button" class="pc-footer-cats__toggle"
-                        aria-expanded="false"
-                        aria-label="Mở rộng {{ fc_group_title | escape }}">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"
-                          stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
-              </div>
-              {%- endif -%}
-              <ul class="pc-footer-cats__links">
-                {%- for link in fc_ll.links -%}
-                  <li><a href="{{ link.url }}">{{ link.title }}</a></li>
-                {%- endfor -%}
-              </ul>
-            </div>
-            {%- endif -%}
-          {%- endif -%}
-        {%- endfor -%}
-      </div>
-    </div>
-  </section>
-  <script>
-  (function() {
-    var root = document.querySelector('.pc-footer-cats');
-    if (!root) return;
-    root.addEventListener('click', function(e) {
-      var btn = e.target.closest('.pc-footer-cats__toggle');
-      if (!btn) return;
-      if (window.matchMedia('(min-width: 768px)').matches) return;
-      var col = btn.closest('.pc-footer-cats__col');
-      var open = col.classList.toggle('is-open');
-      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    });
-  })();
-  </script>
-  {%- endif -%}
-{%- endunless -%}
-{%- comment %} ══════ BLOCK 3: TỪ KHÓA XU HƯỚNG — Block 1 ══════ {%- endcomment -%}
-{%- assign _fsd1 = settings.footer_search_display | default: 'all' -%}
-{%- unless _fsd1 == 'none' -%}
-  {%- if settings.footer_search_menu != blank -%}
-    {%- assign _fsd1_cls = '' -%}
-    {%- if _fsd1 == 'desktop' -%}{%- assign _fsd1_cls = ' sm-hidden' -%}{%- endif -%}
-    {%- if _fsd1 == 'mobile'  -%}{%- assign _fsd1_cls = ' md-hidden' -%}{%- endif -%}
-<div class="pc-footer-keywords{{ _fsd1_cls }}">
-  <div class="container">
-    <h3 class="pc-footer-keywords__title">{{ settings.footer_search_title_2 | default: 'TỪ KHÓA XU HƯỚNG' }}</h3>
-    <div class="pc-footer-keywords__tags">
-      {%- assign _fsk1 = settings.footer_search_menu | split: ';' -%}
-      {%- for _fsi in _fsk1 -%}
-        {%- assign _fskw = _fsi | strip -%}
-        {%- if _fskw != '' -%}
-          <a href="/search?query={{ _fskw | url_encode }}&amp;type=product" title="{{ _fskw | escape }}">{{ _fskw }}</a>
-        {%- endif -%}
-      {%- endfor -%}
-    </div>
+  {%- endunless -%}
+{%- endcapture -%}
+{%- if _fq_cols != blank or _fq_brands != blank -%}
+<section class="pc-h4 pc-h4-quick" aria-labelledby="pc-h4-quick-title">
+  <div class="pc-h4-wrap">
+    <h2 class="pc-h4-quick__t" id="pc-h4-quick-title">{{ settings.footer_cate_title | default: 'Danh mục nhanh' | escape }}</h2>
+    {%- if settings.footer_cate_subtitle != blank -%}<p class="pc-h4-lead mb-6">{{ settings.footer_cate_subtitle | escape }}</p>{%- endif -%}
+    {%- if _fq_cols != blank -%}<div class="pc-h4-quick__grid">{{ _fq_cols }}</div>{%- endif -%}
+    {{ _fq_brands }}
   </div>
-</div>
-  {%- endif -%}
-{%- endunless -%}
+</section>
+{%- endif -%}

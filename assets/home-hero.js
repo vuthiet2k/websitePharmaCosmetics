@@ -34,14 +34,15 @@
   // Giảm chuyển động (prefers-reduced-motion) ⇒ không tự phát video, slide hiện ảnh chờ như ảnh tĩnh.
   var slides = Array.prototype.slice.call(root.querySelectorAll('.portal-hero__slide'));
   var videos = [];
-  var FAIL_MS = 10000;
+  var FAIL_MS = 14000;
+  var REVEAL_MS = 3800;
 
   function makeVideo(slide) {
     var kind = slide.getAttribute('data-hero-video');
     var src = slide.getAttribute('data-video-src');
     var box = slide.querySelector('[data-hero-video-box]');
     if (!kind || !src || !box) return null;
-    var v = { slide: slide, kind: kind, el: null, ready: false, failed: false, active: false, muted: true, timer: 0, ping: 0 };
+    var v = { slide: slide, kind: kind, el: null, ready: false, failed: false, active: false, muted: true, timer: 0, ping: 0, reveal: 0 };
 
     function send(func, args) {
       if (v.kind !== 'yt' || !v.el || !v.el.contentWindow) return;
@@ -56,6 +57,7 @@
     }
     function ended() {
       setPlaying(false);
+      window.clearTimeout(v.reveal); v.reveal = 0;
       if (!v.active) return;
       if (!swiper || userPaused) { v.restart(); return; } // 1 slide / tắt tự chuyển ⇒ phát lại
       if (swiper.isEnd) swiper.slideTo(0); else swiper.slideNext();
@@ -105,7 +107,16 @@
         state = data.info.playerState;
       }
       if (state === null) return;
-      if (state === 1) { window.clearTimeout(v.timer); if (v.active) setPlaying(true); else send('pauseVideo'); }
+      if (state === 1) {
+        window.clearTimeout(v.timer);
+        if (!v.active) { send('pauseVideo'); return; }
+        // 03/11/2026 (chủ dự án: "vẫn còn button pause — ẩn đi"): YouTube vẽ nút tạm dừng giữa khung ~3–4s mỗi lần player chuyển
+        // sang đang phát (kể cả controls=0; không tắt bằng tham số; tua seekTo cũng làm nút hiện lại — đã thử). ⇒ video chạy ngầm sau
+        // ảnh chờ REVEAL_MS rồi mới hiện (nút đã tự ẩn); đổi lại ~3,6s đầu của video nằm sau ảnh chờ. 1 lần mỗi lượt hiện slide.
+        if (!v.reveal && !slide.classList.contains('is-playing')) {
+          v.reveal = window.setTimeout(function () { if (v.active) setPlaying(true); }, REVEAL_MS);
+        }
+      }
       else if (state === 0) ended();
     };
     v.play = function () {
@@ -124,6 +135,7 @@
     v.stop = function () {
       v.active = false;
       window.clearTimeout(v.timer);
+      window.clearTimeout(v.reveal); v.reveal = 0;
       setPlaying(false);
       if (!v.el) return;
       if (v.kind === 'yt') { send('pauseVideo'); send('seekTo', [0, true]); } else { v.el.pause(); }
@@ -135,7 +147,10 @@
       btn.setAttribute('aria-label', v.muted ? 'Bật tiếng video' : 'Tắt tiếng video');
     };
     var btn = slide.querySelector('[data-hero-sound]');
-    if (btn) btn.addEventListener('click', function () { v.toggleSound(btn); });
+    if (btn) {
+      btn.addEventListener('click', function (e) { e.preventDefault(); v.toggleSound(btn); });
+      btn.addEventListener('keydown', function (e) { if (e.key === ' ') { e.preventDefault(); v.toggleSound(btn); } });
+    }
     return v;
   }
 

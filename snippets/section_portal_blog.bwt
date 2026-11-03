@@ -1,24 +1,31 @@
-{% assign portal_blog_handle = settings.portal_blog | default: settings.section_blog_url %}
-{% assign portal_blog = blogs[portal_blog_handle] %}
-<div class="chapter"><div class="wrap"><div class="tag"><b>III</b> {{ settings.portal_chapter_3 | default: 'Đồng hành' | escape }}</div><div class="rule"></div></div></div>
-<section class="blog"><div class="wrap">
-  <div class="section-head"><div><p class="eyebrow">{{ settings.portal_blog_eyebrow | default: 'Kiến thức chăm sóc da' | escape }}</p><h2>{{ settings.portal_blog_title | default: 'Blog Pharma Cosmetics' | escape }}</h2></div>
-    <div class="blog-tabs">{% assign blog_menu = linklists[settings.portal_blog_menu] %}{% for link in blog_menu.links %}<a class="blog-tab" href="{{ link.url | escape }}">{{ link.title | escape }}</a>{% endfor %}</div>
-    <a class="pc-viewall" href="{{ portal_blog.url }}">Xem tất cả bài viết <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-right', size: 'em' %}</i></a>
-  </div>
-  {% if portal_blog.articles.size > 0 %}
-  <div class="blog-grid">
-    {% for article in portal_blog.articles limit: 1 %}
-    <a class="post-lead" href="{{ article.url }}">
-      <div class="thumb"><span class="post-cat">Bài nổi bật</span><img src="{% if article.image.src != blank %}{{ article.image.src | img_url: 'large' }}{% else %}{% include 'placeholder_img_url' %}{% endif %}" alt="{{ article.title | escape }}" width="700" height="440" loading="lazy"></div>
-      <div class="body"><h3>{{ article.title | escape }}</h3><p>{{ article.summary | default: article.content | strip_html | truncate: 210 }}</p><div class="post-meta"><span>{{ article.author | escape }}</span><span>{{ article.published_on | date: '%d.%m.%Y' }}</span></div></div>
-    </a>
-    {% endfor %}
-    <div class="post-list">
-      {% for article in portal_blog.articles offset: 1 limit: 4 %}
-      <a class="post-row" href="{{ article.url }}"><div class="thumb"><img src="{% if article.image.src != blank %}{{ article.image.src | img_url: 'medium' }}{% else %}{% include 'placeholder_img_url' %}{% endif %}" alt="{{ article.title | escape }}" width="160" height="120" loading="lazy"></div><div><div class="k">{{ portal_blog.name | default: portal_blog.title | escape }}</div><h3>{{ article.title | escape }}</h3><div class="t">{{ article.published_on | date: '%d.%m.%Y' }}</div></div></a>
-      {% endfor %}
+{%- comment -%}
+  03/11/2026 (chủ dự án: trang chủ theo Figma "travel" node 5:2): chương III "Đồng hành" — eyebrow + tiêu đề + "Xem tất cả bài viết",
+  3 bài: bài 1 rộng gấp đôi (nhãn "Bài nổi bật"), 2 bài sau nhãn = tên blog; dưới ảnh: nhãn · ngày, tiêu đề 2 dòng, "Bởi <tác giả>".
+  Nguồn giữ nguyên: blog settings.portal_blog (trống ⇒ section_blog_url). CSS: ui-src/css/components.css mục 14.10.
+{%- endcomment -%}
+{%- assign portal_blog_handle = settings.portal_blog | default: settings.section_blog_url -%}
+{%- assign portal_blog = blogs[portal_blog_handle] -%}
+<section class="pc-h4 pc-h4-sec" aria-labelledby="pc-h4-blog-title">
+  <div class="pc-h4-wrap">
+    <div class="pc-h4-chap"><p class="pc-h4-chap__tag">III · {{ settings.portal_chapter_3 | default: 'Đồng hành' | escape }}</p><span class="pc-h4-chap__rule" aria-hidden="true"></span></div>
+    <div class="pc-h4-head">
+      <div>
+        <p class="pc-h4-eyebrow">{{ settings.portal_blog_eyebrow | default: 'Kiến thức chăm sóc da' | escape }}</p>
+        <h2 class="pc-h4-title" id="pc-h4-blog-title">{{ settings.portal_blog_title | default: 'Blog Pharma Cosmetics' | escape }}</h2>
+      </div>
+      {%- if portal_blog.url != blank -%}<a class="pc-h4-more" href="{{ portal_blog.url }}">{{ settings.portal_blog_viewall_text | default: 'Xem tất cả bài viết' | escape }}{% include 'ui_icon', name: 'arrow-right' %}</a>{%- endif -%}
     </div>
+    {%- if portal_blog.articles.size > 0 -%}
+    <div class="pc-h4-blog">
+      {%- for article in portal_blog.articles limit: 3 -%}
+      <a class="pc-h4-post" href="{{ article.url }}">
+        <span class="pc-h4-post__img"><img src="{% if article.image.src != blank %}{{ article.image.src | img_url: 'large' }}{% else %}{% include 'placeholder_img_url' %}{% endif %}" alt="{{ article.title | escape }}" width="{% if forloop.first %}1232{% else %}616{% endif %}" height="440" loading="lazy"></span>
+        <span class="pc-h4-post__k block">{% if forloop.first %}{{ settings.portal_blog_featured_label | default: 'Bài nổi bật' | escape }}{% else %}{{ portal_blog.name | default: portal_blog.title | escape }}{% endif %} · {{ article.published_on | date: '%d.%m.%Y' }}</span>
+        <span class="pc-h4-post__t block">{{ article.title | escape }}</span>
+        {%- if article.author != blank -%}<span class="pc-h4-post__by block">{{ settings.portal_blog_by_label | default: 'Bởi' | escape }} {{ article.author | escape }}</span>{%- endif -%}
+      </a>
+      {%- endfor -%}
+    </div>
+    {%- else -%}<p class="text-sm text-ink-secondary">{{ settings.portal_blog_empty_text | default: 'Bài viết đang được cập nhật.' | escape }}</p>{%- endif -%}
   </div>
-  {% else %}<p class="portal-empty">Bài viết đang được cập nhật.</p>{% endif %}
-</div></section>
+</section>
