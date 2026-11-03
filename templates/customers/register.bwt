@@ -58,7 +58,8 @@
 								<div class="pc-auth-password-wrap">
 									<input type="password" class="pc-auth-input" value="" name="password" id="password" placeholder="Tối thiểu 6 ký tự" required>
 									<button type="button" class="pc-auth-password-toggle" aria-label="Hiện/ẩn mật khẩu" onclick="pcAuthTogglePassword('password', this)">
-										<i class="fa-regular fa-eye" aria-hidden="true"></i>
+										{%- comment -%} L03b27 (03/11/2026): bỏ Font Awesome (fa-eye ↔ fa-eye-slash đổi bằng class) — 2 ui_icon size em, JS pcAuthTogglePassword bật/tắt thuộc tính hidden của 2 thẻ bọc. {%- endcomment -%}
+										<i class="pc-auth-eye inline-flex leading-none" aria-hidden="true">{% include 'ui_icon', name: 'eye', size: 'em' %}</i><i class="pc-auth-eye-off inline-flex leading-none" aria-hidden="true" hidden>{% include 'ui_icon', name: 'eye-off', size: 'em' %}</i>
 									</button>
 								</div>
 							</div>
@@ -105,15 +106,11 @@
 	function pcAuthTogglePassword(fieldId, btn) {
 		var input = document.getElementById(fieldId);
 		if (!input) return;
-		var icon = btn.querySelector('i');
-		if (input.type === 'password') {
-			input.type = 'text';
-			icon.classList.remove('fa-eye');
-			icon.classList.add('fa-eye-slash');
-		} else {
-			input.type = 'password';
-			icon.classList.remove('fa-eye-slash');
-			icon.classList.add('fa-eye');
-		}
+		// L03b27 (03/11/2026): icon SVG ui_icon — đổi bằng thuộc tính hidden của 2 thẻ bọc (mắt / mắt gạch).
+		var show = input.type === 'password';
+		input.type = show ? 'text' : 'password';
+		var eye = btn.querySelector('.pc-auth-eye'), eyeOff = btn.querySelector('.pc-auth-eye-off');
+		if (eye) eye.hidden = show;
+		if (eyeOff) eyeOff.hidden = !show;
 	}
 </script>
