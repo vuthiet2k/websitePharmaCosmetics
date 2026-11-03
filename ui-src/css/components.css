@@ -264,13 +264,30 @@
   :root .pc-h4 .pc-h4-pcard__p s { @apply text-xs font-normal text-ink-muted; }
   :root .pc-h4 .pc-h4-pcard__rx { @apply m-0 mt-auto flex items-center gap-2 pt-3 text-xs font-semibold text-brand-deep; }
   :root .pc-h4 .pc-h4-pcard__rx b { @apply rounded-[4px] bg-brand-deep px-2 py-1 text-xs font-bold text-white; }
+  /* Nút thẻ (03/11/2026, chủ dự án): nền đặc, bo tròn; Flash Sale (tone 'sale') giá + nút màu đỏ */
   :root .pc-h4 .pc-h4-pcard__a { @apply mt-3; }
-  /* Flash sale: đồng hồ trong viên tối (markup đồng hồ do script đếm ngược của section_flash_sale sinh ra) */
+  :root .pc-h4 .pc-h4-pcard__a .pc-btn { @apply rounded-full; }
+  /* <a class="pc-btn"> bị luật màu link của .pc-h4 ép chữ tối ⇒ ghi lại chữ trắng cho nút nền đặc */
+  :root .pc-h4 .pc-h4-pcard__a .pc-btn--primary { @apply text-white no-underline; }
+  :root .pc-h4 .pc-h4-pcard--sale .pc-h4-pcard__p > span { @apply text-sale; }
+  :root .pc-h4 .pc-h4-pcard--sale .pc-btn--primary { @apply bg-sale hover:brightness-90 active:brightness-90; }
+  /* Flash sale: icon tia sét + tiêu đề đỏ; đồng hồ ô số đỏ (script cuối section_flash_sale dựng ô, .is-tick = hiệu ứng lật) */
   :root .pc-h4 .pc-h4-fs__top { @apply flex flex-wrap items-center gap-3 lg:gap-5; }
-  :root .pc-h4 .pc-h4-timer { @apply inline-flex min-h-8 items-center gap-1.5 rounded-[8px] bg-brand-deep px-3.5 py-1 text-sm font-semibold text-white; }
-  :root .pc-h4 .pc-h4-timer__clock { @apply inline-flex items-center tabular-nums; }
-  :root .pc-h4 .pc-h4-timer .block-timer b { @apply font-bold text-white; }
-  :root .pc-h4 .pc-h4-timer .block-timer + .block-timer::before { content: ":"; @apply px-0.5; }
+  :root .pc-h4 .pc-h4-fs__title { @apply inline-flex items-center gap-2 text-sale; }
+  :root .pc-h4 .pc-h4-fs__bolt { @apply block h-8 w-8 shrink-0; animation: pc-h4-bolt 1.6s ease-in-out infinite; }
+  :root .pc-h4 .pc-h4-timer { @apply inline-flex min-h-8 items-center gap-2 text-sm font-semibold text-ink-secondary; }
+  :root .pc-h4 .pc-h4-timer__clock { @apply inline-flex items-center gap-1 tabular-nums; }
+  :root .pc-h4 .pc-h4-timer__box { @apply inline-flex h-8 min-w-8 items-center justify-center overflow-hidden rounded-xl bg-sale px-1.5 text-base font-bold leading-none text-white; }
+  :root .pc-h4 .pc-h4-timer__box[hidden], :root .pc-h4 .pc-h4-timer__sep[hidden] { @apply hidden; }
+  :root .pc-h4 .pc-h4-timer__box b { @apply block; }
+  :root .pc-h4 .pc-h4-timer__box.is-tick b { animation: pc-h4-tick .35s ease-out; }
+  /* Lật số: chữ số mới trượt từ trên xuống + mờ dần vào; tia sét nhấp nháy nhẹ */
+  @keyframes pc-h4-tick { from { transform: translateY(-70%); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes pc-h4-bolt { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.12); opacity: .75; } }
+  :root .pc-h4 .pc-h4-timer__sep { @apply text-base font-bold text-sale; }
+  @media (prefers-reduced-motion: reduce) {
+    :root .pc-h4 .pc-h4-fs__bolt, :root .pc-h4 .pc-h4-timer__box.is-tick b { animation: none; }
+  }
   /* Tab lọc (Bán chạy) — thẻ <a role="tab"> (link danh mục khi chưa chạy JS) */
   :root .pc-h4 .pc-h4-tabs { @apply -mx-4 mb-6 flex gap-2.5 overflow-x-auto px-4 pb-1 lg:mx-0 lg:flex-wrap lg:px-0; }
   :root .pc-h4 .pc-h4-tab { @apply box-border inline-flex h-11 shrink-0 items-center whitespace-nowrap rounded-full border border-solid border-line-soft bg-white px-5 text-sm font-semibold text-brand-deep no-underline hover:border-brand-deco; }

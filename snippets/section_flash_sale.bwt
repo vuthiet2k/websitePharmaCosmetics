@@ -1,5 +1,7 @@
 {%- comment -%}
   03/11/2026 (chủ dự án: trang chủ theo Figma "travel" node 5:2): tiêu đề "Flash sale" + viên tối "Kết thúc sau [đồng hồ]" + "Xem tất cả",
+  03/11/2026 (chủ dự án, lần 2): thêm lại icon tia sét (assets/flash_-1.png), tiêu đề + giá + nút thẻ màu đỏ (tone 'sale'),
+  đồng hồ ô số đỏ có hiệu ứng lật (script cuối file, thay plugin jQuery Dqdt_CountDown).
   1 hàng 5 thẻ (home_product_card) — desktop lưới 5 cột (thẻ thứ 6+ ẩn), mobile vuốt ngang tối đa 10 thẻ. Bỏ carousel Swiper,
   khối <style> cũ (nền tối/vàng gold) và tia sét. Giữ nguyên dữ liệu: danh mục home_flashsale_collection, số lượng home_flashsale_limit, phần chữ tô đỏ home_flashsale_title_hl (trống ⇒ không tô),
   bộ đếm ngược chu kỳ (data-countdown + home_flashsale_countdown_end / _cycle_hours, L09), khối mã giảm giá coupon_products.
@@ -19,9 +21,9 @@
         {%- assign pc_fs_title = settings.home_flashsale_title | default: 'Flash sale' | escape -%}
         {%- assign pc_fs_hl = settings.home_flashsale_title_hl | escape -%}
         {%- capture pc_fs_hl_html -%}<em class="pc-h4-hl">{{ pc_fs_hl }}</em>{%- endcapture -%}
-        <h2 class="pc-h4-title" id="pc-h4-fs-title">{%- if pc_fs_hl != blank and pc_fs_title contains pc_fs_hl -%}{{ pc_fs_title | replace_first: pc_fs_hl, pc_fs_hl_html }}{%- else -%}{{ pc_fs_title }}{%- endif -%}</h2>
+        <h2 class="pc-h4-title pc-h4-fs__title" id="pc-h4-fs-title"><img class="pc-h4-fs__bolt" src="{{ 'flash_-1.png' | asset_url }}" alt="" width="32" height="32" aria-hidden="true">{%- if pc_fs_hl != blank and pc_fs_title contains pc_fs_hl -%}{{ pc_fs_title | replace_first: pc_fs_hl, pc_fs_hl_html }}{%- else -%}{{ pc_fs_title }}{%- endif -%}</h2>
         {%- if settings.home_flashsale_countdown_enable -%}
-        <p class="pc-h4-timer m-0"><span>{{ settings.home_flashsale_countdown_title | default: 'Kết thúc sau' | escape }}</span><span class="pc-h4-timer__clock" role="timer" data-countdown="countdown" data-date="{{ settings.home_flashsale_countdown_end }}" data-cycle-hours="{{ settings.home_flashsale_countdown_cycle_hours | default: 0 }}"></span></p>
+        <p class="pc-h4-timer m-0"><span class="pc-h4-timer__label">{{ settings.home_flashsale_countdown_title | default: 'Kết thúc sau' | escape }}</span><span class="pc-h4-timer__clock" role="timer" data-countdown="countdown" data-date="{{ settings.home_flashsale_countdown_end }}" data-cycle-hours="{{ settings.home_flashsale_countdown_cycle_hours | default: 0 }}"></span></p>
         {%- endif -%}
       </div>
       {%- if count > 0 -%}<a class="pc-h4-more" href="{{ flash_collection_url | escape }}">{{ pc_fs_viewall | escape }}{% include 'ui_icon', name: 'arrow-right' %}</a>{%- endif -%}
@@ -29,7 +31,7 @@
     {%- if count > 0 -%}
     <div class="pc-h4-prow pc-h4-prow--one">
       {%- for product in collections[settings.home_flashsale_collection].products limit: pc_fs_limit -%}
-        {%- include 'home_product_card', product: product, eager: false -%}
+        {%- include 'home_product_card', product: product, eager: false, tone: 'sale' -%}
       {%- endfor -%}
     </div>
     {%- else -%}
@@ -40,95 +42,50 @@
 </section>
 {%- if settings.home_flashsale_countdown_enable -%}
 <script>
-	(function($){
-		"user strict";
-		$.fn.Dqdt_CountDown = function( options ) {
-			return this.each(function() {
-				new  $.Dqdt_CountDown( this, options );
-			});
-		}
-		$.Dqdt_CountDown = function( obj, options ){
-			this.options = $.extend({
-				autoStart			: true,
-				LeadingZero:true,
-				DisplayFormat:"<div><span>%%D%%</span> Days</div><div><span>%%H%%</span> Hours</div><div><span>%%M%%</span> Mins</div><div><span>%%S%%</span> Secs</div>",
-				FinishMessage:"Hết hạn",
-				CountActive:true,
-				TargetDate:null
-			}, options || {} );
-			if( this.options.TargetDate == null || this.options.TargetDate == '' ){
-				return ;
-			}
-			this.timer  = null;
-			this.element = obj;
-			this.CountStepper = -1;
-			this.CountStepper = Math.ceil(this.CountStepper);
-			this.SetTimeOutPeriod = (Math.abs(this.CountStepper)-1)*1000 + 990;
-			var dthen = new Date(this.options.TargetDate);
-			var dnow = new Date();
-			if( this.CountStepper > 0 ) {
-				ddiff = new Date(dnow-dthen);
-			}
-			else {
-				ddiff = new Date(dthen-dnow);
-			}
-			gsecs = Math.floor(ddiff.valueOf()/1000);
-			this.CountBack(gsecs, this);
-		};
-		$.Dqdt_CountDown.fn =  $.Dqdt_CountDown.prototype;
-		$.Dqdt_CountDown.fn.extend =  $.Dqdt_CountDown.extend = $.extend;
-		$.Dqdt_CountDown.fn.extend({
-			calculateDate:function( secs, num1, num2 ){
-				var s = ((Math.floor(secs/num1))%num2).toString();
-				if ( this.options.LeadingZero && s.length < 2) {
-					s = "0" + s;
-				}
-				return "<b>" + s + "</b>";
-			},
-			CountBack:function( secs, self ){
-				if (secs < 0) {
-					self.element.innerHTML = '<div class="lof-labelexpired"> '+self.options.FinishMessage+"</div>";
-					return;
-				}
-				clearInterval(self.timer);
-				DisplayStr = self.options.DisplayFormat.replace(/%%D%%/g, self.calculateDate( secs,86400,100000) );
-				DisplayStr = DisplayStr.replace(/%%H%%/g, self.calculateDate(secs,3600,24));
-				DisplayStr = DisplayStr.replace(/%%M%%/g, self.calculateDate(secs,60,60));
-				DisplayStr = DisplayStr.replace(/%%S%%/g, self.calculateDate(secs,1,60));
-				self.element.innerHTML = DisplayStr;
-				if (self.options.CountActive) {
-					self.timer = null;
-					self.timer =  setTimeout( function(){
-						self.CountBack((secs+self.CountStepper),self);
-					},( self.SetTimeOutPeriod ) );
-				}
-			}
-		});
-		$(document).ready(function(){
-			function pad2(n){ return (n < 10 ? '0' : '') + n; }
-			$('[data-countdown="countdown"]').each(function(index, el) {
-				var $this = $(this);
-				var $date = $this.data('date').split("-");
-				var anchor = new Date($date[0]+"/"+$date[1]+"/"+$date[2]+" "+$date[3]+":"+$date[4]+":"+$date[5]);
-				var cycleHours = parseFloat($this.data('cycle-hours')) || 0;
-				var target = anchor;
-				// Chu kỳ lặp lại: nếu đã qua mốc, nhảy tới mốc kế tiếp cách nhau cycleHours giờ — tránh hiện "Hết hạn"
-				if (cycleHours > 0 && !isNaN(anchor.getTime())) {
-					var now = new Date();
-					if (now.getTime() > anchor.getTime()) {
-						var cycleMs = cycleHours * 3600 * 1000;
-						var cycles = Math.ceil((now.getTime() - anchor.getTime()) / cycleMs);
-						target = new Date(anchor.getTime() + cycles * cycleMs);
-					}
-				}
-				var targetStr = pad2(target.getMonth()+1)+"/"+pad2(target.getDate())+"/"+target.getFullYear()+" "+pad2(target.getHours())+":"+pad2(target.getMinutes())+":"+pad2(target.getSeconds());
-				$this.Dqdt_CountDown({
-					TargetDate: targetStr,
-					DisplayFormat:"<span class=\"block-timer\"><b>%%D%%</b><span class=\"sr-only\"> ngày</span></span><span class=\"block-timer\"><b>%%H%%</b><span class=\"sr-only\"> giờ</span></span><span class=\"block-timer\"><b>%%M%%</b><span class=\"sr-only\"> phút</span></span><span class=\"block-timer\"><b>%%S%%</b><span class=\"sr-only\"> giây</span></span>",
-					FinishMessage: {{ settings.home_flashsale_finish_text | default: 'Hết hạn' | escape | json }}
-				});
-			});
-		});
-	})(jQuery);
+/* 03/11/2026 (chủ dự án): đồng hồ kiểu ô số đỏ (giống sàn TMĐT) — dựng ô 1 lần, mỗi giây chỉ đổi chữ số; ô vừa đổi
+   chạy hiệu ứng lật (CSS .is-tick, tắt khi prefers-reduced-motion). Ô "ngày" chỉ hiện khi còn ≥ 1 ngày.
+   Giữ logic cũ: mốc data-date "YYYY-MM-DD-hh-mm-ss", chu kỳ lặp data-cycle-hours (L09 — giá đổi theo ngày, không phải dark pattern). */
+(function () {
+  var FINISH = {{ settings.home_flashsale_finish_text | default: 'Hết hạn' | escape | json }};
+  var UNITS = [['d', 86400, ' ngày'], ['h', 3600, ' giờ'], ['m', 60, ' phút'], ['s', 1, ' giây']];
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function target(el) {
+    var p = String(el.getAttribute('data-date') || '').split('-');
+    if (p.length < 6) return null;
+    var t = new Date(+p[0], +p[1] - 1, +p[2], +p[3], +p[4], +p[5]).getTime();
+    if (isNaN(t)) return null;
+    var cyc = parseFloat(el.getAttribute('data-cycle-hours')) || 0, now = Date.now();
+    if (cyc > 0 && now > t) { var ms = cyc * 3600000; t += Math.ceil((now - t) / ms) * ms; }
+    return t;
+  }
+  function init(el) {
+    var end = target(el); if (end == null) return;
+    var boxes = {};
+    UNITS.forEach(function (u, k) {
+      if (k > 0) { var sep = document.createElement('span'); sep.className = 'pc-h4-timer__sep'; sep.setAttribute('aria-hidden', 'true'); sep.textContent = ':'; el.appendChild(sep); boxes[u[0] + 'sep'] = sep; }
+      var b = document.createElement('span'); b.className = 'pc-h4-timer__box';
+      b.innerHTML = '<b></b><span class="sr-only">' + u[2] + '</span>';
+      el.appendChild(b); boxes[u[0]] = b;
+    });
+    function tick() {
+      var left = Math.floor((end - Date.now()) / 1000);
+      if (left < 0) { clearInterval(timer); el.textContent = FINISH; return; }
+      var showDay = left >= 86400;
+      boxes.d.hidden = !showDay; boxes.hsep.hidden = !showDay;
+      UNITS.forEach(function (u) {
+        var v = u[0] === 'd' ? Math.floor(left / 86400) : Math.floor(left / u[1]) % (u[0] === 'h' ? 24 : 60);
+        var b = boxes[u[0]], num = b.firstChild, txt = pad(v);
+        if (num.textContent !== txt) {
+          var first = num.textContent === '';
+          num.textContent = txt;
+          if (!first) { b.classList.remove('is-tick'); void b.offsetWidth; b.classList.add('is-tick'); }
+        }
+      });
+    }
+    tick(); var timer = setInterval(tick, 1000);
+  }
+  function run() { Array.prototype.forEach.call(document.querySelectorAll('[data-countdown="countdown"]'), init); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
+})();
 </script>
 {%- endif -%}
