@@ -1,8 +1,9 @@
 {%- comment -%}
   home_product_card.bwt — thẻ sản phẩm trang chủ (03/11/2026, chủ dự án: theo Figma "travel" node 5:2 — Flash sale + Bán chạy).
   Tham số: product (bắt buộc), eager (ảnh không lazy). Thiết kế: ảnh · thương hiệu (vendor) · tên 2 dòng · mô tả ngắn
-  (product.summary, trống ⇒ ẩn) · giá (+ giá gốc gạch, nhãn -X% khi đang giảm). KHÔNG có nút giỏ (khác ui_product_card — thiết kế
-  không có nút; cả thẻ dẫn vào trang SP). Kê toa (pc_is_rx) ⇒ ẩn giá, hiện nhãn "Cần tư vấn" + "Liên hệ để được tư vấn"
+  (product.summary, trống ⇒ ẩn) · giá (+ giá gốc gạch, nhãn -X% khi đang giảm) · nút hành động (03/11/2026, chủ dự án yêu cầu
+  thêm nút giỏ): cùng logic ui_product_card — 1 phiên bản còn hàng ⇒ form /cart/add + add_to_cart (ajaxCart); nhiều phiên bản ⇒
+  «Chọn phiên bản»; hết hàng ⇒ nút vô hiệu; kê toa / giá 0 ⇒ «Xem chi tiết». Kê toa (pc_is_rx) ⇒ ẩn giá, hiện nhãn "Cần tư vấn" + "Liên hệ để được tư vấn"
   (settings.product_rx_card_label). Giá 0 ⇒ "Liên hệ". CSS: ui-src/css/components.css mục 14.6.
 {%- endcomment -%}
 {%- if product != blank -%}
@@ -33,5 +34,22 @@
   {%- else -%}
   <p class="pc-h4-pcard__p"><span>{{ hpc_price | money }}</span>{%- if hpc_compare > hpc_price -%}<s><span class="sr-only">Giá gốc </span>{{ hpc_compare | money }}</s>{%- endif -%}</p>
   {%- endif -%}
+  <div class="pc-h4-pcard__a">
+    {%- capture hpc_aria -%}Thêm vào giỏ: {{ hpc_name | strip_html }}{%- endcapture -%}
+    {%- if pc_is_rx or hpc_price == 0 -%}
+      {%- capture hpc_aria -%}Xem chi tiết: {{ hpc_name | strip_html }}{%- endcapture -%}
+      {% include 'ui_button', label: 'Xem chi tiết', variant: 'secondary', href: product.url, type: '', size: 'md', block: true, disabled: false, loading: false, aria_label: hpc_aria, id: '', form: '', modal: '', js_class: '' %}
+    {%- elsif product.available != true -%}
+      {% include 'ui_button', label: 'Hết hàng', variant: 'secondary', href: '', type: 'button', size: 'md', block: true, disabled: true, loading: false, aria_label: '', id: '', form: '', modal: '', js_class: '' %}
+    {%- elsif product.variants.size > 1 -%}
+      {%- capture hpc_aria -%}Chọn phiên bản: {{ hpc_name | strip_html }}{%- endcapture -%}
+      {% include 'ui_button', label: 'Chọn phiên bản', variant: 'secondary', href: product.url, type: '', size: 'md', block: true, disabled: false, loading: false, aria_label: hpc_aria, id: '', form: '', modal: '', js_class: '' %}
+    {%- else -%}
+    <form action="/cart/add" method="post" class="variants" data-cart-form data-id="product-actions-{{ product.id }}" enctype="multipart/form-data">
+      <input type="hidden" name="variantId" value="{{ hpc_var.id }}">
+      {% include 'ui_button', label: 'Thêm vào giỏ', variant: 'secondary', href: '', type: 'submit', size: 'md', block: true, disabled: false, loading: false, aria_label: hpc_aria, id: '', form: '', modal: '', js_class: 'add_to_cart' %}
+    </form>
+    {%- endif -%}
+  </div>
 </article>
 {%- endif -%}
