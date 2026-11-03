@@ -83,8 +83,15 @@
 	var next = box.querySelector('[data-pc-vouchers-next]');
 	function sync() {
 		var max = track.scrollWidth - track.clientWidth;
-		prev.hidden = track.scrollLeft <= 2;
-		next.hidden = track.scrollLeft >= max - 2;
+		var hidePrev = track.scrollLeft <= 2;
+		var hideNext = track.scrollLeft >= max - 2;
+		var focused = document.activeElement;
+		prev.hidden = hidePrev;
+		next.hidden = hideNext;
+		// N43 (02/11/2026): nút đang giữ focus bị ẩn (Enter «Voucher sau» tới cuối track, hoặc Tab tới nút trước khi
+		// sync chạy) làm focus rơi về body ⇒ chuyển focus sang nút còn lại để người dùng bàn phím không mất vị trí.
+		if (focused === next && hideNext && !hidePrev) prev.focus();
+		else if (focused === prev && hidePrev && !hideNext) next.focus();
 	}
 	prev.addEventListener('click', function () { track.scrollBy({ left: -track.clientWidth * 0.8, behavior: 'smooth' }); });
 	next.addEventListener('click', function () { track.scrollBy({ left: track.clientWidth * 0.8, behavior: 'smooth' }); });
