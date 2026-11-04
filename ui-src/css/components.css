@@ -17,7 +17,8 @@
                                      .pc-h4-swipe2, đầu khối .pc-h4-head--aside, nút tròn .pc-h4-more--icon, thẻ lộ trình .pc-h4-route,
                                      accordion <details data-pc-acc> .pc-h4-acc cho Danh mục nhanh + chân trang, dải pháp lý ẩn ở mobile);
                                      base: .pc-h4-entry__t giữ 32px desktop (h2 → p role=heading), link "Xem chi tiết ca" ≥ 44px;
-                                     .pc-h4-foot__powered display none (trước invisible) */
+                                     .pc-h4-foot__powered display none (trước invisible); mục 19 lớp chuyển trang .pc-navload
+                                     (snippets/ui_nav_loader.bwt) + .pc-navcate-wait (menu Danh mục tải sau) */
 @layer components {
   /* 0. Viền focus — `:root` nâng độ ưu tiên (0,3,0) để thắng CSS cũ `.pc-site-v3 :is(a,button,input):focus-visible` (0,2,1)
      và `a/button:focus { outline: none }`; bỏ `:root` ở D09 khi xoá CSS cũ */
@@ -654,4 +655,25 @@ body:has(.pc-shb-hero #section_hero) header.header:not(:hover):not(:focus-within
   :root .lt-video .pc-vplayer__facade:is(:hover, :focus-visible) .pc-vplayer__play-bg { fill: #e62117; }
   :root .lt-video .pc-vplayer__facade:hover .pc-vplayer__play--facebook .pc-vplayer__play-bg { fill: #1877f2; }
   :root .lt-video .pc-vplayer__frame { @apply absolute inset-0 h-full w-full border-0; }
+}
+
+/* ===== v2.1 (04/11/2026, chủ dự án: "chuyển trang chờ rất lâu — làm hiệu ứng logo + thanh chạy") — 19. Lớp chuyển trang PC-NavLoader
+   (snippets/ui_nav_loader.bwt). Chỉ hiện khi rời trang; nền trắng mờ + logo nhịp thở + thanh chạy màu thương hiệu.
+   z-index 10050: header cũ dùng 9980 / 10010 / 10020 (CSS đóng băng) cao hơn mọi bậc token (tối đa skip 70) ⇒ phải vượt mới phủ được. ===== */
+@layer components {
+  .pc-navload { @apply fixed inset-0 z-[10050] flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm; }
+  .pc-navload[hidden] { @apply hidden; }
+  .pc-navload__box { @apply flex flex-col items-center gap-5; }
+  .pc-navload__logo { @apply block h-auto w-44 max-w-[60vw]; animation: pc-navload-pulse 1.5s ease-in-out infinite; }
+  .pc-navload__bar { @apply relative block h-[3px] w-36 overflow-hidden rounded-full bg-line-soft; }
+  .pc-navload__bar::after { content: ""; @apply absolute inset-y-0 w-1/2 rounded-full bg-brand; left: -50%; animation: pc-navload-slide 1.2s linear infinite; }
+  .pc-navload__t { @apply m-0 text-sm font-semibold uppercase tracking-[.14em] text-brand-deep; }
+  /* Dòng chờ trong khung menu Danh mục khi menu tải sau chưa về (snippets/bean-menu-cate.bwt) */
+  .pc-navcate-wait { @apply m-0 px-4 py-6 text-sm text-ink-muted; }
+  @keyframes pc-navload-pulse { 0%, 100% { transform: scale(.96); opacity: .8; } 50% { transform: scale(1.04); opacity: 1; } }
+  @keyframes pc-navload-slide { from { left: -50%; } to { left: 100%; } }
+  @media (prefers-reduced-motion: reduce) {
+    .pc-navload__logo { animation: none; }
+    .pc-navload__bar::after { animation: none; @apply left-0 w-full; }
+  }
 }

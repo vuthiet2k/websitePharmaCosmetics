@@ -936,7 +936,7 @@ function resolveTemplatePath(tpl) {
 // deploy Vercel. resolvePrettyPath ánh xạ các path Sapo thật sang đúng
 // {tpl, routeParams} để renderFullPage dùng lại nguyên logic hiện có.
 const PAGE_HANDLE_MAP = {
-  'about-us':                   'page.about-us',
+  'about-us':                   'page.about', // 04/11/2026: Trang /about-us trên Sapo gán giao diện page.about (đối soát site đang chạy)
   // T-138 (2026-09-12): /gioi-thieu là link "Giới thiệu" THẬT trên menu chân trang, nhưng trước
   // đây không có trong bảng này nên rơi xuống nhánh collection placeholder → hiện ra lưới sản
   // phẩm thay vì trang giới thiệu (đã đo: HTML trả về chứa "layout-collection"). Trỏ về đúng

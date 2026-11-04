@@ -1,0 +1,51 @@
+{%- comment -%}
+  ui_nav_loader.bwt (04/11/2026, chủ dự án: "khi chuyển trang phải chờ rất lâu … làm hiệu ứng [logo + thanh chạy] để biết đang chuyển
+  trang hoặc đang load trang mới"). THƯ VIỆN PC v2.1 — CSS ui-src/css/components.css mục 19 (.pc-navload).
+  Cách chạy: CHỈ hiện khi RỜI trang (bấm link nội bộ / gửi form GET) — sau 200 ms (chuyển nhanh thì không nháy). Trình duyệt giữ
+  trang cũ đến khi trang mới vẽ được ⇒ lớp phủ tự mất đúng lúc trang mới hiện; KHÔNG phủ trang mới chờ tải xong (làm site chậm hơn,
+  hại LCP/SEO). Bỏ qua: link mở tab mới / tải file / #neo / tel: mailto: zalo / khác tên miền / Ctrl-Cmd-Shift-click / sự kiện đã bị
+  JS khác chặn (giỏ AJAX, popup, tab…) / phần tử có data-no-loader. Quay lại bằng nút Back (bfcache) ⇒ ẩn. Quá 15 s ⇒ tự ẩn.
+  Cấu hình: nav_loader_enable, nav_loader_logo (trống ⇒ logo header: header_logo_image nếu dùng, không thì PharmaCosmetics.svg),
+  nav_loader_text (trống ⇒ chỉ đọc cho trình đọc màn hình). prefers-reduced-motion ⇒ không nhịp/không chạy.
+{%- endcomment -%}
+{%- unless settings.nav_loader_enable == false or settings.nav_loader_enable == 'false' -%}
+{%- if settings.nav_loader_logo != blank -%}{%- assign pc_nl_logo = settings.nav_loader_logo | img_url: 'medium' -%}
+{%- elsif settings.header_logo_use_image and settings.header_logo_image != blank -%}{%- assign pc_nl_logo = settings.header_logo_image | img_url: 'medium' -%}
+{%- else -%}{%- assign pc_nl_logo = 'PharmaCosmetics.svg' | asset_url -%}{%- endif -%}
+{%- assign pc_nl_text = settings.nav_loader_text -%}
+<div class="pc-navload" id="pc-navload" role="status" aria-live="polite" hidden>
+  <div class="pc-navload__box">
+    <img class="pc-navload__logo" src="{{ pc_nl_logo }}" alt="" width="200" height="41" decoding="async">
+    <span class="pc-navload__bar" aria-hidden="true"></span>
+    {%- if pc_nl_text != blank -%}<p class="pc-navload__t">{{ pc_nl_text | escape }}</p>{%- else -%}<span class="sr-only">{{ settings.nav_loader_sr_text | default: 'Đang chuyển trang…' | escape }}</span>{%- endif -%}
+  </div>
+</div>
+<script>
+(function () {
+  var el = document.getElementById('pc-navload'); if (!el || window.pcNavLoader) return; window.pcNavLoader = true;
+  var timer = 0, guard = 0;
+  function show() { clearTimeout(timer); timer = setTimeout(function () { el.hidden = false; clearTimeout(guard); guard = setTimeout(hide, 15000); }, 200); }
+  function hide() { clearTimeout(timer); clearTimeout(guard); el.hidden = true; }
+  function internal(u) {
+    try { var x = new URL(u, location.href); } catch (e) { return false; }
+    if (x.origin !== location.origin || !/^https?:$/.test(x.protocol)) return false;
+    if (x.pathname === location.pathname && x.search === location.search && x.hash) return false; /* chỉ đổi #neo */
+    return true;
+  }
+  /* Nghe ở window (pha nổi bọt) ⇒ chạy SAU mọi handler của trang; handler nào preventDefault (AJAX, popup) thì bỏ qua. */
+  window.addEventListener('click', function (e) {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = e.target.closest && e.target.closest('a[href]'); if (!a || a.closest('[data-no-loader]')) return;
+    var h = a.getAttribute('href') || '';
+    if (!h || h.charAt(0) === '#' || /^(javascript|tel|mailto|sms|zalo):/i.test(h) || a.hasAttribute('download') || (a.target && a.target !== '_self')) return;
+    if (internal(a.href)) show();
+  });
+  window.addEventListener('submit', function (e) {
+    var f = e.target; if (e.defaultPrevented || !f || f.closest('[data-no-loader]') || (f.target && f.target !== '_self')) return;
+    if ((f.method || 'get').toLowerCase() === 'get' && internal(f.action || location.href)) show();
+  });
+  window.addEventListener('pageshow', hide);   /* quay lại bằng Back (bfcache) */
+  window.addEventListener('pagehide', function () { clearTimeout(guard); });
+})();
+</script>
+{%- endunless -%}
