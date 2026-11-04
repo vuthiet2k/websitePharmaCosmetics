@@ -13,8 +13,9 @@
 {%- assign hpc_price = hpc_var.price | default: product.price -%}
 {%- assign hpc_compare = hpc_var.compare_at_price | default: product.compare_at_price | default: 0 -%}
 {%- include 'pc_is_rx' -%}
+{%- include 'pc_is_service' -%}{%- comment -%} 04/11/2026: liệu trình (pc_is_service) ⇒ ẩn giá / % giảm, nút Xem chi tiết. {%- endcomment -%}
 {%- assign hpc_off = 0 -%}
-{%- if hpc_compare > hpc_price and hpc_price > 0 and pc_is_rx != true -%}
+{%- if hpc_compare > hpc_price and hpc_price > 0 and pc_is_rx != true and pc_is_service != true -%}
   {%- assign hpc_off = hpc_compare | minus: hpc_price | times: 100 | divided_by: hpc_compare | round -%}
   {%- if hpc_off < 1 -%}{%- assign hpc_off = 1 -%}{%- endif -%}
 {%- endif -%}
@@ -30,6 +31,8 @@
   {%- if hpc_desc != blank -%}<p class="pc-h4-pcard__d">{{ hpc_desc | escape }}</p>{%- endif -%}
   {%- if pc_is_rx -%}
   <p class="pc-h4-pcard__rx"><b>{{ settings.product_rx_card_badge | default: 'Cần tư vấn' | escape }}</b><span>{{ settings.product_rx_card_label | default: 'Liên hệ để được tư vấn' | escape }}</span></p>
+  {%- elsif pc_is_service -%}
+  <p class="pc-h4-pcard__p">{{ settings.lt_info_price_contact | default: 'Liên hệ tư vấn' | escape }}</p>
   {%- elsif hpc_price == 0 -%}
   <p class="pc-h4-pcard__p">{{ settings.product_card_contact_text | default: 'Liên hệ' | escape }}</p>
   {%- else -%}
@@ -37,7 +40,7 @@
   {%- endif -%}
   <div class="pc-h4-pcard__a">
     {%- capture hpc_aria -%}Thêm vào giỏ: {{ hpc_name | strip_html }}{%- endcapture -%}
-    {%- if pc_is_rx or hpc_price == 0 -%}
+    {%- if pc_is_rx or pc_is_service or hpc_price == 0 -%}
       {%- capture hpc_aria -%}Xem chi tiết: {{ hpc_name | strip_html }}{%- endcapture -%}
       {% include 'ui_button', label: 'Xem chi tiết', variant: 'primary', href: product.url, type: '', size: 'md', block: true, disabled: false, loading: false, aria_label: hpc_aria, id: '', form: '', modal: '', js_class: '' %}
     {%- elsif product.available != true -%}

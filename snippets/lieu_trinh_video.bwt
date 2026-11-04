@@ -1,0 +1,36 @@
+{%- comment -%}
+  lieu_trinh_video (04/11/2026, chủ dự án: "cho chèn video theo tag dạng youtube vào sản phẩm liệu trình — tương tự blog video").
+  Nguồn = tag sản phẩm youtube:<ID|link> (hoặc yt:) / facebook:<link> (hoặc fb:) — cùng quy ước snippets/video_source.bwt
+  (đọc được mọi đối tượng có tags, ở đây là lt_product). Tag đầu = video chính (to), các tag sau = video phụ (lưới 2–3 cột).
+  Khung phát facade dùng chung snippets/video_embed.bwt (ảnh bìa + nút Play, bấm mới tải iframe ⇒ trang nhẹ).
+  Không có tag video ⇒ không in gì. Chữ: lt_video_eyebrow / lt_video_title (Cấu hình theme › Trang liệu trình).
+  CSS: ui-src/css/components.css mục 18 (.lt-video — trình phát .pc-vplayer vốn chỉ có CSS ở trang blog).
+{%- endcomment -%}
+{%- assign pc_vs_article = lt_product -%}
+{%- include 'video_source' -%}
+{%- if pc_vs_list != blank -%}
+{%- assign lt_v_items = pc_vs_list | split: '||' -%}
+<section id="service-video-section" class="lt-section lt-section--white lt-video" aria-labelledby="lt-video-title">
+  <div class="container">
+    <header class="lt-head">
+      {%- if settings.lt_video_eyebrow != blank -%}<p class="lt-eyebrow">{{ settings.lt_video_eyebrow | escape }}</p>{%- endif -%}
+      <h2 class="lt-title" id="lt-video-title">{{ settings.lt_video_title | default: 'Video liệu trình' | replace: '[ten]', lt_short | escape }}</h2>
+    </header>
+    <div class="lt-video__grid{% if lt_v_items.size > 1 %} lt-video__grid--multi{% endif %}">
+      {%- for lt_v in lt_v_items -%}
+        {%- assign lt_v_p = lt_v | split: '~' -%}
+        {%- assign pc_ve_src = lt_v_p[0] -%}{%- assign pc_ve_id = lt_v_p[1] -%}{%- assign pc_ve_fb = lt_v_p[2] -%}
+        {%- capture pc_ve_title -%}{{ lt_short }}{% if lt_v_items.size > 1 %} — video {{ forloop.index }}{% endif %}{%- endcapture -%}
+        {%- assign pc_ve_priority = false -%}
+        {%- capture pc_ve_uid -%}lt-video-{{ forloop.index }}{%- endcapture -%}
+        {%- if pc_ve_src == 'youtube' -%}
+          {%- assign pc_ve_thumb = 'https://i.ytimg.com/vi/' | append: pc_ve_id | append: '/hqdefault.jpg' -%}
+        {%- else -%}
+          {%- assign pc_ve_thumb = lt_product.featured_image.src | img_url: 'large' -%}
+        {%- endif -%}
+        <div class="lt-video__item{% if forloop.first %} lt-video__item--main{% endif %}">{%- include 'video_embed' -%}</div>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+{%- endif -%}

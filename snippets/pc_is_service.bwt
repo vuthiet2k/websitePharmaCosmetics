@@ -1,0 +1,24 @@
+{%- comment -%}
+  pc_is_service.bwt (04/11/2026, chủ dự án: "Dịch vụ … chính là các sản phẩm theo liệu trình — ẩn giá của liệu trình đi (để nút liên
+  hệ tư vấn – trỏ về Zalo, và đặt lịch)"). Nhận diện SẢN PHẨM LIỆU TRÌNH giống cách pc_is_rx nhận diện thuốc kê toa:
+  sản phẩm nằm trong 1 danh mục ở settings.lt_collection (nhiều handle cách nhau dấu phẩy, vd "dieu-tri-chuyen-nghiep,dich-vu")
+  hoặc dùng giao diện product.lieu-trinh ⇒ pc_is_service = true. Tắt "Ẩn giá liệu trình" (lt_hide_price) ⇒ luôn false.
+  Dùng ở thẻ sản phẩm chung (ui_product_card, product_card_collection, home_product_card): ẩn giá + giảm giá, nút "Xem chi tiết".
+{%- endcomment -%}
+{%- assign pc_is_service = false -%}
+{%- unless settings.lt_hide_price == false or settings.lt_hide_price == 'false' -%}
+  {%- if product.template_suffix == 'lieu-trinh' -%}{%- assign pc_is_service = true -%}{%- endif -%}
+  {%- unless pc_is_service -%}
+  {%- assign pc_sv_list = settings.lt_collection | default: 'dieu-tri-chuyen-nghiep' | split: ',' -%}
+  {%- for pc_sv_col in product.collections -%}
+    {%- assign pc_sv_h = pc_sv_col.url | remove: '/' -%}
+    {%- for pc_sv_t in pc_sv_list -%}
+      {%- assign pc_sv_t = pc_sv_t | strip -%}
+      {%- if pc_sv_t != blank -%}
+        {%- if pc_sv_h == pc_sv_t or pc_sv_col.alias == pc_sv_t -%}{%- assign pc_is_service = true -%}{%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- if pc_is_service -%}{%- break -%}{%- endif -%}
+  {%- endfor -%}
+  {%- endunless -%}
+{%- endunless -%}

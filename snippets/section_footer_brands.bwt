@@ -1,20 +1,35 @@
 {%- comment -%}
   FOOTER SEO — "Danh mục nhanh" ngay trên chân trang — CHỈ trang chủ (03/11/2026: include bọc điều kiện ở layouts/theme.bwt).
-  03/11/2026 (chủ dự án: trang chủ theo Figma "travel" node 5:2 — design/home-v4/full.png): 1 khối nền xanh nhạt, tiêu đề
-  footer_cate_title + lưới 4 cột danh sách link thường (bỏ gạch "|", bỏ nút gập mobile — mobile 2 cột):
-    - Cột nhóm 1..4: footer_cate_group_N_title + Menu footer_cate_group_N_menu (menu trống ⇒ bỏ cột).
-    - Cột từ khoá: footer_search_title_2 + danh sách footer_search_menu (phân cách ";") ⇒ /search?query=…
-      (footer_search_display = none ⇒ bỏ cột).
-    - Dòng thương hiệu / loại (footer_brands_menu / footer_types_menu) giữ làm khối phụ dưới lưới khi footer_brands_display ≠ none.
-  Hiển thị: footer_cate_display / footer_brands_display / footer_search_display = all | desktop | mobile | none
-  (desktop ⇒ ẩn < 1024, mobile ⇒ ẩn ≥ 1024). CSS: ui-src/css/components.css mục 14.11.
-  04/11/2026 (chủ dự án: "Danh mục nhanh dùng accordion cho gọn" ở mobile): mỗi cột / khối phụ là <details data-pc-acc open>
-  (tiêu đề nằm trong <summary>). Desktop luôn mở như cũ; < 1024px script cuối snippets/footer.bwt thu gọn sẵn. Chưa chạy JS ⇒ mở hết.
-  CSS mục 14.22.
+  04/11/2026 (chủ dự án: "làm theo Chân trang hiển thị từ trên xuống … mọi danh sách link đều lấy từ Menu"): dựng ĐÚNG thứ tự ghi
+  trong admin (paragraph đầu nhóm Chân trang):
+    (1) dải Thương hiệu / Loại SP — Menu footer_brands_menu / footer_types_menu (+ link "Xem tất cả" footer_*_viewall);
+    (2) Danh mục SEO — tối đa 4 nhóm footer_cate_group_N_title + Menu footer_cate_group_N_menu (menu trống ⇒ bỏ nhóm);
+    (3) Từ khoá tìm nhiều — Menu footer_search_linklist (MỚI); chưa chọn menu ⇒ dự phòng ô nhập footer_search_menu (";") ⇒ /search.
+  (4) cột Logo + 3 cột Menu và (5) Pháp lý + Copyright nằm ở snippets/footer.bwt.
+  Hiển thị từng khối: footer_brands_display / footer_cate_display / footer_search_display = all | desktop | mobile | none.
+  Mọi nhóm là <details class="pc-h4-acc" data-pc-acc open>: desktop luôn mở, < 1024px accordion thu gọn (script cuối footer.bwt).
+  CSS: ui-src/css/components.css mục 14.11 + 14.22.
 {%- endcomment -%}
 {%- assign _fcd = settings.footer_cate_display | default: 'all' -%}
 {%- assign _fsd = settings.footer_search_display | default: 'all' -%}
 {%- assign _fbd = settings.footer_brands_display | default: 'all' -%}
+{%- capture _fq_ic -%}<span class="pc-h4-acc__ic" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down' %}</span>{%- endcapture -%}
+{%- comment -%} (1) Thương hiệu / Loại SP {%- endcomment -%}
+{%- capture _fq_strips -%}
+  {%- unless _fbd == 'none' -%}
+  {%- for j in (1..2) -%}
+    {%- if j == 1 -%}{%- assign _fx_ll = linklists[settings.footer_brands_menu] -%}{%- assign _fx_t = settings.footer_brands_title | default: 'Top thương hiệu nổi bật' -%}{%- assign _fx_more = settings.footer_brands_viewall -%}
+    {%- else -%}{%- assign _fx_ll = linklists[settings.footer_types_menu] -%}{%- assign _fx_t = settings.footer_types_title | default: 'Mua sắm theo loại' -%}{%- assign _fx_more = settings.footer_types_viewall -%}{%- endif -%}
+    {%- if _fx_ll.links.size > 0 -%}
+    <details class="pc-h4-acc pc-h4-quick__strip {% if _fbd == 'desktop' %}pc-h4-lg-only{% elsif _fbd == 'mobile' %}pc-h4-sm-only{% endif %}" data-pc-acc open>
+      <summary class="pc-h4-acc__sum"><h3 class="pc-h4-quick__h">{{ _fx_t | escape }}</h3>{{ _fq_ic }}</summary>
+      <ul class="pc-h4-quick__list pc-h4-quick__list--inline">{%- for link in _fx_ll.links -%}<li><a href="{{ link.url }}">{{ link.title }}</a></li>{%- endfor -%}{%- if _fx_more != blank -%}<li><a href="{{ _fx_more }}">{{ settings.footer_quick_viewall_text | default: 'Xem tất cả' | escape }}</a></li>{%- endif -%}</ul>
+    </details>
+    {%- endif -%}
+  {%- endfor -%}
+  {%- endunless -%}
+{%- endcapture -%}
+{%- comment -%} (2) Danh mục SEO {%- endcomment -%}
 {%- capture _fq_cols -%}
   {%- unless _fcd == 'none' -%}
   {%- for i in (1..4) -%}
@@ -23,43 +38,41 @@
     {%- if _fc_h != blank -%}{%- assign _fc_ll = linklists[_fc_h] -%}
     {%- if _fc_ll.links.size > 0 -%}
     <details class="pc-h4-acc {% if _fcd == 'desktop' %}pc-h4-lg-only{% elsif _fcd == 'mobile' %}pc-h4-sm-only{% endif %}" data-pc-acc open>
-      <summary class="pc-h4-acc__sum"><h3 class="pc-h4-quick__h">{{ settings[_kt] | default: _fc_ll.title | escape }}</h3><span class="pc-h4-acc__ic" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down' %}</span></summary>
+      <summary class="pc-h4-acc__sum"><h3 class="pc-h4-quick__h">{{ settings[_kt] | default: _fc_ll.title | escape }}</h3>{{ _fq_ic }}</summary>
       <ul class="pc-h4-quick__list">{%- for link in _fc_ll.links -%}<li><a href="{{ link.url }}">{{ link.title }}</a></li>{%- endfor -%}</ul>
     </details>
     {%- endif -%}{%- endif -%}
   {%- endfor -%}
   {%- endunless -%}
-  {%- unless _fsd == 'none' -%}{%- if settings.footer_search_menu != blank -%}
-    <details class="pc-h4-acc {% if _fsd == 'desktop' %}pc-h4-lg-only{% elsif _fsd == 'mobile' %}pc-h4-sm-only{% endif %}" data-pc-acc open>
-      <summary class="pc-h4-acc__sum"><h3 class="pc-h4-quick__h">{{ settings.footer_search_title_2 | default: 'Được tìm nhiều' | escape }}</h3><span class="pc-h4-acc__ic" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down' %}</span></summary>
-      <ul class="pc-h4-quick__list">
-        {%- assign _fsk = settings.footer_search_menu | split: ';' -%}
-        {%- for _fsi in _fsk -%}{%- assign _fskw = _fsi | strip -%}{%- if _fskw != blank -%}<li><a href="/search?query={{ _fskw | url_encode }}&amp;type=product">{{ _fskw }}</a></li>{%- endif -%}{%- endfor -%}
-      </ul>
-    </details>
-  {%- endif -%}{%- endunless -%}
 {%- endcapture -%}
-{%- capture _fq_brands -%}
-  {%- unless _fbd == 'none' -%}
-  {%- for j in (1..2) -%}
-    {%- if j == 1 -%}{%- assign _fx_ll = linklists[settings.footer_brands_menu] -%}{%- assign _fx_t = settings.footer_brands_title | default: 'Top thương hiệu nổi bật' -%}{%- assign _fx_more = settings.footer_brands_viewall -%}
-    {%- else -%}{%- assign _fx_ll = linklists[settings.footer_types_menu] -%}{%- assign _fx_t = settings.footer_types_title | default: 'Mua sắm theo loại' -%}{%- assign _fx_more = settings.footer_types_viewall -%}{%- endif -%}
-    {%- if _fx_ll.links.size > 0 -%}
-    <details class="pc-h4-acc pc-h4-quick__extra {% if _fbd == 'desktop' %}pc-h4-lg-only{% elsif _fbd == 'mobile' %}pc-h4-sm-only{% endif %}" data-pc-acc open>
-      <summary class="pc-h4-acc__sum"><h3 class="pc-h4-quick__h">{{ _fx_t | escape }}</h3><span class="pc-h4-acc__ic" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down' %}</span></summary>
-      <ul class="pc-h4-quick__list pc-h4-quick__list--inline">{%- for link in _fx_ll.links -%}<li><a href="{{ link.url }}">{{ link.title }}</a></li>{%- endfor -%}{%- if _fx_more != blank -%}<li><a href="{{ _fx_more }}">{{ settings.footer_quick_viewall_text | default: 'Xem tất cả' | escape }}</a></li>{%- endif -%}</ul>
-    </details>
+{%- comment -%} (3) Từ khoá tìm nhiều — ưu tiên Menu footer_search_linklist {%- endcomment -%}
+{%- capture _fq_kw -%}
+  {%- unless _fsd == 'none' -%}
+  {%- assign _fs_ll = linklists[settings.footer_search_linklist] -%}
+  {%- capture _fs_items -%}
+    {%- if settings.footer_search_linklist != blank and _fs_ll.links.size > 0 -%}
+      {%- for link in _fs_ll.links -%}<li><a href="{{ link.url }}">{{ link.title }}</a></li>{%- endfor -%}
+    {%- elsif settings.footer_search_menu != blank -%}
+      {%- assign _fsk = settings.footer_search_menu | split: ';' -%}
+      {%- for _fsi in _fsk -%}{%- assign _fskw = _fsi | strip -%}{%- if _fskw != blank -%}<li><a href="/search?query={{ _fskw | url_encode }}&amp;type=product">{{ _fskw }}</a></li>{%- endif -%}{%- endfor -%}
     {%- endif -%}
-  {%- endfor -%}
+  {%- endcapture -%}
+  {%- if _fs_items != blank -%}
+    <details class="pc-h4-acc pc-h4-quick__extra {% if _fsd == 'desktop' %}pc-h4-lg-only{% elsif _fsd == 'mobile' %}pc-h4-sm-only{% endif %}" data-pc-acc open>
+      <summary class="pc-h4-acc__sum"><h3 class="pc-h4-quick__h">{{ settings.footer_search_title_2 | default: 'Được tìm nhiều' | escape }}</h3>{{ _fq_ic }}</summary>
+      <ul class="pc-h4-quick__list pc-h4-quick__list--inline">{{ _fs_items }}</ul>
+    </details>
+  {%- endif -%}
   {%- endunless -%}
 {%- endcapture -%}
-{%- if _fq_cols != blank or _fq_brands != blank -%}
+{%- if _fq_strips != blank or _fq_cols != blank or _fq_kw != blank -%}
 <section class="pc-h4 pc-h4-quick" aria-labelledby="pc-h4-quick-title">
   <div class="pc-h4-wrap">
     <h2 class="pc-h4-quick__t" id="pc-h4-quick-title">{{ settings.footer_cate_title | default: 'Danh mục nhanh' | escape }}</h2>
     {%- if settings.footer_cate_subtitle != blank -%}<p class="pc-h4-lead mb-6">{{ settings.footer_cate_subtitle | escape }}</p>{%- endif -%}
+    {%- if _fq_strips != blank -%}<div class="pc-h4-quick__strips">{{ _fq_strips }}</div>{%- endif -%}
     {%- if _fq_cols != blank -%}<div class="pc-h4-quick__grid">{{ _fq_cols }}</div>{%- endif -%}
-    {{ _fq_brands }}
+    {{ _fq_kw }}
   </div>
 </section>
 {%- endif -%}

@@ -62,3 +62,10 @@
   {%- assign lt_cta_url = lt_cta_base | append: '?handle=' | append: lt_alias -%}
 {%- endif -%}
 {%- assign lt_cta_text = settings.lt_cta_text | default: 'ĐẶT LỊCH TƯ VẤN 1:1' -%}
+{%- comment -%} 04/11/2026 (chủ dự án: "ẩn giá của liệu trình — để nút liên hệ tư vấn trỏ về Zalo, và đặt lịch"):
+  lt_hide_price (mặc định bật) ⇒ không in giá ở thẻ / bảng thông tin; nút Zalo = lt_zalo_url (trống ⇒ https://zalo.me/<contact_zalo>),
+  chữ lt_zalo_text. Chưa có Zalo ⇒ không có nút Zalo (giữ nút cũ). {%- endcomment -%}
+{%- assign lt_hide_price = true -%}{%- if settings.lt_hide_price == false or settings.lt_hide_price == 'false' -%}{%- assign lt_hide_price = false -%}{%- endif -%}
+{%- assign lt_zalo_url = settings.lt_zalo_url -%}
+{%- if lt_zalo_url == blank and settings.contact_zalo != blank -%}{%- assign lt_zalo_url = settings.contact_zalo | remove: ' ' | remove: '.' | prepend: 'https://zalo.me/' -%}{%- endif -%}
+{%- assign lt_zalo_text = settings.lt_zalo_text | default: 'Liên hệ tư vấn' -%}

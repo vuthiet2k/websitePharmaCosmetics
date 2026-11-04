@@ -213,6 +213,15 @@ dải pháp lý chân trang (+ nút "Hiện lại nút liên hệ nhanh") chỉ 
 (global_core) ⇒ phần tử cần ẩn ở mobile KHÔNG được mang utility `block` (đưa `block` vào rule `pc-*`); `.pc-home-v3 .pc-portal h2`
 ép cỡ `--ts-h2 !important` ⇒ tiêu đề nhỏ trong thẻ dùng `<p role="heading" aria-level="2">`.
 
+**Liệu trình / Dịch vụ (chốt 04/11/2026, chủ dự án):** menu DỊCH VỤ trên Sapo trỏ danh mục `/dich-vu`. `lt_collection` nhận NHIỀU
+handle cách nhau dấu phẩy (`dieu-tri-chuyen-nghiep,dich-vu`) — các danh mục đó hiện lưới thẻ liệu trình; sản phẩm thuộc chúng (hoặc giao
+diện product.lieu-trinh) = liệu trình (`snippets/pc_is_service.bwt`, giống `pc_is_rx`). `lt_hide_price` (mặc định bật) ⇒ KHÔNG in giá
+liệu trình ở bất kỳ thẻ nào / bảng thông tin; thay bằng nút Liên hệ tư vấn → Zalo (`lt_zalo_url`, trống ⇒ zalo.me/<contact_zalo>) +
+Đặt lịch (`lt_cta_url?handle=`). Video liệu trình = tag sản phẩm `youtube:`/`facebook:` (snippets/lieu_trinh_video.bwt, dùng lại
+video_source + video_embed). Nơi khác đọc `lt_collection` phải `split: ','` (vd page.indexskinhealthy lấy handle đầu).
+Bẫy DotLiquid (Sapo): `nil | append: ''` vẫn là nil ⇒ so `!= ''` luôn đúng — LUÔN so bằng `blank` (lỗi 04/11/2026 làm `ui_icon`
+in PC-ERROR, mất icon menu/tìm kiếm/giỏ trên preview Sapo dù localhost vẫn đúng). Khung header = khung trang (1344px, lề 32/16px).
+
 **Hero + header trang chủ (chốt 2026-10-13):** Hero cao 100vh/100svh; khi Hero là section đầu, header (topbar + hàng logo/menu) đè lên ảnh,
 nền trong suốt, chữ/icon trắng; hover/focus header hoặc cuộn (`.main-header.is-scrolled`, desktop `.hSticky`) ⇒ trở lại nền gốc.
 CSS ở `assets/home-portal.css` (khối "HEADER TRONG SUỐT TRÊN HERO"), chỉ áp `body.pc-home-v3`.

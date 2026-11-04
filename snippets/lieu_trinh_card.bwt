@@ -18,10 +18,11 @@
     {%- if lt_phude != blank -%}<p class="lt-card__text lt-pcard__sub">{{ lt_phude | escape }}</p>{%- endif -%}
     <div class="lt-pcard__meta">
       {%- if lt_thoigian != blank -%}<span><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'clock', size: 'em' %}</i>{{ lt_thoigian | escape }}</span>{%- endif -%}
-      <strong>{% if lt_price > 0 %}{{ lt_price | money }}{% else %}{{ settings.lt_info_price_contact | escape }}{% endif %}</strong>
+      {%- unless lt_hide_price -%}<strong>{% if lt_price > 0 %}{{ lt_price | money }}{% else %}{{ settings.lt_info_price_contact | escape }}{% endif %}</strong>{%- endunless -%}
     </div>
     <div class="lt-pcard__actions">
-      <a href="{{ lt_product.url }}" class="lt-btn lt-btn--light">{{ settings.lt_card_view_text | default: 'Chi tiết' | escape }}</a>
+      {%- comment -%} 04/11/2026: ẩn giá ⇒ nút Liên hệ tư vấn (Zalo) thay "Chi tiết" (ảnh + tên thẻ vẫn mở trang chi tiết). {%- endcomment -%}
+      {%- if lt_hide_price and lt_zalo_url != blank -%}<a href="{{ lt_zalo_url | escape }}" class="lt-btn lt-btn--light" target="_blank" rel="noopener"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'message-circle', size: 'em' %}</i> {{ lt_zalo_text | escape }}</a>{%- else -%}<a href="{{ lt_product.url }}" class="lt-btn lt-btn--light">{{ settings.lt_card_view_text | default: 'Chi tiết' | escape }}</a>{%- endif -%}
       <a href="{{ lt_cta_url | escape }}" class="lt-btn lt-btn--primary">{{ settings.lt_card_book_text | default: 'Đặt lịch' | escape }}</a>
     </div>
   </div>

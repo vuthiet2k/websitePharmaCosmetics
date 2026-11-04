@@ -96,6 +96,15 @@ những liệu trình sau nhanh hơn vì dùng lại bài "Vấn đề da", "Ho�
 - Mỗi ca = 1 bài trong danh mục **Trước & Sau**, gắn tag `lieutrinh:<đường dẫn sản phẩm>`. Hướng dẫn riêng:
   [huong-dan-tao-ca-truoc-sau.md](./huong-dan-tao-ca-truoc-sau.md). **Chỉ ca thật, khách đã đồng ý.** Chưa có ca ⇒ phần này tự ẩn.
 
+### ④b Video liệu trình (04/11/2026)
+
+- Gắn tag **`youtube:<link hoặc mã video>`** vào sản phẩm (vd `youtube:https://www.youtube.com/watch?v=XXXXXXXXXXX`, hoặc
+  `youtube:XXXXXXXXXXX`; video Facebook: `facebook:<link>`). Nhận cả link `youtu.be/…`, `/shorts/…`, `/embed/…`.
+- **Tag đầu = video chính** (to), các tag sau = video phụ (lưới 2 cột). Thứ tự tag = thứ tự video. Cùng quy ước với blog Video.
+- Khối nằm ngay sau "Công nghệ & hoạt chất". Chỉ hiện ảnh bìa + nút Play — bấm mới tải YouTube (trang không chậm).
+- Chữ: Cấu hình theme › Trang liệu trình › "Khối video — dòng nhỏ / tiêu đề" (`[ten]` = tên ngắn). Không có tag video ⇒ khối tự ẩn.
+- Chỉ dùng video **của Pharma Cosmetics / Skin Health Beauty hoặc hãng cho phép**; không dùng video trước–sau không rõ nguồn.
+
 ### ⑦ Thông tin dịch vụ & đặt lịch
 
 ![Thông tin & đặt lịch](images/lieu-trinh/07-thong-tin-dat-lich.jpg)
@@ -105,7 +114,7 @@ những liệu trình sau nhanh hơn vì dùng lại bài "Vấn đề da", "Ho�
 | Hình thức | Tag `hinhthuc:` (bỏ trống ⇒ "Trị liệu da 1:1") |
 | Thời gian thực hiện | Tag `thoigian:` |
 | Liệu trình | Tag `sobuoi:` (bỏ trống ⇒ "Cá nhân hóa sau khi đánh giá da") |
-| Giá dịch vụ | Ô **Giá** của sản phẩm (để 0 ⇒ "Liên hệ tư vấn") |
+| Giá dịch vụ | Ô **Giá** của sản phẩm (để 0 ⇒ "Liên hệ tư vấn"). **04/11/2026: mặc định ẨN** (Cấu hình theme › Trang liệu trình › "Ẩn giá liệu trình") — dòng giá không hiện, thay bằng nút **Liên hệ tư vấn** (Zalo) + **Đặt lịch** |
 | Địa điểm | Tag `diadiem:` |
 | Link "Thông tin chi tiết liệu trình →" | Tự hiện khi ô **Mô tả chi tiết** có nội dung — bấm vào mở cửa sổ ⑧ |
 

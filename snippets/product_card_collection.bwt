@@ -23,8 +23,9 @@
 	{%- if pcc_tl contains 'pre-order' -%}{%- assign pcc_preorder = true -%}{%- endif -%}
 {%- endfor -%}
 {%- include 'pc_is_rx' -%}
+{%- include 'pc_is_service' -%}{%- comment -%} 04/11/2026: liệu trình (pc_is_service) ⇒ ẩn giá / % giảm, nút Xem chi tiết. {%- endcomment -%}
 {%- assign pcc_discount = 0 -%}
-{%- if pcc_compare > pcc_price and pcc_price > 0 and pc_is_rx != true -%}
+{%- if pcc_compare > pcc_price and pcc_price > 0 and pc_is_rx != true and pc_is_service != true -%}
 	{%- assign pcc_discount = pcc_compare | minus: pcc_price | times: 100 | divided_by: pcc_compare | round -%}
 	{%- if pcc_discount < 1 -%}{%- assign pcc_discount = 1 -%}{%- endif -%}
 {%- endif -%}
@@ -60,8 +61,8 @@
 		{%- endif -%}
 		<p class="pc-pcard__desc"{% if pcc_desc == blank %} aria-hidden="true"{% endif %}>{{ pcc_desc | truncatewords: 14 }}</p>
 		<div class="pc-pcard__price">
-			{%- if pc_is_rx -%}
-			<span class="pc-pcard__price-now pc-price--rx">{{ settings.product_rx_card_label | default: 'Liên hệ tư vấn' }}</span>
+			{%- if pc_is_rx or pc_is_service -%}
+			<span class="pc-pcard__price-now pc-price--rx">{% if pc_is_service %}{{ settings.lt_info_price_contact | default: 'Liên hệ tư vấn' | escape }}{% else %}{{ settings.product_rx_card_label | default: 'Liên hệ tư vấn' }}{% endif %}</span>
 			{%- elsif pcc_price == 0 -%}
 			<span class="pc-pcard__price-now">Liên hệ</span>
 			{%- else -%}
@@ -75,7 +76,7 @@
 				<i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'star-filled', size: 'em' %}</i> {{ product.metafields.bpr.rating }} <span>({{ product.metafields.bpr.votes }})</span>
 			</span>
 			{%- else -%}<span></span>{%- endif -%}
-			{%- if pc_is_rx or pcc_price == 0 or pcc_preorder -%}
+			{%- if pc_is_rx or pc_is_service or pcc_price == 0 or pcc_preorder -%}
 			<a class="pc-pcard__cart pc-pcard__cart--view" href="{{ product.url }}" title="Xem chi tiết" aria-label="Xem chi tiết {{ product.name | escape }}"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'eye', size: 'em' %}</i></a>
 			{%- elsif pcc_sold_out -%}
 			<button type="button" class="pc-pcard__cart" disabled title="Hết hàng" aria-label="Hết hàng"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'ban', size: 'em' %}</i></button>

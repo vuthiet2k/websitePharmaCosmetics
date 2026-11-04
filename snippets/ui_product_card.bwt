@@ -14,9 +14,10 @@
 {%- assign pc_pc_price = pc_pc_var.price | default: product.price -%}
 {%- assign pc_pc_compare = pc_pc_var.compare_at_price | default: product.compare_at_price | default: 0 -%}
 {%- include 'pc_is_rx' -%}
+{%- include 'pc_is_service' -%}{%- comment -%} 04/11/2026: liệu trình (pc_is_service) ⇒ ẩn giá / % giảm, nút Xem chi tiết. {%- endcomment -%}
 {%- assign pc_pc_btn = 'primary' -%}{%- if pc_pc_ctx == 'home' -%}{%- assign pc_pc_btn = 'secondary' -%}{%- endif -%}
 {%- assign pc_pc_off = 0 -%}
-{%- if pc_pc_compare > pc_pc_price and pc_pc_price > 0 and pc_is_rx != true -%}
+{%- if pc_pc_compare > pc_pc_price and pc_pc_price > 0 and pc_is_rx != true and pc_is_service != true -%}
   {%- assign pc_pc_off = pc_pc_compare | minus: pc_pc_price | times: 100 | divided_by: pc_pc_compare | round -%}
   {%- if pc_pc_off < 1 -%}{%- assign pc_pc_off = 1 -%}{%- endif -%}
 {%- endif -%}
@@ -33,14 +34,14 @@
   <p class="flex items-center gap-1 text-sm text-ink-secondary">{% include 'ui_icon', name: 'star', size: 20, label: '' %}<span>{{ product.metafields.bpr.rating }}/5 ({{ product.metafields.bpr.votes }} đánh giá)</span></p>
   {%- endif -%}
   <p>
-    {%- if pc_is_rx -%}<span class="pc-card__price">{{ settings.product_rx_card_label | default: 'Liên hệ tư vấn' }}</span>
+    {%- if pc_is_rx or pc_is_service -%}<span class="pc-card__price">{% if pc_is_service %}{{ settings.lt_info_price_contact | default: 'Liên hệ tư vấn' | escape }}{% else %}{{ settings.product_rx_card_label | default: 'Liên hệ tư vấn' }}{% endif %}</span>
     {%- elsif pc_pc_price == 0 -%}<span class="pc-card__price">Liên hệ</span>
     {%- else -%}<span class="pc-card__price">{{ pc_pc_price | money }}</span>{% if pc_pc_compare > pc_pc_price %}<s class="pc-card__price-old"><span class="sr-only">Giá gốc </span>{{ pc_pc_compare | money }}</s>{% endif %}
     {%- endif -%}
   </p>
   <div class="pc-card__actions">
     {%- capture pc_pc_aria -%}Thêm vào giỏ: {{ pc_pc_name | strip_html }}{%- endcapture -%}
-    {%- if pc_is_rx or pc_pc_price == 0 -%}
+    {%- if pc_is_rx or pc_is_service or pc_pc_price == 0 -%}
       {%- capture pc_pc_aria -%}Xem chi tiết: {{ pc_pc_name | strip_html }}{%- endcapture -%}
       {% include 'ui_button', label: 'Xem chi tiết', variant: pc_pc_btn, href: product.url, type: '', size: 'md', block: true, disabled: false, loading: false, aria_label: pc_pc_aria, id: '', form: '', modal: '', js_class: '' %}
     {%- elsif product.available != true -%}

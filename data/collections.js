@@ -62,6 +62,8 @@ function makeShell(id, name, alias, products_count, opts = {}) {
 
 const collectionsData = {
   // 2026-10-17: danh mục liệu trình (snippets/collection_lieu_trinh.bwt) — 6 liệu trình thật của store.
+  // 2026-11-04: danh mục "Dịch vụ" (menu DỊCH VỤ trên Sapo trỏ /dich-vu) — cùng liệu trình; settings.lt_collection = "dieu-tri-chuyen-nghiep,dich-vu".
+  'dich-vu': makeCollection('Dịch vụ', 'dich-vu', 9302, '', products.filter((p) => p.template_suffix === 'lieu-trinh')),
   'dieu-tri-chuyen-nghiep': makeCollection('Điều trị chuyên nghiệp', 'dieu-tri-chuyen-nghiep', 9301, '<p>Liệu trình trị liệu da 1:1 tại Skin Health Beauty — phân tích da, phác đồ cá nhân hóa và theo dõi xuyên suốt bởi chuyên gia.</p>', products.filter((p) => p.template_suffix === 'lieu-trinh')),
 
   // ── Meta: tất cả demo products ────────────────────────────────────────

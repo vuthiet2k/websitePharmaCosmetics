@@ -18,7 +18,7 @@
           {%- if lt_thoigian != blank -%}<div class="lt-spec__row"><dt>{{ settings.lt_info_time_label | escape }}</dt><dd>{{ lt_thoigian | escape }}</dd></div>{%- endif -%}
           {%- assign lt_v = lt_sobuoi | default: settings.lt_info_sessions_default -%}
           {%- if lt_v != blank -%}<div class="lt-spec__row"><dt>{{ settings.lt_info_sessions_label | escape }}</dt><dd>{{ lt_v | escape }}</dd></div>{%- endif -%}
-          <div class="lt-spec__row"><dt>{{ settings.lt_info_price_label | escape }}</dt><dd>{% if lt_price > 0 %}<strong>{{ lt_price | money }}</strong>{% else %}{{ settings.lt_info_price_contact | escape }}{% endif %}</dd></div>
+          {%- unless lt_hide_price -%}<div class="lt-spec__row"><dt>{{ settings.lt_info_price_label | escape }}</dt><dd>{% if lt_price > 0 %}<strong>{{ lt_price | money }}</strong>{% else %}{{ settings.lt_info_price_contact | escape }}{% endif %}</dd></div>{%- endunless -%}
           {%- assign lt_v = lt_diadiem | default: settings.lt_info_place_default -%}
           {%- if lt_v != blank -%}<div class="lt-spec__row"><dt>{{ settings.lt_info_place_label | escape }}</dt><dd>{{ lt_v | escape }}</dd></div>{%- endif -%}
         </dl>
@@ -33,6 +33,7 @@
         <h3 class="lt-booking__title">{{ settings.lt_booking_title | escape }}</h3>
         <div class="lt-actions">
           <a href="{{ lt_cta_url | escape }}" class="lt-btn lt-btn--primary"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'calendar-check', size: 'em' %}</i> {{ lt_cta_text | escape }}</a>
+          {%- if lt_zalo_url != blank -%}<a href="{{ lt_zalo_url | escape }}" class="lt-btn lt-btn--light" target="_blank" rel="noopener"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'message-circle', size: 'em' %}</i> {{ lt_zalo_text | escape }}</a>{%- endif -%}
           {%- if lt_phone != blank -%}<a href="tel:{{ lt_phone | remove: ' ' | remove: '.' }}" class="lt-btn lt-btn--light"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'phone', size: 'em' %}</i> {{ lt_phone | escape }}</a>{%- endif -%}
         </div>
         {%- if settings.lt_brand_lines != blank -%}
@@ -47,7 +48,9 @@
 </section>
 {%- if settings.lt_sticky_cta -%}
 <div id="peel-mobile-sticky-cta" class="lt-sticky" aria-hidden="true">
-  {%- if lt_phone != blank -%}<a href="tel:{{ lt_phone | remove: ' ' | remove: '.' }}" class="lt-btn lt-btn--light" tabindex="-1"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'phone', size: 'em' %}</i> Hotline</a>{%- endif -%}
+  {%- comment -%} 04/11/2026: có Zalo ⇒ nút Liên hệ tư vấn (Zalo) thay Hotline trên thanh bám đáy. {%- endcomment -%}
+  {%- if lt_zalo_url != blank -%}<a href="{{ lt_zalo_url | escape }}" class="lt-btn lt-btn--light" target="_blank" rel="noopener" tabindex="-1"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'message-circle', size: 'em' %}</i> {{ lt_zalo_text | escape }}</a>
+  {%- elsif lt_phone != blank -%}<a href="tel:{{ lt_phone | remove: ' ' | remove: '.' }}" class="lt-btn lt-btn--light" tabindex="-1"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'phone', size: 'em' %}</i> Hotline</a>{%- endif -%}
   <a href="{{ lt_cta_url | escape }}" class="lt-btn lt-btn--primary" tabindex="-1"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'calendar-check', size: 'em' %}</i> {{ lt_cta_text | escape }}</a>
 </div>
 {%- endif -%}
