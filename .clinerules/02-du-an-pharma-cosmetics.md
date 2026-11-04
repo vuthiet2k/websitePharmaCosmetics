@@ -184,23 +184,26 @@ dữ liệu Admin đã lưu trong `settings_data.json`.
 **Danh xưng (RULE-P0-02):** dùng **"Chuyên gia"**, không dùng "Bác sĩ"/"BS."/"DS.".
 `scripts/compliance-lint.js` cảnh báo nếu vi phạm.
 
-**12 section trang chủ** (`home_section_1..18` trong `settings_data.json`, lọc qua whitelist trong
-`snippets/home_portal.bwt`):
+**Section trang chủ** (`home_section_1..18` trong `settings_data.json` khối `current`, lọc qua whitelist 14 snippet trong
+`snippets/home_portal.bwt`; trùng/không có trong whitelist ⇒ bỏ qua). **Thứ tự đang chạy (đối soát 04/11/2026, 10 section):**
 
 | # | Section | Snippet | Biến cấu hình chính |
 | :-- | :-- | :-- | :-- |
-| 1 | Hero | `section_hero.bwt` | `home_hero_*` (slide 1: `home_hero_image/title/btn1_text/btn1_url`; slide 2–5: `home_hero_image_N/title_N/btn_text_N/btn_url_N`) |
-| 2 | Chương I — Ngã ba Shop/Clinic | `section_portal_split.bwt` | `portal_chapter_1`, `portal_shop_*`, `portal_clinic_*`, `store_name` |
-| 3 | Giải pháp theo tình trạng da | `section_solutions.bwt` | `home_solutions_*` |
-| 4 | Flash Sale | `section_flash_sale.bwt` | `home_flashsale_*`, `promo_coupon_home_enable` |
-| 5 | Sản phẩm nổi bật | `section_featured_products.bwt` | `home_featured_*` |
-| 6 | Chương II — Skin Health Beauty | `section_spa.bwt` | `portal_chapter_2`, `portal_clinic_chips`, `home_spa_*` |
-| 7 | Thương hiệu tiêu biểu | `section_brand_marquee.bwt` | `home_brand_*`, `portal_shop_url` |
-| 8 | Minh chứng khách hàng | `section_testimonials.bwt` | 04/11/2026: nguồn chính = tối đa 3 bài blog `clinical_case_blog_handle` có tag `home_testi_pin_tag` (`ghim-trang-chu`), đọc qua `ba_case_source` (thêm tag `khach:`); không có bài ghim ⇒ `home_testi_*` (mỗi thẻ tối đa 3 ảnh: `home_testi_{n}_image_1..3`, xem bằng swiper — 17/09/2026 thay cho cặp `_before`/`_after`, vì không phải case nào cũng có đúng 1 ảnh trước + 1 ảnh sau) |
-| 9 | Hoạt chất / Khoa học | `section_ingredients.bwt` | `home_ing_*` |
-| 10 | Chương III — Blog | `section_portal_blog.bwt` | `portal_chapter_3`, `portal_blog*`, `section_blog_url` |
-| 11 | Mạng xã hội + Đặt lịch | `section_portal_social.bwt` | `portal_social_*`, `portal_booking_*`, `store_name` |
-| 12 | Đăng ký bản tin | `section_portal_newsletter.bwt` | `portal_newsletter_*` |
+| 1 | Hero (slide video/ảnh) | `section_hero.bwt` | `home_hero_*` (slide 1: `home_hero_image/title/btn1_text/btn1_url`; slide 2–5: `home_hero_image_N/title_N/btn_text_N/btn_url_N`) |
+| 2 | Dải 4 cam kết + Chương I "Khám phá" — 2 thẻ Shop / Trị liệu | `section_portal_split.bwt` | `home_trust_*`; `portal_chapter_1`, `portal_chapter_prefix`, `portal_split_title` (mobile), `portal_shop_*` (+ `portal_shop_icon`), `portal_clinic_*` (+ `portal_clinic_icon`), `home_spa_btn_url/_text` |
+| 3 | Mua theo vấn đề da + thẻ Pharma AI | `section_solutions.bwt` | Menu `home_solutions_menu` (ảnh = ảnh danh mục link trỏ tới) + `home_solutions_N_sub`; chưa có menu ⇒ `home_solutions_N_*`; thẻ AI `home_sol_ai_*` (+ `home_sol_ai_icon`) |
+| 4 | Tìm theo hoạt chất | `section_ingredients.bwt` | Menu `home_ing_menu` (số SP + ảnh vòng tròn mobile = danh mục link trỏ tới), `home_ing_eyebrow/title/subtitle`, `home_ing_count_label`, `home_ing_icon`; chưa có menu ⇒ `ing_N_*` |
+| 5 | Flash Sale | `section_flash_sale.bwt` | `home_flashsale_*` (danh mục, số thẻ, đồng hồ chu kỳ), `promo_coupon_home_enable` |
+| 6 | Sản phẩm bán chạy (tab lọc) | `section_featured_products.bwt` | `home_featured_*` (Menu tab `home_featured_tabs_menu` + nhãn `home_featured_tab_labels`) |
+| 7 | Chương II "Tin cậy" — Skin Health Beauty + lộ trình 4 bước | `section_spa.bwt` | `portal_chapter_2`, `home_spa_*` (mobile: `home_spa_steps_title/_tag`, `home_spa_step_labels/_icons/_prefix`), `portal_step_N_*`, `portal_clinic_chips*` |
+| 8 | Kết quả thực tế — Hành trình da khách hàng | `section_testimonials.bwt` + `section_testimonials_case.bwt` | Nguồn chính = tối đa 3 bài mới nhất có tag `home_testi_pin_tag` (`ghim-trang-chu`) trong blog `home_testi_blog` (trống ⇒ `clinical_case_blog_handle`), đọc qua `ba_case_source` (tag `nhom:` `khach:` `tuoi:` `tinh:` `tinhtrang:` `phacdo:` `tuan:` + `<ol>` đầu = hành trình); không có bài ghim ⇒ Thẻ 1–3 DỰ PHÒNG `home_testi_N_*`; chữ `home_testi_eyebrow/title/subtitle/disclaimer/viewall_*`, nhãn `home_testi_*_label` |
+| 9 | Thương hiệu tiêu biểu | `section_brand_marquee.bwt` | Menu `home_brand_menu` (chưa có ⇒ `store.vendors`), `home_brand_limit`, logo `home_brand_marquee_image_N` (mobile thiếu ⇒ ảnh danh mục ⇒ chữ viết tắt) |
+| 10 | Chương III — Blog | `section_portal_blog.bwt` | `portal_chapter_3`, `portal_blog`, `portal_blog_*`, `section_blog_url` |
+
+Có trong whitelist nhưng KHÔNG nằm trong thứ tự đang chạy (bật lại bằng `home_section_N`): `section_ai_guide` (khảo sát da riêng —
+đã gộp vào thẻ AI của mục 3), `section_expert_team`, `section_portal_social`, `section_portal_newsletter`. Ngay trên chân trang
+(chỉ trang chủ, include ở `layouts/theme.bwt`): "Danh mục nhanh" `section_footer_brands.bwt` — xem mục Chân trang.
+Preset `default` trong `settings_data.json` vẫn giữ thứ tự cũ (ai_guide, expert_team…) — Sapo đọc khối `current`.
 
 **Trang chủ MOBILE < 1024px (chốt 04/11/2026, chủ dự án — khung Main.png; CSS `components.css` 14.13–14.22):** khung cố định,
 thiếu chỗ ⇒ hàng vuốt ngang `.pc-h4-swipe2` (vấn đề da 3×2, hoạt chất / thương hiệu vòng tròn 2 dòng, Bán chạy 2×2 không nút), KHÔNG
@@ -572,7 +575,8 @@ handle để localhost phản ánh đúng Sapo.
 | :-- | :-- | :-- |
 | `/kham-da-ai` | `page.ai-skin-quiz` | Trang quiz/soi da THẬT. `/ai-skin-quiz` **không tồn tại** (chỉ route dev); `?tab=camera` vẫn dùng được |
 | `/ai-skin-quiz-results` | `page.ai-skin-quiz-results` | |
-| `/truoc-sau-cham-soc-da-tu-xa` | `page.clinical-proof` | `/clinical-proof` chỉ có ở dev. Menu header "DỊCH VỤ" trỏ về đây |
+| `/truoc-sau-cham-soc-da-tu-xa` | `page.clinical-proof` | `/clinical-proof` chỉ có ở dev. Menu header "TRƯỚC VÀ SAU" trỏ về trang Trước & Sau |
+| `/dich-vu` | **danh mục sản phẩm** (collection.bwt ⇒ lưới thẻ liệu trình vì nằm trong `lt_collection`) | Menu header "DỊCH VỤ" trỏ đây (đối soát preview 04/11/2026) — các sản phẩm liệu trình (GetGlowing Micro-Peel, Enzyme Therapy, WiQo PRX-Plus…) |
 | `/tin-tuc` | `page.tin-tuc` | KHÔNG có danh mục bài viết handle `tin-tuc` |
 | `/chuyen-gia-1` | `page.chuyen-gia` | `/chuyen-gia` trên Sapo là **danh mục bài viết** "Đội ngũ chuyên gia" |
 | `/dich-vu-skin-healthy-beauty` | `page.skinhealthy-services` | `/spa-services`, `/dich-vu-tri-lieu`, `/skinhealthy-services` không tồn tại |
@@ -661,18 +665,24 @@ hôm nay".
   thật của Fanpage (`427805549152968`, quay dọc) — không bịa link Facebook.
 - Dev-server: `/blogs/<blog>/<bài>` không có trong `data/articles.js` ⇒ 404 (như Sapo), không thế bằng bài khác.
 
-## Chân trang (`snippets/footer.bwt` + `section_footer_brands.bwt`, chốt 2026-10-13)
+## Chân trang (`snippets/footer.bwt` + `section_footer_brands.bwt`, chốt 2026-10-13, cập nhật 04/11/2026)
 
-- Mọi danh sách link ở footer lấy từ **Menu Sapo (Điều hướng)** qua `link_list`: dải Thương hiệu/Loại SP,
-  Danh mục SEO (4 nhóm), 3 cột menu (`footer_policy_*`, `footer_support_*`, `footer_custom_*`).
-  Tiêu đề cột trống ⇒ dùng tên menu; cột không có menu/menu rỗng ⇒ ẩn, cột còn lại tự chia đều.
-  Không thêm link/hotline/QR hardcode hay khối "thông tin hỗ trợ" riêng vào footer.
-- Địa chỉ/ĐT/email cột trái lấy từ `store_*` (mục Liên hệ & Hỗ trợ); dải pháp lý dùng `footer_legal_*`
-  riêng. Logo Bộ Công Thương chỉ hiện khi có cả `footer_bct_url` + `footer_bct_logo` (không link cứng).
-- Thứ tự nhóm trong `settings_schema.json` mục "Chân trang" = thứ tự hiển thị trên web (①→⑤).
-- Dải cuối cùng `.pc-foot__copyright` (bản quyền + "Hiện lại nút liên hệ nhanh"): nền `--bgHeader`, căn giữa.
-  **Quy định Sapo:** mã nguồn footer phải có dòng bản quyền + `Cung cấp bởi Sapo` (link sapo.vn) — giữ text trong code,
-  ẩn khỏi giao diện bằng `.pc-foot__powered{visibility:hidden}`; không xoá dòng này.
+- Thứ tự từ trên xuống = paragraph đầu nhóm "Chân trang" trong schema: (1) dải Thương hiệu / Loại SP (`footer_brands_menu`,
+  `footer_types_menu`, `footer_brands_display`) → (2) Danh mục SEO (4 nhóm `footer_cate_group_N_title/_menu`, `footer_cate_display`)
+  → (3) Từ khoá tìm nhiều (Menu `footer_search_linklist`; trống ⇒ dự phòng ô `footer_search_menu` ngăn ";") — (1)–(3) là khối
+  "Danh mục nhanh" `section_footer_brands.bwt`, CHỈ trang chủ → (4) cột Logo/thông tin + 3 cột menu → (5) thanh toán · Bộ Công
+  Thương · bản quyền (+ dải pháp lý nếu bật) — `footer.bwt`, mọi trang.
+- Mọi danh sách link lấy từ **Menu Sapo (Điều hướng)** qua `link_list` (3 cột: `footer_custom_*`, `footer_support_*` + link
+  `footer_policy_menu` chưa trùng, cột Hỗ trợ `footer_help_*`). Tiêu đề trống ⇒ tên menu; menu rỗng ⇒ ẩn cột. Không thêm link/
+  hotline/QR hardcode. Mạng xã hội cột Hỗ trợ = logo `assets/facebook_2.svg`, `instagram_1.svg`, `tiktok.svg`, `whatsapp.svg`,
+  `shopee.svg`, `lazada.svg` (link `footer_social_*`, chỉ kênh có link; vùng bấm 44px, `aria-label`).
+- Mobile < 1024px: mỗi nhóm (1)–(3) và 3 cột menu là accordion `<details data-pc-acc open>` (script cuối `footer.bwt`).
+- Địa chỉ/ĐT/email cột trái = `store_*`. Dải pháp lý (`footer_legal_*`) chỉ dựng khi bật `footer_legal_enable` (đang TẮT theo
+  chủ dự án 04/11/2026 — lưu ý NĐ 52/2013); nút "Hiện lại nút liên hệ nhanh" nằm trong dải này. Logo "Đã thông báo Bộ Công Thương"
+  hiện khi có `footer_bct_url` (ảnh = `footer_bct_logo`, trống ⇒ ảnh chính thức online.gov.vn). Nhãn trước logo thanh toán =
+  `footer_payment_title` (trống ⇒ ẩn).
+- **Quy định Sapo:** mã nguồn giữ dòng bản quyền + `Cung cấp bởi Sapo` (link sapo.vn) — ẩn bằng `.pc-h4-foot__powered`
+  (display none, không chiếm chỗ); không xoá khỏi mã nguồn.
 
 ## AI Skin Quiz — phân tầng Tier/Case & cờ an toàn (chốt 2026-10-05)
 
@@ -764,8 +774,13 @@ grep -o '"id"[[:space:]]*:[[:space:]]*"[a-z_]*"' configs/settings_schema.json
 - Dữ liệu riêng từng liệu trình: tên, Mô tả ngắn (giới thiệu), Mô tả chi tiết, giá, Nhà cung cấp, ảnh alt `[banner]`/`[banner-mobile]`/
   `[hero]`/`[congthuc]`/`[sanpham]`/`[buoc-N]`, tag `nhan:` `phude:` `tenngan:` `tieude:` `congthuc:` `hinhthuc:` `thoigian:`
   `sobuoi:` `diadiem:` `vande:<bài>` `hoatchat:<bài>`; blog `van-de-da`, `hoat-chat` (tag `vaitro:`), `cau-hoi-lieu-trinh` (tag
-  `sanpham:<alias>`), `truoc-va-sau` (tag `lieutrinh:<alias>` + `anhtruoc:`/`anhsau:`). Chữ dùng chung: nhóm cấu hình "Trang liệu
+  `sanpham:<alias>`), `truoc-va-sau-1` (tag `lieutrinh:<alias>` + `anhtruoc:`/`anhsau:` hoặc 2 ảnh đầu nội dung). Chữ dùng chung: nhóm cấu hình "Trang liệu
   trình (sản phẩm)" (`lt_*`, `[ten]` = tên ngắn). Thiếu dữ liệu ⇒ phần đó ẩn. Hướng dẫn nhập liệu: `docs/huong-dan-tao-lieu-trinh.md`.
 - Tên vấn đề da / hoạt chất in CHỮ HOA theo bản bàn giao (người dùng chốt) — ngoại lệ có chủ đích của UI-2.7.
 - `page.getglowing-micro-peel` chỉ còn bọc hiển thị sản phẩm `settings.lt_page_product` + canonical về URL sản phẩm (link cũ).
 - Preview: sản phẩm mock có `template_suffix` ⇒ `dev-server.js` (`productTpl`) render `product.<suffix>`; `all_products` có trong context.
+- (04/11/2026) Danh mục liệu trình = `lt_collection`, NHIỀU handle cách nhau dấu phẩy (`dieu-tri-chuyen-nghiep,dich-vu`) ⇒ lưới
+  `collection_lieu_trinh` + thẻ `lieu_trinh_card`. Ẩn giá (`lt_hide_price`, mặc định bật) ở thẻ liệu trình, bảng thông tin và mọi thẻ
+  sản phẩm chung (`snippets/pc_is_service.bwt`); nút Liên hệ tư vấn → Zalo (`lt_zalo_text`, `lt_zalo_url` / `contact_zalo`) + Đặt
+  lịch (`lt_cta_url?handle=<alias>`). Video: tag `youtube:` / `facebook:` trên sản phẩm ⇒ khối `lieu_trinh_video` (sau Công nghệ &
+  hoạt chất; `lt_video_eyebrow/_title`). Blog Trước & Sau thật là `truoc-va-sau-1` (alias `truoc-va-sau` thuộc 1 Trang nội dung).

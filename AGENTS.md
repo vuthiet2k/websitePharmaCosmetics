@@ -1,7 +1,8 @@
 # AGENTS.md — Chỉ dẫn cho AI agent làm việc trong repo này
 
 Repo: **websitePharmaCosmetics** — theme giao diện **Sapo Web (.bwt)** cho Pharma Cosmetics
-(nhánh làm việc: `hugo-theme-sept2026`).
+(nhánh làm việc: `hugo-theme-sept2026`; việc giao diện từ 24/10/2026 làm trên `ui-fix` — đi trước 186 commit, chưa merge
+— đối soát 04/11/2026, xem README).
 
 ## Bắt buộc đọc trước khi sửa bất kỳ file theme nào
 

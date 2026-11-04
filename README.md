@@ -3,7 +3,9 @@
 Repo giao diện website Pharma Cosmetics, viết bằng **Liquid `.bwt`** cho nền tảng **Sapo Web**, kèm
 một môi trường preview Node + deployment Vercel để review UI trước khi cài lên Sapo.
 
-- **Nhánh làm việc**: `hugo-theme-sept2026`
+- **Nhánh làm việc**: `hugo-theme-sept2026` (nhánh deploy Vercel). **Thực tế từ 24/10/2026:** mọi việc giao diện làm trên `ui-fix`
+  (vòng lặp UI-STANDARD, đã push lên origin) — đối soát 04/11/2026: `ui-fix` đi trước `hugo-theme-sept2026` 186 commit, CHƯA merge;
+  gói Sapo (`npm run build:sapo`) đang đóng từ `ui-fix`. Merge về nhánh nào do chủ dự án quyết.
 - **Bản review**: https://hugo-theme-sept2026-test.vercel.app
 - **Kỹ thuật**: Liquid (`.bwt`), TailwindCSS (build cho khu vực MOPS admin), Node preview server
   (LiquidJS + chokidar + WebSocket), Vercel Serverless (`api/index.js`), Google Apps Script (`mops-gas/`)
