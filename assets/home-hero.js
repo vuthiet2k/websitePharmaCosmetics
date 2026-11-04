@@ -36,13 +36,16 @@
   var videos = [];
   var FAIL_MS = 14000;
   var REVEAL_MS = 3800;
+  // 04/11/2026 (chủ dự án: "khi hết video cũng chuyển trước vài s để tránh hiện nút || lớn giữa khung"): còn END_EARLY_S giây ⇒ che
+  // bằng ảnh chờ + sang slide kế (1 slide / tắt tự chuyển ⇒ phát lại từ đầu). YouTube cuối video vẽ nút lớn (phát lại / tạm dừng).
+  var END_EARLY_S = 3;
 
   function makeVideo(slide) {
     var kind = slide.getAttribute('data-hero-video');
     var src = slide.getAttribute('data-video-src');
     var box = slide.querySelector('[data-hero-video-box]');
     if (!kind || !src || !box) return null;
-    var v = { slide: slide, kind: kind, el: null, ready: false, failed: false, active: false, muted: true, timer: 0, ping: 0, reveal: 0 };
+    var v = { slide: slide, kind: kind, el: null, ready: false, failed: false, active: false, muted: true, timer: 0, ping: 0, reveal: 0, cur: 0, dur: 0, early: false };
 
     function send(func, args) {
       if (v.kind !== 'yt' || !v.el || !v.el.contentWindow) return;
@@ -54,6 +57,13 @@
       v.failed = true;
       slide.classList.add('is-video-failed');
       if (v.active) resumeAfterInteraction();
+    }
+    // Sắp hết video ⇒ kết thúc sớm (1 lần / lượt phát).
+    function nearEnd() {
+      if (!v.active || v.early || !(v.dur > END_EARLY_S * 2) || v.dur - v.cur > END_EARLY_S) return;
+      if (!slide.classList.contains('is-playing')) return; // đang ẩn sau ảnh chờ (vừa tua về 0) ⇒ bỏ qua
+      v.early = true;
+      ended();
     }
     function ended() {
       setPlaying(false);
@@ -89,6 +99,7 @@
         m.src = src;
         m.addEventListener('playing', function () { v.ready = true; if (v.active) setPlaying(true); });
         m.addEventListener('ended', ended);
+        m.addEventListener('timeupdate', function () { v.cur = m.currentTime || 0; v.dur = m.duration || 0; nearEnd(); });
         m.addEventListener('error', fail);
         v.el = m;
       }
@@ -106,6 +117,11 @@
       } else if (data.event === 'infoDelivery' && data.info && typeof data.info.playerState === 'number') {
         state = data.info.playerState;
       }
+      if (data.event === 'infoDelivery' && data.info) {
+        if (typeof data.info.currentTime === 'number') v.cur = data.info.currentTime;
+        if (typeof data.info.duration === 'number' && data.info.duration > 0) v.dur = data.info.duration;
+        nearEnd();
+      }
       if (state === null) return;
       if (state === 1) {
         window.clearTimeout(v.timer);
@@ -118,10 +134,11 @@
           v.reveal = window.setTimeout(function () { if (v.active) setPlaying(true); }, REVEAL_MS);
         }
       }
-      else if (state === 0) ended();
+      else if (state === 0 && !v.early) ended();
     };
     v.play = function () {
       v.active = true;
+      v.early = false; v.cur = 0;
       v.resetSound(); // lượt hiện mới của slide ⇒ bắt đầu tắt tiếng (phát lại cùng slide khi hết video thì giữ tiếng khách đã bật)
       if (v.failed) return;
       v.load();
@@ -131,6 +148,7 @@
       else { try { v.el.currentTime = 0; } catch (e) {} var p = v.el.play(); if (p && p.catch) p.catch(fail); }
     };
     v.restart = function () {
+      v.early = false; v.cur = 0;
       if (v.kind === 'yt') { send('seekTo', [0, true]); send('playVideo'); }
       else { v.el.currentTime = 0; v.el.play(); }
     };
