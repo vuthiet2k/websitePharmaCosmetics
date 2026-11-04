@@ -26,9 +26,17 @@
   <div class="pc-h4-wrap">
     <div class="pc-h4-foot__top">
       <div>
-        <a class="pc-h4-foot__name" href="/">{{ settings.store_name | default: store.name | escape }}</a>
-        {%- comment -%} Logo chân trang cũ (footer_logo_use_image / logo_footer.png) — thiết kế mới dùng tên chữ; giữ đọc trường để Admin bật lại ảnh. {%- endcomment -%}
-        {%- if settings.footer_logo_use_image == true -%}<img class="mt-4 block" src="{{ 'logo_footer.png' | asset_url }}" width="270" height="56" alt="{{ settings.store_name | default: store.name | escape }}" loading="lazy">{%- endif -%}
+        {%- comment -%} 04/11/2026 (chủ dự án: "footer để logo thay vì text"): logo theo đúng mô tả trường cấu hình — bật
+          footer_logo_use_image ⇒ ảnh "Logo chân trang" tải lên (logo_footer.png, nền trong suốt chữ sáng); tắt (mặc định) ⇒ logo gốc
+          assets/PharmaCosmetics.svg chuyển trắng bằng CSS (.pc-h4-foot__logo--root). Tên cửa hàng = alt (giữ tên cho SEO / trình đọc). {%- endcomment -%}
+        {%- assign _ft_name = settings.store_name | default: store.name -%}
+        <a class="pc-h4-foot__brand" href="/" title="{{ _ft_name | escape }}">
+          {%- if settings.footer_logo_use_image == true or settings.footer_logo_use_image == 'true' -%}
+          <img class="pc-h4-foot__logo" src="{{ 'logo_footer.png' | asset_url }}" width="270" height="56" alt="{{ _ft_name | escape }}" loading="lazy">
+          {%- else -%}
+          <img class="pc-h4-foot__logo pc-h4-foot__logo--root" src="{{ 'PharmaCosmetics.svg' | asset_url }}" width="341" height="70" alt="{{ _ft_name | escape }}" loading="lazy">
+          {%- endif -%}
+        </a>
         {%- unless settings.enable_info_foo == false or settings.enable_info_foo == 'false' -%}{%- if settings.content_info_foo != blank -%}
         <div class="pc-h4-foot__info">{{ settings.content_info_foo }}</div>
         {%- endif -%}{%- endunless -%}

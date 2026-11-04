@@ -689,6 +689,8 @@ hôm nay".
   hotline/QR hardcode. Mạng xã hội cột Hỗ trợ = logo `assets/facebook_2.svg`, `instagram_1.svg`, `tiktok.svg`, `whatsapp.svg`,
   `shopee.svg`, `lazada.svg` (link `footer_social_*`, chỉ kênh có link; vùng bấm 44px, `aria-label`).
 - Mobile < 1024px: mỗi nhóm (1)–(3) và 3 cột menu là accordion `<details data-pc-acc open>` (script cuối `footer.bwt`).
+- Cột trái mở đầu bằng **logo** (04/11/2026, không còn chữ tên cửa hàng): `footer_logo_use_image` bật ⇒ ảnh `logo_footer.png`
+  tải lên; tắt (mặc định) ⇒ `assets/PharmaCosmetics.svg` đổi trắng bằng CSS (`.pc-h4-foot__logo--root`); tên cửa hàng ở `alt`.
 - Địa chỉ/ĐT/email cột trái = `store_*`. Dải pháp lý (`footer_legal_*`) chỉ dựng khi bật `footer_legal_enable` (đang TẮT theo
   chủ dự án 04/11/2026 — lưu ý NĐ 52/2013); nút "Hiện lại nút liên hệ nhanh" nằm trong dải này. Logo "Đã thông báo Bộ Công Thương"
   hiện khi có `footer_bct_url` (ảnh = `footer_bct_logo`, trống ⇒ ảnh chính thức online.gov.vn). Nhãn trước logo thanh toán =
