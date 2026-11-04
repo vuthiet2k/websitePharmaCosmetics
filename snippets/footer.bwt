@@ -10,6 +10,9 @@
   script cuối file thu gọn sẵn ở mobile, dùng chung cho "Danh mục nhanh"); DẢI PHÁP LÝ ẩn ở mobile theo yêu cầu chủ dự án ("ẩn
   display none của HỘ KINH DOANH … Mã số thuế …") — câu chữ giữ nguyên, desktop vẫn hiện. Mobile chỉ ẩn các dòng
   .footer-legal__line — nút "Hiện lại nút liên hệ nhanh" trong cùng khối vẫn dùng được.
+  04/11/2026 (chủ dự án: footer theo ảnh "Footer_ Cửa hàng.png" — mọi màn): dải pháp lý (kèm nút "Hiện lại nút liên hệ nhanh") chỉ
+  dựng khi bật footer_legal_enable (mặc định tắt — câu chữ giữ nguyên để bật lại); nhãn "Thanh toán:" chỉ hiện khi footer_payment_title
+  có chữ (đang để trống); dòng "Cung cấp bởi Sapo" display none (trước: visibility hidden vẫn chiếm chỗ ⇒ bản quyền lệch lề).
 {%- endcomment -%}
 {%- assign copyright = settings.footer_copyright -%}
 {%- assign btt = settings.backtotop_enable -%}
@@ -81,7 +84,7 @@
     </div>
     <div class="pc-h4-foot__bar">
       {%- unless settings.footer_payment_enable == false or settings.footer_payment_enable == 'false' -%}
-      <p class="pc-h4-foot__pay"><span>{{ settings.footer_payment_title | default: 'Thanh toán' | escape }}:</span>
+      <p class="pc-h4-foot__pay">{%- if settings.footer_payment_title != blank -%}<span>{{ settings.footer_payment_title | escape }}:</span>{%- endif -%}
         {%- comment -%} Logo thật assets/payment_1..5.png (ô ảnh Admin "Icon N — logo" ghi đè đúng file), alt = footer_payment_N_alt. {%- endcomment -%}
         {%- for i in (1..5) -%}{%- capture enable -%}footer_payment_{{ i }}_enable{%- endcapture -%}{%- capture alt -%}footer_payment_{{ i }}_alt{%- endcapture -%}{%- capture logo -%}payment_{{ i }}.png{%- endcapture -%}
         {%- unless settings[enable] == false or settings[enable] == 'false' -%}<img src="{{ logo | asset_url }}" alt="{{ settings[alt] | default: 'Thanh toán' | escape }}" width="63" height="29" loading="lazy">{%- endunless -%}
@@ -105,6 +108,7 @@
       T-138: HỘ KINH DOANH; địa chỉ pháp lý dùng field riêng footer_legal_address (khác địa chỉ phòng trị liệu).
       T-141: dải pháp lý không lặp điện thoại/email (đã có ở dòng liên hệ phía trên).
     {%- endcomment -%}
+    {%- if settings.footer_legal_enable == true or settings.footer_legal_enable == 'true' -%}
     <div class="pc-h4-foot__legal footer-legal">
       <p class="footer-legal__line">
         <b>{{ settings.footer_legal_company | default: settings.store_name | default: store.name }}</b>
@@ -131,6 +135,7 @@
       <p class="mt-2"><button type="button" class="footer-contact-reopen" data-contact-show>Hiện lại nút liên hệ nhanh</button></p>
       {%- endif -%}
     </div>
+    {%- endif -%}
   </div>
 <script>
 /* 04/11/2026: accordion Danh mục nhanh + chân trang — < 1024px thu gọn sẵn, ≥ 1024px luôn mở (tiêu đề không bấm, không nhận Tab). */

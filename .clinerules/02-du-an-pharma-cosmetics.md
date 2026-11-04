@@ -207,7 +207,9 @@ thiếu chỗ ⇒ hàng vuốt ngang `.pc-h4-swipe2` (vấn đề da 3×2, hoạ
 kéo dài trang; mô tả phụ / eyebrow ẩn bằng `.pc-h4-lg-only`, phần chỉ mobile `.pc-h4-sm-only`; icon ưu tiên ảnh cấu hình hoặc ảnh danh
 mục Sapo (`link.object.image`), thiếu ⇒ `ui_icon` theo tên trong settings (`portal_shop_icon`, `home_ing_icon`, `home_spa_step_icons`…).
 Danh mục nhanh + 3 cột chân trang = accordion `<details data-pc-acc open>` (script cuối `footer.bwt`: < 1024 thu gọn, ≥ 1024 luôn mở);
-dải pháp lý chân trang ẩn ở mobile theo yêu cầu chủ dự án (desktop vẫn hiện). Bẫy CSS cũ (đóng băng R1): `.block{display:block!important}`
+dải pháp lý chân trang (+ nút "Hiện lại nút liên hệ nhanh") chỉ dựng khi bật `footer_legal_enable` — chủ dự án TẮT
+04/11/2026 theo ảnh footer mới (lưu ý NĐ 52/2013 yêu cầu công bố); nhãn "Thanh toán" = `footer_payment_title` (trống ⇒ ẩn); dòng
+"Cung cấp bởi Sapo" display none (giữ trong mã nguồn). Bẫy CSS cũ (đóng băng R1): `.block{display:block!important}`
 (global_core) ⇒ phần tử cần ẩn ở mobile KHÔNG được mang utility `block` (đưa `block` vào rule `pc-*`); `.pc-home-v3 .pc-portal h2`
 ép cỡ `--ts-h2 !important` ⇒ tiêu đề nhỏ trong thẻ dùng `<p role="heading" aria-level="2">`.
 
