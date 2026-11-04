@@ -22,7 +22,9 @@
 {%- assign pc_icon_mode = sprite | append: '' -%}
 {%- if name == blank -%}{%- assign pc_icon_list = '' | split: ',' -%}{%- elsif pc_icon_mode == 'defs' -%}{%- assign pc_icon_list = name | split: ',' -%}{%- else -%}{%- assign pc_icon_list = name | split: '~~' -%}{%- endif -%}
 {%- if name == blank -%}<!-- PC-ERROR ui_icon: thiếu name -->
-{%- elsif pc_icon_mode != '' and pc_icon_mode != 'defs' and pc_icon_mode != 'use' -%}<!-- PC-ERROR ui_icon: sprite "{{ pc_icon_mode }}" không hợp lệ -->
+{%- comment -%} 04/11/2026 (lỗi thật trên Sapo, preview theme 1177945): DotLiquid trả nil cho `nil | append: ''` ⇒ `!= ''` luôn đúng ⇒
+  MỌI icon không truyền sprite in PC-ERROR (mất nút menu / tìm kiếm / giỏ hàng). So bằng `blank` (bắt cả nil lẫn chuỗi rỗng). {%- endcomment -%}
+{%- elsif pc_icon_mode != blank and pc_icon_mode != 'defs' and pc_icon_mode != 'use' -%}<!-- PC-ERROR ui_icon: sprite "{{ pc_icon_mode }}" không hợp lệ -->
 {%- else -%}
 {%- if pc_icon_mode == 'defs' -%}<svg data-pc-sprite class="sr-only" width="0" height="0" aria-hidden="true" focusable="false">{%- endif -%}
 {%- for pc_icon_raw in pc_icon_list -%}

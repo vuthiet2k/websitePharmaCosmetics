@@ -362,7 +362,10 @@
   /* 14.11 Danh mục nhanh (snippets/section_footer_brands.bwt — mọi trang) */
   :root .pc-h4.pc-h4-quick { @apply m-0 border-0 border-t border-solid border-line-soft bg-surface-soft py-12 font-sans lg:py-14; }
   :root .pc-h4 .pc-h4-quick__t { @apply m-0 mb-6 text-lg font-bold uppercase tracking-[.06em] text-brand-deep lg:mb-7; }
-  :root .pc-h4 .pc-h4-quick__grid { @apply grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-4 lg:gap-x-8; }
+  /* v2.1 (04/11/2026): số cột desktop = số nhóm Danh mục SEO thực có (auto-fit) — cột Từ khoá đã tách thành dải (3) riêng */
+  :root .pc-h4 .pc-h4-quick__grid { @apply grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-[repeat(auto-fit,minmax(0,1fr))] lg:gap-x-8; }
+  /* (1) dải Thương hiệu / Loại SP — trên cùng, trước lưới Danh mục SEO */
+  :root .pc-h4 .pc-h4-quick__strips { @apply mb-8 flex flex-col gap-6; }
   :root .pc-h4 .pc-h4-quick__h { @apply m-0 mb-3 text-base font-bold text-brand-deep; }
   :root .pc-h4 .pc-h4-quick__list { @apply m-0 flex list-none flex-col gap-1 p-0; }
   :root .pc-h4 .pc-h4-quick__list li { @apply m-0; }
@@ -571,6 +574,7 @@
     :root .pc-h4 .pc-h4-quick__t { @apply mb-2; }
     :root .pc-h4 .pc-h4-acc { @apply border-0 border-b border-solid border-line-soft; }
     :root .pc-h4 .pc-h4-quick__extra { @apply mt-0; }
+    :root .pc-h4 .pc-h4-quick__strips { @apply mb-0 gap-0; }
     :root .pc-h4 .pc-h4-acc__sum { @apply flex min-h-12 cursor-pointer list-none items-center justify-between gap-3; }
     :root .pc-h4 .pc-h4-acc__sum::-webkit-details-marker { display: none; }
     :root .pc-h4 .pc-h4-acc__sum :is(.pc-h4-quick__h, .pc-h4-foot__h) { @apply m-0; }
@@ -621,4 +625,35 @@ body:has(.pc-shb-hero #section_hero) header.header:not(:hover):not(:focus-within
   background: transparent;
   box-shadow: none;
   border-color: transparent;
+}
+
+/* ===== v2.1 (04/11/2026, chủ dự án xem preview Sapo: "header đang bị container lệch với cả trang") — 17. Khung header = khung nội dung
+   trang (.pc-h4-wrap: tối đa 1344px, lề 16px mobile / 32px ≥ 1024). Trước: .container cũ tối đa 1280px + lề 30px ⇒ logo / tài khoản / giỏ
+   lệch 30px vào trong so với tiêu đề các khối ở màn 1440. Chỉ 2 khung chính (thanh trên + hàng logo/menu), không đụng drawer. ===== */
+@layer components {
+  :root header.header .box-hearder > .container,
+  :root .pc-topbar-v3 > .container { @apply box-border px-4 lg:px-8; }
+  /* CSS cũ (đóng băng) ép .container max-width: var(--pc-container-max) !important (1280px) ⇒ đổi biến trong phạm vi header */
+  :root header.header, :root .pc-topbar-v3 { --pc-container-max: 1344px; }
+}
+
+/* ===== v2.1 (04/11/2026, chủ dự án: "cho chèn video theo tag dạng youtube vào sản phẩm liệu trình") — 18. Khối video trang liệu
+   trình (snippets/lieu_trinh_video.bwt). Trình phát .pc-vplayer (snippets/video_embed.bwt) vốn chỉ có CSS ở assets/page_blog.scss.bwt
+   (nạp ở trang blog) ⇒ chép quy tắc tối thiểu, GIỚI HẠN trong .lt-video để không đè trang blog. Video chính rộng tối đa 960px;
+   nhiều video ⇒ video chính hàng đầu, video phụ 2 cột (mobile 1 cột). ===== */
+@layer components {
+  :root .lt-video .lt-video__grid { @apply mx-auto grid max-w-[960px] gap-4; }
+  :root .lt-video .lt-video__grid--multi { @apply sm:grid-cols-2; }
+  :root .lt-video .lt-video__item--main { @apply sm:col-span-2; }
+  :root .lt-video .pc-vplayer { @apply relative aspect-video w-full overflow-hidden rounded-2xl bg-brand-darkest lg:rounded-none; }
+  :root .lt-video .pc-vplayer--portrait { @apply mx-auto aspect-[9/16] max-w-[405px]; }
+  :root .lt-video .pc-vplayer__facade { @apply absolute inset-0 m-0 block h-full w-full cursor-pointer border-0 bg-transparent p-0; }
+  :root .lt-video .pc-vplayer__facade--static { @apply cursor-default; }
+  :root .lt-video .pc-vplayer__thumb { @apply block h-full w-full object-cover; }
+  :root .lt-video .pc-vplayer__play { @apply absolute left-1/2 top-1/2 h-12 w-[68px] -translate-x-1/2 -translate-y-1/2 text-white; }
+  :root .lt-video .pc-vplayer__play svg { @apply block h-full w-full; }
+  :root .lt-video .pc-vplayer__play-bg { fill: rgba(33, 33, 33, .82); @apply transition-colors duration-200; }
+  :root .lt-video .pc-vplayer__facade:is(:hover, :focus-visible) .pc-vplayer__play-bg { fill: #e62117; }
+  :root .lt-video .pc-vplayer__facade:hover .pc-vplayer__play--facebook .pc-vplayer__play-bg { fill: #1877f2; }
+  :root .lt-video .pc-vplayer__frame { @apply absolute inset-0 h-full w-full border-0; }
 }
