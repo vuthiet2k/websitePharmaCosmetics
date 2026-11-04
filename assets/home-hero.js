@@ -114,6 +114,7 @@
         // sang đang phát (kể cả controls=0; không tắt bằng tham số; tua seekTo cũng làm nút hiện lại — đã thử). ⇒ video chạy ngầm sau
         // ảnh chờ REVEAL_MS rồi mới hiện (nút đã tự ẩn); đổi lại ~3,6s đầu của video nằm sau ảnh chờ. 1 lần mỗi lượt hiện slide.
         if (!v.reveal && !slide.classList.contains('is-playing')) {
+          send('mute'); // 04/11/2026: còn ẩn sau ảnh chờ ⇒ luôn tắt tiếng (trước: lượt phát lại giữ tiếng đã bật ⇒ nghe tiếng khi chưa thấy video)
           v.reveal = window.setTimeout(function () { if (v.active) setPlaying(true); }, REVEAL_MS);
         }
       }
@@ -121,6 +122,7 @@
     };
     v.play = function () {
       v.active = true;
+      v.resetSound(); // lượt hiện mới của slide ⇒ bắt đầu tắt tiếng (phát lại cùng slide khi hết video thì giữ tiếng khách đã bật)
       if (v.failed) return;
       v.load();
       window.clearTimeout(v.timer);
@@ -134,11 +136,18 @@
     };
     v.stop = function () {
       v.active = false;
+      v.resetSound(); // 04/11/2026: rời slide ⇒ về tắt tiếng; lượt hiện sau bắt đầu im lặng, khách bấm loa mới có tiếng
       window.clearTimeout(v.timer);
       window.clearTimeout(v.reveal); v.reveal = 0;
       setPlaying(false);
       if (!v.el) return;
       if (v.kind === 'yt') { send('pauseVideo'); send('seekTo', [0, true]); } else { v.el.pause(); }
+    };
+    v.resetSound = function () {
+      v.muted = true;
+      if (v.kind === 'yt') send('mute'); else if (v.el) v.el.muted = true;
+      var b = slide.querySelector('[data-hero-sound]');
+      if (b) { b.setAttribute('aria-pressed', 'false'); b.setAttribute('aria-label', 'Bật tiếng video'); }
     };
     v.toggleSound = function (btn) {
       v.muted = !v.muted;
