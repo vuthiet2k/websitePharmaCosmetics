@@ -223,7 +223,11 @@ liệu trình ở bất kỳ thẻ nào / bảng thông tin; thay bằng nút Li
 Đặt lịch (`lt_cta_url?handle=`). Video liệu trình = tag sản phẩm `youtube:`/`facebook:` (snippets/lieu_trinh_video.bwt, dùng lại
 video_source + video_embed). Nơi khác đọc `lt_collection` phải `split: ','` (vd page.indexskinhealthy lấy handle đầu).
 Bẫy DotLiquid (Sapo): `nil | append: ''` vẫn là nil ⇒ so `!= ''` luôn đúng — LUÔN so bằng `blank` (lỗi 04/11/2026 làm `ui_icon`
-in PC-ERROR, mất icon menu/tìm kiếm/giỏ trên preview Sapo dù localhost vẫn đúng). Khung header = khung trang (1344px, lề 32/16px).
+in PC-ERROR, mất icon menu/tìm kiếm/giỏ trên preview Sapo dù localhost vẫn đúng). **MỘT khung cho toàn site (chốt 04/11/2026):** mọi khung nội dung
+(`.container` mọi trang, header + thanh trên, `.pc-h4-wrap` của trang chủ / Danh mục nhanh / footer) dùng CHUNG 2 biến
+`--pc-container-max` (1280px) và `--pc-container-gutter` (32px; ≥ 1200px 30px; ≤ 680px 20px) khai báo DUY NHẤT ở
+`assets/storefront-v3.css` (`.pc-site-v3`). Không ghi số rộng/lề riêng cho từng khối; hàng tràn mép (vuốt ngang) dùng
+`calc(-1 * var(--pc-container-gutter))`. Kiểm: logo = mép trái nội dung, giỏ = mép phải, ở 1100/1280/1440px trên trang chủ VÀ trang khác.
 
 **Hero + header trang chủ (chốt 2026-10-13):** Hero cao 100vh/100svh; khi Hero là section đầu, header (topbar + hàng logo/menu) đè lên ảnh,
 nền trong suốt, chữ/icon trắng; hover/focus header hoặc cuộn (`.main-header.is-scrolled`, desktop `.hSticky`) ⇒ trở lại nền gốc.
