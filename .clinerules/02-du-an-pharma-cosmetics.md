@@ -229,6 +229,14 @@ in PC-ERROR, mất icon menu/tìm kiếm/giỏ trên preview Sapo dù localhost 
 `assets/storefront-v3.css` (`.pc-site-v3`). Không ghi số rộng/lề riêng cho từng khối; hàng tràn mép (vuốt ngang) dùng
 `calc(-1 * var(--pc-container-gutter))`. Kiểm: logo = mép trái nội dung, giỏ = mép phải, ở 1100/1280/1440px trên trang chủ VÀ trang khác.
 
+**Tốc độ chuyển trang (đo preview 1178095, 04/11/2026):** thời gian chờ chủ yếu là Sapo dựng HTML (TTFB 2–4,3 s/trang); view
+KHÔNG layout ~0,5 s ⇒ layout dùng chung tốn ~2 s. Khối lớn nhất của layout = cây Danh mục (`header_nav_cate`) ≈ 144 KB / trang (1/3 HTML,
+đọc ảnh từng danh mục). Từ 04/11: `header_nav_lazy` (mặc định bật) ⇒ cây này KHÔNG dựng trong trang, trình duyệt tải
+`/search?view=navcate` (templates/search.navcate.bwt + snippets/nav_cate_list.bwt) ngay khi HTML dựng xong, lưu sessionStorage 30 phút;
+mở menu trước khi về ⇒ dòng `header_nav_loading_text`; handler mở nhóm cho phần tử điền muộn nằm trong bean-menu-cate (main.js giữ
+nguyên). Mức giảm TTFB thật PHẢI đo lại trên Sapo sau khi tải gói (so TTFB /about-us, / trước–sau). Hiệu ứng chuyển trang
+`snippets/ui_nav_loader.bwt` (`nav_loader_*`): chỉ hiện khi rời trang (sau 200 ms), không phủ trang mới.
+
 **Hero + header trang chủ (chốt 2026-10-13):** Hero cao 100vh/100svh; khi Hero là section đầu, header (topbar + hàng logo/menu) đè lên ảnh,
 nền trong suốt, chữ/icon trắng; hover/focus header hoặc cuộn (`.main-header.is-scrolled`, desktop `.hSticky`) ⇒ trở lại nền gốc.
 CSS ở `assets/home-portal.css` (khối "HEADER TRONG SUỐT TRÊN HERO"), chỉ áp `body.pc-home-v3`.
@@ -589,7 +597,7 @@ handle để localhost phản ánh đúng Sapo.
 | `/skin-health-beauty` | `page.indexskinhealthy` | |
 | `/tra-cuu-hoat-chat` | `page.tra-cuu-hoat-chat` | "Thư viện hoạt chất" (thay `/thanh-phan-hoat-tinh` không tồn tại) |
 | `/gioi-thieu` | `page.about-us` | |
-| `/about-us` | `page` (mặc định, chỉ nội dung) | Menu header "VỀ CHÚNG TÔI" trỏ đây ⇒ KHÔNG hiện giao diện about-us — cần chọn giao diện trên Sapo |
+| `/about-us` | **`page.about`** (đối soát site đang chạy 04/11/2026: `template = 'page.about'`) | Menu header "VỀ CHÚNG TÔI" trỏ đây. Theme có CẢ `page.about` và `page.about-us`, cùng thân `snippets/page_about.bwt` (trước 04/11 chỉ có page.about-us ⇒ preview rơi về `page` mặc định) |
 | `/order` | `page.order-lookup` | |
 | `/dat-lich-tu-van`, `/loyalty`, `/dai-ly-b2b`, `/chinh-sach-bao-mat` | cùng tên | |
 | `/truoc-va-sau`, `/phan-hoi-cua-khach-hang` | `page` mặc định | `/truoc-va-sau` chiếm alias ⇒ danh mục ca phải là `truoc-va-sau-1` |

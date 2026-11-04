@@ -7,68 +7,62 @@
   bọc icon layers (span cha đã aria-hidden). {%- endcomment -%}
 {% include 'ui_icon', sprite: 'defs', name: 'menu,layers' %}
 <div id="header-category-menu" class="sudes-list-cate" data-section="header_nav_cate">
-	<script type="text/x-custom-template" data-template="header_nav_cate">
-		<ul class="sudes-main-cate">
-			{%- for link in linklists[settings.header_nav_cate].links -%}
-			{%- comment -%} N16 (24/10/2026): bỏ link về trang chủ khỏi cây danh mục — drawer ☰ đã có TRANG CHỦ của menu chính (#nav), đây không phải danh mục sản phẩm.
-			  Utility py-3/pl-2.5/pr-12 (+ lg:p-0) thay padding 4px cũ của drawer (đã xoá ở global_core) ⇒ mục cao ≥ 44px (B.7); desktop giữ quy tắc cũ. {%- endcomment -%}
-			{%- unless link.url == '/' -%}
-			{%- if linklists[link.alias] -%}
-			<li class="sudes-main-cate-has-child menu-item-count {%if link.active%}active{%endif%}">
-				<a {%if  linklists[link.alias].links.size > 0%}href="javascript:void(0)"{%else%}href="{{link.url}}"{%endif%} title="{{ link.title }}" class="py-3 pl-2.5 pr-12 lg:p-0">
-					{{ link.title }}<i class="icon_mask"></i>
-			</a>
-				{%- comment -%} N18 (24/10/2026): icon ≡ = SVG ui_icon 20px (thay ảnh nền ::before 10px đã xoá ở global_core) — WebKit không vẽ kịp ::before khi giảm chuyển động;
-				  lg:hidden — mega-menu desktop không có icon (trước là ô rỗng 0×0). {%- endcomment -%}
-				<i class="open_mnu down_icon h-12 w-12 lg:hidden">{% include 'ui_icon', name: 'menu', sprite: 'use' %}</i>
-				<ul class="menu-child sub-menu sudes-sub-mega-menu">
-					{%- for childlink in linklists[link.alias].links -%}
-					{%- if linklists[childlink.alias] -%}
-					<li class="sudes-main-cate-has-child-2 clearfix">
-						<a class="image_thumb gap-3 py-3 pl-2.5 pr-12 lg:gap-0 lg:p-0" href="{{ childlink.url }}" title="{{ childlink.title }}">
-						<div class="image">
-						{%- if childlink.object.image.src != blank -%}<img  class="lazyload image1" src="{{ 'lazy.png' | asset_url}}"  data-src="{{ childlink.object.image.src | img_url: 'large'}}" alt="{{ childlink.title }}">{%- else -%}<span class="pc-mm-noimg lg:min-h-16" aria-hidden="true"><i class="inline-block leading-none">{% include 'ui_icon', name: 'layers', size: 'em', sprite: 'use' %}</i></span>{%- endif -%}
-											</div>
-						<span class="line-clamp line-clamp-2">{{ childlink.title }} </span> <i class="icon_mask"></i></a>
-						{%- comment -%} N16 (24/10/2026): icon ≡ chỉ khi menu con có link — linklists[x] của menu rỗng vẫn TRUE ⇒ icon thừa ở mục không có con.
-						  Giữ nguyên li/ul như cũ để mega-menu desktop không đổi cỡ ô. {%- endcomment -%}
-						{%- if linklists[childlink.alias].links.size > 0 -%}<i class="open_mnu down_icon h-12 w-12 lg:hidden">{% include 'ui_icon', name: 'menu', sprite: 'use' %}</i>{%- endif -%}
-						<ul class="menu-child menu-child-2 sub-menu clearfix">
-							{%- for childlink2 in linklists[childlink.alias].links -%}
-							<li>
-								<a href="{{ childlink2.url }}" title="{{ childlink2.title }}">{{ childlink2.title }}</a>
-			</li>
-							{%- endfor -%}
-			</ul>
-			</li>
-					{%- else -%}
-					<li class="sudes-main-cate-has-child-2">
-						<a class="image_thumb gap-3 py-3 pl-2.5 pr-12 lg:gap-0 lg:p-0" href="{{ childlink.url }}" title="{{ childlink.title }}">
-						<div class="image">
-						{%- if childlink.object.image.src != blank -%}<img  class="lazyload image1" src="{{ 'lazy.png' | asset_url}}"  data-src="{{ childlink.object.image.src | img_url: 'large'}}" alt="{{ childlink.title }}">{%- else -%}<span class="pc-mm-noimg lg:min-h-16" aria-hidden="true"><i class="inline-block leading-none">{% include 'ui_icon', name: 'layers', size: 'em', sprite: 'use' %}</i></span>{%- endif -%}
-											</div>
-						<span class="line-clamp line-clamp-2">{{ childlink.title }} </span></a>
-			</li>
-					{%- endif -%}
-					{%- endfor -%}
-					<li class="sudes-main-cate-has-child-2">
-						<a class="image_thumb gap-3 py-3 pl-2.5 pr-12 lg:gap-0 lg:p-0" href="{{ link.url }}" title="XEM TẤT CẢ">
-						<div class="image allcol">
-						<img width="128" height="128" class="lazyload image1" src="{{ 'lazy.png' | asset_url}}"  data-src="{{ 'arrow-right.png' | asset_url}}" alt="Xem tất cả">
-											</div>
-						<span class="line-clamp line-clamp-2">XEM TẤT CẢ </span></a>
-			</li>
-			</ul>
-			</li>
-			{%- else -%}
-			<li class="sudes-main-cate-has-child menu-item-count {%if link.active%}active{%endif%}">
-				<a href="{{ link.url }}" title="{{ link.title }}" class="py-3 px-2.5 lg:p-0">{{ link.title }}</a>
-			</li>
-			{%- endif -%}
-			{%- endunless -%}
-			{%- endfor -%}
-			
-			</ul>
+	{%- comment -%} 04/11/2026: header_nav_lazy (mặc định bật) ⇒ để trống, script dưới tải /search?view=navcate rồi điền vào đây
+	  (main.js / shim header đọc .html() của thẻ này như cũ). Tắt ⇒ nhúng sẵn như trước. {%- endcomment -%}
+	{%- assign pc_nav_lazy = true -%}{%- if settings.header_nav_lazy == false or settings.header_nav_lazy == 'false' -%}{%- assign pc_nav_lazy = false -%}{%- endif -%}
+	<script type="text/x-custom-template" data-template="header_nav_cate"{% if pc_nav_lazy %} data-pc-nav-src="/search?view=navcate"{% endif %}>
+		{%- if pc_nav_lazy -%}<p class="pc-navcate-wait" role="status">{{ settings.header_nav_loading_text | default: 'Đang tải danh mục…' | escape }}</p>{%- else -%}{% include 'nav_cate_list' %}{%- endif -%}
 	</script>
 </div>
+{%- if pc_nav_lazy -%}
+<script>
+/* 04/11/2026: tải cây Danh mục SAU khi trang hiện (không dựng ở server mỗi trang). Kích hoạt: ngay khi HTML dựng xong,
+   hoặc sớm hơn nếu khách chạm/rê/focus nút Danh mục (.js-menu-toggle) hay ☰ (#btn-menu-mobile). Lưu sessionStorage 30 phút ⇒ trang sau
+   có ngay. Đã tải xong mà menu đang mở + khung trống (bấm trước khi tải xong) ⇒ điền luôn. Lỗi mạng ⇒ thử lại lần bấm sau. */
+(function () {
+  var tpl = document.querySelector('script[data-template="header_nav_cate"][data-pc-nav-src]');
+  if (!tpl) return;
+  var KEY = 'pcNavCate:' + tpl.getAttribute('data-pc-nav-src'), TTL = 30 * 60 * 1000, busy = false, done = false;
+  function fill(html) {
+    tpl.innerHTML = html; done = true;
+    var box = document.querySelector('div[data-section="header_nav_cate"]');
+    var open = document.querySelector('.sudes-list-cate.active, .header-menu.current');
+    if (box && open && !box.querySelector('.sudes-main-cate')) {
+      box.innerHTML = html; if (window.awe_lazyloadImage) try { window.awe_lazyloadImage(); } catch (e) {}
+      /* desktop: main.js chọn sẵn nhóm đầu có lưới con lúc bấm Danh mục — menu điền muộn ⇒ làm lại ở đây */
+      if (window.matchMedia('(min-width: 992px)').matches && !box.querySelector('.sudes-main-cate > li.sudes-main-cate-has-child.active')) {
+        var g = [].filter.call(box.querySelectorAll('.sudes-main-cate > li.sudes-main-cate-has-child'), function (li) { return li.querySelector(':scope > .sudes-sub-mega-menu'); })[0];
+        if (g) g.classList.add('active');
+      }
+    }
+  }
+  /* Menu điền SAU khi main.js đã gắn handler trực tiếp (lúc bấm ☰) ⇒ phần tử mới chưa có handler. Uỷ quyền ở document: phần tử
+     đã có handler cũ thì handler đó `return false` (chặn lan) nên đoạn này không chạy trùng. Hành vi y main.js (mobile < 992px). */
+  document.addEventListener('click', function (e) {
+    if (e.defaultPrevented || window.matchMedia('(min-width: 992px)').matches || !e.target.closest) return; /* handler cũ đã xử lý */
+    var a = e.target.closest('.sudes-main-cate li > a[href="javascript:void(0)"]');
+    var t = e.target.closest('.sudes-main-cate li > .open_mnu') || (a && a.parentNode.querySelector(':scope > .open_mnu'));
+    if (!t) return;
+    e.preventDefault();
+    var li = t.closest('li'), sub = li.querySelector(':scope > .menu-child');
+    li.classList.toggle('current'); t.classList.toggle('current');
+    if (sub) { sub.classList.toggle('current'); sub.style.display = sub.classList.contains('current') ? 'block' : 'none'; }
+  });
+  try { var c = JSON.parse(sessionStorage.getItem(KEY) || 'null'); if (c && Date.now() - c.t < TTL && c.h) fill(c.h); } catch (e) {}
+  function load() {
+    if (done || busy) return; busy = true;
+    fetch(tpl.getAttribute('data-pc-nav-src'), { credentials: 'same-origin' }).then(function (r) { return r.ok ? r.text() : ''; })
+      .then(function (h) { busy = false; h = (h || '').trim(); if (h.indexOf('sudes-main-cate') < 0) return;
+        fill(h); try { sessionStorage.setItem(KEY, JSON.stringify({ t: Date.now(), h: h })); } catch (e) {} })
+      .catch(function () { busy = false; });
+  }
+  ['pointerenter', 'pointerdown', 'focusin', 'touchstart'].forEach(function (ev) {
+    document.addEventListener(ev, function (e) { if (e.target.closest && e.target.closest('.js-menu-toggle, #btn-menu-mobile, .header-menu')) load(); }, { passive: true, capture: true });
+  });
+  /* Bắt đầu tải NGAY khi HTML dựng xong (chạy nền, không chặn hiển thị) ⇒ thường đã về trước khi khách kịp mở menu
+     (luồng L01 ui-verify: mở ☰ ~0,8 s sau load phải thấy cây danh mục). */
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load); else load();
+})();
+</script>
+{%- endif -%}
 {%- endif -%}

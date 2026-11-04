@@ -1,0 +1,68 @@
+{%- comment -%}
+  nav_cate_list.bwt (04/11/2026) — cây "Danh mục" (menu settings.header_nav_cate) tách từ snippets/bean-menu-cate.bwt.
+  Dùng ở 2 nơi: (1) nhúng sẵn trong trang (header_nav_lazy tắt — cách cũ); (2) view riêng templates/search.navcate.bwt
+  (layout none) để trình duyệt TẢI SAU (header_nav_lazy bật — mặc định). Lý do: khối này ≈ 144 KB / trang (1/3 HTML) và đọc ảnh
+  từng danh mục (link.object.image) ⇒ Sapo dựng mọi trang chậm hơn dù đa số lượt xem không mở menu (đo preview 1178095:
+  view không layout ~0,5 s, trang có layout ~2,5 s). Icon dùng sprite 'use' — khối defs khai báo ở bean-menu-cate (trên trang).
+{%- endcomment -%}
+		<ul class="sudes-main-cate">
+			{%- for link in linklists[settings.header_nav_cate].links -%}
+			{%- comment -%} N16 (24/10/2026): bỏ link về trang chủ khỏi cây danh mục — drawer ☰ đã có TRANG CHỦ của menu chính (#nav), đây không phải danh mục sản phẩm.
+			  Utility py-3/pl-2.5/pr-12 (+ lg:p-0) thay padding 4px cũ của drawer (đã xoá ở global_core) ⇒ mục cao ≥ 44px (B.7); desktop giữ quy tắc cũ. {%- endcomment -%}
+			{%- unless link.url == '/' -%}
+			{%- if linklists[link.alias] -%}
+			<li class="sudes-main-cate-has-child menu-item-count {%if link.active%}active{%endif%}">
+				<a {%if  linklists[link.alias].links.size > 0%}href="javascript:void(0)"{%else%}href="{{link.url}}"{%endif%} title="{{ link.title }}" class="py-3 pl-2.5 pr-12 lg:p-0">
+					{{ link.title }}<i class="icon_mask"></i>
+			</a>
+				{%- comment -%} N18 (24/10/2026): icon ≡ = SVG ui_icon 20px (thay ảnh nền ::before 10px đã xoá ở global_core) — WebKit không vẽ kịp ::before khi giảm chuyển động;
+				  lg:hidden — mega-menu desktop không có icon (trước là ô rỗng 0×0). {%- endcomment -%}
+				<i class="open_mnu down_icon h-12 w-12 lg:hidden">{% include 'ui_icon', name: 'menu', sprite: 'use' %}</i>
+				<ul class="menu-child sub-menu sudes-sub-mega-menu">
+					{%- for childlink in linklists[link.alias].links -%}
+					{%- if linklists[childlink.alias] -%}
+					<li class="sudes-main-cate-has-child-2 clearfix">
+						<a class="image_thumb gap-3 py-3 pl-2.5 pr-12 lg:gap-0 lg:p-0" href="{{ childlink.url }}" title="{{ childlink.title }}">
+						<div class="image">
+						{%- if childlink.object.image.src != blank -%}<img  class="lazyload image1" src="{{ 'lazy.png' | asset_url}}"  data-src="{{ childlink.object.image.src | img_url: 'large'}}" alt="{{ childlink.title }}">{%- else -%}<span class="pc-mm-noimg lg:min-h-16" aria-hidden="true"><i class="inline-block leading-none">{% include 'ui_icon', name: 'layers', size: 'em', sprite: 'use' %}</i></span>{%- endif -%}
+											</div>
+						<span class="line-clamp line-clamp-2">{{ childlink.title }} </span> <i class="icon_mask"></i></a>
+						{%- comment -%} N16 (24/10/2026): icon ≡ chỉ khi menu con có link — linklists[x] của menu rỗng vẫn TRUE ⇒ icon thừa ở mục không có con.
+						  Giữ nguyên li/ul như cũ để mega-menu desktop không đổi cỡ ô. {%- endcomment -%}
+						{%- if linklists[childlink.alias].links.size > 0 -%}<i class="open_mnu down_icon h-12 w-12 lg:hidden">{% include 'ui_icon', name: 'menu', sprite: 'use' %}</i>{%- endif -%}
+						<ul class="menu-child menu-child-2 sub-menu clearfix">
+							{%- for childlink2 in linklists[childlink.alias].links -%}
+							<li>
+								<a href="{{ childlink2.url }}" title="{{ childlink2.title }}">{{ childlink2.title }}</a>
+			</li>
+							{%- endfor -%}
+			</ul>
+			</li>
+					{%- else -%}
+					<li class="sudes-main-cate-has-child-2">
+						<a class="image_thumb gap-3 py-3 pl-2.5 pr-12 lg:gap-0 lg:p-0" href="{{ childlink.url }}" title="{{ childlink.title }}">
+						<div class="image">
+						{%- if childlink.object.image.src != blank -%}<img  class="lazyload image1" src="{{ 'lazy.png' | asset_url}}"  data-src="{{ childlink.object.image.src | img_url: 'large'}}" alt="{{ childlink.title }}">{%- else -%}<span class="pc-mm-noimg lg:min-h-16" aria-hidden="true"><i class="inline-block leading-none">{% include 'ui_icon', name: 'layers', size: 'em', sprite: 'use' %}</i></span>{%- endif -%}
+											</div>
+						<span class="line-clamp line-clamp-2">{{ childlink.title }} </span></a>
+			</li>
+					{%- endif -%}
+					{%- endfor -%}
+					<li class="sudes-main-cate-has-child-2">
+						<a class="image_thumb gap-3 py-3 pl-2.5 pr-12 lg:gap-0 lg:p-0" href="{{ link.url }}" title="XEM TẤT CẢ">
+						<div class="image allcol">
+						<img width="128" height="128" class="lazyload image1" src="{{ 'lazy.png' | asset_url}}"  data-src="{{ 'arrow-right.png' | asset_url}}" alt="Xem tất cả">
+											</div>
+						<span class="line-clamp line-clamp-2">XEM TẤT CẢ </span></a>
+			</li>
+			</ul>
+			</li>
+			{%- else -%}
+			<li class="sudes-main-cate-has-child menu-item-count {%if link.active%}active{%endif%}">
+				<a href="{{ link.url }}" title="{{ link.title }}" class="py-3 px-2.5 lg:p-0">{{ link.title }}</a>
+			</li>
+			{%- endif -%}
+			{%- endunless -%}
+			{%- endfor -%}
+			
+			</ul>
