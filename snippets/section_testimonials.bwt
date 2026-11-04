@@ -2,7 +2,7 @@
   03/11/2026 (chủ dự án: trang chủ theo Figma "travel" node 5:2): "Hành trình da của khách hàng" — trái: eyebrow + tiêu đề + ghi chú
   + danh sách case (tab) + link "Xem tất cả kết quả trước & sau"; phải: panel case đang chọn = ảnh TRƯỚC / SAU + tên kết quả + dòng
   khách + bảng (Tình trạng ban đầu · Hành trình · Sản phẩm sử dụng · Thời gian theo dõi). Không bịa dữ liệu: dòng nào trống ⇒ ẩn.
-  Nguồn (N = 1..3, case cần home_testi_N_result_title):
+  Nguồn DỰ PHÒNG (chỉ khi không có bài ghim — xem khối 04/11/2026 bên dưới; N = 1..3, case cần home_testi_N_result_title):
   - Nhãn tab: home_testi_N_concern (trống ⇒ result_title) + " – " + home_testi_N_author.
   - Ảnh trước = home_testi_N_image_1, ảnh sau = home_testi_N_image_2 (trống ⇒ ô nền nhạt, không ảnh giả).
   - Dòng khách: author, author_meta + home_testi_N_meta (vd "chăm sóc 1:1 tại phòng").
@@ -11,50 +11,81 @@
   - Ghi chú: home_testi_subtitle (trống ⇒ câu mặc định về ảnh thật + kết quả tuỳ cơ địa) + home_testi_disclaimer (nếu có). Link: home_testi_viewall_text / _url (trống ⇒ blog ca lâm sàng clinical_case_blog_handle).
   Tab dùng snippets/home_tabs_script.bwt. CSS: ui-src/css/components.css mục 14.8.
 {%- endcomment -%}
+{%- comment -%}
+  04/11/2026 (chủ dự án: "các case lấy trong blog danh mục Trước & Sau, theo tag ghim-trang-chu"): NGUỒN CHÍNH = bài trong blog
+  settings.clinical_case_blog_handle có tag settings.home_testi_pin_tag (mặc định "ghim-trang-chu"), tối đa 3 bài mới nhất,
+  đọc qua snippets/ba_case_source (cùng quy ước tag với /truoc-sau-cham-soc-da-tu-xa — docs/huong-dan-tao-ca-truoc-sau.md):
+    tiêu đề bài = tên kết quả · nhom: = nhãn tab (trống ⇒ tiêu đề) · khach: = tên khách trên tab · ảnh trước/sau = tag anhtruoc:/anhsau:
+    hoặc 2 ảnh đầu Nội dung (thiếu ⇒ bỏ ca) · dòng khách = khach:, tuoi:, tinh: · Chuyên gia (Tác giả) · tinhtrang: (trống ⇒ nhom:)
+    · Hành trình = <ol> đầu tiên trong Nội dung (trống ⇒ Tóm tắt) · Sản phẩm sử dụng = phacdo: · Thời gian theo dõi = tuan: + " tuần"
+    · link "Xem chi tiết ca" (clinical_case_more_label) sang bài.
+  Không có bài ghim nào hợp lệ ⇒ dùng nguồn cũ home_testi_N_* (cấu hình tay) như trước.
+  Biến chuẩn hoá t_* rồi snippets/section_testimonials_case dựng tab + panel (dùng chung cho 2 nguồn).
+{%- endcomment -%}
 {%- assign testi_tabs = '' -%}
 {%- assign testi_panels = '' -%}
 {%- assign testi_n = 0 -%}
+{%- assign testi_step_sep = '§§' -%}
 {%- comment -%}03/11/2026: nhãn Trước/Sau/Hành trình cấu hình hoá (home_testi_*_label), dùng nhiều lần trong vòng lặp nên gán 1 lần.{%- endcomment -%}
 {%- assign testi_lb_before = settings.home_testi_before_label | default: 'Trước' -%}{%- assign testi_lb_after = settings.home_testi_after_label | default: 'Sau' -%}{%- assign testi_lb_steps = settings.home_testi_steps_label | default: 'Hành trình' -%}
+{%- assign testi_case_handle = settings.clinical_case_blog_handle | default: 'truoc-va-sau-1' -%}{%- assign testi_case_blog = blogs[testi_case_handle] -%}
+{%- assign testi_pin_tag = settings.home_testi_pin_tag | default: 'ghim-trang-chu' | strip -%}
+{%- assign testi_more_lb = settings.clinical_case_more_label | default: 'Xem chi tiết ca' -%}
+{%- for testi_a in testi_case_blog.articles limit: 50 -%}
+  {%- if testi_n < 3 and testi_a.tags contains testi_pin_tag -%}
+    {%- assign pc_bs_article = testi_a -%}{%- include 'ba_case_source' -%}
+    {%- if pc_bs_before != blank and pc_bs_after != blank -%}
+      {%- assign t_key = testi_a.id -%}
+      {%- assign t_title = testi_a.title -%}
+      {%- assign t_concern = pc_bs_group | default: t_title -%}
+      {%- assign t_tab_who = pc_bs_customer -%}
+      {%- assign t_img1 = pc_bs_before -%}{%- assign t_img2 = pc_bs_after -%}
+      {%- capture t_who -%}{{ pc_bs_customer }}{% if pc_bs_age != blank %}{% if pc_bs_customer != blank %}, {% endif %}{{ pc_bs_age }} tuổi{% endif %}{% if pc_bs_city != blank %}{% if pc_bs_customer != blank or pc_bs_age != blank %}, {% endif %}{{ pc_bs_city }}{% endif %}{% if testi_a.author != blank %}{% if pc_bs_customer != blank or pc_bs_age != blank or pc_bs_city != blank %} · {% endif %}{{ testi_a.author }}{% endif %}{%- endcapture -%}
+      {%- assign t_initial = pc_bs_cond | default: pc_bs_group -%}
+      {%- comment -%} Hành trình = các <li> của <ol> đầu tiên trong Nội dung (cùng nguồn khối "Lộ trình diễn tiến" ở trang chi tiết ca). {%- endcomment -%}
+      {%- assign t_steps = '' -%}
+      {%- if testi_a.content contains '<ol' -%}
+        {%- assign testi_oseg = testi_a.content | prepend: '~' | split: '<ol' -%}
+        {%- assign testi_oseg = testi_oseg[1] | split: '</ol>' | first | split: '<li' -%}
+        {%- for testi_li in testi_oseg offset: 1 -%}
+          {%- assign testi_li_txt = testi_li | prepend: '<i ' | strip_html | strip -%}
+          {%- if testi_li_txt != blank -%}{%- assign t_steps = t_steps | append: testi_li_txt | append: testi_step_sep -%}{%- endif -%}
+        {%- endfor -%}
+      {%- endif -%}
+      {%- assign t_desc = testi_a.summary | default: testi_a.excerpt | strip_html | strip | truncate: 220 -%}
+      {%- assign t_products = pc_bs_plan -%}
+      {%- assign t_duration = '' -%}{%- if pc_bs_weeks != blank -%}{%- assign t_duration = pc_bs_weeks | append: ' tuần' -%}{%- endif -%}
+      {%- assign t_url = testi_a.url -%}
+      {%- include 'section_testimonials_case' -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- if testi_n == 0 -%}
 {%- for i in (1..3) -%}
   {%- capture k -%}home_testi_{{ i }}_{%- endcapture -%}
   {%- capture k_title -%}{{ k }}result_title{%- endcapture -%}
   {%- if settings[k_title] != blank -%}
-    {%- assign testi_n = testi_n | plus: 1 -%}
     {%- capture k_concern -%}{{ k }}concern{%- endcapture -%}{%- capture k_author -%}{{ k }}author{%- endcapture -%}{%- capture k_ameta -%}{{ k }}author_meta{%- endcapture -%}
     {%- capture k_meta -%}{{ k }}meta{%- endcapture -%}{%- capture k_img1 -%}{{ k }}image_1{%- endcapture -%}{%- capture k_img2 -%}{{ k }}image_2{%- endcapture -%}
     {%- capture k_initial -%}{{ k }}initial{%- endcapture -%}{%- capture k_steps -%}{{ k }}steps{%- endcapture -%}{%- capture k_desc -%}{{ k }}result_desc{%- endcapture -%}
     {%- capture k_products -%}{{ k }}products{%- endcapture -%}{%- capture k_tag -%}{{ k }}tag{%- endcapture -%}{%- capture k_duration -%}{{ k }}duration{%- endcapture -%}
+    {%- capture t_key -%}s{{ i }}{%- endcapture -%}
     {%- assign t_title = settings[k_title] -%}
     {%- assign t_concern = settings[k_concern] | default: t_title -%}
+    {%- assign t_tab_who = settings[k_author] -%}
+    {%- assign t_img1 = '' -%}{%- if settings[k_img1] != blank -%}{%- assign t_img1 = settings[k_img1] | img_url: 'large' -%}{%- endif -%}
+    {%- assign t_img2 = '' -%}{%- if settings[k_img2] != blank -%}{%- assign t_img2 = settings[k_img2] | img_url: 'large' -%}{%- endif -%}
+    {%- capture t_who -%}{{ settings[k_author] }}{% if settings[k_ameta] != blank %}, {{ settings[k_ameta] }}{% endif %}{% if settings[k_meta] != blank %} · {{ settings[k_meta] }}{% endif %}{%- endcapture -%}
+    {%- assign t_initial = settings[k_initial] -%}
+    {%- assign t_steps = settings[k_steps] | replace: ';', testi_step_sep -%}
+    {%- assign t_desc = settings[k_desc] -%}
     {%- assign t_products = settings[k_products] | default: settings[k_tag] -%}
-    {%- capture t_sel -%}{% if testi_n == 1 %}true{% else %}false{% endif %}{%- endcapture -%}
-    {%- capture t_tab -%}<li class="m-0"><a class="pc-h4-case-tab" role="tab" id="pc-h4-ct-{{ i }}" aria-controls="pc-h4-cp-{{ i }}" aria-selected="{{ t_sel }}" tabindex="{% if testi_n == 1 %}0{% else %}-1{% endif %}" href="#pc-h4-cp-{{ i }}">0{{ testi_n }} · {{ t_concern | escape }}{% if settings[k_author] != blank %} – {{ settings[k_author] | escape }}{% endif %}</a></li>{%- endcapture -%}
-    {%- capture t_panel -%}
-    <article class="pc-h4-case" role="tabpanel" id="pc-h4-cp-{{ i }}" aria-labelledby="pc-h4-ct-{{ i }}"{% if testi_n > 1 %} hidden{% endif %}>
-      <div class="pc-h4-case__imgs">
-        <figure class="pc-h4-case__img"><span class="pc-h4-case__badge">{{ testi_lb_before | escape }}</span>{%- if settings[k_img1] != blank -%}<img src="{{ settings[k_img1] | img_url: 'large' }}" alt="{{ testi_lb_before | escape }} — {{ t_title | escape }}" width="728" height="600" loading="lazy">{%- endif -%}</figure>
-        <figure class="pc-h4-case__img"><span class="pc-h4-case__badge pc-h4-case__badge--after">{{ testi_lb_after | escape }}</span>{%- if settings[k_img2] != blank -%}<img src="{{ settings[k_img2] | img_url: 'large' }}" alt="{{ testi_lb_after | escape }} — {{ t_title | escape }}" width="728" height="600" loading="lazy">{%- endif -%}</figure>
-      </div>
-      <h3 class="pc-h4-case__t">{{ t_title | escape }}</h3>
-      {%- capture t_who -%}{{ settings[k_author] }}{% if settings[k_ameta] != blank %}, {{ settings[k_ameta] }}{% endif %}{% if settings[k_meta] != blank %} · {{ settings[k_meta] }}{% endif %}{%- endcapture -%}
-      {%- if t_who != blank -%}<p class="pc-h4-case__m">{{ t_who | escape }}</p>{%- endif -%}
-      <dl class="pc-h4-case__dl">
-        {%- if settings[k_initial] != blank -%}<dt>{{ settings.home_testi_initial_label | default: 'Tình trạng ban đầu' | escape }}</dt><dd>{{ settings[k_initial] | escape }}</dd>{%- endif -%}
-        {%- if settings[k_steps] != blank -%}
-        <dt>{{ testi_lb_steps | escape }}</dt><dd><ol class="pc-h4-case__steps">{%- assign t_steps = settings[k_steps] | split: ';' -%}{%- for st in t_steps -%}{%- if st != blank -%}<li><b aria-hidden="true">{{ forloop.index }}</b><span>{{ st | strip | escape }}</span></li>{%- endif -%}{%- endfor -%}</ol></dd>
-        {%- elsif settings[k_desc] != blank -%}
-        <dt>{{ testi_lb_steps | escape }}</dt><dd>{{ settings[k_desc] | escape }}</dd>
-        {%- endif -%}
-        {%- if t_products != blank -%}<dt>{{ settings.home_testi_products_label | default: 'Sản phẩm sử dụng' | escape }}</dt><dd>{{ t_products | escape }}</dd>{%- endif -%}
-        {%- if settings[k_duration] != blank -%}<dt>{{ settings.home_testi_duration_label | default: 'Thời gian theo dõi' | escape }}</dt><dd>{{ settings[k_duration] | escape }}</dd>{%- endif -%}
-      </dl>
-    </article>
-    {%- endcapture -%}
-    {%- assign testi_tabs = testi_tabs | append: t_tab -%}
-    {%- assign testi_panels = testi_panels | append: t_panel -%}
+    {%- assign t_duration = settings[k_duration] -%}
+    {%- assign t_url = '' -%}
+    {%- include 'section_testimonials_case' -%}
   {%- endif -%}
 {%- endfor -%}
+{%- endif -%}
 {%- if testi_n > 0 -%}
 <section class="pc-h4 pc-h4-sec" aria-labelledby="pc-h4-testi-title">
   <div class="pc-h4-wrap">
@@ -64,7 +95,7 @@
         <h2 class="pc-h4-title" id="pc-h4-testi-title">{{ settings.home_testi_title | default: 'Hành trình da của khách hàng' | escape }}</h2>
         <p class="pc-h4-cases__lead">{{ settings.home_testi_subtitle | default: 'Ảnh thật, đăng với sự đồng ý của khách. Kết quả phụ thuộc vào tình trạng da và cơ địa mỗi người.' | escape }}{% if settings.home_testi_disclaimer != blank %} {{ settings.home_testi_disclaimer | escape }}{% endif %}</p>
         <ul class="pc-h4-cases__tabs" role="tablist" aria-label="Chọn câu chuyện khách hàng">{{ testi_tabs }}</ul>
-        {%- assign testi_case_handle = settings.clinical_case_blog_handle | default: 'truoc-va-sau-1' -%}{%- assign testi_case_blog = blogs[testi_case_handle] -%}{%- capture testi_case_fb -%}/blogs/{{ testi_case_handle }}{%- endcapture -%}
+        {%- capture testi_case_fb -%}/blogs/{{ testi_case_handle }}{%- endcapture -%}
         {%- assign testi_more_url = settings.home_testi_viewall_url | default: testi_case_blog.url | default: testi_case_fb -%}
         <a class="pc-h4-go pc-h4-cases__more" href="{{ testi_more_url | escape }}">{{ settings.home_testi_viewall_text | default: 'Xem tất cả kết quả trước & sau' | escape }}{% include 'ui_icon', name: 'arrow-right' %}</a>
       </div>

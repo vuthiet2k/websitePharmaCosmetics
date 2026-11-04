@@ -1,13 +1,14 @@
 # Hướng dẫn tạo bài TRƯỚC & SAU (ca khách hàng)
 
 Mỗi ca khách hàng là **1 bài viết Sapo** trong danh mục bài viết **Trước & Sau** (handle **`truoc-va-sau-1`** — alias `truoc-va-sau` đã thuộc một Trang nội dung). Một bài nhập xong sẽ
-tự hiện ở 3 nơi:
+tự hiện ở các nơi sau:
 
 | Nơi hiển thị | Hiện gì |
 | :-- | :-- |
 | Trang **/truoc-sau-cham-soc-da-tu-xa** — phần "Kết quả của khách hàng" | Thanh **nav tab lọc** (gạch chân) theo nhóm vấn đề da (tự sinh từ các giá trị tag `nhom:` đang có ca; "Kết quả khác" luôn cuối) + **khung trình chiếu 1 ca/lần**: cặp ảnh TRƯỚC (trái) / SAU (phải) full ngang tỉ lệ 4:3, không nhãn đè trên ảnh, nút ‹ › + chấm, vuốt trên điện thoại. Chữ (tiêu đề · Tóm tắt · tuổi · số tuần · "Xem chi tiết ca") chỉ trượt lên khi rê chuột vào ảnh; điện thoại hiện sẵn dưới ảnh. Bấm vào ca mở trang chi tiết. Ca đầu tiên còn làm ảnh hero nếu chưa cài ảnh hero riêng. |
 | **Trang chi tiết ca** `/<đường dẫn bài>` trên Sapo (bản dev: `/blogs/truoc-va-sau-1/<đường dẫn bài>`) (giao diện `article.truoc-va-sau`) | Khung **bài viết blog** như mọi bài khác. Cột chính: thẻ đầu bài (nhãn nhóm · H1 · chuyên gia · ngày/tỉnh · tóm tắt · hồ sơ ca 4 ô) → ảnh TRƯỚC/SAU 50/50 có nhãn tuần → nhận định chuyên gia → lộ trình diễn tiến → câu chuyện. Sidebar: đặt lịch + hotline + Zalo → liệu trình & sản phẩm đồng hành → ca khác cùng nhóm. Mobile: sidebar xuống dưới + thanh đặt lịch bám đáy |
 | Trang **liệu trình** (sản phẩm giao diện `product.lieu-trinh`) — phần "Trước – sau" | Chỉ khi bài có tag `lieutrinh:<alias sản phẩm>` (tối đa 8 ca, trình chiếu ‹ ›) |
+| **Trang chủ** — mục "Kết quả thực tế · Hành trình da của khách hàng" | Chỉ khi bài có tag **`ghim-trang-chu`** và đủ ảnh trước/sau (tối đa **3 bài mới nhất**). Tab = `nhom:` (trống ⇒ tiêu đề) – `khach:`; panel = ảnh TRƯỚC/SAU · tiêu đề · dòng khách (`khach:`, `tuoi:`, `tinh:` · Tác giả) · Tình trạng ban đầu (`tinhtrang:`, trống ⇒ `nhom:`) · Hành trình (danh sách số đầu tiên trong Nội dung, trống ⇒ Tóm tắt) · Sản phẩm sử dụng (`phacdo:`) · Thời gian theo dõi (`tuan:`) · link "Xem chi tiết ca". Đổi tag ghim: Cấu hình theme › Trước & Sau (Testimonials) › **Hành trình da — Tag ghim ca lên trang chủ**. Không bài nào được ghim ⇒ trang chủ dùng Thẻ 1–3 nhập tay như trước |
 
 > **Chỉ đăng ca thật**, đã được khách đồng ý công bố. Ảnh trước và sau phải cùng góc chụp, cùng ánh sáng và không chỉnh sửa.
 > Không dùng ảnh của hãng hoặc ảnh của liệu trình khác làm kết quả. Phần nào chưa có dữ liệu thì để trống, trang sẽ tự ẩn phần đó.
@@ -83,6 +84,8 @@ Tag thiếu thì dòng tương ứng tự ẩn.
 | `tinhtrang:` | Ô "Tình trạng ban đầu" của hồ sơ ca (không có thì dùng `nhom:`) | `tinhtrang:Mụn viêm và bít tắc` |
 | `sanpham:` | Alias **sản phẩm** dùng trong phác đồ — thẻ ở khối "Phác đồ & sản phẩm đồng hành" (tối đa 4 thẻ cùng `lieutrinh:`). Lặp được. | `sanpham:toner-niacinamide-5-zinc` |
 | `chupanh:` | Ghi chú cách chụp ảnh, hiện dưới cặp ảnh (chỉ ghi điều **đúng thật** với ca này) | `chupanh:Ảnh chụp bằng máy soi da OBSERV 520x – không chỉnh sửa` |
+| `ghim-trang-chu` | (tag thường, không có dấu `:`) Đưa ca lên mục "Hành trình da của khách hàng" ở trang chủ — tối đa 3 bài mới nhất có tag này | `ghim-trang-chu` |
+| `khach:` | Tên/danh xưng khách **đã đồng ý công bố**, hiện trên tab và dòng khách ở trang chủ (trống ⇒ ẩn) | `khach:Chị Lan` |
 | `nhantruoc:` / `nhansau:` | Ghi đè nhãn trên ảnh (mặc định "Tuần 0 · Trước điều trị" / "Tuần <tuan> · Sau điều trị") | `nhansau:Tuần 8 · Sạch nhân mụn` |
 
 Thứ tự nhóm trên trang Trước & Sau theo thứ tự bài mới nhất. Mỗi trang đọc tối đa 50 bài mới nhất của danh mục.

@@ -520,6 +520,12 @@ const beforeAfterArticles = [
     author: 'Chuyên gia Thanh Hằng', published_on: '2026-10-15T08:00:00', created_at: '2026-10-15T08:00:00',
     tags, comments_count: 0, template_suffix: 'truoc-va-sau', blog: { handle: 'truoc-va-sau-1', title: 'Trước & Sau' },
   }, extra || {});
+  // 2026-11-04: tag ghim-trang-chu (settings.home_testi_pin_tag) ⇒ ca hiện ở mục "Hành trình da của khách hàng" trang chủ
+  // (snippets/section_testimonials). khach: = tên khách trên tab — DEMO, không phải khách thật.
+  [[211, 'Khách DEMO A'], [215, ''], [213, '']].forEach(([id, khach]) => {
+    const a = beforeAfterArticles.find((x) => x.id === id);
+    if (a) a.tags.push('ghim-trang-chu', ...(khach ? [`khach:${khach}`] : []));
+  });
   beforeAfterArticles.unshift(
     demoCase(217, 'demo-getglowing-micro-peel-6-tuan', '[DEMO] GetGlowing Micro-Peel – cải thiện bít tắc sau 6 tuần',
       '[DEMO] Ca mẫu gắn liệu trình GetGlowing Micro-Peel — hiện cả ở trang liệu trình.',

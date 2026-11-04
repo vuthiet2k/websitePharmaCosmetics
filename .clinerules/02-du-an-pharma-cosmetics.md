@@ -196,7 +196,7 @@ dữ liệu Admin đã lưu trong `settings_data.json`.
 | 5 | Sản phẩm nổi bật | `section_featured_products.bwt` | `home_featured_*` |
 | 6 | Chương II — Skin Health Beauty | `section_spa.bwt` | `portal_chapter_2`, `portal_clinic_chips`, `home_spa_*` |
 | 7 | Thương hiệu tiêu biểu | `section_brand_marquee.bwt` | `home_brand_*`, `portal_shop_url` |
-| 8 | Minh chứng khách hàng | `section_testimonials.bwt` | `home_testi_*` (mỗi thẻ tối đa 3 ảnh: `home_testi_{n}_image_1..3`, xem bằng swiper — 17/09/2026 thay cho cặp `_before`/`_after`, vì không phải case nào cũng có đúng 1 ảnh trước + 1 ảnh sau) |
+| 8 | Minh chứng khách hàng | `section_testimonials.bwt` | 04/11/2026: nguồn chính = tối đa 3 bài blog `clinical_case_blog_handle` có tag `home_testi_pin_tag` (`ghim-trang-chu`), đọc qua `ba_case_source` (thêm tag `khach:`); không có bài ghim ⇒ `home_testi_*` (mỗi thẻ tối đa 3 ảnh: `home_testi_{n}_image_1..3`, xem bằng swiper — 17/09/2026 thay cho cặp `_before`/`_after`, vì không phải case nào cũng có đúng 1 ảnh trước + 1 ảnh sau) |
 | 9 | Hoạt chất / Khoa học | `section_ingredients.bwt` | `home_ing_*` |
 | 10 | Chương III — Blog | `section_portal_blog.bwt` | `portal_chapter_3`, `portal_blog*`, `section_blog_url` |
 | 11 | Mạng xã hội + Đặt lịch | `section_portal_social.bwt` | `portal_social_*`, `portal_booking_*`, `store_name` |
@@ -319,7 +319,8 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
   `page.patient-portal` (chỉ giữ tên + đơn hàng thật), ca bệnh/số liệu bịa ở `page.clinical-proof`
   (giới thiệu + 4 chỉ số = `clinical_*` settings, mặc định trống; ca điều trị = blog
   `clinical_case_blog_handle`, mặc định `truoc-va-sau`). Mọi nơi đọc ca (/clinical-proof, `article.truoc-va-sau`,
-  `lieu_trinh_cases`) đi qua `snippets/ba_case_source.bwt`: ảnh = tag `anhtruoc:`/`anhsau:` hoặc 2 ảnh đầu trong nội dung
+  `lieu_trinh_cases`, mục "Hành trình da của khách hàng" trang chủ = bài có tag `home_testi_pin_tag` — mặc định
+  `ghim-trang-chu`, tối đa 3) đi qua `snippets/ba_case_source.bwt`: ảnh = tag `anhtruoc:`/`anhsau:` hoặc 2 ảnh đầu trong nội dung
   bài (trang chi tiết gỡ 2 ảnh đó khỏi nội dung). Hướng dẫn nhập: `docs/huong-dan-tao-ca-truoc-sau.md`.
 - **Audit Checklist Sapo tự động:** `BASE=http://localhost:3000 npm run audit:sapo-review` (Playwright,
   33 route): 1 `<h1>`/trang, `<img>` có alt + width/height, ảnh dưới màn hình đầu lazy, không lỗi
