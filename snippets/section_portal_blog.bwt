@@ -2,27 +2,32 @@
   03/11/2026 (chủ dự án: trang chủ theo Figma "travel" node 5:2): chương III "Đồng hành" — eyebrow + tiêu đề + "Xem tất cả bài viết",
   3 bài: bài 1 rộng gấp đôi (nhãn "Bài nổi bật"), 2 bài sau nhãn = tên blog; dưới ảnh: nhãn · ngày, tiêu đề 2 dòng, "Bởi <tác giả>".
   Nguồn giữ nguyên: blog settings.portal_blog (trống ⇒ section_blog_url). CSS: ui-src/css/components.css mục 14.10.
+  04/11/2026 (chủ dự án: giao diện mobile theo khung Main.png — CSS mục 14.21, chỉ < 1024px): nhãn chương có tiền tố
+  portal_chapter_prefix; ẩn eyebrow; "Xem tất cả bài viết" thành nút tròn; bài 1 rộng (nhãn "Bài nổi bật" đè ảnh, tác giả · ngày,
+  tóm tắt 1 dòng), 2 bài sau 2 cột (tiêu đề, tác giả, ngày). Desktop giữ nguyên.
 {%- endcomment -%}
 {%- assign portal_blog_handle = settings.portal_blog | default: settings.section_blog_url -%}
 {%- assign portal_blog = blogs[portal_blog_handle] -%}
 <section class="pc-h4 pc-h4-sec" aria-labelledby="pc-h4-blog-title">
   <div class="pc-h4-wrap">
-    <div class="pc-h4-chap"><p class="pc-h4-chap__tag">III · {{ settings.portal_chapter_3 | default: 'Đồng hành' | escape }}</p><span class="pc-h4-chap__rule" aria-hidden="true"></span></div>
-    <div class="pc-h4-head">
+    <div class="pc-h4-chap"><p class="pc-h4-chap__tag"><span class="pc-h4-sm-only">{{ settings.portal_chapter_prefix | default: 'Mục' | escape }} </span>III · {{ settings.portal_chapter_3 | default: 'Đồng hành' | escape }}</p><span class="pc-h4-chap__rule" aria-hidden="true"></span></div>
+    <div class="pc-h4-head{% if portal_blog.url != blank %} pc-h4-head--aside{% endif %}">
       <div>
-        <p class="pc-h4-eyebrow">{{ settings.portal_blog_eyebrow | default: 'Kiến thức chăm sóc da' | escape }}</p>
+        <p class="pc-h4-eyebrow pc-h4-lg-only">{{ settings.portal_blog_eyebrow | default: 'Kiến thức chăm sóc da' | escape }}</p>
         <h2 class="pc-h4-title" id="pc-h4-blog-title">{{ settings.portal_blog_title | default: 'Blog Pharma Cosmetics' | escape }}</h2>
       </div>
-      {%- if portal_blog.url != blank -%}<a class="pc-h4-more" href="{{ portal_blog.url }}">{{ settings.portal_blog_viewall_text | default: 'Xem tất cả bài viết' | escape }}{% include 'ui_icon', name: 'arrow-right' %}</a>{%- endif -%}
+      {%- if portal_blog.url != blank -%}<a class="pc-h4-more pc-h4-more--icon" href="{{ portal_blog.url }}"><span class="pc-h4-more__txt">{{ settings.portal_blog_viewall_text | default: 'Xem tất cả bài viết' | escape }}</span>{% include 'ui_icon', name: 'arrow-right' %}</a>{%- endif -%}
     </div>
     {%- if portal_blog.articles.size > 0 -%}
     <div class="pc-h4-blog">
       {%- for article in portal_blog.articles limit: 3 -%}
       <a class="pc-h4-post" href="{{ article.url }}">
-        <span class="pc-h4-post__img"><img src="{% if article.image.src != blank %}{{ article.image.src | img_url: 'large' }}{% else %}{% include 'placeholder_img_url' %}{% endif %}" alt="{{ article.title | escape }}" width="{% if forloop.first %}1232{% else %}616{% endif %}" height="440" loading="lazy"></span>
-        <span class="pc-h4-post__k block">{% if forloop.first %}{{ settings.portal_blog_featured_label | default: 'Bài nổi bật' | escape }}{% else %}{{ portal_blog.name | default: portal_blog.title | escape }}{% endif %} · {{ article.published_on | date: '%d.%m.%Y' }}</span>
-        <span class="pc-h4-post__t block">{{ article.title | escape }}</span>
-        {%- if article.author != blank -%}<span class="pc-h4-post__by block">{{ settings.portal_blog_by_label | default: 'Bởi' | escape }} {{ article.author | escape }}</span>{%- endif -%}
+        <span class="pc-h4-post__img"><img src="{% if article.image.src != blank %}{{ article.image.src | img_url: 'large' }}{% else %}{% include 'placeholder_img_url' %}{% endif %}" alt="{{ article.title | escape }}" width="{% if forloop.first %}1232{% else %}616{% endif %}" height="440" loading="lazy">{%- if forloop.first -%}<span class="pc-h4-post__badge pc-h4-sm-only">{{ settings.portal_blog_featured_label | default: 'Bài nổi bật' | escape }}</span>{%- endif -%}</span>
+        <span class="pc-h4-post__k pc-h4-lg-only">{% if forloop.first %}{{ settings.portal_blog_featured_label | default: 'Bài nổi bật' | escape }}{% else %}{{ portal_blog.name | default: portal_blog.title | escape }}{% endif %} · {{ article.published_on | date: '%d.%m.%Y' }}</span>
+        <span class="pc-h4-post__t">{{ article.title | escape }}</span>
+        <span class="pc-h4-post__meta pc-h4-sm-only">{%- if article.author != blank -%}<span>{{ article.author | escape }}</span>{%- endif -%}<span>{{ article.published_on | date: '%d/%m/%Y' }}</span></span>
+        {%- if forloop.first -%}{%- assign pb_sum = article.summary | default: article.excerpt | strip_html | strip | truncate: 140 -%}{%- if pb_sum != blank -%}<span class="pc-h4-post__sum pc-h4-sm-only">{{ pb_sum | escape }}</span>{%- endif -%}{%- endif -%}
+        {%- if article.author != blank -%}<span class="pc-h4-post__by pc-h4-lg-only">{{ settings.portal_blog_by_label | default: 'Bởi' | escape }} {{ article.author | escape }}</span>{%- endif -%}
       </a>
       {%- endfor -%}
     </div>

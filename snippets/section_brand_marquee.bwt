@@ -4,30 +4,37 @@
   Nguồn giữ nguyên: Menu settings.home_brand_menu (12 mục đầu) — chưa chọn menu ⇒ store.vendors. Số ô: home_brand_limit (mặc định 12). Ô thứ N có "Logo thương hiệu N" (home_brand_marquee_image_N) ⇒ hiện logo thay tên;
   "Mô tả thương hiệu N" (home_brand_marquee_text_N) ⇒ chú thích khi rê chuột. home_brand_subtitle ⇒ dòng giới thiệu cạnh tiêu đề (trống ⇒ ẩn).
   CSS: ui-src/css/components.css mục 14.9.
+  04/11/2026 (chủ dự án: giao diện mobile theo khung Main.png — CSS mục 14.20, chỉ < 1024px): vòng tròn logo + tên, 2 dòng vuốt ngang
+  (.pc-h4-swipe2). Logo = "Logo thương hiệu N" → ảnh danh mục link trỏ tới (link.object.image) → chữ viết tắt (từ đầu tên, tối đa
+  5 ký tự). Ẩn eyebrow; "Xem tất cả thương hiệu" thành nút tròn. Desktop giữ nguyên (ô chữ / logo).
 {%- endcomment -%}
 {%- assign brand_ll = linklists[settings.home_brand_menu] -%}
 {%- assign brand_limit = settings.home_brand_limit | plus: 0 -%}
 {%- if brand_limit < 1 -%}{%- assign brand_limit = 12 -%}{%- endif -%}
 <section class="pc-h4 pc-h4-sec pc-h4-sec--soft" aria-labelledby="pc-h4-brand-title">
   <div class="pc-h4-wrap">
-    <div class="pc-h4-head">
+    <div class="pc-h4-head pc-h4-head--aside">
       <div>
-        <p class="pc-h4-eyebrow">{{ settings.home_brand_lead | default: 'Nhập khẩu chính hãng' | escape }}</p>
+        <p class="pc-h4-eyebrow pc-h4-lg-only">{{ settings.home_brand_lead | default: 'Nhập khẩu chính hãng' | escape }}</p>
         <h2 class="pc-h4-title" id="pc-h4-brand-title">{{ settings.home_brand_title | default: 'Thương hiệu tiêu biểu' | escape }}</h2>
       </div>
       {%- if settings.home_brand_subtitle != blank -%}<p class="pc-h4-lead">{{ settings.home_brand_subtitle | escape }}</p>{%- endif -%}
-      <a class="pc-h4-more" href="{{ settings.home_brand_url | default: settings.portal_shop_url | default: '/collections/all' | escape }}">{{ settings.home_brand_viewall_text | default: 'Xem tất cả thương hiệu' | escape }}{% include 'ui_icon', name: 'arrow-right' %}</a>
+      <a class="pc-h4-more pc-h4-more--icon" href="{{ settings.home_brand_url | default: settings.portal_shop_url | default: '/collections/all' | escape }}"><span class="pc-h4-more__txt">{{ settings.home_brand_viewall_text | default: 'Xem tất cả thương hiệu' | escape }}</span>{% include 'ui_icon', name: 'arrow-right' %}</a>
     </div>
-    <div class="pc-h4-brands">
+    <div class="pc-h4-brands pc-h4-swipe2">
       {%- if settings.home_brand_menu != blank and brand_ll.links.size > 0 -%}
         {%- for link in brand_ll.links limit: brand_limit -%}
           {%- capture k_logo -%}home_brand_marquee_image_{{ forloop.index }}{%- endcapture -%}{%- capture k_txt -%}home_brand_marquee_text_{{ forloop.index }}{%- endcapture -%}
           <a class="pc-h4-brand" href="{{ link.url | escape }}"{% if settings[k_txt] != blank %} title="{{ settings[k_txt] | escape }}"{% endif %}>
-            {%- if settings[k_logo] != blank -%}<img src="{{ settings[k_logo] | img_url: 'medium' }}" alt="{{ link.title | escape }}" width="160" height="48" loading="lazy">{%- else -%}{{ link.title | escape }}{%- endif -%}
+            <span class="pc-h4-lg-only">{%- if settings[k_logo] != blank -%}<img src="{{ settings[k_logo] | img_url: 'medium' }}" alt="{{ link.title | escape }}" width="160" height="48" loading="lazy">{%- else -%}{{ link.title | escape }}{%- endif -%}</span>
+            {%- assign brand_m_img = '' -%}
+            {%- if settings[k_logo] != blank -%}{%- assign brand_m_img = settings[k_logo] | img_url: 'small' -%}{%- else -%}{%- assign brand_obj_img = link.object.image.src | default: link.object.featured_image.src -%}{%- if brand_obj_img != blank -%}{%- assign brand_m_img = brand_obj_img | img_url: 'small' -%}{%- endif -%}{%- endif -%}
+            <span class="pc-h4-brand__logo pc-h4-sm-only" aria-hidden="true">{%- if brand_m_img != blank -%}<img src="{{ brand_m_img }}" alt="" width="56" height="56" loading="lazy">{%- else -%}{{ link.title | split: ' ' | first | truncate: 5, '' | escape }}{%- endif -%}</span>
+            <span class="pc-h4-brand__name pc-h4-sm-only">{{ link.title | escape }}</span>
           </a>
         {%- endfor -%}
       {%- else -%}
-        {%- for vendor in store.vendors limit: brand_limit -%}<a class="pc-h4-brand" href="/collections/all?q=vendor:({{ vendor | url_encode }})&page=1&view=grid">{{ vendor | escape }}</a>{%- endfor -%}
+        {%- for vendor in store.vendors limit: brand_limit -%}<a class="pc-h4-brand" href="/collections/all?q=vendor:({{ vendor | url_encode }})&page=1&view=grid"><span class="pc-h4-lg-only">{{ vendor | escape }}</span><span class="pc-h4-brand__logo pc-h4-sm-only" aria-hidden="true">{{ vendor | split: ' ' | first | truncate: 5, '' | escape }}</span><span class="pc-h4-brand__name pc-h4-sm-only">{{ vendor | escape }}</span></a>{%- endfor -%}
       {%- endif -%}
     </div>
   </div>

@@ -6,6 +6,10 @@
   footer_social_*); dải giữa = thanh toán (logo payment_N.png các cổng đang bật, alt footer_payment_N_alt) · logo Bộ Công Thương · bản quyền.
   DẢI PHÁP LÝ (T-126 / T-138 / T-141, NĐ 52/2013) GIỮ NGUYÊN CÂU CHỮ — chỉ đổi khung/màu (UI-STANDARD A.6).
   Dòng "Cung cấp bởi Sapo" giữ trong mã nguồn (quy định theme Sapo), ẩn khỏi giao diện. CSS: ui-src/css/components.css mục 14.12.
+  04/11/2026 (chủ dự án, mobile < 1024px — CSS mục 14.22): 3 cột link thành accordion <details data-pc-acc open> (desktop luôn mở;
+  script cuối file thu gọn sẵn ở mobile, dùng chung cho "Danh mục nhanh"); DẢI PHÁP LÝ ẩn ở mobile theo yêu cầu chủ dự án ("ẩn
+  display none của HỘ KINH DOANH … Mã số thuế …") — câu chữ giữ nguyên, desktop vẫn hiện. Mobile chỉ ẩn các dòng
+  .footer-legal__line — nút "Hiện lại nút liên hệ nhanh" trong cùng khối vẫn dùng được.
 {%- endcomment -%}
 {%- assign copyright = settings.footer_copyright -%}
 {%- assign btt = settings.backtotop_enable -%}
@@ -38,25 +42,25 @@
       </div>
       {%- assign _fc_ll = linklists[settings.footer_custom_menu] -%}
       {%- if settings.footer_custom_menu != blank and _fc_ll.links.size > 0 -%}
-      <div>
-        <h2 class="pc-h4-foot__h">{{ settings.footer_custom_title | default: _fc_ll.title | escape }}</h2>
+      <details class="pc-h4-acc" data-pc-acc open>
+        <summary class="pc-h4-acc__sum"><h2 class="pc-h4-foot__h">{{ settings.footer_custom_title | default: _fc_ll.title | escape }}</h2><span class="pc-h4-acc__ic" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down' %}</span></summary>
         <ul class="pc-h4-foot__list">{%- for link in _fc_ll.links -%}<li><a href="{{ link.url }}">{{ link.title }}</a></li>{%- endfor -%}</ul>
-      </div>
+      </details>
       {%- endif -%}
       {%- assign _fs_ll = linklists[settings.footer_support_menu] -%}
       {%- assign _fp_ll = linklists[settings.footer_policy_menu] -%}
       {%- if _fs_ll.links.size > 0 or _fp_ll.links.size > 0 -%}
-      <div>
-        <h2 class="pc-h4-foot__h">{{ settings.footer_support_title | default: settings.footer_policy_title | default: 'Chính sách' | escape }}</h2>
+      <details class="pc-h4-acc" data-pc-acc open>
+        <summary class="pc-h4-acc__sum"><h2 class="pc-h4-foot__h">{{ settings.footer_support_title | default: settings.footer_policy_title | default: 'Chính sách' | escape }}</h2><span class="pc-h4-acc__ic" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down' %}</span></summary>
         <ul class="pc-h4-foot__list">
           {%- assign _fs_urls = '|' -%}
           {%- for link in _fs_ll.links -%}<li><a href="{{ link.url }}">{{ link.title }}</a></li>{%- assign _fs_urls = _fs_urls | append: link.url | append: '|' -%}{%- endfor -%}
           {%- for link in _fp_ll.links -%}{%- capture _fs_mark -%}|{{ link.url }}|{%- endcapture -%}{%- unless _fs_urls contains _fs_mark -%}<li><a href="{{ link.url }}">{{ link.title }}</a></li>{%- endunless -%}{%- endfor -%}
         </ul>
-      </div>
+      </details>
       {%- endif -%}
-      <div>
-        <h2 class="pc-h4-foot__h">{{ settings.footer_help_title | default: 'Hỗ trợ' | escape }}</h2>
+      <details class="pc-h4-acc" data-pc-acc open>
+        <summary class="pc-h4-acc__sum"><h2 class="pc-h4-foot__h">{{ settings.footer_help_title | default: 'Hỗ trợ' | escape }}</h2><span class="pc-h4-acc__ic" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down' %}</span></summary>
         <ul class="pc-h4-foot__list">
           {%- assign _fh_phone = _ft_phone -%}
           {%- if _fh_phone != blank -%}<li>{{ settings.footer_help_hotline_label | default: 'Hotline' | escape }}: <a href="tel:{{ _fh_phone | remove: ' ' | remove: '.' }}">{{ _fh_phone }}</a></li>{%- endif -%}
@@ -73,7 +77,7 @@
           {%- if _fh_social != blank -%}<li>{{ _fh_social | replace: '</a><a', '</a> · <a' }}</li>{%- endif -%}
           {%- endif -%}
         </ul>
-      </div>
+      </details>
     </div>
     <div class="pc-h4-foot__bar">
       {%- unless settings.footer_payment_enable == false or settings.footer_payment_enable == 'false' -%}
@@ -128,6 +132,21 @@
       {%- endif -%}
     </div>
   </div>
+<script>
+/* 04/11/2026: accordion Danh mục nhanh + chân trang — < 1024px thu gọn sẵn, ≥ 1024px luôn mở (tiêu đề không bấm, không nhận Tab). */
+(function () {
+  var mq = window.matchMedia('(max-width: 1023.98px)');
+  function apply() {
+    Array.prototype.forEach.call(document.querySelectorAll('details[data-pc-acc]'), function (d) {
+      d.open = !mq.matches;
+      var s = d.querySelector('summary');
+      if (s) { if (mq.matches) s.removeAttribute('tabindex'); else s.setAttribute('tabindex', '-1'); }
+    });
+  }
+  apply();
+  if (mq.addEventListener) mq.addEventListener('change', apply); else if (mq.addListener) mq.addListener(apply);
+})();
+</script>
   {% if btt %}
   <a href="#" class="backtop" title="Lên đầu trang"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-up', size: 'em' %}</i></a>
   {% endif %}

@@ -5,6 +5,8 @@
   - Tab còn lại = các mục của Menu settings.home_featured_tabs_menu (mặc định giai-phap-dieu-tri), mỗi mục trỏ tới 1 danh mục;
     nhãn ngắn theo thứ tự ở home_featured_tab_labels (phân cách ";", trống ⇒ tên mục menu). Danh mục không có SP ⇒ bỏ tab.
   Tab là link danh mục (chưa có JS vẫn dùng được) — JS chung snippets/home_tabs_script.bwt. CSS: components.css mục 14.6.
+  04/11/2026 (chủ dự án: giao diện mobile theo khung Main.png — CSS mục 14.17, chỉ < 1024px): lưới 2 × 2 thẻ, còn lại vuốt ngang
+  (.pc-h4-swipe2), thẻ gọn không nút (.pc-h4-prow--compact); ẩn eyebrow; "Xem tất cả" thành nút tròn. Desktop giữ nguyên.
 {%- endcomment -%}
 {%- assign feat_col = settings.home_featured_collection | default: 'san-pham-ban-chay-noi-bat' -%}
 {%- assign feat_limit = settings.home_featured_limit | plus: 0 -%}
@@ -29,7 +31,7 @@
   {%- assign feat_link_html = feat_link_html | append: feat_one_link -%}
   {%- if feat_all_cols -%}
     {%- capture feat_one_tab -%}<a class="pc-h4-tab" role="tab" id="pc-h4-ft-{{ forloop.index }}" aria-controls="pc-h4-fp-{{ forloop.index }}" aria-selected="false" tabindex="-1" href="{{ link.url | escape }}">{{ feat_lbl | escape }}</a>{%- endcapture -%}
-    {%- capture feat_one_panel -%}<div class="pc-h4-prow" role="tabpanel" id="pc-h4-fp-{{ forloop.index }}" aria-labelledby="pc-h4-ft-{{ forloop.index }}" hidden>
+    {%- capture feat_one_panel -%}<div class="pc-h4-prow pc-h4-swipe2 pc-h4-prow--compact" role="tabpanel" id="pc-h4-fp-{{ forloop.index }}" aria-labelledby="pc-h4-ft-{{ forloop.index }}" hidden>
       {%- for product in feat_c.products limit: feat_limit -%}{%- include 'home_product_card', product: product, eager: false, tone: '' -%}{%- endfor -%}
     </div>{%- endcapture -%}
     {%- assign feat_tab_html = feat_tab_html | append: feat_one_tab -%}
@@ -40,13 +42,13 @@
 {%- assign feat_all_url = collections[feat_col].url | default: feat_col -%}
 <section class="pc-h4 pc-h4-sec pc-h4-sec--soft section_featured_products" aria-labelledby="pc-h4-feat-title">
   <div class="pc-h4-wrap">
-    <div class="pc-h4-head">
+    <div class="pc-h4-head pc-h4-head--aside">
       <div>
-        {%- if settings.home_featured_eyebrow != blank -%}<p class="pc-h4-eyebrow">{{ settings.home_featured_eyebrow | escape }}</p>{%- endif -%}
+        {%- if settings.home_featured_eyebrow != blank -%}<p class="pc-h4-eyebrow pc-h4-lg-only">{{ settings.home_featured_eyebrow | escape }}</p>{%- endif -%}
         <h2 class="pc-h4-title" id="pc-h4-feat-title">{{ settings.home_featured_title | default: 'Sản phẩm bán chạy' | escape }}</h2>
         {%- if settings.home_featured_subtitle != blank -%}<p class="pc-h4-lead mt-3">{{ settings.home_featured_subtitle | escape }}</p>{%- endif -%}
       </div>
-      <a class="pc-h4-more" href="{{ feat_all_url | escape }}">{{ settings.home_featured_viewall_text | default: 'Xem tất cả' | escape }}{% include 'ui_icon', name: 'arrow-right' %}</a>
+      <a class="pc-h4-more pc-h4-more--icon" href="{{ feat_all_url | escape }}"><span class="pc-h4-more__txt">{{ settings.home_featured_viewall_text | default: 'Xem tất cả' | escape }}</span>{% include 'ui_icon', name: 'arrow-right' %}</a>
     </div>
     <div data-h4-tabs>
       {%- if feat_tab_html != blank -%}
@@ -60,7 +62,7 @@
         {{- feat_link_html -}}
       </nav>
       {%- endif -%}
-      <div class="pc-h4-prow"{% if feat_tab_html != blank %} role="tabpanel" id="pc-h4-fp-0" aria-labelledby="pc-h4-ft-0"{% endif %}>
+      <div class="pc-h4-prow pc-h4-swipe2 pc-h4-prow--compact"{% if feat_tab_html != blank %} role="tabpanel" id="pc-h4-fp-0" aria-labelledby="pc-h4-ft-0"{% endif %}>
         {%- for product in collections[feat_col].products limit: feat_limit -%}{%- include 'home_product_card', product: product, eager: false, tone: '' -%}{%- endfor -%}
       </div>
       {{- feat_panel_html -}}

@@ -8,6 +8,9 @@
     - Dòng thương hiệu / loại (footer_brands_menu / footer_types_menu) giữ làm khối phụ dưới lưới khi footer_brands_display ≠ none.
   Hiển thị: footer_cate_display / footer_brands_display / footer_search_display = all | desktop | mobile | none
   (desktop ⇒ ẩn < 1024, mobile ⇒ ẩn ≥ 1024). CSS: ui-src/css/components.css mục 14.11.
+  04/11/2026 (chủ dự án: "Danh mục nhanh dùng accordion cho gọn" ở mobile): mỗi cột / khối phụ là <details data-pc-acc open>
+  (tiêu đề nằm trong <summary>). Desktop luôn mở như cũ; < 1024px script cuối snippets/footer.bwt thu gọn sẵn. Chưa chạy JS ⇒ mở hết.
+  CSS mục 14.22.
 {%- endcomment -%}
 {%- assign _fcd = settings.footer_cate_display | default: 'all' -%}
 {%- assign _fsd = settings.footer_search_display | default: 'all' -%}
@@ -19,21 +22,21 @@
     {%- assign _fc_h = settings[_km] | default: '' -%}
     {%- if _fc_h != blank -%}{%- assign _fc_ll = linklists[_fc_h] -%}
     {%- if _fc_ll.links.size > 0 -%}
-    <div class="{% if _fcd == 'desktop' %}pc-h4-lg-only{% elsif _fcd == 'mobile' %}pc-h4-sm-only{% endif %}">
-      <h3 class="pc-h4-quick__h">{{ settings[_kt] | default: _fc_ll.title | escape }}</h3>
+    <details class="pc-h4-acc {% if _fcd == 'desktop' %}pc-h4-lg-only{% elsif _fcd == 'mobile' %}pc-h4-sm-only{% endif %}" data-pc-acc open>
+      <summary class="pc-h4-acc__sum"><h3 class="pc-h4-quick__h">{{ settings[_kt] | default: _fc_ll.title | escape }}</h3><span class="pc-h4-acc__ic" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down' %}</span></summary>
       <ul class="pc-h4-quick__list">{%- for link in _fc_ll.links -%}<li><a href="{{ link.url }}">{{ link.title }}</a></li>{%- endfor -%}</ul>
-    </div>
+    </details>
     {%- endif -%}{%- endif -%}
   {%- endfor -%}
   {%- endunless -%}
   {%- unless _fsd == 'none' -%}{%- if settings.footer_search_menu != blank -%}
-    <div class="{% if _fsd == 'desktop' %}pc-h4-lg-only{% elsif _fsd == 'mobile' %}pc-h4-sm-only{% endif %}">
-      <h3 class="pc-h4-quick__h">{{ settings.footer_search_title_2 | default: 'Được tìm nhiều' | escape }}</h3>
+    <details class="pc-h4-acc {% if _fsd == 'desktop' %}pc-h4-lg-only{% elsif _fsd == 'mobile' %}pc-h4-sm-only{% endif %}" data-pc-acc open>
+      <summary class="pc-h4-acc__sum"><h3 class="pc-h4-quick__h">{{ settings.footer_search_title_2 | default: 'Được tìm nhiều' | escape }}</h3><span class="pc-h4-acc__ic" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down' %}</span></summary>
       <ul class="pc-h4-quick__list">
         {%- assign _fsk = settings.footer_search_menu | split: ';' -%}
         {%- for _fsi in _fsk -%}{%- assign _fskw = _fsi | strip -%}{%- if _fskw != blank -%}<li><a href="/search?query={{ _fskw | url_encode }}&amp;type=product">{{ _fskw }}</a></li>{%- endif -%}{%- endfor -%}
       </ul>
-    </div>
+    </details>
   {%- endif -%}{%- endunless -%}
 {%- endcapture -%}
 {%- capture _fq_brands -%}
@@ -42,10 +45,10 @@
     {%- if j == 1 -%}{%- assign _fx_ll = linklists[settings.footer_brands_menu] -%}{%- assign _fx_t = settings.footer_brands_title | default: 'Top thương hiệu nổi bật' -%}{%- assign _fx_more = settings.footer_brands_viewall -%}
     {%- else -%}{%- assign _fx_ll = linklists[settings.footer_types_menu] -%}{%- assign _fx_t = settings.footer_types_title | default: 'Mua sắm theo loại' -%}{%- assign _fx_more = settings.footer_types_viewall -%}{%- endif -%}
     {%- if _fx_ll.links.size > 0 -%}
-    <div class="pc-h4-quick__extra {% if _fbd == 'desktop' %}pc-h4-lg-only{% elsif _fbd == 'mobile' %}pc-h4-sm-only{% endif %}">
-      <h3 class="pc-h4-quick__h">{{ _fx_t | escape }}</h3>
+    <details class="pc-h4-acc pc-h4-quick__extra {% if _fbd == 'desktop' %}pc-h4-lg-only{% elsif _fbd == 'mobile' %}pc-h4-sm-only{% endif %}" data-pc-acc open>
+      <summary class="pc-h4-acc__sum"><h3 class="pc-h4-quick__h">{{ _fx_t | escape }}</h3><span class="pc-h4-acc__ic" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down' %}</span></summary>
       <ul class="pc-h4-quick__list pc-h4-quick__list--inline">{%- for link in _fx_ll.links -%}<li><a href="{{ link.url }}">{{ link.title }}</a></li>{%- endfor -%}{%- if _fx_more != blank -%}<li><a href="{{ _fx_more }}">{{ settings.footer_quick_viewall_text | default: 'Xem tất cả' | escape }}</a></li>{%- endif -%}</ul>
-    </div>
+    </details>
     {%- endif -%}
   {%- endfor -%}
   {%- endunless -%}

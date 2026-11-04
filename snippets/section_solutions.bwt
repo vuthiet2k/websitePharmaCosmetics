@@ -6,6 +6,9 @@
   - Chưa có menu ⇒ 6 thẻ nhập tay home_solutions_N_* như trước (danh mục giai-phap-* → trang tìm kiếm theo từ khoá).
   - Thẻ AI: home_sol_ai_eyebrow / _title / _desc / _cta_text / _cta_url (tắt bằng home_sol_ai_enable).
   CSS: ui-src/css/components.css mục 14.4.
+  04/11/2026 (chủ dự án: giao diện mobile theo khung Main.png — CSS mục 14.15, chỉ < 1024px): ô 3 cột × 2 dòng (ảnh danh mục thu
+  thành icon tròn + mũi tên + tên), quá 6 ô ⇒ vuốt ngang sang trang (.pc-h4-swipe2); ẩn eyebrow + dòng phụ; thẻ AI tách thành
+  bản mobile dưới lưới (icon home_sol_ai_icon, tiêu đề + mô tả gộp 1 đoạn, nút rộng). Desktop giữ nguyên.
 {%- endcomment -%}
 {%- capture sol_tiles -%}
 {%- assign sol_ll = linklists[settings.home_solutions_menu] -%}
@@ -16,8 +19,9 @@
     {%- if sol_img != blank -%}{%- assign sol_src = sol_img | img_url: 'large' -%}{%- elsif forloop.index <= 6 -%}{%- capture sol_asset -%}home_concern_{{ forloop.index }}.jpg{%- endcapture -%}{%- assign sol_src = sol_asset | asset_url -%}{%- else -%}{%- assign sol_src = '' -%}{%- endif -%}
     {%- capture k_sub -%}home_solutions_{{ forloop.index }}_sub{%- endcapture -%}
     <a class="pc-h4-con" href="{{ link.url | escape }}">
+<span class="pc-h4-con__arr pc-h4-sm-only">{% include 'ui_icon', name: 'arrow-right' %}</span>
       <span class="pc-h4-con__media">{%- if sol_src != blank -%}<img src="{{ sol_src }}" alt="{{ link.title | escape }}" width="614" height="260" loading="lazy">{%- endif -%}</span>
-      <span class="pc-h4-con__body"><span class="pc-h4-con__t block">{{ link.title | escape }}</span>{%- if settings[k_sub] != blank -%}<span class="pc-h4-con__d block">{{ settings[k_sub] | escape }}</span>{%- endif -%}</span>
+      <span class="pc-h4-con__body"><span class="pc-h4-con__t">{{ link.title | escape }}</span>{%- if settings[k_sub] != blank -%}<span class="pc-h4-con__d">{{ settings[k_sub] | escape }}</span>{%- endif -%}</span>
     </a>
   {%- endfor -%}
 {%- else -%}
@@ -43,8 +47,9 @@
       {%- if sol_col.products_count > 0 -%}{%- assign sol_url = sol_col.url -%}{%- endif -%}
       {%- if settings[image] != blank -%}{%- assign sol_src = settings[image] | img_url: 'large' -%}{%- else -%}{%- capture sol_asset -%}home_concern_{{ i }}.jpg{%- endcapture -%}{%- assign sol_src = sol_asset | asset_url -%}{%- endif -%}
       <a class="pc-h4-con" href="{{ sol_url | escape }}">
+<span class="pc-h4-con__arr pc-h4-sm-only">{% include 'ui_icon', name: 'arrow-right' %}</span>
         <span class="pc-h4-con__media"><img src="{{ sol_src }}" alt="{{ settings[label] | escape }}" width="614" height="260" loading="lazy"></span>
-        <span class="pc-h4-con__body"><span class="pc-h4-con__t block">{{ settings[label] | escape }}</span>{%- if settings[k_sub] != blank -%}<span class="pc-h4-con__d block">{{ settings[k_sub] | escape }}</span>{%- endif -%}</span>
+        <span class="pc-h4-con__body"><span class="pc-h4-con__t">{{ settings[label] | escape }}</span>{%- if settings[k_sub] != blank -%}<span class="pc-h4-con__d">{{ settings[k_sub] | escape }}</span>{%- endif -%}</span>
       </a>
     {%- endif -%}{%- endunless -%}
   {%- endfor -%}
@@ -54,16 +59,16 @@
   <div class="pc-h4-wrap">
     <div class="pc-h4-head">
       <div>
-        <p class="pc-h4-eyebrow">{{ settings.home_solutions_eyebrow | default: 'Mua theo vấn đề da' | escape }}</p>
+        <p class="pc-h4-eyebrow pc-h4-lg-only">{{ settings.home_solutions_eyebrow | default: 'Mua theo vấn đề da' | escape }}</p>
         <h2 class="pc-h4-title" id="pc-h4-sol-title">{{ settings.home_solutions_title | default: 'Giải pháp cho từng vấn đề' | escape }}</h2>
       </div>
       {%- if settings.home_solutions_subtitle != blank -%}<p class="pc-h4-lead">{{ settings.home_solutions_subtitle | escape }}</p>{%- endif -%}
     </div>
-    <div class="pc-h4-concerns">
+    <div class="pc-h4-concerns pc-h4-swipe2">
       {{ sol_tiles }}
       {%- unless settings.home_sol_ai_enable == false or settings.home_sol_ai_enable == 'false' -%}
       {%- assign sol_count = sol_tiles | split: 'class="pc-h4-con"' | size | minus: 1 | modulo: 4 -%}
-      <a class="pc-h4-ai{% if sol_count == 2 %} pc-h4-ai--wide{% endif %}" href="{{ settings.home_sol_ai_cta_url | default: settings.home_ai_guide_cta_url | default: '/kham-da-ai' | escape }}">
+      <a class="pc-h4-ai pc-h4-lg-only{% if sol_count == 2 %} pc-h4-ai--wide{% endif %}" href="{{ settings.home_sol_ai_cta_url | default: settings.home_ai_guide_cta_url | default: '/kham-da-ai' | escape }}">
         <span class="pc-h4-ai__k block">{{ settings.home_sol_ai_eyebrow | default: 'Pharma AI' | escape }}</span>
         <span class="pc-h4-ai__t block">{{ settings.home_sol_ai_title | default: 'Chưa biết da mình thuộc nhóm nào?' | escape }}</span>
         {%- assign sol_ai_desc = settings.home_sol_ai_desc | default: 'Trả lời vài câu hỏi để nhận gợi ý hoạt chất và sản phẩm tham khảo.' -%}
@@ -72,5 +77,13 @@
       </a>
       {%- endunless -%}
     </div>
+    {%- unless settings.home_sol_ai_enable == false or settings.home_sol_ai_enable == 'false' -%}
+    {%- assign sol_ai_icon = settings.home_sol_ai_icon | default: 'wand-sparkles' -%}
+    <a class="pc-h4-ai pc-h4-ai--m pc-h4-sm-only" href="{{ settings.home_sol_ai_cta_url | default: settings.home_ai_guide_cta_url | default: '/kham-da-ai' | escape }}">
+      <span class="pc-h4-ai__k">{% include 'ui_icon', name: sol_ai_icon %}{{ settings.home_sol_ai_eyebrow | default: 'Pharma AI' | escape }}</span>
+      <span class="pc-h4-ai__d block">{{ settings.home_sol_ai_title | default: 'Chưa biết da mình thuộc nhóm nào?' | escape }} {{ settings.home_sol_ai_desc | default: 'Trả lời vài câu hỏi để nhận gợi ý hoạt chất và sản phẩm tham khảo.' | escape }}</span>
+      <span class="pc-h4-go">{{ settings.home_sol_ai_cta_text | default: settings.home_ai_guide_cta_text | default: 'Bắt đầu khảo sát da' | escape }}{% include 'ui_icon', name: 'arrow-right' %}</span>
+    </a>
+    {%- endunless -%}
   </div>
 </section>

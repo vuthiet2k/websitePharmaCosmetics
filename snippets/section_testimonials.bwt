@@ -10,6 +10,9 @@
     · Sản phẩm sử dụng: home_testi_N_products (trống ⇒ tag) · Thời gian theo dõi: home_testi_N_duration.
   - Ghi chú: home_testi_subtitle (trống ⇒ câu mặc định về ảnh thật + kết quả tuỳ cơ địa) + home_testi_disclaimer (nếu có). Link: home_testi_viewall_text / _url (trống ⇒ blog ca lâm sàng clinical_case_blog_handle).
   Tab dùng snippets/home_tabs_script.bwt. CSS: ui-src/css/components.css mục 14.8.
+  04/11/2026 (chủ dự án: giao diện mobile theo khung Main.png — CSS mục 14.19, chỉ < 1024px): ẩn eyebrow; link ngắn
+  home_testi_viewall_short ("Tất cả") cạnh tiêu đề thay link dài cuối cột; tab thành hàng viên thuốc vuốt ngang; thẻ ca: tiêu đề +
+  dòng khách + nhãn sản phẩm lên đầu, ảnh vuông có nhãn "Sau <thời gian>", ẩn bảng chi tiết, hiện tóm tắt 3 dòng. Desktop giữ nguyên.
 {%- endcomment -%}
 {%- comment -%}
   04/11/2026 (chủ dự án: "các case lấy trong blog danh mục Trước & Sau, theo tag ghim-trang-chu"): NGUỒN CHÍNH = bài trong blog
@@ -91,13 +94,16 @@
   <div class="pc-h4-wrap">
     <div class="pc-h4-cases" data-h4-tabs>
       <div class="pc-h4-cases__side">
-        <p class="pc-h4-eyebrow">{{ settings.home_testi_eyebrow | default: 'Kết quả thực tế' | escape }}</p>
-        <h2 class="pc-h4-title" id="pc-h4-testi-title">{{ settings.home_testi_title | default: 'Hành trình da của khách hàng' | escape }}</h2>
-        <p class="pc-h4-cases__lead">{{ settings.home_testi_subtitle | default: 'Ảnh thật, đăng với sự đồng ý của khách. Kết quả phụ thuộc vào tình trạng da và cơ địa mỗi người.' | escape }}{% if settings.home_testi_disclaimer != blank %} {{ settings.home_testi_disclaimer | escape }}{% endif %}</p>
-        <ul class="pc-h4-cases__tabs" role="tablist" aria-label="Chọn câu chuyện khách hàng">{{ testi_tabs }}</ul>
+        <p class="pc-h4-eyebrow pc-h4-lg-only">{{ settings.home_testi_eyebrow | default: 'Kết quả thực tế' | escape }}</p>
         {%- capture testi_case_fb -%}/blogs/{{ testi_case_handle }}{%- endcapture -%}
         {%- assign testi_more_url = settings.home_testi_viewall_url | default: testi_case_blog.url | default: testi_case_fb -%}
-        <a class="pc-h4-go pc-h4-cases__more" href="{{ testi_more_url | escape }}">{{ settings.home_testi_viewall_text | default: 'Xem tất cả kết quả trước & sau' | escape }}{% include 'ui_icon', name: 'arrow-right' %}</a>
+        <div class="pc-h4-cases__hd">
+          <h2 class="pc-h4-title" id="pc-h4-testi-title">{{ settings.home_testi_title | default: 'Hành trình da của khách hàng' | escape }}</h2>
+          <a class="pc-h4-cases__all pc-h4-sm-only" href="{{ testi_more_url | escape }}">{{ settings.home_testi_viewall_short | default: 'Tất cả' | escape }}{% include 'ui_icon', name: 'chevron-right' %}</a>
+        </div>
+        <p class="pc-h4-cases__lead">{{ settings.home_testi_subtitle | default: 'Ảnh thật, đăng với sự đồng ý của khách. Kết quả phụ thuộc vào tình trạng da và cơ địa mỗi người.' | escape }}{% if settings.home_testi_disclaimer != blank %} {{ settings.home_testi_disclaimer | escape }}{% endif %}</p>
+        <ul class="pc-h4-cases__tabs" role="tablist" aria-label="Chọn câu chuyện khách hàng">{{ testi_tabs }}</ul>
+        <a class="pc-h4-go pc-h4-cases__more pc-h4-lg-only" href="{{ testi_more_url | escape }}">{{ settings.home_testi_viewall_text | default: 'Xem tất cả kết quả trước & sau' | escape }}{% include 'ui_icon', name: 'arrow-right' %}</a>
       </div>
       <div>{{ testi_panels }}</div>
     </div>

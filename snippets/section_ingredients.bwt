@@ -3,14 +3,20 @@
   Nguồn giữ nguyên: Menu settings.home_ing_menu (tối đa 16 mục, số SP = products_count của danh mục link trỏ tới — 0 ⇒ ẩn dòng số).
   Chưa có menu ⇒ 9 ô nhập tay ing_N_title / _url / _tag như trước (nhãn ing_N_tag thay dòng số).
   CSS: ui-src/css/components.css mục 14.5.
+  04/11/2026 (chủ dự án: giao diện mobile theo khung Main.png — CSS mục 14.16, chỉ < 1024px): ô tròn ảnh + tên + "N SP", 2 dòng vuốt
+  ngang (.pc-h4-swipe2); ảnh = ảnh danh mục link trỏ tới (link.object.image → featured_image), thiếu ⇒ icon home_ing_icon (tên
+  ui_icon, mặc định flask-conical). Ẩn eyebrow; nhãn đếm "<số ô> home_ing_count_label" bên phải tiêu đề. Desktop giữ nguyên.
 {%- endcomment -%}
+{%- assign ing_icon = settings.home_ing_icon | default: 'flask-conical' -%}
 {%- assign ing_ll = linklists[settings.home_ing_menu] -%}
 {%- capture pc_ing_items -%}
 {%- if settings.home_ing_menu != blank and ing_ll.links.size > 0 -%}
   {%- for link in ing_ll.links limit: 16 -%}
+    {%- assign ing_img = link.object.image.src | default: link.object.featured_image.src -%}
     <a class="pc-h4-ing" href="{{ link.url | escape }}">
-      <span class="pc-h4-ing__t block">{{ link.title | escape }}</span>
-      {%- if link.object.products_count > 0 -%}<span class="pc-h4-ing__n block">{{ link.object.products_count }} SP</span>{%- endif -%}
+      <span class="pc-h4-ing__ic pc-h4-sm-only">{%- if ing_img != blank -%}<img src="{{ ing_img | img_url: 'small' }}" alt="" width="56" height="56" loading="lazy">{%- else -%}{% include 'ui_icon', name: ing_icon %}{%- endif -%}</span>
+      <span class="pc-h4-ing__t">{{ link.title | escape }}</span>
+      {%- if link.object.products_count > 0 -%}<span class="pc-h4-ing__n">{{ link.object.products_count }} SP</span>{%- endif -%}
     </a>
   {%- endfor -%}
 {%- else -%}
@@ -21,8 +27,9 @@
     {%- if ingredient_name != blank -%}
     {%- capture fallback_url -%}/search?query={{ ingredient_name | url_encode }}&type=product{%- endcapture -%}
     <a class="pc-h4-ing" href="{{ settings[url] | default: fallback_url | escape }}">
-      <span class="pc-h4-ing__t block">{{ ingredient_name | escape }}</span>
-      {%- if settings[tag] != blank -%}<span class="pc-h4-ing__n block">{{ settings[tag] | escape }}</span>{%- endif -%}
+      <span class="pc-h4-ing__ic pc-h4-sm-only">{% include 'ui_icon', name: ing_icon %}</span>
+      <span class="pc-h4-ing__t">{{ ingredient_name | escape }}</span>
+      {%- if settings[tag] != blank -%}<span class="pc-h4-ing__n">{{ settings[tag] | escape }}</span>{%- endif -%}
     </a>
     {%- endif -%}
   {%- endfor -%}
@@ -30,13 +37,15 @@
 {%- endcapture -%}
 <section class="pc-h4 pc-h4-sec pc-h4-sec--soft" aria-labelledby="pc-h4-ing-title">
   <div class="pc-h4-wrap">
-    <div class="pc-h4-head">
+    {%- assign ing_count = pc_ing_items | split: 'class="pc-h4-ing"' | size | minus: 1 -%}
+    <div class="pc-h4-head{% if ing_count > 0 %} pc-h4-head--aside{% endif %}">
       <div>
-        <p class="pc-h4-eyebrow">{{ settings.home_ing_eyebrow | default: 'Thấu hiểu làn da bằng khoa học' | escape }}</p>
+        <p class="pc-h4-eyebrow pc-h4-lg-only">{{ settings.home_ing_eyebrow | default: 'Thấu hiểu làn da bằng khoa học' | escape }}</p>
         <h2 class="pc-h4-title" id="pc-h4-ing-title">{{ settings.home_ing_title | default: 'Tìm theo hoạt chất' | escape }}</h2>
       </div>
       {%- if settings.home_ing_subtitle != blank -%}<p class="pc-h4-lead">{{ settings.home_ing_subtitle | escape }}</p>{%- endif -%}
+      {%- if ing_count > 0 -%}<p class="pc-h4-count pc-h4-sm-only">{{ ing_count }} {{ settings.home_ing_count_label | default: 'hoạt chất' | escape }}</p>{%- endif -%}
     </div>
-    {%- if pc_ing_items != blank -%}<div class="pc-h4-ings">{{ pc_ing_items }}</div>{%- endif -%}
+    {%- if pc_ing_items != blank -%}<div class="pc-h4-ings pc-h4-swipe2">{{ pc_ing_items }}</div>{%- endif -%}
   </div>
 </section>

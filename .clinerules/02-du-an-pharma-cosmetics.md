@@ -202,6 +202,15 @@ dữ liệu Admin đã lưu trong `settings_data.json`.
 | 11 | Mạng xã hội + Đặt lịch | `section_portal_social.bwt` | `portal_social_*`, `portal_booking_*`, `store_name` |
 | 12 | Đăng ký bản tin | `section_portal_newsletter.bwt` | `portal_newsletter_*` |
 
+**Trang chủ MOBILE < 1024px (chốt 04/11/2026, chủ dự án — khung Main.png; CSS `components.css` 14.13–14.22):** khung cố định,
+thiếu chỗ ⇒ hàng vuốt ngang `.pc-h4-swipe2` (vấn đề da 3×2, hoạt chất / thương hiệu vòng tròn 2 dòng, Bán chạy 2×2 không nút), KHÔNG
+kéo dài trang; mô tả phụ / eyebrow ẩn bằng `.pc-h4-lg-only`, phần chỉ mobile `.pc-h4-sm-only`; icon ưu tiên ảnh cấu hình hoặc ảnh danh
+mục Sapo (`link.object.image`), thiếu ⇒ `ui_icon` theo tên trong settings (`portal_shop_icon`, `home_ing_icon`, `home_spa_step_icons`…).
+Danh mục nhanh + 3 cột chân trang = accordion `<details data-pc-acc open>` (script cuối `footer.bwt`: < 1024 thu gọn, ≥ 1024 luôn mở);
+dải pháp lý chân trang ẩn ở mobile theo yêu cầu chủ dự án (desktop vẫn hiện). Bẫy CSS cũ (đóng băng R1): `.block{display:block!important}`
+(global_core) ⇒ phần tử cần ẩn ở mobile KHÔNG được mang utility `block` (đưa `block` vào rule `pc-*`); `.pc-home-v3 .pc-portal h2`
+ép cỡ `--ts-h2 !important` ⇒ tiêu đề nhỏ trong thẻ dùng `<p role="heading" aria-level="2">`.
+
 **Hero + header trang chủ (chốt 2026-10-13):** Hero cao 100vh/100svh; khi Hero là section đầu, header (topbar + hàng logo/menu) đè lên ảnh,
 nền trong suốt, chữ/icon trắng; hover/focus header hoặc cuộn (`.main-header.is-scrolled`, desktop `.hSticky`) ⇒ trở lại nền gốc.
 CSS ở `assets/home-portal.css` (khối "HEADER TRONG SUỐT TRÊN HERO"), chỉ áp `body.pc-home-v3`.

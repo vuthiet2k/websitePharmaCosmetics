@@ -2,6 +2,10 @@
   03/11/2026 (chủ dự án: dựng trang chủ theo Figma "travel" node 5:2 — design/home-v4/full.png): khối ngay sau Hero gồm
   (1) dải 4 cam kết (home_trust_N_title / _desc, tắt cả dải bằng home_trust_enable) và (2) chương I "Khám phá" với 2 thẻ lối vào
   (giữ nguyên trường cũ portal_shop_* / portal_clinic_* / home_spa_btn_url). CSS: ui-src/css/components.css mục 14.2–14.3.
+  04/11/2026 (chủ dự án: giao diện mobile theo khung Main.png — CSS mục 14.14, chỉ < 1024px): ẩn dải cam kết; nhãn chương có tiền tố
+  portal_chapter_prefix ("Mục") + tiêu đề portal_split_title; 2 thẻ cạnh nhau: icon (portal_shop_icon / portal_clinic_icon — tên ui_icon)
+  + nhãn + tiêu đề 1 dòng + mô tả 2 dòng + nút tròn. Desktop giữ nguyên. Tiêu đề thẻ là <p role="heading" aria-level="2"> (không
+  phải <h2>): CSS cũ đóng băng ép mọi `.pc-portal h2` cỡ --ts-h2 !important ⇒ không thu được chữ trên mobile.
 {%- endcomment -%}
 {%- unless settings.home_trust_enable == false or settings.home_trust_enable == 'false' -%}
 <div class="pc-h4 pc-h4-trust"><div class="pc-h4-wrap">
@@ -24,17 +28,28 @@
 {%- endunless -%}
 <section class="pc-h4 pc-h4-sec pc-h4-sec--tight-b" aria-labelledby="pc-h4-explore">
   <div class="pc-h4-wrap">
-    <div class="pc-h4-chap"><p class="pc-h4-chap__tag" id="pc-h4-explore">I · {{ settings.portal_chapter_1 | default: 'Khám phá' | escape }}</p><span class="pc-h4-chap__rule" aria-hidden="true"></span></div>
+    <div class="pc-h4-chap"><p class="pc-h4-chap__tag" id="pc-h4-explore"><span class="pc-h4-sm-only">{{ settings.portal_chapter_prefix | default: 'Mục' | escape }} </span>I · {{ settings.portal_chapter_1 | default: 'Khám phá' | escape }}</p><span class="pc-h4-chap__rule" aria-hidden="true"></span></div>
+    {%- if settings.portal_split_title != blank -%}<p class="pc-h4-title pc-h4-split__title pc-h4-sm-only">{{ settings.portal_split_title | escape }}</p>{%- endif -%}
     <div class="pc-h4-split">
       <a class="pc-h4-entry" href="{{ settings.portal_shop_url | default: '/collections/all' | escape }}">
-        <p class="pc-h4-entry__k">{{ settings.portal_shop_kicker | default: 'Pharma Cosmetics' | escape }}</p>
-        <h2 class="pc-h4-entry__t">{{ settings.portal_shop_title | default: 'Mua dược mỹ phẩm chính hãng' | escape }}</h2>
+        <div class="pc-h4-entry__hd">
+          <span class="pc-h4-entry__ic pc-h4-sm-only">{%- assign ps_ic = settings.portal_shop_icon | default: 'pill-bottle' -%}{% include 'ui_icon', name: ps_ic %}</span>
+          <div>
+            <p class="pc-h4-entry__k">{{ settings.portal_shop_kicker | default: 'Pharma Cosmetics' | escape }}</p>
+            <p class="pc-h4-entry__t" role="heading" aria-level="2">{{ settings.portal_shop_title | default: 'Mua dược mỹ phẩm chính hãng' | escape }}</p>
+          </div>
+        </div>
         {%- if settings.portal_shop_desc != blank -%}<p class="pc-h4-entry__d">{{ settings.portal_shop_desc | escape }}</p>{%- endif -%}
         <span class="pc-h4-go">{{ settings.portal_shop_btn_text | default: 'Vào cửa hàng' | escape }}{% include 'ui_icon', name: 'arrow-right' %}</span>
       </a>
       <a class="pc-h4-entry pc-h4-entry--dark" href="{{ settings.home_spa_btn_url | default: '/skin-health-beauty' | escape }}" title="{{ settings.home_spa_btn_text | default: 'Khám phá Skin Health Beauty' | escape }}">
-        <p class="pc-h4-entry__k">{{ settings.portal_clinic_kicker | default: 'Skin Health Beauty' | escape }}</p>
-        <h2 class="pc-h4-entry__t">{{ settings.portal_clinic_title | default: 'Trị liệu da 1:1 tại Hà Nội' | escape }}</h2>
+        <div class="pc-h4-entry__hd">
+          <span class="pc-h4-entry__ic pc-h4-sm-only">{%- assign ps_ic = settings.portal_clinic_icon | default: 'shield-heart' -%}{% include 'ui_icon', name: ps_ic %}</span>
+          <div>
+            <p class="pc-h4-entry__k">{{ settings.portal_clinic_kicker | default: 'Skin Health Beauty' | escape }}</p>
+            <p class="pc-h4-entry__t" role="heading" aria-level="2">{{ settings.portal_clinic_title | default: 'Trị liệu da 1:1 tại Hà Nội' | escape }}</p>
+          </div>
+        </div>
         {%- if settings.portal_clinic_desc != blank -%}<p class="pc-h4-entry__d">{{ settings.portal_clinic_desc | escape }}</p>{%- endif -%}
         <span class="pc-h4-go">{{ settings.portal_clinic_btn_text | default: 'Khám phá trị liệu' | escape }}{% include 'ui_icon', name: 'arrow-right' %}</span>
       </a>

@@ -4,6 +4,8 @@
   t_key (id duy nhất), t_title, t_concern, t_tab_who, t_img1/t_img2 (URL ảnh, trống ⇒ ô nền nhạt), t_who, t_initial,
   t_steps (các bước nối bằng testi_step_sep; trống ⇒ t_desc), t_desc, t_products, t_duration, t_url (trống ⇒ không link).
   Cộng dồn vào testi_tabs / testi_panels, tăng testi_n. Dòng nào trống ⇒ ẩn (không bịa dữ liệu).
+  04/11/2026 (mobile, CSS 14.19): .pc-h4-case__hd (tiêu đề + dòng khách + nhãn sản phẩm t_products) đưa lên đầu thẻ bằng order;
+  nhãn ảnh sau thêm t_duration; tóm tắt t_desc (.pc-h4-case__sum) chỉ hiện mobile — desktop vẫn dùng bảng dl.
 {%- endcomment -%}
 {%- assign testi_n = testi_n | plus: 1 -%}
 {%- capture t_sel -%}{% if testi_n == 1 %}true{% else %}false{% endif %}{%- endcapture -%}
@@ -12,10 +14,13 @@
 <article class="pc-h4-case" role="tabpanel" id="pc-h4-cp-{{ t_key }}" aria-labelledby="pc-h4-ct-{{ t_key }}"{% if testi_n > 1 %} hidden{% endif %}>
   <div class="pc-h4-case__imgs">
     <figure class="pc-h4-case__img"><span class="pc-h4-case__badge">{{ testi_lb_before | escape }}</span>{%- if t_img1 != blank -%}<img src="{{ t_img1 }}" alt="{{ testi_lb_before | escape }} — {{ t_title | escape }}" width="728" height="600" loading="lazy" decoding="async">{%- endif -%}</figure>
-    <figure class="pc-h4-case__img"><span class="pc-h4-case__badge pc-h4-case__badge--after">{{ testi_lb_after | escape }}</span>{%- if t_img2 != blank -%}<img src="{{ t_img2 }}" alt="{{ testi_lb_after | escape }} — {{ t_title | escape }}" width="728" height="600" loading="lazy" decoding="async">{%- endif -%}</figure>
+    <figure class="pc-h4-case__img"><span class="pc-h4-case__badge pc-h4-case__badge--after">{{ testi_lb_after | escape }}{% if t_duration != blank %}<span class="pc-h4-sm-only"> {{ t_duration | escape }}</span>{% endif %}</span>{%- if t_img2 != blank -%}<img src="{{ t_img2 }}" alt="{{ testi_lb_after | escape }} — {{ t_title | escape }}" width="728" height="600" loading="lazy" decoding="async">{%- endif -%}</figure>
   </div>
-  <h3 class="pc-h4-case__t">{{ t_title | escape }}</h3>
-  {%- if t_who != blank -%}<p class="pc-h4-case__m">{{ t_who | strip | escape }}</p>{%- endif -%}
+  <div class="pc-h4-case__hd">
+    <h3 class="pc-h4-case__t">{{ t_title | escape }}</h3>
+    {%- if t_who != blank -%}<p class="pc-h4-case__m">{{ t_who | strip | escape }}</p>{%- endif -%}
+    {%- if t_products != blank -%}<p class="pc-h4-case__tag pc-h4-sm-only m-0">{{ t_products | escape }}</p>{%- endif -%}
+  </div>
   <dl class="pc-h4-case__dl">
     {%- if t_initial != blank -%}<dt>{{ settings.home_testi_initial_label | default: 'Tình trạng ban đầu' | escape }}</dt><dd>{{ t_initial | escape }}</dd>{%- endif -%}
     {%- assign t_step_list = t_steps | split: testi_step_sep -%}
@@ -27,6 +32,7 @@
     {%- if t_products != blank -%}<dt>{{ settings.home_testi_products_label | default: 'Sản phẩm sử dụng' | escape }}</dt><dd>{{ t_products | escape }}</dd>{%- endif -%}
     {%- if t_duration != blank -%}<dt>{{ settings.home_testi_duration_label | default: 'Thời gian theo dõi' | escape }}</dt><dd>{{ t_duration | escape }}</dd>{%- endif -%}
   </dl>
+  {%- if t_desc != blank -%}<p class="pc-h4-case__sum pc-h4-sm-only">{{ t_desc | escape }}</p>{%- endif -%}
   {%- if t_url != blank and testi_more_lb != blank -%}<a class="pc-h4-go" href="{{ t_url }}">{{ testi_more_lb | escape }}{% include 'ui_icon', name: 'arrow-right' %}</a>{%- endif -%}
 </article>
 {%- endcapture -%}

@@ -5,18 +5,23 @@
   (home_spa_cta_text / _url, mặc định link nút 1 Hero) + địa chỉ (home_spa_address, trống ⇒ ẩn); phải = 4 thẻ bước đánh số
   portal_step_N_title / _desc (N = 1..4, có _url ⇒ thẻ là link). Bỏ ảnh / chip / carousel cũ (các trường đó giữ trong schema).
   CSS: ui-src/css/components.css mục 14.7.
+  04/11/2026 (chủ dự án: giao diện mobile theo khung Main.png — CSS mục 14.18, chỉ < 1024px): nền sáng; eyebrow thành tiêu đề lớn,
+  tiêu đề thành câu trích; ẩn nhãn / nút / địa chỉ / 4 thẻ bước của desktop, thay bằng THẺ LỘ TRÌNH (.pc-h4-route): địa chỉ
+  (home_spa_address) · tiêu đề home_spa_steps_title + nhãn home_spa_steps_tag · 4 tab bước (số + icon home_spa_step_icons + nhãn ngắn
+  home_spa_step_labels, đều phân cách ";", trống ⇒ tiêu đề bước) · khung chi tiết bước đang chọn (home_spa_step_prefix + số: tiêu đề,
+  mô tả) · nút đặt lịch rộng. Tab dùng snippets/home_tabs_script.bwt. Desktop giữ nguyên.
 {%- endcomment -%}
 {%- assign spa_cta_url = settings.home_spa_cta_url | default: settings.home_hero_btn1_url | default: '/dat-lich-tu-van' -%}
 {%- assign spa_tags = settings.portal_clinic_chips | split: ';' -%}
 {%- assign spa_tag_urls = settings.portal_clinic_chip_urls | split: ';' -%}
 {%- assign spa_tag_icons = settings.portal_clinic_chip_icons | split: ';' -%}
-<section class="pc-h4 pc-h4-sec pc-h4-sec--dark" aria-labelledby="pc-h4-spa-title">
+<section class="pc-h4 pc-h4-sec pc-h4-sec--dark pc-h4-spa" aria-labelledby="pc-h4-spa-title">
   <div class="pc-h4-wrap">
-    <div class="pc-h4-chap"><p class="pc-h4-chap__tag">II · {{ settings.portal_chapter_2 | default: 'Tin cậy' | escape }}</p><span class="pc-h4-chap__rule" aria-hidden="true"></span></div>
+    <div class="pc-h4-chap"><p class="pc-h4-chap__tag"><span class="pc-h4-sm-only">{{ settings.portal_chapter_prefix | default: 'Mục' | escape }} </span>II · {{ settings.portal_chapter_2 | default: 'Tin cậy' | escape }}</p><span class="pc-h4-chap__rule" aria-hidden="true"></span></div>
     <div class="pc-h4-trust2">
       <div>
         <p class="pc-h4-eyebrow">{{ settings.home_spa_eyebrow | default: 'Khi routine tại nhà chưa đủ' | escape }}</p>
-        <h2 class="pc-h4-trust2__t" id="pc-h4-spa-title">{{ settings.home_spa_title | default: 'Làn da cần lộ trình đúng,' | escape }}{%- if settings.home_spa_title_accent != blank -%}<br>{{ settings.home_spa_title_accent | escape }}{%- endif -%}</h2>
+        <h2 class="pc-h4-trust2__t" id="pc-h4-spa-title">{{ settings.home_spa_title | default: 'Làn da cần lộ trình đúng,' | escape }}{%- if settings.home_spa_title_accent != blank %} <br>{{ settings.home_spa_title_accent | escape }}{%- endif -%}</h2>
         {%- assign spa_desc = settings.home_spa_desc | default: settings.portal_clinic_desc -%}
         {%- if spa_desc != blank -%}<p class="pc-h4-trust2__d">{{ spa_desc | escape }}</p>{%- endif -%}
         {%- if settings.portal_clinic_chips != blank -%}
@@ -49,5 +54,30 @@
         {%- endfor -%}
       </ol>
     </div>
+    {%- if spa_n > 0 -%}
+    {%- assign spa_lbls = settings.home_spa_step_labels | default: 'Phân tích;Phác đồ;Chăm sóc 1:1;Đồng hành' | split: ';' -%}
+    {%- assign spa_icos = settings.home_spa_step_icons | default: 'microscope;clipboard-list;leaf;headset' | split: ';' -%}
+    {%- assign spa_steps_t = settings.home_spa_steps_title | default: 'Lộ trình 4 bước chuẩn y khoa' -%}
+    {%- assign spa_tabs = '' -%}{%- assign spa_panels = '' -%}{%- assign spa_m = 0 -%}
+    {%- for i in (1..4) -%}
+      {%- capture k_t -%}portal_step_{{ i }}_title{%- endcapture -%}{%- capture k_d -%}portal_step_{{ i }}_desc{%- endcapture -%}
+      {%- if settings[k_t] != blank -%}
+        {%- assign spa_m = spa_m | plus: 1 -%}
+        {%- assign spa_lb = spa_lbls[forloop.index0] | strip | default: settings[k_t] -%}
+        {%- assign spa_ic = spa_icos[forloop.index0] | strip -%}
+        {%- capture spa_tab -%}<a class="pc-h4-route__tab" role="tab" id="pc-h4-rt-{{ i }}" aria-controls="pc-h4-rp-{{ i }}" aria-selected="{% if spa_m == 1 %}true{% else %}false{% endif %}" tabindex="{% if spa_m == 1 %}0{% else %}-1{% endif %}" href="#pc-h4-rp-{{ i }}"><b>0{{ spa_m }}</b>{%- if spa_ic != blank -%}{% include 'ui_icon', name: spa_ic %}{%- endif -%}<span>{{ spa_lb | escape }}</span></a>{%- endcapture -%}
+        {%- capture spa_panel -%}<div class="pc-h4-route__p" role="tabpanel" id="pc-h4-rp-{{ i }}" aria-labelledby="pc-h4-rt-{{ i }}"{% if spa_m > 1 %} hidden{% endif %}>{% include 'ui_icon', name: 'circle-check' %}<p class="m-0"><b>{{ settings.home_spa_step_prefix | default: 'Bước' | escape }} 0{{ spa_m }}: {{ settings[k_t] | escape }}</b>{%- if settings[k_d] != blank -%}<span>{{ settings[k_d] | escape }}</span>{%- endif -%}</p></div>{%- endcapture -%}
+        {%- assign spa_tabs = spa_tabs | append: spa_tab -%}{%- assign spa_panels = spa_panels | append: spa_panel -%}
+      {%- endif -%}
+    {%- endfor -%}
+    <div class="pc-h4-route pc-h4-sm-only" data-h4-tabs>
+      {%- if settings.home_spa_address != blank -%}<p class="pc-h4-route__addr">{% include 'ui_icon', name: 'map-pin' %}<span>{{ settings.home_spa_address | newline_to_br | replace: '<br />', ' ' | replace: '<br>', ' ' | strip_newlines | escape }}</span></p>{%- endif -%}
+      <div class="pc-h4-route__hd"><p class="pc-h4-route__t">{{ spa_steps_t | escape }}</p>{%- assign spa_steps_tag = settings.home_spa_steps_tag | default: 'Phác đồ cá nhân' -%}<p class="pc-h4-route__tag">{{ spa_steps_tag | escape }}</p></div>
+      <div class="pc-h4-route__tabs" role="tablist" aria-label="{{ spa_steps_t | escape }}">{{ spa_tabs }}</div>
+      {{ spa_panels }}
+      <a class="pc-h4-route__cta" href="{{ spa_cta_url | escape }}">{{ settings.home_spa_cta_text | default: 'Đặt lịch phân tích da' | escape }}{% include 'ui_icon', name: 'arrow-right' %}</a>
+    </div>
+    {%- endif -%}
   </div>
 </section>
+{%- if spa_n > 0 -%}{%- include 'home_tabs_script' -%}{%- endif -%}

@@ -6,6 +6,10 @@
   khối <style> cũ (nền tối/vàng gold) và tia sét. Giữ nguyên dữ liệu: danh mục home_flashsale_collection, số lượng home_flashsale_limit, phần chữ tô đỏ home_flashsale_title_hl (trống ⇒ không tô),
   bộ đếm ngược chu kỳ (data-countdown + home_flashsale_countdown_end / _cycle_hours, L09), khối mã giảm giá coupon_products.
   CSS: ui-src/css/components.css mục 14.6.
+  04/11/2026 (chủ dự án: giao diện mobile theo khung Main.png — CSS mục 14.17, chỉ < 1024px): đồng hồ xuống dưới tiêu đề (nhãn
+  "Kết thúc sau" chỉ còn cho trình đọc màn hình), "Xem tất cả" thành nút tròn mũi tên bên phải. Desktop giữ nguyên.
+  04/11/2026 (chủ dự án, lần 2): icon tia sét ở Ô RIÊNG bên trái (.pc-h4-fs__ic, cao 2 dòng) — tiêu đề trên, đồng hồ nhỏ gọn ngay dưới
+  (ô số cao 24px, chữ 14px — không to hơn chữ thường). Icon trong tiêu đề chỉ còn ở desktop (pc-h4-lg-only).
 {%- endcomment -%}
 {% assign flash_collection = collections[settings.home_flashsale_collection] %}
 {% capture flash_fallback_url %}/{{ settings.home_flashsale_collection }}{% endcapture %}
@@ -16,17 +20,18 @@
 {%- if pc_fs_limit < 1 or pc_fs_limit > 10 -%}{%- assign pc_fs_limit = 10 -%}{%- endif -%}
 <section class="pc-h4 pc-h4-sec section_flash_sale" aria-labelledby="pc-h4-fs-title">
   <div class="pc-h4-wrap">
-    <div class="pc-h4-head lg:items-center">
+    <div class="pc-h4-head{% if count > 0 %} pc-h4-head--aside{% endif %} lg:items-center">
       <div class="pc-h4-fs__top">
+        <span class="pc-h4-fs__ic pc-h4-sm-only" aria-hidden="true"><img src="{{ 'flash_-1.png' | asset_url }}" alt="" width="24" height="24"></span>
         {%- assign pc_fs_title = settings.home_flashsale_title | default: 'Flash sale' | escape -%}
         {%- assign pc_fs_hl = settings.home_flashsale_title_hl | escape -%}
         {%- capture pc_fs_hl_html -%}<em class="pc-h4-hl">{{ pc_fs_hl }}</em>{%- endcapture -%}
-        <h2 class="pc-h4-title pc-h4-fs__title" id="pc-h4-fs-title"><img class="pc-h4-fs__bolt" src="{{ 'flash_-1.png' | asset_url }}" alt="" width="32" height="32" aria-hidden="true">{%- if pc_fs_hl != blank and pc_fs_title contains pc_fs_hl -%}{{ pc_fs_title | replace_first: pc_fs_hl, pc_fs_hl_html }}{%- else -%}{{ pc_fs_title }}{%- endif -%}</h2>
+        <h2 class="pc-h4-title pc-h4-fs__title" id="pc-h4-fs-title"><img class="pc-h4-fs__bolt pc-h4-lg-only" src="{{ 'flash_-1.png' | asset_url }}" alt="" width="32" height="32" aria-hidden="true">{%- if pc_fs_hl != blank and pc_fs_title contains pc_fs_hl -%}{{ pc_fs_title | replace_first: pc_fs_hl, pc_fs_hl_html }}{%- else -%}{{ pc_fs_title }}{%- endif -%}</h2>
         {%- if settings.home_flashsale_countdown_enable -%}
         <p class="pc-h4-timer m-0"><span class="pc-h4-timer__label">{{ settings.home_flashsale_countdown_title | default: 'Kết thúc sau' | escape }}</span><span class="pc-h4-timer__clock" role="timer" data-countdown="countdown" data-date="{{ settings.home_flashsale_countdown_end }}" data-cycle-hours="{{ settings.home_flashsale_countdown_cycle_hours | default: 0 }}"></span></p>
         {%- endif -%}
       </div>
-      {%- if count > 0 -%}<a class="pc-h4-more" href="{{ flash_collection_url | escape }}">{{ pc_fs_viewall | escape }}{% include 'ui_icon', name: 'arrow-right' %}</a>{%- endif -%}
+      {%- if count > 0 -%}<a class="pc-h4-more pc-h4-more--icon" href="{{ flash_collection_url | escape }}"><span class="pc-h4-more__txt">{{ pc_fs_viewall | escape }}</span>{% include 'ui_icon', name: 'arrow-right' %}</a>{%- endif -%}
     </div>
     {%- if count > 0 -%}
     <div class="pc-h4-prow pc-h4-prow--one">
