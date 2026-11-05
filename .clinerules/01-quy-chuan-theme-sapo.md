@@ -164,6 +164,10 @@ Mỗi lần tải lên Sapo chỉ báo 1 lỗi đầu tiên ⇒ mọi quy tắc 
 - `blank`/`empty` **chỉ dùng để so sánh** (`== blank`, `!= blank`). Không gán làm giá trị (`assign x = blank`),
   không truyền vào filter hay `linklists[...]`: DotLiquid của Sapo báo lỗi "Đối tượng 'DotLiquid.Util.Symbol' không
   hợp lệ". Cần khởi tạo rỗng thì dùng `assign x = ''`.
+- **Không viết cú pháp thẻ `{% … %}` bên trong `{% comment %}`**: DotLiquid của Sapo vẫn phân tích thẻ trong comment
+  ⇒ thẻ khối không đóng (vd `form`, `for`, `if`) làm cả file "sai cú pháp liquid" (sự cố /about-us 05/11/2026).
+  Nhắc tới thẻ trong chú thích thì viết `` `include 'x'` `` (không ngoặc `{% %}`).
+- Tham số `include` truyền biến đơn — `assign` phần tử mảng ra biến trước (`assign ic = arr[i]`), không truyền `arr[i]`.
 - Nhúng snippet: `{% include 'ten-snippet' %}` (không đuôi `.bwt`). Kiểm tra template bằng `contains`
   (`{% if template contains 'product' %}`).
 - Alias/Handle: kebab-case không dấu (`handleize`).
