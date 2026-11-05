@@ -69,6 +69,10 @@ Bổ sung cho `01-quy-chuan-theme-sapo.md` (quy chuẩn nền tảng Sapo). File
   ⇒ `vercel --prod` báo `No existing credentials found`. Cần `VERCEL_TOKEN` hoặc `npx vercel login`.
 - `vercel deploy --temporary` (không cần login) chỉ tạo bản **tạm, hết hạn ~59 phút**, phải claim —
   chỉ dùng để review UI, **không** thay thế production và **không** báo là "đã deploy prod".
+- Gói free giới hạn **5000 file upload/ngày** cho CLI (`api-upload-free`, khoá 24 h). `.vercelignore` (allowlist)
+  chỉ cho upload file server cần. Nếu vẫn bị khoá: push nhánh ⇒ Vercel tự build Preview từ git (không tính hạn
+  mức) ⇒ `npx vercel promote <url-preview> --yes` đưa lên production. Deploy CLI nên chạy từ worktree sạch
+  ở HEAD để không kèm thay đổi chưa commit.
 - `.vercel/` là gitignored: không commit. Sau khi chạy CLI, kiểm tra `.vercel/` vẫn giữ đúng
   `project.json` gốc (CLI có thể tạo output build trong đó — phải dọn/khôi phục).
 
