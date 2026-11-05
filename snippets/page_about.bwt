@@ -5,8 +5,8 @@
   page.about-us cũ sang snippet này để 2 tên giao diện hiển thị y hệt, không nhân đôi mã.
   (Lịch sử) page.about-us.bwt (T-21) — nội dung trang "Về chúng tôi", đối chiếu
   Pharma_Cosmetics_Figma_Project/about-us.html. Header/Footer/topbar đã có sẵn ở
-  layouts/theme.bwt ({% include 'header' %} / {% include 'footer' %} quanh
-  {{ content_for_layout }}) — file này chỉ chứa nội dung <main>.
+  layouts/theme.bwt (include header / include footer quanh
+  content_for_layout) — file này chỉ chứa nội dung <main>.
 
   LƯU Ý: configs/settings_schema.json (mục "── HERO ──" .. "── LIÊN HỆ ──", các field
   "about_*") đã được author sẵn ĐẦY ĐỦ cho đúng nội dung trang này, với 1 dòng ghi chú
@@ -157,9 +157,11 @@
       {%- assign v_title = settings[k_title] -%}
       {%- if v_title != blank -%}
       {%- assign idx0 = i | minus: 1 -%}
+      {%- comment -%} 05/11/2026: gán icon ra biến trước — tham số include dạng mảng[chỉ số] không chắc được Sapo parse. {%- endcomment -%}
+      {%- assign pillar_icon = pillar_icons[idx0] -%}
       <div class="bg-gray-50 rounded-2xl p-8 border border-gray-100 hover:shadow-md transition">
         <div class="w-14 h-14 rounded-xl bg-{{ pillar_colors[idx0] }}-100 text-{{ pillar_colors[idx0] }}-700 flex items-center justify-center text-2xl mb-6">
-          <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: pillar_icons[idx0], size: 'em' %}</i>
+          <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: pillar_icon, size: 'em' %}</i>
         </div>
         <span class="text-xs font-bold text-{{ pillar_colors[idx0] }}-700 uppercase tracking-widest">TRỤ CỘT 0{{ i }}</span>
         <h3 class="text-lg font-bold text-gray-900 mt-2 mb-3">{{ v_title }}</h3>
@@ -412,7 +414,7 @@
       {%- comment -%}
         pii_form_gate (POLICY.yaml#frontend_theme): mục đích rõ ràng + checkbox consent + link chính sách.
         2026-10-18 (rà trang /about-us): trước đây action="#" + onsubmit="return false" ⇒ khách bấm "Gửi tin nhắn" nhưng KHÔNG gửi
-        đi đâu. Nay dùng form liên hệ gốc Sapo ({% form 'contact' %} → /contact, Sapo gửi email về hộp thư cửa hàng — cùng
+        đi đâu. Nay dùng form liên hệ gốc Sapo (thẻ form 'contact' → /contact, Sapo gửi email về hộp thư cửa hàng — cùng
         endpoint với snippets/popup_tragop.bwt). Thêm ô Email (form liên hệ Sapo dùng contact[email]); contact[Nguon] ghi trang gửi.
       {%- endcomment -%}
       <div class="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200">
