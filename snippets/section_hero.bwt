@@ -15,6 +15,9 @@
   (watch / youtu.be / embed / shorts) hoặc link file .mp4/.webm. Slide có video: ảnh (nếu có) làm ảnh chờ, video tắt tiếng tự chạy phủ kín
   Hero; autoplay Swiper DỪNG trong lúc video chạy, video chạy HẾT mới sang slide kế (assets/home-hero.js). Video nạp khi slide được
   hiện (data-src) để không chặn LCP. Slide chỉ có video (không ảnh) vẫn hiện — ảnh chờ YouTube lấy thumbnail của video.
+  09/11/2026 (chủ dự án chuyển báo cáo UX hero + luật L11 / R3 của docs/UI-STANDARD.md): đo 390px tương phản chữ «chìm» trên ảnh
+  ≈ 1,16:1 (cần ≥ 4,5:1), nút link chữ 33px nằm một phần dưới thanh điều hướng đáy ⇒ lớp phủ tối ở đáy slide, chữ trắng đậm,
+  nút = ui_button primary lg (48px) thay link chữ vệt sáng; mobile cao 78svh để lộ đầu mục kế tiếp. Vẫn giữ ảnh toàn khổ, 1 ảnh mọi màn.
 {%- endcomment -%}
 {%- assign hero_slide_count = 0 -%}
 {%- assign hero_h1_done = false -%}
@@ -28,7 +31,9 @@
       {%- if hero_lead_eyebrow != blank -%}<p class="portal-hero__eyebrow">{{ hero_lead_eyebrow | escape }}</p>{%- endif -%}
       {%- if hero_lead_text != blank -%}{%- assign hero_h1_done = true -%}<h1 class="portal-hero__title" id="portal-hero-title">{{ hero_lead_text | escape | newline_to_br }}</h1>{%- endif -%}
       {%- if hero_lead_sub != blank -%}<p class="portal-hero__sub">{{ hero_lead_sub | escape | newline_to_br }}</p>{%- endif -%}
-      <a class="portal-hero__btn" href="{{ hero_lead_url | default: '/dat-lich-tu-van' | escape }}">{{ hero_lead_btn | default: 'Đặt lịch tư vấn' | escape }}<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      {%- capture hero_cta_label -%}{{ hero_lead_btn | default: 'Đặt lịch tư vấn' | escape }}<i class="inline-flex leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-right', size: 'em' %}</i>{%- endcapture -%}
+      {%- assign hero_cta_href = hero_lead_url | default: '/dat-lich-tu-van' | escape -%}
+      <div class="portal-hero__cta">{% include 'ui_button', label: hero_cta_label, variant: 'primary', href: hero_cta_href, type: '', size: 'lg', block: false, disabled: false, loading: false, aria_label: '', id: '', form: '', modal: '', js_class: '' %}</div>
     </div>
   </div>
 {%- endif -%}
@@ -100,7 +105,9 @@
       {%- unless hero_h1_done -%}{%- assign hero_h1_done = true -%}<h1 class="portal-hero__title" id="portal-hero-title">{{ hero_text | escape | newline_to_br }}</h1>
       {%- else -%}<h2 class="portal-hero__title">{{ hero_text | escape | newline_to_br }}</h2>{%- endunless -%}
       {%- endif -%}
-      <a class="portal-hero__btn" href="{{ hero_url | default: '/dat-lich-tu-van' | escape }}">{{ hero_btn | escape }}<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      {%- capture hero_cta_label -%}{{ hero_btn | escape }}<i class="inline-flex leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-right', size: 'em' %}</i>{%- endcapture -%}
+      {%- assign hero_cta_href = hero_url | default: '/dat-lich-tu-van' | escape -%}
+      <div class="portal-hero__cta">{% include 'ui_button', label: hero_cta_label, variant: 'primary', href: hero_cta_href, type: '', size: 'lg', block: false, disabled: false, loading: false, aria_label: '', id: '', form: '', modal: '', js_class: '' %}</div>
     </div>
   </div>
   {%- endif -%}
