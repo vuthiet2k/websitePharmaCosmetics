@@ -57,24 +57,26 @@
     <div class="ot-result" id="ot-result" style="display:none" aria-live="polite">
 
       {% comment %} Stepper {% endcomment %}
+      {%- comment -%} L03b38 (09/11/2026): tick bước «xong» = SVG ui_icon check trong <i data-ot-check> (JS renderStepper bật/tắt hidden) — thay
+        glyph Font Awesome '\f00c' ở .ot-step__dot::after (page_order_tracking.scss, quy tắc đã xoá). text-sm = 14px = cỡ glyph cũ (--fs-body). {%- endcomment -%}
       <div class="ot-stepper" id="ot-stepper" aria-label="Tiến trình đơn hàng">
         <div class="ot-step" id="ot-step-1" role="listitem">
-          <div class="ot-step__dot"><span class="ot-step__num">1</span></div>
+          <div class="ot-step__dot"><span class="ot-step__num">1</span><i data-ot-check class="hidden text-sm leading-none text-white" aria-hidden="true">{% include 'ui_icon', name: 'check', size: 'em' %}</i></div>
           <div class="ot-step__label">Đặt đơn</div>
         </div>
         <div class="ot-step-line" id="ot-line-1"></div>
         <div class="ot-step" id="ot-step-2" role="listitem">
-          <div class="ot-step__dot"><span class="ot-step__num">2</span></div>
+          <div class="ot-step__dot"><span class="ot-step__num">2</span><i data-ot-check class="hidden text-sm leading-none text-white" aria-hidden="true">{% include 'ui_icon', name: 'check', size: 'em' %}</i></div>
           <div class="ot-step__label">Chuyển khoản</div>
         </div>
         <div class="ot-step-line" id="ot-line-2"></div>
         <div class="ot-step" id="ot-step-3" role="listitem">
-          <div class="ot-step__dot"><span class="ot-step__num">3</span></div>
+          <div class="ot-step__dot"><span class="ot-step__num">3</span><i data-ot-check class="hidden text-sm leading-none text-white" aria-hidden="true">{% include 'ui_icon', name: 'check', size: 'em' %}</i></div>
           <div class="ot-step__label">Xác nhận</div>
         </div>
         <div class="ot-step-line" id="ot-line-3"></div>
         <div class="ot-step" id="ot-step-4" role="listitem">
-          <div class="ot-step__dot"><span class="ot-step__num">4</span></div>
+          <div class="ot-step__dot"><span class="ot-step__num">4</span><i data-ot-check class="hidden text-sm leading-none text-white" aria-hidden="true">{% include 'ui_icon', name: 'check', size: 'em' %}</i></div>
           <div class="ot-step__label">Hoàn thành</div>
         </div>
       </div>
@@ -240,6 +242,7 @@
     for (var s = 1; s <= 4; s++) {
       var el = document.getElementById('ot-step-' + s);
       el.className = 'ot-step' + (steps[s] ? ' ot-step--' + steps[s] : '');
+      el.querySelector('[data-ot-check]').classList.toggle('hidden', steps[s] !== 'done');
     }
     for (var l = 1; l <= 3; l++) {
       var ln = document.getElementById('ot-line-' + l);
