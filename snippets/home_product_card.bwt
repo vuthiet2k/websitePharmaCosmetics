@@ -19,7 +19,9 @@
   {%- assign hpc_off = hpc_compare | minus: hpc_price | times: 100 | divided_by: hpc_compare | round -%}
   {%- if hpc_off < 1 -%}{%- assign hpc_off = 1 -%}{%- endif -%}
 {%- endif -%}
-{%- assign hpc_desc = product.summary | strip_html | strip_newlines | strip | truncate: 90 -%}
+{%- comment -%} 09/11/2026 (QA): mô tả ngắn Sapo chứa thực thể HTML (&nbsp; giữa «Thương hiệu … Xuất xứ …») — strip_html giữ nguyên thực thể,
+  escape mã hoá lần 2 ⇒ hiện chữ «&nbsp;». Đổi thực thể khoảng trắng / & về ký tự thường TRƯỚC khi escape (như product_card_collection). {%- endcomment -%}
+{%- assign hpc_desc = product.summary | strip_html | replace: '&nbsp;', ' ' | replace: '&#160;', ' ' | replace: '&amp;', '&' | strip_newlines | strip | truncate: 90 -%}
 <article class="pc-h4-pcard{% if tone == 'sale' %} pc-h4-pcard--sale{% endif %}">
   <a class="pc-h4-pcard__media" href="{{ product.url }}" tabindex="-1" aria-hidden="true">
     <img src="{% if product.featured_image.src != blank %}{{ product.featured_image.src | img_url: 'large' }}{% else %}{% include 'placeholder_img_url' %}{% endif %}" alt="{{ product.featured_image.alt | default: hpc_name | escape }}" width="436" height="380"{% unless eager %} loading="lazy"{% endunless %}>

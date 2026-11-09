@@ -2,7 +2,7 @@
 	<div class="def-content">
 		<div class="def-header">
 			Liên hệ với chúng tôi
-			<div class="close-icon close-widget-btn" title="Đóng">
+			<div class="close-icon close-widget-btn" title="Đóng" role="button" tabindex="0" aria-label="Đóng bảng liên hệ">
 				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
 					<path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
 				</svg>
@@ -154,6 +154,10 @@
 		e.preventDefault();
 		var w = document.querySelector('.main-widget');
 		if (w) w.classList.toggle('widget-opened');
+	});
+	// 09/11/2026: nút X đầu bảng là <div role=button> ⇒ Enter / Space đóng bảng như bấm chuột
+	document.addEventListener('keydown', function(e){
+		if ((e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('.close-widget-btn')) { e.preventDefault(); e.target.click(); }
 	});
 
 	// D02 (phase home-shopping-ux, 2026-09-20): 3 trạng thái — thu gọn (mặc định), mở panel
@@ -383,6 +387,10 @@
 	opacity: 1;
 	transform: translate(-50%, -50%) rotate(0deg);
 }
+
+/* 09/11/2026 (QA: nút X đầu bảng liên hệ 28×28 < 44): giữ vòng tròn 28px, mở vùng chạm 44×44 bằng ::after (không đổi chiều cao đầu bảng) */
+.main-widget .def-header .close-widget-btn::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; }
+.main-widget .def-header .close-widget-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 /* --- KÉO + NÚT X ẨN NHANH (09/11/2026) --- */
 /* Dời bằng biến translate (JS ghi --pc-drag-x/y) — không đụng right/bottom vì footer_script đang chỉnh bottom khi cuộn tới chân trang */
