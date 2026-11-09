@@ -95,10 +95,7 @@
 			</div>
 			{%endif%}
 		</div>
-		<button type="button" class="widget-hide-action" data-contact-hide>
-			<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" stroke="currentColor" stroke-width="1.6"/><path d="M3 3l18 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-			<span>Ẩn nút liên hệ</span>
-		</button>
+		{%- comment -%} 09/11/2026: nút «Ẩn nút liên hệ» trong bảng chuyển thành nút X ở góc robot (.pc-widget-dismiss, cùng data-contact-hide) — không để 2 nút trùng việc. {%- endcomment -%}
 	</div>
 
 	{%- comment -%} 2026-10-19: linh vật robot Pharma Cosmetics vẫy tay (GIF 96px nền trong suốt, ~55KB, cắt từ video CapCut)
@@ -143,6 +140,9 @@
 			<i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'x', size: 'em' %}</i>
 		</div>
 	</div>
+	{%- comment -%} 09/11/2026 (chủ dự án: robot liên hệ đè thẻ SP trên mobile, không có nút X, không kéo được): nút X ẩn nhanh
+	  ngay góc robot (cùng cơ chế data-contact-hide của «Ẩn nút liên hệ» — hiện lại ở chân trang), vùng chạm 44px. {%- endcomment -%}
+	<button type="button" class="pc-widget-dismiss" data-contact-hide aria-label="Ẩn nút liên hệ"><span class="pc-widget-dismiss__dot" aria-hidden="true">{% include 'ui_icon', name: 'x', size: 'em' %}</span></button>
 </div>
 
 <script>
@@ -183,6 +183,84 @@
 			if (!e.target.closest) return;
 			if (e.target.closest('[data-contact-hide]')) { e.preventDefault(); setHidden(true); }
 			if (e.target.closest('[data-contact-show]')) { e.preventDefault(); setHidden(false); }
+		});
+	})();
+	// 09/11/2026 (chủ dự án: robot đè thẻ SP, không kéo được): kéo robot lên/xuống, thả ra tự hít về mép trái/phải gần nhất.
+	// Pointer Events (chạm + chuột); .out-circle có touch-action:none nên kéo không cuộn trang. Di chuyển < 8px ⇒ vẫn là bấm
+	// (mở bảng liên hệ); đã kéo ⇒ chặn cú click ngay sau đó. Giữ trong màn hình: không lên quá đáy header, không xuống dưới vị
+	// trí gốc (trên thanh điều hướng đáy). Vị trí nhớ ở localStorage (bị chặn ⇒ về chỗ gốc, không lỗi).
+	(function(){
+		var widget = document.querySelector('.main-widget');
+		var handle = widget && widget.querySelector('#toggle-widget-btn');
+		if (!widget || !handle || !window.PointerEvent) return;
+		var POS_KEY = 'pc_contact_widget_pos', TH = 8, EDGE = 8;
+		var offY = 0, start = null, dragging = false, suppressClick = false;
+		function apply(x){
+			widget.style.setProperty('--pc-drag-x', (x || 0) + 'px');
+			widget.style.setProperty('--pc-drag-y', offY + 'px');
+		}
+		function clampY(y){
+			// vị trí gốc (khi offY = 0) suy ra từ vị trí hiện tại
+			var r = widget.getBoundingClientRect(), baseTop = r.top - offY;
+			if (!r.height) return Math.min(0, y); // đang ẩn (widget-hidden) ⇒ chưa đo được
+			var hd = document.querySelector('header.header, .header');
+			var minTop = Math.max(EDGE, hd ? Math.min(hd.getBoundingClientRect().bottom, window.innerHeight / 3) + EDGE : EDGE);
+			return Math.min(0, Math.max(minTop - baseTop, y));
+		}
+		function save(){
+			try { localStorage.setItem(POS_KEY, JSON.stringify({ left: widget.classList.contains('pc-widget--left'), y: offY })); } catch(e){}
+		}
+		try {
+			var saved = JSON.parse(localStorage.getItem(POS_KEY) || 'null');
+			if (saved) { widget.classList.toggle('pc-widget--left', !!saved.left); offY = Number(saved.y) || 0; apply(0); offY = clampY(offY); apply(0); }
+		} catch(e){}
+		handle.addEventListener('pointerdown', function(e){
+			if (e.button !== 0 || widget.classList.contains('widget-opened')) return;
+			// chuột: chặn kéo-ảnh / bôi đen mặc định (đi qua ảnh khác ⇒ dragstart ⇒ pointercancel, mất kéo); click vẫn chạy
+			if (e.pointerType === 'mouse') e.preventDefault();
+			start = { x: e.clientX, y: e.clientY, offY: offY, id: e.pointerId };
+			dragging = false;
+		});
+		window.addEventListener('pointermove', function(e){
+			if (!start || e.pointerId !== start.id) return;
+			var dx = e.clientX - start.x, dy = e.clientY - start.y;
+			if (!dragging) {
+				if (Math.abs(dx) < TH && Math.abs(dy) < TH) return;
+				dragging = true;
+				widget.classList.add('is-dragging');
+			}
+			offY = clampY(start.offY + dy);
+			apply(dx);
+		});
+		function end(e){
+			if (!start || (e && e.pointerId !== start.id)) return;
+			if (dragging) {
+				var r = widget.getBoundingClientRect();
+				widget.classList.toggle('pc-widget--left', r.left + r.width / 2 < window.innerWidth / 2);
+				widget.classList.remove('is-dragging');
+				apply(0);
+				save();
+				suppressClick = true;
+				setTimeout(function(){ suppressClick = false; }, 400);
+			}
+			start = null; dragging = false;
+		}
+		// nghe ở window: ngón tay / chuột rời khỏi robot ngay nhịp đầu vẫn kéo tiếp
+		window.addEventListener('pointerup', end);
+		window.addEventListener('pointercancel', end);
+		// chạy trước bộ bật/tắt bảng (lắng nghe ở document) ⇒ thả tay sau khi kéo không mở bảng liên hệ
+		window.addEventListener('click', function(e){
+			if (suppressClick && handle.contains(e.target)) { e.stopPropagation(); e.preventDefault(); suppressClick = false; }
+		}, true);
+		window.addEventListener('resize', function(){ offY = clampY(offY); apply(0); });
+		// Robot đã kéo lên cao ⇒ bảng liên hệ mở phía trên sẽ tràn mép trên màn ⇒ lật bảng xuống dưới robot.
+		// Nghe ở document, đăng ký SAU bộ bật/tắt bảng ⇒ chạy khi class widget-opened đã đổi. offsetHeight không tính transform hiệu ứng.
+		document.addEventListener('click', function(){
+			var panel = widget.querySelector('.def-content');
+			widget.classList.remove('pc-widget--below');
+			if (!panel || !widget.classList.contains('widget-opened')) return;
+			var r = widget.getBoundingClientRect();
+			if (r.top - 18 - panel.offsetHeight < EDGE) widget.classList.add('pc-widget--below');
 		});
 	})();
 	$(function(){
@@ -306,33 +384,42 @@
 	transform: translate(-50%, -50%) rotate(0deg);
 }
 
+/* --- KÉO + NÚT X ẨN NHANH (09/11/2026) --- */
+/* Dời bằng biến translate (JS ghi --pc-drag-x/y) — không đụng right/bottom vì footer_script đang chỉnh bottom khi cuộn tới chân trang */
+.main-widget { translate: var(--pc-drag-x, 0px) var(--pc-drag-y, 0px); transition: translate .25s ease; }
+.main-widget.is-dragging { transition: none; }
+.main-widget .out-circle { touch-action: none; -webkit-user-select: none; user-select: none; }
+.main-widget .out-circle img { -webkit-user-drag: none; pointer-events: none; }
+/* Hít mép trái: bảng liên hệ + mũi tên mở về phía phải */
+.main-widget.pc-widget--left { right: auto; left: 12px; }
+.main-widget.pc-widget--left .def-content { right: auto; left: 0; transform-origin: bottom left; }
+.main-widget.pc-widget--left .def-content:before { right: auto; left: 22px; }
+/* Bảng mở xuống dưới robot (robot ở cao, phía trên không đủ chỗ) — :has() cho bằng độ ưu tiên luật bottom:78px của robot */
+.main-widget.pc-widget--below:has(.out-circle) .def-content { bottom: auto; top: 72px; transform-origin: top right; }
+.main-widget.pc-widget--below.pc-widget--left:has(.out-circle) .def-content { transform-origin: top left; }
+.main-widget.pc-widget--below .def-content:before { bottom: auto; top: -8px; border-top: 0; border-bottom: 8px solid var(--white); }
+.pc-widget-dismiss {
+	position: absolute; top: -22px; right: -8px; z-index: 2;
+	display: flex; align-items: center; justify-content: center;
+	width: 44px; height: 44px; padding: 0; margin: 0;
+	background: transparent; border: 0; border-radius: 50%; cursor: pointer;
+}
+.main-widget.pc-widget--left .pc-widget-dismiss { right: auto; left: -8px; }
+.pc-widget-dismiss__dot {
+	display: inline-flex; align-items: center; justify-content: center;
+	width: 22px; height: 22px; border-radius: 50%;
+	background: rgba(17, 24, 39, .72); color: #fff; font-size: var(--fs-xs); line-height: 1;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
+}
+.pc-widget-dismiss:hover .pc-widget-dismiss__dot { background: rgba(17, 24, 39, .9); }
+.pc-widget-dismiss:focus-visible { outline: 2px solid #075B40; outline-offset: 0; }
+.main-widget.widget-opened .pc-widget-dismiss, .main-widget.is-dragging .pc-widget-dismiss { display: none; }
+@media (prefers-reduced-motion: reduce) { .main-widget { transition: none; } }
+
 /* --- TRẠNG THÁI ẨN HOÀN TOÀN (D02) --- */
 /* display:none thật: không còn chiếm chỗ, không còn bắt click/focus/hover — khác thu gọn. */
 .main-widget.widget-hidden {
 	display: none !important;
 }
 
-.widget-hide-action {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	width: 100%;
-	margin-top: 4px;
-	padding: 8px 6px;
-	background: transparent;
-	border: none;
-	border-top: 1px solid rgba(0,0,0,.08);
-	color: #767676;
-	font-size: var(--fs-xs);
-	line-height: 1.2;
-	cursor: pointer;
-	text-align: left;
-}
-.widget-hide-action:hover,
-.widget-hide-action:focus-visible {
-	color: #333;
-}
-.widget-hide-action svg {
-	flex: 0 0 auto;
-}
 </style>
