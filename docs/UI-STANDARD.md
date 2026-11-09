@@ -403,7 +403,7 @@ Bộ chuẩn áp cho mọi thay đổi giao diện từ nay; cột Hiện trạn
 | #3CB371 chỉ cho mảng trang trí, icon lớn, viền, nền nhạt; chữ/giá/link xanh và nút đặc dùng #075B40 hoặc #003F2D | #3CB371 làm màu chữ hoặc nền chữ trắng | Đạt (L02) |
 | Topbar, footer nền Deep Forest #003F2D chữ trắng | Chữ trắng trên #3CB371 | Đạt (L02) |
 | Link trong đoạn văn có gạch chân hoặc tương phản ≥ 3 : 1 với chữ thường | Link chỉ khác màu rất nhẹ | Đạt (N20) |
-| Chữ trên ảnh có lớp phủ đảm bảo tương phản | Chữ xanh trên ảnh xanh | Chưa (L11) |
+| Chữ trên ảnh có lớp phủ đảm bảo tương phản | Chữ xanh trên ảnh xanh | Ngoại lệ: chữ hero «chìm» do chủ dự án giữ (L11, 09/11/2026) |
 | Thông tin không chỉ truyền bằng màu (kèm chữ/icon) | Viền đỏ không chữ | Một phần |
 
 ### **D.5 Nút & lời kêu gọi hành động**
@@ -729,6 +729,8 @@ Mọi nút, ô nhập, checkbox không có viền focus (204/208 lượt Tab). C
 #### **P1 — sửa ngay sau P0 (có ảnh)**
 
 ##### **L11 · Mức 3 — Hero trang chủ không đọc được ngay**
+
+> **Ngoại lệ (chủ dự án, 09/11/2026):** chữ hero «chìm» (trắng mờ, không lớp phủ gradient lên ảnh/video) là quyết định thiết kế — chấp nhận tương phản ≈ 1,16:1, không tính là lỗi L11, vòng lặp không tự sửa. Phần còn lại của L11 (nút ≥ 44px, hiện ngay ở t=0) vẫn áp dụng.
 
 Tiêu đề hero hiện bằng hiệu ứng mờ dần, sau 1,5 giây vẫn còn mờ và làm LCP lên 7,4s trên 4G. Nút "Đặt lịch phân tích da" chữ xanh trên ảnh xanh; màn đầu desktop không có thông điệp nào đọc được.
 
@@ -1059,7 +1061,7 @@ Mục ✅ KHÔNG được sửa lại trừ khi ui-verify báo hồi quy (khi đ
 | N54 | 7 | Popup xem nhanh /collections/all (1440): Escape không đóng popup (R9) | ⬜ | — | 04/11/2026 | — |
 | N55 | 7 | /collections/all (1440): bấm «Xem nhanh» trước khi quickview.js gắn sự kiện ⇒ chuyển trang SP thay vì mở popup (WebKit, 1/3 lượt) | ⬜ | — | 04/11/2026 | — |
 | L03c | 3 | Tốc độ phần c: ảnh đúng cỡ (`img_url` theo khung), srcset, WebP khi có, preload ảnh LCP (g | ⬜ Chưa sửa | — | — | — |
-| L11 | 3 | Hero trang chủ: tiêu đề + nút hiện ngay, chữ trên ảnh có lớp phủ ≥ 4,5:1 | ⬜ Chưa sửa | — | — | — |
+| L11 | 3 | Hero trang chủ: tiêu đề + nút hiện ngay, chữ trên ảnh có lớp phủ ≥ 4,5:1 | ⚠️ Một phần — tương phản: NGOẠI LỆ chủ dự án (BLOCKED_OWNER) | 0dbdfab + commit giữ chữ «chìm» 09/11 | 09/11/2026 | Đã sửa: nút ui_button lg 48px (cũ 33px bị thanh đáy che), h1 + nút hiện ở t=0, mobile 78svh lộ mục kế. NGOẠI LỆ 09/11/2026: chủ dự án giữ chữ «chìm» (trắng 82%, không phủ gradient lên ảnh/video vì ảnh/video có chữ, là nội dung chính) — chấp nhận tương phản ≈ 1,16:1 < 4,5:1; vòng lặp KHÔNG tự thêm lớp phủ / đổi màu chữ hero. LCP 4G thuộc L03. |
 | L37 | 3 | Ảnh quá cỡ / nặng (`img_url` đúng cỡ, srcset, ảnh nội dung ≤ 200KB) | ⬜ Chưa sửa | — | — | — |
 | L04 | 4 | Form: lỗi tiếng Việt dưới ô (`ui_field` + `data-pc-form`) cho 6 form | ⬜ Chưa sửa | — | — | — |
 | L05 | 4 | Ô nhập 16px, cao 44px | ⬜ Chưa sửa | — | — | — |

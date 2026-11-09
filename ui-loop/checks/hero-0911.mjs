@@ -21,8 +21,11 @@ for (const [name, eng, opt] of [['chromium390', chromium, { viewport:{width:390,
     return { vh: innerHeight, hero: R(hero), title: R(t), titleTxt: t.textContent.trim(), font: cs.fontWeight+' '+cs.fontSize+' '+cs.textTransform+' '+cs.color, btn: R(btn), btnTxt: btn&&btn.textContent.trim(), nav: R(nav), navVisible: nav && getComputedStyle(nav).display!=='none', nextTop: next && Math.round(next.getBoundingClientRect().top), heroBottom: Math.round(hero.getBoundingClientRect().bottom), below: (()=>{const y=hero.getBoundingClientRect().bottom+12; if(y>=innerHeight) return 'ngoài màn'; const e=document.elementFromPoint(innerWidth/2,y); return e && (e.tagName+'.'+String(e.className).slice(0,40))})(), btnBg: btn && getComputedStyle(btn).backgroundColor+' / '+getComputedStyle(btn).color, titleOp: getComputedStyle(t).opacity+'/'+getComputedStyle(t.closest('.portal-hero__caption')).opacity }; });
   await p.addStyleTag({content:'.portal-hero__caption{visibility:hidden!important}'}); await p.waitForTimeout(300);
   const shot = async (r) => decode(await p.screenshot({ clip:{x:Math.max(0,r[0]),y:Math.max(0,r[1]),width:r[2],height:Math.min(r[3], m.vh - r[1])} }));
-  const ct = contrast(await shot(m.title), [255,255,255,1]);
-  const cb = m.btnBg;
-  console.log('==', name, JSON.stringify(m)); console.log('   tương phản tiêu đề (trắng):', JSON.stringify(ct), ' | nút (#0E5235):', JSON.stringify(cb));
+  const ct = contrast(await shot(m.title), [255,255,255,.82]);
+  // Nút so với ảnh xung quanh (viền 10px quanh nút, ẩn caption): tương phản nền nút #075B40 với từng điểm ảnh — WCAG 1.4.11 cần ≥ 3:1
+  const ring = await shot([m.btn[0]-10, m.btn[1]-10, m.btn[2]+20, m.btn[3]+20]);
+  const bgL = L(7,91,64); const rs=[]; for(let y=0;y<ring.h;y++) for(let x=0;x<ring.w;x++){ if(x>=10&&x<ring.w-10&&y>=10&&y<ring.h-10) continue; const o=(y*ring.w+x)*ring.bpp; rs.push(CR(bgL, L(ring.px[o],ring.px[o+1],ring.px[o+2]))); }
+  rs.sort((a,b)=>a-b); const cb = m.btnBg + ' | nút vs ảnh quanh: p10 ' + rs[Math.floor(rs.length*.1)].toFixed(2) + ' trung vị ' + rs[Math.floor(rs.length*.5)].toFixed(2) + ' min ' + rs[0].toFixed(2);
+  console.log('==', name, JSON.stringify(m)); console.log('   tương phản tiêu đề (trắng 82%):', JSON.stringify(ct), ' | nút (#0E5235):', JSON.stringify(cb));
   await b.close();
 }
