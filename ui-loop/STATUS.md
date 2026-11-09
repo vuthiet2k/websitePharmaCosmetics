@@ -1,5 +1,5 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 106 (09/11/2026) · Việc vừa làm: L03b37 → DONE (lần thử đầu; preview đã khởi động lại sau vòng 105) — bỏ bộ lọc `remove` kiểu FA solid thừa ở snippets/lieu_trinh_concerns.bwt (ui_icon tự lấy từ cuối + bỏ tiền tố fa-). Dữ liệu mẫu local `?lt=noimg` (dev-server.js + preview-mock.js) dựng nhánh ô icon.
+Vòng: 106 (09/11/2026) · Việc vừa làm: L03b37 → DONE e3214c6 (lần thử đầu; preview đã khởi động lại sau vòng 105) — bỏ bộ lọc `remove` kiểu FA solid thừa ở snippets/lieu_trinh_concerns.bwt (ui_icon tự lấy từ cuối + bỏ tiền tố fa-). Dữ liệu mẫu local `?lt=noimg` (dev-server.js + preview-mock.js) dựng nhánh ô icon.
 checks/L03b37.mjs 0 ✗ (2 trang × 7 khung): outerHTML 5 ô icon after = before; icon 26×26 / 40×40 =, lệch tâm 0,0px, ΔRGB 0; HTML khối có ảnh = before; cao khối/trang lệch 0px; Tab = before; 0 lỗi JS; ảnh đã xem.
 build:sapo PASS. ui-guard PASS (faIcon 1 → 0 — hết lượt Font Awesome trong mã; --tighten 1 mốc). --quick 7 trang 0 lỗi mới ⇒ --write-baseline (lượt 1 gặp L01 chập chờn N56 ⇒ ghi lại, lượt 2 sạch).
 Việc tiếp theo: L03b phần cuối — gỡ link CDN Font Awesome ở layouts/theme.bwt + layouts/chat.bwt (kiểm `<i class="fa">` trống ở snippets/filter-cate-col.bwt dòng 41; đo --quick theo nhóm ≤ 8 trang), rồi L03, L03c, L37.
