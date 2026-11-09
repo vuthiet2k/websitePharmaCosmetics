@@ -289,6 +289,28 @@ const mockCustomer = buildMockCustomer();
 // resolvePrettyPath) khi request đến từ 1 đường dẫn thật (/blogs/:h, /:alias,
 // /search?query=...) thay vì toolbar ?tpl=. Khi không có routeParams (dùng
 // toolbar) → giữ nguyên hành vi cũ hoàn toàn (suy luận từ templateName).
+// L03b35 (04/11/2026): `?tiers=demo` (dev-server) ⇒ bật 3 hạng thành viên (/loyalty) / 3 gói đại lý (/dai-ly-b2b)
+// bằng dữ liệu MẪU chỉ ở local — settings_data.json không có giá trị nên danh sách quyền lợi (chứa icon) không dựng được.
+// Chữ ghi rõ "mẫu", không phải nội dung thật; không sửa settings dùng chung.
+const TIERS_DEMO_SETTINGS = {
+  'page.loyalty': {
+    loyalty_tier_1_enable: true, loyalty_tier_1_name: 'Hạng mẫu 1', loyalty_tier_1_threshold: '0', loyalty_tier_1_color: '#9CA3AF',
+    loyalty_tier_1_perks: 'Quyền lợi mẫu A; Quyền lợi mẫu B',
+    loyalty_tier_2_enable: true, loyalty_tier_2_name: 'Hạng mẫu 2', loyalty_tier_2_threshold: '500', loyalty_tier_2_color: '#D4A017',
+    loyalty_tier_2_perks: 'Quyền lợi mẫu A; Quyền lợi mẫu B dài hơn để kiểm chữ xuống dòng trong thẻ hạng thành viên; Quyền lợi mẫu C',
+    loyalty_tier_3_enable: true, loyalty_tier_3_name: 'Hạng mẫu 3', loyalty_tier_3_threshold: '2000', loyalty_tier_3_color: '#075B40',
+    loyalty_tier_3_perks: 'Quyền lợi mẫu A; Quyền lợi mẫu B; Quyền lợi mẫu C; Quyền lợi mẫu D',
+  },
+  'page.dai-ly-b2b': {
+    b2b_tier_1_enable: true, b2b_tier_1_name: 'Gói mẫu 1', b2b_tier_1_min_order: 'Mức mẫu 1', b2b_tier_1_discount: '0%',
+    b2b_tier_1_features: 'Quyền lợi mẫu A; Quyền lợi mẫu B',
+    b2b_tier_2_enable: true, b2b_tier_2_featured: true, b2b_tier_2_name: 'Gói mẫu 2', b2b_tier_2_min_order: 'Mức mẫu 2', b2b_tier_2_discount: '0%',
+    b2b_tier_2_features: 'Quyền lợi mẫu A; Quyền lợi mẫu B dài hơn để kiểm chữ xuống dòng trong thẻ gói đại lý; Quyền lợi mẫu C',
+    b2b_tier_3_enable: true, b2b_tier_3_name: 'Gói mẫu 3', b2b_tier_3_min_order: 'Mức mẫu 3', b2b_tier_3_discount: '0%',
+    b2b_tier_3_features: 'Quyền lợi mẫu A; Quyền lợi mẫu B; Quyền lợi mẫu C; Quyền lợi mẫu D',
+  },
+};
+
 function getContext(templateName = 'index', routeParams = {}) {
   // Sản phẩm đơn dùng cho template product.bwt — ưu tiên alias thật từ URL.
   let currentProduct = routeParams.productAlias
@@ -414,7 +436,9 @@ function getContext(templateName = 'index', routeParams = {}) {
     // 2026-11-03 (L03b28): SP demo có `demo_settings` (data/products.js) ⇒ chỉ trang của SP đó thấy settings bật thêm.
     settings: (currentProduct && currentProduct.demo_settings && routeParams.productAlias === currentProduct.alias)
       ? { ...settings, ...currentProduct.demo_settings }
-      : settings,
+      : (routeParams.tiersDemo && TIERS_DEMO_SETTINGS[templateName])
+        ? { ...settings, ...TIERS_DEMO_SETTINGS[templateName] }
+        : settings,
     store,
     template:         sapoTemplate,
     page_title:       store.name,

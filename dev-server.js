@@ -1246,6 +1246,9 @@ async function renderFullPage(tpl = 'index', queryParams = null, routeParams = {
   // che mất (không có product / SP không ảnh / giá 0 ⇒ nút tư vấn) — xử lý trong preview-mock.js getContext.
   const svcState = queryParams && queryParams.get('svc');
   if (svcState && /^(none|noimg|free)$/.test(svcState)) finalRouteParams.svcState = svcState;
+  // L03b35 (04/11/2026): `?tiers=demo` ⇒ bật hạng thành viên (/loyalty) / gói đại lý (/dai-ly-b2b) MẪU (preview-mock.js
+  // TIERS_DEMO_SETTINGS) để dựng danh sách quyền lợi chứa icon — settings_data.json để trống các ô này.
+  if (queryParams && queryParams.get('tiers') === 'demo') finalRouteParams.tiersDemo = true;
   if (tpl === 'search' && queryParams && !Object.prototype.hasOwnProperty.call(finalRouteParams, 'searchQuery')) {
     finalRouteParams.searchQuery = queryParams.get('query') || queryParams.get('q') || '';
     finalRouteParams.searchType = queryParams.get('type') || 'product';
