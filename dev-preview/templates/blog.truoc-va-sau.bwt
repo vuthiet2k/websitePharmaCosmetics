@@ -25,7 +25,7 @@
       <figure class="pc-ba-frame pc-ba-frame--after"><img src="{{ pc_bs_after }}" alt="{{ pc_bt_a.title | escape }} — sau" width="280" height="280" loading="lazy"><figcaption class="pc-ba-badge pc-ba-badge--after">SAU</figcaption></figure>
     </div>
     {%- else -%}
-    <div class="pc-bt-empty"><i class="fa-solid fa-image" aria-hidden="true"></i> Thiếu ảnh — ca KHÔNG hiện ở /clinical-proof</div>
+    <div class="pc-bt-empty"><i class="inline-flex align-middle leading-none" aria-hidden="true">{% include 'ui_icon', name: 'image', size: 'em' %}</i> Thiếu ảnh — ca KHÔNG hiện ở /clinical-proof</div>
     {%- endif -%}
     <p class="pc-bt-card__group">{{ pc_bt_group | upcase }}</p>
     <h2 class="pc-bt-card__title"><a href="{{ pc_bt_a.url }}">{{ pc_bt_a.title }}</a></h2>
@@ -36,13 +36,19 @@
       {%- if pc_bs_plan != blank -%}<span>{{ pc_bs_plan }}</span>{%- endif -%}
     {%- endcapture -%}
     {%- if pc_bt_meta != blank -%}<p class="pc-bt-card__meta">{{ pc_bt_meta }}</p>{%- endif -%}
+    {%- comment -%} L03b43 (09/11/2026): bỏ Font Awesome — ui_icon size em (1em = glyph FA), <i> bọc giữ màu .is-ok/.is-warn i; tên icon chọn theo trạng thái {%- endcomment -%}
     <ul class="pc-bt-checks">
-      <li class="{% if pc_bt_has %}is-ok{% else %}is-bad{% endif %}"><i class="fa-solid {% if pc_bt_has %}fa-circle-check{% else %}fa-circle-xmark{% endif %}" aria-hidden="true"></i> Ảnh trước/sau{% if pc_bt_has %} · từ {{ pc_bt_src }}{% endif %}</li>
-      <li class="{% if pc_bs_group != blank %}is-ok{% else %}is-warn{% endif %}"><i class="fa-solid {% if pc_bs_group != blank %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}" aria-hidden="true"></i> Tag nhom:{% if pc_bs_group == blank %} — vào "{{ pc_bt_other }}"{% endif %}</li>
-      <li class="{% if pc_bt_sum != blank %}is-ok{% else %}is-warn{% endif %}"><i class="fa-solid {% if pc_bt_sum != blank %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}" aria-hidden="true"></i> Tóm tắt</li>
-      <li class="{% if pc_bt_a.author != blank %}is-ok{% else %}is-warn{% endif %}"><i class="fa-solid {% if pc_bt_a.author != blank %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}" aria-hidden="true"></i> Tác giả (chuyên gia){% if pc_bt_a.author != blank %} · {{ pc_bt_a.author }}{% endif %}</li>
-      <li class="{% if pc_bt_a.template_suffix == 'truoc-va-sau' %}is-ok{% else %}is-warn{% endif %}"><i class="fa-solid {% if pc_bt_a.template_suffix == 'truoc-va-sau' %}fa-circle-check{% else %}fa-circle-exclamation{% endif %}" aria-hidden="true"></i> Khung giao diện: article{% if pc_bt_a.template_suffix != blank %}.{{ pc_bt_a.template_suffix }}{% endif %}</li>
-      {%- if pc_bs_lt_first != blank -%}<li class="is-ok"><i class="fa-solid fa-link" aria-hidden="true"></i> Liệu trình: {{ pc_bs_lt_first | truncate: 40 }}</li>{%- endif -%}
+      {%- if pc_bt_has -%}{%- assign pc_bt_ic = 'circle-check' -%}{%- else -%}{%- assign pc_bt_ic = 'circle-x' -%}{%- endif -%}
+      <li class="{% if pc_bt_has %}is-ok{% else %}is-bad{% endif %}"><i class="inline-flex align-middle leading-none" aria-hidden="true">{% include 'ui_icon', name: pc_bt_ic, size: 'em' %}</i> Ảnh trước/sau{% if pc_bt_has %} · từ {{ pc_bt_src }}{% endif %}</li>
+      {%- if pc_bs_group != blank -%}{%- assign pc_bt_ic = 'circle-check' -%}{%- else -%}{%- assign pc_bt_ic = 'circle-alert' -%}{%- endif -%}
+      <li class="{% if pc_bs_group != blank %}is-ok{% else %}is-warn{% endif %}"><i class="inline-flex align-middle leading-none" aria-hidden="true">{% include 'ui_icon', name: pc_bt_ic, size: 'em' %}</i> Tag nhom:{% if pc_bs_group == blank %} — vào "{{ pc_bt_other }}"{% endif %}</li>
+      {%- if pc_bt_sum != blank -%}{%- assign pc_bt_ic = 'circle-check' -%}{%- else -%}{%- assign pc_bt_ic = 'circle-alert' -%}{%- endif -%}
+      <li class="{% if pc_bt_sum != blank %}is-ok{% else %}is-warn{% endif %}"><i class="inline-flex align-middle leading-none" aria-hidden="true">{% include 'ui_icon', name: pc_bt_ic, size: 'em' %}</i> Tóm tắt</li>
+      {%- if pc_bt_a.author != blank -%}{%- assign pc_bt_ic = 'circle-check' -%}{%- else -%}{%- assign pc_bt_ic = 'circle-alert' -%}{%- endif -%}
+      <li class="{% if pc_bt_a.author != blank %}is-ok{% else %}is-warn{% endif %}"><i class="inline-flex align-middle leading-none" aria-hidden="true">{% include 'ui_icon', name: pc_bt_ic, size: 'em' %}</i> Tác giả (chuyên gia){% if pc_bt_a.author != blank %} · {{ pc_bt_a.author }}{% endif %}</li>
+      {%- if pc_bt_a.template_suffix == 'truoc-va-sau' -%}{%- assign pc_bt_ic = 'circle-check' -%}{%- else -%}{%- assign pc_bt_ic = 'circle-alert' -%}{%- endif -%}
+      <li class="{% if pc_bt_a.template_suffix == 'truoc-va-sau' %}is-ok{% else %}is-warn{% endif %}"><i class="inline-flex align-middle leading-none" aria-hidden="true">{% include 'ui_icon', name: pc_bt_ic, size: 'em' %}</i> Khung giao diện: article{% if pc_bt_a.template_suffix != blank %}.{{ pc_bt_a.template_suffix }}{% endif %}</li>
+      {%- if pc_bs_lt_first != blank -%}<li class="is-ok"><i class="inline-flex align-middle leading-none" aria-hidden="true">{% include 'ui_icon', name: 'link', size: 'em' %}</i> Liệu trình: {{ pc_bs_lt_first | truncate: 40 }}</li>{%- endif -%}
     </ul>
   </article>
 {%- endfor -%}
@@ -82,7 +88,7 @@
     @media (max-width: 991px) { .pc-bt-grid { grid-template-columns: 1fr 1fr; } .pc-bt-stats { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 767px) { .pc-bt-grid { grid-template-columns: 1fr; } .pc-bt-stats { gap: 10px; } }
   </style>
-  <div class="pc-bt-devbar"><div class="container"><i class="fa-solid fa-flask" aria-hidden="true"></i> TRANG TEST LOCAL — dữ liệu demo, không đóng gói lên Sapo.</div></div>
+  <div class="pc-bt-devbar"><div class="container"><i class="inline-flex align-middle leading-none" aria-hidden="true">{% include 'ui_icon', name: 'flask', size: 'em' %}</i> TRANG TEST LOCAL — dữ liệu demo, không đóng gói lên Sapo.</div></div>
   <section class="container pc-ba-hero pc-ba-hero--text">
     <div class="pc-ba-hero__text">
       <p class="pc-ba-kicker">DANH MỤC BÀI VIẾT · {{ blog.handle | upcase }}</p>
