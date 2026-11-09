@@ -1,5 +1,5 @@
 TRẠNG THÁI: ĐANG CHẠY
-Vòng: 108 (09/11/2026) · Việc vừa làm: L03b39 → DONE (lần thử đầu; mã commit ghi ở E.7 commit docs kế tiếp) — /order-lookup: XOÁ quy tắc CSS nội tuyến `.pl-node.done .pl-dot::after` (glyph FA \f00c); thêm `<template id="pl-check-icon">` (ui_icon check size em trong <i aria-hidden>), renderRail chèn vào chấm done.
+Vòng: 108 (09/11/2026) · Việc vừa làm: L03b39 → DONE b559807 (lần thử đầu) — /order-lookup: XOÁ quy tắc CSS nội tuyến `.pl-node.done .pl-dot::after` (glyph FA \f00c); thêm `<template id="pl-check-icon">` (ui_icon check size em trong <i aria-hidden>), renderRail chèn vào chấm done.
 checks/L03b39.mjs 595 ✔ / 0 ✗ (7 khung, GAS giả lập route Playwright: DELIVERING / DELIVERED (Enter) / CANCELLED): tick 3/4/2 = before; pseudo font FA 3/4/2 → 0; tick 12×12 (glyph 10,5×12), lệch tâm 0px, ΔRGB 0; chấm ●/×, nhãn, thanh tiến trình, cao trang = before; toast trống + Tab = before; 0 lỗi JS; ảnh đã xem.
 build:sapo PASS. ui-guard PASS (--tighten 0 mốc). --quick 7 trang 0 lỗi mới (lượt 2) ⇒ --write-baseline lượt 3 sạch (lượt 1–2 chập chờn ngoài trang việc: giỏ WebKit có hàng, /collections/all điều hướng, L01 N56 ⇒ đã git restore mốc). Thêm N60 (toast /order-lookup bị thanh đáy che 37px — có từ trước).
 Việc tiếp theo: L03b40 (tay kéo trước/sau page.indexskinhealthy \f337), L03b41, L03b42 (gỡ CDN), rồi L03, L03c, L37.
