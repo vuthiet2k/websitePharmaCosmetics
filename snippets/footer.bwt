@@ -148,14 +148,15 @@
     {%- endif -%}
   </div>
 <script>
-/* 04/11/2026: accordion Danh mục nhanh + chân trang — < 1024px thu gọn sẵn, ≥ 1024px luôn mở (tiêu đề không bấm, không nhận Tab). */
+/* 04/11/2026: accordion Danh mục nhanh + chân trang — < 1024px thu gọn sẵn, ≥ 1024px luôn mở (tiêu đề không bấm, không nhận Tab).
+   09/11/2026 (kế hoạch mobile TASK-06): bỏ gán tabindex="-1" lên <summary> ở desktop — Chrome báo «Interactive element inside of a
+   <summary>» (3 lỗi/trang ở /collections/all, trang SP). Không cần: ≥ 1024px summary đã display:contents (ui-src/css/components.css
+   .pc-h4-acc__sum) ⇒ trình duyệt tự bỏ qua khi Tab. */
 (function () {
   var mq = window.matchMedia('(max-width: 1023.98px)');
   function apply() {
     Array.prototype.forEach.call(document.querySelectorAll('details[data-pc-acc]'), function (d) {
       d.open = !mq.matches;
-      var s = d.querySelector('summary');
-      if (s) { if (mq.matches) s.removeAttribute('tabindex'); else s.setAttribute('tabindex', '-1'); }
     });
   }
   apply();

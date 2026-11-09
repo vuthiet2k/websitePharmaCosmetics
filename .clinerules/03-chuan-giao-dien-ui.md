@@ -66,6 +66,7 @@ Xuất `test-results/audit-ui/report.json` + ảnh chụp toàn trang; mã lỗi
 | UI-5.1 ◇ | Hai họ thẻ SP, mỗi họ một kiểu: **thẻ trang chủ** (`product_grid_office_sale`, theo thiết kế trang chủ: nút viền, nhãn góc trái) và **thẻ catalog** cho mọi nơi khác (danh mục, PDP "Có thể bạn thích"/"Liên quan", đã xem, tài khoản — theo mockup `design/danh-muc/`: nhãn giảm giá dạng viên đỏ góc trái, nút xanh rừng `#003F2D` bo 8px, giá `#003F2D`). Chung: ảnh tỉ lệ cố định, tên 15/14px 600 cắt đúng 2 dòng, giá 16/15px 700 + giá gốc 13px gạch, nút 14/13px. Khối `PCARD-UNIFY` cuối `assets/storefront-v3.css`. | ảnh chụp |
 | UI-5.2 ◇ | Các thẻ trong một hàng cao bằng nhau; nút bám đáy thẻ thẳng hàng. | ảnh chụp |
 | UI-5.3 | Không bịa dữ liệu (đánh giá sao, % đã bán) — thiếu dữ liệu thì ẩn phần tử (02 mục 7). | review |
+| UI-5.4 ◇ | Thẻ trang chủ `.pc-h4-pcard` trên mobile (< 1024px, chốt 09/11/2026): ảnh **tràn viền** vuông 1:1 sát mép trên/trái/phải (thẻ không đệm, bo 12px cắt góc ảnh), nhãn -X% ghim góc trái ảnh; ẩn dòng hãng (vendor); tên giữ đủ chỗ 2 dòng; nút bo 8px, **1 dòng** (nowrap + «…»), cao 44px. | `ui-loop/checks/mobile-plan-0911.mjs` |
 
 ## UI-6. Ảnh & media
 
@@ -81,6 +82,7 @@ Xuất `test-results/audit-ui/report.json` + ảnh chụp toàn trang; mã lỗi
 | :-- | :-- | :-- |
 | UI-7.1 ◇ | Header giống nhau ở mọi trang (không layout riêng bỏ header — xem sự cố 18/09 ở 02 mục 7). | ảnh chụp |
 | UI-7.2 ◇ | Nút nổi (lên đầu trang, Zalo/Messenger, liên hệ) không che nút chính / giá / nút giỏ trên mobile; không chồng lên bottom-nav. | ảnh chụp mobile |
+| UI-7.4 ✱ | Phần tử dính đáy (bottom-nav, robot liên hệ, thanh mua) cộng `env(safe-area-inset-bottom)`; meta viewport phải có `viewport-fit=cover` (`layouts/theme.bwt`) — thiếu cờ này iOS luôn trả `env()` = 0. | review |
 | UI-7.3 ◇ | Footer: cột thương hiệu + 3 cột menu (mobile: accordion); dải pháp lý (tên HKD, địa chỉ, MST, badge "Đã thông báo BCT") **căn giữa**; dòng bản quyền căn giữa. | ảnh chụp |
 
 ## UI-8. Chất lượng chạy
@@ -89,6 +91,7 @@ Xuất `test-results/audit-ui/report.json` + ảnh chụp toàn trang; mã lỗi
 | :-- | :-- | :-- |
 | UI-8.1 ✱ | Không lỗi JS (`pageerror`) trên trang. Lỗi console do dịch vụ ngoài (mạng chặn ở local) ghi chú, không tính. | `errors` |
 | UI-8.2 ✱ | Không trang nào trả lỗi render Liquid (chuỗi `Liquid error`, `SYSTEM.LINQ`, `{{`, `{%` lộ ra màn hình). | `liquidLeak` |
+| UI-8.4 ✱ | Không lỗi Chrome «Interactive element inside of a `<summary>`»: trong `<summary>` không đặt `<a>`/`<button>`/ô nhập, **không gắn `tabindex` (kể cả lên chính `<summary>`)**. Cần bỏ summary khỏi Tab ở desktop ⇒ `display:contents` (accordion footer). | `ui-loop/checks/summary-issue-0911.mjs` (390 + 1440) |
 | UI-8.3 ◇ | Trạng thái rỗng (giỏ trống, danh mục 0 SP, chưa đăng nhập) có thông điệp + nút dẫn tiếp, không để khoảng trắng. | ảnh chụp |
 
 ## UI-9. Icon — thư viện dùng chung (RULE CỨNG, 17/10/2026)
