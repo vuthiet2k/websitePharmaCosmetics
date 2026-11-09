@@ -267,6 +267,14 @@ engine.registerFilter('asset_url', (src) => {
 engine.registerFilter('img_url', (src, size) => {
   // Sapo img objects ({ src, alt }) hoặc string URL — xử lý cả hai
   const url = src && typeof src === 'object' ? (src.src || '') : (src || '');
+  // L03c1 (09/11/2026): mô phỏng CDN Sapo — ảnh bizweb.dktcdn.net/100/… kèm cỡ chuẩn Sapo ⇒ …/thumb/<cỡ>/100/… như img_url
+  // thật (trước đây trả nguyên ảnh gốc 2000px vào ô 181px). Đã đo CDN (ui-loop/checks/L03c1-cdn.mjs): 10 cỡ dưới đây trả 200
+  // cho products/collections/theme_temp/files; 'master', '480x480' trả 404 ⇒ giữ nguyên URL. Không cỡ / URL đã có /thumb/ ⇒ giữ nguyên.
+  const SAPO_SIZES = ['pico', 'icon', 'thumb', 'small', 'compact', 'medium', 'large', 'grande', '1024x1024', '2048x2048'];
+  if (url && SAPO_SIZES.includes(size)) {
+    const m = /^((?:https?:)?\/\/bizweb\.dktcdn\.net\/)(100\/.*)$/.exec(url);
+    if (m) return `${m[1]}thumb/${size}/${m[2]}`;
+  }
   if (!url || url.startsWith('http')) return url;
   // Placeholder cho ảnh CDN (asset local, relative path)
   const dim = typeof size === 'string' && size.includes('x')
@@ -576,7 +584,37 @@ function devToolbarStyle() {
     border-radius: 4px; font-size: 12px; display: none;
   }
   body { padding-bottom: 42px !important; }
-</style>`;
+  /* 09/11/2026: ẩn / hiện thanh dev — nút «Ẩn», phím Alt+Shift+D, hoặc ?devbar=0 / ?devbar=1 trên URL.
+     Trạng thái nhớ ở localStorage 'pc_dev_toolbar_hidden' (mặc định HIỆN ⇒ trình duyệt kiểm tự động không đổi gì). */
+  #dev-toolbar .dev-tb-btn {
+    background: #313244; color: #cdd6f4; border: 1px solid #45475a; border-radius: 4px;
+    padding: 2px 8px; font: inherit; font-size: 12px; cursor: pointer;
+  }
+  #dev-toolbar .dev-tb-btn:hover { background: #45475a; }
+  .dev-toolbar-show {
+    position: fixed; left: 8px; bottom: 8px; z-index: 99999; display: none;
+    background: #1e1e2e; color: #89b4fa; border: 1px solid #89b4fa; border-radius: 999px;
+    padding: 4px 10px; font: 12px monospace; cursor: pointer; opacity: .55;
+  }
+  .dev-toolbar-show:hover, .dev-toolbar-show:focus-visible { opacity: 1; }
+  html.dev-tb-off #dev-toolbar { display: none !important; }
+  html.dev-tb-off body { padding-bottom: 0 !important; }
+  html.dev-tb-off .dev-toolbar-show { display: block; }
+</style>
+<script>
+(function () {
+  var K = 'pc_dev_toolbar_hidden', q = /[?&]devbar=([01])/.exec(location.search), off;
+  try { if (q) localStorage.setItem(K, q[1] === '0' ? '1' : '0'); off = localStorage.getItem(K) === '1'; } catch (e) { off = q && q[1] === '0'; }
+  if (off) document.documentElement.classList.add('dev-tb-off');
+  window.__devToolbar = function (hide) {
+    var h = document.documentElement.classList.toggle('dev-tb-off', hide);
+    try { localStorage.setItem(K, h ? '1' : '0'); } catch (e) {}
+  };
+  document.addEventListener('keydown', function (e) {
+    if (e.altKey && e.shiftKey && (e.key === 'D' || e.key === 'd' || e.code === 'KeyD')) { e.preventDefault(); window.__devToolbar(); }
+  });
+})();
+</script>`;
 }
 
 function devCuratedGroups() {
@@ -726,8 +764,10 @@ function devToolbarHtml(tpl) {
     <select id="tpl-select" onchange="var o=this.options[this.selectedIndex],v=this.value;location.href=(o.getAttribute('data-url')||(v==='page.mops-admin'?'/mops-admin':'/?tpl='+v))">${options}</select>
     <a class="tpl-badge" href="/__pages" style="text-decoration:none">📋 Tất cả trang</a>
     <span class="tpl-badge">localhost:${PORT}</span>
+    <button type="button" class="dev-tb-btn" onclick="__devToolbar(true)" title="Ẩn thanh dev (Alt+Shift+D)">✕ Ẩn</button>
   </div>
 </div>
+<button type="button" class="dev-toolbar-show" onclick="__devToolbar(false)" title="Hiện thanh dev (Alt+Shift+D)">DEV ▲</button>
 <script>
 /* Nhiều mục chung 1 template (vd blog) ⇒ chọn đúng mục theo URL đang xem. */
 (function () {
