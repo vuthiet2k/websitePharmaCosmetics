@@ -32,8 +32,10 @@
     position: absolute; top: 0; bottom: 0; left: var(--sh2-ba-pos, 50%); width: 2px; background: #fff;
     transform: translateX(-1px); pointer-events: none;
   }
-  .sh2-ba-slider__handle::after {
-    content: '\f337'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  /* L03b40 (09/11/2026): vòng tròn tay kéo chuyển từ ::after (glyph Font Awesome \f337) sang phần tử thật .sh2-ba-slider__knob chứa
+     ui_icon move-horizontal size em — chỉ đổi selector + XOÁ 3 khai báo glyph (content / font-family / font-weight), không thêm khai báo (R1). */
+  .sh2-ba-slider__knob {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
     width: 36px; height: 36px; border-radius: 50%; background: #fff; color: var(--sh-ink);
     display: flex; align-items: center; justify-content: center; font-size: var(--fs-body); box-shadow: 0 2px 8px rgba(0,0,0,.25);
   }
@@ -725,7 +727,7 @@
           <div class="sh2-ba-slider" data-ba-slider>
             <img class="sh2-ba-slider__before" src="{{ sh_ba_before | img_url: 'grande' }}" alt="{{ sh_ba_name }} — trước điều trị">
             <img class="sh2-ba-slider__after"  src="{{ sh_ba_after  | img_url: 'grande' }}" alt="{{ sh_ba_name }} — sau điều trị">
-            <div class="sh2-ba-slider__handle"></div>
+            <div class="sh2-ba-slider__handle"><span class="sh2-ba-slider__knob" aria-hidden="true">{% include 'ui_icon', name: 'arrows-left-right', size: 'em' %}</span></div>
             <span class="sh2-ba-slider__label sh2-ba-slider__label--before">Trước</span>
             <span class="sh2-ba-slider__label sh2-ba-slider__label--after">Sau</span>
           </div>

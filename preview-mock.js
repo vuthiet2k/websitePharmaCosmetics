@@ -310,6 +310,18 @@ const TIERS_DEMO_SETTINGS = {
     b2b_tier_3_features: 'Quyền lợi mẫu A; Quyền lợi mẫu B; Quyền lợi mẫu C; Quyền lợi mẫu D',
   },
 };
+// L03b40 (09/11/2026): `?ba=demo` (dev-server) ⇒ khối «Trước & Sau» của page.indexskinhealthy (/skin-health-beauty) có ảnh MẪU
+// cho 3 nhóm (2 nhóm đủ trước + sau ⇒ dựng thanh kéo so sánh chứa tay kéo icon; 1 nhóm chỉ chú thích) — settings_data.json để
+// trống 18 ô này nên khối không hiện. Ảnh = asset local có sẵn (URL tuyệt đối ⇒ img_url trả nguyên), chú thích ghi rõ "mẫu".
+const BA_DEMO_ASSET = (f) => `http://localhost:${process.env.PORT || 3000}/assets/${f}`;
+const BA_DEMO_SETTINGS = {
+  'page.indexskinhealthy': {
+    skinhealthy_cat_1_before: BA_DEMO_ASSET('home_concern_1.jpg'), skinhealthy_cat_1_after: BA_DEMO_ASSET('home_concern_2.jpg'),
+    skinhealthy_cat_1_annotation: 'Chú thích mẫu — chỉ dùng ở local',
+    skinhealthy_cat_2_before: BA_DEMO_ASSET('home_concern_3.jpg'), skinhealthy_cat_2_after: BA_DEMO_ASSET('home_concern_4.jpg'),
+    skinhealthy_cat_3_annotation: 'Chú thích mẫu (nhóm không ảnh)',
+  },
+};
 
 function getContext(templateName = 'index', routeParams = {}) {
   // Sản phẩm đơn dùng cho template product.bwt — ưu tiên alias thật từ URL.
@@ -446,7 +458,9 @@ function getContext(templateName = 'index', routeParams = {}) {
       ? { ...settings, ...currentProduct.demo_settings }
       : (routeParams.tiersDemo && TIERS_DEMO_SETTINGS[templateName])
         ? { ...settings, ...TIERS_DEMO_SETTINGS[templateName] }
-        : settings,
+        : (routeParams.baDemo && BA_DEMO_SETTINGS[templateName])
+          ? { ...settings, ...BA_DEMO_SETTINGS[templateName] }
+          : settings,
     store,
     template:         sapoTemplate,
     page_title:       store.name,
