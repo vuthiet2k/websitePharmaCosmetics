@@ -111,4 +111,21 @@
   </div>
 </section>
 {%- include 'home_tabs_script' -%}
+<script>
+/* 09/11/2026: thanh kéo so sánh ảnh TRƯỚC / SAU (desktop >= 1024, CSS 14.8) — kéo chuột / chạm (Pointer Events) hoặc phím trái/phải/Home/End.
+   Ghi --ba (0-100%) lên khung; ảnh SAU cắt bằng clip-path theo --ba. Mobile thanh ẩn (display:none) ⇒ không bắt sự kiện. */
+(function(){
+  document.querySelectorAll('[data-h4-ba]').forEach(function(box){
+    var h = box.querySelector('.pc-h4-case__ba'); if (!h) return;
+    function set(v){ v = Math.max(0, Math.min(100, Math.round(v))); box.style.setProperty('--ba', v + '%'); h.setAttribute('aria-valuenow', v); h.setAttribute('aria-valuetext', v + '%'); }
+    function fromX(x){ var r = box.getBoundingClientRect(); set((x - r.left) / r.width * 100); }
+    var drag = false;
+    box.addEventListener('pointerdown', function(e){ if (e.button !== 0 || getComputedStyle(h).display === 'none') return; drag = true; try { box.setPointerCapture(e.pointerId); } catch (err) {} fromX(e.clientX); e.preventDefault(); h.focus({ preventScroll: true }); });
+    box.addEventListener('pointermove', function(e){ if (drag) fromX(e.clientX); });
+    box.addEventListener('pointerup', function(){ drag = false; });
+    box.addEventListener('pointercancel', function(){ drag = false; });
+    h.addEventListener('keydown', function(e){ var v = +h.getAttribute('aria-valuenow'); var m = { ArrowLeft: v - 5, ArrowDown: v - 5, ArrowRight: v + 5, ArrowUp: v + 5, Home: 0, End: 100 }[e.key]; if (m === undefined) return; e.preventDefault(); set(m); });
+  });
+})();
+</script>
 {%- endif -%}

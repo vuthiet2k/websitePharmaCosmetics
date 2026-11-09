@@ -6,21 +6,30 @@
   Cộng dồn vào testi_tabs / testi_panels, tăng testi_n. Dòng nào trống ⇒ ẩn (không bịa dữ liệu).
   04/11/2026 (mobile, CSS 14.19): .pc-h4-case__hd (tiêu đề + dòng khách + nhãn sản phẩm t_products) đưa lên đầu thẻ bằng order;
   nhãn ảnh sau thêm t_duration; tóm tắt t_desc (.pc-h4-case__sum) chỉ hiện mobile — desktop vẫn dùng bảng dl.
+  09/11/2026 (chủ dự án: «bệnh án dàn trải» — 2 ảnh to + bảng dài kéo trang): desktop ≥ 1024 (CSS 14.8) ảnh TRƯỚC / SAU gộp 1 khung 4:3
+  có thanh kéo so sánh (.pc-h4-case__ba, role=slider — JS cuối section_testimonials), cột phải = tiêu đề + dòng khách + 2 chip
+  (thời gian theo dõi, sản phẩm sử dụng) + tóm tắt t_desc; bảng chi tiết (tình trạng ban đầu, các bước…) gói trong <details>
+  «Hành trình». Không thêm số liệu nào ngoài dữ liệu ca. Mobile: .pc-h4-case__body display:contents ⇒ giữ nguyên thứ tự Main.png.
 {%- endcomment -%}
 {%- assign testi_n = testi_n | plus: 1 -%}
 {%- capture t_sel -%}{% if testi_n == 1 %}true{% else %}false{% endif %}{%- endcapture -%}
 {%- capture t_tab -%}<li class="m-0"><a class="pc-h4-case-tab" role="tab" id="pc-h4-ct-{{ t_key }}" aria-controls="pc-h4-cp-{{ t_key }}" aria-selected="{{ t_sel }}" tabindex="{% if testi_n == 1 %}0{% else %}-1{% endif %}" href="#pc-h4-cp-{{ t_key }}">0{{ testi_n }} · {{ t_concern | escape }}{% if t_tab_who != blank %} – {{ t_tab_who | escape }}{% endif %}</a></li>{%- endcapture -%}
 {%- capture t_panel -%}
 <article class="pc-h4-case" role="tabpanel" id="pc-h4-cp-{{ t_key }}" aria-labelledby="pc-h4-ct-{{ t_key }}"{% if testi_n > 1 %} hidden{% endif %}>
-  <div class="pc-h4-case__imgs">
+  <div class="pc-h4-case__imgs" data-h4-ba>
     <figure class="pc-h4-case__img"><span class="pc-h4-case__badge">{{ testi_lb_before | escape }}</span>{%- if t_img1 != blank -%}<img src="{{ t_img1 }}" alt="{{ testi_lb_before | escape }} — {{ t_title | escape }}" width="728" height="600" loading="lazy" decoding="async">{%- endif -%}</figure>
     <figure class="pc-h4-case__img"><span class="pc-h4-case__badge pc-h4-case__badge--after">{{ testi_lb_after | escape }}{% if t_duration != blank %}<span class="pc-h4-sm-only"> {{ t_duration | escape }}</span>{% endif %}</span>{%- if t_img2 != blank -%}<img src="{{ t_img2 }}" alt="{{ testi_lb_after | escape }} — {{ t_title | escape }}" width="728" height="600" loading="lazy" decoding="async">{%- endif -%}</figure>
+    {%- if t_img1 != blank and t_img2 != blank -%}<span class="pc-h4-case__ba pc-h4-lg-only" role="slider" tabindex="0" aria-label="{{ testi_lb_before | escape }} / {{ testi_lb_after | escape }} — {{ t_title | escape }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-valuetext="50%"><span class="pc-h4-case__ba-knob" aria-hidden="true">{% include 'ui_icon', name: 'chevron-left' %}{% include 'ui_icon', name: 'chevron-right' %}</span></span>{%- endif -%}
   </div>
+  <div class="pc-h4-case__body">
   <div class="pc-h4-case__hd">
     <h3 class="pc-h4-case__t">{{ t_title | escape }}</h3>
     {%- if t_who != blank -%}<p class="pc-h4-case__m">{{ t_who | strip | escape }}</p>{%- endif -%}
     {%- if t_products != blank -%}<p class="pc-h4-case__tag pc-h4-sm-only m-0">{{ t_products | escape }}</p>{%- endif -%}
   </div>
+  {%- if t_duration != blank or t_products != blank -%}<ul class="pc-h4-case__chips pc-h4-lg-only">{%- if t_duration != blank -%}<li>{% include 'ui_icon', name: 'clock' %}<span><small>{{ settings.home_testi_duration_label | default: 'Thời gian theo dõi' | escape }}</small>{{ t_duration | escape }}</span></li>{%- endif -%}{%- if t_products != blank -%}<li>{% include 'ui_icon', name: 'flask-conical' %}<span><small>{{ settings.home_testi_products_label | default: 'Sản phẩm sử dụng' | escape }}</small>{{ t_products | escape }}</span></li>{%- endif -%}</ul>{%- endif -%}
+  {%- if t_desc != blank -%}<p class="pc-h4-case__sum">{{ t_desc | escape }}</p>{%- endif -%}
+  <details class="pc-h4-case__more"><summary>{{ testi_lb_steps | escape }}{% include 'ui_icon', name: 'chevron-down' %}</summary>
   <dl class="pc-h4-case__dl">
     {%- if t_initial != blank -%}<dt>{{ settings.home_testi_initial_label | default: 'Tình trạng ban đầu' | escape }}</dt><dd>{{ t_initial | escape }}</dd>{%- endif -%}
     {%- assign t_step_list = t_steps | split: testi_step_sep -%}
@@ -32,8 +41,9 @@
     {%- if t_products != blank -%}<dt>{{ settings.home_testi_products_label | default: 'Sản phẩm sử dụng' | escape }}</dt><dd>{{ t_products | escape }}</dd>{%- endif -%}
     {%- if t_duration != blank -%}<dt>{{ settings.home_testi_duration_label | default: 'Thời gian theo dõi' | escape }}</dt><dd>{{ t_duration | escape }}</dd>{%- endif -%}
   </dl>
-  {%- if t_desc != blank -%}<p class="pc-h4-case__sum pc-h4-sm-only">{{ t_desc | escape }}</p>{%- endif -%}
+  </details>
   {%- if t_url != blank and testi_more_lb != blank -%}<a class="pc-h4-go" href="{{ t_url }}">{{ testi_more_lb | escape }}{% include 'ui_icon', name: 'arrow-right' %}</a>{%- endif -%}
+  </div>
 </article>
 {%- endcapture -%}
 {%- assign testi_tabs = testi_tabs | append: t_tab -%}

@@ -13,7 +13,7 @@ body.pc-site-v3{font-family:var(--pc-font-body);font-size:var(--fs-base)}
 /* STICKY-OFFSET 2026-10-17: chiều cao header khi đã bám đỉnh (đo thật: thanh menu .hSticky 44px ≥992px; header mobile sticky 57px).
    Phần tử sticky bên dưới header (subnav SHB, sidebar lọc…) dùng top:var(--pc-sticky-offset) — không ghi số riêng. */
 .pc-site-v3{--pc-sticky-offset:57px}
-@media (min-width:992px){.pc-site-v3{--pc-sticky-offset:44px}}
+@media (min-width:992px){.pc-site-v3{--pc-sticky-offset:64px}} /* 09/11/2026: thanh dính 44 → 64px (logo 40px) — xem khối HEADER 09/11 cuối file */
 /* Thân trang: :where() giữ độ ưu tiên 0,1,0 — thắng vendor_bootstrap/global_core nhờ nạp sau, nhưng vẫn nhường
    khung hẹp có chủ đích (.ot-page 640px, .mops-hero 720px…). Header/footer cần độ ưu tiên cao để thắng global_core/pharma_ui_kit. */
 :where(.pc-site-v3) .container{width:100%;max-width:var(--pc-container-max);margin-left:auto;margin-right:auto;padding-left:var(--pc-container-gutter);padding-right:var(--pc-container-gutter)}
@@ -320,3 +320,14 @@ body.pc-site-v3{font-family:var(--pc-font-body);font-size:var(--fs-base)}
 /* MEGAMENU-NOIMG 2026-10-19: ô ảnh danh mục con chưa có ảnh (snippets/bean-menu-cate.bwt) — icon thay "NO IMAGE AVAILABLE" của Sapo.
    N16 24/10/2026: xoá min-height:64px (ô thay thế 64px trong drawer mobile); desktop giữ cỡ ô bằng utility lg:min-h-16 trong snippet */
 .sudes-list-cate .image .pc-mm-noimg{display:flex;align-items:center;justify-content:center;width:100%;height:100%;aspect-ratio:1;background:#F4F7F4;color:#3CB371;font-size:var(--fs-xl);border-radius:8px}
+
+/* HEADER 09/11/2026 (chủ dự án: logo bị menu chữ đậm lấn át; khi cuộn thanh dính 44px, logo 32px quá nhỏ — dòng «× SKIN HEALTH BEAUTY» không đọc được):
+   - Menu: nét 500 (thay 600), màu xám than ink-secondary; hover / mục đang chọn = xanh thương hiệu đậm, mục đang chọn 600 (thay 700).
+     Chữ IN HOA là dữ liệu tên mục menu Sapo (CSS không ép uppercase) — đổi sang «Trang chủ…» trong admin Sapo.
+   - Thanh dính ≥ 992px: cao 64px, logo 40px (max 210px); --pc-sticky-offset đầu file = 64px cho phần tử bám dưới header. */
+@media (min-width:992px){
+ .pc-site-v3 header.header .box-hearder .header-menu .sudes-main-header #nav>.nav-item>a{font-weight:500;color:var(--pc-color-ink-secondary)}
+ .pc-site-v3 header.header .box-hearder .header-menu .sudes-main-header #nav>.nav-item.active>a{font-weight:600}
+ .pc-site-v3 header.header.hSticky .header-menu .navigation-horizontal>.row{min-height:64px}
+ .pc-site-v3 header.header.hSticky .pc-sticky-logo img{height:40px;max-width:210px}
+}
