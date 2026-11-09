@@ -15,14 +15,15 @@
     với icon (tag icon:fa-… trên bài, mặc định fa-spa) để lưới 5 thẻ luôn đều.
   {%- endcomment -%}
   {%- assign lt_icon = 'fa-spa' -%}
-  {%- for lt_t in lt_a.tags -%}{%- if lt_t contains ':' -%}{%- assign lt_tr = lt_t | split: ':' | first -%}{%- assign lt_tk = lt_tr | strip | downcase -%}{%- if lt_tk == 'icon' -%}{%- assign lt_icon = lt_t | remove_first: lt_tr | remove_first: ':' | downcase | remove: 'fa-solid' | strip -%}{%- endif -%}{%- endif -%}{%- endfor -%}
+  {%- for lt_t in lt_a.tags -%}{%- if lt_t contains ':' -%}{%- assign lt_tr = lt_t | split: ':' | first -%}{%- assign lt_tk = lt_tr | strip | downcase -%}{%- if lt_tk == 'icon' -%}{%- assign lt_icon = lt_t | remove_first: lt_tr | remove_first: ':' | downcase | strip -%}{%- endif -%}{%- endif -%}{%- endfor -%}
   {%- assign lt_has_body = false -%}{%- if lt_a.content.size > 0 -%}{%- assign lt_has_body = true -%}{%- endif -%}
   {%- if lt_has_body -%}<a class="lt-card lt-concern lt-card--link" href="{{ lt_a.url }}">{%- else -%}<article class="lt-card lt-concern">{%- endif -%}
     {%- if lt_a.image.src != blank -%}{%- assign lt_cimg = true -%}
     <div class="lt-media lt-media--4x3"><img src="{{ lt_a.image.src | img_url: 'large' }}" alt="{{ lt_a.image.alt | default: lt_a.title | escape }}" width="1200" height="900" loading="lazy" decoding="async"></div>
     {%- else -%}
     {%- comment -%} L03b6 (31/10/2026): icon SVG ui_icon (bỏ Font Awesome) — tag icon:fa-… cũ vẫn dùng được (ui_icon ánh xạ tên FA);
-      tên không có trong bộ icon ⇒ dự phòng leaf (= fa-spa mặc định cũ), không để lộ PC-ERROR. {%- endcomment -%}
+      tên không có trong bộ icon ⇒ dự phòng leaf (= fa-spa mặc định cũ), không để lộ PC-ERROR.
+      L03b37 (09/11/2026): bỏ bộ lọc remove (kiểu FA solid) khi đọc tag — ui_icon tự lấy từ cuối + bỏ tiền tố fa-, kết quả như cũ. {%- endcomment -%}
     {%- capture lt_icon_svg -%}{% include 'ui_icon', name: lt_icon, size: 'em' %}{%- endcapture -%}
     {%- if lt_icon_svg contains 'PC-ERROR' -%}{%- capture lt_icon_svg -%}{% include 'ui_icon', name: 'leaf', size: 'em' %}{%- endcapture -%}{%- endif -%}
     <div class="lt-media lt-media--4x3 lt-media--icon"><i class="inline-block leading-none" aria-hidden="true">{{ lt_icon_svg }}</i></div>

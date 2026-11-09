@@ -396,6 +396,14 @@ function getContext(templateName = 'index', routeParams = {}) {
       }
     : null;
 
+  // L03b37 (09/11/2026): `?lt=noimg` (dev-server) ⇒ 5 bài blog van-de-da KHÔNG ảnh + tag icon: nhiều dạng (FA cũ / thiếu tên)
+  // để dựng nhánh ô icon của snippets/lieu_trinh_concerns.bwt — dữ liệu mẫu chỉ local, bản gốc blogsObj không đổi.
+  const LT_NOIMG_ICONS = ['fa-solid fa-braille', 'fa-solid fa-droplet', 'fa-regular fa-circle-half-stroke', 'fa-solid', 'fa-hourglass-half'];
+  const blogsForCtx = (routeParams.ltNoImg && blogsObj['van-de-da'])
+    ? { ...blogsObj, 'van-de-da': { ...blogsObj['van-de-da'], articles: blogsObj['van-de-da'].articles.map((a, i) => ({
+        ...a, image: null, featured_image: null, tags: [`icon:${LT_NOIMG_ICONS[i % LT_NOIMG_ICONS.length]}`] })) } }
+    : blogsObj;
+
   // Blog/article — ưu tiên handle thật từ URL (/blogs/:handle, /blogs/:handle/:article).
   const currentBlog = routeParams.blogHandle
     ? (blogsObj[routeParams.blogHandle] || blogsObj['tin-tuc-va-kien-thuc'])
@@ -468,7 +476,7 @@ function getContext(templateName = 'index', routeParams = {}) {
     pages: pagesObj,
 
     // Blog
-    blogs:   blogsObj,
+    blogs:   blogsForCtx,
     blog:    currentBlog,
     article: resolvedArticle,
     articles,
