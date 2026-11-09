@@ -109,7 +109,6 @@
 .pl-node{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;z-index:1}
 .pl-node .pl-dot{width:24px;height:24px;border-radius:50%;background:var(--pl-surface);border:2px solid var(--pl-line-2);display:flex;align-items:center;justify-content:center;font-size:var(--fs-xs);color:var(--pl-muted)}
 .pl-node.done .pl-dot{background:var(--pl-green);border-color:var(--pl-green);color:#fff}
-.pl-node.done .pl-dot::after{content:"\f00c";font-family:"Font Awesome 6 Free";font-weight:900;font-size:var(--fs-xs);font-weight:600}
 .pl-node.now .pl-dot{background:var(--pl-clay);border-color:var(--pl-clay);color:#fff;box-shadow:0 0 0 4px var(--pl-clay-tint)}
 .pl-node.now .pl-dot::after{content:"●"}
 .pl-node.err .pl-dot{background:var(--pl-err);border-color:var(--pl-err);color:#fff}
@@ -300,6 +299,9 @@
               <div class="pl-rail-scale" id="pl-rail">
                 <!-- 5 nodes will be rendered by JS -->
               </div>
+              {%- comment -%} L03b39 (09/11/2026): tick chấm «xong» = SVG ui_icon check (renderRail chèn từ template này) — thay glyph Font Awesome
+                \f00c trong CSS pseudo .pl-node.done .pl-dot::after (đã xoá); cỡ 1em theo cỡ chữ chấm, màu trắng theo color của chấm. {%- endcomment -%}
+              <template id="pl-check-icon"><i class="inline-flex leading-none" aria-hidden="true">{% include 'ui_icon', name: 'check', size: 'em' %}</i></template>
             </div>
           </div>
 
@@ -573,6 +575,8 @@
     var labels = isAppt ? RAIL_STEPS_APPT : RAIL_STEPS;
     var rail = document.getElementById('pl-rail');
     var html = '';
+    var tplCheck = document.getElementById('pl-check-icon');
+    var checkIcon = tplCheck ? tplCheck.innerHTML : '';
     for (var i = 0; i < 5; i++) {
       var cls = '';
       if (st.err) {
@@ -581,7 +585,7 @@
         if (i + 1 < st.idx) cls = 'done';
         else if (i + 1 === st.idx) cls = 'now';
       }
-      html += '<div class="pl-node ' + cls + '"><div class="pl-dot"></div><div class="pl-nlbl">' + labels[i].replace(/\n/g,'<br>') + '</div></div>';
+      html += '<div class="pl-node ' + cls + '"><div class="pl-dot">' + (cls === 'done' ? checkIcon : '') + '</div><div class="pl-nlbl">' + labels[i].replace(/\n/g,'<br>') + '</div></div>';
     }
     rail.innerHTML = html;
     // Progress bar width — chỉ set CSS var, ::after tính width qua calc trong CSS chính.
