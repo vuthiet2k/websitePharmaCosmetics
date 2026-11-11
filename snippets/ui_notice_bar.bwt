@@ -1,0 +1,68 @@
+{%- comment -%}
+  ui_notice_bar.bwt (12/11/2026, chủ dự án yêu cầu trực tiếp: "làm 1 phần thông tin như UNIQLO" — dải cảnh báo lừa đảo giao hàng
+  COD trên đầu trang, tham khảo faq-vn.uniqlo.com). THƯ VIỆN PC v2.2 — CSS ui-src/css/components.css mục 20 (.pc-notice).
+  · Dải nền vàng kem (token warning) đầu header.header, trên topbar — KHÔNG dính màn (D.17: phần tử nổi ≤ 15% màn).
+  · Bấm vào câu cảnh báo ⇒ popup ui_modal "Nhận hàng an toàn" (hoặc tới trang delivery_alert_link nếu có nhập).
+  · Nút ✕ (44×44) ẩn dải; nhớ trạng thái: delivery_alert_hide_days = 0 ⇒ chỉ trong phiên (sessionStorage), N ⇒ N ngày (localStorage).
+    Đổi delivery_alert_version ⇒ khách đã tắt sẽ thấy lại (nội dung mới).
+  · Script chạy NGAY sau thẻ (đồng bộ, trước khi vẽ) ⇒ khách đã tắt không thấy dải nháy lên rồi biến mất (không CLS). Không JS ⇒ dải luôn hiện.
+  Cấu hình: Admin › Header & Điều hướng › "Thanh cảnh báo lừa đảo giao hàng" (delivery_alert_*). Hotline lấy từ store_phone.
+{%- endcomment -%}
+{%- unless settings.delivery_alert_enable == false or settings.delivery_alert_enable == 'false' -%}
+{%- assign pc_nb_title = settings.delivery_alert_title | default: 'Cảnh giác lừa đảo giao hàng:' -%}
+{%- assign pc_nb_text = settings.delivery_alert_text | default: 'Chỉ thanh toán khi nhận hàng tận tay, không chuyển khoản trước.' -%}
+{%- assign pc_nb_more = settings.delivery_alert_more_label | default: 'Xem thêm' -%}
+{%- assign pc_nb_link = settings.delivery_alert_link -%}
+{%- assign pc_nb_days = settings.delivery_alert_hide_days | default: '0' | plus: 0 -%}
+{%- assign pc_nb_key = settings.delivery_alert_version | default: '1' | handleize -%}
+{%- assign pc_nb_phone = settings.store_phone | default: store.phone_number -%}
+<aside class="pc-notice" id="pc-notice-delivery" aria-label="{{ settings.delivery_alert_aria | default: 'Cảnh báo an toàn khi nhận hàng' | escape }}" data-days="{{ pc_nb_days }}" data-key="delivery-{{ pc_nb_key }}">
+  <div class="pc-notice__inner">
+    <span class="pc-notice__icon">{% include 'ui_icon', name: 'triangle-alert', size: 20, label: '' %}</span>
+    {%- capture pc_nb_body -%}<span class="pc-notice__body"><strong class="pc-notice__title">{{ pc_nb_title | escape }}</strong> {{ pc_nb_text | escape }} <span class="pc-notice__more">{{ pc_nb_more | escape }}</span></span>{%- endcapture -%}
+    {%- if pc_nb_link != blank -%}
+    <a class="pc-notice__msg" href="{{ pc_nb_link }}">{{ pc_nb_body }}</a>
+    {%- else -%}
+    <button type="button" class="pc-notice__msg" aria-haspopup="dialog" aria-controls="pc-notice-delivery-modal" data-pc-modal-open="pc-notice-delivery-modal">{{ pc_nb_body }}</button>
+    {%- endif -%}
+    <button type="button" class="pc-notice__close" data-pc-notice-close aria-label="{{ settings.delivery_alert_close_label | default: 'Đóng cảnh báo' | escape }}">{% include 'ui_icon', name: 'x', size: 20, label: '' %}</button>
+  </div>
+</aside>
+<script>
+(function () {
+  var el = document.getElementById('pc-notice-delivery'); if (!el) return;
+  var days = Number(el.getAttribute('data-days')) || 0, key = 'pc_notice_' + el.getAttribute('data-key'), store = null;
+  try { store = days > 0 ? window.localStorage : window.sessionStorage; } catch (e) {}
+  try { var at = store && Number(store.getItem(key)); if (at && (days <= 0 || Date.now() - at < days * 864e5)) el.hidden = true; } catch (e) {}
+  var btn = el.querySelector('[data-pc-notice-close]');
+  if (btn) btn.addEventListener('click', function () {
+    el.hidden = true;
+    try { if (store) store.setItem(key, String(Date.now())); } catch (e) {}
+    try { window.dispatchEvent(new Event('resize')); } catch (e) {} /* header.bwt đo lại --pc-topbar-h */
+    var f = document.querySelectorAll('header.header .main-header a[href], header.header .main-header button');
+    for (var i = 0; i < f.length; i++) { if (f[i].offsetWidth && f[i].offsetHeight) { f[i].focus(); break; } } /* focus không rơi về <body> */
+  });
+})();
+</script>
+{%- if pc_nb_link == blank -%}
+{%- assign pc_nb_items = settings.delivery_alert_detail | default: 'Nhân viên giao hàng chính thức chỉ thu tiền (COD) khi trao kiện hàng tận tay quý khách.;Không chuyển khoản trước theo yêu cầu qua điện thoại, Zalo, SMS của người tự xưng nhân viên giao hàng (vd "phí giữ đơn", "đơn gặp sự cố"). Chỉ thanh toán theo hướng dẫn trên trang thanh toán của website.;Không bấm đường link lạ, không đọc mã OTP hay mật khẩu ngân hàng cho bất kỳ ai.;Nghi ngờ lừa đảo: từ chối nhận hàng và gọi ngay hotline để được xác minh đơn.' | split: ';' -%}
+{%- capture pc_nb_content -%}
+<ol class="m-0 grid gap-3 pl-5 text-sm text-ink">
+  {%- for pc_nb_item in pc_nb_items -%}{%- assign pc_nb_line = pc_nb_item | strip -%}{%- if pc_nb_line != blank -%}<li>{{ pc_nb_line | escape }}</li>{%- endif -%}{%- endfor -%}
+</ol>
+{%- if pc_nb_phone != blank -%}<p class="mt-4 text-sm text-ink">{{ settings.delivery_alert_hotline_label | default: 'Hotline chính thức:' | escape }} <a href="tel:{{ pc_nb_phone | remove: ' ' | remove: '.' | remove: '-' }}">{{ pc_nb_phone | escape }}</a></p>{%- endif -%}
+{%- if settings.delivery_alert_bank != blank -%}<p class="mt-2 text-sm text-ink">{{ settings.delivery_alert_bank | escape }}</p>{%- endif -%}
+{%- endcapture -%}
+{%- assign pc_nb_mtitle = settings.delivery_alert_detail_title | default: 'Nhận hàng an toàn, tránh lừa đảo' -%}
+{% include 'ui_modal', id: 'pc-notice-delivery-modal', title: pc_nb_mtitle, content: pc_nb_content, close_label: 'Đóng' %}
+{%- comment -%} Dải nằm trong header.header (ngữ cảnh xếp lớp riêng khi popup mở — components.css N10) ⇒ popup + lớp phủ để trong header thì
+  topbar / menu desktop (z 10010 / 10020) vẽ đè lớp phủ. Chuyển ra <body> như mọi popup thư viện khác. {%- endcomment -%}
+<script>
+(function () {
+  var b = document.body; if (!b) return;
+  var o = document.querySelector('[data-pc-modal-overlay="pc-notice-delivery-modal"]'), m = document.getElementById('pc-notice-delivery-modal');
+  if (o) b.appendChild(o); if (m) b.appendChild(m);
+})();
+</script>
+{%- endif -%}
+{%- endunless -%}

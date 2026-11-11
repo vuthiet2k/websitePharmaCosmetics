@@ -1,4 +1,4 @@
-/* ui-src/css/components.css — THƯ VIỆN PC v2.1 — KHOÁ. Chỉ sửa qua quy trình C.6
+/* ui-src/css/components.css — THƯ VIỆN PC v2.2 — KHOÁ. Chỉ sửa qua quy trình C.6
    Changelog: v1.0 (24/10/2026) khởi tạo 13 component (bản Sapo)
               v1.1 (24/10/2026, N04) viền focus chung 2px brand cho phần tử bấm/nhập; .pc-input bỏ ring, dùng viền đó
               v1.2 (24/10/2026, N05) thanh mua 1 hàng (giá co, nút giữ cỡ chữ); nhóm 13 — phần tử nổi cũ nhường thư viện
@@ -18,7 +18,8 @@
                                      accordion <details data-pc-acc> .pc-h4-acc cho Danh mục nhanh + chân trang, dải pháp lý ẩn ở mobile);
                                      base: .pc-h4-entry__t giữ 32px desktop (h2 → p role=heading), link "Xem chi tiết ca" ≥ 44px;
                                      .pc-h4-foot__powered display none (trước invisible); mục 19 lớp chuyển trang .pc-navload
-                                     (snippets/ui_nav_loader.bwt) + .pc-navcate-wait (menu Danh mục tải sau) */
+                                     (snippets/ui_nav_loader.bwt) + .pc-navcate-wait (menu Danh mục tải sau)
+              v2.2 (12/11/2026, chủ dự án yêu cầu trực tiếp) mục 20 thanh cảnh báo lừa đảo giao hàng .pc-notice (snippets/ui_notice_bar.bwt) */
 @layer components {
   /* 0. Viền focus — `:root` nâng độ ưu tiên (0,3,0) để thắng CSS cũ `.pc-site-v3 :is(a,button,input):focus-visible` (0,2,1)
      và `a/button:focus { outline: none }`; bỏ `:root` ở D09 khi xoá CSS cũ */
@@ -751,4 +752,24 @@ body:has(.pc-shb-hero #section_hero) header.header:not(:hover):not(:focus-within
     .pc-navload__logo { animation: none; }
     .pc-navload__bar::after { animation: none; @apply left-0 w-full; }
   }
+}
+
+/* ===== v2.2 (12/11/2026, chủ dự án: "làm 1 phần thông tin như UNIQLO" — dải cảnh báo lừa đảo giao hàng COD) — 20. Thanh cảnh báo
+   PC-Notice (snippets/ui_notice_bar.bwt). Nền vàng kem token warning (không đỏ gắt), đầu header (trên topbar), cuộn đi cùng topbar — KHÔNG dính màn
+   (D.17). Cả câu là 1 vùng bấm ≥ 44px mở popup; nút đóng 44×44; chữ 12px (< 1024) / 14px. ===== */
+@layer components {
+  /* relative z-10: trang chủ desktop header.header absolute đè hero — không có lớp xếp thì ảnh hero (định vị) vẽ đè lên dải */
+  .pc-notice { @apply relative z-10 block bg-warning-tint font-sans text-warning; }
+  .pc-notice[hidden] { @apply hidden; }
+  .pc-notice__inner { @apply mx-auto flex w-full max-w-content items-center gap-2 pl-3 pr-0 lg:gap-3 lg:pl-8 lg:pr-5; }
+  .pc-notice__icon { @apply flex shrink-0; }
+  .pc-notice__msg { @apply m-0 flex min-h-11 min-w-0 flex-1 cursor-pointer items-center border-0 border-none bg-transparent px-0 py-1.5
+                           text-left font-sans text-xs font-medium text-warning no-underline lg:text-sm; }
+  .pc-notice__msg:hover .pc-notice__more { @apply no-underline; }
+  .pc-notice__body { @apply block min-w-0; }
+  .pc-notice__title { @apply font-bold; }
+  .pc-notice__more { @apply whitespace-nowrap font-semibold underline underline-offset-4; }
+  .pc-notice__close { @apply m-0 inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center border-0 border-none
+                             bg-transparent p-0 text-warning; }
+  :root :is(.pc-notice__msg, .pc-notice__close):focus-visible { @apply outline outline-2 outline-offset-[-2px] outline-warning; }
 }

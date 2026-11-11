@@ -15,6 +15,8 @@
   Giữ một menu duy nhất để dùng chung điều hướng desktop và drawer mobile.
 {%- endcomment -%}
 <header class="header">
+	{%- comment -%} 12/11/2026 (chủ dự án): dải cảnh báo lừa đảo giao hàng COD như UNIQLO (snippets/ui_notice_bar.bwt, cấu hình delivery_alert_*). Nằm TRONG header.header (trên topbar) vì header mobile fixed/sticky — đặt ngoài sẽ bị header đè; chiều cao dải được cộng vào --pc-topbar-h nên khi cuộn dải cuộn đi cùng topbar, không dính màn. {%- endcomment -%}
+	{% include 'ui_notice_bar' %}
 	<div class="main-header">
 			{%- comment -%} ============ PHẦN 1 — HEADER TOP (topbar xanh) ============ {%- endcomment -%}
 		{%- comment -%} 2026-10-03: site_topbar chỉ đổi sang settings.skinhealthy_announce khi topbar_context == 'clinic' nhưng trước đây không nơi nào gán → field Admin đó không có tác dụng. {%- endcomment -%}
@@ -390,7 +392,9 @@
 	const measureHeader = () => {
 		/* 2026-10-14: chiều cao topbar ⇒ biến CSS cho header mobile dính (top âm = topbar cuộn đi, xem global_core pc-mh-sticky). */
 		const topbar = header.querySelector('.pc-topbar-v3');
-		header.style.setProperty('--pc-topbar-h', (topbar ? topbar.offsetHeight : 0) + 'px');
+		/* 12/11/2026: cộng dải cảnh báo giao hàng (ui_notice_bar, nằm trên topbar) — cuộn đi cùng topbar; bấm ✕ ⇒ ui_notice_bar phát resize ⇒ đo lại. */
+		const notice = header.querySelector('.pc-notice');
+		header.style.setProperty('--pc-topbar-h', (topbar ? topbar.offsetHeight : 0) + (notice ? notice.offsetHeight : 0) + 'px');
 		header.classList.remove('hSticky');
 		header.style.minHeight = '';
 		const headerHeight = header.offsetHeight;
