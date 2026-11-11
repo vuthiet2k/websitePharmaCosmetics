@@ -1690,7 +1690,25 @@
   &:hover, &:focus-visible { color: var(--pc-brand-deep); text-decoration: underline; }
 }
 
-/* 12/11/2026: bỏ CSS .pc-bg-* (tab lọc + trình chiếu 18/10) — trang Trước & Sau trở lại lưới thẻ .pc-ba-group theo thiết kế. */
+/* 12/11/2026: trang Trước & Sau = tab lọc (.pc-bg-tabs, giữ từ bản 18/10) + lưới thẻ .pc-ba-group theo thiết kế; bỏ CSS trình chiếu .pc-bg-slide/arrow/dot. */
+.pc-bg-tabs {
+  display: flex; gap: 4px; margin: 0 0 20px; border-bottom: 1px solid var(--pc-ba-line);
+  overflow-x: auto; scrollbar-width: none; &::-webkit-scrollbar { display: none; }
+}
+.pc-bg-tab {
+  position: relative; flex: none; min-height: 48px; margin-bottom: -1px; padding: 0 18px;
+  border: 0; border-bottom: 3px solid transparent; background: transparent; cursor: pointer;
+  font-size: var(--fs-base); font-weight: 600; color: var(--pc-ba-soft, #4d5f57); white-space: nowrap; transition: color .2s ease, border-color .2s ease;
+  &:hover { color: var(--pc-brand-deep); }
+  &:focus-visible { outline: 2px solid var(--pc-brand-secondary); outline-offset: -2px; }
+  &[aria-pressed="true"] { color: var(--pc-brand-deep); border-bottom-color: var(--pc-brand-secondary); }
+}
+.pc-ba-group[hidden] { display: none; }
+@media (max-width: 767px) {
+  .pc-bg-tab { min-height: 44px; padding: 0 12px; font-size: var(--fs-sm); }
+  .pc-bg-tabs { margin-left: calc(-1 * var(--pc-container-gutter, 16px)); margin-right: calc(-1 * var(--pc-container-gutter, 16px)); padding-left: var(--pc-container-gutter, 16px); padding-right: var(--pc-container-gutter, 16px); }
+}
+@media (prefers-reduced-motion: reduce) { .pc-bg-tab { transition: none; } }
 
 /* ══ 2026-10-17: trang chi tiết 1 ca (templates/article.truoc-va-sau.bwt) — dùng lại khung .pc-ba-*. ══ */
 /* 2026-10-17 (người dùng: "spacing nhỏ lại — không tự tách khoảng với path"): hero (cả trang tổng) bỏ khoảng

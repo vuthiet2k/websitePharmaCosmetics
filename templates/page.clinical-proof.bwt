@@ -158,6 +158,18 @@
   <section class="container pc-ba-section" id="pc-ba-results">
     <h2 class="pc-ba-h2">{{ settings.clinical_results_title | default: 'Kết quả của khách hàng' | escape }}</h2>
     {%- if settings.clinical_results_sub != blank -%}<p class="pc-ba-sub">{{ settings.clinical_results_sub | escape }}</p>{%- endif -%}
+    {%- comment -%} 12/11/2026 (người dùng: «vẫn giữ thanh nav bên trên»): tab lọc theo nhóm nằm trên lưới thẻ; ≥ 2 nhóm mới hiện. {%- endcomment -%}
+    {%- assign pc_ba_gn = 0 -%}{%- for pc_ba_g in pc_ba_group_list -%}{%- if pc_ba_g != blank -%}{%- assign pc_ba_gn = pc_ba_gn | plus: 1 -%}{%- endif -%}{%- endfor -%}
+    {%- if pc_ba_gn > 1 -%}
+    <div class="pc-bg-tabs" role="toolbar" aria-label="{{ settings.clinical_filter_label | default: 'Lọc theo vấn đề da' | escape }}">
+      <button type="button" class="pc-bg-tab" data-ba-filter="" aria-pressed="true">{{ settings.clinical_filter_all | default: 'Tất cả' | escape }}</button>
+      {%- for pc_ba_group_name in pc_ba_group_list -%}
+      {%- if pc_ba_group_name != blank -%}
+      <button type="button" class="pc-bg-tab" data-ba-filter="{{ pc_ba_group_name | handleize }}" aria-pressed="false">{{ pc_ba_group_name | escape }}</button>
+      {%- endif -%}
+      {%- endfor -%}
+    </div>
+    {%- endif -%}
     <div class="pc-ba-groups">
       {%- for pc_ba_group_name in pc_ba_group_list -%}
       {%- if pc_ba_group_name != blank -%}
@@ -195,7 +207,7 @@
         {%- assign pc_ba_infos = pc_ba_infos | append: pc_ba_one -%}
         {%- endif -%}
       {%- endfor -%}
-      <div class="pc-ba-card pc-ba-group" data-ba-group>
+      <div class="pc-ba-card pc-ba-group" data-ba-group data-ba-cat="{{ pc_ba_group_name | handleize }}">
         <div class="pc-ba-group__head">
           <h3 class="pc-ba-group__title">{{ pc_ba_group_name | upcase | escape }}</h3>
           <p class="pc-ba-group__counter" aria-live="polite">Case <span data-ba-current>1</span> / {{ pc_ba_n }}</p>
@@ -241,6 +253,18 @@
 </main>
 <script>
   /* 12/11/2026: chuyển ca trong từng thẻ nhóm (‹ ›, chấm, vuốt ngang) — ảnh và mô tả đổi cùng chỉ số. */
+  /* Tab lọc: chỉ hiện thẻ của nhóm được chọn ("" = tất cả). */
+  (function () {
+    var tabs = document.querySelectorAll('[data-ba-filter]');
+    var cards = document.querySelectorAll('[data-ba-group]');
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        var cat = tab.getAttribute('data-ba-filter');
+        tabs.forEach(function (t) { t.setAttribute('aria-pressed', t === tab ? 'true' : 'false'); });
+        cards.forEach(function (c) { c.hidden = cat !== '' && c.getAttribute('data-ba-cat') !== cat; });
+      });
+    });
+  })();
   document.querySelectorAll('[data-ba-group]').forEach(function (group) {
     var cases = group.querySelectorAll('[data-ba-case]');
     if (cases.length < 2) return;
