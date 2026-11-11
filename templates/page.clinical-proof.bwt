@@ -170,7 +170,9 @@
       {%- endfor -%}
     </div>
     {%- endif -%}
-    <div class="pc-ba-groups">
+    {%- comment -%} 12/11/2026 (người dùng: «cho phân trang vào, 4 mục 1»): 4 thẻ nhóm / trang, áp sau tab lọc; thẻ thứ 5+ ẩn sẵn từ server để không nháy. {%- endcomment -%}
+    {%- assign pc_ba_per = 4 -%}{%- assign pc_ba_gi = 0 -%}
+    <div class="pc-ba-groups" data-ba-per="{{ pc_ba_per }}">
       {%- for pc_ba_group_name in pc_ba_group_list -%}
       {%- if pc_ba_group_name != blank -%}
       {%- assign pc_ba_pairs = '' -%}{%- assign pc_ba_infos = '' -%}{%- assign pc_ba_n = 0 -%}
@@ -207,7 +209,8 @@
         {%- assign pc_ba_infos = pc_ba_infos | append: pc_ba_one -%}
         {%- endif -%}
       {%- endfor -%}
-      <div class="pc-ba-card pc-ba-group" data-ba-group data-ba-cat="{{ pc_ba_group_name | handleize }}">
+      {%- assign pc_ba_gi = pc_ba_gi | plus: 1 -%}
+      <div class="pc-ba-card pc-ba-group" data-ba-group data-ba-cat="{{ pc_ba_group_name | handleize }}"{% if pc_ba_gi > pc_ba_per %} hidden{% endif %}>
         <div class="pc-ba-group__head">
           <h3 class="pc-ba-group__title">{{ pc_ba_group_name | upcase | escape }}</h3>
           <p class="pc-ba-group__counter" aria-live="polite">Case <span data-ba-current>1</span> / {{ pc_ba_n }}</p>
@@ -232,6 +235,11 @@
       {%- endif -%}
       {%- endfor -%}
     </div>
+    <nav class="pc-ba-pager" data-ba-pager aria-label="Phân trang kết quả" hidden>
+      <button type="button" class="pc-ba-pager__btn" data-ba-page-prev aria-label="Trang trước"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'chevron-left', size: 'em' %}</i></button>
+      <span class="pc-ba-pager__nums" data-ba-page-nums></span>
+      <button type="button" class="pc-ba-pager__btn" data-ba-page-next aria-label="Trang sau"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'chevron-right', size: 'em' %}</i></button>
+    </nav>
     {%- if settings.clinical_note != blank -%}<p class="pc-ba-note">{{ settings.clinical_note | escape }}</p>{%- endif -%}
   </section>
   {%- endif -%}
@@ -253,17 +261,45 @@
 </main>
 <script>
   /* 12/11/2026: chuyển ca trong từng thẻ nhóm (‹ ›, chấm, vuốt ngang) — ảnh và mô tả đổi cùng chỉ số. */
-  /* Tab lọc: chỉ hiện thẻ của nhóm được chọn ("" = tất cả). */
+  /* Tab lọc ("" = tất cả) + phân trang N thẻ / trang trên danh sách đã lọc. */
   (function () {
+    var grid = document.querySelector('[data-ba-per]');
+    if (!grid) return;
+    var per = parseInt(grid.getAttribute('data-ba-per'), 10) || 4;
+    var pager = document.querySelector('[data-ba-pager]');
     var tabs = document.querySelectorAll('[data-ba-filter]');
-    var cards = document.querySelectorAll('[data-ba-group]');
+    var cards = [].slice.call(grid.querySelectorAll('[data-ba-group]'));
+    var cat = '', page = 0;
+    var nums = pager.querySelector('[data-ba-page-nums]');
+    var prev = pager.querySelector('[data-ba-page-prev]'), next = pager.querySelector('[data-ba-page-next]');
+    prev.addEventListener('click', function () { page -= 1; render(true); });
+    next.addEventListener('click', function () { page += 1; render(true); });
+    function render(scroll) {
+      var list = cards.filter(function (c) { return cat === '' || c.getAttribute('data-ba-cat') === cat; });
+      var pages = Math.max(1, Math.ceil(list.length / per));
+      if (page >= pages) page = pages - 1;
+      cards.forEach(function (c) { c.hidden = true; });
+      list.slice(page * per, page * per + per).forEach(function (c) { c.hidden = false; });
+      pager.hidden = pages < 2;
+      prev.disabled = page === 0; next.disabled = page === pages - 1;
+      nums.innerHTML = '';
+      for (var i = 0; i < pages; i++) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'pc-ba-pager__btn'; b.textContent = i + 1; b.setAttribute('aria-label', 'Trang ' + (i + 1));
+        if (i === page) b.setAttribute('aria-current', 'page');
+        b.addEventListener('click', (function (k) { return function () { page = k; render(true); }; })(i));
+        nums.appendChild(b);
+      }
+      if (scroll) document.getElementById('pc-ba-results').scrollIntoView({ block: 'start' });
+    }
     tabs.forEach(function (tab) {
       tab.addEventListener('click', function () {
-        var cat = tab.getAttribute('data-ba-filter');
+        cat = tab.getAttribute('data-ba-filter'); page = 0;
         tabs.forEach(function (t) { t.setAttribute('aria-pressed', t === tab ? 'true' : 'false'); });
-        cards.forEach(function (c) { c.hidden = cat !== '' && c.getAttribute('data-ba-cat') !== cat; });
+        render(false);
       });
     });
+    render(false);
   })();
   document.querySelectorAll('[data-ba-group]').forEach(function (group) {
     var cases = group.querySelectorAll('[data-ba-case]');
