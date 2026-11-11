@@ -480,7 +480,11 @@ const beforeAfterArticles = [
     a.template_suffix = 'truoc-va-sau';
     if (!baTags[a.id]) return;
     if (baInContent.includes(a.id)) {
-      a.content = `<p><img src="${baBefore}" alt="" /></p><p><img src="${baAfter}" alt="" /></p>${a.content}`;
+      // 12/11/2026: cặp trong Nội dung PHẢI có Mô tả ảnh (alt) "Ảnh trước"/"Ảnh sau"; 212 = ca 1 ảnh (ảnh ghép, alt trống)
+      // ⇒ chế độ 1 ảnh: ảnh đại diện + ảnh trong Nội dung, mỗi ảnh 1 slide (snippets/ba_case_source.bwt).
+      a.content = a.id === 212
+        ? `<p><img src="${img('DCE7E0/2F6B4F', '[ẢNH GHÉP TRƯỚC – SAU]', '800x600')}" alt="" /></p>${a.content}`
+        : `<p><img src="${baBefore}" alt="Ảnh trước" /></p><p><img src="${baAfter}" alt="Ảnh sau" /></p>${a.content}`;
       a.tags.push(...baTags[a.id]);
     } else {
       a.tags.push(`anhtruoc:${baBefore}`, `anhsau:${baAfter}`, ...baTags[a.id]);
@@ -502,7 +506,7 @@ const beforeAfterArticles = [
   if (a211) {
     a211.title = '[DEMO] Hành trình 8 tuần cải thiện da mụn viêm';
     a211.summary = a211.excerpt = '[DEMO] Khách hàng nữ 24 tuổi, da dầu mụn viêm mức độ trung bình. Phác đồ 2 giai đoạn: phục hồi hàng rào da rồi kết hợp BHA và Niacinamide; nền da thông thoáng, giảm viêm rõ sau 8 tuần.';
-    a211.content = `<p><img src="${baBefore}" alt="" /></p><p><img src="${baAfter}" alt="" /></p>`
+    a211.content = `<p><img src="${baBefore}" alt="Ảnh trước" /></p><p><img src="${baAfter}" alt="Ảnh sau" /></p>`
       + `<blockquote><p>[DEMO] Da dầu mụn viêm cần làm dịu và phục hồi hàng rào bảo vệ trước, sau đó mới đưa hoạt chất điều trị vào. Tuân thủ chống nắng và tái khám đúng hẹn là yếu tố quyết định kết quả ổn định.</p></blockquote>`
       + `<ol><li>Giai đoạn 1 (Tuần 1–2): Làm dịu, kháng viêm và phục hồi hàng rào bảo vệ da.</li>`
       + `<li>Giai đoạn 2 (Tuần 3–4): Peel nhẹ tại spa, thông thoáng nang lông và gom cồi mụn.</li>`
@@ -532,16 +536,16 @@ const beforeAfterArticles = [
       ['nhom:Mụn', 'tuoi:29', 'tinh:Hà Nội', 'tuan:6', 'phacdo:GetGlowing Micro-Peel + phục hồi', 'lieutrinh:' + 'elaine-brennan-getglowing-micro-peel-lieu-trinh-peel-chuyen-nghiep-ho-tro-lam-sang-va-cai-thien-be-mat-da',
         'tinhtrang:Bít tắc và bề mặt sần ráp', 'chupanh:Ảnh chụp cùng góc và ánh sáng – không chỉnh sửa', 'sanpham:kem-phuc-hoi-ceramide-niacinamide', 'sanpham:kem-chong-nang-mineral-spf50'],
       // 2026-10-18: đủ 6 khối article.truoc-va-sau (Trích dẫn = nhận định chuyên gia, danh sách số = lộ trình).
-      `<p><img src="${baBefore}" alt="" /></p><p><img src="${baAfter}" alt="" /></p>`
+      `<p><img src="${baBefore}" alt="Ảnh trước" /></p><p><img src="${baAfter}" alt="Ảnh sau" /></p>`
         + `<blockquote><p>[DEMO] Nền da bít tắc nhưng hàng rào bảo vệ còn tốt nên phù hợp peel đa mục tiêu. Giữ khoảng cách giữa các buổi và chống nắng nghiêm ngặt giúp kết quả ổn định.</p></blockquote>`
         + `<ol><li>Tuần 0: Soi da, lập hồ sơ và thử phản ứng trước khi peel.</li><li>Tuần 1–2: Buổi GetGlowing Micro-Peel đầu tiên, bong nhẹ 3–5 ngày, dưỡng phục hồi tại nhà.</li><li>Tuần 3–6: Buổi peel thứ 2 và 3, bề mặt da mịn hơn, nhân mụn giảm dần.</li></ol>`
         + story(), { summary: '[DEMO] Khách hàng nữ 29 tuổi, da bít tắc và sần ráp. 3 buổi GetGlowing Micro-Peel kết hợp phục hồi tại nhà; bề mặt da mịn hơn, nhân mụn giảm sau 6 tuần.' }),
     demoCase(218, 'demo-ca-thieu-anh', '[DEMO] Ca chưa đủ ảnh – chỉ có ảnh trước',
-      '[DEMO] Ca thiếu ảnh sau ⇒ KHÔNG hiện ở /clinical-proof; trang test đánh dấu "Thiếu ảnh".',
+      '[DEMO] Ảnh không đánh dấu trước/sau ⇒ chế độ 1 ảnh (12/11/2026): ảnh đại diện + ảnh trong Nội dung, mỗi ảnh 1 slide.',
       ['nhom:Mụn', 'tuan:4'], `<p><img src="${baBefore}" alt="" /></p>` + story()),
     demoCase(219, 'demo-ca-khong-gan-nhom', '[DEMO] Ca không gắn tag nhom:',
       '[DEMO] Không có tag nhom: ⇒ vào nhóm "Kết quả khác".',
-      ['tuoi:41', 'tuan:10'], `<p><img src="${baBefore}" alt="" /></p><p><img src="${baAfter}" alt="" /></p>` + story(), { author: '' }),
+      ['tuoi:41', 'tuan:10'], `<p><img src="${baBefore}" alt="Ảnh trước" /></p><p><img src="${baAfter}" alt="Ảnh sau" /></p>` + story(), { author: '' }),
   );
 }
 
@@ -711,7 +715,8 @@ const blogs = {
     // 2026-10-17: giao diện blog.truoc-va-sau CHỈ có ở dev-preview/templates/ (trang test local, không đóng gói).
     template_suffix: 'truoc-va-sau',
     title:   'Trước & Sau Điều Trị',
-    description: 'Case study thực tế ghi nhận tiến trình điều trị theo từng tuần, đánh giá bởi đội ngũ chuyên gia phụ trách.',
+    // 12/11/2026: ảnh/video trong Mô tả danh mục = media hero trang /truoc-sau-cham-soc-da-tu-xa (page.clinical-proof).
+    description: `<p>Case study thực tế ghi nhận tiến trình điều trị theo từng tuần, đánh giá bởi đội ngũ chuyên gia phụ trách.</p><p><img src="${img('DCE7E0/2F6B4F', '[ẢNH HERO – MÔ TẢ DANH MỤC]', '840x630')}" alt="" /></p>`,
     handle:  'truoc-va-sau-1',
     url:     '/blogs/truoc-va-sau-1',
     articles: beforeAfterArticles,

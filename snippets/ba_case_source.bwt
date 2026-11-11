@@ -2,10 +2,7 @@
   ba_case_source.bwt (2026-10-17) — đọc dữ liệu 1 ca Trước & Sau (bài trong blog settings.clinical_case_blog_handle).
   Dùng chung cho page.clinical-proof, article.truoc-va-sau và snippets/lieu_trinh_cases — trước đây mỗi nơi tự tách tag.
   Đầu vào: pc_bs_article; pc_bs_need_body = true nếu cần nội dung đã gỡ 2 ảnh trước/sau (trang chi tiết).
-  Ảnh trước/sau, theo thứ tự ưu tiên (bài nào nhập kiểu nào cũng nhận):
-    1. Tag anhtruoc:<link ảnh> / anhsau:<link ảnh> (cách cũ, vẫn giữ).
-    2. 2 ảnh ĐẦU TIÊN chèn trong Nội dung bài (ảnh 1 = trước, ảnh 2 = sau) — cách nhập trên trình soạn thảo Sapo,
-       không phải dán link vào tag.
+  Ảnh: xem chú thích "12/11/2026" bên dưới (cặp trước/sau chỉ khi có đánh dấu; không thì chế độ 1 ảnh).
   Tag phụ: nhom:, tuoi:, tinh:, tuan:, phacdo:, lieutrinh:<alias SP> (lặp được).
   2026-10-18 (trang chi tiết ca 6 khối): tinhtrang: (tình trạng ban đầu), chupanh: (ghi chú cách chụp ảnh),
   nhantruoc:/nhansau: (nhãn ảnh), sanpham:<alias SP> (lặp được — sản phẩm đồng hành).
@@ -45,39 +42,66 @@
   {%- endif -%}
 {%- endfor -%}
 
-{%- assign pc_bs_body = '' -%}
+{%- comment -%}
+  12/11/2026 (người dùng: «không dùng cấu trúc HTML chèn ảnh có thông tin trước/sau thì dùng 1 ảnh thôi — tải ảnh đơn giản
+  không thể chia cho đúng»): BỎ quy ước cũ "2 ảnh đầu trong Nội dung = trước, sau" (không có gì đánh dấu ⇒ dễ ghép sai).
+  - CẶP TRƯỚC/SAU chỉ khi có đánh dấu rõ: tag anhtruoc:/anhsau: HOẶC ảnh trong Nội dung có Mô tả ảnh (alt) chứa
+    "trước"/"truoc"/"before" (ảnh trước) và "sau"/"after" (ảnh sau). Alt chứa cả hai ⇒ coi là ảnh ghép, không tách.
+  - Còn lại = CHẾ ĐỘ 1 ẢNH: pc_bs_imgs = ảnh đại diện + mọi ảnh trong Nội dung ("|" ngăn cách, bỏ trùng), mỗi ảnh hiện
+    nguyên khung (thường là ảnh ghép trước–sau), không gắn nhãn TRƯỚC/SAU. pc_bs_before/after rỗng ⇒ các nơi chỉ nhận
+    cặp ảnh (trang chủ, trang liệu trình, khung so sánh trang chi tiết) tự bỏ qua ca này.
+  Đầu ra thêm: pc_bs_imgs, pc_bs_single (true ⇒ ca 1 ảnh).
+{%- endcomment -%}
+{%- assign pc_bs_body = '' -%}{%- assign pc_bs_imgs = '' -%}{%- assign pc_bs_single = false -%}
 {%- assign pc_bs_tag1 = '' -%}{%- assign pc_bs_tag2 = '' -%}{%- assign pc_bs_img1 = '' -%}{%- assign pc_bs_img2 = '' -%}
-{%- if pc_bs_need_body or pc_bs_before == blank or pc_bs_after == blank -%}
-  {%- if pc_bs_article.content contains '<img' -%}
-    {%- comment -%} Thêm "~" đầu chuỗi để phần tử [0] luôn là đoạn trước ảnh đầu (kể cả khi nội dung mở đầu bằng ảnh). {%- endcomment -%}
-    {%- assign pc_bs_parts = pc_bs_article.content | prepend: '~' | split: '<img' -%}
-    {%- for pc_bs_part in pc_bs_parts offset: 1 limit: 2 -%}
-      {%- assign pc_bs_attr = pc_bs_part | split: '>' | first -%}
-      {%- assign pc_bs_src = '' -%}
-      {%- if pc_bs_attr contains 'src="' -%}
-        {%- assign pc_bs_src = pc_bs_attr | split: 'src="' | last | split: '"' | first -%}
-      {%- elsif pc_bs_attr contains "src='" -%}
-        {%- assign pc_bs_src = pc_bs_attr | split: "src='" | last | split: "'" | first -%}
-      {%- endif -%}
+{%- assign pc_bs_from_content = false -%}
+{%- assign pc_bs_tagged = false -%}{%- if pc_bs_before != blank and pc_bs_after != blank -%}{%- assign pc_bs_tagged = true -%}{%- endif -%}
+{%- assign pc_bs_all = '|' -%}
+{%- if pc_bs_article.content contains '<img' -%}
+  {%- comment -%} Thêm "~" đầu chuỗi để phần tử [0] luôn là đoạn trước ảnh đầu (kể cả khi nội dung mở đầu bằng ảnh). {%- endcomment -%}
+  {%- assign pc_bs_parts = pc_bs_article.content | prepend: '~' | split: '<img' -%}
+  {%- for pc_bs_part in pc_bs_parts offset: 1 -%}
+    {%- assign pc_bs_attr = pc_bs_part | split: '>' | first -%}
+    {%- assign pc_bs_src = '' -%}{%- assign pc_bs_alt = '' -%}
+    {%- if pc_bs_attr contains 'src="' -%}{%- assign pc_bs_src = pc_bs_attr | split: 'src="' | last | split: '"' | first -%}
+    {%- elsif pc_bs_attr contains "src='" -%}{%- assign pc_bs_src = pc_bs_attr | split: "src='" | last | split: "'" | first -%}{%- endif -%}
+    {%- if pc_bs_attr contains 'alt="' -%}{%- assign pc_bs_alt = pc_bs_attr | split: 'alt="' | last | split: '"' | first -%}
+    {%- elsif pc_bs_attr contains "alt='" -%}{%- assign pc_bs_alt = pc_bs_attr | split: "alt='" | last | split: "'" | first -%}{%- endif -%}
+    {%- if pc_bs_src != blank -%}
+      {%- assign pc_bs_w = '|' | append: pc_bs_src | append: '|' -%}
+      {%- unless pc_bs_all contains pc_bs_w -%}{%- assign pc_bs_all = pc_bs_all | append: pc_bs_src | append: '|' -%}{%- endunless -%}
+      {%- assign pc_bs_al = pc_bs_alt | downcase -%}
+      {%- assign pc_bs_is_b = false -%}{%- assign pc_bs_is_a = false -%}
+      {%- if pc_bs_al contains 'trước' or pc_bs_alt contains 'TRƯỚC' or pc_bs_alt contains 'Trước' or pc_bs_al contains 'truoc' or pc_bs_al contains 'before' -%}{%- assign pc_bs_is_b = true -%}{%- endif -%}
+      {%- if pc_bs_al contains 'sau' or pc_bs_al contains 'after' -%}{%- assign pc_bs_is_a = true -%}{%- endif -%}
       {%- assign pc_bs_full = '<img' | append: pc_bs_attr | append: '>' -%}
-      {%- if forloop.index == 1 -%}{%- assign pc_bs_img1 = pc_bs_src -%}{%- assign pc_bs_tag1 = pc_bs_full -%}
-      {%- else -%}{%- assign pc_bs_img2 = pc_bs_src -%}{%- assign pc_bs_tag2 = pc_bs_full -%}{%- endif -%}
-    {%- endfor -%}
-    {%- if pc_bs_before == blank and pc_bs_after == blank and pc_bs_img1 != blank and pc_bs_img2 != blank -%}
-      {%- assign pc_bs_before = pc_bs_img1 -%}{%- assign pc_bs_after = pc_bs_img2 -%}
-      {%- assign pc_bs_from_content = true -%}
-    {%- else -%}
-      {%- assign pc_bs_from_content = false -%}
+      {%- if pc_bs_is_b and pc_bs_is_a == false and pc_bs_img1 == blank -%}{%- assign pc_bs_img1 = pc_bs_src -%}{%- assign pc_bs_tag1 = pc_bs_full -%}{%- endif -%}
+      {%- if pc_bs_is_a and pc_bs_is_b == false and pc_bs_img2 == blank -%}{%- assign pc_bs_img2 = pc_bs_src -%}{%- assign pc_bs_tag2 = pc_bs_full -%}{%- endif -%}
     {%- endif -%}
-  {%- else -%}
-    {%- assign pc_bs_from_content = false -%}
+  {%- endfor -%}
+  {%- if pc_bs_tagged == false and pc_bs_img1 != blank and pc_bs_img2 != blank -%}
+    {%- assign pc_bs_before = pc_bs_img1 -%}{%- assign pc_bs_after = pc_bs_img2 -%}{%- assign pc_bs_from_content = true -%}
   {%- endif -%}
-  {%- if pc_bs_need_body -%}
-    {%- assign pc_bs_body = pc_bs_article.content -%}
-    {%- comment -%} Ảnh trước/sau đã hiện ở khung so sánh ⇒ gỡ khỏi nội dung để không lặp ảnh. {%- endcomment -%}
-    {%- if pc_bs_from_content -%}
-      {%- assign pc_bs_body = pc_bs_body | remove_first: pc_bs_tag1 | remove_first: pc_bs_tag2 -%}
-    {%- endif -%}
+{%- endif -%}
+{%- if pc_bs_before == blank or pc_bs_after == blank -%}
+  {%- assign pc_bs_before = '' -%}{%- assign pc_bs_after = '' -%}
+  {%- assign pc_bs_list = '|' -%}
+  {%- if pc_bs_article.image.src != blank -%}
+    {%- assign pc_bs_feat = pc_bs_article.image.src | img_url: 'large' -%}
+    {%- assign pc_bs_w = '|' | append: pc_bs_feat | append: '|' -%}
+    {%- comment -%} Ảnh đại diện trùng 1 ảnh trong Nội dung ⇒ không lặp. {%- endcomment -%}
+    {%- unless pc_bs_all contains pc_bs_w -%}{%- assign pc_bs_list = pc_bs_list | append: pc_bs_feat | append: '|' -%}{%- endunless -%}
+  {%- endif -%}
+  {%- assign pc_bs_rest = pc_bs_all | remove_first: '|' -%}
+  {%- assign pc_bs_list = pc_bs_list | append: pc_bs_rest -%}
+  {%- assign pc_bs_imgs = pc_bs_list | remove_first: '|' -%}
+  {%- if pc_bs_imgs != blank -%}{%- assign pc_bs_single = true -%}{%- endif -%}
+{%- endif -%}
+{%- if pc_bs_need_body -%}
+  {%- assign pc_bs_body = pc_bs_article.content -%}
+  {%- comment -%} Cặp ảnh đã hiện ở khung so sánh ⇒ gỡ khỏi nội dung để không lặp ảnh. {%- endcomment -%}
+  {%- if pc_bs_from_content -%}
+    {%- assign pc_bs_body = pc_bs_body | remove_first: pc_bs_tag1 | remove_first: pc_bs_tag2 -%}
   {%- endif -%}
 {%- endif -%}
 {%- assign pc_bs_need_body = false -%}

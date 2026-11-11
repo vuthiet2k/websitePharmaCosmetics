@@ -9,7 +9,7 @@
   - Câu chữ, link, ảnh hero: Theme Settings → "Trang Minh chứng lâm sàng" (field clinical_*). Ảnh hero trống ⇒ lấy
     cặp ảnh của ca đầu tiên có đủ ảnh; không có ca nào ⇒ hero chỉ còn chữ.
   - Ca khách hàng = bài viết trong blog settings.clinical_case_blog_handle (mặc định truoc-va-sau-1 — trên Sapo alias truoc-va-sau đã thuộc một Trang nội dung), đọc qua
-    snippets/ba_case_source.bwt (2026-10-17): ảnh trước/sau = tag anhtruoc:/anhsau: HOẶC 2 ảnh đầu chèn trong nội dung
+    snippets/ba_case_source.bwt (2026-10-17): ảnh trước/sau = tag anhtruoc:/anhsau: HOẶC ảnh trong nội dung có Mô tả ảnh "trước"/"sau"; không đánh dấu ⇒ ca 1 ảnh (12/11/2026)
     bài (BẮT BUỘC đủ 2 ảnh, thiếu ⇒ không hiện ca). Hướng dẫn nhập: docs/huong-dan-tao-ca-truoc-sau.md. Tag phụ
     nhom:<vấn đề da> (gom nhóm; không có ⇒ nhóm clinical_group_other), tuoi:<số>, tinh:<tỉnh/thành>,
     tuan:<số tuần theo dõi>, phacdo:<tên phác đồ/sản phẩm chính>. Thiếu tag nào ⇒ ẩn phần đó.
@@ -26,35 +26,64 @@
 {%- assign pc_ba_groups = '' -%}{%- assign pc_ba_has_other = false -%}
 {%- assign pc_ba_first_before = '' -%}
 {%- assign pc_ba_first_after = '' -%}
-{%- assign pc_ba_first_title = '' -%}
+{%- assign pc_ba_first_title = '' -%}{%- assign pc_ba_first_single = '' -%}
 {%- for pc_ba in pc_ba_blog.articles limit: 50 -%}
   {%- assign pc_bs_article = pc_ba -%}{%- include 'ba_case_source' -%}
   {%- assign pc_ba_before = pc_bs_before -%}{%- assign pc_ba_after = pc_bs_after -%}{%- assign pc_ba_group = pc_bs_group -%}
-  {%- if pc_ba_before != blank and pc_ba_after != blank -%}
+  {%- if pc_bs_single or pc_ba_before != blank and pc_ba_after != blank -%}
     {%- comment -%} 2026-10-18: ca không gắn nhom: gom vào nhóm "khác" — luôn đứng cuối (tab lọc). {%- endcomment -%}
     {%- if pc_ba_group == blank or pc_ba_group == pc_ba_group_other -%}{%- assign pc_ba_has_other = true -%}{%- else -%}
     {%- assign pc_ba_wrapped = '|' | append: pc_ba_group | append: '|' -%}
     {%- unless pc_ba_groups contains pc_ba_wrapped -%}{%- assign pc_ba_groups = pc_ba_groups | append: pc_ba_wrapped -%}{%- endunless -%}
     {%- endif -%}
-    {%- if pc_ba_first_before == blank -%}
-      {%- assign pc_ba_first_before = pc_ba_before -%}{%- assign pc_ba_first_after = pc_ba_after -%}{%- assign pc_ba_first_title = pc_ba.title -%}
+    {%- if pc_ba_first_before == blank and pc_ba_first_single == blank -%}
+      {%- assign pc_ba_first_title = pc_ba.title -%}
+      {%- if pc_bs_single -%}{%- assign pc_ba_first_single = pc_bs_imgs | split: '|' | first -%}
+      {%- else -%}{%- assign pc_ba_first_before = pc_ba_before -%}{%- assign pc_ba_first_after = pc_ba_after -%}{%- endif -%}
     {%- endif -%}
   {%- endif -%}
 {%- endfor -%}
 {%- if pc_ba_has_other -%}{%- assign pc_ba_groups = pc_ba_groups | append: '|' | append: pc_ba_group_other | append: '|' -%}{%- endif -%}
 {%- assign pc_ba_group_list = pc_ba_groups | split: '|' -%}
 
-{%- if settings.clinical_hero_before != blank and settings.clinical_hero_after != blank -%}
-  {%- assign pc_ba_hero_before = settings.clinical_hero_before | img_url: 'large' -%}
-  {%- assign pc_ba_hero_after = settings.clinical_hero_after | img_url: 'large' -%}
-{%- else -%}
-  {%- assign pc_ba_hero_before = pc_ba_first_before -%}
-  {%- assign pc_ba_hero_after = pc_ba_first_after -%}
+{%- comment -%}
+  12/11/2026 (người dùng): media hero ưu tiên lấy từ ô MÔ TẢ của danh mục bài viết Trước & Sau (Sapo › Danh mục bài viết):
+    1. Có nhúng <iframe> (video YouTube…) ⇒ hero là video đó (khung 16:9).
+    2. Không có video, có ảnh ⇒ ảnh ĐẦU TIÊN, hiện nguyên khung (1 ảnh, không tách trước/sau).
+    3. Mô tả không có ảnh/video ⇒ cặp ảnh Theme Settings clinical_hero_before/after (đủ cả hai) ⇒ ca đầu tiên (cặp hoặc 1 ảnh).
+{%- endcomment -%}
+{%- assign pc_ba_hero_video = '' -%}{%- assign pc_ba_hero_single = '' -%}
+{%- assign pc_ba_hero_before = '' -%}{%- assign pc_ba_hero_after = '' -%}
+{%- assign pc_ba_desc = pc_ba_blog.description -%}
+{%- if pc_ba_desc contains '<iframe' -%}
+  {%- assign pc_ba_v = pc_ba_desc | prepend: '~' | split: '<iframe' -%}
+  {%- for pc_ba_vp in pc_ba_v offset: 1 limit: 1 -%}
+    {%- assign pc_ba_hero_video = pc_ba_vp | split: '</iframe>' | first | prepend: '<iframe' | append: '</iframe>' -%}
+  {%- endfor -%}
+{%- elsif pc_ba_desc contains '<img' -%}
+  {%- assign pc_ba_d = pc_ba_desc | prepend: '~' | split: '<img' -%}
+  {%- for pc_ba_dp in pc_ba_d offset: 1 limit: 1 -%}
+    {%- assign pc_ba_d_attr = pc_ba_dp | split: '>' | first -%}
+    {%- if pc_ba_d_attr contains 'src="' -%}{%- assign pc_ba_hero_single = pc_ba_d_attr | split: 'src="' | last | split: '"' | first -%}
+    {%- elsif pc_ba_d_attr contains "src='" -%}{%- assign pc_ba_hero_single = pc_ba_d_attr | split: "src='" | last | split: "'" | first -%}{%- endif -%}
+  {%- endfor -%}
 {%- endif -%}
+{%- if pc_ba_hero_video == blank and pc_ba_hero_single == blank -%}
+  {%- if settings.clinical_hero_before != blank and settings.clinical_hero_after != blank -%}
+    {%- assign pc_ba_hero_before = settings.clinical_hero_before | img_url: 'large' -%}
+    {%- assign pc_ba_hero_after = settings.clinical_hero_after | img_url: 'large' -%}
+  {%- elsif pc_ba_first_before != blank -%}
+    {%- assign pc_ba_hero_before = pc_ba_first_before -%}{%- assign pc_ba_hero_after = pc_ba_first_after -%}
+  {%- else -%}
+    {%- assign pc_ba_hero_single = pc_ba_first_single -%}
+  {%- endif -%}
+{%- endif -%}
+{%- assign pc_ba_hero_media = true -%}
+{%- if pc_ba_hero_video == blank and pc_ba_hero_single == blank and pc_ba_hero_before == blank -%}{%- assign pc_ba_hero_media = false -%}{%- endif -%}
 
 {% include 'breadcrumb' %}
 <main class="pc-ba">
-  <section class="container pc-ba-hero{% if pc_ba_hero_before == blank %} pc-ba-hero--text{% endif %}">
+  <section class="container pc-ba-hero{% unless pc_ba_hero_media %} pc-ba-hero--text{% endunless %}">
     <div class="pc-ba-hero__text">
       <p class="pc-ba-kicker">{{ settings.clinical_hero_kicker | default: 'TRƯỚC & SAU · CHĂM SÓC DA TỪ XA' }}</p>
       <h1 class="pc-ba-hero__title">{{ settings.clinical_hero_title | default: page.title }}</h1>
@@ -66,7 +95,11 @@
         {%- endif -%}
       </div>
     </div>
-    {%- if pc_ba_hero_before != blank -%}
+    {%- if pc_ba_hero_video != blank -%}
+    <div class="pc-ba-hero__media pc-ba-hero__media--video">{{ pc_ba_hero_video }}</div>
+    {%- elsif pc_ba_hero_single != blank -%}
+    <figure class="pc-ba-hero__media"><img src="{{ pc_ba_hero_single }}" alt="{{ settings.clinical_hero_title | default: page.title | strip_html | escape }}" width="840" height="630" fetchpriority="high"></figure>
+    {%- elsif pc_ba_hero_before != blank -%}
     <div class="pc-ba-pair pc-ba-pair--hero">
       <figure class="pc-ba-frame pc-ba-frame--before">
         <img src="{{ pc_ba_hero_before }}" alt="{{ pc_ba_first_title | default: page.title | escape }} — trước" width="420" height="420" fetchpriority="high">
@@ -179,9 +212,38 @@
       {%- for pc_ba in pc_ba_blog.articles limit: 50 -%}
         {%- assign pc_bs_article = pc_ba -%}{%- include 'ba_case_source' -%}
         {%- assign pc_ba_group = pc_bs_group | default: pc_ba_group_other -%}
-        {%- if pc_bs_before != blank and pc_bs_after != blank and pc_ba_group == pc_ba_group_name -%}
+        {%- assign pc_ba_ok = false -%}
+        {%- if pc_bs_single or pc_bs_before != blank and pc_bs_after != blank -%}{%- assign pc_ba_ok = true -%}{%- endif -%}
+        {%- if pc_ba_ok and pc_ba_group == pc_ba_group_name -%}
+        {%- comment -%}
+          Ảnh và mô tả in thành 2 dãy riêng để thanh ‹ chấm › nằm giữa (đúng thiết kế); JS bật cùng chỉ số.
+          12/11/2026: ca 1 ảnh (pc_bs_single) ⇒ MỖI ảnh (đại diện + ảnh trong Nội dung) là 1 slide nguyên khung, không nhãn,
+          dùng chung mô tả của ca.
+        {%- endcomment -%}
+        {%- capture pc_ba_meta -%}
+          {%- if pc_bs_age != blank -%}{%- assign pc_ba_age_l = pc_bs_age | downcase -%}<span>{{ pc_bs_age | escape }}{% unless pc_ba_age_l contains 'tuổi' %} tuổi{% endunless %}</span>{%- endif -%}
+          {%- if pc_bs_city != blank -%}<span>{{ pc_bs_city | escape }}</span>{%- endif -%}
+          {%- if pc_bs_weeks != blank -%}<span>Theo dõi {{ pc_bs_weeks | escape }} tuần</span>{%- endif -%}
+        {%- endcapture -%}
+        {%- capture pc_ba_info -%}
+          {%- if pc_ba_meta != blank -%}<p class="pc-ba-case__meta">{{ pc_ba_meta }}</p>{%- endif -%}
+          {%- if pc_bs_plan != blank -%}<p class="pc-ba-case__plan">{{ settings.clinical_article_plan_label | default: 'Phác đồ' | escape }}: {{ pc_bs_plan | escape }}</p>{%- endif -%}
+        {%- endcapture -%}
+        {%- if pc_bs_single -%}
+        {%- assign pc_ba_imgs = pc_bs_imgs | split: '|' -%}
+        {%- for pc_ba_src in pc_ba_imgs -%}{%- if pc_ba_src != blank -%}
         {%- assign pc_ba_n = pc_ba_n | plus: 1 -%}
-        {%- comment -%} Ảnh và mô tả in thành 2 dãy riêng để thanh ‹ chấm › nằm giữa (đúng thiết kế); JS bật cùng chỉ số. {%- endcomment -%}
+        {%- capture pc_ba_one -%}
+          <figure class="pc-ba-frame pc-ba-frame--single" data-ba-case{% if pc_ba_n > 1 %} hidden{% endif %}>
+            <img src="{{ pc_ba_src }}" alt="{{ pc_ba.title | escape }}{% if pc_ba_imgs.size > 1 %} — ảnh {{ forloop.index }}{% endif %}" width="560" height="420" loading="lazy" decoding="async">
+          </figure>
+        {%- endcapture -%}
+        {%- assign pc_ba_pairs = pc_ba_pairs | append: pc_ba_one -%}
+        {%- capture pc_ba_one -%}<div class="pc-ba-case__info" data-ba-info{% if pc_ba_n > 1 %} hidden{% endif %}>{{ pc_ba_info }}</div>{%- endcapture -%}
+        {%- assign pc_ba_infos = pc_ba_infos | append: pc_ba_one -%}
+        {%- endif -%}{%- endfor -%}
+        {%- else -%}
+        {%- assign pc_ba_n = pc_ba_n | plus: 1 -%}
         {%- capture pc_ba_one -%}
           <div class="pc-ba-pair" data-ba-case{% if pc_ba_n > 1 %} hidden{% endif %}>
             <figure class="pc-ba-frame pc-ba-frame--before">
@@ -195,18 +257,9 @@
           </div>
         {%- endcapture -%}
         {%- assign pc_ba_pairs = pc_ba_pairs | append: pc_ba_one -%}
-        {%- capture pc_ba_meta -%}
-          {%- if pc_bs_age != blank -%}{%- assign pc_ba_age_l = pc_bs_age | downcase -%}<span>{{ pc_bs_age | escape }}{% unless pc_ba_age_l contains 'tuổi' %} tuổi{% endunless %}</span>{%- endif -%}
-          {%- if pc_bs_city != blank -%}<span>{{ pc_bs_city | escape }}</span>{%- endif -%}
-          {%- if pc_bs_weeks != blank -%}<span>Theo dõi {{ pc_bs_weeks | escape }} tuần</span>{%- endif -%}
-        {%- endcapture -%}
-        {%- capture pc_ba_one -%}
-          <div class="pc-ba-case__info" data-ba-info{% if pc_ba_n > 1 %} hidden{% endif %}>
-            {%- if pc_ba_meta != blank -%}<p class="pc-ba-case__meta">{{ pc_ba_meta }}</p>{%- endif -%}
-            {%- if pc_bs_plan != blank -%}<p class="pc-ba-case__plan">{{ settings.clinical_article_plan_label | default: 'Phác đồ' | escape }}: {{ pc_bs_plan | escape }}</p>{%- endif -%}
-          </div>
-        {%- endcapture -%}
+        {%- capture pc_ba_one -%}<div class="pc-ba-case__info" data-ba-info{% if pc_ba_n > 1 %} hidden{% endif %}>{{ pc_ba_info }}</div>{%- endcapture -%}
         {%- assign pc_ba_infos = pc_ba_infos | append: pc_ba_one -%}
+        {%- endif -%}
         {%- endif -%}
       {%- endfor -%}
       {%- assign pc_ba_gi = pc_ba_gi | plus: 1 -%}

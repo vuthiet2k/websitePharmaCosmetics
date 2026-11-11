@@ -359,7 +359,7 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
   (giới thiệu + 4 chỉ số = `clinical_*` settings, mặc định trống; ca điều trị = blog
   `clinical_case_blog_handle`, mặc định `truoc-va-sau`). Mọi nơi đọc ca (/clinical-proof, `article.truoc-va-sau`,
   `lieu_trinh_cases`, mục "Hành trình da của khách hàng" trang chủ = bài có tag `home_testi_pin_tag` — mặc định
-  `ghim-trang-chu`, tối đa 3) đi qua `snippets/ba_case_source.bwt`: ảnh = tag `anhtruoc:`/`anhsau:` hoặc 2 ảnh đầu trong nội dung
+  `ghim-trang-chu`, tối đa 3) đi qua `snippets/ba_case_source.bwt`: ảnh = tag `anhtruoc:`/`anhsau:` hoặc 2 ảnh trong nội dung có Mô tả ảnh (alt) chứa "trước"/"sau"; không đánh dấu ⇒ **ca 1 ảnh** (ảnh đại diện + mọi ảnh nội dung, mỗi ảnh 1 slide nguyên khung — chỉ trang Trước & Sau nhận, 12/11/2026); hero trang Trước & Sau lấy video/ảnh từ ô Mô tả danh mục
   bài (trang chi tiết gỡ 2 ảnh đó khỏi nội dung). Hướng dẫn nhập: `docs/huong-dan-tao-ca-truoc-sau.md`.
 - **Audit Checklist Sapo tự động:** `BASE=http://localhost:3000 npm run audit:sapo-review` (Playwright,
   33 route): 1 `<h1>`/trang, `<img>` có alt + width/height, ảnh dưới màn hình đầu lazy, không lỗi
@@ -792,7 +792,7 @@ grep -o '"id"[[:space:]]*:[[:space:]]*"[a-z_]*"' configs/settings_schema.json
 - Dữ liệu riêng từng liệu trình: tên, Mô tả ngắn (giới thiệu), Mô tả chi tiết, giá, Nhà cung cấp, ảnh alt `[banner]`/`[banner-mobile]`/
   `[hero]`/`[congthuc]`/`[sanpham]`/`[buoc-N]`, tag `nhan:` `phude:` `tenngan:` `tieude:` `congthuc:` `hinhthuc:` `thoigian:`
   `sobuoi:` `diadiem:` `vande:<bài>` `hoatchat:<bài>`; blog `van-de-da`, `hoat-chat` (tag `vaitro:`), `cau-hoi-lieu-trinh` (tag
-  `sanpham:<alias>`), `truoc-va-sau-1` (tag `lieutrinh:<alias>` + `anhtruoc:`/`anhsau:` hoặc 2 ảnh đầu nội dung). Chữ dùng chung: nhóm cấu hình "Trang liệu
+  `sanpham:<alias>`), `truoc-va-sau-1` (tag `lieutrinh:<alias>` + `anhtruoc:`/`anhsau:` hoặc 2 ảnh nội dung có Mô tả ảnh "trước"/"sau"). Chữ dùng chung: nhóm cấu hình "Trang liệu
   trình (sản phẩm)" (`lt_*`, `[ten]` = tên ngắn). Thiếu dữ liệu ⇒ phần đó ẩn. Hướng dẫn nhập liệu: `docs/huong-dan-tao-lieu-trinh.md`.
 - Tên vấn đề da / hoạt chất in CHỮ HOA theo bản bàn giao (người dùng chốt) — ngoại lệ có chủ đích của UI-2.7.
 - `page.getglowing-micro-peel` chỉ còn bọc hiển thị sản phẩm `settings.lt_page_product` + canonical về URL sản phẩm (link cũ).

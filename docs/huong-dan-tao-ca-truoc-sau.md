@@ -5,7 +5,7 @@ tự hiện ở các nơi sau:
 
 | Nơi hiển thị | Hiện gì |
 | :-- | :-- |
-| Trang **/truoc-sau-cham-soc-da-tu-xa** — phần "Kết quả của khách hàng" | Thanh **nav tab lọc** (gạch chân) theo nhóm vấn đề da (tự sinh từ các giá trị tag `nhom:` đang có ca; "Kết quả khác" luôn cuối) + **khung trình chiếu 1 ca/lần**: cặp ảnh TRƯỚC (trái) / SAU (phải) full ngang tỉ lệ 4:3, không nhãn đè trên ảnh, nút ‹ › + chấm, vuốt trên điện thoại. Chữ (tiêu đề · Tóm tắt · tuổi · số tuần · "Xem chi tiết ca") chỉ trượt lên khi rê chuột vào ảnh; điện thoại hiện sẵn dưới ảnh. Bấm vào ca mở trang chi tiết. Ca đầu tiên còn làm ảnh hero nếu chưa cài ảnh hero riêng. |
+| Trang **/truoc-sau-cham-soc-da-tu-xa** — phần "Kết quả của khách hàng" | Thanh **tab lọc** theo nhóm vấn đề da (tự sinh từ tag `nhom:`; "Kết quả khác" luôn cuối) + **lưới thẻ theo nhóm** (2 cột, điện thoại 1 cột), **4 thẻ / trang** có phân trang. Mỗi thẻ: tên nhóm + "Case x / n", ảnh, nút ‹ › + chấm (vuốt trên điện thoại) để chuyển ca, dòng mô tả ngắn (tuổi · tỉnh · theo dõi n tuần / Phác đồ) và nút **Tư vấn phác đồ qua Zalo**. Ca có cặp ảnh đánh dấu ⇒ 2 ảnh TRƯỚC/SAU có nhãn; ca không đánh dấu ⇒ **mỗi ảnh 1 slide nguyên khung** (xem 2.1). Thẻ không link sang bài chi tiết. |
 | **Trang chi tiết ca** `/<đường dẫn bài>` trên Sapo (bản dev: `/blogs/truoc-va-sau-1/<đường dẫn bài>`) (giao diện `article.truoc-va-sau`) | Khung **bài viết blog** như mọi bài khác. Cột chính: thẻ đầu bài (nhãn nhóm · H1 · chuyên gia · ngày/tỉnh · tóm tắt · hồ sơ ca 4 ô) → ảnh TRƯỚC/SAU 50/50 có nhãn tuần → nhận định chuyên gia → lộ trình diễn tiến → câu chuyện. Sidebar: đặt lịch + hotline + Zalo → liệu trình & sản phẩm đồng hành → ca khác cùng nhóm. Mobile: sidebar xuống dưới + thanh đặt lịch bám đáy |
 | Trang **liệu trình** (sản phẩm giao diện `product.lieu-trinh`) — phần "Trước – sau" | Chỉ khi bài có tag `lieutrinh:<alias sản phẩm>` (tối đa 8 ca, trình chiếu ‹ ›) |
 | **Trang chủ** — mục "Kết quả thực tế · Hành trình da của khách hàng" | Chỉ khi bài có tag **`ghim-trang-chu`** và đủ ảnh trước/sau (tối đa **3 bài mới nhất**). Tab = `nhom:` (trống ⇒ tiêu đề) – `khach:`; panel = ảnh TRƯỚC/SAU · tiêu đề · dòng khách (`khach:`, `tuoi:`, `tinh:` · Tác giả) · Tình trạng ban đầu (`tinhtrang:`, trống ⇒ `nhom:`) · Hành trình (danh sách số đầu tiên trong Nội dung, trống ⇒ Tóm tắt) · Sản phẩm sử dụng (`phacdo:`) · Thời gian theo dõi (`tuan:`) · link "Xem chi tiết ca". Đổi tag ghim: Cấu hình theme › Trước & Sau (Testimonials) › **Hành trình da — Tag ghim ca lên trang chủ**. Không bài nào được ghim ⇒ trang chủ dùng Thẻ 1–3 nhập tay như trước |
@@ -23,15 +23,16 @@ tự hiện ở các nơi sau:
 | :-- | :-- | :-- |
 | Trang giới thiệu Trước & Sau | Trang nội dung alias **`truoc-sau-cham-soc-da-tu-xa`**, giao diện `page.clinical-proof` → `/truoc-sau-cham-soc-da-tu-xa` | Đã có. **Không có** đường dẫn `/clinical-proof` trên Sapo (chỉ là tên route ở bản dev). |
 | Danh mục bài viết ca | **Trước & Sau**, handle **`truoc-va-sau-1`** (`/truoc-va-sau` là Trang nội dung "Trước và sau", không phải danh mục) | Có 1 bài "[DEMO] Hành trình 8 tuần…" — gỡ/ẩn trước khi công bố. Ô **Blog ca điều trị** phải chọn danh mục này |
-| Ảnh hero TRƯỚC/SAU | Cấu hình theme › Trang Trước & Sau › Hero — ảnh TRƯỚC / ảnh SAU | Trống ⇒ hero lấy cặp ảnh của ca đầu tiên; chưa có ca ⇒ hero chỉ còn chữ |
+| Ảnh / video hero | **Ô Mô tả của danh mục bài viết Trước & Sau** (Website › Bài viết › Danh mục bài viết › Trước & Sau): có nhúng video (iframe YouTube…) ⇒ hero là video; không có video, có ảnh ⇒ ảnh đầu tiên (1 ảnh, nguyên khung) | Mô tả không có ảnh/video ⇒ dùng cặp ảnh Cấu hình theme › Trang Trước & Sau › Hero (nếu đủ 2 ảnh) ⇒ ca đầu tiên; chưa có ca ⇒ hero chỉ còn chữ |
 
 Ảnh trên bản dev (localhost/Vercel) chỉ là ô giữ chỗ "[ẢNH TRƯỚC] / [ẢNH SAU]" của dữ liệu mẫu — theme **không** đưa
 ảnh nào lên Sapo. Ảnh thật phải nhập theo mục 2.
 
 1. **Website › Bài viết › Danh mục bài viết**: đã có danh mục **Trước & Sau**, đường dẫn `truoc-va-sau-1`.
    Nếu dùng đường dẫn khác thì chọn lại ở **Cấu hình theme › Trang Trước & Sau (/truoc-sau-cham-soc-da-tu-xa) › Blog ca điều trị**.
-2. Ảnh hero (tuỳ chọn): **Cấu hình theme › Trang Trước & Sau** › **Hero — ảnh TRƯỚC** + **Hero — ảnh SAU** (phải đủ cả
-   hai; thiếu một ⇒ dùng ca đầu tiên). Ảnh khách thật đã đồng ý công bố, vuông 1:1.
+2. Ảnh / video hero (12/11/2026): mở danh mục bài viết **Trước & Sau**, trong ô **Mô tả** chèn **1 ảnh** (nút Chèn ảnh)
+   hoặc **nhúng 1 video** (nút Mã HTML › dán mã `<iframe>` của YouTube). Có video thì ưu tiên video. Ô Mô tả trống ảnh/video
+   ⇒ dùng **Cấu hình theme › Trang Trước & Sau › Hero — ảnh TRƯỚC + ảnh SAU** (đủ cả hai) ⇒ ca đầu tiên.
 3. Ô **Chi tiết ca — link nút quay lại** phải là `/truoc-sau-cham-soc-da-tu-xa` (bản cũ mặc định `/clinical-proof` ⇒ 404).
 4. Trong cùng mục cấu hình đó, có thể sửa chữ dùng chung: tiêu đề phần kết quả, ghi chú dưới kết quả, nút Zalo,
    nhãn link **"Xem chi tiết ca"** (để trống thì ẩn link), và các nhãn của trang chi tiết (`Chi tiết ca — …`):
@@ -45,28 +46,34 @@ Nhập lần lượt các ô trên màn hình **Đăng bài viết mới**:
 | Ô trên Sapo | Nhập | Hiện ở đâu |
 | :-- | :-- | :-- |
 | **Tiêu đề** | Tên ca ngắn gọn, nêu vấn đề và thời gian. Ví dụ: *Hành trình 8 tuần cải thiện da mụn viêm* | Tiêu đề trang chi tiết (H1), alt của ảnh, thẻ "Ca khác cùng nhóm" |
-| **Nội dung bài viết** | **Ảnh 1 = TRƯỚC, ảnh 2 = SAU** (xem 2.1), sau đó là câu chuyện của ca | Khung so sánh TRƯỚC/SAU và phần "Hành trình chăm sóc da" |
+| **Nội dung bài viết** | Ảnh của ca (xem 2.1), sau đó là câu chuyện của ca | Thẻ ca ở trang Trước & Sau, khung so sánh trang chi tiết và phần "Hành trình chăm sóc da" |
 | **Tóm tắt** (bấm "Thêm tóm tắt") | 1–2 câu tóm tắt ca: tình trạng ban đầu, phác đồ và kết quả ghi nhận | Đoạn dưới H1 trang chi tiết, mô tả SEO/JSON-LD |
 | **Xem trước kết quả tìm kiếm** (Tùy chỉnh SEO) | Tiêu đề ≤ 60 ký tự, mô tả ≤ 160 ký tự, đường dẫn ngắn không dấu | Google |
 | **Trạng thái** | **Hiển thị** (hoặc Đặt lịch hiển thị) | Chọn **Ẩn** thì ca không hiện ở cả 3 nơi |
-| **Ảnh bài viết** | Ảnh đại diện: ảnh SAU hoặc ảnh ghép trước/sau, tỉ lệ 1:1 | Danh sách bài của blog, ảnh chia sẻ Facebook/Zalo. Không dùng làm khung so sánh. |
+| **Ảnh bài viết** | Ảnh đại diện: thường là ảnh ghép trước–sau | Danh sách bài, ảnh chia sẻ Facebook/Zalo. Ca **không đánh dấu** trước/sau (2.1 cách A) ⇒ ảnh đại diện là slide đầu tiên của ca trên trang Trước & Sau |
 | **Tác giả** | Chuyên gia phụ trách ca | Dòng "Chuyên gia phụ trách" trên trang chi tiết |
 | **Danh mục** | **Trước & Sau** (`truoc-va-sau-1`, bắt buộc) | Bài ở danh mục khác sẽ không được trang đọc |
 | **Tag** | Các tag dạng `khoá:giá trị` (xem 2.2) | Nhóm, bảng thông tin ca, liên kết liệu trình |
 | **Khung giao diện** | **`article.truoc-va-sau`** (bắt buộc) | Nếu để `article`, trang chi tiết hiện như bài tin tức thường |
 
-### 2.1. Chèn ảnh trước/sau vào nội dung
+### 2.1. Ảnh của ca (cập nhật 12/11/2026)
 
-1. Đặt con trỏ ở **đầu** ô Nội dung, bấm biểu tượng **Chèn ảnh** trên thanh công cụ và tải **ảnh TRƯỚC** lên.
-2. Xuống dòng, chèn tiếp **ảnh SAU**.
-3. Xuống dòng và viết câu chuyện của ca (xem gợi ý 2.3).
+Có 2 cách — chọn 1:
 
-Theme tự lấy **2 ảnh đầu tiên** trong nội dung làm cặp TRƯỚC/SAU, rồi gỡ 2 ảnh này khỏi phần nội dung để ảnh không bị lặp.
-Ảnh thứ 3 trở đi (ví dụ ảnh tuần 4) vẫn hiện trong phần nội dung.
+**Cách A — đơn giản (khuyên dùng): 1 ảnh, không cần đánh dấu.** Tải ảnh đại diện (thường là **ảnh ghép trước–sau** đã
+dựng sẵn) và chèn thêm ảnh vào Nội dung nếu muốn. Trên trang Trước & Sau, **mỗi ảnh là 1 slide nguyên khung** (ảnh đại
+diện trước, rồi các ảnh trong Nội dung theo thứ tự), không gắn nhãn TRƯỚC/SAU, không cắt. Theme **không tự đoán** ảnh nào
+là trước hay sau — tải ảnh bình thường thì không thể chia đúng.
 
-- Ảnh vuông 1:1, tối thiểu 800×800 px, định dạng JPG/WebP, dung lượng dưới 300 KB.
-- Ca chưa đủ 2 ảnh thì **không** hiện ở trang Trước & Sau và trang liệu trình. Trang chi tiết vẫn mở được nhưng không có khung so sánh.
-- Cách cũ vẫn dùng được: tag `anhtruoc:<link ảnh>` + `anhsau:<link ảnh>`. Khi có cả 2 tag này, theme ưu tiên tag thay vì ảnh trong nội dung.
+**Cách B — cặp TRƯỚC/SAU có đánh dấu.** Chèn 2 ảnh vào Nội dung và điền **Mô tả ảnh** (alt, trong hộp Chèn ảnh) cho từng ảnh:
+ảnh trước có chữ **"trước"** (vd `Ảnh trước`), ảnh sau có chữ **"sau"** (vd `Ảnh sau`). Theme dựng khung so sánh TRƯỚC/SAU
+có nhãn và gỡ 2 ảnh này khỏi phần nội dung để không lặp. Mô tả ảnh chứa cả "trước" lẫn "sau" ⇒ coi là ảnh ghép (cách A).
+Cách cũ vẫn dùng được: tag `anhtruoc:<link ảnh>` + `anhsau:<link ảnh>` (ưu tiên hơn ảnh trong nội dung).
+
+- Ảnh tối thiểu 800 px cạnh ngắn, JPG/WebP, dưới 300 KB.
+- Ca không có ảnh nào ⇒ không hiện ở trang Trước & Sau.
+- **Trang chủ** (mục Hành trình da) và **trang liệu trình** chỉ hiện ca **cách B** (cần cặp TRƯỚC/SAU); ca cách A chỉ hiện ở
+  trang Trước & Sau và trang chi tiết (ảnh nằm trong phần nội dung).
 
 ### 2.2. Tag
 
