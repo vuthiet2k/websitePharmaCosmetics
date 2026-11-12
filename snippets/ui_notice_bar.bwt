@@ -45,20 +45,22 @@
 })();
 </script>
 {%- if pc_nb_link == blank -%}
-{%- assign pc_nb_items = settings.delivery_alert_detail | default: 'Nhân viên giao hàng chính thức chỉ thu tiền (COD) khi trao kiện hàng tận tay quý khách.;Không chuyển khoản trước theo yêu cầu qua điện thoại, Zalo, SMS của người tự xưng nhân viên giao hàng (vd "phí giữ đơn", "đơn gặp sự cố"). Chỉ thanh toán theo hướng dẫn trên trang thanh toán của website.;Không bấm đường link lạ, không đọc mã OTP hay mật khẩu ngân hàng cho bất kỳ ai.;Nghi ngờ lừa đảo: từ chối nhận hàng và gọi ngay hotline để được xác minh đơn.' | split: ';' -%}
-{%- comment -%} 12/11/2026 (chủ dự án: "làm giao diện tốt lên … có button liên hệ zalo"): popup dạng thẻ — khung nhắc vàng, mỗi lưu ý
+{%- assign pc_nb_items = settings.delivery_alert_detail | default: 'Nhân viên giao hàng chính thức **chỉ thu tiền (COD)** khi trao kiện hàng tận tay quý khách.;!!Không chuyển khoản trước!! theo yêu cầu qua điện thoại, Zalo, SMS của người tự xưng nhân viên giao hàng (vd "phí giữ đơn", "đơn gặp sự cố"). Chỉ thanh toán theo hướng dẫn trên trang thanh toán của website.;**Không bấm đường link lạ**, không đọc mã OTP hay mật khẩu ngân hàng cho bất kỳ ai.;**Nghi ngờ lừa đảo:** từ chối nhận hàng và gọi ngay hotline để được xác minh đơn.' | split: ';' -%}
+{%- comment -%} 12/11/2026 — giao diện theo Figma «Main - SecurityAlertModal» (node 757:5, chủ dự án gửi). Lưu ý hỗ trợ đánh dấu:
+  **cụm** ⇒ in đậm, !!cụm!! ⇒ in đậm màu đỏ cảnh báo (token sale). Trước đó (chủ dự án: "làm giao diện tốt lên … có button liên hệ zalo"): popup dạng thẻ — khung nhắc vàng, mỗi lưu ý
   1 hàng có icon (delivery_alert_detail_icons, theo thứ tự), cuối là 2 nút Gọi hotline (store_phone) + Chat Zalo (contact_zalo). {%- endcomment -%}
 {%- assign pc_nb_icons = settings.delivery_alert_detail_icons | default: 'truck,banknote,lock,shield-check' | split: ',' -%}
 {%- assign pc_nb_intro = settings.delivery_alert_detail_intro | default: 'Kẻ gian thường giả danh nhân viên giao hàng để yêu cầu chuyển khoản trước. Quý khách lưu ý:' -%}
 {%- assign pc_nb_tel = pc_nb_phone | remove: ' ' | remove: '.' | remove: '-' -%}
 {%- assign pc_nb_zalo = settings.contact_zalo | remove: ' ' | remove: '.' | remove: '-' | strip -%}
 {%- capture pc_nb_content -%}
+<div class="pc-notice-dlg">
 {%- if pc_nb_intro != blank -%}<p class="pc-notice-dlg__lead"><span class="pc-notice-dlg__lead-ico">{% include 'ui_icon', name: 'triangle-alert', size: 20, label: '' %}</span><span>{{ pc_nb_intro | escape }}</span></p>{%- endif -%}
 <ol class="pc-notice-dlg__list">
   {%- assign pc_nb_n = 0 -%}
   {%- for pc_nb_item in pc_nb_items -%}{%- assign pc_nb_line = pc_nb_item | strip -%}{%- if pc_nb_line != blank -%}
   {%- assign pc_nb_ico = 'shield-check' -%}{%- for pc_nb_i in pc_nb_icons -%}{%- if forloop.index0 == pc_nb_n -%}{%- assign pc_nb_i2 = pc_nb_i | strip -%}{%- if pc_nb_i2 != blank -%}{%- assign pc_nb_ico = pc_nb_i2 -%}{%- endif -%}{%- endif -%}{%- endfor -%}{%- comment -%} DotLiquid: không lấy mảng theo chỉ số biến (A.6) {%- endcomment -%}{%- assign pc_nb_n = pc_nb_n | plus: 1 -%}
-  <li class="pc-notice-dlg__item"><span class="pc-notice-dlg__ico">{% include 'ui_icon', name: pc_nb_ico, size: 20, label: '' %}</span><span class="pc-notice-dlg__txt">{{ pc_nb_line | escape }}</span></li>
+  <li class="pc-notice-dlg__item"><span class="pc-notice-dlg__ico">{% include 'ui_icon', name: pc_nb_ico, size: 20, label: '' %}</span><span class="pc-notice-dlg__txt">{%- assign pc_nb_parts = pc_nb_line | escape | split: '!!' -%}{%- for pc_nb_p in pc_nb_parts -%}{%- assign pc_nb_odd = forloop.index0 | modulo: 2 -%}{%- if pc_nb_odd == 1 -%}<strong class="pc-notice-dlg__alert">{{ pc_nb_p }}</strong>{%- else -%}{%- assign pc_nb_bs = pc_nb_p | split: '**' -%}{%- for pc_nb_b in pc_nb_bs -%}{%- assign pc_nb_odd2 = forloop.index0 | modulo: 2 -%}{%- if pc_nb_odd2 == 1 -%}<strong>{{ pc_nb_b }}</strong>{%- else -%}{{ pc_nb_b }}{%- endif -%}{%- endfor -%}{%- endif -%}{%- endfor -%}</span></li>
   {%- endif -%}{%- endfor -%}
 </ol>
 {%- if settings.delivery_alert_bank != blank -%}<p class="pc-notice-dlg__bank">{% include 'ui_icon', name: 'banknote', size: 20, label: '' %}<span>{{ settings.delivery_alert_bank | escape }}</span></p>{%- endif -%}
@@ -71,9 +73,10 @@
 </div>
 </div>
 {%- endif -%}
-
+</div>
 {%- endcapture -%}
 {%- assign pc_nb_mtitle = settings.delivery_alert_detail_title | default: 'Nhận hàng an toàn, tránh lừa đảo' -%}
+{%- capture pc_nb_mtitle -%}<span class="pc-notice-dlg__badge">{% include 'ui_icon', name: 'shield-check', size: 20, label: '' %}</span><span>{{ pc_nb_mtitle | escape }}</span>{%- endcapture -%}
 {% include 'ui_modal', id: 'pc-notice-delivery-modal', title: pc_nb_mtitle, content: pc_nb_content, close_label: 'Đóng' %}
 {%- comment -%} Dải nằm trong header.header (ngữ cảnh xếp lớp riêng khi popup mở — components.css N10) ⇒ popup + lớp phủ để trong header thì
   topbar / menu desktop (z 10010 / 10020) vẽ đè lớp phủ. Chuyển ra <body> như mọi popup thư viện khác. {%- endcomment -%}

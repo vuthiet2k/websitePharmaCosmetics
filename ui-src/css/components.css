@@ -772,23 +772,35 @@ body:has(.pc-shb-hero #section_hero) header.header:not(:hover):not(:focus-within
   .pc-notice__close { @apply m-0 inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center border-0 border-none
                              bg-transparent p-0 text-warning; }
   :root :is(.pc-notice__msg, .pc-notice__close):focus-visible { @apply outline outline-2 outline-offset-[-2px] outline-warning; }
-  /* Popup "Nhận hàng an toàn" (12/11/2026, chủ dự án: "làm giao diện tốt lên … có button liên hệ zalo"): khung nhắc vàng, lưu ý dạng
-     thẻ có icon tròn, 2 nút liên hệ (gọi = chính, Zalo = phụ). Bo góc theo R4 (mobile 12px, desktop vuông). */
-  .pc-notice-dlg__lead { @apply m-0 flex items-start gap-2 bg-warning-tint p-3 text-sm font-medium text-warning rounded-xl lg:rounded-none; }
+  /* Popup "Nhận hàng an toàn" — theo Figma «Main - SecurityAlertModal» (node 757:5, 12/11/2026, chủ dự án gửi): mobile là thẻ nổi
+     cách mép 12px bo 4 góc (366px ở khung 390); đầu popup có ô icon khiên + nút đóng tròn xám, gạch chân; khung nhắc vàng; lưu ý là
+     thẻ nền xám nhạt, icon trong ô vuông viền xanh; chân xám dính đáy với hotline + 2 nút. Biến thể chỉ áp cho popup chứa .pc-notice-dlg. */
+  .pc-modal:has(.pc-notice-dlg) { @apply pt-4 max-lg:inset-x-3 max-lg:bottom-3 max-lg:max-h-[calc(100dvh-24px)] max-lg:border max-lg:rounded-2xl lg:pt-6; }
+  .pc-modal:has(.pc-notice-dlg) .pc-modal__title { @apply m-0 -mx-4 flex items-center gap-3 border-0 border-b border-solid border-line px-4 pb-4 pr-14
+                                                          text-lg font-bold text-brand-darkest lg:-mx-6 lg:px-6 lg:pr-16; }
+  .pc-modal:has(.pc-notice-dlg) .pc-modal__close { @apply right-2 top-2 lg:right-4 lg:top-4; }
+  .pc-modal:has(.pc-notice-dlg) .pc-modal__close::before { content: ""; @apply absolute h-8 w-8 bg-slate-100 rounded-full; }
+  .pc-modal:has(.pc-notice-dlg) .pc-modal__close svg { @apply relative h-4 w-4 text-ink-secondary; }
+  .pc-modal:has(.pc-notice-dlg) > .mt-4 { @apply mt-0; }
+  .pc-notice-dlg { @apply pt-4; }
+  .pc-notice-dlg__badge { @apply flex h-9 w-9 shrink-0 items-center justify-center bg-brand-tint text-brand-deep rounded-xl lg:rounded-none; }
+  .pc-notice-dlg__lead { @apply m-0 flex items-start gap-2.5 bg-warning-tint p-3 text-sm font-medium text-warning rounded-xl lg:rounded-none; }
   .pc-notice-dlg__lead-ico { @apply flex shrink-0 pt-px; }
-  .pc-notice-dlg__list { @apply m-0 mt-4 grid list-none gap-2 p-0; }
-  .pc-notice-dlg__item { @apply m-0 flex items-start gap-3 border border-solid border-line bg-white p-3 rounded-xl lg:rounded-none; }
-  .pc-notice-dlg__ico { @apply flex h-9 w-9 shrink-0 items-center justify-center bg-brand-tint text-brand-deep rounded-full; }
-  .pc-notice-dlg__txt { @apply min-w-0 self-center text-sm text-ink; }
+  .pc-notice-dlg__list { @apply m-0 mt-3 grid list-none gap-2 p-0; }
+  .pc-notice-dlg__item { @apply m-0 flex items-start gap-3 bg-slate-50 p-3 rounded-xl lg:rounded-none; }
+  .pc-notice-dlg__ico { @apply flex h-8 w-8 shrink-0 items-center justify-center border border-solid border-line-soft bg-white text-brand rounded-xl lg:rounded-none; }
+  .pc-notice-dlg__txt { @apply min-w-0 self-center text-sm text-ink-secondary; }
+  .pc-notice-dlg__txt strong { @apply font-bold text-ink; }
+  :root .pc-notice-dlg__txt .pc-notice-dlg__alert { @apply text-sale; }
   /* Chân popup dính đáy khung cuộn (bù đúng padding p-4 / lg:p-6 của .pc-modal) ⇒ 2 nút liên hệ luôn thấy khi nội dung dài */
-  .pc-notice-dlg__foot { @apply sticky -bottom-4 -mx-4 -mb-4 mt-5 border-0 border-t border-solid border-line bg-white px-4 pb-4 pt-3
+  .pc-notice-dlg__foot { @apply sticky -bottom-4 -mx-4 -mb-4 mt-4 border-0 border-t border-solid border-line bg-slate-50 px-4 pb-4 pt-3
                                 lg:-bottom-6 lg:-mx-6 lg:-mb-6 lg:px-6 lg:pb-6; }
-  .pc-notice-dlg__ask { @apply m-0 text-sm font-semibold text-ink; }
-  .pc-notice-dlg__num { @apply whitespace-nowrap font-bold text-brand-deep; }
-  .pc-notice-dlg__actions { @apply mt-2 grid grid-cols-2 gap-2; }
+  .pc-notice-dlg__ask { @apply m-0 text-center text-xs text-ink-secondary; }
+  .pc-notice-dlg__num { @apply whitespace-nowrap text-sm font-bold text-brand-deep; }
+  .pc-notice-dlg__actions { @apply mt-3 grid grid-cols-2 gap-2; }
   .pc-notice-dlg__actions > :only-child { @apply col-span-2; }
   :root .pc-notice-dlg__btn { @apply w-full whitespace-nowrap px-3 no-underline; }
-  :root .pc-notice-dlg__btn.pc-btn--primary { @apply text-white hover:text-white; }
-  :root .pc-notice-dlg__btn.pc-btn--secondary { @apply text-brand hover:text-brand; }
-  .pc-notice-dlg__bank { @apply m-0 mt-4 flex items-start gap-2 text-sm text-ink-secondary; }
+  :root .pc-notice-dlg__btn.pc-btn--primary { @apply bg-brand-deep text-white hover:bg-brand-darkest hover:text-white; }
+  :root .pc-notice-dlg__btn.pc-btn--secondary { @apply border-brand-deep bg-white text-brand-deep hover:bg-brand-tint hover:text-brand-deep; }
+  .pc-notice-dlg__bank { @apply m-0 mt-3 flex items-start gap-2 text-sm text-ink-secondary; }
 }
