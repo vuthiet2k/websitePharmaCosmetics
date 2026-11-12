@@ -46,12 +46,32 @@
 </script>
 {%- if pc_nb_link == blank -%}
 {%- assign pc_nb_items = settings.delivery_alert_detail | default: 'Nhân viên giao hàng chính thức chỉ thu tiền (COD) khi trao kiện hàng tận tay quý khách.;Không chuyển khoản trước theo yêu cầu qua điện thoại, Zalo, SMS của người tự xưng nhân viên giao hàng (vd "phí giữ đơn", "đơn gặp sự cố"). Chỉ thanh toán theo hướng dẫn trên trang thanh toán của website.;Không bấm đường link lạ, không đọc mã OTP hay mật khẩu ngân hàng cho bất kỳ ai.;Nghi ngờ lừa đảo: từ chối nhận hàng và gọi ngay hotline để được xác minh đơn.' | split: ';' -%}
+{%- comment -%} 12/11/2026 (chủ dự án: "làm giao diện tốt lên … có button liên hệ zalo"): popup dạng thẻ — khung nhắc vàng, mỗi lưu ý
+  1 hàng có icon (delivery_alert_detail_icons, theo thứ tự), cuối là 2 nút Gọi hotline (store_phone) + Chat Zalo (contact_zalo). {%- endcomment -%}
+{%- assign pc_nb_icons = settings.delivery_alert_detail_icons | default: 'truck,banknote,lock,shield-check' | split: ',' -%}
+{%- assign pc_nb_intro = settings.delivery_alert_detail_intro | default: 'Kẻ gian thường giả danh nhân viên giao hàng để yêu cầu chuyển khoản trước. Quý khách lưu ý:' -%}
+{%- assign pc_nb_tel = pc_nb_phone | remove: ' ' | remove: '.' | remove: '-' -%}
+{%- assign pc_nb_zalo = settings.contact_zalo | remove: ' ' | remove: '.' | remove: '-' | strip -%}
 {%- capture pc_nb_content -%}
-<ol class="m-0 grid gap-3 pl-5 text-sm text-ink">
-  {%- for pc_nb_item in pc_nb_items -%}{%- assign pc_nb_line = pc_nb_item | strip -%}{%- if pc_nb_line != blank -%}<li>{{ pc_nb_line | escape }}</li>{%- endif -%}{%- endfor -%}
+{%- if pc_nb_intro != blank -%}<p class="pc-notice-dlg__lead"><span class="pc-notice-dlg__lead-ico">{% include 'ui_icon', name: 'triangle-alert', size: 20, label: '' %}</span><span>{{ pc_nb_intro | escape }}</span></p>{%- endif -%}
+<ol class="pc-notice-dlg__list">
+  {%- assign pc_nb_n = 0 -%}
+  {%- for pc_nb_item in pc_nb_items -%}{%- assign pc_nb_line = pc_nb_item | strip -%}{%- if pc_nb_line != blank -%}
+  {%- assign pc_nb_ico = 'shield-check' -%}{%- for pc_nb_i in pc_nb_icons -%}{%- if forloop.index0 == pc_nb_n -%}{%- assign pc_nb_i2 = pc_nb_i | strip -%}{%- if pc_nb_i2 != blank -%}{%- assign pc_nb_ico = pc_nb_i2 -%}{%- endif -%}{%- endif -%}{%- endfor -%}{%- comment -%} DotLiquid: không lấy mảng theo chỉ số biến (A.6) {%- endcomment -%}{%- assign pc_nb_n = pc_nb_n | plus: 1 -%}
+  <li class="pc-notice-dlg__item"><span class="pc-notice-dlg__ico">{% include 'ui_icon', name: pc_nb_ico, size: 20, label: '' %}</span><span class="pc-notice-dlg__txt">{{ pc_nb_line | escape }}</span></li>
+  {%- endif -%}{%- endfor -%}
 </ol>
-{%- if pc_nb_phone != blank -%}<p class="mt-4 text-sm text-ink">{{ settings.delivery_alert_hotline_label | default: 'Hotline chính thức:' | escape }} <a href="tel:{{ pc_nb_phone | remove: ' ' | remove: '.' | remove: '-' }}">{{ pc_nb_phone | escape }}</a></p>{%- endif -%}
-{%- if settings.delivery_alert_bank != blank -%}<p class="mt-2 text-sm text-ink">{{ settings.delivery_alert_bank | escape }}</p>{%- endif -%}
+{%- if settings.delivery_alert_bank != blank -%}<p class="pc-notice-dlg__bank">{% include 'ui_icon', name: 'banknote', size: 20, label: '' %}<span>{{ settings.delivery_alert_bank | escape }}</span></p>{%- endif -%}
+{%- if pc_nb_tel != blank or pc_nb_zalo != blank -%}
+<div class="pc-notice-dlg__foot">
+<p class="pc-notice-dlg__ask">{{ settings.delivery_alert_contact_title | default: 'Xác minh đơn qua kênh chính thức:' | escape }}{% if pc_nb_phone != blank %} <strong class="pc-notice-dlg__num">{{ pc_nb_phone | escape }}</strong>{% endif %}</p>
+<div class="pc-notice-dlg__actions">
+  {%- if pc_nb_tel != blank -%}<a class="pc-btn pc-btn--primary pc-notice-dlg__btn" href="tel:{{ pc_nb_tel }}" aria-label="{{ settings.delivery_alert_hotline_label | default: 'Gọi hotline' | escape }} {{ pc_nb_phone | escape }}">{% include 'ui_icon', name: 'phone', size: 20, label: '' %}<span>{{ settings.delivery_alert_hotline_label | default: 'Gọi hotline' | escape }}</span></a>{%- endif -%}
+  {%- if pc_nb_zalo != blank -%}<a class="pc-btn pc-btn--secondary pc-notice-dlg__btn" href="https://zalo.me/{{ pc_nb_zalo }}" target="_blank" rel="noopener" aria-label="{{ settings.delivery_alert_zalo_label | default: 'Chat Zalo' | escape }} (mở tab mới)">{% include 'ui_icon', name: 'message-circle', size: 20, label: '' %}<span>{{ settings.delivery_alert_zalo_label | default: 'Chat Zalo' | escape }}</span></a>{%- endif -%}
+</div>
+</div>
+{%- endif -%}
+
 {%- endcapture -%}
 {%- assign pc_nb_mtitle = settings.delivery_alert_detail_title | default: 'Nhận hàng an toàn, tránh lừa đảo' -%}
 {% include 'ui_modal', id: 'pc-notice-delivery-modal', title: pc_nb_mtitle, content: pc_nb_content, close_label: 'Đóng' %}
