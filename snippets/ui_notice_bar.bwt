@@ -5,6 +5,7 @@
   · Bấm vào câu cảnh báo ⇒ popup ui_modal "Nhận hàng an toàn" (hoặc tới trang delivery_alert_link nếu có nhập).
   · Nút ✕ (44×44) ẩn dải; nhớ trạng thái: delivery_alert_hide_days = 0 ⇒ chỉ trong phiên (sessionStorage), N ⇒ N ngày (localStorage).
     Đổi delivery_alert_version ⇒ khách đã tắt sẽ thấy lại (nội dung mới).
+  · notice_variant: 'hero' ⇒ thẻ nổi trên Hero trang chủ (section_hero), link sang trang cảnh báo; khác ⇒ dải vàng đầu header + popup.
   · Script chạy NGAY sau thẻ (đồng bộ, trước khi vẽ) ⇒ khách đã tắt không thấy dải nháy lên rồi biến mất (không CLS). Không JS ⇒ dải luôn hiện.
   Cấu hình: Admin › Header & Điều hướng › "Thanh cảnh báo lừa đảo giao hàng" (delivery_alert_*). Hotline lấy từ store_phone.
 {%- endcomment -%}
@@ -16,6 +17,39 @@
 {%- assign pc_nb_days = settings.delivery_alert_hide_days | default: '0' | plus: 0 -%}
 {%- assign pc_nb_key = settings.delivery_alert_version | default: '1' | handleize -%}
 {%- assign pc_nb_phone = settings.store_phone | default: store.phone_number -%}
+{%- if notice_variant == 'hero' -%}
+{%- comment -%} 12/11/2026 (chủ dự án: "tạo 1 page.xxx và trang chủ cho position ngay hero", ảnh UNIQLO): TRANG CHỦ — thẻ trắng bo góc nổi ở góc
+  trên-trái Hero (section_hero), cuộn đi cùng Hero (không dính màn, D.17). Bấm câu / «Xem thêm» ⇒ trang đầy đủ delivery_alert_page_url
+  (page.canh-bao-lua-dao). ✕ dùng chung khoá nhớ với dải vàng các trang khác (tắt 1 nơi ⇒ ẩn cả 2). {%- endcomment -%}
+{%- assign pc_nb_page = settings.delivery_alert_page_url | default: '/canh-bao-lua-dao' -%}
+<aside class="pc-notice-hero" id="pc-notice-hero" aria-label="{{ settings.delivery_alert_aria | default: 'Cảnh báo an toàn khi nhận hàng' | escape }}" data-days="{{ pc_nb_days }}" data-key="delivery-{{ pc_nb_key }}">
+  <a class="pc-notice-hero__msg" href="{{ pc_nb_page | escape }}"><strong class="pc-notice-hero__title">{{ pc_nb_title | escape }}</strong> {{ pc_nb_text | escape }} <span class="pc-notice-hero__more">{{ pc_nb_more | escape }}</span></a>
+  <button type="button" class="pc-notice-hero__close" data-pc-notice-close aria-label="{{ settings.delivery_alert_close_label | default: 'Đóng cảnh báo' | escape }}">{% include 'ui_icon', name: 'x', size: 20, label: '' %}</button>
+</aside>
+<script>
+(function () {
+  var el = document.getElementById('pc-notice-hero'); if (!el) return;
+  var days = Number(el.getAttribute('data-days')) || 0, key = 'pc_notice_' + el.getAttribute('data-key'), store = null;
+  try { store = days > 0 ? window.localStorage : window.sessionStorage; } catch (e) {}
+  try { var at = store && Number(store.getItem(key)); if (at && (days <= 0 || Date.now() - at < days * 864e5)) el.hidden = true; } catch (e) {}
+  /* Header trang chủ nằm ĐÈ lên Hero (absolute/fixed) ⇒ đặt thẻ ngay dưới mép header, không che menu */
+  function place() {
+    var hd = document.querySelector('header.header'), hero = el.parentNode; if (!hd || !hero) return;
+    var gap = window.innerWidth >= 1024 ? 24 : 12, hb = hd.getBoundingClientRect().bottom - hero.getBoundingClientRect().top;
+    el.style.top = (hb > 0 && hb < hero.offsetHeight / 2 ? hb + gap : gap) + 'px';
+    var lg = window.innerWidth >= 1024 && hd.querySelector('.main-header a[href="/"] img, .main-header a[href="/"]'); /* desktop: thẳng mép logo như UNIQLO */
+    el.style.left = lg && lg.getBoundingClientRect().width ? Math.max(16, Math.round(lg.getBoundingClientRect().left - hero.getBoundingClientRect().left)) + 'px' : '';
+  }
+  place(); window.addEventListener('resize', place); window.addEventListener('load', place);
+  var btn = el.querySelector('[data-pc-notice-close]');
+  if (btn) btn.addEventListener('click', function () {
+    el.hidden = true;
+    try { if (store) store.setItem(key, String(Date.now())); } catch (e) {}
+    var h = el.parentNode && el.parentNode.querySelector('a[href], button'); if (h && h.focus) h.focus(); /* focus không rơi về <body> */
+  });
+})();
+</script>
+{%- else -%}
 <aside class="pc-notice" id="pc-notice-delivery" aria-label="{{ settings.delivery_alert_aria | default: 'Cảnh báo an toàn khi nhận hàng' | escape }}" data-days="{{ pc_nb_days }}" data-key="delivery-{{ pc_nb_key }}">
   <div class="pc-notice__inner">
     <span class="pc-notice__icon">{% include 'ui_icon', name: 'triangle-alert', size: 20, label: '' %}</span>
@@ -90,5 +124,6 @@
   if (o) b.appendChild(o); if (m) b.appendChild(m);
 })();
 </script>
+{%- endif -%}
 {%- endif -%}
 {%- endunless -%}
