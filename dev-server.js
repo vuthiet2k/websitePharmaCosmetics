@@ -1016,6 +1016,7 @@ const PAGE_HANDLE_MAP = {
   'skin-health-beauty-thanh-toan': 'page.payment',
   'dang-ky-lieu-trinh-tri-mun':    'page.payment',
   'order':                         'page.order-lookup',
+  'canh-bao-lua-dao':              'page.canh-bao-lua-dao', // 12/11/2026: trang cảnh báo lừa đảo giao hàng COD
 };
 
 // Tập hợp tất cả slug 1-segment mà chính menu điều hướng của site (data/

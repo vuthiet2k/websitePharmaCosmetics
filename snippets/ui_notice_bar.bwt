@@ -60,9 +60,12 @@
   {%- assign pc_nb_n = 0 -%}
   {%- for pc_nb_item in pc_nb_items -%}{%- assign pc_nb_line = pc_nb_item | strip -%}{%- if pc_nb_line != blank -%}
   {%- assign pc_nb_ico = 'shield-check' -%}{%- for pc_nb_i in pc_nb_icons -%}{%- if forloop.index0 == pc_nb_n -%}{%- assign pc_nb_i2 = pc_nb_i | strip -%}{%- if pc_nb_i2 != blank -%}{%- assign pc_nb_ico = pc_nb_i2 -%}{%- endif -%}{%- endif -%}{%- endfor -%}{%- comment -%} DotLiquid: không lấy mảng theo chỉ số biến (A.6) {%- endcomment -%}{%- assign pc_nb_n = pc_nb_n | plus: 1 -%}
-  <li class="pc-notice-dlg__item"><span class="pc-notice-dlg__ico">{% include 'ui_icon', name: pc_nb_ico, size: 20, label: '' %}</span><span class="pc-notice-dlg__txt">{%- assign pc_nb_parts = pc_nb_line | escape | split: '!!' -%}{%- for pc_nb_p in pc_nb_parts -%}{%- assign pc_nb_odd = forloop.index0 | modulo: 2 -%}{%- if pc_nb_odd == 1 -%}<strong class="pc-notice-dlg__alert">{{ pc_nb_p }}</strong>{%- else -%}{%- assign pc_nb_bs = pc_nb_p | split: '**' -%}{%- for pc_nb_b in pc_nb_bs -%}{%- assign pc_nb_odd2 = forloop.index0 | modulo: 2 -%}{%- if pc_nb_odd2 == 1 -%}<strong>{{ pc_nb_b }}</strong>{%- else -%}{{ pc_nb_b }}{%- endif -%}{%- endfor -%}{%- endif -%}{%- endfor -%}</span></li>
+  <li class="pc-notice-dlg__item"><span class="pc-notice-dlg__ico">{% include 'ui_icon', name: pc_nb_ico, size: 20, label: '' %}</span><span class="pc-notice-dlg__txt">{%- include 'rich_line', line: pc_nb_line -%}</span></li>
   {%- endif -%}{%- endfor -%}
 </ol>
+{%- assign pc_nb_page = settings.delivery_alert_page_url | default: '/canh-bao-lua-dao' -%}
+{%- comment -%} 12/11/2026 (chủ dự án: "thêm 1 trang nội dung cảnh báo lừa đảo như UNIQLO"): link xuống trang đầy đủ page.canh-bao-lua-dao {%- endcomment -%}
+<p class="pc-notice-dlg__page"><a href="{{ pc_nb_page | escape }}">{{ settings.delivery_alert_page_label | default: 'Xem đầy đủ hướng dẫn phòng tránh lừa đảo' | escape }}{% include 'ui_icon', name: 'arrow-right', size: 20, label: '' %}</a></p>
 {%- if settings.delivery_alert_bank != blank -%}<p class="pc-notice-dlg__bank">{% include 'ui_icon', name: 'banknote', size: 20, label: '' %}<span>{{ settings.delivery_alert_bank | escape }}</span></p>{%- endif -%}
 {%- if pc_nb_tel != blank or pc_nb_zalo != blank -%}
 <div class="pc-notice-dlg__foot">

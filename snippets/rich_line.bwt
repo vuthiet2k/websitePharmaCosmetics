@@ -1,0 +1,12 @@
+{%- comment -%}
+  rich_line.bwt (12/11/2026) — in 1 dòng chữ cấu hình (settings) có đánh dấu nhẹ, dùng chung cho popup «Nhận hàng an toàn»
+  (ui_notice_bar) và trang Cảnh báo lừa đảo (page.canh-bao-lua-dao). Tham số: line (chuỗi). Chữ được escape trước khi tách.
+  · **cụm** ⇒ <strong> (in đậm)   · !!cụm!! ⇒ <strong class="pc-rich-alert"> (in đậm màu đỏ cảnh báo, token sale)
+  Tách bằng split + forloop.index0 | modulo: 2 (DotLiquid không có regex).
+{%- endcomment -%}
+{%- assign rl_parts = line | escape | split: '!!' -%}
+{%- for rl_p in rl_parts -%}{%- assign rl_odd = forloop.index0 | modulo: 2 -%}
+{%- if rl_odd == 1 -%}<strong class="pc-rich-alert">{{ rl_p }}</strong>{%- else -%}
+{%- assign rl_bs = rl_p | split: '**' -%}{%- for rl_b in rl_bs -%}{%- assign rl_odd2 = forloop.index0 | modulo: 2 -%}
+{%- if rl_odd2 == 1 -%}<strong>{{ rl_b }}</strong>{%- else -%}{{ rl_b }}{%- endif -%}{%- endfor -%}
+{%- endif -%}{%- endfor -%}

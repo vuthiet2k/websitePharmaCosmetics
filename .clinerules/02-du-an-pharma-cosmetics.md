@@ -603,6 +603,7 @@ handle để localhost phản ánh đúng Sapo.
 | `/gioi-thieu` | `page.about-us` | |
 | `/about-us` | **`page.about`** (đối soát site đang chạy 04/11/2026: `template = 'page.about'`) | Menu header "VỀ CHÚNG TÔI" trỏ đây. Theme có CẢ `page.about` và `page.about-us`, cùng thân `snippets/page_about.bwt` (trước 04/11 chỉ có page.about-us ⇒ preview rơi về `page` mặc định) |
 | `/order` | `page.order-lookup` | |
+| `/canh-bao-lua-dao` | `page.canh-bao-lua-dao` | Trang «Lưu ý khi nhận đơn COD» (12/11/2026, tham khảo UNIQLO). **Phải tạo Trang nội dung alias này trên Sapo** — popup «Nhận hàng an toàn» link tới (`delivery_alert_page_url`). Chữ: Admin › Trang Cảnh báo lừa đảo (`scam_page_*`) |
 | `/dat-lich-tu-van`, `/loyalty`, `/dai-ly-b2b`, `/chinh-sach-bao-mat` | cùng tên | |
 | `/truoc-va-sau`, `/phan-hoi-cua-khach-hang` | `page` mặc định | `/truoc-va-sau` chiếm alias ⇒ danh mục ca phải là `truoc-va-sau-1` |
 

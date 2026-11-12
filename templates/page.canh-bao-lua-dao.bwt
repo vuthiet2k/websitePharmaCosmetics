@@ -1,0 +1,80 @@
+{%- comment -%}
+  page.canh-bao-lua-dao.bwt (12/11/2026, chủ dự án: "thêm 1 trang nội dung cảnh báo lừa đảo như vậy nữa" — tham khảo trang
+  «Lưu ý quan trọng khi nhận đơn hàng COD» của UNIQLO VN). Nội dung viết lại cho Pharma Cosmetics, KHÔNG chép nguyên văn.
+  · Trên Sapo: tạo Trang nội dung alias `canh-bao-lua-dao`, chọn giao diện `page.canh-bao-lua-dao`. Popup «Nhận hàng an toàn»
+    (ui_notice_bar) có link xuống đây (delivery_alert_page_url, mặc định /canh-bao-lua-dao).
+  · Mọi chữ cấu hình ở Admin › "Trang Cảnh báo lừa đảo" (scam_page_*). Danh sách ngăn bằng dấu ; — hỗ trợ **in đậm** và !!đỏ cảnh báo!!
+    (snippets/rich_line.bwt). Hotline = store_phone, Zalo = contact_zalo (cùng nguồn với popup).
+  · page.content (soạn ở trình soạn thảo Sapo) có nội dung ⇒ in thêm dưới mục cuối.
+  · CSS: ui-src/css/components.css mục 21 (.pc-scam). Một <h1> duy nhất.
+{%- endcomment -%}
+{%- assign sp_title = settings.scam_page_title | default: page.title | default: 'Lưu ý quan trọng khi nhận đơn hàng thanh toán khi nhận hàng (COD)' -%}
+{%- assign sp_phone = settings.store_phone | default: store.phone_number -%}
+{%- assign sp_tel = sp_phone | remove: ' ' | remove: '.' | remove: '-' -%}
+{%- assign sp_zalo = settings.contact_zalo | remove: ' ' | remove: '.' | remove: '-' | strip -%}
+{%- assign sp_signs = settings.scam_page_signs | default: 'Yêu cầu trả thêm khoản phí **ngoài giá trị đơn hàng đã xác nhận** (vd "phí giữ đơn", "phí giao lại", "phí bảo hiểm").;Tự xưng nhân viên giao hàng và !!yêu cầu chuyển khoản trước!! khi chưa tới địa chỉ giao hàng.;Mạo danh Pharma Cosmetics để hỏi **số CCCD, mã OTP, mật khẩu** hoặc thông tin tài khoản ngân hàng.;Đề nghị chuyển tiền vào **tài khoản cá nhân** hoặc tài khoản không rõ nguồn gốc.;Gửi **đường link lạ** qua SMS, Zalo, mạng xã hội để "xác nhận đơn" hay "nhận hoàn tiền".' | split: ';' -%}
+{%- assign sp_sign_icons = settings.scam_page_sign_icons | default: 'banknote,truck,lock,hand-coins,link' | split: ',' -%}
+{%- assign sp_steps = settings.scam_page_steps | default: 'Thấy dấu hiệu bất thường: **ngừng trao đổi, từ chối nhận hàng** và không thanh toán bất kỳ khoản nào.;Đơn đã nhận và thanh toán xong: !!không chuyển thêm tiền!! theo bất kỳ yêu cầu nào liên quan tới đơn đó, kể cả khi người gọi tự nhận là nhân viên giao hàng.;**Không bấm vào đường link** không thuộc website hoặc kênh chính thức của Pharma Cosmetics.;Còn nghi ngờ về đơn hàng hay khoản thanh toán: **liên hệ hotline / Zalo chính thức** để xác minh trước khi làm bất cứ điều gì.' | split: ';' -%}
+{%- assign sp_key = settings.scam_page_key | default: 'Quý khách **CHỈ nhận hàng và thanh toán trực tiếp** cho nhân viên giao hàng khi kiện hàng đã ở trong tay. Pharma Cosmetics !!không bao giờ yêu cầu chuyển khoản trước!! qua điện thoại, Zalo hay SMS.' -%}
+{%- assign sp_alts = settings.scam_page_alt | default: 'Chọn phương thức thanh toán trực tuyến (nếu có) ngay trên **trang thanh toán của website** khi đặt hàng.;Ghi chú **khung giờ nhận hàng thuận tiện** ở bước đặt hàng để nhân viên giao đúng lúc.;Nhờ người thân nhận thay và dặn kỹ: chỉ trả đúng số tiền ghi trên đơn khi đã cầm kiện hàng.' | split: ';' -%}
+
+<div class="pc-scam">
+  {% include 'breadcrumb' %}
+  <div class="pc-scam__wrap">
+    <header class="pc-scam__hero">
+      <p class="pc-scam__eyebrow">{% include 'ui_icon', name: 'shield-check', size: 20, label: '' %}<span>{{ settings.scam_page_eyebrow | default: 'An toàn mua sắm' | escape }}</span></p>
+      <h1 class="pc-scam__title">{{ sp_title | escape }}</h1>
+      <p class="pc-scam__intro">{{ settings.scam_page_intro | default: 'Để phòng tránh các trường hợp lừa đảo trực tuyến và giúp quý khách mua sắm an tâm, Pharma Cosmetics xin gửi một số lưu ý quan trọng khi nhận đơn hàng thanh toán khi nhận hàng (COD):' | escape }}</p>
+    </header>
+
+    <p class="pc-scam__key">
+      <span class="pc-scam__key-ico">{% include 'ui_icon', name: 'triangle-alert', size: 24, label: '' %}</span>
+      <span>{%- include 'rich_line', line: sp_key -%}</span>
+    </p>
+
+    <section class="pc-scam__sec" aria-labelledby="pc-scam-signs">
+      <h2 class="pc-scam__h2" id="pc-scam-signs">{{ settings.scam_page_signs_title | default: 'Dấu hiệu lừa đảo cần cảnh giác' | escape }}</h2>
+      <ul class="pc-scam__signs">
+        {%- assign sp_n = 0 -%}
+        {%- for sp_item in sp_signs -%}{%- assign sp_line = sp_item | strip -%}{%- if sp_line != blank -%}
+        {%- assign sp_ico = 'circle-alert' -%}{%- for sp_i in sp_sign_icons -%}{%- if forloop.index0 == sp_n -%}{%- assign sp_i2 = sp_i | strip -%}{%- if sp_i2 != blank -%}{%- assign sp_ico = sp_i2 -%}{%- endif -%}{%- endif -%}{%- endfor -%}{%- assign sp_n = sp_n | plus: 1 -%}
+        <li class="pc-scam__sign"><span class="pc-scam__sign-ico">{% include 'ui_icon', name: sp_ico, size: 20, label: '' %}</span><span class="pc-scam__txt">{%- include 'rich_line', line: sp_line -%}</span></li>
+        {%- endif -%}{%- endfor -%}
+      </ul>
+    </section>
+
+    <section class="pc-scam__sec" aria-labelledby="pc-scam-steps">
+      <h2 class="pc-scam__h2" id="pc-scam-steps">{{ settings.scam_page_steps_title | default: 'Quý khách nên làm gì?' | escape }}</h2>
+      <ol class="pc-scam__steps">
+        {%- assign sp_n = 0 -%}
+        {%- for sp_item in sp_steps -%}{%- assign sp_line = sp_item | strip -%}{%- if sp_line != blank -%}{%- assign sp_n = sp_n | plus: 1 -%}
+        <li class="pc-scam__step"><span class="pc-scam__num" aria-hidden="true">{{ sp_n }}</span><span class="pc-scam__txt">{%- include 'rich_line', line: sp_line -%}</span></li>
+        {%- endif -%}{%- endfor -%}
+      </ol>
+    </section>
+
+    <section class="pc-scam__sec" aria-labelledby="pc-scam-alt">
+      <h2 class="pc-scam__h2" id="pc-scam-alt">{{ settings.scam_page_alt_title | default: 'Nếu quý khách thường không tiện nhận hàng trực tiếp' | escape }}</h2>
+      <ul class="pc-scam__alts">
+        {%- for sp_item in sp_alts -%}{%- assign sp_line = sp_item | strip -%}{%- if sp_line != blank -%}
+        <li class="pc-scam__alt">{% include 'ui_icon', name: 'circle-check', size: 20, label: '' %}<span class="pc-scam__txt">{%- include 'rich_line', line: sp_line -%}</span></li>
+        {%- endif -%}{%- endfor -%}
+      </ul>
+    </section>
+
+    {%- if page.content != blank -%}
+    <div class="pc-scam__extra rte">{{ page.content }}</div>
+    {%- endif -%}
+
+    <aside class="pc-scam__contact" aria-labelledby="pc-scam-contact">
+      <h2 class="pc-scam__h2" id="pc-scam-contact">{{ settings.scam_page_contact_title | default: 'Xác minh đơn hàng qua kênh chính thức' | escape }}</h2>
+      <p class="pc-scam__contact-txt">{{ settings.scam_page_contact_text | default: 'Mọi thắc mắc về đơn hàng, quý khách vui lòng liên hệ Pharma Cosmetics để được hỗ trợ xác minh.' | escape }}{% if sp_phone != blank %} <strong class="pc-scam__phone">{{ sp_phone | escape }}</strong>{% endif %}</p>
+      <div class="pc-scam__actions">
+        {%- if sp_tel != blank -%}<a class="pc-btn pc-btn--primary pc-scam__btn" href="tel:{{ sp_tel }}" aria-label="{{ settings.delivery_alert_hotline_label | default: 'Gọi hotline' | escape }} {{ sp_phone | escape }}">{% include 'ui_icon', name: 'phone', size: 20, label: '' %}<span>{{ settings.delivery_alert_hotline_label | default: 'Gọi hotline' | escape }}</span></a>{%- endif -%}
+        {%- if sp_zalo != blank -%}<a class="pc-btn pc-btn--secondary pc-scam__btn" href="https://zalo.me/{{ sp_zalo }}" target="_blank" rel="noopener" aria-label="{{ settings.delivery_alert_zalo_label | default: 'Chat Zalo' | escape }} (mở tab mới)">{% include 'ui_icon', name: 'message-circle', size: 20, label: '' %}<span>{{ settings.delivery_alert_zalo_label | default: 'Chat Zalo' | escape }}</span></a>{%- endif -%}
+        {%- assign sp_order = settings.scam_page_order_url | default: '/order' -%}
+        <a class="pc-btn pc-btn--secondary pc-scam__btn" href="{{ sp_order | escape }}">{% include 'ui_icon', name: 'search', size: 20, label: '' %}<span>{{ settings.scam_page_order_label | default: 'Tra cứu đơn hàng' | escape }}</span></a>
+      </div>
+    </aside>
+  </div>
+</div>
