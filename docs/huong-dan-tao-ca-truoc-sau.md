@@ -15,6 +15,8 @@ tự hiện ở các nơi sau:
 
 ---
 
+> **Cách nhanh (13/11/2026): gán giao diện cho danh mục, không cần Trang nội dung.** Website › Bài viết › Danh mục bài viết › **Trước & Sau** › ô **Giao diện** chọn **`blog.truoc-va-sau`**. Khi đó `/truoc-va-sau` hiện luôn trang Trước & Sau (hero, các bước, kết quả theo nhóm); ca = các bài trong danh mục này. Cùng cách đó với danh mục **Video** (`/video`) → giao diện **`blog.video`**. Trang tin tức tổng vẫn là Trang nội dung riêng, không đổi.
+
 ## 1. Chuẩn bị (chỉ làm 1 lần)
 
 **Thực tế trên Sapo (đối soát 17/10/2026):**
