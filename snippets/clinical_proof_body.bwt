@@ -39,7 +39,11 @@
 {%- endcomment -%}
 {%- assign pc_ba_hero_video = '' -%}{%- assign pc_ba_hero_single = '' -%}
 {%- assign pc_ba_hero_before = '' -%}{%- assign pc_ba_hero_after = '' -%}
+{%- comment -%} 14/11/2026: ô Mô tả của danh mục bài viết — Sapo có thể trả qua description hoặc content (body_html/summary dự phòng); lấy trường đầu tiên có dữ liệu. {%- endcomment -%}
 {%- assign pc_ba_desc = pc_ba_blog.description -%}
+{%- if pc_ba_desc == blank -%}{%- assign pc_ba_desc = pc_ba_blog.content -%}{%- endif -%}
+{%- if pc_ba_desc == blank -%}{%- assign pc_ba_desc = pc_ba_blog.body_html -%}{%- endif -%}
+{%- if pc_ba_desc == blank -%}{%- assign pc_ba_desc = pc_ba_blog.summary -%}{%- endif -%}
 {%- if pc_ba_desc contains '<iframe' -%}
   {%- assign pc_ba_v = pc_ba_desc | prepend: '~' | split: '<iframe' -%}
   {%- for pc_ba_vp in pc_ba_v offset: 1 limit: 1 -%}
