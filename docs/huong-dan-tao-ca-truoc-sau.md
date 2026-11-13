@@ -1,12 +1,12 @@
 # Hướng dẫn tạo bài TRƯỚC & SAU (ca khách hàng)
 
-Mỗi ca khách hàng là **1 bài viết Sapo** trong danh mục bài viết **Trước & Sau** (handle **`truoc-va-sau-1`** — alias `truoc-va-sau` đã thuộc một Trang nội dung). Một bài nhập xong sẽ
+Mỗi ca khách hàng là **1 bài viết Sapo** trong danh mục bài viết **Trước & Sau** (handle **`truoc-va-sau`**; 13/11/2026 đổi từ `truoc-va-sau-1`). Một bài nhập xong sẽ
 tự hiện ở các nơi sau:
 
 | Nơi hiển thị | Hiện gì |
 | :-- | :-- |
 | Trang **/truoc-sau-cham-soc-da-tu-xa** — phần "Kết quả của khách hàng" | Thanh **tab lọc** theo nhóm vấn đề da (tự sinh từ tag `nhom:`; "Kết quả khác" luôn cuối) + **lưới thẻ theo nhóm** (2 cột, điện thoại 1 cột), **4 thẻ / trang** có phân trang. Mỗi thẻ: tên nhóm + "Case x / n", ảnh, nút ‹ › + chấm (vuốt trên điện thoại) để chuyển ca, dòng mô tả ngắn (tuổi · tỉnh · theo dõi n tuần / Phác đồ) và nút **Tư vấn phác đồ qua Zalo**. Ca có cặp ảnh đánh dấu ⇒ 2 ảnh TRƯỚC/SAU có nhãn; ca không đánh dấu ⇒ **mỗi ảnh 1 slide nguyên khung** (xem 2.1). Thẻ không link sang bài chi tiết. |
-| **Trang chi tiết ca** `/<đường dẫn bài>` trên Sapo (bản dev: `/blogs/truoc-va-sau-1/<đường dẫn bài>`) (giao diện `article.truoc-va-sau`) | Khung **bài viết blog** như mọi bài khác. Cột chính: thẻ đầu bài (nhãn nhóm · H1 · chuyên gia · ngày/tỉnh · tóm tắt · hồ sơ ca 4 ô) → ảnh TRƯỚC/SAU 50/50 có nhãn tuần → nhận định chuyên gia → lộ trình diễn tiến → câu chuyện. Sidebar: đặt lịch + hotline + Zalo → liệu trình & sản phẩm đồng hành → ca khác cùng nhóm. Mobile: sidebar xuống dưới + thanh đặt lịch bám đáy |
+| **Trang chi tiết ca** `/<đường dẫn bài>` trên Sapo (bản dev: `/blogs/truoc-va-sau/<đường dẫn bài>`) (giao diện `article.truoc-va-sau`) | Khung **bài viết blog** như mọi bài khác. Cột chính: thẻ đầu bài (nhãn nhóm · H1 · chuyên gia · ngày/tỉnh · tóm tắt · hồ sơ ca 4 ô) → ảnh TRƯỚC/SAU 50/50 có nhãn tuần → nhận định chuyên gia → lộ trình diễn tiến → câu chuyện. Sidebar: đặt lịch + hotline + Zalo → liệu trình & sản phẩm đồng hành → ca khác cùng nhóm. Mobile: sidebar xuống dưới + thanh đặt lịch bám đáy |
 | Trang **liệu trình** (sản phẩm giao diện `product.lieu-trinh`) — phần "Trước – sau" | Chỉ khi bài có tag `lieutrinh:<alias sản phẩm>` (tối đa 8 ca, trình chiếu ‹ ›) |
 | **Trang chủ** — mục "Kết quả thực tế · Hành trình da của khách hàng" | Chỉ khi bài có tag **`ghim-trang-chu`** và đủ ảnh trước/sau (tối đa **3 bài mới nhất**). Tab = `nhom:` (trống ⇒ tiêu đề) – `khach:`; panel = ảnh TRƯỚC/SAU · tiêu đề · dòng khách (`khach:`, `tuoi:`, `tinh:` · Tác giả) · Tình trạng ban đầu (`tinhtrang:`, trống ⇒ `nhom:`) · Hành trình (danh sách số đầu tiên trong Nội dung, trống ⇒ Tóm tắt) · Sản phẩm sử dụng (`phacdo:`) · Thời gian theo dõi (`tuan:`) · link "Xem chi tiết ca". Đổi tag ghim: Cấu hình theme › Trước & Sau (Testimonials) › **Hành trình da — Tag ghim ca lên trang chủ**. Không bài nào được ghim ⇒ trang chủ dùng Thẻ 1–3 nhập tay như trước |
 
@@ -22,13 +22,13 @@ tự hiện ở các nơi sau:
 | Thành phần | Trên Sapo | Trạng thái |
 | :-- | :-- | :-- |
 | Trang giới thiệu Trước & Sau | Trang nội dung alias **`truoc-sau-cham-soc-da-tu-xa`**, giao diện `page.clinical-proof` → `/truoc-sau-cham-soc-da-tu-xa` | Đã có. **Không có** đường dẫn `/clinical-proof` trên Sapo (chỉ là tên route ở bản dev). |
-| Danh mục bài viết ca | **Trước & Sau**, handle **`truoc-va-sau-1`** (`/truoc-va-sau` là Trang nội dung "Trước và sau", không phải danh mục) | Có 1 bài "[DEMO] Hành trình 8 tuần…" — gỡ/ẩn trước khi công bố. Ô **Blog ca điều trị** phải chọn danh mục này |
+| Danh mục bài viết ca | **Trước & Sau**, handle **`truoc-va-sau`** (`/truoc-va-sau` là Trang nội dung "Trước và sau", không phải danh mục) | Có 1 bài "[DEMO] Hành trình 8 tuần…" — gỡ/ẩn trước khi công bố. Ô **Blog ca điều trị** phải chọn danh mục này |
 | Ảnh / video hero | **Ô Mô tả của danh mục bài viết Trước & Sau** (Website › Bài viết › Danh mục bài viết › Trước & Sau): có nhúng video (iframe YouTube…) ⇒ hero là video; không có video, có ảnh ⇒ ảnh đầu tiên (1 ảnh, nguyên khung) | Mô tả không có ảnh/video ⇒ dùng cặp ảnh Cấu hình theme › Trang Trước & Sau › Hero (nếu đủ 2 ảnh) ⇒ ca đầu tiên; chưa có ca ⇒ hero chỉ còn chữ |
 
 Ảnh trên bản dev (localhost/Vercel) chỉ là ô giữ chỗ "[ẢNH TRƯỚC] / [ẢNH SAU]" của dữ liệu mẫu — theme **không** đưa
 ảnh nào lên Sapo. Ảnh thật phải nhập theo mục 2.
 
-1. **Website › Bài viết › Danh mục bài viết**: đã có danh mục **Trước & Sau**, đường dẫn `truoc-va-sau-1`.
+1. **Website › Bài viết › Danh mục bài viết**: đã có danh mục **Trước & Sau**, đường dẫn `truoc-va-sau`.
    Nếu dùng đường dẫn khác thì chọn lại ở **Cấu hình theme › Trang Trước & Sau (/truoc-sau-cham-soc-da-tu-xa) › Blog ca điều trị**.
 2. Ảnh / video hero (12/11/2026): mở danh mục bài viết **Trước & Sau**, trong ô **Mô tả** chèn **1 ảnh** (nút Chèn ảnh)
    hoặc **nhúng 1 video** (nút Mã HTML › dán mã `<iframe>` của YouTube). Có video thì ưu tiên video. Ô Mô tả trống ảnh/video
@@ -52,7 +52,7 @@ Nhập lần lượt các ô trên màn hình **Đăng bài viết mới**:
 | **Trạng thái** | **Hiển thị** (hoặc Đặt lịch hiển thị) | Chọn **Ẩn** thì ca không hiện ở cả 3 nơi |
 | **Ảnh bài viết** | Ảnh đại diện: thường là ảnh ghép trước–sau | Danh sách bài, ảnh chia sẻ Facebook/Zalo. Ca **không đánh dấu** trước/sau (2.1 cách A) ⇒ ảnh đại diện là slide đầu tiên của ca trên trang Trước & Sau |
 | **Tác giả** | Chuyên gia phụ trách ca | Dòng "Chuyên gia phụ trách" trên trang chi tiết |
-| **Danh mục** | **Trước & Sau** (`truoc-va-sau-1`, bắt buộc) | Bài ở danh mục khác sẽ không được trang đọc |
+| **Danh mục** | **Trước & Sau** (`truoc-va-sau`, bắt buộc) | Bài ở danh mục khác sẽ không được trang đọc |
 | **Tag** | Các tag dạng `khoá:giá trị` (xem 2.2) | Nhóm, bảng thông tin ca, liên kết liệu trình |
 | **Khung giao diện** | **`article.truoc-va-sau`** (bắt buộc) | Nếu để `article`, trang chi tiết hiện như bài tin tức thường |
 
@@ -133,7 +133,7 @@ Dùng Heading 2/3, chữ đậm và gạch đầu dòng. Không chỉnh cỡ ch�
 - **Tag**: `nhom:Mụn`, `tuoi:24`, `tinh:Hà Nội`, `tuan:8`, `phacdo:BHA + Niacinamide`, `tinhtrang:Mụn viêm và bít tắc`,
   `chupanh:Ảnh chụp cùng góc và ánh sáng – không chỉnh sửa`, `lieutrinh:<alias liệu trình>`, `sanpham:<alias sản phẩm>`
 
-Bản dev có sẵn ca mẫu này đủ 6 khối: `/blogs/truoc-va-sau-1/hanh-trinh-8-tuan-cai-thien-da-mun-viem`.
+Bản dev có sẵn ca mẫu này đủ 6 khối: `/blogs/truoc-va-sau/hanh-trinh-8-tuan-cai-thien-da-mun-viem`.
 
 ## 4. Kiểm tra trước khi công bố (laptop + điện thoại)
 
@@ -141,5 +141,5 @@ Bản dev có sẵn ca mẫu này đủ 6 khối: `/blogs/truoc-va-sau-1/hanh-tr
 2. Mở trang chi tiết ca: có 1 tiêu đề H1, hồ sơ ca 4 ô đúng, nhãn tuần trên ảnh đúng, nhận định chuyên gia + lộ trình không lặp lại trong phần câu chuyện, thẻ liệu trình/sản phẩm mở đúng trang, nút đặt lịch + hotline đúng số; điện thoại: cuộn xuống thấy thanh "Đặt lịch tư vấn 1:1" bám đáy.
 3. Nếu có tag `lieutrinh:`: mở trang liệu trình đó và kiểm tra phần "Trước – sau".
 4. Dev: `npm run preview`, sau đó chạy
-   `AUDIT_PAGES="/clinical-proof,/blogs/truoc-va-sau-1/<đường dẫn bài>" npm run audit:ui` (route bản dev)
+   `AUDIT_PAGES="/clinical-proof,/blogs/truoc-va-sau/<đường dẫn bài>" npm run audit:ui` (route bản dev)
    (Git Bash thêm `MSYS_NO_PATHCONV=1`). Kết quả cần 0 lỗi ở 1440px và 390px.

@@ -44,8 +44,8 @@ const PAGES = [
   '/skinhealthy-service-detail', '/spa-services', '/dich-vu-skin-healthy-beauty', '/getglowing-micro-peel-ha-noi',
   '/dang-ky-lieu-trinh-tri-mun', '/truoc-sau-cham-soc-da-tu-xa', '/soi-da', '/kham-da-ai', '/ai-skin-quiz', '/ai-skin-quiz-results',
   '/tra-cuu-hoat-chat', '/tin-tuc', '/blogs/tin-tuc-va-kien-thuc', '/blogs/tin-tuc-va-kien-thuc/retinol-thanh-phan-vang-chong-lao-hoa',
-  '/blogs/bi-quyet', '/blogs/video', '/blogs/video/huong-dan-su-dung-toner-dung-cach', '/blogs/truoc-va-sau-1',
-  '/blogs/truoc-va-sau-1/giam-tham-sau-mun-5-tuan', '/blogs/chuyen-gia', '/blogs/chuyen-gia/chuyen-gia-thanh-hang', '/blogs/hoat-chat',
+  '/blogs/bi-quyet', '/blogs/video', '/blogs/video/huong-dan-su-dung-toner-dung-cach', '/blogs/truoc-va-sau',
+  '/blogs/truoc-va-sau/giam-tham-sau-mun-5-tuan', '/blogs/chuyen-gia', '/blogs/chuyen-gia/chuyen-gia-thanh-hang', '/blogs/hoat-chat',
   '/blogs/hoat-chat/retinol', '/blogs/van-de-da', '/blogs/van-de-da/tham-sau-mun', '/blogs/giai-phap-skin-health',
   '/?tpl=blog.instagram-feed', '/about-us', '/gioi-thieu', '/clinical-proof', '/dai-ly-b2b', '/chinh-sach-bao-mat', '/seo-directory',
   '/?tpl=page', '/?tpl=404',
@@ -53,7 +53,7 @@ const PAGES = [
 const RESP_PAGES = ['/', '/collections/all', '/products/serum-vitamin-c-15', '/?tpl=cart', '/?tpl=search', '/?tpl=login', '/?tpl=register',
   '/?tpl=account', '/dat-lich-tu-van', '/skinhealthy-services', '/skinhealthy-service-detail', '/?tpl=product.lieu-trinh',
   '/getglowing-micro-peel-ha-noi', '/soi-da', '/ai-skin-quiz', '/tra-cuu-hoat-chat', '/tin-tuc',
-  '/blogs/tin-tuc-va-kien-thuc/retinol-thanh-phan-vang-chong-lao-hoa', '/blogs/truoc-va-sau-1', '/clinical-proof', '/about-us',
+  '/blogs/tin-tuc-va-kien-thuc/retinol-thanh-phan-vang-chong-lao-hoa', '/blogs/truoc-va-sau', '/clinical-proof', '/about-us',
   '/chuyen-gia', '/order-lookup', '/dai-ly-b2b'];
 const PERF_PAGES = ['/', '/collections/all', '/products/serum-vitamin-c-15', '/?tpl=cart', '/soi-da', '/tin-tuc',
   '/blogs/tin-tuc-va-kien-thuc/retinol-thanh-phan-vang-chong-lao-hoa', '/skinhealthy-services', '/dat-lich-tu-van', '/?tpl=login'];

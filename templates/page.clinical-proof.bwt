@@ -8,7 +8,7 @@
   Nguồn dữ liệu:
   - Câu chữ, link, ảnh hero: Theme Settings → "Trang Minh chứng lâm sàng" (field clinical_*). Ảnh hero trống ⇒ lấy
     cặp ảnh của ca đầu tiên có đủ ảnh; không có ca nào ⇒ hero chỉ còn chữ.
-  - Ca khách hàng = bài viết trong blog settings.clinical_case_blog_handle (mặc định truoc-va-sau-1 — trên Sapo alias truoc-va-sau đã thuộc một Trang nội dung), đọc qua
+  - Ca khách hàng = bài viết trong blog settings.clinical_case_blog_handle (mặc định truoc-va-sau — 13/11/2026: danh mục đã đổi từ truoc-va-sau-1 sang truoc-va-sau), đọc qua
     snippets/ba_case_source.bwt (2026-10-17): ảnh trước/sau = tag anhtruoc:/anhsau: HOẶC ảnh trong nội dung có Mô tả ảnh "trước"/"sau"; không đánh dấu ⇒ ca 1 ảnh (12/11/2026)
     bài (BẮT BUỘC đủ 2 ảnh, thiếu ⇒ không hiện ca). Hướng dẫn nhập: docs/huong-dan-tao-ca-truoc-sau.md. Tag phụ
     nhom:<vấn đề da> (gom nhóm; không có ⇒ nhóm clinical_group_other), tuoi:<số>, tinh:<tỉnh/thành>,
@@ -17,8 +17,8 @@
   - 2026-10-18: kết quả = tab lọc + trình chiếu (link bài) — BỎ 12/11/2026, trở lại lưới thẻ theo nhóm + nút Zalo từng
     thẻ đúng thiết kế (xem chú thích ở khối kết quả).
 {%- endcomment -%}
-{%- assign pc_ba_blog_handle = settings.clinical_case_blog_handle | default: 'truoc-va-sau-1' -%}
-{%- assign pc_ba_blog = blogs[pc_ba_blog_handle] -%}
+{%- assign pc_ba_blog_handle = settings.clinical_case_blog_handle | default: 'truoc-va-sau' -%}
+{%- assign pc_ba_blog = blogs[pc_ba_blog_handle] -%}{%- comment -%} 13/11/2026: handle trong cấu hình đã xoá/đổi (vd cũ truoc-va-sau-1) ⇒ dự phòng truoc-va-sau để trang không trống. {%- endcomment -%}{%- if pc_ba_blog.articles.size == 0 or pc_ba_blog == blank -%}{%- assign pc_ba_blog = blogs['truoc-va-sau'] -%}{%- endif -%}
 {%- assign pc_ba_cta_link = settings.clinical_hero_cta_link | default: '/kham-da-ai' -%}
 {%- assign pc_ba_group_other = settings.clinical_group_other | default: 'Kết quả khác' -%}
 
@@ -90,7 +90,7 @@
       {%- if settings.clinical_intro != blank -%}<p class="pc-ba-hero__lead">{{ settings.clinical_intro }}</p>{%- endif -%}
       <div class="pc-ba-actions">
         <a href="{{ pc_ba_cta_link }}" class="pc-ba-btn pc-ba-btn--primary">{{ settings.clinical_hero_cta_label | default: 'Nhận phân tích da miễn phí' }}</a>
-        {%- if pc_ba_group_list.size > 0 -%}
+        {%- if pc_ba_groups != blank -%}
         <a href="#pc-ba-results" class="pc-ba-btn pc-ba-btn--outline">{{ settings.clinical_hero_cta2_label | default: 'Xem kết quả khách hàng' }}</a>
         {%- endif -%}
       </div>
@@ -177,7 +177,7 @@
   </section>
   {%- endif -%}
 
-  {%- if pc_ba_group_list.size > 0 -%}
+  {%- if pc_ba_groups != blank -%}
   {%- comment -%}
     12/11/2026 (người dùng duyệt lại thiết kế Claude Design / Figma 751:1281 "Body-trước&sau"): bỏ bản 18/10 (tab lọc +
     trình chiếu 1 ca, cả slide là link bài) — trở lại lưới thẻ theo NHÓM vấn đề da (2 cột, ≤ 991px 1 cột). Mỗi thẻ:

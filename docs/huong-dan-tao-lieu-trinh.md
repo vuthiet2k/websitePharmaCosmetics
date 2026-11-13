@@ -343,7 +343,7 @@ Danh mục bài viết cần có (đã có đủ trên Sapo ngày 18/10/2026):
 | Vấn đề da | `van-de-da` |
 | Câu hỏi liệu trình | `cau-hoi-lieu-trinh` |
 | Thư viện hoạt chất | `hoat-chat` |
-| Trước & Sau | `truoc-va-sau-1` |
+| Trước & Sau | `truoc-va-sau` |
 
 > Trang liệu trình là **sản phẩm**; `http://localhost:3000/?tpl=page.getglowing-micro-peel` chỉ là trang thử ở máy dev
 > (hiện lại sản phẩm đặt ở cấu hình `lt_page_product`). Trên Sapo không có trang `/getglowing-micro-peel-ha-noi`.

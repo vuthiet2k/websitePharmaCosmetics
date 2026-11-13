@@ -88,9 +88,13 @@
   {%- assign pc_bs_list = '|' -%}
   {%- if pc_bs_article.image.src != blank -%}
     {%- assign pc_bs_feat = pc_bs_article.image.src | img_url: 'large' -%}
-    {%- assign pc_bs_w = '|' | append: pc_bs_feat | append: '|' -%}
-    {%- comment -%} Ảnh đại diện trùng 1 ảnh trong Nội dung ⇒ không lặp. {%- endcomment -%}
-    {%- unless pc_bs_all contains pc_bs_w -%}{%- assign pc_bs_list = pc_bs_list | append: pc_bs_feat | append: '|' -%}{%- endunless -%}
+    {%- comment -%}
+      13/11/2026: so trùng bằng URL GỐC (và bản đã qua img_url) — trước đây chỉ so bản img_url ('..._large') với URL gốc trong Nội dung
+      nên không bao giờ khớp ⇒ ảnh đại diện (thường là ảnh ghép) bị lặp thành slide thứ 2 giống hệt.
+    {%- endcomment -%}
+    {%- assign pc_bs_w = '|' | append: pc_bs_article.image.src | append: '|' -%}
+    {%- assign pc_bs_w2 = '|' | append: pc_bs_feat | append: '|' -%}
+    {%- unless pc_bs_all contains pc_bs_w or pc_bs_all contains pc_bs_w2 -%}{%- assign pc_bs_list = pc_bs_list | append: pc_bs_feat | append: '|' -%}{%- endunless -%}
   {%- endif -%}
   {%- assign pc_bs_rest = pc_bs_all | remove_first: '|' -%}
   {%- assign pc_bs_list = pc_bs_list | append: pc_bs_rest -%}

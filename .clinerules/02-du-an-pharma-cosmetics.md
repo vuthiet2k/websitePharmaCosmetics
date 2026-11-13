@@ -605,10 +605,10 @@ handle để localhost phản ánh đúng Sapo.
 | `/order` | `page.order-lookup` | |
 | `/canh-bao-lua-dao` | `page.canh-bao-lua-dao` | Trang «Lưu ý khi nhận đơn COD» (12/11/2026, tham khảo UNIQLO). **Phải tạo Trang nội dung alias này trên Sapo** — popup «Nhận hàng an toàn» link tới (`delivery_alert_page_url`). Chữ: Admin › Trang Cảnh báo lừa đảo (`scam_page_*`) |
 | `/dat-lich-tu-van`, `/loyalty`, `/dai-ly-b2b`, `/chinh-sach-bao-mat` | cùng tên | |
-| `/truoc-va-sau`, `/phan-hoi-cua-khach-hang` | `page` mặc định | `/truoc-va-sau` chiếm alias ⇒ danh mục ca phải là `truoc-va-sau-1` |
+| `/phan-hoi-cua-khach-hang` | `page` mặc định | — (13/11/2026: danh mục ca đã đổi về `truoc-va-sau`, không còn Trang nội dung trùng alias) |
 
 **Danh mục bài viết (blog):** `bi-quyet` (Bí Quyết Làm Đẹp, ~56 bài), `video` (24), `tin-tuc-va-kien-thuc` ("Tin tức &
-Kiến thức", 3 bài), `y-kien-chuyen-gia` (2), `y-kien-chuyen-gia-1` (3 — trùng tên, nên gộp), **`truoc-va-sau-1`** ("Trước &
+Kiến thức", 3 bài), `y-kien-chuyen-gia` (2), `y-kien-chuyen-gia-1` (3 — trùng tên, nên gộp), **`truoc-va-sau`** ("Trước &
 Sau", ca khách hàng; có 1 bài "[DEMO]" cần gỡ trước khi công bố), `chuyen-gia`, `hoat-chat`, `giai-phap-skin-health`,
 `danh-gia-khach-hang`, `cau-hoi-san-pham`, `cau-hoi-dat-lich`, `cau-hoi-tai-khoan`, `tri-lieu-da`, `bi-quyet-1`, `video-1`
 (0 bài), `cau-hoi-lieu-trinh` (`lt_faq_blog`), `van-de-da` (`lt_concern_blog`) — 2 blog cuối đã tạo (đối soát 19/10/2026).
@@ -793,7 +793,7 @@ grep -o '"id"[[:space:]]*:[[:space:]]*"[a-z_]*"' configs/settings_schema.json
 - Dữ liệu riêng từng liệu trình: tên, Mô tả ngắn (giới thiệu), Mô tả chi tiết, giá, Nhà cung cấp, ảnh alt `[banner]`/`[banner-mobile]`/
   `[hero]`/`[congthuc]`/`[sanpham]`/`[buoc-N]`, tag `nhan:` `phude:` `tenngan:` `tieude:` `congthuc:` `hinhthuc:` `thoigian:`
   `sobuoi:` `diadiem:` `vande:<bài>` `hoatchat:<bài>`; blog `van-de-da`, `hoat-chat` (tag `vaitro:`), `cau-hoi-lieu-trinh` (tag
-  `sanpham:<alias>`), `truoc-va-sau-1` (tag `lieutrinh:<alias>` + `anhtruoc:`/`anhsau:` hoặc 2 ảnh nội dung có Mô tả ảnh "trước"/"sau"). Chữ dùng chung: nhóm cấu hình "Trang liệu
+  `sanpham:<alias>`), `truoc-va-sau` (tag `lieutrinh:<alias>` + `anhtruoc:`/`anhsau:` hoặc 2 ảnh nội dung có Mô tả ảnh "trước"/"sau"). Chữ dùng chung: nhóm cấu hình "Trang liệu
   trình (sản phẩm)" (`lt_*`, `[ten]` = tên ngắn). Thiếu dữ liệu ⇒ phần đó ẩn. Hướng dẫn nhập liệu: `docs/huong-dan-tao-lieu-trinh.md`.
 - Tên vấn đề da / hoạt chất in CHỮ HOA theo bản bàn giao (người dùng chốt) — ngoại lệ có chủ đích của UI-2.7.
 - `page.getglowing-micro-peel` chỉ còn bọc hiển thị sản phẩm `settings.lt_page_product` + canonical về URL sản phẩm (link cũ).
@@ -802,4 +802,4 @@ grep -o '"id"[[:space:]]*:[[:space:]]*"[a-z_]*"' configs/settings_schema.json
   `collection_lieu_trinh` + thẻ `lieu_trinh_card`. Ẩn giá (`lt_hide_price`, mặc định bật) ở thẻ liệu trình, bảng thông tin và mọi thẻ
   sản phẩm chung (`snippets/pc_is_service.bwt`); nút Liên hệ tư vấn → Zalo (`lt_zalo_text`, `lt_zalo_url` / `contact_zalo`) + Đặt
   lịch (`lt_cta_url?handle=<alias>`). Video: tag `youtube:` / `facebook:` trên sản phẩm ⇒ khối `lieu_trinh_video` (sau Công nghệ &
-  hoạt chất; `lt_video_eyebrow/_title`). Blog Trước & Sau thật là `truoc-va-sau-1` (alias `truoc-va-sau` thuộc 1 Trang nội dung).
+  hoạt chất; `lt_video_eyebrow/_title`). Blog Trước & Sau thật là `truoc-va-sau` (13/11/2026 chủ dự án xoá `truoc-va-sau-1`, đổi về `truoc-va-sau`).
