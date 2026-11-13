@@ -1,43 +1,46 @@
 <div class="side-right-stick">
-	{%- if settings.right_aside_blog -%}
+	{%- if settings.right_aside_blog and settings.aside_category_blog_menu != blank -%}
 	{%- include 'aside-cate-blog' -%}
 	{%- endif -%}
-	{%- if settings.right_aside_noibat -%}
-	{%- assign blog_count = blogs[settings.relate_blog]articles_count -%}
+	{%- assign pc_show_noibat = true -%}
+	{%- if settings.right_aside_noibat == false -%}{%- assign pc_show_noibat = false -%}{%- endif -%}
+	{%- if pc_show_noibat -%}
+	{%- assign relate_handle = settings.relate_blog | default: 'tin-tuc-va-kien-thuc' -%}
+	{%- assign relate_b = blogs[relate_handle] -%}
+	{%- assign relate_count = settings.number_relate_blog | default: 5 | plus: 0 -%}
+	{%- if relate_count < 1 -%}{%- assign relate_count = 5 -%}{%- endif -%}
+	{%- assign relate_url = relate_b.url -%}
+	{%- if relate_url == blank -%}{%- assign relate_url = '/blogs/' | append: relate_handle -%}{%- endif -%}
 	<div class="blog_noibat">
 		<h2 class="h2_sidebar_blog">
-			<a href="{{settings.relate_blog}}" title="{{ settings.news_relate }}">{{ settings.news_relate }}</a>
+			<a href="{{ relate_url }}" title="{{ settings.news_relate | default: 'Tin nổi bật' | escape }}">{{ settings.news_relate | default: 'Tin nổi bật' | escape }}</a>
 		</h2>
-		{%- if blog_count > 0 -%}
+		{%- if relate_b.articles.size > 0 -%}
 		<div class="blog_content">
-			{% for article in blogs[settings.relate_blog].articles | limit: settings.number_relate_blog %}
+			{%- for article in relate_b.articles limit: relate_count -%}
 			<div class="item clearfix">
 				<div class="post-thumb">
-					<a class="image-blog scale_hover" href="{{ article.url }}" title="{{ article.title }}">
-						{% if article.image != null %}
-						<img width="675" height="380" class="img_blog lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC" data-src="{{ article.image.src }}"  alt="{{ article.title }}">
-						{%else%}
-						<img width="675" height="380" class="img_blog lazyload" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAANSURBVBhXYzh8+PB/AAffA0nNPuCLAAAAAElFTkSuQmCC" data-src="{% include 'placeholder_img_url' %}" alt="{{ article.title }}" title="{{ article.title }}"/>
-						{% endif %}
+					<a class="image-blog" href="{{ article.url }}" title="{{ article.title | escape }}">
+						{%- if article.image != null and article.image.src != blank -%}
+						<img width="100" height="63" class="img_blog" src="{{ article.image.src | img_url: 'compact' }}" alt="{{ article.title | escape }}" loading="lazy">
+						{%- else -%}
+						<img width="100" height="63" class="img_blog" src="{% include 'placeholder_img_url' %}" alt="{{ article.title | escape }}" loading="lazy">
+						{%- endif -%}
 					</a>
 				</div>
 				<div class="contentright">
-					<h3><a title="{{ article.title }}" href="{{ article.url }}">{{ article.title }}</a></h3>
+					<h3><a title="{{ article.title | escape }}" href="{{ article.url }}">{{ article.title | escape }}</a></h3>
 					<p class="time-post">
-						<span>
-							{{ article.published_on | date:'dd/MM/yyy' }}
-						</span>
+						<span>{{ article.published_on | date: 'dd/MM/yyyy' }}</span>
 					</p>
 				</div>
 			</div>
-			{% endfor %}
+			{%- endfor -%}
 		</div>
 		{%- else -%}
-		<div class="box_alert">
-			<div class="alert alert-warning alert-warning2 alert-dismissible margin-top-15 section">
-				Danh mục đang được cập nhật.
-			</div>
-		</div>				
+		<p class="box_alert text-muted m-0">
+			{{ settings.news_empty_text | default: 'Danh mục đang được cập nhật.' | escape }}
+		</p>				
 		{%- endif -%}
 	</div>
 	{%- endif -%}

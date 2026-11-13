@@ -48,40 +48,13 @@
 			<div class="pc-nblog__main">
 				{% paginate blog.articles by pc_nb_per %}
 				{%- if blog.articles.size > 0 -%}
-					{%- assign pc_nb_feat = false -%}
-					{%- if paginate.current_page == 1 or paginate.current_page == blank -%}
-						{%- assign pc_nb_feat = blog.articles.first -%}
-						{%- assign pc_nb_topic = '' -%}
-						{%- for pc_nb_tag in pc_nb_feat.tags -%}
-							{%- if pc_nb_tag contains 'chude:' -%}{%- assign pc_nb_topic = pc_nb_tag | remove_first: 'chude:' | strip -%}{%- endif -%}
-						{%- endfor -%}
-						<article class="pc-vfeat pc-nfeat">
-							<a class="pc-nfeat__img" href="{{ pc_nb_feat.url }}" tabindex="-1" aria-hidden="true">
-								<img src="{% if pc_nb_feat.image.src != blank %}{{ pc_nb_feat.image.src | img_url: '1024x1024' }}{% else %}{% include 'placeholder_img_url' %}{% endif %}" alt="{{ pc_nb_feat.title | escape }}" width="1024" height="576" fetchpriority="high">
-							</a>
-							<div class="pc-vfeat__body">
-								{%- if pc_nb_topic != blank -%}<div class="pc-vfeat__tags"><span class="pc-vcard__topic">{{ pc_nb_topic | escape }}</span></div>{%- endif -%}
-								<h2 class="pc-vfeat__title"><a href="{{ pc_nb_feat.url }}">{{ pc_nb_feat.title | escape }}</a></h2>
-								{%- assign pc_nb_sum = pc_nb_feat.summary | default: pc_nb_feat.excerpt | default: pc_nb_feat.content | strip_html | strip -%}
-								{%- if pc_nb_sum != blank -%}<p class="pc-vfeat__sum">{{ pc_nb_sum | truncatewords: 40 }}</p>{%- endif -%}
-								<div class="pc-vfeat__meta">
-									{%- if pc_nb_feat.author != blank -%}<span>{{ pc_nb_feat.author | escape }}</span>{%- endif -%}
-									<time datetime="{{ pc_nb_feat.published_on | date: 'yyyy-MM-dd' }}">{{ pc_nb_feat.published_on | date: 'dd/MM/yyyy' }}</time>
-								</div>
-								<a class="pc-vfeat__cta" href="{{ pc_nb_feat.url }}">{{ settings.product_article_read_label | default: 'Đọc tiếp' | escape }} <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-							</div>
-						</article>
-					{%- endif -%}
-					{%- if blog.articles.size > 1 or pc_nb_feat == false -%}
 					<div class="pc-ngrid">
 						{%- for article in blog.articles -%}
-						{%- unless pc_nb_feat and forloop.first -%}
 						{%- assign pc_card_i = forloop.index0 -%}
+						{%- assign pc_card_first = forloop.first -%}
 						{% include 'pc_article_card' %}
-						{%- endunless -%}
 						{%- endfor -%}
 					</div>
-					{%- endif -%}
 					{%- if paginate.pages > 1 -%}
 					<div class="pc-vblog__pagi">{% include 'paginate-pages' %}</div>
 					{%- endif -%}
