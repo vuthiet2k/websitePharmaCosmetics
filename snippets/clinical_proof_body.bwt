@@ -217,6 +217,10 @@
         {%- capture pc_ba_info -%}
           {%- if pc_ba_meta != blank -%}<p class="pc-ba-case__meta">{{ pc_ba_meta }}</p>{%- endif -%}
           {%- if pc_bs_plan != blank -%}<p class="pc-ba-case__plan">{{ settings.clinical_article_plan_label | default: 'Phác đồ' | escape }}: {{ pc_bs_plan | escape }}</p>{%- endif -%}
+          {%- comment -%} 14/11/2026 (chủ dự án): mô tả ca = Tóm tắt của bài; trống ⇒ thẻ văn bản (đoạn) ĐẦU TIÊN trong Nội dung. CSS chặn 3 dòng + «…». {%- endcomment -%}
+          {%- assign pc_ba_desc_t = pc_ba.summary | strip_html | strip -%}
+          {%- if pc_ba_desc_t == blank -%}{%- assign pc_ba_desc_parts = pc_ba.content | split: '</p>' -%}{%- for pc_ba_desc_p in pc_ba_desc_parts -%}{%- assign pc_ba_desc_x = pc_ba_desc_p | strip_html | strip -%}{%- if pc_ba_desc_x != blank and pc_ba_desc_t == blank -%}{%- assign pc_ba_desc_t = pc_ba_desc_x -%}{%- endif -%}{%- endfor -%}{%- endif -%}
+          {%- if pc_ba_desc_t != blank -%}<p class="pc-ba-case__desc">{{ pc_ba_desc_t | truncate: 240 }}</p>{%- endif -%}
         {%- endcapture -%}
         {%- if pc_bs_single -%}
         {%- assign pc_ba_imgs = pc_bs_imgs | split: '|' -%}
