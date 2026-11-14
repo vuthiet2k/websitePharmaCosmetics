@@ -1,5 +1,5 @@
 {%- comment -%}
-  pc_article_card.bwt — thẻ bài viết 100% Tailwind (BATCH-05 overhaul).
+  pc_article_card.bwt — thẻ bài viết 100% Tailwind (BATCH-05/09 overhaul).
   Đầu vào: article, pc_card_i (thứ tự thẻ), pc_card_ex_blog (blog chuyên gia tra sẵn).
 {%- endcomment -%}
 {%- assign pc_card_cat = '' -%}
@@ -22,16 +22,16 @@
 		{%- if pc_card_item_handle == pc_card_ex_handle -%}{%- assign pc_card_ex = pc_card_item -%}{%- endif -%}
 	{%- endfor -%}
 {%- endif -%}
-<article class="group flex h-full flex-col overflow-hidden rounded-2xl bg-card border border-solid border-line transition-all duration-300 hover:shadow-sm">
-	<a class="relative block aspect-[580/314] overflow-hidden bg-surface" href="{{ article.url }}" tabindex="-1" aria-hidden="true">
+<article class="group flex h-full flex-col overflow-hidden rounded-2xl bg-card border border-solid border-line transition-all duration-300">
+	<a class="relative block aspect-video overflow-hidden bg-surface" href="{{ article.url }}" tabindex="-1" aria-hidden="true">
 		{%- if article.image.src != blank -%}
 		<img src="{{ article.image.src | img_url: 'large' }}" alt="{{ article.title | replace: '"', '' | escape }}" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" width="580" height="314"{% if pc_card_first %} fetchpriority="high"{% else %} loading="lazy"{% endif %}>
 		{%- else -%}
 		<img src="{{ 'PharmaCosmetics.svg' | asset_url }}" alt="{{ article.title | replace: '"', '' | escape }}" class="block h-full w-full bg-white object-contain p-6" width="580" height="314" loading="lazy">
 		{%- endif -%}
 		{%- if pc_card_cat != blank -%}
-		<span class="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary shadow-sm backdrop-blur-sm">
-			<i class="fa-solid fa-tag text-[10px]" aria-hidden="true"></i>
+		<span class="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
+			{% include 'ui_icon', name: 'tag', size: '1em' %}
 			{{ pc_card_cat | escape }}
 		</span>
 		{%- endif -%}
@@ -44,22 +44,22 @@
 			{{ article.summary | default: article.content | strip_html | truncatewords: 26 }}
 		</p>
 		<div class="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-0 border-t border-solid border-line-soft pt-3">
-			<div class="flex items-center gap-2.5 min-w-0">
+			<div class="flex items-center gap-2 min-w-0">
 				{%- if pc_card_ex and pc_card_ex.image.src != blank -%}
 				<img class="h-8 w-8 rounded-full object-cover flex-shrink-0" src="{{ pc_card_ex.image.src | img_url: 'thumb' }}" alt="{{ pc_card_ex.title | escape }}" width="32" height="32" loading="lazy">
 				{%- else -%}
 				<span class="flex h-8 w-8 items-center justify-center rounded-full bg-surface text-primary flex-shrink-0" aria-hidden="true">
-					<i class="fa-solid fa-user text-xs"></i>
+					{% include 'ui_icon', name: 'user', size: '1em' %}
 				</span>
 				{%- endif -%}
 				<div class="flex flex-col min-w-0">
 					<span class="text-xs font-semibold text-ink whitespace-nowrap truncate">{% if pc_card_ex %}{{ pc_card_ex.title | escape }}{% else %}{{ article.author | escape }}{% endif %}</span>
-					<time class="text-[11px] text-slate-400 whitespace-nowrap" datetime="{{ article.published_on | date: 'yyyy-MM-dd' }}">{{ article.published_on | date: 'dd/MM/yyyy' }}</time>
+					<time class="text-xs text-slate-400 whitespace-nowrap" datetime="{{ article.published_on | date: 'yyyy-MM-dd' }}">{{ article.published_on | date: 'dd/MM/yyyy' }}</time>
 				</div>
 			</div>
 			<a class="inline-flex items-center gap-1 text-xs font-bold uppercase text-primary transition-colors hover:text-secondary whitespace-nowrap no-underline" href="{{ article.url }}">
 				{{ settings.product_article_read_label | default: 'Đọc tiếp' | escape }}
-				<i class="fa-solid fa-arrow-right text-[10px]" aria-hidden="true"></i>
+				{% include 'ui_icon', name: 'arrow-right', size: '1em' %}
 			</a>
 		</div>
 	</div>

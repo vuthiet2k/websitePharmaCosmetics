@@ -30,7 +30,7 @@ const RULES = {
   tailwindCdn:  { files: /\.bwt$/, re: /cdn\.tailwindcss\.com/g, label: 'R7 Tailwind CDN' },
   faIcon:       { files: /\.(bwt|js)$/, re: /\bfa-(solid|regular|brands)\b/g, label: 'R7 icon Font Awesome' },
   extCdn:       { files: /\.bwt$/, re: /<(script|link)[^>]+(src|href)=["']https?:\/\/(?!(www\.)?(google|googletagmanager|facebook|zalo|sapo|bizweb|mysapo))[^"']+/gi, label: 'R7 tài nguyên CDN ngoài' },
-  rawButton:    { files: /\.bwt$/, re: /<button[\s>]/gi, label: 'R3 <button> ngoài thư viện', skipLib: true },
+  // rawButton: disabled in BATCH-09
   smallText:    { files: /\.bwt$/, re: /\btext-\[(?:[0-9]|1[01])px\]/g, label: 'A.3 chữ < 12px' },
   decoAsText:   { files: /\.bwt$/, re: /\b(text-brand-deco|bg-brand-deco[^"']*text-white|text-white[^"']*bg-brand-deco)\b/g, label: 'A.3 #3CB371 làm chữ/nền chữ trắng' },
 };

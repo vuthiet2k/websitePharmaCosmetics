@@ -114,7 +114,12 @@
 {%- endcapture -%}
 {%- assign pc_nb_mtitle = settings.delivery_alert_detail_title | default: 'Nhận hàng an toàn, tránh lừa đảo' -%}
 {%- capture pc_nb_mtitle -%}<span class="pc-notice-dlg__badge">{% include 'ui_icon', name: 'shield-check', size: 20, label: '' %}</span><span>{{ pc_nb_mtitle | escape }}</span>{%- endcapture -%}
-{% include 'ui_modal', id: 'pc-notice-delivery-modal', title: pc_nb_mtitle, content: pc_nb_content, close_label: 'Đóng' %}
+<div class="pc-overlay" data-pc-modal-overlay="pc-notice-delivery-modal" hidden></div>
+<div class="pc-modal" id="pc-notice-delivery-modal" data-pc-modal role="dialog" aria-modal="true" aria-labelledby="pc-notice-delivery-modal-title" tabindex="-1" hidden>
+  <h2 class="pc-modal__title" id="pc-notice-delivery-modal-title">{{ pc_nb_mtitle }}</h2>
+  <button type="button" class="pc-modal__close" data-pc-modal-close="pc-notice-delivery-modal" aria-label="Đóng">{% include 'ui_icon', name: 'x', size: 24, label: '' %}</button>
+  <div class="mt-4">{{ pc_nb_content }}</div>
+</div>
 {%- comment -%} Dải nằm trong header.header (ngữ cảnh xếp lớp riêng khi popup mở — components.css N10) ⇒ popup + lớp phủ để trong header thì
   topbar / menu desktop (z 10010 / 10020) vẽ đè lớp phủ. Chuyển ra <body> như mọi popup thư viện khác. {%- endcomment -%}
 <script>
