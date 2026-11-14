@@ -359,8 +359,8 @@
 
   /* 22. Thẻ cảnh báo nổi trên Hero trang chủ (ui_notice_bar notice_variant 'hero', 12/11/2026 — chủ dự án gửi ảnh UNIQLO: "trang chủ cho
      position ngay hero"). Thẻ trắng bo góc, không viền, góc trên-trái Hero; cuộn đi cùng Hero. Cao ~70px ≪ 15% màn (D.17). */
-  .pc-notice-hero { @apply absolute left-3 right-3 top-3 z-10 box-border flex items-start gap-1 bg-sale py-1 pl-4 pr-0 font-sans text-white backdrop-blur-sm rounded-2xl
-                           lg:left-8 lg:right-auto lg:top-6 lg:w-full lg:max-w-md; }
+  .pc-notice-hero { @apply absolute left-3 right-3 top-[108px] z-10 box-border flex items-start gap-1 bg-sale py-1 pl-4 pr-0 font-sans text-white backdrop-blur-sm rounded-2xl
+                           lg:left-8 lg:right-auto lg:top-[116px] lg:w-full lg:max-w-md; }
   .pc-notice-hero[hidden] { @apply hidden; }
   /* 14/11/2026 (chủ dự án): thẻ cảnh báo Hero NỀN ĐỎ CHỮ TRẮNG (token --pc-color-sale, mờ nhẹ 90% nếu trình duyệt hỗ trợ). */
   @supports (background: color-mix(in srgb, red 90%, transparent)) { .pc-notice-hero { background: color-mix(in srgb, var(--pc-color-sale) 90%, transparent); } }
@@ -14980,6 +14980,97 @@ body.pc-site-v3{font-family:var(--pc-font-body);font-size:var(--fs-base)}
 @media (min-width:992px){
   .pc-site-v3 .header-menu #nav > .nav-item.has-childs > a.nav-link{display:inline-flex;align-items:center;gap:6px}
   .pc-site-v3 .header-menu #nav > .nav-item.has-childs > a.nav-link > svg{flex:none;margin:0;vertical-align:middle}
+}
+
+/* ===== HEADER TRONG SUỐT TRÊN HERO TRANG CHỦ (JS điều khiển class .header--transparent trong header.bwt) ===== */
+body.pc-home-v3 header.header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+body.pc-home-v3 header.header .main-header,
+body.pc-home-v3 header.header .box-hearder,
+body.pc-home-v3 header.header .pc-topbar-v3 {
+  transition: background-color 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+body.pc-home-v3 header.header.header--transparent .main-header {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+body.pc-home-v3 header.header.header--transparent .pc-topbar-v3 {
+  background: transparent !important;
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.18) !important;
+  color: #fff !important;
+}
+body.pc-home-v3 header.header.header--transparent .pc-topbar-v3 :is(.lang-btn, .topbar-account-btn, .pc-topbar__phone, a, button, span) {
+  color: #fff !important;
+}
+body.pc-home-v3 header.header.header--transparent .box-hearder {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+body.pc-home-v3 header.header.header--transparent .header-logo .pc-logo-master-img {
+  filter: brightness(0) invert(1) !important;
+}
+body.pc-home-v3 header.header.header--transparent .header-menu {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+body.pc-home-v3 header.header.header--transparent #nav > .nav-item > .nav-link {
+  color: #fff !important;
+}
+body.pc-home-v3 header.header.header--transparent #nav > .nav-item > .nav-link:hover {
+  color: #3CB371 !important;
+}
+body.pc-home-v3 header.header.header--transparent .sudes-cate-header .title.js-menu-toggle {
+  color: #fff !important;
+  background: transparent !important;
+}
+body.pc-home-v3 header.header.header--transparent .sudes-cate-header {
+  border-right-color: rgba(255, 255, 255, 0.3) !important;
+}
+body.pc-home-v3 header.header.header--transparent .header-right :is(a, button, .box-icon, i, .header-action-search) {
+  color: #fff !important;
+}
+body.pc-home-v3 header.header.header--transparent .menu-bar,
+body.pc-home-v3 header.header.header--transparent .search-mobile,
+body.pc-home-v3 header.header.header--transparent .sudes-header-cart > a {
+  color: #fff !important;
+}
+
+@media (min-width: 992px) {
+  body.pc-home-v3 header.header.header--transparent:hover .box-hearder,
+  body.pc-home-v3 header.header.header--transparent:focus-within .box-hearder {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+    border-bottom-color: rgba(0, 46, 35, 0.08) !important;
+  }
+  body.pc-home-v3 header.header.header--transparent:hover .pc-topbar-v3,
+  body.pc-home-v3 header.header.header--transparent:focus-within .pc-topbar-v3 {
+    background: #3CB371 !important;
+  }
+  body.pc-home-v3 header.header.header--transparent:hover #nav > .nav-item > .nav-link,
+  body.pc-home-v3 header.header.header--transparent:focus-within #nav > .nav-item > .nav-link,
+  body.pc-home-v3 header.header.header--transparent:hover .sudes-cate-header .title.js-menu-toggle,
+  body.pc-home-v3 header.header.header--transparent:focus-within .sudes-cate-header .title.js-menu-toggle,
+  body.pc-home-v3 header.header.header--transparent:hover .header-right :is(a, button, .box-icon, i, .header-action-search),
+  body.pc-home-v3 header.header.header--transparent:focus-within .header-right :is(a, button, .box-icon, i, .header-action-search) {
+    color: var(--mainColorDark, #003F2D) !important;
+  }
+  body.pc-home-v3 header.header.header--transparent:hover .header-logo .pc-logo-master-img,
+  body.pc-home-v3 header.header.header--transparent:focus-within .header-logo .pc-logo-master-img {
+    filter: none !important;
+  }
+  body.pc-home-v3 header.header.header--transparent:hover .sudes-cate-header,
+  body.pc-home-v3 header.header.header--transparent:focus-within .sudes-cate-header {
+    border-right-color: #E2E8F0 !important;
+  }
 }
 /* HEADING-SCALE 2026-10-16 (/goal review toàn site, .clinerules/03 UI-2.2/2.4): tiêu đề section ngoài trang chủ
    lúc VIẾT HOA 28.13px/500, lúc 30px/700, lúc 26.25px — quy về một kiểu như trang chủ: chữ thường, 32/26px, 600.

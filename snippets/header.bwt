@@ -14,7 +14,7 @@
   Khi cuộn qua header, menu tách thành thanh cố định và mới hiện nút Danh mục.
   Giữ một menu duy nhất để dùng chung điều hướng desktop và drawer mobile.
 {%- endcomment -%}
-<header class="header">
+<header class="header{% if template contains 'index' and is_skinhealthy_content == false %} header--transparent{% endif %}">
 	{%- comment -%} 12/11/2026 (chủ dự án: "cảnh báo chỉ hiện ở hero thôi, qua trang khác làm gì còn"): KHÔNG còn dải cảnh báo đầu header ở mọi trang. Cảnh báo chỉ là thẻ nổi trên Hero trang chủ (section_hero → ui_notice_bar notice_variant 'hero'), link sang trang /canh-bao-lua-dao. {%- endcomment -%}
 	<div class="main-header">
 			{%- comment -%} ============ PHẦN 1 — HEADER TOP (topbar xanh) ============ {%- endcomment -%}
@@ -371,6 +371,20 @@
 	const tabLinks = document.querySelectorAll('.tab-link');
 	const tabContents = document.querySelectorAll('.tab-content-mb');
 
+	/* 14/11/2026 (người dùng yêu cầu: khi mới vào thì header nền trong suốt. Dùng JS để xử lý trong header):
+	   - Khi mới vào trang chủ có Hero, header có nền trong suốt đè lên ảnh Hero, chữ/icon/logo trắng.
+	   - JS lắng nghe cuộn: khi cuộn (> 20px) gỡ header--transparent để chuyển sang nền chuẩn (topbar màu xanh thương hiệu + header trắng).
+	   - Khi cuộn ngược lên đỉnh (<= 20px), khôi phục lại nền trong suốt.
+	*/
+	const isHomeWithHero = document.body.classList.contains('pc-home-v3');
+
+	const updateHeaderTransparency = () => {
+		if (!isHomeWithHero) return;
+		const currentY = window.scrollY || window.pageYOffset || 0;
+		const atTop = currentY <= 20;
+		header.classList.toggle('header--transparent', atTop);
+	};
+
 	const closeHeaderCategories = () => {
 		const trigger = header.querySelector('.js-menu-toggle');
 		if (!trigger || !trigger.classList.contains('active')) return;
@@ -382,6 +396,7 @@
 	};
 
 	const handleScroll = () => {
+		updateHeaderTransparency();
 		const sticky = desktopHeader.matches && window.scrollY > offsetStickyHeader;
 		if (header.classList.contains('hSticky') === sticky) return;
 		closeHeaderCategories();
@@ -397,8 +412,8 @@
 		header.classList.remove('hSticky');
 		header.style.minHeight = '';
 		const headerHeight = header.offsetHeight;
-		offsetStickyHeader = header.getBoundingClientRect().top + window.scrollY + headerHeight;
-		if (desktopHeader.matches) header.style.minHeight = headerHeight + 'px';
+		offsetStickyHeader = (header.getBoundingClientRect().top + window.scrollY + headerHeight) || headerHeight;
+		if (desktopHeader.matches && !isHomeWithHero) header.style.minHeight = headerHeight + 'px';
 		else closeHeaderCategories();
 		handleScroll();
 	};
