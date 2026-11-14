@@ -310,12 +310,15 @@
 {% endif %}
 {% if is_skinhealthy_content %}{% include 'skinhealthy_content_style' %}{% endif %}
 {%- comment -%} D03 (UI-STANDARD B.5): thư viện pc-* nạp SAU mọi CSS cũ để class pc-* thắng khi trùng thứ tự. {%- endcomment -%}
-{{ 'pc-ui.css' | asset_url | stylesheet_tag }}
 {%- comment -%} D05 (UI-STANDARD C.5): hành vi thư viện (popup, thông báo, slider, form) — JS thuần, defer, sau swiper.js. {%- endcomment -%}
 <script defer src="{{ 'pc-ui.js' | asset_url }}"></script>
 {{ content_for_header }}
 {%- comment -%} D06: Tailwind cũ dựng sẵn thay CDN — CUỐI <head> như <style> CDN cũ (xem chú thích đầu <head>). {%- endcomment -%}
 {{ 'pc-legacy-tw.css' | asset_url | stylesheet_tag }}
+{%- comment -%} 14/11/2026 (UI-0): pc-ui.css nạp SAU pc-legacy-tw.css. Bản Tailwind cũ quét cùng template nên sinh lại mọi class tiện ích
+  (grid-cols-1, text-sm tính theo rem…) — nạp sau thì đè class responsive / cỡ chữ px / màu cấu hình của pc-ui.css (lưới 2 cột trang danh mục
+  không lên được). pc-ui.css là bản Tailwind chính ⇒ phải đứng cuối. {%- endcomment -%}
+{{ 'pc-ui.css' | asset_url | stylesheet_tag }}
 </head>
 	<body class="{{ template | replace: '.', ' ' | truncatewords: 1, '' }} pc-site-v3{% if template contains 'index' and is_skinhealthy_content == false %} pc-home-v3{% endif %}{% if settings.mobile_header_sticky %} pc-mh-sticky{% endif %}{% if settings.mobile_bottom_nav_enable %} max-[991px]:!pb-[calc(68px+env(safe-area-inset-bottom,0px))]{% endif %}" id="{{ page_title | alias }}">
 		<div class="opacity_menu"></div>

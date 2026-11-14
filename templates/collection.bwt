@@ -14,107 +14,71 @@
 	<div class="container">
 		{%- comment -%}
 			2026-10-10 (thiết kế design/danh-muc/danh-muc-san-pham.png): banner (h1 = tên danh mục) → dải voucher riêng →
-			cột lọc | cột sản phẩm (bộ lọc nhanh → số SP + sắp xếp → lưới thẻ mới product_card_collection → phân trang).
+			cột lọc | cột sản phẩm (bộ lọc nhanh → số SP + sắp xếp → lưới thẻ ui_product_card → phân trang).
 		{%- endcomment -%}
 		{%- include 'collection_hero' -%}
 		{%- include 'collection_vouchers' -%}
-		<div class="row">
+		{%- comment -%} 14/11/2026: khung 2 cột + ngăn bộ lọc mobile viết bằng class Tailwind (UI-0). Móc JS (không CSS): layout-collection,
+		  left-content (+ .active do col.js bật ⇒ ngăn trượt vào), close-filters, #ajax-result, #afw-active-bar. {%- endcomment -%}
+		<div class="grid grid-cols-1 gap-6 min-[992px]:grid-cols-[280px_minmax(0,1fr)] min-[992px]:items-start">
 			{%if settings.aside_category_enable_bot%}
-			<div class="col-12">
-				<div class="col-list-cate">
-					{%include 'menu-col-cate'%}
-				</div>
+			<div class="col-list-cate min-w-0 min-[992px]:col-span-2">
+				{%include 'menu-col-cate'%}
 			</div>
 			{%endif%}
-			<aside class="dqdt-sidebar left-content  col-lg-3 col-12">
-				<div class="close-filters d-lg-none d-xl-none" title="Đóng bộ lọc">
-					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
-						<path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
-					</svg>
-				</div>
-				<div class="section-box-bg">
+			<aside class="left-content min-w-0 font-sans max-[991px]:fixed max-[991px]:inset-y-0 max-[991px]:left-0 max-[991px]:z-[99999] max-[991px]:w-[86%] max-[991px]:max-w-[360px] max-[991px]:-translate-x-full max-[991px]:overflow-y-auto max-[991px]:bg-white max-[991px]:p-4 max-[991px]:transition-transform max-[991px]:[&.active]:translate-x-0" aria-label="{{ settings.collection_filter_heading | default: 'Bộ lọc sản phẩm' | escape }}">
+				<button type="button" class="close-filters ml-auto flex h-[44px] w-[44px] cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-ink min-[992px]:hidden" aria-label="Đóng bộ lọc">{% include 'ui_icon', name: 'x', size: 24, label: '' %}</button>
+				{%- comment -%} section-box-bg / col-list-cate: lớp bọc CŨ giữ tạm cho ruột bộ lọc + menu danh mục (aside-filter, aside-cate, menu-col-cate chưa chuyển Tailwind). {%- endcomment -%}
+			<div class="section-box-bg min-[992px]:border min-[992px]:border-solid min-[992px]:border-line min-[992px]:bg-white min-[992px]:p-4 min-[992px]:rounded-2xl">
 					{%- include 'sidebar-collection' -%}
-				{%- comment -%} 2026-10-08: câu trang trí cuối cột lọc theo thiết kế (Admin › Trang danh mục › Câu trang trí cuối cột lọc). {%- endcomment -%}
-				{%- if settings.collection_sidebar_quote != blank -%}
-				<div class="pc-col-aside-quote" aria-hidden="true">
-					<svg class="pc-col-aside-quote__leaf" width="120" height="120" viewBox="0 0 180 200" fill="none" focusable="false"><path d="M20 196C52 150 78 104 98 30" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M98 30c-26 2-42 22-36 46 24-4 38-22 36-46Z" fill="currentColor" opacity=".55"/><path d="M86 66c-30-6-52 8-56 34 26 6 48-8 56-34Z" fill="currentColor" opacity=".45"/><path d="M74 104c28-16 54-10 66 14-26 12-52 6-66-14Z" fill="currentColor" opacity=".4"/><path d="M58 136c-28-4-48 12-50 36 26 2 44-12 50-36Z" fill="currentColor" opacity=".35"/></svg>
-					<p>{{ settings.collection_sidebar_quote }} <span>&#9825;</span></p>
-				</div>
-				{%- endif -%}
+					{%- comment -%} 2026-10-08: câu trang trí cuối cột lọc (Admin › Trang danh mục › Câu trang trí cuối cột lọc). {%- endcomment -%}
+					{%- if settings.collection_sidebar_quote != blank -%}
+					<p class="m-0 mt-6 border-0 border-t border-solid border-line pt-4 text-center text-sm italic text-ink-secondary" aria-hidden="true">{{ settings.collection_sidebar_quote }}</p>
+					{%- endif -%}
 				</div>
 			</aside>
-			<div class="block-collection col-lg-9 col-12">
-				<div class="pc-col-main">
-				{%- comment -%}
-					F02 (phase home-shopping-ux): ô danh mục con — trước bộ lọc/sort. 2026-10-10: h1 đã chuyển vào banner,
-					thẻ giới thiệu + mã giảm giá cũ thay bằng dải voucher dưới banner (collection_vouchers).
-				{%- endcomment -%}
+			<div class="min-w-0">
+				{%- comment -%} F02: ô danh mục con — trước bộ lọc / sắp xếp. 2026-10-10: h1 nằm ở banner; mã giảm giá ở dải voucher. {%- endcomment -%}
 				{%- include 'collection_subnav' -%}
 				{%- include 'collection_quick_filters' -%}
-
-				{%- comment -%} ─── "Bạn chọn" — Active filter bar (desktop + mobile) ─── {%- endcomment -%}
+		
+				{%- comment -%} "Đang lọc N tiêu chí" — col.js bật / tắt bằng thuộc tính hidden và dựng chip (.afw-chip). {%- endcomment -%}
 				<div id="afw-active-bar" class="afw-bar" hidden>
 					<div class="afw-bar__head">
 						<span class="afw-bar__count">Đang lọc <strong class="afw-bar__count-num">0</strong> tiêu chí</span>
-						<button type="button" class="afw-bar__clear" onclick="clearAllFiltered()">
-							<svg width="11" height="11" viewBox="0 0 365.696 365.696" aria-hidden="true"><path d="m243.1875 182.859375 113.132812-113.132813c12.5-12.5 12.5-32.765624 0-45.246093l-15.082031-15.082031c-12.503906-12.503907-32.769531-12.503907-45.25 0l-113.128906 113.128906-113.132813-113.152344c-12.5-12.5-32.765624-12.5-45.246093 0l-15.105469 15.082031c-12.5 12.503907-12.5 32.769531 0 45.25l113.152344 113.152344-113.128906 113.128906c-12.503907 12.503907-12.503907 32.769531 0 45.25l15.082031 15.082031c12.5 12.5 32.765625 12.5 45.246093 0l113.132813-113.132812 113.128906 113.132812c12.503907 12.5 32.769531 12.5 45.25 0l15.082031-15.082031c12.5-12.503906 12.5-32.769531 0-45.25zm0 0" fill="currentColor"/></svg>
-							Bỏ chọn hết
-						</button>
+						<button type="button" class="afw-bar__clear" onclick="clearAllFiltered()">{% include 'ui_icon', name: 'x', size: 20, label: '' %} Bỏ chọn hết</button>
 					</div>
 					<div class="afw-bar__chips" id="afw-active-chips"></div>
 				</div>
-
+		
 				<div id="ajax-result">
-				<div class="category-products products-view products-view-grid list_hover_pro">
-					<div class="filter-containers">
-						{% if collection.products.size > 0 %}
-						{%include 'collection-sortby'%}
-						{%endif%}
-					</div>
 					{% if collection.products.size > 0 %}
+					{%include 'collection-sortby'%}
 					{%include 'products-grid-item'%}
 					{% else %}
-					<div class="alert alert-warning alert-dismissible margin-top-15 margin-bottom-20 section" role="alert">
-						Sản phẩm đang được cập nhật.
-					</div>
+					<p class="m-0 border border-solid border-line bg-surface-soft p-4 text-sm text-ink-secondary rounded-xl" role="status">Sản phẩm đang được cập nhật.</p>
 					{% endif %}
 				</div>
+		
+				{%- comment -%} Mô tả danh mục (object collection.description / trang des_all_page) — dài quá 700 ký tự ⇒ thu gọn, nút «Xem thêm»
+				  bật bằng ô chọn ẩn + :has (không cần JS). {%- endcomment -%}
+				{%- if page_title == "Tất cả sản phẩm" -%}{%- assign pc_col_desc = pages[settings.des_all_page].content -%}
+				{%- else -%}{%- assign pc_col_desc = collection.description | split: '<h5>' | first -%}{%- endif -%}
+				{%- if pc_col_desc != blank -%}
+				<div class="group mt-8 font-sans">
+					{%- if pc_col_desc.size > 700 -%}
+					<div class="max-h-[240px] overflow-hidden text-sm leading-relaxed text-ink group-has-[:checked]:max-h-none">{{ pc_col_desc }}</div>
+					<label class="mt-3 inline-flex min-h-[44px] cursor-pointer items-center gap-1 text-sm font-semibold text-primary underline underline-offset-4">
+						<input type="checkbox" class="sr-only">
+						<span class="group-has-[:checked]:hidden">Xem thêm</span>
+						<span class="[display:none] group-has-[:checked]:[display:inline]">Thu gọn</span>
+					</label>
+					{%- else -%}
+					<div class="text-sm leading-relaxed text-ink">{{ pc_col_desc }}</div>
+					{%- endif -%}
 				</div>
-				</div>
-				<div class="col-box-content">
-					{%if page_title =="Tất cả sản phẩm"%}
-					<div class="descrip_coll {% if pages[settings.des_all_page].content.size > 700  %}content_coll{% endif %} add_apper">
-						{{ pages[settings.des_all_page].content }}
-						{% if pages[settings.des_all_page].content.size > 700  %}
-						<div class="bg_cl"></div>
-						{% endif %}
-					</div>
-					{% if pages[settings.des_all_page].content.size > 700  %}
-					<div class="view_mores">
-						<a class="one">Xem thêm <img width="90" height="90" src="{{'sortdown.png' | asset_url}}" alt="{{store.name}}"></a>
-						<a class="two active">Thu gọn <img width="90" height="90" src="{{'sortdown.png' | asset_url}}" alt="{{store.name}}"></a>
-					</div>
-					{% endif %}
-					{%else%}
-					{%if collection.description.size > 0%}
-					{% assign mycontent = collection.description | split:'<h5>' %}
-					<div class="descrip_coll {% if mycontent[0].size > 700  %}content_coll{% endif %} add_apper">
-						{{mycontent[0]}}
-						{% if mycontent[0].size > 700  %}
-						<div class="bg_cl"></div>
-						{% endif %}
-					</div>
-					{% if mycontent[0].size > 700   %}
-					<div class="view_mores">
-						<a class="one">Xem thêm <img width="90" height="90" src="{{'sortdown.png' | asset_url}}" alt="{{store.name}}"></a>
-						<a class="two active">Thu gọn <img width="90" height="90" src="{{'sortdown.png' | asset_url}}" alt="{{store.name}}"></a>
-					</div>
-					{% endif %}
-					{% endif %}
-					{% endif %}
-				</div>
+				{%- endif -%}
 			</div>
-
 		</div>
 	</div>
 
@@ -143,7 +107,7 @@
 	var colId = 0;
 	{%endif%}
 	var selectedViewData = "{% if template contains '.list' %}data_list{% else %}data{% endif %}";
-	/* 2026-10-10: tim yêu thích trên thẻ product_card_collection — dùng chung cookie danh sách yêu thích của theme
+	/* 2026-10-10: tim yêu thích trên thẻ ui_product_card — dùng chung cookie danh sách yêu thích của theme
 	   (sudes_wishlist_products, snippets/favorite_js.bwt); bắt sự kiện ở document để chạy cả với kết quả lọc AJAX. */
 	(function () {
 		var KEY = 'sudes_wishlist_products';
@@ -180,18 +144,6 @@
 		var ajax = document.getElementById('ajax-result');
 		if (ajax && window.MutationObserver) new MutationObserver(function () { paint(ajax); }).observe(ajax, { childList: true, subtree: true });
 	})();
-	$('.view_mores a.one').click(function() {
-		$(this).addClass('active');
-		$('.view_mores a.two').removeClass('active');
-		$('.content_coll').addClass('active');
-		$('.bg_cl').addClass('active');
-	});
-	$('.view_mores a.two').click(function() {
-		$(this).addClass('active');
-		$('.view_mores a.one').removeClass('active');
-		$('.content_coll').removeClass('active');
-		$('.bg_cl').removeClass('active');
-	});
 </script>
 <div class="ab-most-view-product-module ab-hide"></div>
 {% endif %}

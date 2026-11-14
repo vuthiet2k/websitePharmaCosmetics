@@ -2,7 +2,7 @@
 const colors = require('tailwindcss/colors');
 const v = (name) => `var(--pc-color-${name})`;
 module.exports = {
-  content: ['./layouts/**/*.bwt', './templates/**/*.bwt', './snippets/**/*.bwt', './assets/pc-ui.js'],
+  content: ['./layouts/**/*.bwt', './templates/**/*.bwt', './snippets/**/*.bwt', './assets/pc-ui.js', './assets/col.js.bwt'],
   corePlugins: { preflight: false, container: false }, // preflight bật lại ở đợt 12
   theme: {
     screens: { sm: '640px', md: '768px', lg: '1024px', xl: '1280px' },

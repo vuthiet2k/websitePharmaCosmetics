@@ -355,15 +355,16 @@ $(function () {
 	/* Mobile filter panel toggle */
 	$(document).on('click', '.btn-filter-mobile', function () {
 		if (!$('.filter-overlay').length) {
-			$('<div class="filter-overlay"></div>').appendTo('body');
+			/* 14/11/2026: lớp phủ + khoá cuộn bằng class Tailwind (assets/pc-ui.css) — không còn CSS .filter-overlay / body.filter-open */
+			$('<div class="filter-overlay fixed inset-0 z-[99998] bg-slate-900/50 [display:none] [&.active]:[display:block]"></div>').appendTo('body');
 		}
 		$('.layout-collection .left-content').toggleClass('active');
-		$('body').toggleClass('filter-open');
+		$('body').toggleClass('filter-open overflow-hidden');
 		$('.filter-overlay').toggleClass('active');
 	});
 	$(document).on('click', '.btn-close-filter, .close-filters, .filter-overlay', function () {
 		$('.layout-collection .left-content').removeClass('active');
-		$('body').removeClass('filter-open');
+		$('body').removeClass('filter-open overflow-hidden');
 		$('.filter-overlay').removeClass('active');
 	});
 	/* F03 (phase home-shopping-ux, 2026-09-20): sheet bộ lọc mobile đã khoá cuộn nền
@@ -372,7 +373,7 @@ $(function () {
 	$(document).on('keydown', function (e) {
 		if (e.key === 'Escape' && $('.layout-collection .left-content').hasClass('active')) {
 			$('.layout-collection .left-content').removeClass('active');
-			$('body').removeClass('filter-open');
+			$('body').removeClass('filter-open overflow-hidden');
 			$('.filter-overlay').removeClass('active');
 			$('.btn-filter-mobile').trigger('focus');
 		}

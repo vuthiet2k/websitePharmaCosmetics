@@ -1,25 +1,22 @@
-<div class="sort-cate clearfix">
-	{%- comment -%}
-	  2026-10-08 (thiết kế trang danh mục): hàng công cụ = số sản phẩm | ô chọn sắp xếp + nút lưới/danh sách;
-	  các nút sắp xếp nhanh (pill) ở hàng dưới. Ô chọn và pill gọi cùng sortby() trong col.js.
-	  Chế độ lưới/danh sách lưu theo từng trình duyệt (localStorage) qua thuộc tính html[data-pc-view],
-	  nằm ngoài #ajax-result nên không mất khi lọc AJAX.
-	{%- endcomment -%}
-	{%- assign _result_count = paginate.items | default: collection.products_count | default: search.results_count -%}
-	{%- comment -%} 2026-10-10: paginate.items = 0 (không phải nil) thì default không thay ⇒ lấy số SP của danh mục. {%- endcomment -%}
-	{%- if _result_count == 0 and collection.products_count > 0 -%}{%- assign _result_count = collection.products_count -%}{%- endif -%}
-	<div class="sort-cate-bar">
+{%- comment -%}
+  collection-sortby.bwt — hàng công cụ lưới sản phẩm: "Sản phẩm (N)" | ô sắp xếp + nút lưới / danh sách + nút mở bộ lọc (mobile).
+  14/11/2026: viết lại 100% class Tailwind (UI-0); bỏ hàng nút sắp xếp nhanh (đã ẩn bằng CSS từ 2026-10-10 — ô chọn là đủ).
+  Móc JS (không có CSS): sort-cate-select__input (đồng bộ ?sortby), pc-view-toggle__btn + html[data-pc-view] (lưới / danh sách,
+  nhớ theo trình duyệt), btn-filter-mobile (col.js mở ngăn bộ lọc), count-filter-val (số tiêu chí đang lọc), sort-count-num.
+  Có hàng "Bộ lọc nhanh" (.pc-quick-filters, đã có nút Bộ lọc riêng) thì ẩn nút Bộ lọc ở đây.
+{%- endcomment -%}
+{%- assign _result_count = paginate.items | default: collection.products_count | default: search.results_count -%}
+{%- comment -%} 2026-10-10: paginate.items = 0 (không phải nil) thì default không thay ⇒ lấy số SP của danh mục. {%- endcomment -%}
+{%- if _result_count == 0 and collection.products_count > 0 -%}{%- assign _result_count = collection.products_count -%}{%- endif -%}
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3 font-sans">
 	{%- if _result_count > 0 -%}
-	<div class="sort-cate-count">
-		{%- comment -%} 2026-10-10: "Sản phẩm (36)" theo thiết kế design/danh-muc/danh-muc-san-pham.png. {%- endcomment -%}
-		<span class="sort-cate-count__label">{{ settings.collection_products_label | default: 'Sản phẩm' | escape }}</span> (<span class="sort-count-num">{{ _result_count }}</span>)
-	</div>
+	<p class="m-0 text-lg font-bold text-ink">{{ settings.collection_products_label | default: 'Sản phẩm' | escape }} (<span class="sort-count-num">{{ _result_count }}</span>)</p>
 	{%- endif -%}
-	<div class="sort-cate-tools">
-		<label class="sort-cate-select">
+	<div class="ml-auto flex items-center gap-2">
+		<label class="m-0 !flex min-h-[44px] flex-nowrap items-center gap-2 whitespace-nowrap border border-solid border-line bg-white px-3 text-sm text-ink rounded-xl">
 			<span class="sr-only">Sắp xếp</span>
-			<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M3.5 2.5a.5.5 0 0 0-1 0v9.8l-1.15-1.15a.5.5 0 0 0-.7.7l2 2a.5.5 0 0 0 .7 0l2-2a.5.5 0 0 0-.7-.7L3.5 12.3V2.5ZM7 3.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5Zm0 3a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5Zm0 3a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5Z"/></svg>
-			<select class="sort-cate-select__input" onchange="sortby(this.value)" aria-label="Sắp xếp">
+			{% include 'ui_icon', name: 'arrow-down-up', size: 20, label: '' %}
+			<select class="sort-cate-select__input !h-[42px] !w-auto cursor-pointer border-0 bg-transparent text-sm text-ink outline-none" onchange="sortby(this.value)" aria-label="Sắp xếp">
 				<option value="default">Sắp xếp</option>
 				<option value="alpha-asc">Tên A-Z</option>
 				<option value="alpha-desc">Tên Z-A</option>
@@ -28,66 +25,27 @@
 				<option value="price-desc">Giá cao xuống thấp</option>
 			</select>
 		</label>
-		<div class="pc-view-toggle" role="group" aria-label="Kiểu hiển thị">
-			<button type="button" class="pc-view-toggle__btn" data-pc-view="grid" aria-pressed="true" title="Dạng lưới">
-				<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg>
-			</button>
-			<button type="button" class="pc-view-toggle__btn" data-pc-view="list" aria-pressed="false" title="Dạng danh sách">
-				<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><rect x="1" y="2" width="3" height="3" rx="1"/><rect x="6" y="2.5" width="9" height="2" rx="1"/><rect x="1" y="6.5" width="3" height="3" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="1" y="11" width="3" height="3" rx="1"/><rect x="6" y="11.5" width="9" height="2" rx="1"/></svg>
-			</button>
+		<div class="flex items-center gap-1" role="group" aria-label="Kiểu hiển thị">
+			<button type="button" class="pc-view-toggle__btn flex h-[44px] w-[44px] cursor-pointer items-center justify-center border border-solid border-line bg-white p-0 text-ink-secondary rounded-xl aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-white" data-pc-view="grid" aria-pressed="true" aria-label="Dạng lưới">{% include 'ui_icon', name: 'layout-grid', size: 20, label: '' %}</button>
+			<button type="button" class="pc-view-toggle__btn flex h-[44px] w-[44px] cursor-pointer items-center justify-center border border-solid border-line bg-white p-0 text-ink-secondary rounded-xl aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-white" data-pc-view="list" aria-pressed="false" aria-label="Dạng danh sách">{% include 'ui_icon', name: 'list', size: 20, label: '' %}</button>
 		</div>
 	</div>
-	</div>
-	<div class="sort-cate-right">
-		<h3>
-			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-sort-alpha-down" viewBox="0 0 16 16">
-				<path fill-rule="evenodd" d="M10.082 5.629 9.664 7H8.598l1.789-5.332h1.234L13.402 7h-1.12l-.419-1.371h-1.781zm1.57-.785L11 2.687h-.047l-.652 2.157h1.351z"/>
-				<path d="M12.96 14H9.028v-.691l2.579-3.72v-.054H9.098v-.867h3.785v.691l-2.567 3.72v.054h2.645V14zM4.5 2.5a.5.5 0 0 0-1 0v9.793l-1.146-1.147a.5.5 0 0 0-.708.708l2 1.999.007.007a.497.497 0 0 0 .7-.006l2-2a.5.5 0 0 0-.707-.708L4.5 12.293V2.5z"/>
-			</svg> Sắp xếp</h3>
-		<ul>
-			<li class="btn-quick-sort" data-sort="default">
-				<a href="javascript:;" onclick="sortby('default')" title="Mặc định"><i></i>Mặc định</a>
-			</li>
-			<li class="btn-quick-sort" data-sort="alpha-asc">
-				<a href="javascript:;" onclick="sortby('alpha-asc')" title="Tên A-Z"><i></i>Tên A-Z</a>
-			</li>
-			<li class="btn-quick-sort" data-sort="alpha-desc">
-				<a href="javascript:;" onclick="sortby('alpha-desc')" title="Tên Z-A"><i></i>Tên Z-A</a>
-			</li>
-			<li class="btn-quick-sort" data-sort="created-desc">
-				<a href="javascript:;" onclick="sortby('created-desc')" title="Hàng mới"><i></i>Hàng mới</a>
-			</li>
-			<li class="btn-quick-sort" data-sort="price-asc">
-				<a href="javascript:;" onclick="sortby('price-asc')" title="Giá thấp đến cao"><i></i>Giá thấp đến cao</a>
-			</li>
-			<li class="btn-quick-sort" data-sort="price-desc">
-				<a href="javascript:;" onclick="sortby('price-desc')" title="Giá cao xuống thấp"><i></i>Giá cao xuống thấp</a>
-			</li>
-		</ul>
-	</div>
-	{%if settings.aside_filter_enable%}
-	<div class="sudes-filter">
-		<a class="btn btn-outline btn-filter btn-filter-mobile" title="Bộ lọc">
-			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-funnel-fill" viewBox="0 0 16 16">
-				<path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z"/>
-			</svg>
-			Bộ lọc
-			<span class="count-filter-val"></span>
-		</a>
-	</div>
-	{%endif%}
+	{%- if settings.aside_filter_enable -%}
+	<button type="button" class="btn-filter-mobile inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 border-0 bg-primary-tint px-4 text-sm font-semibold text-primary rounded-full min-[992px]:hidden [.pc-quick-filters~*_&]:hidden [.pc-search-toolbar_&]:hidden" aria-label="Mở bộ lọc">
+		{% include 'ui_icon', name: 'sliders-horizontal', size: 20, label: '' %}
+		<span>Bộ lọc</span>
+		<span class="count-filter-val min-w-[20px] bg-sale px-1 text-center text-xs font-bold text-white rounded-full"></span>
+	</button>
+	{%- endif -%}
 </div>
 
 <script>
 (function () {
-	/* B2: Sync sort active state from URL */
+	/* Đồng bộ ô sắp xếp theo ?sortby trên URL */
 	var _sv = (function () {
 		var m = /[?&]sortby=([^&#]*)/.exec(window.location.href);
 		return m ? decodeURIComponent(m[1]) : 'default';
 	})();
-	document.querySelectorAll('.btn-quick-sort[data-sort]').forEach(function (li) {
-		li.classList.toggle('active', li.dataset.sort === _sv);
-	});
 	document.querySelectorAll('.sort-cate-select__input').forEach(function (sel) { sel.value = _sv; });
 
 	/* 2026-10-08: nút lưới/danh sách — trạng thái ở html[data-pc-view], nhớ theo trình duyệt. */
@@ -118,7 +76,7 @@
 })();
 
 function countFilterItem() {
-	/* Đọc count từ "Bạn chọn" bar mới (B13 refactor) — đếm chips trong #afw-active-chips */
+	/* Đếm chip trong thanh "Đang lọc" (#afw-active-chips) */
 	var n = $('#afw-active-chips .afw-chip').length;
 	var $badge = $('.count-filter-val');
 	if (n > 0) { $badge.text(n).show(); } else { $badge.text('').hide(); }

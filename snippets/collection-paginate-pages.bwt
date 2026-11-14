@@ -1,26 +1,29 @@
-<nav class="collection-paginate clearfix relative nav_pagi w_100">
-	<ul class="pagination clearfix">
-		{% if paginate.previous %}
-		<li class="page-item"><a class="page-link link-next-pre" onclick="doSearch({{ paginate.current_page | minus: 1 }})" href="javascript:;" title="{{ paginate.previous.title }}">&laquo;</a></li>
-		{% else %}  
-		<li class="page-item disabled"><a class="page-link" href="#">&laquo;</a></li>
-		{% endif %}
-		
-		{% for part in paginate.parts %}
-		{% if part.is_link %}
-		<li class="page-item"><a class="page-link" onclick="doSearch({{ part.title }})" href="javascript:;">{{ part.title }}</a></li>
-		{% else %}
-		{% if part.title == paginate.current_page %}
-		<li class="active page-item disabled"><a class="page-link" href="javascript:;" style="pointer-events:none">{{ part.title }}</a></li>
-		{% else %}
-		<li class="page-item"><a class="page-link" href="javascript:;">{{ part.title }}</a></li>
-		{% endif %}
-		{% endif %}
-		{% endfor %}                
-		{% if paginate.next %}
-		<li class="page-item"><a class="page-link link-next-pre" onclick="doSearch({{ paginate.current_page | plus: 1 }})" href="javascript:;" title="{{ paginate.next.title }}">&raquo;</a></li>
-		{% else %}
-		<li class="page-item disabled"><a class="page-link" href="#">&raquo;</a></li>
-		{% endif %}     
+{%- comment -%}
+  collection-paginate-pages.bwt — phân trang lưới sản phẩm (doSearch của col.js tải trang bằng AJAX).
+  14/11/2026: viết lại 100% class Tailwind (UI-0) — ô 44×44, trang hiện tại nền màu chính, nút hết trang mờ + không bấm được.
+{%- endcomment -%}
+{%- assign pc_pg_link = 'flex h-[44px] min-w-[44px] items-center justify-center border border-solid border-line bg-white px-2 text-sm font-semibold !text-ink no-underline rounded-xl hover:border-primary' -%}
+{%- assign pc_pg_off = 'flex h-[44px] min-w-[44px] cursor-not-allowed items-center justify-center border border-solid border-line bg-white px-2 text-sm font-semibold text-ink-secondary opacity-40 rounded-xl' -%}
+<nav class="mt-6 font-sans" aria-label="Phân trang">
+	<ul class="m-0 flex list-none flex-wrap items-center justify-center gap-2 p-0">
+		{%- if paginate.previous -%}
+		<li><a class="{{ pc_pg_link }}" onclick="doSearch({{ paginate.current_page | minus: 1 }})" href="javascript:;" aria-label="Trang trước">{% include 'ui_icon', name: 'chevron-left', size: 20, label: '' %}</a></li>
+		{%- else -%}
+		<li><span class="{{ pc_pg_off }}" aria-hidden="true">{% include 'ui_icon', name: 'chevron-left', size: 20, label: '' %}</span></li>
+		{%- endif -%}
+		{%- for part in paginate.parts -%}
+		{%- if part.is_link -%}
+		<li><a class="{{ pc_pg_link }}" onclick="doSearch({{ part.title }})" href="javascript:;">{{ part.title }}</a></li>
+		{%- elsif part.title == paginate.current_page -%}
+		<li><span class="flex h-[44px] min-w-[44px] items-center justify-center border border-solid border-primary bg-primary px-2 text-sm font-semibold text-white rounded-xl" aria-current="page">{{ part.title }}</span></li>
+		{%- else -%}
+		<li><span class="flex h-[44px] min-w-[24px] items-center justify-center text-sm text-ink-secondary">{{ part.title }}</span></li>
+		{%- endif -%}
+		{%- endfor -%}
+		{%- if paginate.next -%}
+		<li><a class="{{ pc_pg_link }}" onclick="doSearch({{ paginate.current_page | plus: 1 }})" href="javascript:;" aria-label="Trang sau">{% include 'ui_icon', name: 'chevron-right', size: 20, label: '' %}</a></li>
+		{%- else -%}
+		<li><span class="{{ pc_pg_off }}" aria-hidden="true">{% include 'ui_icon', name: 'chevron-right', size: 20, label: '' %}</span></li>
+		{%- endif -%}
 	</ul>
 </nav>
