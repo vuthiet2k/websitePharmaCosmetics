@@ -1,169 +1,175 @@
 {%- comment -%}
-  Chân trang (mọi trang). 03/11/2026 (chủ dự án: trang chủ theo Figma "travel" node 5:2 — design/home-v4/full.png):
-  nền xanh đậm nhất, viền trên xanh deco; hàng trên = cột thương hiệu (tên cửa hàng · giới thiệu content_info_foo · địa chỉ
-  store_address · điện thoại · email) + 3 cột: Menu footer_custom_menu (footer_custom_title), Menu footer_support_menu
-  (footer_support_title, thêm các link footer_policy_menu chưa trùng), cột "Hỗ trợ" (footer_help_title: hotline, Zalo, mạng xã hội
-  footer_social_*); dải giữa = thanh toán (logo payment_N.png các cổng đang bật, alt footer_payment_N_alt) · logo Bộ Công Thương · bản quyền.
-  DẢI PHÁP LÝ (T-126 / T-138 / T-141, NĐ 52/2013) GIỮ NGUYÊN CÂU CHỮ — chỉ đổi khung/màu (UI-STANDARD A.6).
-  Dòng "Cung cấp bởi Sapo" giữ trong mã nguồn (quy định theme Sapo), ẩn khỏi giao diện. CSS: ui-src/css/components.css mục 14.12.
-  04/11/2026 (chủ dự án, mobile < 1024px — CSS mục 14.22): 3 cột link thành accordion <details data-pc-acc open> (desktop luôn mở;
-  script cuối file thu gọn sẵn ở mobile, dùng chung cho "Danh mục nhanh"); DẢI PHÁP LÝ ẩn ở mobile theo yêu cầu chủ dự án ("ẩn
-  display none của HỘ KINH DOANH … Mã số thuế …") — câu chữ giữ nguyên, desktop vẫn hiện. Mobile chỉ ẩn các dòng
-  .footer-legal__line — nút "Hiện lại nút liên hệ nhanh" trong cùng khối vẫn dùng được.
-  04/11/2026 (chủ dự án: footer theo ảnh "Footer_ Cửa hàng.png" — mọi màn): dải pháp lý (kèm nút "Hiện lại nút liên hệ nhanh") chỉ
-  dựng khi bật footer_legal_enable (mặc định tắt — câu chữ giữ nguyên để bật lại); nhãn "Thanh toán:" chỉ hiện khi footer_payment_title
-  có chữ (đang để trống); dòng "Cung cấp bởi Sapo" display none (trước: visibility hidden vẫn chiếm chỗ ⇒ bản quyền lệch lề).
+  Chân trang (mọi trang).
+  100% utility class Tailwind chuẩn, không class CSS tự chế, không lồng selector.
+  Màu nền bám theo cấu hình theme (bg-primary), chữ trắng.
 {%- endcomment -%}
 {%- assign copyright = settings.footer_copyright -%}
 {%- assign btt = settings.backtotop_enable -%}
 {%- assign _ft_addr = settings.store_address -%}
 {%- if _ft_addr == blank -%}
-{%- capture _ft_addr -%}{%if store.address!='' %}{{ store.address }}, {%endif%}{%if store.province!='' %}{{store.province}}, {%endif%}{%if store.district!='' %}{{store.district}}, {%endif%}{%if store.country!='' %}{{store.country}}{%endif%}{%- endcapture -%}
+  {%- capture _ft_addr -%}{%if store.address!='' %}{{ store.address }}, {%endif%}{%if store.province!='' %}{{store.province}}, {%endif%}{%if store.district!='' %}{{store.district}}, {%endif%}{%if store.country!='' %}{{store.country}}{%endif%}{%- endcapture -%}
 {%- endif -%}
 {%- assign _ft_phone = settings.store_phone | default: store.phone_number -%}
 {%- assign _ft_email = settings.store_email | default: store.customer_email -%}
-<footer class="pc-h4 pc-h4-foot footer">
-  <div class="pc-h4-wrap">
-    <div class="pc-h4-foot__top">
+<footer class="footer bg-primary text-white py-10 lg:py-14">
+  <div class="container">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
       <div>
-        {%- comment -%} 04/11/2026 (chủ dự án: "footer để logo thay vì text"): logo theo đúng mô tả trường cấu hình — bật
-          footer_logo_use_image ⇒ ảnh "Logo chân trang" tải lên (logo_footer.png, nền trong suốt chữ sáng); tắt (mặc định) ⇒ logo gốc
-          assets/PharmaCosmetics.svg chuyển trắng bằng CSS (.pc-h4-foot__logo--root). Tên cửa hàng = alt (giữ tên cho SEO / trình đọc). {%- endcomment -%}
         {%- assign _ft_name = settings.store_name | default: store.name -%}
-        <a class="pc-h4-foot__brand" href="/" title="{{ _ft_name | escape }}">
+        <a class="inline-flex items-center mb-4 text-white no-underline" href="/" title="{{ _ft_name | escape }}">
           {%- if settings.footer_logo_use_image == true or settings.footer_logo_use_image == 'true' -%}
-          <img class="pc-h4-foot__logo" src="{{ 'logo_footer.png' | asset_url }}" width="270" height="56" alt="{{ _ft_name | escape }}" loading="lazy">
+            <img class="block h-auto w-48 lg:w-56" src="{{ 'logo_footer.png' | asset_url }}" width="270" height="56" alt="{{ _ft_name | escape }}" loading="lazy">
           {%- else -%}
-          <img class="pc-h4-foot__logo pc-h4-foot__logo--root" src="{{ 'PharmaCosmetics.svg' | asset_url }}" width="341" height="70" alt="{{ _ft_name | escape }}" loading="lazy">
+            <img class="block h-auto w-48 lg:w-56 brightness-0 invert" src="{{ 'PharmaCosmetics.svg' | asset_url }}" width="341" height="70" alt="{{ _ft_name | escape }}" loading="lazy">
           {%- endif -%}
         </a>
-        {%- unless settings.enable_info_foo == false or settings.enable_info_foo == 'false' -%}{%- if settings.content_info_foo != blank -%}
-        <div class="pc-h4-foot__info">{{ settings.content_info_foo }}</div>
-        {%- endif -%}{%- endunless -%}
+        {%- unless settings.enable_info_foo == false or settings.enable_info_foo == 'false' -%}
+          {%- if settings.content_info_foo != blank -%}
+            <div class="text-sm leading-relaxed text-white/90 mb-3">{{ settings.content_info_foo }}</div>
+          {%- endif -%}
+        {%- endunless -%}
         {%- if _ft_addr != blank -%}
-        <p class="pc-h4-foot__line">{%- assign _ft_addr_lines = _ft_addr | newline_to_br | split: '<br />' -%}{%- assign _ft_first = true -%}{%- for _l in _ft_addr_lines -%}{%- assign _l = _l | strip -%}{%- if _l != blank -%}{%- unless _ft_first -%}<br>{%- endunless -%}{{ _l }}{%- assign _ft_first = false -%}{%- endif -%}{%- endfor -%}</p>
+          <p class="m-0 mb-2 text-sm leading-relaxed text-white/90">
+            {%- assign _ft_addr_lines = _ft_addr | newline_to_br | split: '<br />' -%}
+            {%- assign _ft_first = true -%}
+            {%- for _l in _ft_addr_lines -%}
+              {%- assign _l = _l | strip -%}
+              {%- if _l != blank -%}
+                {%- unless _ft_first -%}<br>{%- endunless -%}{{ _l }}
+                {%- assign _ft_first = false -%}
+              {%- endif -%}
+            {%- endfor -%}
+          </p>
         {%- endif -%}
         {%- if _ft_phone != blank or _ft_email != blank -%}
-        <p class="pc-h4-foot__line">
-          {%- if _ft_phone != blank -%}<a href="tel:{{ _ft_phone | remove: ' ' | remove: '.' }}">{{ _ft_phone }}</a>{%- endif -%}
-          {%- if _ft_phone != blank and _ft_email != blank %} · {% endif -%}
-          {%- if _ft_email != blank -%}<a href="mailto:{{ _ft_email }}">{{ _ft_email }}</a>{%- endif -%}
-        </p>
+          <p class="m-0 text-sm leading-relaxed text-white/90">
+            {%- if _ft_phone != blank -%}<a class="text-white hover:underline no-underline" href="tel:{{ _ft_phone | remove: ' ' | remove: '.' }}">{{ _ft_phone }}</a>{%- endif -%}
+            {%- if _ft_phone != blank and _ft_email != blank %} · {% endif -%}
+            {%- if _ft_email != blank -%}<a class="text-white hover:underline no-underline" href="mailto:{{ _ft_email }}">{{ _ft_email }}</a>{%- endif -%}
+          </p>
         {%- endif -%}
       </div>
+
       {%- assign _fc_ll = linklists[settings.footer_custom_menu] -%}
       {%- if settings.footer_custom_menu != blank and _fc_ll.links.size > 0 -%}
-      <details class="pc-h4-acc" data-pc-acc open>
-        <summary class="pc-h4-acc__sum"><h2 class="pc-h4-foot__h">{{ settings.footer_custom_title | default: _fc_ll.title | escape }}</h2><span class="pc-h4-acc__ic" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down' %}</span></summary>
-        <ul class="pc-h4-foot__list">{%- for link in _fc_ll.links -%}<li><a href="{{ link.url }}">{{ link.title }}</a></li>{%- endfor -%}</ul>
-      </details>
+        <div class="border-b border-white/10 pb-4 lg:border-none lg:pb-0">
+          <h4 class="m-0 text-sm font-bold uppercase tracking-wider text-white mb-4">{{ settings.footer_custom_title | default: _fc_ll.title | escape }}</h4>
+          <ul class="m-0 p-0 list-none flex flex-col gap-2">
+            {%- for link in _fc_ll.links -%}
+              <li><a class="text-sm text-white/85 hover:text-white hover:underline no-underline" href="{{ link.url }}">{{ link.title }}</a></li>
+            {%- endfor -%}
+          </ul>
+        </div>
       {%- endif -%}
+
       {%- assign _fs_ll = linklists[settings.footer_support_menu] -%}
       {%- assign _fp_ll = linklists[settings.footer_policy_menu] -%}
       {%- if _fs_ll.links.size > 0 or _fp_ll.links.size > 0 -%}
-      <details class="pc-h4-acc" data-pc-acc open>
-        <summary class="pc-h4-acc__sum"><h2 class="pc-h4-foot__h">{{ settings.footer_support_title | default: settings.footer_policy_title | default: 'Chính sách' | escape }}</h2><span class="pc-h4-acc__ic" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down' %}</span></summary>
-        <ul class="pc-h4-foot__list">
-          {%- assign _fs_urls = '|' -%}
-          {%- for link in _fs_ll.links -%}<li><a href="{{ link.url }}">{{ link.title }}</a></li>{%- assign _fs_urls = _fs_urls | append: link.url | append: '|' -%}{%- endfor -%}
-          {%- for link in _fp_ll.links -%}{%- capture _fs_mark -%}|{{ link.url }}|{%- endcapture -%}{%- unless _fs_urls contains _fs_mark -%}<li><a href="{{ link.url }}">{{ link.title }}</a></li>{%- endunless -%}{%- endfor -%}
-        </ul>
-      </details>
+        <div class="border-b border-white/10 pb-4 lg:border-none lg:pb-0">
+          <h4 class="m-0 text-sm font-bold uppercase tracking-wider text-white mb-4">{{ settings.footer_support_title | default: settings.footer_policy_title | default: 'Chính sách' | escape }}</h4>
+          <ul class="m-0 p-0 list-none flex flex-col gap-2">
+            {%- assign _fs_urls = '|' -%}
+            {%- for link in _fs_ll.links -%}
+              <li><a class="text-sm text-white/85 hover:text-white hover:underline no-underline" href="{{ link.url }}">{{ link.title }}</a></li>
+              {%- assign _fs_urls = _fs_urls | append: link.url | append: '|' -%}
+            {%- endfor -%}
+            {%- for link in _fp_ll.links -%}
+              {%- capture _fs_mark -%}|{{ link.url }}|{%- endcapture -%}
+              {%- unless _fs_urls contains _fs_mark -%}
+                <li><a class="text-sm text-white/85 hover:text-white hover:underline no-underline" href="{{ link.url }}">{{ link.title }}</a></li>
+              {%- endunless -%}
+            {%- endfor -%}
+          </ul>
+        </div>
       {%- endif -%}
-      <details class="pc-h4-acc" data-pc-acc open>
-        <summary class="pc-h4-acc__sum"><h2 class="pc-h4-foot__h">{{ settings.footer_help_title | default: 'Hỗ trợ' | escape }}</h2><span class="pc-h4-acc__ic" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down' %}</span></summary>
-        <ul class="pc-h4-foot__list">
+
+      <div>
+        <h4 class="m-0 text-sm font-bold uppercase tracking-wider text-white mb-4">{{ settings.footer_help_title | default: 'Hỗ trợ' | escape }}</h4>
+        <ul class="m-0 p-0 list-none flex flex-col gap-2">
           {%- assign _fh_phone = _ft_phone -%}
-          {%- if _fh_phone != blank -%}<li>{{ settings.footer_help_hotline_label | default: 'Hotline' | escape }}: <a href="tel:{{ _fh_phone | remove: ' ' | remove: '.' }}">{{ _fh_phone }}</a></li>{%- endif -%}
-          {%- if settings.contact_zalo != blank -%}<li><a href="https://zalo.me/{{ settings.contact_zalo | remove: ' ' | remove: '.' }}" target="_blank" rel="noopener">{{ settings.footer_help_zalo_label | default: 'Tư vấn qua Zalo' | escape }}</a></li>{%- endif -%}
+          {%- if _fh_phone != blank -%}
+            <li class="text-sm text-white/85">
+              {{ settings.footer_help_hotline_label | default: 'Hotline' | escape }}: <a class="font-bold text-white hover:underline no-underline" href="tel:{{ _fh_phone | remove: ' ' | remove: '.' }}">{{ _fh_phone }}</a>
+            </li>
+          {%- endif -%}
+          {%- if settings.contact_zalo != blank -%}
+            <li class="text-sm text-white/85">
+              <a class="text-white hover:underline no-underline" href="https://zalo.me/{{ settings.contact_zalo | remove: ' ' | remove: '.' }}" target="_blank" rel="noopener">{{ settings.footer_help_zalo_label | default: 'Tư vấn qua Zalo' | escape }}</a>
+            </li>
+          {%- endif -%}
           {%- if settings.footer_social_enable -%}
-          {%- comment -%} 04/11/2026 (chủ dự án: "Facebook · Instagram · WhatsApp dùng logo đang có"): logo màu sẵn trong assets/
-            (facebook_2.svg, instagram_1.svg, tiktok.svg, whatsapp.svg, shopee.svg, lazada.svg) thay chữ; tên kênh ở aria-label. {%- endcomment -%}
-          {%- capture _fh_social -%}
-            {%- if settings.footer_social_fb != blank -%}<a href="{{ settings.footer_social_fb }}" target="_blank" rel="noopener" aria-label="Facebook"><img src="{{ 'facebook_2.svg' | asset_url }}" alt="" width="32" height="32" loading="lazy"></a>{%- endif -%}
-            {%- if settings.footer_social_insta != blank -%}<a href="{{ settings.footer_social_insta }}" target="_blank" rel="noopener" aria-label="Instagram"><img src="{{ 'instagram_1.svg' | asset_url }}" alt="" width="32" height="32" loading="lazy"></a>{%- endif -%}
-            {%- if settings.footer_social_tiktok != blank -%}<a href="{{ settings.footer_social_tiktok }}" target="_blank" rel="noopener" aria-label="TikTok"><img src="{{ 'tiktok.svg' | asset_url }}" alt="" width="32" height="32" loading="lazy"></a>{%- endif -%}
-            {%- if settings.footer_social_whatsapp != blank -%}<a href="{{ settings.footer_social_whatsapp }}" target="_blank" rel="noopener" aria-label="WhatsApp"><img src="{{ 'whatsapp.svg' | asset_url }}" alt="" width="32" height="32" loading="lazy"></a>{%- endif -%}
-            {%- if settings.footer_social_shopee != blank -%}<a href="{{ settings.footer_social_shopee }}" target="_blank" rel="noopener" aria-label="Shopee"><img src="{{ 'shopee.svg' | asset_url }}" alt="" width="32" height="32" loading="lazy"></a>{%- endif -%}
-            {%- if settings.footer_social_lazada != blank -%}<a href="{{ settings.footer_social_lazada }}" target="_blank" rel="noopener" aria-label="Lazada"><img src="{{ 'lazada.svg' | asset_url }}" alt="" width="32" height="32" loading="lazy"></a>{%- endif -%}
-          {%- endcapture -%}
-          {%- if _fh_social != blank -%}<li class="pc-h4-foot__social">{{ _fh_social }}</li>{%- endif -%}
+            {%- capture _fh_social -%}
+              {%- if settings.footer_social_fb != blank -%}<a class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors" href="{{ settings.footer_social_fb }}" target="_blank" rel="noopener" aria-label="Facebook"><img src="{{ 'facebook_2.svg' | asset_url }}" alt="" width="20" height="20" loading="lazy"></a>{%- endif -%}
+              {%- if settings.footer_social_insta != blank -%}<a class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors" href="{{ settings.footer_social_insta }}" target="_blank" rel="noopener" aria-label="Instagram"><img src="{{ 'instagram_1.svg' | asset_url }}" alt="" width="20" height="20" loading="lazy"></a>{%- endif -%}
+              {%- if settings.footer_social_tiktok != blank -%}<a class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors" href="{{ settings.footer_social_tiktok }}" target="_blank" rel="noopener" aria-label="TikTok"><img src="{{ 'tiktok.svg' | asset_url }}" alt="" width="20" height="20" loading="lazy"></a>{%- endif -%}
+              {%- if settings.footer_social_whatsapp != blank -%}<a class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors" href="{{ settings.footer_social_whatsapp }}" target="_blank" rel="noopener" aria-label="WhatsApp"><img src="{{ 'whatsapp.svg' | asset_url }}" alt="" width="20" height="20" loading="lazy"></a>{%- endif -%}
+              {%- if settings.footer_social_shopee != blank -%}<a class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors" href="{{ settings.footer_social_shopee }}" target="_blank" rel="noopener" aria-label="Shopee"><img src="{{ 'shopee.svg' | asset_url }}" alt="" width="20" height="20" loading="lazy"></a>{%- endif -%}
+              {%- if settings.footer_social_lazada != blank -%}<a class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors" href="{{ settings.footer_social_lazada }}" target="_blank" rel="noopener" aria-label="Lazada"><img src="{{ 'lazada.svg' | asset_url }}" alt="" width="20" height="20" loading="lazy"></a>{%- endif -%}
+            {%- endcapture -%}
+            {%- if _fh_social != blank -%}<li class="flex flex-wrap items-center gap-2 mt-2">{{ _fh_social }}</li>{%- endif -%}
           {%- endif -%}
         </ul>
-      </details>
+      </div>
     </div>
-    <div class="pc-h4-foot__bar">
+
+    <div class="border-t border-solid border-white/10 mt-8 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/80">
       {%- unless settings.footer_payment_enable == false or settings.footer_payment_enable == 'false' -%}
-      <p class="pc-h4-foot__pay">{%- if settings.footer_payment_title != blank -%}<span>{{ settings.footer_payment_title | escape }}:</span>{%- endif -%}
-        {%- comment -%} Logo thật assets/payment_1..5.png (ô ảnh Admin "Icon N — logo" ghi đè đúng file), alt = footer_payment_N_alt. {%- endcomment -%}
-        {%- for i in (1..5) -%}{%- capture enable -%}footer_payment_{{ i }}_enable{%- endcapture -%}{%- capture alt -%}footer_payment_{{ i }}_alt{%- endcapture -%}{%- capture logo -%}payment_{{ i }}.png{%- endcapture -%}
-        {%- unless settings[enable] == false or settings[enable] == 'false' -%}<img src="{{ logo | asset_url }}" alt="{{ settings[alt] | default: 'Thanh toán' | escape }}" width="63" height="29" loading="lazy">{%- endunless -%}
-        {%- endfor -%}
-      </p>
-      {%- else -%}<span></span>{%- endunless -%}
-      {%- comment -%} Logo "Đã thông báo Bộ Công Thương" chỉ hiện khi admin dán link thật (online.gov.vn riêng từng DN); chưa tải footer_bct_logo ⇒ ảnh chính thức online.gov.vn. {%- endcomment -%}
+        <div class="flex flex-wrap items-center gap-2">
+          {%- if settings.footer_payment_title != blank -%}<span class="font-medium text-white/90">{{ settings.footer_payment_title | escape }}:</span>{%- endif -%}
+          {%- for i in (1..5) -%}
+            {%- capture enable -%}footer_payment_{{ i }}_enable{%- endcapture -%}
+            {%- capture alt -%}footer_payment_{{ i }}_alt{%- endcapture -%}
+            {%- capture logo -%}payment_{{ i }}.png{%- endcapture -%}
+            {%- unless settings[enable] == false or settings[enable] == 'false' -%}
+              <img class="h-6 w-auto rounded bg-white px-1.5 py-0.5 object-contain" src="{{ logo | asset_url }}" alt="{{ settings[alt] | default: 'Thanh toán' | escape }}" width="63" height="29" loading="lazy">
+            {%- endunless -%}
+          {%- endfor -%}
+        </div>
+      {%- else -%}<div></div>{%- endunless -%}
+
       {%- if settings.footer_bct_url != blank -%}
-      {%- if settings.footer_bct_logo != blank -%}{%- assign pc_bct_logo = settings.footer_bct_logo | img_url: 'large' -%}{%- else -%}{%- assign pc_bct_logo = 'https://fileserver.online.gov.vn/uploads/Resources/iconxacnhan/DaThongBao.png' -%}{%- endif -%}
-      <a href="{{ settings.footer_bct_url | escape }}" target="_blank" rel="noopener nofollow" title="Đã thông báo Bộ Công Thương"><img src="{{ pc_bct_logo }}" alt="Đã thông báo Bộ Công Thương" width="130" height="49" loading="lazy"></a>
+        {%- if settings.footer_bct_logo != blank -%}{%- assign pc_bct_logo = settings.footer_bct_logo | img_url: 'large' -%}{%- else -%}{%- assign pc_bct_logo = 'https://fileserver.online.gov.vn/uploads/Resources/iconxacnhan/DaThongBao.png' -%}{%- endif -%}
+        <a href="{{ settings.footer_bct_url | escape }}" target="_blank" rel="noopener nofollow" title="Đã thông báo Bộ Công Thương">
+          <img src="{{ pc_bct_logo }}" alt="Đã thông báo Bộ Công Thương" width="130" height="49" loading="lazy">
+        </a>
       {%- endif -%}
-      <p class="pc-h4-foot__copy" id="copyright">
+
+      <p class="m-0 text-center md:text-right" id="copyright">
         {% if copyright != blank %}{{ copyright }}{% else %}© Bản quyền thuộc về <b>Pharma Cosmetics</b>{% endif %}
-        <span class="pc-h4-foot__powered">Cung cấp bởi <a href="https://www.sapo.vn/" target="_blank" rel="nofollow noopener">Sapo</a></span>
+        <span class="hidden">Cung cấp bởi <a href="https://www.sapo.vn/" target="_blank" rel="nofollow noopener">Sapo</a></span>
       </p>
     </div>
-    {%- comment -%}
-      T-126 (2026-09-12) — Nghị định 52/2013/NĐ-CP (điều 29) buộc website TMĐT phải công bố tên thương nhân,
-      địa chỉ trụ sở, MST/mã số doanh nghiệp, ngày cấp + nơi cấp và người đại diện. Toàn bộ giá trị lấy từ
-      schema-admin — CỐ Ý không hardcode số MST/GPKD; field chưa nhập hiện rõ là ô cần điền, KHÔNG bịa số.
-      T-138: HỘ KINH DOANH; địa chỉ pháp lý dùng field riêng footer_legal_address (khác địa chỉ phòng trị liệu).
-      T-141: dải pháp lý không lặp điện thoại/email (đã có ở dòng liên hệ phía trên).
-    {%- endcomment -%}
+
     {%- if settings.footer_legal_enable == true or settings.footer_legal_enable == 'true' -%}
-    <div class="pc-h4-foot__legal footer-legal">
-      <p class="footer-legal__line">
-        <b>{{ settings.footer_legal_company | default: settings.store_name | default: store.name }}</b>
-        {%- assign _legal_addr = settings.footer_legal_address | default: settings.store_address -%}
-        {%- if _legal_addr != blank %}
-        &bull; Địa chỉ: {{ _legal_addr | strip_newlines | remove: 'Phòng trị liệu da chuyên nghiệp 1:1 (Skin Health Beauty)' | remove: 'Địa chỉ:' | strip }}
+      <div class="border-t border-solid border-white/10 mt-4 pt-4 text-xs leading-relaxed text-white/70 footer-legal">
+        <p class="m-0 mb-1">
+          <b class="font-semibold text-white/90">{{ settings.footer_legal_company | default: settings.store_name | default: store.name }}</b>
+          {%- assign _legal_addr = settings.footer_legal_address | default: settings.store_address -%}
+          {%- if _legal_addr != blank %}
+            &bull; Địa chỉ: {{ _legal_addr | strip_newlines | remove: 'Phòng trị liệu da chuyên nghiệp 1:1 (Skin Health Beauty)' | remove: 'Địa chỉ:' | strip }}
+          {%- endif %}
+        </p>
+        <p class="m-0 mb-1">
+          Mã số thuế / Mã số doanh nghiệp:
+          <b class="font-semibold text-white/90">{{ settings.footer_legal_tax_code | default: '(chưa cập nhật — nhập tại Sapo Admin › Cấu hình giao diện)' }}</b>
+          {%- if settings.footer_legal_license_date != blank %}
+            &bull; Ngày cấp: {{ settings.footer_legal_license_date }}
+          {%- endif %}
+          {%- if settings.footer_legal_license_issuer != blank %}
+            &bull; Nơi cấp: {{ settings.footer_legal_license_issuer }}
+          {%- endif %}
+        </p>
+        {%- if settings.footer_legal_representative != blank %}
+          <p class="m-0">Người đại diện pháp luật: {{ settings.footer_legal_representative }}</p>
         {%- endif %}
-      </p>
-      <p class="footer-legal__line">
-        Mã số thuế / Mã số doanh nghiệp:
-        <b>{{ settings.footer_legal_tax_code | default: '(chưa cập nhật — nhập tại Sapo Admin › Cấu hình giao diện)' }}</b>
-        {%- if settings.footer_legal_license_date != blank %}
-        &bull; Ngày cấp: {{ settings.footer_legal_license_date }}
-        {%- endif %}
-        {%- if settings.footer_legal_license_issuer != blank %}
-        &bull; Nơi cấp: {{ settings.footer_legal_license_issuer }}
-        {%- endif %}
-      </p>
-      {%- if settings.footer_legal_representative != blank %}
-      <p class="footer-legal__line">Người đại diện pháp luật: {{ settings.footer_legal_representative }}</p>
-      {%- endif %}
-      {%- if settings.contact_us_enable -%}
-      {%- comment -%} D02 (phase home-shopping-ux): mở lại cụm liên hệ nổi khi người dùng đã ẩn (snippets/support.bwt). {%- endcomment -%}
-      <p class="mt-2"><button type="button" class="footer-contact-reopen" data-contact-show>Hiện lại nút liên hệ nhanh</button></p>
-      {%- endif -%}
-    </div>
+        {%- if settings.contact_us_enable -%}
+          <p class="mt-2"><button type="button" class="footer-contact-reopen inline-flex items-center text-xs text-white underline cursor-pointer bg-transparent border-0 p-0" data-contact-show>Hiện lại nút liên hệ nhanh</button></p>
+        {%- endif -%}
+      </div>
     {%- endif -%}
   </div>
-<script>
-/* 04/11/2026: accordion Danh mục nhanh + chân trang — < 1024px thu gọn sẵn, ≥ 1024px luôn mở (tiêu đề không bấm, không nhận Tab).
-   09/11/2026 (kế hoạch mobile TASK-06): bỏ gán tabindex="-1" lên <summary> ở desktop — Chrome báo «Interactive element inside of a
-   <summary>» (3 lỗi/trang ở /collections/all, trang SP). Không cần: ≥ 1024px summary đã display:contents (ui-src/css/components.css
-   .pc-h4-acc__sum) ⇒ trình duyệt tự bỏ qua khi Tab. */
-(function () {
-  var mq = window.matchMedia('(max-width: 1023.98px)');
-  function apply() {
-    Array.prototype.forEach.call(document.querySelectorAll('details[data-pc-acc]'), function (d) {
-      d.open = !mq.matches;
-    });
-  }
-  apply();
-  if (mq.addEventListener) mq.addEventListener('change', apply); else if (mq.addListener) mq.addListener(apply);
-})();
-</script>
+
   {% if btt %}
-  <a href="#" class="backtop" title="Lên đầu trang"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-up', size: 'em' %}</i></a>
+    <a href="#" class="backtop" title="Lên đầu trang"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-up', size: 'em' %}</i></a>
   {% endif %}
 </footer>
