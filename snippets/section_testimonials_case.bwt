@@ -1,49 +1,91 @@
 {%- comment -%}
-  section_testimonials_case.bwt (04/11/2026) — dựng 1 tab + 1 panel case cho snippets/section_testimonials (dùng chung cho nguồn
-  bài blog ghim và nguồn cấu hình tay home_testi_N_*). Đầu vào (biến toàn cục do section_testimonials gán):
-  t_key (id duy nhất), t_title, t_concern, t_tab_who, t_img1/t_img2 (URL ảnh, trống ⇒ ô nền nhạt), t_who, t_initial,
-  t_steps (các bước nối bằng testi_step_sep; trống ⇒ t_desc), t_desc, t_products, t_duration, t_url (trống ⇒ không link).
-  Cộng dồn vào testi_tabs / testi_panels, tăng testi_n. Dòng nào trống ⇒ ẩn (không bịa dữ liệu).
-  04/11/2026 (mobile, CSS 14.19): .pc-h4-case__hd (tiêu đề + dòng khách + nhãn sản phẩm t_products) đưa lên đầu thẻ bằng order;
-  nhãn ảnh sau thêm t_duration; tóm tắt t_desc (.pc-h4-case__sum) chỉ hiện mobile — desktop vẫn dùng bảng dl.
-  09/11/2026 (chủ dự án: «bệnh án dàn trải»): desktop ≥ 1024 (CSS 14.8) khối 6:6 — thẻ ca (cột phải) dạng card: 2 ảnh TRƯỚC / SAU riêng
-  ở trên (chủ dự án: KHÔNG dùng thanh kéo so sánh), dưới là tiêu đề + dòng khách + dải nhãn mảnh (thời gian, sản phẩm — nhãn chữ
-  cho trình đọc màn) + tóm tắt 2 dòng + 1 hàng chân: <details> «Hành trình» (bảng chi tiết) bên trái, «Xem chi tiết ca» bên phải.
-  Không thêm số liệu nào ngoài dữ liệu ca. Mobile: .pc-h4-case__body / __ft display:contents ⇒ giữ nguyên thứ tự Main.png.
+  section_testimonials_case.bwt — 1 tab + 1 panel ca trị liệu lâm sàng cho section_testimonials.
+  100% Tailwind utility class trực tiếp trên thẻ ngữ nghĩa, không dùng class CSS tự sinh.
 {%- endcomment -%}
 {%- assign testi_n = testi_n | plus: 1 -%}
 {%- capture t_sel -%}{% if testi_n == 1 %}true{% else %}false{% endif %}{%- endcapture -%}
-{%- capture t_tab -%}<li class="m-0"><a class="pc-h4-case-tab" role="tab" id="pc-h4-ct-{{ t_key }}" aria-controls="pc-h4-cp-{{ t_key }}" aria-selected="{{ t_sel }}" tabindex="{% if testi_n == 1 %}0{% else %}-1{% endif %}" href="#pc-h4-cp-{{ t_key }}">0{{ testi_n }} · {{ t_concern | escape }}{% if t_tab_who != blank %} – {{ t_tab_who | escape }}{% endif %}</a></li>{%- endcapture -%}
+{%- capture t_tab -%}
+<li class="m-0 shrink-0 md:shrink">
+  <a role="tab" id="tab-case-{{ t_key }}" aria-controls="panel-case-{{ t_key }}" aria-selected="{{ t_sel }}" tabindex="{% if testi_n == 1 %}0{% else %}-1{% endif %}" href="#panel-case-{{ t_key }}"
+     class="box-border inline-flex md:flex min-h-11 md:min-h-[50px] items-center whitespace-nowrap md:whitespace-normal rounded-full md:rounded-xl border border-solid border-line-soft bg-white px-4 md:px-5 text-xs md:text-sm font-semibold text-brand-deep no-underline hover:border-primary aria-selected:border-primary aria-selected:bg-primary aria-selected:text-white transition-all">
+    0{{ testi_n }} · {{ t_concern | escape }}{% if t_tab_who != blank %} – {{ t_tab_who | escape }}{% endif %}
+  </a>
+</li>
+{%- endcapture -%}
 {%- capture t_panel -%}
-<article class="pc-h4-case" role="tabpanel" id="pc-h4-cp-{{ t_key }}" aria-labelledby="pc-h4-ct-{{ t_key }}"{% if testi_n > 1 %} hidden{% endif %}>
-  <div class="pc-h4-case__imgs">
-    <figure class="pc-h4-case__img"><span class="pc-h4-case__badge">{{ testi_lb_before | escape }}</span>{%- if t_img1 != blank -%}<img src="{{ t_img1 }}" alt="{{ testi_lb_before | escape }} — {{ t_title | escape }}" width="728" height="600" loading="lazy" decoding="async">{%- endif -%}</figure>
-    <figure class="pc-h4-case__img"><span class="pc-h4-case__badge pc-h4-case__badge--after">{{ testi_lb_after | escape }}{% if t_duration != blank %}<span class="pc-h4-sm-only"> {{ t_duration | escape }}</span>{% endif %}</span>{%- if t_img2 != blank -%}<img src="{{ t_img2 }}" alt="{{ testi_lb_after | escape }} — {{ t_title | escape }}" width="728" height="600" loading="lazy" decoding="async">{%- endif -%}</figure>
+<article role="tabpanel" id="panel-case-{{ t_key }}" aria-labelledby="tab-case-{{ t_key }}" class="rounded-2xl border border-solid border-line-soft bg-white p-4 md:p-6 lg:p-7 flex flex-col"{% if testi_n > 1 %} hidden{% endif %}>
+  <div class="grid grid-cols-2 gap-2 md:gap-3">
+    <figure class="relative m-0 aspect-square md:aspect-[364/300] overflow-hidden rounded-xl bg-brand-tint">
+      <span class="absolute left-2.5 top-2.5 rounded-full bg-brand-deep px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white">{{ testi_lb_before | escape }}</span>
+      {%- if t_img1 != blank -%}<img src="{{ t_img1 }}" alt="{{ testi_lb_before | escape }} — {{ t_title | escape }}" width="728" height="600" loading="lazy" decoding="async" class="block h-full w-full object-cover">{%- endif -%}
+    </figure>
+    <figure class="relative m-0 aspect-square md:aspect-[364/300] overflow-hidden rounded-xl bg-brand-tint">
+      <span class="absolute left-2.5 top-2.5 rounded-full bg-primary px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white">{{ testi_lb_after | escape }}{% if t_duration != blank %}<span class="md:hidden"> {{ t_duration | escape }}</span>{% endif %}</span>
+      {%- if t_img2 != blank -%}<img src="{{ t_img2 }}" alt="{{ testi_lb_after | escape }} — {{ t_title | escape }}" width="728" height="600" loading="lazy" decoding="async" class="block h-full w-full object-cover">{%- endif -%}
+    </figure>
   </div>
-  <div class="pc-h4-case__body">
-  <div class="pc-h4-case__hd">
-    <h3 class="pc-h4-case__t">{{ t_title | escape }}</h3>
-    {%- if t_who != blank -%}<p class="pc-h4-case__m">{{ t_who | strip | escape }}</p>{%- endif -%}
-    {%- if t_products != blank -%}<p class="pc-h4-case__tag pc-h4-sm-only m-0">{{ t_products | escape }}</p>{%- endif -%}
-  </div>
-  {%- if t_duration != blank or t_products != blank -%}<ul class="pc-h4-case__chips pc-h4-lg-only">{%- if t_duration != blank -%}<li>{% include 'ui_icon', name: 'clock' %}<span><small class="sr-only">{{ settings.home_testi_duration_label | default: 'Thời gian theo dõi' | escape }}: </small>{{ t_duration | escape }}</span></li>{%- endif -%}{%- if t_products != blank -%}<li>{% include 'ui_icon', name: 'flask-conical' %}<span><small class="sr-only">{{ settings.home_testi_products_label | default: 'Sản phẩm sử dụng' | escape }}: </small>{{ t_products | escape }}</span></li>{%- endif -%}</ul>{%- endif -%}
-  {%- if t_desc != blank -%}<p class="pc-h4-case__sum">{{ t_desc | escape }}</p>{%- endif -%}
-  <div class="pc-h4-case__ft">
-  <details class="pc-h4-case__more"><summary>{{ testi_lb_steps | escape }}{% include 'ui_icon', name: 'chevron-down' %}</summary>
-  <dl class="pc-h4-case__dl">
-    {%- if t_initial != blank -%}<dt>{{ settings.home_testi_initial_label | default: 'Tình trạng ban đầu' | escape }}</dt><dd>{{ t_initial | escape }}</dd>{%- endif -%}
-    {%- assign t_step_list = t_steps | split: testi_step_sep -%}
-    {%- if t_steps != blank and t_step_list.size > 0 -%}
-    <dt>{{ testi_lb_steps | escape }}</dt><dd><ol class="pc-h4-case__steps">{%- assign t_step_i = 0 -%}{%- for st in t_step_list -%}{%- assign st_s = st | strip -%}{%- if st_s != blank -%}{%- assign t_step_i = t_step_i | plus: 1 -%}<li><b aria-hidden="true">{{ t_step_i }}</b><span>{{ st_s | escape }}</span></li>{%- endif -%}{%- endfor -%}</ol></dd>
-    {%- elsif t_desc != blank -%}
-    <dt>{{ testi_lb_steps | escape }}</dt><dd>{{ t_desc | escape }}</dd>
+  <div class="flex flex-col mt-4 md:mt-6">
+    <div class="flex flex-col">
+      <h3 class="m-0 text-lg md:text-xl lg:text-2xl font-bold text-brand-deep leading-snug">{{ t_title | escape }}</h3>
+      {%- if t_who != blank -%}<p class="m-0 mt-1 text-xs md:text-sm text-ink-muted">{{ t_who | strip | escape }}</p>{%- endif -%}
+      {%- if t_products != blank -%}<p class="md:hidden m-0 mt-2 inline-block self-start rounded-full bg-brand-tint px-3 py-1 text-xs font-bold text-brand-deep">{{ t_products | escape }}</p>{%- endif -%}
+    </div>
+    {%- if t_duration != blank or t_products != blank -%}
+      <ul class="m-0 mt-3 hidden md:flex list-none flex-wrap gap-2 p-0">
+        {%- if t_duration != blank -%}
+          <li class="inline-flex items-center gap-1.5 rounded-full bg-surface-soft px-3 py-1 text-xs font-semibold text-brand-deep">
+            {% include 'ui_icon', name: 'clock' %}
+            <span>{{ t_duration | escape }}</span>
+          </li>
+        {%- endif -%}
+        {%- if t_products != blank -%}
+          <li class="inline-flex items-center gap-1.5 rounded-full bg-surface-soft px-3 py-1 text-xs font-semibold text-brand-deep">
+            {% include 'ui_icon', name: 'flask-conical' %}
+            <span>{{ t_products | escape }}</span>
+          </li>
+        {%- endif -%}
+      </ul>
     {%- endif -%}
-    {%- if t_products != blank -%}<dt>{{ settings.home_testi_products_label | default: 'Sản phẩm sử dụng' | escape }}</dt><dd>{{ t_products | escape }}</dd>{%- endif -%}
-    {%- if t_duration != blank -%}<dt>{{ settings.home_testi_duration_label | default: 'Thời gian theo dõi' | escape }}</dt><dd>{{ t_duration | escape }}</dd>{%- endif -%}
-  </dl>
-  </details>
-  {%- if t_url != blank and testi_more_lb != blank -%}<a class="pc-h4-go" href="{{ t_url }}">{{ testi_more_lb | escape }}{% include 'ui_icon', name: 'arrow-right' %}</a>{%- endif -%}
-  </div>
+    {%- if t_desc != blank -%}
+      <p class="m-0 mt-3 line-clamp-3 text-sm leading-relaxed text-ink-muted">{{ t_desc | escape }}</p>
+    {%- endif -%}
+    <div class="mt-4 pt-3 border-t border-solid border-line-soft flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <details class="cursor-pointer">
+        <summary class="flex items-center gap-2 text-sm font-bold text-brand-deep list-none select-none">
+          <span>{{ testi_lb_steps | escape }}</span>
+          {% include 'ui_icon', name: 'chevron-down' %}
+        </summary>
+        <dl class="m-0 mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-[160px_1fr]">
+          {%- if t_initial != blank -%}<dt class="font-bold text-brand-deep">{{ settings.home_testi_initial_label | default: 'Tình trạng ban đầu' | escape }}</dt><dd class="m-0 text-ink">{{ t_initial | escape }}</dd>{%- endif -%}
+          {%- assign t_step_list = t_steps | split: testi_step_sep -%}
+          {%- if t_steps != blank and t_step_list.size > 0 -%}
+            <dt class="font-bold text-brand-deep">{{ testi_lb_steps | escape }}</dt>
+            <dd class="m-0 text-ink">
+              <ol class="m-0 p-0 list-none flex flex-col gap-1.5">
+                {%- assign t_step_i = 0 -%}
+                {%- for st in t_step_list -%}
+                  {%- assign st_s = st | strip -%}
+                  {%- if st_s != blank -%}
+                    {%- assign t_step_i = t_step_i | plus: 1 -%}
+                    <li class="flex items-start gap-2"><b class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-tint text-xs font-bold text-brand-deep">{{ t_step_i }}</b><span>{{ st_s | escape }}</span></li>
+                  {%- endif -%}
+                {%- endfor -%}
+              </ol>
+            </dd>
+          {%- elsif t_desc != blank -%}
+            <dt class="font-bold text-brand-deep">{{ testi_lb_steps | escape }}</dt><dd class="m-0 text-ink">{{ t_desc | escape }}</dd>
+          {%- endif -%}
+          {%- if t_products != blank -%}<dt class="font-bold text-brand-deep">{{ settings.home_testi_products_label | default: 'Sản phẩm sử dụng' | escape }}</dt><dd class="m-0 text-ink">{{ t_products | escape }}</dd>{%- endif -%}
+          {%- if t_duration != blank -%}<dt class="font-bold text-brand-deep">{{ settings.home_testi_duration_label | default: 'Thời gian theo dõi' | escape }}</dt><dd class="m-0 text-ink">{{ t_duration | escape }}</dd>{%- endif -%}
+        </dl>
+      </details>
+      {%- assign t_zalo = settings.contact_zalo | remove: ' ' | remove: '.' | remove: '-' | remove: '+' | strip -%}
+      {%- if t_zalo != blank -%}
+        <a class="inline-flex min-h-11 w-full md:w-auto items-center justify-center rounded-full bg-primary hover:bg-btn-hover px-6 text-sm font-bold text-white no-underline transition-colors" href="https://zalo.me/{{ t_zalo }}" target="_blank" rel="noopener">{{ settings.clinical_case_cta_label | default: 'Liên hệ tư vấn' | escape }}</a>
+      {%- else -%}
+        <a class="inline-flex min-h-11 w-full md:w-auto items-center justify-center rounded-full bg-primary hover:bg-btn-hover px-6 text-sm font-bold text-white no-underline transition-colors" href="/dat-lich-tu-van">{{ settings.portal_booking_text | default: 'Liên hệ tư vấn' | escape }}</a>
+      {%- endif -%}
+    </div>
   </div>
 </article>
 {%- endcapture -%}

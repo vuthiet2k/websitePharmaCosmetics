@@ -1,15 +1,6 @@
 {%- comment -%}
-  03/11/2026 (chủ dự án: trang chủ theo Figma "travel" node 5:2): tiêu đề "Flash sale" + viên tối "Kết thúc sau [đồng hồ]" + "Xem tất cả",
-  03/11/2026 (chủ dự án, lần 2): thêm lại icon tia sét (assets/flash_-1.png), tiêu đề + giá + nút thẻ màu đỏ (tone 'sale'),
-  đồng hồ ô số đỏ có hiệu ứng lật (script cuối file, thay plugin jQuery Dqdt_CountDown).
-  1 hàng 5 thẻ (ui_product_card) — desktop lưới 5 cột (thẻ thứ 6+ ẩn), mobile vuốt ngang tối đa 10 thẻ. Bỏ carousel Swiper,
-  khối <style> cũ (nền tối/vàng gold) và tia sét. Giữ nguyên dữ liệu: danh mục home_flashsale_collection, số lượng home_flashsale_limit, phần chữ tô đỏ home_flashsale_title_hl (trống ⇒ không tô),
-  bộ đếm ngược chu kỳ (data-countdown + home_flashsale_countdown_end / _cycle_hours, L09), khối mã giảm giá coupon_products.
-  CSS: ui-src/css/components.css mục 14.6.
-  04/11/2026 (chủ dự án: giao diện mobile theo khung Main.png — CSS mục 14.17, chỉ < 1024px): đồng hồ xuống dưới tiêu đề (nhãn
-  "Kết thúc sau" chỉ còn cho trình đọc màn hình), "Xem tất cả" thành nút tròn mũi tên bên phải. Desktop giữ nguyên.
-  04/11/2026 (chủ dự án, lần 2): icon tia sét ở Ô RIÊNG bên trái (.pc-h4-fs__ic, cao 2 dòng) — tiêu đề trên, đồng hồ nhỏ gọn ngay dưới
-  (ô số cao 24px, chữ 14px — không to hơn chữ thường). Icon trong tiêu đề chỉ còn ở desktop (pc-h4-lg-only).
+  section_flash_sale.bwt — Khối Flash sale trang chủ.
+  100% Tailwind utility class trực tiếp trên thẻ ngữ nghĩa, không dùng class CSS tự sinh.
 {%- endcomment -%}
 {% assign flash_collection = collections[settings.home_flashsale_collection] %}
 {% capture flash_fallback_url %}/{{ settings.home_flashsale_collection }}{% endcapture %}
@@ -18,38 +9,50 @@
 {%- assign pc_fs_viewall = settings.home_flashsale_viewall_text | default: 'Xem tất cả' -%}
 {%- assign pc_fs_limit = settings.home_flashsale_limit | plus: 0 -%}
 {%- if pc_fs_limit < 1 or pc_fs_limit > 10 -%}{%- assign pc_fs_limit = 10 -%}{%- endif -%}
-<section class="pc-h4 pc-h4-sec section_flash_sale" aria-labelledby="pc-h4-fs-title">
-  <div class="pc-h4-wrap">
-    <div class="pc-h4-head{% if count > 0 %} pc-h4-head--aside{% endif %} lg:items-center">
-      <div class="pc-h4-fs__top">
-        <span class="pc-h4-fs__ic pc-h4-sm-only" aria-hidden="true"><img src="{{ 'flash_-1.png' | asset_url }}" alt="" width="24" height="24"></span>
+<section class="py-10 lg:py-16 font-sans text-ink section_flash_sale" aria-labelledby="section-flash-sale-title">
+  <div class="container">
+    <div class="mb-6 lg:mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="flex flex-wrap items-center gap-3 md:gap-4">
         {%- assign pc_fs_title = settings.home_flashsale_title | default: 'Flash sale' | escape -%}
         {%- assign pc_fs_hl = settings.home_flashsale_title_hl | escape -%}
-        {%- capture pc_fs_hl_html -%}<em class="pc-h4-hl">{{ pc_fs_hl }}</em>{%- endcapture -%}
-        <h2 class="pc-h4-title pc-h4-fs__title" id="pc-h4-fs-title"><img class="pc-h4-fs__bolt pc-h4-lg-only" src="{{ 'flash_-1.png' | asset_url }}" alt="" width="32" height="32" aria-hidden="true">{%- if pc_fs_hl != blank and pc_fs_title contains pc_fs_hl -%}{{ pc_fs_title | replace_first: pc_fs_hl, pc_fs_hl_html }}{%- else -%}{{ pc_fs_title }}{%- endif -%}</h2>
+        {%- capture pc_fs_hl_html -%}<em class="not-italic text-sale">{{ pc_fs_hl }}</em>{%- endcapture -%}
+        <h2 class="m-0 text-2xl lg:text-3xl font-bold text-brand-deep flex items-center gap-2" id="section-flash-sale-title">
+          <img src="{{ 'flash_-1.png' | asset_url }}" alt="" width="28" height="28" class="inline-block" aria-hidden="true">
+          {%- if pc_fs_hl != blank and pc_fs_title contains pc_fs_hl -%}{{ pc_fs_title | replace_first: pc_fs_hl, pc_fs_hl_html }}{%- else -%}{{ pc_fs_title }}{%- endif -%}
+        </h2>
         {%- if settings.home_flashsale_countdown_enable -%}
-        <p class="pc-h4-timer m-0"><span class="pc-h4-timer__label">{{ settings.home_flashsale_countdown_title | default: 'Kết thúc sau' | escape }}</span><span class="pc-h4-timer__clock" role="timer" data-countdown="countdown" data-date="{{ settings.home_flashsale_countdown_end }}" data-cycle-hours="{{ settings.home_flashsale_countdown_cycle_hours | default: 0 }}"></span></p>
+        <div class="inline-flex items-center gap-2 bg-red-50 border border-solid border-red-200 px-3 py-1 rounded-full text-xs font-semibold text-sale">
+          <span>{{ settings.home_flashsale_countdown_title | default: 'Kết thúc sau' | escape }}</span>
+          <span class="inline-flex items-center" role="timer" data-countdown="countdown" data-date="{{ settings.home_flashsale_countdown_end }}" data-cycle-hours="{{ settings.home_flashsale_countdown_cycle_hours | default: 0 }}"></span>
+        </div>
         {%- endif -%}
       </div>
-      {%- if count > 0 -%}<a class="pc-h4-more pc-h4-more--icon" href="{{ flash_collection_url | escape }}"><span class="pc-h4-more__txt">{{ pc_fs_viewall | escape }}</span>{% include 'ui_icon', name: 'arrow-right' %}</a>{%- endif -%}
+      {%- if count > 0 -%}
+        <a class="inline-flex items-center gap-1.5 text-sm font-bold text-brand-deep hover:text-primary no-underline transition-colors self-start md:self-auto" href="{{ flash_collection_url | escape }}">
+          <span>{{ pc_fs_viewall | escape }}</span>
+          {% include 'ui_icon', name: 'arrow-right' %}
+        </a>
+      {%- endif -%}
     </div>
+
     {%- if count > 0 -%}
-    <div class="pc-h4-prow pc-h4-prow--one">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
       {%- for product in collections[settings.home_flashsale_collection].products limit: pc_fs_limit -%}
         {%- include 'ui_product_card', product: product, tone: 'sale', eager: false, wish: false -%}
       {%- endfor -%}
     </div>
     {%- else -%}
-    <p class="text-sm text-ink-secondary">{{ settings.home_flashsale_empty_text | default: 'Danh mục đang cập nhật sản phẩm.' | escape }}</p>
+    <p class="text-sm text-ink-muted m-0">{{ settings.home_flashsale_empty_text | default: 'Danh mục đang cập nhật sản phẩm.' | escape }}</p>
     {%- endif -%}
-    {%- if settings.promo_coupon_home_enable -%}<div class="pc-flashsale__coupons mt-6">{% include 'coupon_products' %}</div>{%- endif -%}
+
+    {%- if settings.promo_coupon_home_enable -%}
+      <div class="mt-6">{% include 'coupon_products' %}</div>
+    {%- endif -%}
   </div>
 </section>
+
 {%- if settings.home_flashsale_countdown_enable -%}
 <script>
-/* 03/11/2026 (chủ dự án): đồng hồ kiểu ô số đỏ (giống sàn TMĐT) — dựng ô 1 lần, mỗi giây chỉ đổi chữ số; ô vừa đổi
-   chạy hiệu ứng lật (CSS .is-tick, tắt khi prefers-reduced-motion). Ô "ngày" chỉ hiện khi còn ≥ 1 ngày.
-   Giữ logic cũ: mốc data-date "YYYY-MM-DD-hh-mm-ss", chu kỳ lặp data-cycle-hours (L09 — giá đổi theo ngày, không phải dark pattern). */
 (function () {
   var FINISH = {{ settings.home_flashsale_finish_text | default: 'Hết hạn' | escape | json }};
   var UNITS = [['d', 86400, ' ngày'], ['h', 3600, ' giờ'], ['m', 60, ' phút'], ['s', 1, ' giây']];
@@ -67,10 +70,19 @@
     var end = target(el); if (end == null) return;
     var boxes = {};
     UNITS.forEach(function (u, k) {
-      if (k > 0) { var sep = document.createElement('span'); sep.className = 'pc-h4-timer__sep'; sep.setAttribute('aria-hidden', 'true'); sep.textContent = ':'; el.appendChild(sep); boxes[u[0] + 'sep'] = sep; }
-      var b = document.createElement('span'); b.className = 'pc-h4-timer__box';
+      if (k > 0) {
+        var sep = document.createElement('span');
+        sep.className = 'inline-block text-sale font-bold mx-0.5';
+        sep.setAttribute('aria-hidden', 'true');
+        sep.textContent = ':';
+        el.appendChild(sep);
+        boxes[u[0] + 'sep'] = sep;
+      }
+      var b = document.createElement('span');
+      b.className = 'inline-flex items-center justify-center min-w-[22px] h-5 px-1 rounded bg-sale text-white text-xs font-bold leading-none';
       b.innerHTML = '<b></b><span class="sr-only">' + u[2] + '</span>';
-      el.appendChild(b); boxes[u[0]] = b;
+      el.appendChild(b);
+      boxes[u[0]] = b;
     });
     function tick() {
       var left = Math.floor((end - Date.now()) / 1000);
@@ -81,13 +93,12 @@
         var v = u[0] === 'd' ? Math.floor(left / 86400) : Math.floor(left / u[1]) % (u[0] === 'h' ? 24 : 60);
         var b = boxes[u[0]], num = b.firstChild, txt = pad(v);
         if (num.textContent !== txt) {
-          var first = num.textContent === '';
           num.textContent = txt;
-          if (!first) { b.classList.remove('is-tick'); void b.offsetWidth; b.classList.add('is-tick'); }
         }
       });
     }
-    tick(); var timer = setInterval(tick, 1000);
+    tick();
+    var timer = setInterval(tick, 1000);
   }
   function run() { Array.prototype.forEach.call(document.querySelectorAll('[data-countdown="countdown"]'), init); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();

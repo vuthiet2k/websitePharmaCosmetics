@@ -1,11 +1,6 @@
 {%- comment -%}
-  03/11/2026 (chủ dự án: trang chủ theo Figma "travel" node 5:2): lưới 8 cột × 2 hàng ô hoạt chất (tên + "N SP"), bỏ carousel.
-  Nguồn giữ nguyên: Menu settings.home_ing_menu (tối đa 16 mục, số SP = products_count của danh mục link trỏ tới — 0 ⇒ ẩn dòng số).
-  Chưa có menu ⇒ 9 ô nhập tay ing_N_title / _url / _tag như trước (nhãn ing_N_tag thay dòng số).
-  CSS: ui-src/css/components.css mục 14.5.
-  04/11/2026 (chủ dự án: giao diện mobile theo khung Main.png — CSS mục 14.16, chỉ < 1024px): ô tròn ảnh + tên + "N SP", 2 dòng vuốt
-  ngang (.pc-h4-swipe2); ảnh = ảnh danh mục link trỏ tới (link.object.image → featured_image), thiếu ⇒ icon home_ing_icon (tên
-  ui_icon, mặc định flask-conical). Ẩn eyebrow; nhãn đếm "<số ô> home_ing_count_label" bên phải tiêu đề. Desktop giữ nguyên.
+  section_ingredients.bwt — Tìm theo hoạt chất.
+  100% Tailwind utility class trực tiếp trên thẻ ngữ nghĩa, không dùng class CSS tự sinh.
 {%- endcomment -%}
 {%- assign ing_icon = settings.home_ing_icon | default: 'flask-conical' -%}
 {%- assign ing_ll = linklists[settings.home_ing_menu] -%}
@@ -13,26 +8,26 @@
 {%- if settings.home_ing_menu != blank and ing_ll.links.size > 0 -%}
   {%- for link in ing_ll.links limit: 16 -%}
     {%- assign ing_img = link.object.image.src | default: link.object.featured_image.src -%}
-    <a class="pc-h4-ing" href="{{ link.url | escape }}">
-      <span class="pc-h4-ing__ic pc-h4-sm-only">{%- if ing_img != blank -%}<img src="{{ ing_img | img_url: 'small' }}" alt="" width="56" height="56" loading="lazy">{%- else -%}{% include 'ui_icon', name: ing_icon %}{%- endif -%}</span>
-      <span class="pc-h4-ing__t">{{ link.title | escape }}</span>
-      {%- if link.object.products_count > 0 -%}<span class="pc-h4-ing__n">{{ link.object.products_count }} SP</span>{%- endif -%}
+    <a class="box-border flex min-h-[90px] flex-col justify-between rounded-xl border border-solid border-line-soft bg-white p-3 md:p-4 text-center hover:border-primary no-underline transition-all" href="{{ link.url | escape }}">
+      <span class="m-0 block text-xs md:text-sm font-bold text-brand-deep leading-snug line-clamp-2">{{ link.title | escape }}</span>
+      {%- if link.object.products_count > 0 -%}
+        <span class="m-0 mt-2 block text-xs font-semibold text-primary">{{ link.object.products_count }} SP</span>
+      {%- endif -%}
     </a>
   {%- endfor -%}
 {%- endif -%}
-{%- comment -%} 14/11/2026: bỏ 27 ô nhập tay ing_N_{title,tag,url} — hoạt chất lấy 100% từ menu (linklists[home_ing_menu]: tên, link, số sản phẩm của danh mục). {%- endcomment -%}
 {%- endcapture -%}
-<section class="pc-h4 pc-h4-sec pc-h4-sec--soft" aria-labelledby="pc-h4-ing-title">
-  <div class="pc-h4-wrap">
-    {%- assign ing_count = pc_ing_items | split: 'class="pc-h4-ing"' | size | minus: 1 -%}
-    <div class="pc-h4-head{% if ing_count > 0 %} pc-h4-head--aside{% endif %}">
+<section class="bg-surface-soft py-10 lg:py-16 font-sans text-ink" aria-labelledby="section-ing-title">
+  <div class="container">
+    <div class="mb-6 lg:mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div>
-        <p class="pc-h4-eyebrow pc-h4-lg-only">{{ settings.home_ing_eyebrow | default: 'Thấu hiểu làn da bằng khoa học' | escape }}</p>
-        <h2 class="pc-h4-title" id="pc-h4-ing-title">{{ settings.home_ing_title | default: 'Tìm theo hoạt chất' | escape }}</h2>
+        <p class="m-0 text-xs font-bold uppercase tracking-wider text-primary hidden lg:block">{{ settings.home_ing_eyebrow | default: 'Thấu hiểu làn da bằng khoa học' | escape }}</p>
+        <h2 class="m-0 text-2xl lg:text-3xl font-bold text-brand-deep mt-1" id="section-ing-title">{{ settings.home_ing_title | default: 'Tìm theo hoạt chất' | escape }}</h2>
+        {%- if settings.home_ing_subtitle != blank -%}<p class="m-0 mt-2 text-sm text-ink-muted">{{ settings.home_ing_subtitle | escape }}</p>{%- endif -%}
       </div>
-      {%- if settings.home_ing_subtitle != blank -%}<p class="pc-h4-lead">{{ settings.home_ing_subtitle | escape }}</p>{%- endif -%}
-      {%- if ing_count > 0 -%}<p class="pc-h4-count pc-h4-sm-only">{{ ing_count }} {{ settings.home_ing_count_label | default: 'hoạt chất' | escape }}</p>{%- endif -%}
     </div>
-    {%- if pc_ing_items != blank -%}<div class="pc-h4-ings pc-h4-swipe2">{{ pc_ing_items }}</div>{%- endif -%}
+    {%- if pc_ing_items != blank -%}
+      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">{{ pc_ing_items }}</div>
+    {%- endif -%}
   </div>
 </section>
