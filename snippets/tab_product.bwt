@@ -30,9 +30,10 @@
 {%- assign pc_dt_groups = pc_dt_keys | strip_newlines | split: '~~' -%}
 {%- assign pc_dt_name1 = product.name | strip | upcase -%}
 {%- assign pc_dt_name2 = product.name | escape | strip | upcase -%}
+{%- assign pc_clean_content = product.content | default: '' | replace: '<b ', '<span ' | replace: '<B ', '<span ' | replace: '<b>', '<span>' | replace: '</b>', '</span>' -%}
 {%- assign pc_dt_src = '' -%}
-{%- if product.content != blank -%}
-  {%- assign pc_dt_src = product.content | split: '<h5>' | first | split: '<h6>' | first -%}
+{%- if pc_clean_content != blank -%}
+  {%- assign pc_dt_src = pc_clean_content | split: '<h5>' | first | split: '<h6>' | first -%}
 {%- endif -%}
 {%- assign pc_dt_src = pc_dt_src | replace: '<b>', '<strong>' | replace: '</b>', '</strong>' | replace: '<h1', '<p data-pch' | replace: '<h2', '<p data-pch' | replace: '<h3', '<p data-pch' | replace: '<h4', '<p data-pch' | replace: '</h1>', '</p>' | replace: '</h2>', '</p>' | replace: '</h3>', '</p>' | replace: '</h4>', '</p>' -%}
 {%- assign pc_dt_parts = pc_dt_src | split: '<p' -%}
@@ -296,13 +297,13 @@
 		{%- else -%}
 		<div id="tab-1" class="tab-content active content_extab">
 			<div class="rte product_getcontent product-review-content">
-				{% assign a = product.content | size %}
+				{% assign a = pc_clean_content | size %}
 				{% if a > 0 %}
-				{% assign mycontent = product.content | split:'<h5>' %}
+				{% assign mycontent = pc_clean_content | split:'<h5>' %}
 				{% assign mycontents = mycontent[0] | split:'<h6>' %}
 				<div class="ba-text-fpt {% if a > 4000 %}has-height{% endif %}">
 					{%- comment -%} 2026-10-19: mô tả nhập kèm <h1> (D-Tox, Glow-up, Volayon, PRX…) ⇒ trang có 2–3 h1 (UI-2.5) — hạ xuống h2. {%- endcomment -%}
-					{{ mycontents[0] | replace: '<h1', '<h2' | replace: '</h1>', '</h2>' }}
+					{{ mycontents[0] | replace: '<h1', '<h2' | replace: '</h1>', '</h2>' | replace: '</b>', '</span>' }}</span></span></strong></strong>
 				</div>
 				{% if a > 4000 %}
 				<div class="show-more hidden-lg hidden-md hidden-sm">
