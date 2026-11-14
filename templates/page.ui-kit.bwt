@@ -59,27 +59,12 @@
     {%- assign kit_products = collections.all.products -%}
     <section class="mb-10" aria-labelledby="kit-card">
       <h2 id="kit-card" class="m-0 mb-1 text-xl font-bold text-ink">4. Thẻ sản phẩm</h2>
-      <p class="m-0 mb-4 text-sm text-ink-secondary">Dữ liệu thật từ object <code>product</code> (tên, hãng, giá, ảnh) — không nhập tay. Class: bg-card, border-card-line, bg-card-btn, text-card-btn-text.</p>
+      <p class="m-0 mb-4 text-sm text-ink-secondary">Dữ liệu thật từ object <code>product</code> (tên, hãng, giá, ảnh) — không nhập tay. Dùng duy nhất snippet <code>ui_product_card</code>.</p>
       {%- if kit_products.size > 0 -%}
       <ul class="m-0 grid list-none grid-cols-2 gap-3 p-0 lg:grid-cols-4 lg:gap-4">
         {%- for product in kit_products limit: 4 -%}
-        {%- assign kit_var = product.selected_or_first_available_variant | default: product.variants.first -%}
-        <li class="flex min-w-0 flex-col overflow-hidden border border-solid border-card-line bg-card rounded-2xl">
-          <a href="{{ product.url }}" class="relative block aspect-square w-full overflow-hidden bg-slate-100" tabindex="-1" aria-hidden="true">
-            <img class="block h-full w-full object-cover" src="{% if product.featured_image.src != blank %}{{ product.featured_image.src | img_url: 'medium' }}{% else %}{% include 'placeholder_img_url' %}{% endif %}" alt="{{ product.featured_image.alt | default: product.name | escape }}" width="240" height="240" loading="lazy">
-            {%- if kit_var.compare_at_price > kit_var.price and kit_var.price > 0 -%}
-            <span class="absolute left-2 top-2 bg-sale px-2 py-1 text-xs font-bold text-white rounded-full">-{{ kit_var.compare_at_price | minus: kit_var.price | times: 100 | divided_by: kit_var.compare_at_price | round }}%</span>
-            {%- endif -%}
-          </a>
-          <div class="flex min-w-0 flex-1 flex-col gap-1 p-3">
-            <p class="notranslate m-0 truncate text-xs font-medium uppercase text-ink-secondary" translate="no">{{ product.vendor | escape }}</p>
-            <h3 class="notranslate m-0 line-clamp-2 text-sm font-semibold text-ink" translate="no"><a class="text-ink no-underline hover:text-primary" href="{{ product.url }}">{{ product.name }}</a></h3>
-            <p class="m-0 mt-auto flex flex-wrap items-baseline gap-x-2 pt-2">
-              <span class="text-base font-bold text-price">{{ kit_var.price | money }}</span>
-              {%- if kit_var.compare_at_price > kit_var.price -%}<s class="text-xs text-ink-secondary">{{ kit_var.compare_at_price | money }}</s>{%- endif -%}
-            </p>
-            <a href="{{ product.url }}" class="mt-2 inline-flex min-h-11 items-center justify-center bg-card-btn px-3 text-sm font-semibold text-card-btn-text no-underline rounded-full hover:bg-btn-hover">Xem chi tiết</a>
-          </div>
+        <li class="min-w-0">
+          {%- include 'ui_product_card', product: product, tone: '', eager: false, wish: true -%}
         </li>
         {%- endfor -%}
       </ul>
@@ -90,26 +75,13 @@
 
     <section class="mb-10" aria-labelledby="kit-flash">
       <h2 id="kit-flash" class="m-0 mb-1 text-xl font-bold text-ink">5. Thẻ Flash sale</h2>
-      <p class="m-0 mb-4 text-sm text-ink-secondary">Class: bg-flash, text-flash-text, bg-flash-badge, text-flash-badge-text.</p>
+      <p class="m-0 mb-4 text-sm text-ink-secondary">Thẻ sản phẩm trên nền flash sale (tone: flash).</p>
       {%- if kit_products.size > 0 -%}
       <div class="bg-flash p-3 rounded-2xl lg:p-4">
         <ul class="m-0 grid list-none grid-cols-2 gap-3 p-0 lg:grid-cols-4 lg:gap-4">
           {%- for product in kit_products limit: 4 -%}
-          {%- assign kit_var = product.selected_or_first_available_variant | default: product.variants.first -%}
-          <li class="flex min-w-0 flex-col overflow-hidden bg-card rounded-xl">
-            <a href="{{ product.url }}" class="relative block aspect-square w-full overflow-hidden bg-slate-100" tabindex="-1" aria-hidden="true">
-              <img class="block h-full w-full object-cover" src="{% if product.featured_image.src != blank %}{{ product.featured_image.src | img_url: 'medium' }}{% else %}{% include 'placeholder_img_url' %}{% endif %}" alt="{{ product.featured_image.alt | default: product.name | escape }}" width="240" height="240" loading="lazy">
-              {%- if kit_var.compare_at_price > kit_var.price and kit_var.price > 0 -%}
-              <span class="absolute left-2 top-2 bg-flash-badge px-2 py-1 text-xs font-bold text-flash-badge-text rounded-full">-{{ kit_var.compare_at_price | minus: kit_var.price | times: 100 | divided_by: kit_var.compare_at_price | round }}%</span>
-              {%- endif -%}
-            </a>
-            <div class="flex min-w-0 flex-1 flex-col gap-1 p-3">
-              <h3 class="notranslate m-0 line-clamp-2 text-sm font-semibold text-ink" translate="no"><a class="text-ink no-underline" href="{{ product.url }}">{{ product.name }}</a></h3>
-              <p class="m-0 mt-auto flex flex-wrap items-baseline gap-x-2 pt-2">
-                <span class="text-base font-bold text-flash-text">{{ kit_var.price | money }}</span>
-                {%- if kit_var.compare_at_price > kit_var.price -%}<s class="text-xs text-ink-secondary">{{ kit_var.compare_at_price | money }}</s>{%- endif -%}
-              </p>
-            </div>
+          <li class="min-w-0">
+            {%- include 'ui_product_card', product: product, tone: 'flash', eager: false, wish: true -%}
           </li>
           {%- endfor -%}
         </ul>
