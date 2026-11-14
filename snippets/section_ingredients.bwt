@@ -19,21 +19,8 @@
       {%- if link.object.products_count > 0 -%}<span class="pc-h4-ing__n">{{ link.object.products_count }} SP</span>{%- endif -%}
     </a>
   {%- endfor -%}
-{%- else -%}
-  {%- for i in (1..9) -%}
-    {%- capture title -%}ing_{{ i }}_title{%- endcapture -%}{%- capture url -%}ing_{{ i }}_url{%- endcapture -%}{%- capture tag -%}ing_{{ i }}_tag{%- endcapture -%}
-    {%- assign ingredient_name = settings[title] -%}
-    {%- if i == 1 -%}{%- assign ingredient_name = ingredient_name | default: 'Retinol' -%}{%- elsif i == 2 -%}{%- assign ingredient_name = ingredient_name | default: 'Hyaluronic Acid' -%}{%- elsif i == 3 -%}{%- assign ingredient_name = ingredient_name | default: 'Ceramides' -%}{%- endif -%}
-    {%- if ingredient_name != blank -%}
-    {%- capture fallback_url -%}/search?query={{ ingredient_name | url_encode }}&type=product{%- endcapture -%}
-    <a class="pc-h4-ing" href="{{ settings[url] | default: fallback_url | escape }}">
-      <span class="pc-h4-ing__ic pc-h4-sm-only">{% include 'ui_icon', name: ing_icon %}</span>
-      <span class="pc-h4-ing__t">{{ ingredient_name | escape }}</span>
-      {%- if settings[tag] != blank -%}<span class="pc-h4-ing__n">{{ settings[tag] | escape }}</span>{%- endif -%}
-    </a>
-    {%- endif -%}
-  {%- endfor -%}
 {%- endif -%}
+{%- comment -%} 14/11/2026: bỏ 27 ô nhập tay ing_N_{title,tag,url} — hoạt chất lấy 100% từ menu (linklists[home_ing_menu]: tên, link, số sản phẩm của danh mục). {%- endcomment -%}
 {%- endcapture -%}
 <section class="pc-h4 pc-h4-sec pc-h4-sec--soft" aria-labelledby="pc-h4-ing-title">
   <div class="pc-h4-wrap">

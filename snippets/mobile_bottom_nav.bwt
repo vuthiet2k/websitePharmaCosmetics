@@ -3,7 +3,7 @@
   Admin bật/tắt từng tab + tự đặt nhãn, đường dẫn, icon trong Tùy chỉnh → Mobile.
   Icon (L03b 30/10/2026): tên icon ui_icon (vd: house) — vẫn nhận giá trị cũ dạng class FA (vd: "… fa-house", tự ánh xạ);
   để trống hoặc tên không có trong snippets/ui_icon.bwt → icon mặc định của tab (SVG nội tuyến, cỡ theo chữ — size em).
-  Nhãn dài xuống dòng, không cắt "..." (L34 24/10/2026 — UI-STANDARD D.8 "nhãn đọc trọn").
+  Nhãn dài xuống dòng, không cắt "..." (L34 24/10/2026 — UI-STANDARD D.8 "nhãn đọc trọn"). 14/11/2026: 100% class Tailwind.
   Active state: Tab blog/article khớp blog.url; Tab wishlist khớp URL setting hoặc wishlist_page;
   tab "blog" (nay là "Soi da & Dịch vụ", trỏ trang nội dung) còn khớp page.url == mobile_nav_blog_url (L34).
 {%- endcomment -%}
@@ -60,74 +60,64 @@
 {%- assign nav_blog_icon     = settings.mobile_nav_blog_icon     | strip -%}
 {%- assign nav_account_icon  = settings.mobile_nav_account_icon  | strip -%}
 
-<nav class="pc-bottom-nav" aria-label="Điều hướng">
-  <ul class="pc-bottom-nav__list">
-
+{%- comment -%}
+  14/11/2026: viết lại 100% class Tailwind (bỏ assets/comp_mobile_nav.scss.bwt). `pc-bottom-nav` chỉ còn là móc JS (lieu-trinh.js,
+  article.truoc-va-sau đo chiều cao thanh), không có CSS. Nhãn dài xuống dòng TRỌN chữ: thanh cao tối thiểu 56px và tự cao thêm
+  (trước đây cao cứng 56px ⇒ "Danh mục" bị cắt còn "Danh" trên iPhone). Hiện ≤ 991px như cũ (min-[992px]:hidden).
+  Chừa chỗ cho thanh: class pb trên <body> ở layouts/theme.bwt.
+{%- endcomment -%}
+<nav class="pc-bottom-nav fixed inset-x-0 bottom-0 z-bottomnav border-0 border-t border-solid border-line bg-white pb-[env(safe-area-inset-bottom,0px)] font-sans min-[992px]:hidden" aria-label="Điều hướng">
+  <ul class="m-0 flex list-none items-stretch p-0">
     {%- if settings.mobile_nav_home_enable -%}
-    <li class="pc-bottom-nav__item{% if mb_active == 'home' %} is-active{% endif %}">
-      <a href="{{ nav_home_url }}" title="{{ nav_home_label }}" aria-label="{{ nav_home_label }}"{% if mb_active == 'home' %} aria-current="page"{% endif %}>
-        <span class="pc-bottom-nav__icon">
-          {%- capture mb_ico -%}{% include 'ui_icon', name: nav_home_icon, size: 'em' %}{%- endcapture -%}
-          {%- unless mb_ico contains '<svg' -%}{%- capture mb_ico -%}{% include 'ui_icon', name: 'house', size: 'em' %}{%- endcapture -%}{%- endunless -%}
-          <i class="inline-block leading-none" aria-hidden="true">{{ mb_ico }}</i>
-        </span>
-        <span class="pc-bottom-nav__label">{{ nav_home_label }}</span>
+    <li class="min-w-0 flex-1">
+      <a href="{{ nav_home_url }}" class="flex min-h-14 flex-col items-center justify-center gap-1 px-1 py-1.5 text-center text-xs font-medium leading-tight no-underline hover:text-primary focus:text-primary {% if mb_active == 'home' %}font-semibold text-primary{% else %}text-ink-secondary{% endif %}"{% if mb_active == 'home' %} aria-current="page"{% endif %}>
+        {%- capture mb_ico -%}{% include 'ui_icon', name: nav_home_icon, size: 24, label: '' %}{%- endcapture -%}
+        {%- unless mb_ico contains '<svg' -%}{%- capture mb_ico -%}{% include 'ui_icon', name: 'house', size: 24, label: '' %}{%- endcapture -%}{%- endunless -%}
+        <span class="flex h-6 w-6 items-center justify-center" aria-hidden="true">{{ mb_ico }}</span>
+        <span class="block max-w-full break-words">{{ nav_home_label | escape }}</span>
       </a>
     </li>
     {%- endif -%}
-
     {%- if settings.mobile_nav_products_enable -%}
-    <li class="pc-bottom-nav__item{% if mb_active == 'products' %} is-active{% endif %}">
-      <a href="{{ nav_products_url }}" title="{{ nav_products_label }}" aria-label="{{ nav_products_label }}"{% if mb_active == 'products' %} aria-current="page"{% endif %}>
-        <span class="pc-bottom-nav__icon">
-          {%- capture mb_ico -%}{% include 'ui_icon', name: nav_products_icon, size: 'em' %}{%- endcapture -%}
-          {%- unless mb_ico contains '<svg' -%}{%- capture mb_ico -%}{% include 'ui_icon', name: 'shopping-bag', size: 'em' %}{%- endcapture -%}{%- endunless -%}
-          <i class="inline-block leading-none" aria-hidden="true">{{ mb_ico }}</i>
-        </span>
-        <span class="pc-bottom-nav__label">{{ nav_products_label }}</span>
+    <li class="min-w-0 flex-1">
+      <a href="{{ nav_products_url }}" class="flex min-h-14 flex-col items-center justify-center gap-1 px-1 py-1.5 text-center text-xs font-medium leading-tight no-underline hover:text-primary focus:text-primary {% if mb_active == 'products' %}font-semibold text-primary{% else %}text-ink-secondary{% endif %}"{% if mb_active == 'products' %} aria-current="page"{% endif %}>
+        {%- capture mb_ico -%}{% include 'ui_icon', name: nav_products_icon, size: 24, label: '' %}{%- endcapture -%}
+        {%- unless mb_ico contains '<svg' -%}{%- capture mb_ico -%}{% include 'ui_icon', name: 'shopping-bag', size: 24, label: '' %}{%- endcapture -%}{%- endunless -%}
+        <span class="flex h-6 w-6 items-center justify-center" aria-hidden="true">{{ mb_ico }}</span>
+        <span class="block max-w-full break-words">{{ nav_products_label | escape }}</span>
       </a>
     </li>
     {%- endif -%}
-
     {%- if settings.mobile_nav_wishlist_enable -%}
-    <li class="pc-bottom-nav__item{% if mb_active == 'wishlist' %} is-active{% endif %}">
-      <a href="{{ wishlist_url }}" title="{{ nav_wishlist_label }}" aria-label="{{ nav_wishlist_label }}"{% if mb_active == 'wishlist' %} aria-current="page"{% endif %}>
-        <span class="pc-bottom-nav__icon">
-          {%- capture mb_ico -%}{% include 'ui_icon', name: nav_wishlist_icon, size: 'em' %}{%- endcapture -%}
-          {%- unless mb_ico contains '<svg' -%}{%- capture mb_ico -%}{% include 'ui_icon', name: 'heart', size: 'em' %}{%- endcapture -%}{%- endunless -%}
-          <i class="inline-block leading-none" aria-hidden="true">{{ mb_ico }}</i>
-        </span>
-        <span class="pc-bottom-nav__label">{{ nav_wishlist_label }}</span>
+    <li class="min-w-0 flex-1">
+      <a href="{{ wishlist_url }}" class="flex min-h-14 flex-col items-center justify-center gap-1 px-1 py-1.5 text-center text-xs font-medium leading-tight no-underline hover:text-primary focus:text-primary {% if mb_active == 'wishlist' %}font-semibold text-primary{% else %}text-ink-secondary{% endif %}"{% if mb_active == 'wishlist' %} aria-current="page"{% endif %}>
+        {%- capture mb_ico -%}{% include 'ui_icon', name: nav_wishlist_icon, size: 24, label: '' %}{%- endcapture -%}
+        {%- unless mb_ico contains '<svg' -%}{%- capture mb_ico -%}{% include 'ui_icon', name: 'heart', size: 24, label: '' %}{%- endcapture -%}{%- endunless -%}
+        <span class="flex h-6 w-6 items-center justify-center" aria-hidden="true">{{ mb_ico }}</span>
+        <span class="block max-w-full break-words">{{ nav_wishlist_label | escape }}</span>
       </a>
     </li>
     {%- endif -%}
-
     {%- if settings.mobile_nav_blog_enable -%}
-    <li class="pc-bottom-nav__item{% if mb_active == 'blog' %} is-active{% endif %}">
-      <a href="{{ nav_blog_url }}" title="{{ nav_blog_label }}" aria-label="{{ nav_blog_label }}"{% if mb_active == 'blog' %} aria-current="page"{% endif %}>
-        <span class="pc-bottom-nav__icon">
-          {%- capture mb_ico -%}{% include 'ui_icon', name: nav_blog_icon, size: 'em' %}{%- endcapture -%}
-          {%- unless mb_ico contains '<svg' -%}{%- capture mb_ico -%}{% include 'ui_icon', name: 'newspaper', size: 'em' %}{%- endcapture -%}{%- endunless -%}
-          <i class="inline-block leading-none" aria-hidden="true">{{ mb_ico }}</i>
-        </span>
-        <span class="pc-bottom-nav__label">{{ nav_blog_label }}</span>
+    <li class="min-w-0 flex-1">
+      <a href="{{ nav_blog_url }}" class="flex min-h-14 flex-col items-center justify-center gap-1 px-1 py-1.5 text-center text-xs font-medium leading-tight no-underline hover:text-primary focus:text-primary {% if mb_active == 'blog' %}font-semibold text-primary{% else %}text-ink-secondary{% endif %}"{% if mb_active == 'blog' %} aria-current="page"{% endif %}>
+        {%- capture mb_ico -%}{% include 'ui_icon', name: nav_blog_icon, size: 24, label: '' %}{%- endcapture -%}
+        {%- unless mb_ico contains '<svg' -%}{%- capture mb_ico -%}{% include 'ui_icon', name: 'newspaper', size: 24, label: '' %}{%- endcapture -%}{%- endunless -%}
+        <span class="flex h-6 w-6 items-center justify-center" aria-hidden="true">{{ mb_ico }}</span>
+        <span class="block max-w-full break-words">{{ nav_blog_label | escape }}</span>
       </a>
     </li>
     {%- endif -%}
-
     {%- if settings.mobile_nav_account_enable -%}
-    <li class="pc-bottom-nav__item{% if mb_active == 'account' %} is-active{% endif %}">
-      <a href="{{ nav_account_url }}" title="{{ nav_account_label }}" aria-label="{{ nav_account_label }}"{% if mb_active == 'account' %} aria-current="page"{% endif %}>
-        <span class="pc-bottom-nav__icon">
-          {%- capture mb_ico -%}{% include 'ui_icon', name: nav_account_icon, size: 'em' %}{%- endcapture -%}
-          {%- unless mb_ico contains '<svg' -%}{%- capture mb_ico -%}{% include 'ui_icon', name: 'user', size: 'em' %}{%- endcapture -%}{%- endunless -%}
-          <i class="inline-block leading-none" aria-hidden="true">{{ mb_ico }}</i>
-        </span>
-        <span class="pc-bottom-nav__label">{{ nav_account_label }}</span>
+    <li class="min-w-0 flex-1">
+      <a href="{{ nav_account_url }}" class="flex min-h-14 flex-col items-center justify-center gap-1 px-1 py-1.5 text-center text-xs font-medium leading-tight no-underline hover:text-primary focus:text-primary {% if mb_active == 'account' %}font-semibold text-primary{% else %}text-ink-secondary{% endif %}"{% if mb_active == 'account' %} aria-current="page"{% endif %}>
+        {%- capture mb_ico -%}{% include 'ui_icon', name: nav_account_icon, size: 24, label: '' %}{%- endcapture -%}
+        {%- unless mb_ico contains '<svg' -%}{%- capture mb_ico -%}{% include 'ui_icon', name: 'user', size: 24, label: '' %}{%- endcapture -%}{%- endunless -%}
+        <span class="flex h-6 w-6 items-center justify-center" aria-hidden="true">{{ mb_ico }}</span>
+        <span class="block max-w-full break-words">{{ nav_account_label | escape }}</span>
       </a>
     </li>
     {%- endif -%}
-
   </ul>
 </nav>
 {%- endif -%}

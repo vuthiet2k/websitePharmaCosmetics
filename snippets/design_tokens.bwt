@@ -59,37 +59,7 @@
     biên dịch thành hex cố định ở T-70) vì 1 class (page.about-us.bwt) dùng opacity modifier
     (bg-forest-900/70) không tương thích với giá trị CSS var (xem AC-28: phạm vi "token mới").
   {%- endcomment -%}
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --primary-forest-900: #132E20;
-      --primary-forest-800: #2DD4BF;
-      --primary-emerald-700: #34D399;
-      --primary-emerald-600: #3ED58C;
-      --primary-mint-100: #1B3E2D;
-      --primary-mint-50: #112A1E;
-      --accent-sale-orange: #E8A588;
-      --accent-gold: #E0A838;
-      --accent-luxury-sand: #2E1D16;
-      --color-brand-primary: #3ED58C;
-      --color-brand-green: #34D399;
-      --color-brand-dark: #2DD4BF;
-      --color-brand-deep: #132E20;
-      --color-mint-light: #1B3E2D;
-      --color-mint-subtle: #112A1E;
-      --color-badge-green-bg: #143823;
-      --color-badge-green-text: #34D399;
-      --color-gold-sand: #F3CA7E;
-      --color-gold-dark: #E0A838;
-      --color-peach: #E8A588;
-      --color-peach-light: #2E1D16;
-      --color-text-main: #F1F5F3;
-      --color-text-body: #CBD5E1;
-      --color-text-muted: #94A3B8;
-      --color-border-clinical: #1E3A2B;
-      --color-bg-page: #0B1712;
-      --color-semantic-success: #34D399;
-    }
-  }
+  /* 14/11/2026: bỏ tự đổi màu theo chế độ tối của máy — nền thẻ ghi cứng trắng nên chữ sáng bị mất (iPhone dark mode). */
   :root[data-theme="dark"] {
     --primary-forest-900: #132E20;
     --primary-forest-800: #2DD4BF;
@@ -257,15 +227,7 @@
 	  --line/--bg-page) — chỉ áp cho các biến CSS custom property đang định nghĩa trong khối này,
 	  đồng bộ cơ chế @media/[data-theme] với snippets/pharma_ui_kit.bwt.
 	{%- endcomment -%}
-	@media (prefers-color-scheme: dark) {
-		:root:not([data-theme="light"]) {
-			--primary-deep: #2DD4BF;
-			--clay:         #E8A588;
-			--clay-soft:    #2E1D16;
-			--line:         #1E3A2B;
-			--bg-page:      #0B1712;
-		}
-	}
+	/* 14/11/2026: bỏ tự đổi màu theo chế độ tối của máy — nền thẻ ghi cứng trắng nên chữ sáng bị mất (iPhone dark mode). */
 	:root[data-theme="dark"] {
 		--primary-deep: #2DD4BF;
 		--clay:         #E8A588;
@@ -425,5 +387,41 @@
     --auth-alert-error-border: #f7c4c4;
     --vip-text: #775f2d;
     --vip-bg: #fcdc9d;
+  }
+{%- comment -%}
+    14/11/2026 (chủ dự án: "config màu theo Tailwind, tạo class bg-primary… theo màu; không tự CSS ngoài"):
+    CẦU NỐI Cấu hình theme › Màu sắc → biến --pc-color-* mà tailwind.pc.config.js đọc. Đổi màu trong admin ⇒ mọi class
+    bg-primary / text-primary / bg-btn / bg-card / bg-flash… đổi theo. :root:root để thắng giá trị mặc định trong pc-ui.css.
+    Ô trống ⇒ kế thừa (nút ← màu chính; nút thẻ SP ← nút; nhãn flash ← màu sale).
+  {%- endcomment -%}
+  {%- assign pc_c_primary = settings.theme_main_color | default: "#075B40" -%}
+  {%- assign pc_c_primary_hover = settings.theme_forest_color | default: "#003F2D" -%}
+  {%- assign pc_c_darkest = settings.theme_dark_color | default: "#002E23" -%}
+  {%- assign pc_c_btn = settings.color_btn_bg | default: pc_c_primary -%}
+  {%- assign pc_c_btn_hover = settings.color_btn_hover_bg | default: pc_c_primary_hover -%}
+  {%- assign pc_c_btn_text = settings.color_btn_text | default: "#FFFFFF" -%}
+  {%- assign pc_c_sale = settings.color_sale | default: "#B91C1C" -%}
+  :root:root {
+    color-scheme: light;
+    --pc-color-brand-primary: {{ pc_c_primary }};
+    --pc-color-brand-hover: {{ pc_c_primary_hover }};
+    --pc-color-brand-deep: {{ pc_c_primary_hover }};
+    --pc-color-brand-darkest: {{ pc_c_darkest }};
+    --pc-color-brand-deco: {{ settings.color_accent | default: "#3CB371" }};
+    --pc-color-secondary: {{ settings.theme_sub_color | default: "#1F5A3B" }};
+    --pc-color-ink: {{ settings.theme_body_text_color | default: "#0F172A" }};
+    --pc-color-price: {{ settings.color_price | default: pc_c_primary }};
+    --pc-color-sale: {{ pc_c_sale }};
+    --pc-color-btn: {{ pc_c_btn }};
+    --pc-color-btn-hover: {{ pc_c_btn_hover }};
+    --pc-color-btn-text: {{ pc_c_btn_text }};
+    --pc-color-card: {{ settings.color_card_bg | default: "#FFFFFF" }};
+    --pc-color-card-line: {{ settings.color_card_border | default: "#E2E8F0" }};
+    --pc-color-card-btn: {{ settings.color_card_btn_bg | default: pc_c_btn }};
+    --pc-color-card-btn-text: {{ settings.color_card_btn_text | default: pc_c_btn_text }};
+    --pc-color-flash: {{ settings.color_flash_bg | default: "#FEE2E2" }};
+    --pc-color-flash-text: {{ settings.color_flash_text | default: "#7F1D1D" }};
+    --pc-color-flash-badge: {{ settings.color_flash_badge_bg | default: pc_c_sale }};
+    --pc-color-flash-badge-text: {{ settings.color_flash_badge_text | default: "#FFFFFF" }};
   }
 </style>

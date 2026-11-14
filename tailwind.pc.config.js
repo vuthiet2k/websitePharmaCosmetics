@@ -19,6 +19,12 @@ module.exports = {
         darkest: v('brand-darkest'),
         tint: v('brand-tint'),
       },
+      /* 14/11/2026: tên theo Cấu hình theme › Màu sắc — bg-primary, text-primary, bg-btn, bg-card, bg-flash… (brand = tên cũ, cùng biến) */
+      primary: { DEFAULT: v('brand-primary'), hover: v('brand-hover'), deep: v('brand-deep'), darkest: v('brand-darkest'), tint: v('brand-tint'), accent: v('brand-deco') },
+      secondary: v('secondary'),
+      btn: { DEFAULT: v('btn'), hover: v('btn-hover'), text: v('btn-text') },
+      card: { DEFAULT: v('card'), line: v('card-line'), btn: v('card-btn'), 'btn-text': v('card-btn-text') },
+      flash: { DEFAULT: v('flash'), text: v('flash-text'), badge: v('flash-badge'), 'badge-text': v('flash-badge-text') },
       surface: { page: v('surface-page'), card: v('surface-card'), footer: v('surface-footer'), soft: v('surface-soft') },
       ink: { DEFAULT: v('ink'), secondary: v('ink-secondary'), muted: v('ink-muted') },
       price: v('price'),

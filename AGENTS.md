@@ -27,6 +27,7 @@ Repo: **websitePharmaCosmetics** — theme giao diện **Sapo Web (.bwt)** cho P
 
 - Nội dung hiển thị phải **cấu hình hoá**: `settings.<id>` + `| default:` trong snippet, khai báo
   `id`/`default` ở `configs/settings_schema.json`, giá trị ở `configs/settings_data.json`.
+- **Class Tailwind + màu theo cấu hình (RULE CỨNG UI-0, chốt 14/11/2026 — thắng mọi mục giao diện khác):** markup mới/sửa dùng 100% class Tailwind (`bg-primary`, `bg-btn`, `bg-card`, `bg-flash`…), màu chỉ đổi ở Cấu hình theme › Màu sắc; không class CSS tự đặt, không `style=""`/`<style>`, không `@media` mới, không dark mode tự động; dữ liệu có trên object Sapo thì đọc object, không tạo ô nhập tay. Trang kiểm `/ui-kit`. Chi tiết: `.clinerules/03` mục UI-0.
 - **Cỡ chữ = biến (RULE CỨNG UI-2.9):** mọi `font-size`/`font:` dùng `var(--fs-*)` (`snippets/design_tokens.bwt`) — cấm px/rem/pt ghi cứng; `npm run lint:guardrails` (trong `build:sapo`) FAIL nếu vi phạm. Cần cỡ mới thì thêm bậc token, không ghi số tại chỗ.
 - **Icon = Font Awesome 6 Free (RULE CỨNG UI-9):** thư viện duy nhất, nạp 1 lần qua CDN trong `layouts/theme.bwt`; cú pháp `fa-solid fa-x` + `aria-hidden="true"`; cấm emoji/ký tự/ảnh làm icon, cấm cú pháp `fas`/`fa fa-`; không thêm SVG icon tự vẽ (`lint:guardrails` FAIL/baseline). MOPS admin là ngoại lệ (Material Symbols).
 - Liquid: chuỗi rỗng là TRUE ⇒ kiểm tra bằng `!= blank`; ảnh phải qua `img_url` + `alt` riêng +

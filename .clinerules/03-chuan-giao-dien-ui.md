@@ -16,6 +16,22 @@ Xuất `test-results/audit-ui/report.json` + ảnh chụp toàn trang; mã lỗi
 
 ---
 
+## UI-0. Class Tailwind + màu theo cấu hình (RULE CỨNG — chủ dự án chốt 14/11/2026)
+
+Mâu thuẫn với mục khác của file này hoặc `docs/UI-STANDARD.md` (thư viện class `pc-*`, breakpoint 680/767/991) ⇒ **UI-0 thắng**.
+
+| Mã | Tiêu chí |
+| :-- | :-- |
+| UI-0.1 | **Màu chỉ có 1 nguồn:** Cấu hình theme › Màu sắc → `snippets/design_tokens.bwt` (biến `--pc-color-*`) → `tailwind.pc.config.js`. Class dùng: `bg-primary` `text-primary` `border-primary` (+ `-hover` `-deep` `-darkest` `-tint` `-accent`), `bg-secondary`, `text-ink` `text-ink-secondary`, `text-price`, `bg-sale` `text-sale`, nút `bg-btn` `text-btn-text` `hover:bg-btn-hover`, thẻ sản phẩm `bg-card` `border-card-line` `bg-card-btn` `text-card-btn-text`, flash sale `bg-flash` `text-flash-text` `bg-flash-badge` `text-flash-badge-text`. Cần màu mới ⇒ thêm ô màu + biến + tên Tailwind, không ghi hex tại chỗ. |
+| UI-0.2 | **Markup mới / markup được sửa = 100% class Tailwind** (`assets/pc-ui.css`): không đặt class CSS mới (kể cả `pc-*` qua `@apply`), không `style=""`, không `<style>`, không thêm quy tắc vào `assets/*.scss.bwt` / `*.css`. Không tự ghi `color:` / `background:`. Tên class không phải Tailwind chỉ được giữ làm **móc JS** (vd `add_to_cart`, `pc-bottom-nav`) và không có CSS đi kèm. |
+| UI-0.3 | **Responsive bằng tiền tố Tailwind** (`sm:` 640, `md:` 768, `lg:` 1024, `xl:` 1280; cần giữ mốc cũ thì `max-[991px]:` / `min-[992px]:`) — không viết `@media` mới. |
+| UI-0.4 | Chuyển khối nào sang Tailwind thì **xoá CSS cũ của khối đó** trong cùng commit (file chỉ phục vụ khối đó ⇒ xoá file + dòng nạp + mục baseline). |
+| UI-0.5 | **Không tự bật dark mode:** không `@media (prefers-color-scheme: dark)` đổi biến màu (nền thẻ trắng + chữ sáng ⇒ mất chữ trên iPhone). `:root { color-scheme: light }` ở design_tokens. |
+| UI-0.6 | **Cấu hình theo object Sapo:** dữ liệu đã có trên object (`store`, `product`, `collection`, `blogs[handle]`, `linklists[handle]`, `pages[handle]`) thì đọc từ object — cấu hình chỉ giữ ô CHỌN object (menu / blog / danh mục / trang) và chữ biên tập không object nào có. Cấm họ ô đánh số nhập tay tên + link + ảnh (`xxx_1_title`, `xxx_1_url`…) khi một menu / blog thay được. |
+| UI-0.7 | Trang kiểm: `/ui-kit` (`templates/page.ui-kit.bwt`) hiện toàn bộ màu + nút + thẻ dựng từ cấu hình; thêm màu / thành phần dùng chung thì thêm ô mẫu vào trang này. |
+
+---
+
 ## UI-1. Khung & lưới
 
 | Mã | Tiêu chí | Kiểm |

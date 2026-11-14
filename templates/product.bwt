@@ -215,19 +215,21 @@
 						  {%- if pc_rx_parts.size > 1 -%}{%- assign pc_rx_list = pc_rx_parts[1] -%}{%- endif -%}
 						{%- endif -%}
 						{%- if pc_rx_lead != blank -%}<p class="pc-rx-lead">{{ pc_rx_lead }}</p>{%- endif -%}
-						<div class="product-top clearfix">
+						{%- comment -%} 14/11/2026: dòng Mã + đánh giá viết lại bằng class Tailwind (bỏ CSS .product-top/.sku-product ở page_product.scss) —
+							  flex-wrap + whitespace-nowrap để chữ không bị ép xuống từng ký tự khi máy khách phóng to cỡ chữ (ảnh lỗi Android).
+							  Tên class không tiền tố còn lại (variant-sku, a-sku, product-review, sapo-product-reviews-badge) chỉ là móc JS. {%- endcomment -%}
+							<div class="product-top flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-secondary">
 							{{product.variants[0].barcode}}
 							{% assign current_variant = product.selected_or_first_available_variant %}
-							<div class="sku-product clearfix">
-								<span class="d-none">Thương hiệu: <strong class="notranslate" translate="no">{% if product.vendor.size > 0 %}{{ product.vendor }}{% else %}{{ store.name }}{% endif %}</strong></span>
-								<span class="variant-sku"  content="{% if product.variants[0].sku != "" and product.variants[0].sku != null %}{{product.variants[0].sku}}{% else %}Đang cập nhật{% endif %}">Mã: <span class="a-sku notranslate" translate="no">{%if product.variants[0].sku != "" and product.variants[0].sku != null %}{{product.variants[0].sku}}{% else %}Đang cập nhật{% endif %}</span></span>
-								<br>
-								<span class="d-none" >Chất liệu: <strong>{% if product.type.size > 0 %}{{ product.type }}{% else %}Đang cập nhật{% endif %}</strong></span>
+							<div class="sku-product min-w-0">
+								<span class="hidden">Thương hiệu: <strong class="notranslate" translate="no">{% if product.vendor.size > 0 %}{{ product.vendor }}{% else %}{{ store.name }}{% endif %}</strong></span>
+								<span class="variant-sku whitespace-nowrap" content="{% if product.variants[0].sku != "" and product.variants[0].sku != null %}{{product.variants[0].sku}}{% else %}Đang cập nhật{% endif %}">Mã: <span class="a-sku notranslate font-bold text-primary" translate="no">{%if product.variants[0].sku != "" and product.variants[0].sku != null %}{{product.variants[0].sku}}{% else %}Đang cập nhật{% endif %}</span></span>
+								<span class="hidden">Chất liệu: <strong>{% if product.type.size > 0 %}{{ product.type }}{% else %}Đang cập nhật{% endif %}</strong></span>
 							</div>
 							{%- comment -%} 2026-10-05: sản phẩm kê toa ẩn 100% đánh giá (người dùng chốt). {%- endcomment -%}
 							{%if settings.product_tab3_enable and pc_pdp_rx != true %}
-							<div class="product-review">
-								<div class="sapo-product-reviews-badge " data-id="{{ product.id }}" ></div>
+							<div class="product-review flex min-w-0 cursor-pointer flex-wrap items-center gap-x-2 gap-y-1">
+								<div class="sapo-product-reviews-badge peer empty:hidden" data-id="{{ product.id }}"></div>
 								{%- comment -%}
 								  T-128 (2026-09-12) — báo cáo audit: "Mất icon 5 ngôi sao bên cạnh số lượng
 								  review, chỉ còn chữ số trơ trọi". .sapo-product-reviews-badge ở trên là chỗ
@@ -235,6 +237,7 @@
 								  dữ liệu thì khối đó RỖNG nên chỉ còn mỗi "(170 đánh giá)". Vẽ sẵn widget sao
 								  từ metafields.bpr.rating làm lớp nền — app Sapo (nếu có) vẫn ghi đè badge như
 								  cũ, không xung đột.
+								  14/11/2026: app ĐÃ vẽ sao thì ẩn lớp sao nền của theme (peer-[:not(:empty)]:hidden) — trước đó hiện 2 hàng sao cạnh nhau.
 								{%- endcomment -%}
 								{%- comment -%} 2026-10-05 (PRD mục 2 — người dùng chốt): chỉ in sao khi có đánh giá thật
 								  (votes > 0); rating > 0 mà votes = 0 là số liệu không có căn cứ ⇒ ẩn. {%- endcomment -%}
@@ -244,7 +247,7 @@
 								{% assign pc_r_frac = pc_rating | minus: pc_r_floor %}
 								{% assign pc_r_half = 0 %}
 								{% if pc_r_frac >= 0.25 %}{% assign pc_r_half = pc_r_floor | plus: 1 %}{% endif %}
-								<span class="pc-stars" role="img" aria-label="Đánh giá {{ pc_rating }} trên 5 sao">
+								<span class="pc-stars inline-flex items-center whitespace-nowrap peer-[:not(:empty)]:hidden" role="img" aria-label="Đánh giá {{ pc_rating }} trên 5 sao">
 									{% for i in (1..5) %}
 									{% if i <= pc_r_floor %}<i class="pc-stars__on inline-block px-px leading-none" aria-hidden="true">{% include 'ui_icon', name: 'star-filled', size: 'em' %}</i>
 									{% elsif i == pc_r_half %}<i class="pc-stars__on inline-block px-px leading-none" aria-hidden="true">{% include 'ui_icon', name: 'star-half-filled', size: 'em' %}</i>
@@ -254,7 +257,7 @@
 								</span>
 								{% endif %}
 								{% if product.metafields.bpr.votes > 0 %}
-								<span>({{ product.metafields.bpr.votes }} đánh giá)</span>
+								<span class="whitespace-nowrap">({{ product.metafields.bpr.votes }} đánh giá)</span>
 								{%endif%}
 							</div>
 							{%endif%}
@@ -755,86 +758,32 @@
 				{%- assign productRelateCheck2 = product.collections.first.products_count -%}					
 				{%- if productRelateCheck > 0 and settings.product_upsell_enable and productRelateCheck2 > 1 -%}
 				<div class="col-12">
-					<div class="product-related product-swipers">
-						<div class="section-title a-left txt-uppercese">
-							<h2>
-								<a href="/{{ productRelate | handleize }}" title="{{settings.product_same_cate_title | strip_html}}">{{settings.product_same_cate_title}}</a>
-							</h2>
-						</div>
-
-						<div class="swiper_product_related swiper-container">
-							<div class="swiper-wrapper">
-								{%- comment -%} 2026-10-10: bỏ SP đang xem và SP đã có ở "Có thể bạn thích" (trước đây lặp lại 2 lần). {%- endcomment -%}
-								{%- assign pc_same_limit = settings.product_same_cate_limit | plus: 0 -%}
-								{%- assign pc_same_n = 0 -%}
-								{% for product in collections[productRelate].products limit: 40 %}
-								{%- assign pc_same_key = '|' | append: product.alias | append: '|' -%}
-								{%- unless product.alias == pc_pdp_alias or pc_pdp_seen contains pc_same_key or pc_same_n >= pc_same_limit -%}
-								{%- assign pc_same_n = pc_same_n | plus: 1 -%}
-								<div class="swiper-slide">
-									<div class="item_product_main">
-										{%include 'product_grid_office'%}
-									</div>
+					{%- comment -%} 14/11/2026: khối «Sản phẩm liên quan» viết lại bằng class Tailwind + cuộn ngang gốc của trình duyệt (snap) —
+					  bỏ Swiper: trên site thật khi JS chưa chạy, mỗi thẻ phình rộng hơn màn hình và trống ảnh (ảnh lỗi Android).
+					  Bề rộng thẻ do class quyết định (2 / 3 / 4 / 5 thẻ mỗi hàng), không phụ thuộc JS. {%- endcomment -%}
+					<section class="mt-8 min-w-0 lg:mt-12" aria-labelledby="pc-pdp-related-title">
+						<h2 id="pc-pdp-related-title" class="m-0 mb-4 text-xl font-bold text-ink lg:text-2xl"><a class="text-ink no-underline hover:text-primary" href="/{{ productRelate | handleize }}">{{ settings.product_same_cate_title }}</a></h2>
+						<ul class="m-0 flex list-none snap-x snap-mandatory gap-3 overflow-x-auto p-0 pb-2 lg:gap-4" tabindex="0" aria-label="{{ settings.product_same_cate_title | strip_html | escape }}">
+							{%- comment -%} 2026-10-10: bỏ SP đang xem và SP đã có ở "Có thể bạn thích" (trước đây lặp lại 2 lần). {%- endcomment -%}
+							{%- assign pc_same_limit = settings.product_same_cate_limit | plus: 0 -%}
+							{%- assign pc_same_n = 0 -%}
+							{% for product in collections[productRelate].products limit: 40 %}
+							{%- assign pc_same_key = '|' | append: product.alias | append: '|' -%}
+							{%- unless product.alias == pc_pdp_alias or pc_pdp_seen contains pc_same_key or pc_same_n >= pc_same_limit -%}
+							{%- assign pc_same_n = pc_same_n | plus: 1 -%}
+							<li class="w-[calc(50%-6px)] shrink-0 snap-start md:w-[calc(33.333%-8px)] lg:w-[calc(25%-12px)] xl:w-[calc(20%-13px)]">
+								<div class="item_product_main h-full">
+									{%include 'product_grid_office'%}
 								</div>
-								{%- endunless -%}
-								{% endfor %}
-							</div>
-							<div class="swiper-button-prev">
-								<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-									<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-									<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-								</svg>
-							</div>
-							<div class="swiper-button-next">
-								<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-									<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-									<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-								</svg>
-							</div>
-						</div>
-						<div class="show-more-same">
-							<a class='show-more btn btn-primary frame flexbtn' href='/{{ productRelate | handleize }}' title='Xem thêm'>
-								Xem thêm <svg height="64" viewBox="0 0 24 24" width="64" xmlns="http://www.w3.org/2000/svg" data-name="Layer 2"><path d="m22.707 11.293-7-7a1 1 0 0 0 -1.414 1.414l5.293 5.293h-17.586a1 1 0 0 0 0 2h17.586l-5.293 5.293a1 1 0 1 0 1.414 1.414l7-7a1 1 0 0 0 0-1.414z"></path></svg>
-							</a>
-						</div>
-					</div>
+							</li>
+							{%- endunless -%}
+							{% endfor %}
+						</ul>
+						<p class="m-0 mt-4 text-center">
+							<a class="inline-flex min-h-11 items-center justify-center gap-2 bg-btn px-6 text-sm font-semibold text-btn-text no-underline rounded-full hover:bg-btn-hover" href="/{{ productRelate | handleize }}">Xem thêm {% include 'ui_icon', name: 'arrow-right', size: 20, label: '' %}</a>
+						</p>
+					</section>
 				</div>
-				<script>
-					// L03a (30/10/2026): swiper.js nạp defer ⇒ khởi tạo sau khi DOM xong.
-					document.addEventListener('DOMContentLoaded', function () {
-					var swiper_related = new Swiper('.swiper_product_related', {
-						slidesPerView: 4,
-						spaceBetween: 20,
-						slidesPerGroup: 1,
-						navigation: {
-							nextEl: '.swiper_product_related .swiper-button-next',
-							prevEl: '.swiper_product_related .swiper-button-prev',
-						},
-						breakpoints: {
-							280: {
-								slidesPerView: 2,
-								spaceBetween: 15
-							},
-							640: {
-								slidesPerView: 2,
-								spaceBetween: 15
-							},
-							768: {
-								slidesPerView: 3,
-								spaceBetween: 15
-							},
-							992: {
-								slidesPerView: 4,
-								spaceBetween: 15
-							},
-							1025: {
-								slidesPerView: 5,
-								spaceBetween: 20
-							}
-						}
-					});
-					});
-				</script>
 				{%- endif -%}
 				{%- endif -%}
 				{%- comment -%} 2026-10-05: "Cùng tầm giá" in giá sản phẩm hiện tại — không hiện với kê toa. {%- endcomment -%}

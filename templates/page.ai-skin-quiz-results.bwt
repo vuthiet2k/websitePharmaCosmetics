@@ -916,10 +916,11 @@
     card.appendChild(media);
     var heart = document.createElement('button');
     heart.type = 'button';
-    heart.className = 'pc-plan-card__wish' + (wish.indexOf(p.alias) !== -1 ? ' is-active' : '');
+    /* 14/11/2026: tim rỗng / tim đặc đổi theo aria-pressed bằng class Tailwind (CSS cũ còn .far/.fas của Font Awesome ⇒ hiện cả 2 tim). */
+    heart.className = 'pc-plan-card__wish group aria-pressed:text-sale' + (wish.indexOf(p.alias) !== -1 ? ' is-active' : '');
     heart.setAttribute('aria-label', 'Yêu thích ' + (p.name || ''));
     heart.setAttribute('aria-pressed', String(wish.indexOf(p.alias) !== -1));
-    heart.innerHTML = resIc('heart') + resIc('heart-filled');
+    heart.innerHTML = '<i class="leading-none group-aria-pressed:hidden" aria-hidden="true">' + (RES_IC['heart'] || '') + '</i><i class="leading-none [display:none] group-aria-pressed:[display:inline]" aria-hidden="true">' + (RES_IC['heart-filled'] || '') + '</i>';
     heart.addEventListener('click', function () { toggleWish(p.alias, heart); });
     card.appendChild(heart);
     var body = document.createElement('div');
