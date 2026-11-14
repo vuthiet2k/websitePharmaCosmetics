@@ -1,53 +1,51 @@
 {%- comment -%}
-  section_spa.bwt — chương II "Tin cậy": Pharma Cosmetics × Skin Health Beauty.
-  03/11/2026 (chủ dự án: trang chủ theo Figma "travel" node 5:2): nền xanh đậm, trái = eyebrow + tiêu đề 2 dòng
-  (home_spa_title / home_spa_title_accent) + mô tả (home_spa_desc) + nhãn (portal_clinic_chips phân cách ";"; link / icon cùng thứ tự ở portal_clinic_chip_urls / portal_clinic_chip_icons — trống ⇒ nhãn chữ) + nút đặt lịch
-  (home_spa_cta_text / _url, mặc định link nút 1 Hero) + địa chỉ (home_spa_address, trống ⇒ ẩn); phải = 4 thẻ bước đánh số
-  portal_step_N_title / _desc (N = 1..4, có _url ⇒ thẻ là link). Bỏ ảnh / chip / carousel cũ (các trường đó giữ trong schema).
-  CSS: ui-src/css/components.css mục 14.7.
-  04/11/2026 (chủ dự án: giao diện mobile theo khung Main.png — CSS mục 14.18, chỉ < 1024px): nền sáng; eyebrow thành tiêu đề lớn,
-  tiêu đề thành câu trích; ẩn nhãn / nút / địa chỉ / 4 thẻ bước của desktop, thay bằng THẺ LỘ TRÌNH (.pc-h4-route): địa chỉ
-  (home_spa_address) · tiêu đề home_spa_steps_title + nhãn home_spa_steps_tag · 4 tab bước (số + icon home_spa_step_icons + nhãn ngắn
-  home_spa_step_labels, đều phân cách ";", trống ⇒ tiêu đề bước) · khung chi tiết bước đang chọn (home_spa_step_prefix + số: tiêu đề,
-  mô tả) · nút đặt lịch rộng. Tab dùng snippets/home_tabs_script.bwt. Desktop giữ nguyên.
+  section_spa.bwt — chuong II "Tin cay": Pharma Cosmetics x Skin Health Beauty.
+  Dung 100% Tailwind utility class, mau theo he thong chu de chinh (primary).
+  Desktop: nen primary, trai la thong tin gioi thieu va dat lich, phai la 4 the buoc danh so.
+  Mobile: the lo trinh 4 buoc voi tab tuong tac (home_tabs_script.bwt).
 {%- endcomment -%}
 {%- assign spa_cta_url = settings.home_spa_cta_url | default: settings.home_hero_btn1_url | default: '/dat-lich-tu-van' -%}
 {%- assign spa_tags = settings.portal_clinic_chips | split: ';' -%}
 {%- assign spa_tag_urls = settings.portal_clinic_chip_urls | split: ';' -%}
 {%- assign spa_tag_icons = settings.portal_clinic_chip_icons | split: ';' -%}
-<section class="pc-h4 pc-h4-sec pc-h4-sec--dark pc-h4-spa" aria-labelledby="pc-h4-spa-title">
-  <div class="pc-h4-wrap">
-    <div class="pc-h4-chap"><p class="pc-h4-chap__tag"><span class="pc-h4-sm-only">{{ settings.portal_chapter_prefix | default: 'Mục' | escape }} </span>II · {{ settings.portal_chapter_2 | default: 'Tin cậy' | escape }}</p><span class="pc-h4-chap__rule" aria-hidden="true"></span></div>
-    <div class="pc-h4-trust2">
+<section class="py-8 lg:py-16 bg-brand-tint lg:bg-primary text-ink lg:text-white" aria-labelledby="spa-section-title">
+  <div class="container">
+    <div class="mb-4 flex items-center gap-3">
+      <p class="m-0 text-xs font-bold uppercase tracking-wider text-primary lg:text-white/80">
+        <span class="lg:hidden">{{ settings.portal_chapter_prefix | default: 'Muc' | escape }} </span>II · {{ settings.portal_chapter_2 | default: 'Tin cay' | escape }}
+      </p>
+      <span class="hidden lg:block h-px flex-1 bg-white/20" aria-hidden="true"></span>
+    </div>
+    <div class="grid gap-10 lg:grid-cols-2 lg:gap-16">
       <div>
-        <p class="pc-h4-eyebrow">{{ settings.home_spa_eyebrow | default: 'Khi routine tại nhà chưa đủ' | escape }}</p>
-        <h2 class="pc-h4-trust2__t" id="pc-h4-spa-title">{{ settings.home_spa_title | default: 'Làn da cần lộ trình đúng,' | escape }}{%- if settings.home_spa_title_accent != blank %} <br>{{ settings.home_spa_title_accent | escape }}{%- endif -%}</h2>
+        <p class="m-0 text-xs font-bold uppercase tracking-wider text-primary lg:text-white/80">{{ settings.home_spa_eyebrow | default: 'Khi routine tai nha chua du' | escape }}</p>
+        <h2 class="m-0 mt-2 text-2xl lg:text-4xl font-bold leading-tight text-ink lg:text-white" id="spa-section-title">{{ settings.home_spa_title | default: 'Lan da can lo trinh dung,' | escape }}{%- if settings.home_spa_title_accent != blank %} <br>{{ settings.home_spa_title_accent | escape }}{%- endif -%}</h2>
         {%- assign spa_desc = settings.home_spa_desc | default: settings.portal_clinic_desc -%}
-        {%- if spa_desc != blank -%}<p class="pc-h4-trust2__d">{{ spa_desc | escape }}</p>{%- endif -%}
+        {%- if spa_desc != blank -%}<p class="m-0 mt-4 lg:mt-6 max-w-xl text-sm lg:text-base leading-relaxed text-ink-muted lg:text-white/85">{{ spa_desc | escape }}</p>{%- endif -%}
         {%- if settings.portal_clinic_chips != blank -%}
-        <ul class="pc-h4-tags">
+        <ul class="hidden lg:flex m-0 mt-5 list-none flex-wrap gap-2.5 p-0">
           {%- for t in spa_tags -%}{%- if t != blank -%}
           {%- assign spa_u = spa_tag_urls[forloop.index0] | strip -%}{%- assign spa_i = spa_tag_icons[forloop.index0] | strip -%}
-          <li>{%- if spa_u != blank -%}<a href="{{ spa_u | escape }}">{%- endif -%}{%- if spa_i != blank -%}{% include 'ui_icon', name: spa_i, size: 'em' %} {% endif -%}{{ t | strip | escape }}{%- if spa_u != blank -%}</a>{%- endif -%}</li>
+          <li class="m-0 rounded-full border border-solid border-white/30 px-3 py-1 text-xs font-medium text-white">{%- if spa_u != blank -%}<a class="inline-flex items-center gap-1 text-white no-underline hover:underline" href="{{ spa_u | escape }}">{%- endif -%}{%- if spa_i != blank -%}{% include 'ui_icon', name: spa_i, size: 'em' %} {% endif -%}{{ t | strip | escape }}{%- if spa_u != blank -%}</a>{%- endif -%}</li>
           {%- endif -%}{%- endfor -%}
         </ul>
         {%- endif -%}
-        <div class="pc-h4-trust2__act">
-          <a class="pc-h4-cta" href="{{ spa_cta_url | escape }}">{{ settings.home_spa_cta_text | default: 'Đặt lịch phân tích da' | escape }}</a>
-          {%- if settings.home_spa_address != blank -%}<p class="pc-h4-trust2__addr">{{ settings.home_spa_address | escape | newline_to_br }}</p>{%- endif -%}
+        <div class="hidden lg:flex mt-7 flex-wrap items-center gap-5">
+          <a class="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-7 text-base font-bold text-primary no-underline hover:bg-surface-soft transition-colors" href="{{ spa_cta_url | escape }}">{{ settings.home_spa_cta_text | default: 'Dat lich phan tich da' | escape }}</a>
+          {%- if settings.home_spa_address != blank -%}<p class="m-0 max-w-[200px] text-sm leading-relaxed text-white/80">{{ settings.home_spa_address | escape | newline_to_br }}</p>{%- endif -%}
         </div>
       </div>
-      <ol class="pc-h4-steps">
+      <ol class="hidden lg:grid m-0 grid list-none gap-4 p-0 sm:grid-cols-2">
         {%- assign spa_n = 0 -%}
         {%- for i in (1..4) -%}
           {%- capture k_t -%}portal_step_{{ i }}_title{%- endcapture -%}{%- capture k_d -%}portal_step_{{ i }}_desc{%- endcapture -%}{%- capture k_u -%}portal_step_{{ i }}_url{%- endcapture -%}
           {%- if settings[k_t] != blank -%}
           {%- assign spa_n = spa_n | plus: 1 -%}
-          <li class="m-0">
-            {%- if settings[k_u] != blank -%}<a class="pc-h4-step" href="{{ settings[k_u] | escape }}">{%- else -%}<div class="pc-h4-step">{%- endif -%}
-              <span class="pc-h4-step__n block" aria-hidden="true">0{{ spa_n }}</span>
-              <span class="pc-h4-step__t block">{{ settings[k_t] | escape }}</span>
-              {%- if settings[k_d] != blank -%}<span class="pc-h4-step__d block">{{ settings[k_d] | escape }}</span>{%- endif -%}
+          <li class="m-0 flex">
+            {%- if settings[k_u] != blank -%}<a class="m-0 box-border w-full rounded-2xl bg-white/10 p-6 border border-white/10 hover:bg-white/15 transition-colors no-underline block" href="{{ settings[k_u] | escape }}">{%- else -%}<div class="m-0 box-border w-full rounded-2xl bg-white/10 p-6 border border-white/10">{%- endif -%}
+              <span class="m-0 text-xs font-bold text-white/60 block" aria-hidden="true">0{{ spa_n }}</span>
+              <span class="m-0 mt-2 text-lg font-bold text-white block">{{ settings[k_t] | escape }}</span>
+              {%- if settings[k_d] != blank -%}<span class="m-0 mt-3 text-sm leading-relaxed text-white/80 block">{{ settings[k_d] | escape }}</span>{%- endif -%}
             {%- if settings[k_u] != blank -%}</a>{%- else -%}</div>{%- endif -%}
           </li>
           {%- endif -%}
@@ -55,9 +53,9 @@
       </ol>
     </div>
     {%- if spa_n > 0 -%}
-    {%- assign spa_lbls = settings.home_spa_step_labels | default: 'Phân tích;Phác đồ;Chăm sóc 1:1;Đồng hành' | split: ';' -%}
+    {%- assign spa_lbls = settings.home_spa_step_labels | default: 'Phan tich;Phac do;Cham soc 1:1;Dong hanh' | split: ';' -%}
     {%- assign spa_icos = settings.home_spa_step_icons | default: 'microscope;clipboard-list;leaf;headset' | split: ';' -%}
-    {%- assign spa_steps_t = settings.home_spa_steps_title | default: 'Lộ trình 4 bước chuẩn y khoa' -%}
+    {%- assign spa_steps_t = settings.home_spa_steps_title | default: 'Lo trinh 4 buoc chuan y khoa' -%}
     {%- assign spa_tabs = '' -%}{%- assign spa_panels = '' -%}{%- assign spa_m = 0 -%}
     {%- for i in (1..4) -%}
       {%- capture k_t -%}portal_step_{{ i }}_title{%- endcapture -%}{%- capture k_d -%}portal_step_{{ i }}_desc{%- endcapture -%}
@@ -65,17 +63,17 @@
         {%- assign spa_m = spa_m | plus: 1 -%}
         {%- assign spa_lb = spa_lbls[forloop.index0] | strip | default: settings[k_t] -%}
         {%- assign spa_ic = spa_icos[forloop.index0] | strip -%}
-        {%- capture spa_tab -%}<a class="pc-h4-route__tab" role="tab" id="pc-h4-rt-{{ i }}" aria-controls="pc-h4-rp-{{ i }}" aria-selected="{% if spa_m == 1 %}true{% else %}false{% endif %}" tabindex="{% if spa_m == 1 %}0{% else %}-1{% endif %}" href="#pc-h4-rp-{{ i }}"><b>0{{ spa_m }}</b>{%- if spa_ic != blank -%}{% include 'ui_icon', name: spa_ic %}{%- endif -%}<span>{{ spa_lb | escape }}</span></a>{%- endcapture -%}
-        {%- capture spa_panel -%}<div class="pc-h4-route__p" role="tabpanel" id="pc-h4-rp-{{ i }}" aria-labelledby="pc-h4-rt-{{ i }}"{% if spa_m > 1 %} hidden{% endif %}>{% include 'ui_icon', name: 'circle-check' %}<p class="m-0"><b>{{ settings.home_spa_step_prefix | default: 'Bước' | escape }} 0{{ spa_m }}: {{ settings[k_t] | escape }}</b>{%- if settings[k_d] != blank -%}<span>{{ settings[k_d] | escape }}</span>{%- endif -%}</p></div>{%- endcapture -%}
+        {%- capture spa_tab -%}<a class="flex flex-col items-center justify-center py-2 px-1 rounded-lg text-center no-underline text-ink-muted transition-colors border border-transparent aria-selected:border-line-soft aria-selected:bg-white aria-selected:text-primary aria-selected:shadow-sm" role="tab" id="spa-rt-{{ i }}" aria-controls="spa-rp-{{ i }}" aria-selected="{% if spa_m == 1 %}true{% else %}false{% endif %}" tabindex="{% if spa_m == 1 %}0{% else %}-1{% endif %}" href="#spa-rp-{{ i }}"><b class="text-xs">0{{ spa_m }}</b>{%- if spa_ic != blank -%}{% include 'ui_icon', name: spa_ic %}{%- endif -%}<span class="text-[10px] mt-0.5 truncate max-w-full">{{ spa_lb | escape }}</span></a>{%- endcapture -%}
+        {%- capture spa_panel -%}<div class="flex items-start gap-3 rounded-xl bg-surface-soft p-3 text-xs leading-relaxed" role="tabpanel" id="spa-rp-{{ i }}" aria-labelledby="spa-rt-{{ i }}"{% if spa_m > 1 %} hidden{% endif %}>{% include 'ui_icon', name: 'circle-check' %}<p class="m-0"><b class="block text-ink text-sm mb-1">{{ settings.home_spa_step_prefix | default: 'Buoc' | escape }} 0{{ spa_m }}: {{ settings[k_t] | escape }}</b>{%- if settings[k_d] != blank -%}<span class="text-ink-muted">{{ settings[k_d] | escape }}</span>{%- endif -%}</p></div>{%- endcapture -%}
         {%- assign spa_tabs = spa_tabs | append: spa_tab -%}{%- assign spa_panels = spa_panels | append: spa_panel -%}
       {%- endif -%}
     {%- endfor -%}
-    <div class="pc-h4-route pc-h4-sm-only" data-h4-tabs>
-      {%- if settings.home_spa_address != blank -%}<p class="pc-h4-route__addr">{% include 'ui_icon', name: 'map-pin' %}<span>{{ settings.home_spa_address | newline_to_br | replace: '<br />', ' ' | replace: '<br>', ' ' | strip_newlines | escape }}</span></p>{%- endif -%}
-      <div class="pc-h4-route__hd"><p class="pc-h4-route__t">{{ spa_steps_t | escape }}</p>{%- assign spa_steps_tag = settings.home_spa_steps_tag | default: 'Phác đồ cá nhân' -%}<p class="pc-h4-route__tag">{{ spa_steps_tag | escape }}</p></div>
-      <div class="pc-h4-route__tabs" role="tablist" aria-label="{{ spa_steps_t | escape }}">{{ spa_tabs }}</div>
+    <div class="lg:hidden mt-6 rounded-2xl bg-white p-4 shadow-sm border border-line-soft" data-h4-tabs>
+      {%- if settings.home_spa_address != blank -%}<p class="m-0 mb-3 flex items-start gap-2 text-xs text-ink-muted">{% include 'ui_icon', name: 'map-pin' %}<span>{{ settings.home_spa_address | newline_to_br | replace: '<br />', ' ' | replace: '<br>', ' ' | strip_newlines | escape }}</span></p>{%- endif -%}
+      <div class="mb-3 flex items-center justify-between"><p class="m-0 text-base font-bold text-ink">{{ spa_steps_t | escape }}</p>{%- assign spa_steps_tag = settings.home_spa_steps_tag | default: 'Phac do ca nhan' -%}<p class="m-0 text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">{{ spa_steps_tag | escape }}</p></div>
+      <div class="grid grid-cols-4 gap-1.5 p-1 bg-surface-soft rounded-xl mb-3" role="tablist" aria-label="{{ spa_steps_t | escape }}">{{ spa_tabs }}</div>
       {{ spa_panels }}
-      <a class="pc-h4-route__cta" href="{{ spa_cta_url | escape }}">{{ settings.home_spa_cta_text | default: 'Đặt lịch phân tích da' | escape }}{% include 'ui_icon', name: 'arrow-right' %}</a>
+      <a class="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-white font-bold text-sm no-underline hover:bg-primary-dark transition-colors" href="{{ spa_cta_url | escape }}">{{ settings.home_spa_cta_text | default: 'Dat lich phan tich da' | escape }}{% include 'ui_icon', name: 'arrow-right' %}</a>
     </div>
     {%- endif -%}
   </div>

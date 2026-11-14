@@ -14,10 +14,10 @@
                                      (Swiper 6.6.2 chỉ có CSS cho .swiper-container) — hành vi ở assets/pc-ui.js
               v2.0 (03/11/2026) trang chủ theo Figma travel node 5:2 — mục 14–16
               v2.1 (04/11/2026, chủ dự án yêu cầu trực tiếp) trang chủ MOBILE < 1024px theo khung Main.png — mục 14.13–14.22 (hàng vuốt
-                                     .pc-h4-swipe2, đầu khối .pc-h4-head--aside, nút tròn .pc-h4-more--icon, thẻ lộ trình .pc-h4-route,
-                                     accordion <details data-pc-acc> .pc-h4-acc cho Danh mục nhanh + chân trang, dải pháp lý ẩn ở mobile);
-                                     base: .pc-h4-entry__t giữ 32px desktop (h2 → p role=heading), link "Xem chi tiết ca" ≥ 44px;
-                                     .pc-h4-foot__powered display none (trước invisible); mục 19 lớp chuyển trang .pc-navload
+                                     , đầu khối , nút tròn , thẻ lộ trình ,
+                                     accordion <details data-pc-acc>  cho Danh mục nhanh + chân trang, dải pháp lý ẩn ở mobile);
+                                     base:  giữ 32px desktop (h2 → p role=heading), link "Xem chi tiết ca" ≥ 44px;
+                                      display none (trước invisible); mục 19 lớp chuyển trang .pc-navload
                                      (snippets/ui_nav_loader.bwt) + .pc-navcate-wait (menu Danh mục tải sau)
               v2.2 (12/11/2026, chủ dự án yêu cầu trực tiếp) mục 20 thanh cảnh báo lừa đảo giao hàng .pc-notice (snippets/ui_notice_bar.bwt) */
 @layer components {
@@ -48,7 +48,7 @@
   .pc-btn--block { @apply w-full; }
   .pc-btn[aria-busy="true"] { @apply pointer-events-none opacity-70; }
 
-  /* 3. Thẻ sản phẩm — 14/11/2026: không còn CSS; thẻ duy nhất snippets/ui_product_card.bwt viết 100% class Tailwind (đã gỡ .pc-card*, .pc-h4-pcard*). */
+  /* 3. Thẻ sản phẩm — 14/11/2026: không còn CSS; thẻ duy nhất snippets/ui_product_card.bwt viết 100% class Tailwind (đã gỡ .pc-card*, *). */
 
   /* 4. Ô nhập */
   .pc-field { @apply flex flex-col gap-1.5; }
@@ -173,306 +173,6 @@
   }
 }
 
-/* ===== v2.0 (03/11/2026, chủ dự án yêu cầu: "update trang chủ theo khung giao diện mới" — Figma travel node 5:2,
-   ảnh gốc design/home-v4/full.png). Thiết kế dùng thẻ bo 12/16px cả desktop ⇒ khác R4 (desktop rounded-none) — theo
-   yêu cầu "giống thiết kế" của chủ dự án. `:root .pc-h4 …` (0,3,0) để thắng CSS cũ `.pc-home-v3 .pc-portal h2/p/section`
-   (0,2,1); bỏ tiền tố khi xoá CSS cũ (D09). Mọi khối trang chủ mới gắn class gốc `pc-h4` + `pc-h4-sec`. ===== */
-@layer components {
-  /* 14.1 Khung khối */
-  :root .pc-h4.pc-h4-sec { @apply m-0 bg-white px-0 py-12 font-sans text-ink lg:py-16; }
-  :root .pc-h4.pc-h4-sec--soft { @apply bg-surface-soft; }
-  /* Khám phá → Giải pháp liền mạch như thiết kế (40px thay 2 × 64px) */
-  :root .pc-h4.pc-h4-sec--tight-b { @apply pb-10; }
-  :root .pc-h4.pc-h4-sec--tight-t { @apply pt-4 lg:pt-10; }
-  :root .pc-h4.pc-h4-sec--dark { @apply bg-brand-deep text-white; }
-  /* v2.1 (04/11/2026, chủ dự án: "fix lại chung 1 container"): khung = KHUNG CHUNG CỦA SITE — biến --pc-container-max /
-     --pc-container-gutter (assets/storefront-v3.css trên body.pc-site-v3: 1280px; lề 32px, ≥ 1200px 30px, ≤ 680px 20px), y như
-     .container mọi trang. Trước: 1344px + lề 16/32px ghi riêng ⇒ trang chủ + footer (mọi trang) lệch 30px so với header/nội dung. */
-  :root .pc-h4 .pc-h4-wrap { @apply mx-auto box-border w-full; max-width: var(--pc-container-max, 1280px); padding-inline: var(--pc-container-gutter, 16px); }
-  :root .pc-h4 .pc-h4-chap { @apply mb-8 flex items-center gap-4 lg:mb-9; }
-  :root .pc-h4 .pc-h4-chap__tag { @apply m-0 whitespace-nowrap text-xs font-bold uppercase tracking-[.16em] text-brand; }
-  :root .pc-h4 .pc-h4-chap__rule { @apply h-px flex-1 bg-line-soft; }
-  :root .pc-h4-sec--dark .pc-h4-chap__tag { @apply text-brand-deco; }
-  :root .pc-h4-sec--dark .pc-h4-chap__rule { @apply bg-white/10; }
-  :root .pc-h4 .pc-h4-head { @apply mb-6 flex flex-col gap-3 lg:mb-7 lg:flex-row lg:items-end lg:justify-between lg:gap-10; }
-  :root .pc-h4 .pc-h4-eyebrow { @apply m-0 mb-2 text-xs font-bold uppercase tracking-[.14em] text-brand; }
-  :root .pc-h4-sec--dark .pc-h4-eyebrow { @apply text-brand-deco; }
-  :root .pc-h4 .pc-h4-title { @apply m-0 text-3xl font-bold tracking-normal text-brand-deep lg:text-4xl; }
-  :root .pc-h4-sec--dark .pc-h4-title { @apply text-white; }
-  :root .pc-h4 .pc-h4-lead { @apply m-0 max-w-md text-sm leading-relaxed text-ink-muted lg:pb-1; }
-  :root .pc-h4 .pc-h4-more { @apply inline-flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-brand-deep no-underline hover:underline lg:min-h-0 lg:pb-1; }
-  :root .pc-h4 .pc-h4-more svg { @apply h-4 w-4; }
-  :root .pc-h4 .pc-h4-go { @apply mt-6 inline-flex items-center gap-1.5 text-sm font-bold; }
-  :root .pc-h4 .pc-h4-go svg { @apply h-3.5 w-3.5 transition-transform duration-200; }
-  :root .pc-h4 a:hover > .pc-h4-go svg, :root .pc-h4 a.pc-h4-go:hover svg { @apply translate-x-1; }
-
-
-
-  /* 14.4 Vấn đề da + thẻ Pharma AI */
-  :root .pc-h4 .pc-h4-concerns { @apply grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4; }
-  :root .pc-h4 .pc-h4-con { @apply flex flex-col overflow-hidden rounded-2xl border border-solid border-line-soft bg-white no-underline; }
-  :root .pc-h4 .pc-h4-con__media { @apply block aspect-[307/130] w-full overflow-hidden bg-brand-tint; }
-  :root .pc-h4 .pc-h4-con__media img { @apply block h-full w-full object-cover transition-transform duration-300; }
-  :root .pc-h4 .pc-h4-con:hover .pc-h4-con__media img { @apply scale-105; }
-  :root .pc-h4 .pc-h4-con__body { @apply px-4 py-3 lg:px-5 lg:py-4; }
-  :root .pc-h4 .pc-h4-con__t { @apply m-0 block text-sm font-bold text-brand-deep lg:text-base; }
-  :root .pc-h4 .pc-h4-con__d { @apply m-0 mt-1 block text-xs text-ink-muted; }
-  /* 12/11/2026 (chủ dự án gửi Figma node 701-154: "chuyển về theo thiết kế"): desktop về đúng mẫu — thẻ bo góc, ảnh nền xanh nhạt
-     phía trên, tên đậm xanh + dòng phụ xám bên dưới (không đè lên ảnh). Bỏ biến thể 09/11 (ảnh phủ kín 4:3 + dải sương trắng).
-     Mobile giữ ô icon tròn + tên (Main.png, mục 14.15). */
-  :root .pc-h4 .pc-h4-ai { @apply col-span-2 flex flex-col rounded-2xl bg-brand-deco p-6 text-brand-deep no-underline lg:col-span-1 lg:px-6 lg:py-7; }
-  :root .pc-h4 .pc-h4-ai__k { @apply m-0 text-xs font-bold uppercase tracking-[.14em] text-brand-deep; }
-  :root .pc-h4 .pc-h4-ai__t { @apply m-0 mt-3 text-lg font-bold text-brand-deep; }
-  :root .pc-h4 .pc-h4-ai__d { @apply m-0 mt-3 text-sm leading-relaxed text-brand-deep; }
-  :root .pc-h4 .pc-h4-ai .pc-h4-go { @apply mt-auto pt-5 text-brand-deep; }
-  /* Số thẻ vấn đề da chia 4 dư 2 (vd menu 6 mục) ⇒ thẻ AI rộng 2 cột cho kín hàng cuối */
-  :root .pc-h4 .pc-h4-ai--wide { @apply lg:col-span-2; }
-
-  /* 14.5 Hoạt chất */
-  :root .pc-h4 .pc-h4-ings { @apply grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8; }
-  :root .pc-h4 .pc-h4-ing { @apply box-border flex min-h-24 flex-col justify-between gap-3 rounded-xl border border-solid border-line-soft bg-white p-4 no-underline hover:border-brand-deco; }
-  :root .pc-h4 .pc-h4-ing__t { @apply m-0 block text-sm font-bold text-brand-deep; }
-  :root .pc-h4 .pc-h4-ing__n { @apply m-0 block text-xs font-semibold text-brand; }
-
-  /* 14.6 Hàng sản phẩm (Flash sale, Bán chạy) — mobile vuốt ngang, desktop 5 cột */
-  /* Hàng vuốt ngang tràn ra mép màn: lề âm / đệm = đúng lề khung (--pc-container-gutter), không ghi 16px */
-  :root .pc-h4 .pc-h4-prow { margin-inline: calc(-1 * var(--pc-container-gutter, 16px)); padding-inline: var(--pc-container-gutter, 16px); scroll-padding-inline: var(--pc-container-gutter, 16px); @apply grid snap-x snap-mandatory auto-cols-[46%] grid-flow-col gap-3 overflow-x-auto pb-1
-                                     sm:auto-cols-[31%] lg:mx-0 lg:grid-flow-row lg:grid-cols-5 lg:gap-4 lg:overflow-visible lg:px-0; scrollbar-width: none; }
-  /* 09/11/2026 (chủ dự án: thanh cuộn xám hiện dưới hàng Flash sale + hàng tab Bán chạy trên mobile): ẩn thanh cuộn, vẫn vuốt được */
-  :root .pc-h4 :is(.pc-h4-prow, .pc-h4-tabs)::-webkit-scrollbar { display: none; }
-  :root .pc-h4 .pc-h4-prow[hidden] { @apply hidden; }
-  :root .pc-h4 .pc-h4-prow > :nth-child(n+6) { @apply lg:hidden; }
-  /* 09/11/2026 (QA: thẻ kê toa có nhãn «Cần tư vấn» + chữ «Liên hệ để được tư vấn» chen phía trên nút «Xem chi tiết» — từ khi thẻ Bán chạy
-     có nút): chỉ giữ nhãn nhìn thấy, câu «Liên hệ…» để cho trình đọc màn hình (không bỏ nội dung cấu hình product_rx_card_label) */
-  /* Nút thẻ (03/11/2026, chủ dự án): nền đặc, bo tròn; Flash Sale (tone 'sale') giá + nút màu đỏ */
-  /* <a class="pc-btn"> bị luật màu link của .pc-h4 ép chữ tối ⇒ ghi lại chữ trắng cho nút nền đặc */
-  /* 09/11/2026 (QA: «Hết hàng» chữ trắng trên nền xanh/đỏ mờ 40% ≈ 1,5:1): nút vô hiệu của thẻ trang chủ = nền xám nhạt đặc, chữ xám đậm */
-  /* Flash sale: icon tia sét + tiêu đề đỏ; đồng hồ ô số đỏ (script cuối section_flash_sale dựng ô, .is-tick = hiệu ứng lật) */
-  :root .pc-h4 .pc-h4-fs__top { @apply flex flex-wrap items-center gap-3 lg:gap-5; }
-  :root .pc-h4 .pc-h4-fs__title { @apply inline-flex items-center gap-2 text-sale; }
-  :root .pc-h4 .pc-h4-fs__bolt { @apply block h-8 w-8 shrink-0; animation: pc-h4-bolt 1.6s ease-in-out infinite; }
-  :root .pc-h4 .pc-h4-timer { @apply inline-flex min-h-8 items-center gap-2 text-sm font-semibold text-ink-secondary; }
-  :root .pc-h4 .pc-h4-timer__clock { @apply inline-flex items-center gap-1 tabular-nums; }
-  :root .pc-h4 .pc-h4-timer__box { @apply inline-flex h-8 min-w-8 items-center justify-center overflow-hidden rounded-xl bg-sale px-1.5 text-base font-bold leading-none text-white; }
-  :root .pc-h4 .pc-h4-timer__box[hidden], :root .pc-h4 .pc-h4-timer__sep[hidden] { @apply hidden; }
-  :root .pc-h4 .pc-h4-timer__box b { @apply block; }
-  :root .pc-h4 .pc-h4-timer__box.is-tick b { animation: pc-h4-tick .35s ease-out; }
-  /* Lật số: chữ số mới trượt từ trên xuống + mờ dần vào; tia sét nhấp nháy nhẹ */
-  @keyframes pc-h4-tick { from { transform: translateY(-70%); opacity: 0; } to { transform: none; opacity: 1; } }
-  @keyframes pc-h4-bolt { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.12); opacity: .75; } }
-  :root .pc-h4 .pc-h4-timer__sep { @apply text-base font-bold text-sale; }
-  @media (prefers-reduced-motion: reduce) {
-    :root .pc-h4 .pc-h4-fs__bolt, :root .pc-h4 .pc-h4-timer__box.is-tick b { animation: none; }
-  }
-  /* Tab lọc (Bán chạy) — thẻ <a role="tab"> (link danh mục khi chưa chạy JS) */
-  :root .pc-h4 .pc-h4-tabs { margin-inline: calc(-1 * var(--pc-container-gutter, 16px)); padding-inline: var(--pc-container-gutter, 16px); scroll-padding-inline: var(--pc-container-gutter, 16px); @apply mb-6 flex gap-2.5 overflow-x-auto pb-1 lg:mx-0 lg:flex-wrap lg:px-0; scrollbar-width: none; }
-  :root .pc-h4 .pc-h4-tab { @apply box-border inline-flex h-11 shrink-0 items-center whitespace-nowrap rounded-full border border-solid border-line-soft bg-white px-5 text-sm font-semibold text-brand-deep no-underline hover:border-brand-deco; }
-  :root .pc-h4 .pc-h4-tab:is([aria-selected="true"], [aria-current="true"]) { @apply border-brand-deco bg-brand-deco; }
-
-  /* 14.7 Tin cậy (khối tối) */
-  :root .pc-h4 .pc-h4-trust2 { @apply grid gap-10 lg:grid-cols-2 lg:gap-16; }
-  :root .pc-h4 .pc-h4-trust2__t { @apply m-0 mt-2 text-3xl font-bold leading-tight text-white lg:text-4xl lg:leading-tight; }
-  :root .pc-h4 .pc-h4-trust2__d { @apply m-0 mt-6 max-w-xl text-base leading-relaxed text-white/85; }
-  :root .pc-h4 .pc-h4-tags { @apply m-0 mt-5 flex list-none flex-wrap gap-2.5 p-0; }
-  :root .pc-h4 .pc-h4-tags li { @apply m-0 rounded-full border border-solid border-white/30 px-3 py-1 text-xs font-medium text-white; }
-  :root .pc-h4 .pc-h4-tags a { @apply inline-flex items-center gap-1 text-white no-underline hover:underline; }
-  :root .pc-h4 .pc-h4-trust2__act { @apply mt-7 flex flex-wrap items-center gap-5; }
-  :root .pc-h4 .pc-h4-cta { @apply inline-flex min-h-12 items-center justify-center rounded-full bg-brand-deco px-7 text-base font-bold text-brand-deep no-underline hover:bg-white; }
-  :root .pc-h4 .pc-h4-trust2__addr { @apply m-0 max-w-[200px] text-sm leading-relaxed text-white/80; }
-  :root .pc-h4 .pc-h4-steps { @apply m-0 grid list-none gap-4 p-0 sm:grid-cols-2; }
-  :root .pc-h4 .pc-h4-steps > li { @apply m-0 flex; }
-  :root .pc-h4 .pc-h4-step { @apply m-0 box-border w-full rounded-2xl bg-brand p-6; }
-  :root .pc-h4 a.pc-h4-step { @apply block no-underline hover:bg-brand-hover; }
-  :root .pc-h4 .pc-h4-step__n { @apply m-0 text-xs font-bold text-brand-deco; }
-  :root .pc-h4 .pc-h4-step__t { @apply m-0 mt-2 text-lg font-bold text-white; }
-  :root .pc-h4 .pc-h4-step__d { @apply m-0 mt-3 text-sm leading-relaxed text-white/80; }
-
-
-
-  /* 14.9 Thương hiệu */
-  :root .pc-h4 .pc-h4-brands { @apply grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6; }
-  :root .pc-h4 .pc-h4-brand img { @apply block h-auto max-h-10 w-auto max-w-[80%] object-contain; }
-  :root .pc-h4 .pc-h4-hl { @apply not-italic text-sale; }
-  :root .pc-h4 .pc-h4-brand { @apply box-border flex min-h-[72px] items-center justify-center rounded-xl border border-solid border-line-soft bg-white px-3 text-center text-sm font-bold uppercase tracking-[.06em] text-brand-deep no-underline hover:border-brand-deco; }
-
-  /* 14.10 Blog */
-  :root .pc-h4 .pc-h4-blog { @apply grid gap-8 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr] lg:gap-6; }
-  :root .pc-h4 .pc-h4-post { @apply block no-underline; }
-  :root .pc-h4 .pc-h4-post:first-child { @apply sm:col-span-2 lg:col-span-1; }
-  :root .pc-h4 .pc-h4-post__img { @apply block aspect-[16/9] overflow-hidden rounded-2xl bg-brand-tint lg:aspect-auto lg:h-[220px]; }
-  :root .pc-h4 .pc-h4-post__img img { @apply block h-full w-full object-cover transition-transform duration-300; }
-  :root .pc-h4 .pc-h4-post:hover .pc-h4-post__img img { @apply scale-105; }
-  :root .pc-h4 .pc-h4-post__k { @apply m-0 mt-4 block text-xs font-bold uppercase tracking-[.1em] text-brand; }
-  :root .pc-h4 .pc-h4-post__t { @apply m-0 mt-3 line-clamp-2 text-base font-bold leading-snug text-brand-deep; }
-  :root .pc-h4 .pc-h4-post__by { @apply m-0 mt-3 block text-xs text-ink-muted; }
-
-  /* 14.11 Danh mục nhanh (snippets/section_footer_brands.bwt — mọi trang) */
-  :root .pc-h4.pc-h4-quick { @apply m-0 border-0 border-t border-solid border-line-soft bg-surface-soft py-12 font-sans lg:py-14; }
-  :root .pc-h4 .pc-h4-quick__t { @apply m-0 mb-6 text-lg font-bold uppercase tracking-[.06em] text-brand-deep lg:mb-7; }
-  /* v2.1 (04/11/2026): số cột desktop = số nhóm Danh mục SEO thực có (auto-fit) — cột Từ khoá đã tách thành dải (3) riêng */
-  :root .pc-h4 .pc-h4-quick__grid { @apply grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-[repeat(auto-fit,minmax(0,1fr))] lg:gap-x-8; }
-  /* (1) dải Thương hiệu / Loại SP — trên cùng, trước lưới Danh mục SEO */
-  :root .pc-h4 .pc-h4-quick__strips { @apply mb-8 flex flex-col gap-6; }
-  :root .pc-h4 .pc-h4-quick__h { @apply m-0 mb-3 text-base font-bold text-brand-deep; }
-  :root .pc-h4 .pc-h4-quick__list { @apply m-0 flex list-none flex-col gap-1 p-0; }
-  :root .pc-h4 .pc-h4-quick__list li { @apply m-0; }
-  :root .pc-h4 .pc-h4-quick__list--inline { @apply flex-row flex-wrap gap-x-4 gap-y-0; }
-  :root .pc-h4 .pc-h4-quick__extra { @apply mt-8; }
-  /* v2.1 (04/11/2026): khối <details data-pc-acc> — desktop luôn mở, tiêu đề như cũ (không marker, không bấm); mobile xem 14.22 */
-  :root .pc-h4 .pc-h4-acc__sum { @apply list-none; }
-  :root .pc-h4 .pc-h4-acc__sum::-webkit-details-marker { display: none; }
-  @media (min-width: 1024px) {
-    :root .pc-h4 .pc-h4-acc__sum { @apply pointer-events-none; display: contents; }
-    :root .pc-h4 .pc-h4-acc__ic { @apply hidden; }
-  }
-
-  /* Ẩn/hiện theo thiết bị — KHÔNG dùng `hidden lg:block` (global_core .hidden !important phá idiom này) */
-  @media (max-width: 1023.98px) { :root .pc-h4 .pc-h4-lg-only { display: none; } }
-  @media (min-width: 1024px) { :root .pc-h4 .pc-h4-sm-only { display: none; } }
-  :root .pc-h4 .pc-h4-quick__list a { @apply inline-block py-1 text-sm text-ink-muted no-underline hover:text-brand-deep hover:underline; }
-
-
-}
-
-/* ===== v2.1 (04/11/2026, chủ dự án yêu cầu: "update giao diện mobile theo khung thiết kế" — ảnh gốc Main.png 390px).
-   CHỈ áp < 1024px (desktop giữ nguyên v2.0). Nguyên tắc: khung cố định, thiếu chỗ ⇒ hàng vuốt ngang (scroll-snap) thay vì
-   kéo dài trang; mô tả phụ ẩn (.pc-h4-lg-only ở template). Icon ưu tiên ảnh cấu hình / ảnh danh mục Sapo (link.object.image).
-   Phần tử chỉ có ở mobile: .pc-h4-sm-only (mục 14.11). ===== */
-@layer components {
-  @media (max-width: 1023.98px) {
-    /* 14.13 Khung chung mobile */
-    :root .pc-h4.pc-h4-sec { @apply py-8; }
-    :root .pc-h4.pc-h4-sec--tight-b { @apply pb-6; }
-    :root .pc-h4.pc-h4-sec--tight-t { @apply pt-2; }
-    :root .pc-h4.pc-h4-trust { @apply hidden; }
-    :root .pc-h4 .pc-h4-chap { @apply mb-1.5; }
-    :root .pc-h4 .pc-h4-chap__rule { @apply hidden; }
-    :root .pc-h4 .pc-h4-title { @apply text-2xl leading-tight; }
-    :root .pc-h4 .pc-h4-head { @apply mb-4 gap-1; }
-    :root .pc-h4 .pc-h4-lead { @apply line-clamp-2 text-sm; }
-    /* Đầu khối có phần phụ bên phải (nút tròn "Xem tất cả" / nhãn đếm) */
-    :root .pc-h4 .pc-h4-head--aside { @apply grid grid-cols-[1fr_auto] items-center gap-x-3; }
-    :root .pc-h4 .pc-h4-head--aside > * { @apply col-start-1; }
-    :root .pc-h4 .pc-h4-head--aside > :last-child { @apply col-start-2 row-span-2 row-start-1 self-center; }
-    :root .pc-h4 .pc-h4-more--icon { @apply h-11 w-11 justify-center gap-0 rounded-full bg-brand-tint p-0 text-brand-deep hover:no-underline; }
-    :root .pc-h4 .pc-h4-more--icon svg { @apply h-5 w-5; }
-    :root .pc-h4 .pc-h4-more--icon .pc-h4-more__txt { @apply sr-only; }
-    /* Hàng vuốt ngang dùng chung: 2 dòng, cột tự xếp theo chiều ngang */
-    :root .pc-h4 .pc-h4-swipe2 { margin-inline: calc(-1 * var(--pc-container-gutter, 16px)); padding-inline: var(--pc-container-gutter, 16px); scroll-padding-inline: var(--pc-container-gutter, 16px); @apply grid snap-x snap-mandatory grid-flow-col grid-rows-2 overflow-x-auto pb-1; scrollbar-width: none; }
-    :root .pc-h4 .pc-h4-swipe2::-webkit-scrollbar { display: none; }
-    :root .pc-h4 .pc-h4-swipe2 > * { @apply snap-start; }
-
-
-
-    /* 14.15 Vấn đề da: ô 3 cột × 2 dòng, dư ⇒ vuốt sang trang; thẻ AI tách xuống dưới */
-    /* 13/11/2026 (chủ dự án: "mobile cũng để như thiết kế, card ảnh trên + chữ dưới"): bỏ ô icon tròn + vuốt ngang —
-       lưới 2 cột như desktop, thẻ bo góc, ảnh phía trên, tên + dòng phụ bên dưới */
-    :root .pc-h4 .pc-h4-concerns.pc-h4-swipe2 { @apply m-0 grid-flow-row grid-cols-2 grid-rows-none gap-3 overflow-visible p-0; }
-    :root .pc-h4 .pc-h4-con__arr { @apply hidden; }
-    :root .pc-h4 .pc-h4-con__body { @apply px-3 py-2.5; }
-    :root .pc-h4 .pc-h4-con__t { @apply line-clamp-2 text-sm leading-snug; }
-    :root .pc-h4 .pc-h4-ai--m { @apply mt-4 gap-3 bg-brand-tint p-5; }
-    :root .pc-h4 .pc-h4-ai--m .pc-h4-ai__k { @apply flex items-center gap-2 text-sm tracking-normal; }
-    :root .pc-h4 .pc-h4-ai--m .pc-h4-ai__d { @apply mt-0 text-sm; }
-    :root .pc-h4 .pc-h4-ai--m .pc-h4-go { @apply mt-1 box-border flex min-h-12 w-full justify-center rounded-full bg-brand-deep px-4 pt-0 text-white; }
-
-    /* 14.16 Hoạt chất: vòng tròn ảnh + tên + số SP, 2 dòng vuốt ngang */
-    :root .pc-h4 .pc-h4-ings { @apply auto-cols-[23%] grid-cols-none gap-x-2 gap-y-4; }
-    :root .pc-h4 .pc-h4-ing { @apply min-h-0 items-center justify-start gap-1 border-0 bg-transparent p-0 text-center; }
-    :root .pc-h4 .pc-h4-ing__ic { @apply mb-1 inline-flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-white text-brand; }
-    :root .pc-h4 .pc-h4-ing__ic img { @apply block h-full w-full object-cover; }
-    :root .pc-h4 .pc-h4-ing__t { @apply line-clamp-2 text-xs; }
-    :root .pc-h4 .pc-h4-ing__n { @apply font-normal text-ink-muted; }
-    :root .pc-h4 .pc-h4-count { @apply m-0 whitespace-nowrap rounded-full bg-brand-tint px-3 py-1.5 text-xs font-bold text-brand-deep; }
-
-    /* 14.17 Hàng sản phẩm mobile: nhãn hãng màu thương hiệu, ẩn mô tả; Bán chạy = lưới 2 × 2 vuốt ngang.
-       09/11/2026 (chủ dự án): thẻ Bán chạy CÓ nút như Flash sale — bỏ luật ẩn .pc-h4-prow--compact .pc-h4-pcard__a */
-    /* 09/11/2026 (kế hoạch tinh chỉnh mobile PLAN-2026-MOBILE-UI-01, TASK-01/02/03 — chủ dự án giao):
-       - Ảnh tràn viền: thẻ bỏ đệm 12px + khung ảnh lồng (bo 12px, nền riêng) — ảnh vuông 1:1 sát mép trên/trái/phải, thẻ bo 12px cắt góc ảnh;
-         chữ / giá / nút lùi vào 10px. object-cover (ảnh SP Sapo vuông ⇒ không mất gì; ảnh lệch tỉ lệ cắt giữa, không méo).
-       - Nhãn hãng (vendor «PHARMA COSMETICS» lặp ở mọi thẻ) ẩn trên mobile — hãng vẫn có ở trang chi tiết; nhãn kê toa (cùng class) cũng ẩn,
-         thẻ kê toa vẫn còn nhãn «Cần tư vấn» ở chỗ giá. Tên SP luôn giữ đủ chỗ 2 dòng ⇒ giá + nút các thẻ thẳng hàng.
-       - Nút thẻ: bo 8px thay viên thuốc 9999px, đệm ngang 8px, 1 dòng (nowrap + … khi chữ dài hơn) — «Chọn phiên bản» gãy 2 dòng ở 390px. */
-    /* chữ nút là nút văn bản trần (không bọc span) ⇒ «…» chỉ chạy với display:block; cao 44px giữ bằng line-height */
-    :root .pc-h4 .pc-h4-prow.pc-h4-swipe2 { @apply gap-3; }
-    :root .pc-h4 .pc-h4-fs__top { @apply grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-1; }
-    :root .pc-h4 .pc-h4-fs__ic { @apply row-span-2 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-sale-tint; }
-    :root .pc-h4 .pc-h4-fs__ic img { @apply block h-6 w-6; }
-    :root .pc-h4 .pc-h4-fs__top > :not(.pc-h4-fs__ic) { @apply col-start-2; }
-    :root .pc-h4 .pc-h4-fs__title { @apply leading-none; }
-    :root .pc-h4 .pc-h4-timer { @apply min-h-0 text-sm; }
-    :root .pc-h4 .pc-h4-timer__box { @apply h-6 min-w-6 rounded-[6px] bg-sale-tint px-1 text-sm text-sale; }
-    :root .pc-h4 .pc-h4-timer__sep { @apply text-sm; }
-    :root .pc-h4 .pc-h4-timer__label { @apply sr-only; }
-
-    /* 14.18 Tin cậy (mobile nền sáng): tiêu đề → câu trích → mô tả → thẻ lộ trình 4 bước có tab */
-    :root .pc-h4.pc-h4-spa { @apply bg-brand-tint text-ink; }
-    :root .pc-h4-spa .pc-h4-chap__tag, :root .pc-h4-spa .pc-h4-eyebrow { @apply text-brand; }
-    :root .pc-h4-spa .pc-h4-trust2 { @apply block; }
-    :root .pc-h4.pc-h4-spa .pc-h4-trust2__t { @apply mt-1 text-brand-deep; }
-    :root .pc-h4.pc-h4-spa .pc-h4-trust2__t br { @apply hidden; }
-    :root .pc-h4.pc-h4-spa .pc-h4-trust2__d { @apply mt-2 line-clamp-4 text-sm text-ink-muted; }
-    :root .pc-h4.pc-h4-spa :is(.pc-h4-tags, .pc-h4-trust2__act, .pc-h4-steps) { @apply hidden; }
-    :root .pc-h4 .pc-h4-route { @apply mt-5 rounded-2xl bg-white p-4; }
-    :root .pc-h4 .pc-h4-route__addr { @apply m-0 flex items-start gap-2 border-0 border-b border-solid border-line-soft pb-3 text-sm text-ink-secondary; }
-    :root .pc-h4 .pc-h4-route__addr svg { @apply mt-0.5 h-5 w-5 shrink-0 text-brand; }
-    :root .pc-h4 .pc-h4-route__hd { @apply mt-3 flex items-center justify-between gap-2; }
-    :root .pc-h4 .pc-h4-route__t { @apply m-0 min-w-0 text-sm font-bold text-brand-deep; }
-    :root .pc-h4 .pc-h4-route__tag { @apply m-0 shrink-0 whitespace-nowrap text-xs font-bold uppercase tracking-[.06em] text-brand; }
-    :root .pc-h4 .pc-h4-route__tabs { @apply mt-3 grid grid-cols-4 gap-2; }
-    :root .pc-h4 .pc-h4-route__tab { @apply box-border flex min-h-[76px] flex-col items-center justify-center gap-1 rounded-2xl bg-brand-tint px-1 py-2 text-center text-xs font-semibold leading-tight text-brand-deep no-underline; }
-    :root .pc-h4 .pc-h4-route__tab b { @apply text-sm font-bold text-brand; }
-    :root .pc-h4 .pc-h4-route__tab svg { @apply h-4 w-4; }
-    :root .pc-h4 .pc-h4-route__tab[aria-selected="true"] { @apply bg-brand-deep text-white; }
-    :root .pc-h4 .pc-h4-route__tab[aria-selected="true"] b { @apply text-white; }
-    :root .pc-h4 .pc-h4-route__p { @apply mt-3 flex items-start gap-2 rounded-xl bg-surface-soft p-3; }
-    :root .pc-h4 .pc-h4-route__p[hidden] { @apply hidden; }
-    :root .pc-h4 .pc-h4-route__p > svg { @apply mt-0.5 h-4 w-4 shrink-0 text-brand; }
-    :root .pc-h4 .pc-h4-route__p b { @apply block text-sm font-bold text-brand-deep; }
-    :root .pc-h4 .pc-h4-route__p span { @apply mt-1 block text-xs leading-relaxed text-ink-secondary; }
-    :root .pc-h4 .pc-h4-route__cta { @apply mt-4 box-border flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-deep px-4 text-base font-bold text-white no-underline; }
-    :root .pc-h4 .pc-h4-route__cta svg { @apply h-4 w-4; }
-
-
-
-    /* 14.20 Thương hiệu: vòng tròn logo (ảnh cấu hình / ảnh danh mục, thiếu ⇒ chữ viết tắt) + tên, 2 dòng vuốt ngang */
-    :root .pc-h4 .pc-h4-brands { @apply auto-cols-[23%] grid-cols-none gap-x-2 gap-y-4; }
-    :root .pc-h4 .pc-h4-brand { @apply min-h-0 flex-col gap-2 border-0 bg-transparent p-0 text-xs font-semibold normal-case tracking-normal; }
-    :root .pc-h4 .pc-h4-brand__logo { @apply box-border inline-flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-solid border-white bg-brand-tint text-xs font-bold uppercase text-brand-deep; }
-    :root .pc-h4 .pc-h4-brand__logo img { @apply max-h-full max-w-full rounded-full object-contain; }
-    :root .pc-h4 .pc-h4-brand__name { @apply block w-full truncate; }
-
-    /* 14.21 Blog: bài nổi bật rộng (nhãn đè ảnh, tác giả · ngày, tóm tắt 1 dòng) + 2 bài 2 cột */
-    :root .pc-h4 .pc-h4-blog { @apply grid-cols-2 gap-3; }
-    :root .pc-h4 .pc-h4-post { @apply flex flex-col rounded-2xl bg-surface-soft p-3; }
-    :root .pc-h4 .pc-h4-post:first-child { @apply col-span-2; }
-    :root .pc-h4 .pc-h4-post__img { @apply relative aspect-[4/3] rounded-xl; }
-    :root .pc-h4 .pc-h4-post:first-child .pc-h4-post__img { @apply aspect-[16/9]; }
-    :root .pc-h4 .pc-h4-post__badge { @apply absolute left-2 top-2 rounded-full bg-brand-deep px-3 py-1 text-xs font-bold uppercase text-white; }
-    :root .pc-h4 .pc-h4-post__t { @apply order-2 mt-2 text-sm; }
-    :root .pc-h4 .pc-h4-post:first-child .pc-h4-post__t { @apply text-base; }
-    :root .pc-h4 .pc-h4-post__meta { @apply order-3 mt-2 flex flex-col text-xs text-ink-muted; }
-    :root .pc-h4 .pc-h4-post:first-child .pc-h4-post__meta { @apply order-1 mt-3 flex-row flex-wrap gap-x-2 font-semibold text-brand; }
-    :root .pc-h4 .pc-h4-post:first-child .pc-h4-post__meta > span + span::before { content: "·"; @apply mr-2; }
-    /* 14.22 Accordion Danh mục nhanh + chân trang (<details data-pc-acc>, script cuối snippets/footer.bwt) — dải pháp lý ẩn */
-    :root .pc-h4 .pc-h4-quick__grid { @apply grid-cols-1 gap-0; }
-    :root .pc-h4 .pc-h4-quick__t { @apply mb-2; }
-    :root .pc-h4 .pc-h4-acc { @apply border-0 border-b border-solid border-line-soft; }
-    :root .pc-h4 .pc-h4-quick__extra { @apply mt-0; }
-    :root .pc-h4 .pc-h4-quick__strips { @apply mb-0 gap-0; }
-    :root .pc-h4 .pc-h4-acc__sum { @apply flex min-h-12 cursor-pointer list-none items-center justify-between gap-3; }
-    :root .pc-h4 .pc-h4-acc__sum::-webkit-details-marker { display: none; }
-    :root .pc-h4 .pc-h4-acc__sum .pc-h4-quick__h { @apply m-0; }
-    :root .pc-h4 .pc-h4-acc__ic { @apply inline-flex shrink-0 transition-transform duration-200; }
-    :root .pc-h4 .pc-h4-acc__ic svg { @apply h-5 w-5; }
-    :root .pc-h4 .pc-h4-acc[open] .pc-h4-acc__ic { @apply rotate-180; }
-    :root .pc-h4 .pc-h4-acc > ul { @apply pb-2; }
-    :root .pc-h4 .pc-h4-acc li > a { @apply inline-flex min-h-11 items-center py-0; }
-
-    :root .pc-h4 .pc-h4-post__sum { @apply order-4 m-0 mt-1 line-clamp-1 text-sm text-ink-muted; }
-  }
-}
-
 /* ===== v2.0 (03/11/2026) — 15. Hero trang chủ: slide video (snippets/section_hero.bwt + assets/home-hero.js), chuyển từ
    assets/home-portal.css (đóng băng R1). Video phủ kín khung (container query; iframe 16:9 luôn lớn hơn khung ⇒ không viền đen),
    hiện dần khi thật sự chạy (.is-playing); không nhận chuột (vuốt vẫn chuyển slide); lớp tối mờ mép trên để chữ menu trắng đọc
@@ -510,7 +210,7 @@ body:has(.pc-shb-hero #section_hero) header.header:not(:hover):not(:focus-within
 }
 
 /* ===== v2.1 (04/11/2026) — 17. ĐÃ BỎ: bản đầu ép header về 1344px để khớp trang chủ ⇒ mọi trang khác lệch (chủ dự án báo lại cùng
-   ngày). Đúng hướng: header giữ khung chung .container (--pc-container-max / --pc-container-gutter), trang chủ + footer (.pc-h4-wrap)
+   ngày). Đúng hướng: header giữ khung chung .container (--pc-container-max / --pc-container-gutter), trang chủ + footer ()
    dùng cùng 2 biến đó — xem mục 14.1. ===== */
 
 /* ===== v2.1 (04/11/2026, chủ dự án: "cho chèn video theo tag dạng youtube vào sản phẩm liệu trình") — 18. Khối video trang liệu
@@ -612,7 +312,7 @@ body:has(.pc-shb-hero #section_hero) header.header:not(:hover):not(:focus-within
      như UNIQLO"). Cùng ngôn ngữ với popup «Nhận hàng an toàn»: khối bo góc, KHÔNG viền (chủ dự án: "kẻ viền border ghê quá"). */
   .pc-scam { @apply bg-white font-sans text-ink; }
   /* 12/11/2026 (chủ dự án: "check container, suốt ngày mắc lỗi này"): khung = KHUNG CHUNG của site (--pc-container-max / --pc-container-gutter,
-     như .pc-h4-wrap & breadcrumb) ⇒ mép chữ thẳng mép logo; trước đó max-w-3xl căn giữa lệch ~170px so với header. Đoạn văn dài giới hạn
+     như  & breadcrumb) ⇒ mép chữ thẳng mép logo; trước đó max-w-3xl căn giữa lệch ~170px so với header. Đoạn văn dài giới hạn
      ~48rem, căn TRÁI để dễ đọc. :root + .pc-scam để thắng reset .container cũ. */
   :root .pc-scam .pc-scam__wrap { @apply mx-auto box-border w-full pb-12 pt-6 lg:pb-16 lg:pt-10; max-width: var(--pc-container-max, 1280px); padding-inline: var(--pc-container-gutter, 16px); }
   .pc-scam__hero { @apply max-w-3xl; }

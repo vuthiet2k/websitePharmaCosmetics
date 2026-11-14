@@ -1,36 +1,56 @@
 {%- comment -%}
-  03/11/2026 (chủ dự án: trang chủ theo Figma "travel" node 5:2): chương III "Đồng hành" — eyebrow + tiêu đề + "Xem tất cả bài viết",
-  3 bài: bài 1 rộng gấp đôi (nhãn "Bài nổi bật"), 2 bài sau nhãn = tên blog; dưới ảnh: nhãn · ngày, tiêu đề 2 dòng, "Bởi <tác giả>".
-  Nguồn giữ nguyên: blog settings.portal_blog (trống ⇒ section_blog_url). CSS: ui-src/css/components.css mục 14.10.
-  04/11/2026 (chủ dự án: giao diện mobile theo khung Main.png — CSS mục 14.21, chỉ < 1024px): nhãn chương có tiền tố
-  portal_chapter_prefix; ẩn eyebrow; "Xem tất cả bài viết" thành nút tròn; bài 1 rộng (nhãn "Bài nổi bật" đè ảnh, tác giả · ngày,
-  tóm tắt 1 dòng), 2 bài sau 2 cột (tiêu đề, tác giả, ngày). Desktop giữ nguyên.
+  section_portal_blog.bwt — chuong III "Dong hanh".
+  Dung 100% Tailwind utility class, mau theo he thong chu de chinh.
+  Desktop: 3 bai viet (bai dau rong gap doi).
+  Mobile: bai 1 the rong, 2 bai sau 2 cot.
 {%- endcomment -%}
 {%- assign portal_blog_handle = settings.portal_blog | default: settings.section_blog_url -%}
 {%- assign portal_blog = blogs[portal_blog_handle] -%}
-<section class="pc-h4 pc-h4-sec" aria-labelledby="pc-h4-blog-title">
-  <div class="pc-h4-wrap">
-    <div class="pc-h4-chap"><p class="pc-h4-chap__tag"><span class="pc-h4-sm-only">{{ settings.portal_chapter_prefix | default: 'Mục' | escape }} </span>III · {{ settings.portal_chapter_3 | default: 'Đồng hành' | escape }}</p><span class="pc-h4-chap__rule" aria-hidden="true"></span></div>
-    <div class="pc-h4-head{% if portal_blog.url != blank %} pc-h4-head--aside{% endif %}">
+<section class="py-8 lg:py-16" aria-labelledby="portal-blog-title">
+  <div class="container">
+    <div class="mb-4 flex items-center gap-3">
+      <p class="m-0 text-xs font-bold uppercase tracking-wider text-primary">
+        <span class="lg:hidden">{{ settings.portal_chapter_prefix | default: 'Muc' | escape }} </span>III · {{ settings.portal_chapter_3 | default: 'Dong hanh' | escape }}
+      </p>
+      <span class="hidden lg:block h-px flex-1 bg-line-soft" aria-hidden="true"></span>
+    </div>
+    <div class="mb-6 flex items-center justify-between gap-4">
       <div>
-        <p class="pc-h4-eyebrow pc-h4-lg-only">{{ settings.portal_blog_eyebrow | default: 'Kiến thức chăm sóc da' | escape }}</p>
-        <h2 class="pc-h4-title" id="pc-h4-blog-title">{{ settings.portal_blog_title | default: 'Blog Pharma Cosmetics' | escape }}</h2>
+        <p class="hidden lg:block m-0 text-xs font-bold uppercase tracking-wider text-ink-muted">{{ settings.portal_blog_eyebrow | default: 'Kien thuc cham soc da' | escape }}</p>
+        <h2 class="m-0 mt-1 text-2xl lg:text-3xl font-bold leading-tight text-ink" id="portal-blog-title">{{ settings.portal_blog_title | default: 'Blog Pharma Cosmetics' | escape }}</h2>
       </div>
-      {%- if portal_blog.url != blank -%}<a class="pc-h4-more pc-h4-more--icon" href="{{ portal_blog.url }}"><span class="pc-h4-more__txt">{{ settings.portal_blog_viewall_text | default: 'Xem tất cả bài viết' | escape }}</span>{% include 'ui_icon', name: 'arrow-right' %}</a>{%- endif -%}
+      {%- if portal_blog.url != blank -%}
+      <a class="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-dark no-underline shrink-0 transition-colors" href="{{ portal_blog.url }}">
+        <span class="hidden sm:inline">{{ settings.portal_blog_viewall_text | default: 'Xem tat ca bai viet' | escape }}</span>
+        {% include 'ui_icon', name: 'arrow-right' %}
+      </a>
+      {%- endif -%}
     </div>
     {%- if portal_blog.articles.size > 0 -%}
-    <div class="pc-h4-blog">
+    <div class="grid grid-cols-2 lg:grid-cols-[2fr_1fr_1fr] gap-3 lg:gap-6">
       {%- for article in portal_blog.articles limit: 3 -%}
-      <a class="pc-h4-post" href="{{ article.url }}">
-        <span class="pc-h4-post__img"><img src="{% if article.image.src != blank %}{{ article.image.src | img_url: 'large' }}{% else %}{% include 'placeholder_img_url' %}{% endif %}" alt="{{ article.title | escape }}" width="{% if forloop.first %}1232{% else %}616{% endif %}" height="440" loading="lazy">{%- if forloop.first -%}<span class="pc-h4-post__badge pc-h4-sm-only">{{ settings.portal_blog_featured_label | default: 'Bài nổi bật' | escape }}</span>{%- endif -%}</span>
-        <span class="pc-h4-post__k pc-h4-lg-only">{% if forloop.first %}{{ settings.portal_blog_featured_label | default: 'Bài nổi bật' | escape }}{% else %}{{ portal_blog.name | default: portal_blog.title | escape }}{% endif %} · {{ article.published_on | date: '%d.%m.%Y' }}</span>
-        <span class="pc-h4-post__t">{{ article.title | escape }}</span>
-        <span class="pc-h4-post__meta pc-h4-sm-only">{%- if article.author != blank -%}<span>{{ article.author | escape }}</span>{%- endif -%}<span>{{ article.published_on | date: '%d/%m/%Y' }}</span></span>
-        {%- if forloop.first -%}{%- assign pb_sum = article.summary | default: article.excerpt | strip_html | strip | truncate: 140 -%}{%- if pb_sum != blank -%}<span class="pc-h4-post__sum pc-h4-sm-only">{{ pb_sum | escape }}</span>{%- endif -%}{%- endif -%}
-        {%- if article.author != blank -%}<span class="pc-h4-post__by pc-h4-lg-only">{{ settings.portal_blog_by_label | default: 'Bởi' | escape }} {{ article.author | escape }}</span>{%- endif -%}
+      <a class="{% if forloop.first %}col-span-2 lg:col-span-1{% endif %} flex flex-col rounded-2xl bg-surface-soft p-3 lg:p-0 lg:bg-transparent no-underline group" href="{{ article.url }}">
+        <span class="relative block overflow-hidden rounded-xl lg:rounded-2xl bg-surface-soft {% if forloop.first %}aspect-[16/9] lg:h-[220px]{% else %}aspect-[4/3] lg:aspect-auto lg:h-[220px]{% endif %}">
+          <img class="block h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" src="{% if article.image.src != blank %}{{ article.image.src | img_url: 'large' }}{% else %}{% include 'placeholder_img_url' %}{% endif %}" alt="{{ article.title | escape }}" width="{% if forloop.first %}1232{% else %}616{% endif %}" height="440" loading="lazy">
+          {%- if forloop.first -%}
+          <span class="lg:hidden absolute left-2 top-2 rounded-full bg-primary px-3 py-1 text-xs font-bold uppercase text-white">{{ settings.portal_blog_featured_label | default: 'Bai noi bat' | escape }}</span>
+          {%- endif -%}
+        </span>
+        <span class="hidden lg:block m-0 mt-4 text-xs font-bold uppercase tracking-wider text-primary">{% if forloop.first %}{{ settings.portal_blog_featured_label | default: 'Bai noi bat' | escape }}{% else %}{{ portal_blog.name | default: portal_blog.title | escape }}{% endif %} · {{ article.published_on | date: '%d.%m.%Y' }}</span>
+        <span class="m-0 mt-2 line-clamp-2 text-sm lg:text-base font-bold leading-snug text-ink group-hover:text-primary transition-colors">{{ article.title | escape }}</span>
+        <span class="lg:hidden m-0 mt-2 flex flex-wrap gap-x-2 text-xs text-ink-muted">{%- if article.author != blank -%}<span>{{ article.author | escape }}</span>{%- endif -%}<span>{{ article.published_on | date: '%d/%m/%Y' }}</span></span>
+        {%- if forloop.first -%}
+          {%- assign pb_sum = article.summary | default: article.excerpt | strip_html | strip | truncate: 140 -%}
+          {%- if pb_sum != blank -%}<span class="lg:hidden m-0 mt-1 line-clamp-1 text-xs text-ink-muted">{{ pb_sum | escape }}</span>{%- endif -%}
+        {%- endif -%}
+        {%- if article.author != blank -%}
+        <span class="hidden lg:block m-0 mt-2 text-xs text-ink-muted">{{ settings.portal_blog_by_label | default: 'Boi' | escape }} {{ article.author | escape }}</span>
+        {%- endif -%}
       </a>
       {%- endfor -%}
     </div>
-    {%- else -%}<p class="text-sm text-ink-secondary">{{ settings.portal_blog_empty_text | default: 'Bài viết đang được cập nhật.' | escape }}</p>{%- endif -%}
+    {%- else -%}
+    <p class="text-sm text-ink-secondary">{{ settings.portal_blog_empty_text | default: 'Bai viet dang duoc cap nhat.' | escape }}</p>
+    {%- endif -%}
   </div>
 </section>
