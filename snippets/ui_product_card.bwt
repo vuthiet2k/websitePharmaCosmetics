@@ -34,9 +34,10 @@
   {%- if pc_pc_tm contains '§freeship' -%}{%- assign pc_pc_freeship = true -%}{%- endif -%}
   {%- if pc_pc_tl contains 'pre-order' -%}{%- assign pc_pc_preorder = true -%}{%- endif -%}
 {%- endfor -%}
+{%- comment -%} Vùng chạm ghi min-h-[44px] / h-[44px] (KHÔNG min-h-11 / h-11): thang rem của Tailwind co theo cỡ chữ gốc 14px ⇒ h-11 chỉ ra 38,5px (.clinerules/03 UI-0.4b). {%- endcomment -%}
 {%- comment -%} Chuỗi class ghi NGUYÊN VĂN (Tailwind chỉ sinh CSS cho chuỗi nhìn thấy trong file). `!text-…`: thắng luật màu link của CSS cũ. {%- endcomment -%}
-{%- assign pc_pc_btn = 'mt-2 inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 border-0 bg-card-btn px-3 text-center text-sm font-semibold !text-card-btn-text no-underline rounded-full hover:bg-btn-hover' -%}
-{%- if pc_pc_sale -%}{%- assign pc_pc_btn = 'mt-2 inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 border-0 bg-flash-badge px-3 text-center text-sm font-semibold !text-flash-badge-text no-underline rounded-full hover:brightness-90' -%}{%- endif -%}
+{%- assign pc_pc_btn = 'mt-2 inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 border-0 bg-card-btn px-3 text-center text-sm font-semibold !text-card-btn-text no-underline rounded-full hover:bg-btn-hover' -%}
+{%- if pc_pc_sale -%}{%- assign pc_pc_btn = 'mt-2 inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 border-0 bg-flash-badge px-3 text-center text-sm font-semibold !text-flash-badge-text no-underline rounded-full hover:brightness-90' -%}{%- endif -%}
 <article class="relative flex h-full min-w-0 snap-start flex-col [html[data-pc-view=list]_&]:flex-row overflow-hidden border border-solid border-card-line bg-card text-left font-sans rounded-2xl">
   {%- comment -%} html[data-pc-view=list] (nút lưới / danh sách ở trang danh mục) ⇒ thẻ nằm ngang, ảnh cố định bề rộng. {%- endcomment -%}
   <div class="relative [html[data-pc-view=list]_&]:w-28 [html[data-pc-view=list]_&]:shrink-0 md:[html[data-pc-view=list]_&]:w-48">
@@ -50,8 +51,8 @@
     {%- elsif pc_pc_tag != blank -%}<span class="absolute left-2 top-2 max-w-xs truncate bg-primary px-2 py-1 text-xs font-bold text-white rounded-full">{{ pc_pc_tag | escape }}</span>
     {%- endif -%}
     {%- if wish == true -%}
-    <button type="button" class="group absolute right-1 top-1 flex h-11 w-11 cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-ink-secondary aria-pressed:text-sale" data-pc-wish="{{ product.alias }}" aria-label="Yêu thích {{ pc_pc_name | escape }}" aria-pressed="false">
-      <span class="flex h-9 w-9 items-center justify-center bg-white rounded-full">
+    <button type="button" class="group absolute right-1 top-1 flex h-[44px] w-[44px] cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-ink-secondary aria-pressed:text-sale" data-pc-wish="{{ product.alias }}" aria-label="Yêu thích {{ pc_pc_name | escape }}" aria-pressed="false">
+      <span class="flex h-[36px] w-[36px] items-center justify-center bg-white rounded-full">
         <i class="leading-none group-aria-pressed:hidden" data-pc-wish-off aria-hidden="true">{% include 'ui_icon', name: 'heart', size: 20, label: '' %}</i>
         <i class="leading-none [display:none] group-aria-pressed:[display:block]" data-pc-wish-on aria-hidden="true">{% include 'ui_icon', name: 'heart-filled', size: 20, label: '' %}</i>
       </span>
@@ -86,7 +87,7 @@
     {%- if pc_is_rx or pc_is_service or pc_pc_price == 0 or pc_pc_preorder -%}
     <a class="{{ pc_pc_btn }}" href="{{ product.url }}" aria-label="Xem chi tiết: {{ pc_pc_name | strip_html | escape }}">Xem chi tiết</a>
     {%- elsif product.available != true -%}
-    <button type="button" class="mt-2 inline-flex min-h-11 w-full cursor-not-allowed items-center justify-center border border-solid border-line bg-surface-soft px-3 text-sm font-semibold text-ink-secondary rounded-full" disabled>Hết hàng</button>
+    <button type="button" class="mt-2 inline-flex min-h-[44px] w-full cursor-not-allowed items-center justify-center border border-solid border-line bg-surface-soft px-3 text-sm font-semibold text-ink-secondary rounded-full" disabled>Hết hàng</button>
     {%- elsif product.variants.size > 1 -%}
     <a class="{{ pc_pc_btn }}" href="{{ product.url }}" aria-label="Chọn phiên bản: {{ pc_pc_name | strip_html | escape }}">Chọn phiên bản</a>
     {%- else -%}

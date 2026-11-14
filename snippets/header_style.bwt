@@ -306,6 +306,13 @@
 {%- comment -%} Khối app "Sản phẩm xem nhiều nhất" có ở trang chủ/danh mục/sản phẩm (2026-10-06). {%- endcomment -%}
 {%if template contains 'customers'%}{{ 'page_account.scss.css' | asset_url | stylesheet_tag }}{%endif%}
 {%if template contains 'collection' or template contains 'search'%}{{ 'page_collection.scss.css' | asset_url | stylesheet_tag }}{%endif%}
+{%- comment -%} 14/11/2026: nạp lại 5 file CSS bị gỡ ở BATCH-12/13 khi markup vẫn dùng class của chúng (breadcrumb, sidebar blog, khối app «xem nhiều»,
+ form liên hệ, trang tìm kiếm). Mỗi file đã lọc quy tắc chết bằng scripts/purge-dead-css.mjs; chỉ gỡ dòng nạp khi khối tương ứng đã chuyển Tailwind. {%- endcomment -%}
+{%if template != 'index'%}{{ 'comp_breadcrumb.scss.css' | asset_url | stylesheet_tag }}{%endif%}
+{%if template contains 'blog' or template contains 'article'%}{{ 'comp_sidebar.scss.css' | asset_url | stylesheet_tag }}{%endif%}
+{%if template contains 'index' or template contains 'collection' or template contains 'product'%}{{ 'comp_most_view.scss.css' | asset_url | stylesheet_tag }}{%endif%}
+{%if template contains 'contact'%}{{ 'page_contact.scss.css' | asset_url | stylesheet_tag }}{%endif%}
+{%if template contains 'search'%}{{ 'page_search.scss.css' | asset_url | stylesheet_tag }}{%endif%}
 {%- if customer -%}{{ 'comp_loyalty.scss.css' | asset_url | stylesheet_tag }}{%- endif -%}
 {%if template contains 'product' or template contains 'index' or template contains 'search' or template contains 'article' or template contains 'page.khuyen-mai' or template contains 'collection' or template contains 'page' or template contains 'cart' %}
 {%- unless template contains 'page.dat_hang_nhanh' -%}
