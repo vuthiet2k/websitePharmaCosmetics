@@ -1,65 +1,82 @@
 ---
-description: Tự review + sửa giao diện/lỗi theme theo bộ rule chuẩn (.clinerules 01/02/03), mở trình duyệt thật kiểm toàn site, commit + push + deploy rồi báo cáo. Bản nhẹ — KHÔNG dùng .project-agent/.
-argument-hint: [để trống = review toàn site | mô tả vấn đề | đường dẫn báo cáo QA | danh sách trang "/,/collections/all"]
+description: Vòng lặp cưỡng chế đại trùng tu giao diện & dọn dẹp CSS/Snippets theo plan.md (Astra Multi-Model Antigravity v2.0). Chạy tự động tuần tự 16 Micro-Batches, tự kiểm định cơ học, commit từng bước đến khi hoàn tất.
+argument-hint: [để trống = tự chạy Batch tiếp theo theo checklist | mã Batch cụ thể ví dụ BATCH-02 | status]
 ---
 
-Việc cần làm: $ARGUMENTS
+# LỆNH /goal — VÒNG LẶP CƯỠNG CHẾ ĐẠI TRÙNG TU (ANTIGRAVITY MULTI-MODEL)
 
-Lệnh chạy **một lượt** trong phiên hiện tại rồi báo cáo — không phải vòng lặp nền, không dựng lại
-`.project-agent/` (STATE.json / ACCEPTANCE.yaml / FINAL_REPORT.json…), không tạo file trạng thái/báo cáo theo phase.
+> **Mục tiêu**: Thực thi 16 Micro-Batches theo kế hoạch `plan.md` nhằm xoá sổ CSS rác, đồng bộ 1 thẻ sản phẩm, dọn snippets, cải tổ Customizer và sửa triệt để 7 mã lỗi mobile (`BUG-01`..`BUG-07`).
 
-## 0. Xác định phạm vi
+---
 
-- **$ARGUMENTS trống** ⇒ chế độ **REVIEW TOÀN SITE**: kiểm mọi trang trong danh sách của `scripts/audit-ui.js`
-  theo `.clinerules/03-chuan-giao-dien-ui.md`.
-- **Danh sách đường dẫn** (bắt đầu bằng `/`) ⇒ chỉ review các trang đó (`AUDIT_PAGES="..."`).
-- **Mô tả vấn đề / file báo cáo** ⇒ đọc toàn bộ (cả file đính kèm, ảnh), xử lý đúng vấn đề đó, cuối cùng vẫn chạy
-  `audit:ui` cho các trang bị ảnh hưởng.
+## BƯỚC 0: KHỞI ĐỘNG CỔNG KIỂM SOÁT TRẠNG THÁI (STATE AUTHORITY GATE)
 
-## 1. Đọc rule trước khi đụng code
+Hành động đầu tiên bắt buộc của model là chạy lệnh:
+```bash
+node scripts/overhaul-tracker.mjs --status
+```
+1. Đọc stdout để xác định **`BATCH-xx` TIẾP THEO** đang có trạng thái `PENDING` hoặc `VERIFY_FAIL` (với `attempts < 2`).
+2. Nếu `$ARGUMENTS` chỉ định rõ một Batch (ví dụ `/goal BATCH-04`), thực hiện đúng Batch đó nếu các phụ thuộc (`depends_on`) đã `DONE`.
+3. Nếu một `BATCH-xx` bị `attempts >= 2` và `VERIFY_FAIL`: In thông báo yêu cầu chuyển đổi sang model **Claude Sonnet / GPT cơ bản** trên Antigravity trước khi chạy tiếp.
 
-`.clinerules/01-quy-chuan-theme-sapo.md`, `.clinerules/02-du-an-pharma-cosmetics.md`,
-`.clinerules/03-chuan-giao-dien-ui.md` (tiêu chí UI-x.y). Rule là chuẩn — không "phát hiện" rule mới rồi để trong
-báo cáo; nguyên tắc lâu dài mới phải ghi thẳng vào `.clinerules/`.
+---
 
-## 2. Mở web thật và đo
+## BƯỚC 1: NẠP NGỮ CẢNH TỐI THIỂU (SCOPED CONTEXT LOADING)
 
-1. Đảm bảo preview chạy: `curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/` ≠ 200 ⇒ `npm run preview` (nền).
-2. `npm run audit:ui` (hoặc `AUDIT_PAGES="..." npm run audit:ui`) — trình duyệt thật, 1440px + 390px.
-   Lỗi ✱ in theo mã UI-x.y; ảnh toàn trang ở `test-results/audit-ui/`.
-3. **Mở xem ảnh chụp** từng trang (ưu tiên mobile) để duyệt mục ◇: lệch trục, khung không đồng bộ, khoảng cách
-   section lệch, nút/thẻ khác kiểu, chữ to nhỏ lẫn lộn, phần tử nổi che nội dung, trạng thái rỗng trơ trọi.
-   Cần nhìn kỹ một khối thì chụp riêng phần tử đó (Playwright `element.screenshot`).
+- Model **CHỈ ĐƯỢC PHÉP ĐỌC** các file nằm trong danh sách `target_files` của đúng `BATCH-xx` đang làm (tối đa 4 file), cùng với mô tả kỹ thuật của Batch đó trong `c:\Users\user\Downloads\plan.md`.
+- Tuyệt đối cấm đọc lan man sang các file của Batch khác để bảo vệ context window (đặc biệt khi dùng **Gemini 3.8 Flash**).
 
-## 3. Sửa — tự quyết, không hỏi giữa chừng
+---
 
-- Sửa hết lỗi ✱ và mọi lỗi ◇ nhìn thấy. Đối chiếu `git log` gần đây, comment `REOPEN`/`T-xxx`, mockup `design/`
-  trước khi đổi thứ đã được chốt; báo cáo QA bên ngoài phải xác minh trên code thật, không chép máy móc.
-- CSS scope theo class trang/section; token có sẵn (`--ts-*`, `--pc-container-*`, `design_tokens.bwt`);
-  không `rem` cho cỡ chữ; không cấu hình trong `assets/*.bwt`; nội dung hiển thị phải cấu hình hoá.
-- **Chỉ dừng hỏi** khi: xoá field settings / đổi nguồn dữ liệu của phần tử, tái cấu trúc layout lớn trái mockup,
-  thao tác phá huỷ (xoá dữ liệu, force-push). Không bịa dữ liệu (đánh giá, % đã bán, thống kê).
-- Không đụng thay đổi dở dang không phải của mình trong working tree (vd file đang bị xoá chưa commit) — chỉ báo lại.
+## BƯỚC 2: QUY TẮC THỰC THI PHẪU THUẬT (SURGICAL CODE INVARIANTS)
 
-## 4. Kiểm lại
+1. **CẤM DÙNG COMMENT CẮT NGẮN**: Tuyệt đối không viết `<!-- ... giữ nguyên ... -->` hoặc `/* ... rest of code ... */` khi ghi file. Mọi thay đổi phải là nội dung hoàn chỉnh hoặc dùng tool edit thay thế chính xác.
+2. **SAPO .NET LIQUID INVARIANT**:
+   - Khi sửa `.bwt`, cấm dùng filter `slice` rồi so sánh hoặc nối chuỗi (tránh lỗi `TakeIterator` của Sapo .NET).
+   - Bắt buộc dùng tiền tố `'§'` + `contains` (ví dụ: `assign t_m = tag | downcase | prepend: '§' | if t_m contains '§nhan:'`).
+3. **TAILWIND TOKEN WHITELIST INVARIANT (`tailwind.pc.config.js`)**:
+   - **Màu nền**: `bg-primary`, `bg-primary-hover`, `bg-btn`, `bg-card`, `bg-card-btn`, `bg-flash`, `bg-sale`, `bg-white`, `bg-transparent`.
+   - **Màu chữ**: `text-primary`, `text-btn-text`, `text-card-btn-text`, `text-flash-text`, `text-ink`, `text-ink-secondary`, `text-price`, `text-sale`, `text-white`.
+   - **Viền**: `border-primary`, `border-card-line`, `border-line-soft`, `border-transparent`.
+   - **Bo góc**: `rounded-none`, `rounded-xl` (12px), `rounded-2xl` (16px), `rounded-full` (9999px). CẤM `rounded-md`, `rounded-lg`.
+   - **Đổ bóng**: CẤM `shadow-*` (luật R4).
+4. **MOBILE ANTI-BREAKING INVARIANT**:
+   - Mọi container flexbox ngang trên mobile phải có `flex-wrap`.
+   - Mã SKU, Giá, Số sao, Tên tác giả, Ngày đăng, Nhãn giảm giá phải có `whitespace-nowrap`.
 
-1. Chạy lại `audit:ui` cho trang đã sửa tới khi sạch ✱; xem lại ảnh sau sửa.
-2. `node -e "JSON.parse(...)"` nếu sửa `configs/*.json`; `npm run test:portal` nếu sửa snippet Home Portal;
-   `PYTHONIOENCODING=utf-8 npm run build:sapo` trước commit. Lỗi có sẵn từ trước (không do mình) ⇒ xác minh bằng
-   cách tạm bỏ thay đổi, rồi ghi rõ trong báo cáo.
+---
 
-## 5. Commit · push · deploy
+## BƯỚC 3: CỔNG KIỂM ĐỊNH CƠ HỌC BẮT BUỘC (MECHANICAL GATE)
 
-- `git add` **đúng file mình sửa**; conventional commit + tiếng Việt có dấu; body: vấn đề → cách sửa → file.
-- `git push origin hugo-theme-sept2026`.
-- Deploy production **một lần cuối lượt**: tạo worktree sạch từ HEAD (`git worktree add --detach <scratchpad>/deploy-wt HEAD`,
-  chép `.vercel/project.json`), `npx vercel --prod --yes` trong đó, rồi `git worktree remove --force` (không junction
-  `node_modules` vào worktree). Xác minh bằng marker CSS/HTML mới + `X-Vercel-Cache`, và
-  `AUDIT_URL=https://hugo-theme-sept2026-test.vercel.app npm run audit:ui` cho các trang đã sửa.
+Sau khi sửa code của `BATCH-xx`, model bắt buộc chạy lệnh:
+```bash
+node scripts/overhaul-tracker.mjs --verify <BATCH-ID>
+```
+- Nếu có file CSS hoặc `.bwt` thay đổi: script tự động chạy kèm `npm run build:pc` và `node scripts/ui-guard.mjs`.
+- Nếu có sửa `snippets/` hoặc `configs/`: script tự động chạy kèm `python scripts/export-config-sheet.py --check` (`npm run lint:config`).
+- **NẾU FAIL (exit code 1)**: Đọc kỹ log lỗi do script in ra, sửa lại đúng các lỗi đó rồi chạy lại lệnh `--verify`. Không được commit khi chưa pass!
 
-## 6. Báo cáo (tiếng Việt, ngắn gọn)
+---
 
-- Đã kiểm gì (số trang × 2 màn hình), lỗi tìm thấy theo mã UI-x.y.
-- Đã sửa gì — file nào, vì sao.
-- Cố tình không sửa gì và lý do (mâu thuẫn thiết kế đã chốt, thiếu dữ liệu thật, cần quyết định của người dùng).
-- Commit, trạng thái deploy, kết quả `audit:ui` trên production.
+## BƯỚC 4: COMMIT NGUYÊN TỬ & TỰ ĐỘNG CHUYỂN TIẾP (AUTO-CONTINUE)
+
+Khi `node scripts/overhaul-tracker.mjs --verify <BATCH-ID>` trả về **`exit code 0`** (`DONE`):
+1. Chạy lệnh commit nguyên tử:
+   ```bash
+   git add <các_file_thuộc_batch> ui-loop/OVERHAUL-CHECKLIST.json
+   git commit -m "refactor(<batch-id>): <mô tả thay đổi bằng tiếng Việt có dấu>"
+   ```
+2. **TỰ ĐỘNG TIẾP TỤC**:
+   - Chạy lại `node scripts/overhaul-tracker.mjs --status`.
+   - Nếu còn Batch kế tiếp ở trạng thái `PENDING`: Model **TỰ ĐỘNG BẮT ĐẦU NGAY BATCH TIẾP THEO** mà không dừng lại hỏi người dùng!
+   - Chỉ dừng lại khi: Toàn bộ 16 Batch đạt `DONE`, hoặc gặp lỗi cần chuyển model (`attempts >= 2`), hoặc người dùng yêu cầu dừng.
+
+---
+
+## BƯỚC 5: BÁO CÁO KẾT THÚC LƯỢT
+
+Báo cáo ngắn gọn cho chủ dự án:
+- Batch vừa hoàn tất và kết quả kiểm định cơ học.
+- Các file đã sửa / xoá và commit hash tương ứng.
+- Trạng thái tổng thể tiến độ (xx/16 Batches).
+- Batch tiếp theo sẵn sàng chạy.

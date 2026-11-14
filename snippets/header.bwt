@@ -14,16 +14,16 @@
   Khi cuộn qua header, menu tách thành thanh cố định và mới hiện nút Danh mục.
   Giữ một menu duy nhất để dùng chung điều hướng desktop và drawer mobile.
 {%- endcomment -%}
-<header class="header{% if template contains 'index' and is_skinhealthy_content == false %} header--transparent{% endif %}">
-	{%- comment -%} 12/11/2026 (chủ dự án: "cảnh báo chỉ hiện ở hero thôi, qua trang khác làm gì còn"): KHÔNG còn dải cảnh báo đầu header ở mọi trang. Cảnh báo chỉ là thẻ nổi trên Hero trang chủ (section_hero → ui_notice_bar notice_variant 'hero'), link sang trang /canh-bao-lua-dao. {%- endcomment -%}
-	<div class="main-header">
-			{%- comment -%} ============ PHẦN 1 — HEADER TOP (topbar xanh) ============ {%- endcomment -%}
-		{%- comment -%} 2026-10-03: site_topbar chỉ đổi sang settings.skinhealthy_announce khi topbar_context == 'clinic' nhưng trước đây không nơi nào gán → field Admin đó không có tác dụng. {%- endcomment -%}
+<header class="header{% if template contains 'index' and is_skinhealthy_content == false %} header-transparent{% endif %}">
+	{%- comment -%} 12/11/2026: Cảnh báo lừa đảo là thẻ nổi trên Hero trang chủ, link sang /canh-bao-lua-dao. {%- endcomment -%}
+	<div class="card header-card main-header border-0 rounded-none bg-transparent shadow-none">
+		{%- comment -%} CARD-HEADER: Topbar thông tin, khuyến mãi, tài khoản (ẩn khi cuộn) {%- endcomment -%}
 		{%- if is_skinhealthy_content -%}{%- assign topbar_context = 'clinic' -%}{%- endif -%}
 		{% include 'site_topbar' %}
-			{%- comment -%} ============ PHẦN 2 — HEADER MAIN (logo + menu + tìm kiếm + giỏ hàng, nền trắng) ============ {%- endcomment -%}
-			<div class="box-hearder">
-		<div class="container">
+
+		{%- comment -%} CARD-BODY: Thân header gồm logo, menu, tìm kiếm, giỏ hàng {%- endcomment -%}
+		<div class="card-body header-main box-hearder p-0">
+			<div class="container">
 				<div class="row d-flex align-items-center pc-header-row">
 					<div class="col-6 col-xl-3 col-lg-3 col-md-4 header-logo">
 						<a href="/" class="logo-wrapper pc-logo-master" title="{{settings.store_name | default: store.name}}">
@@ -371,19 +371,12 @@
 	const tabLinks = document.querySelectorAll('.tab-link');
 	const tabContents = document.querySelectorAll('.tab-content-mb');
 
-	/* 14/11/2026 (người dùng yêu cầu: khi mới vào thì header nền trong suốt. Dùng JS để xử lý trong header):
-	   - Khi mới vào trang chủ có Hero, header có nền trong suốt đè lên ảnh Hero, chữ/icon/logo trắng.
-	   - JS lắng nghe cuộn: khi cuộn (> 20px) gỡ header--transparent để chuyển sang nền chuẩn (topbar màu xanh thương hiệu + header trắng).
-	   - Khi cuộn ngược lên đỉnh (<= 20px), khôi phục lại nền trong suốt.
+	/* 14/11/2026: Khi mới vào thì header nền trong suốt (header-transparent).
+	   - Card-header là Topbar, card-body là thân Header (logo, menu, actions).
+	   - Khi cuộn trang (scrollY > 20): card-header ẩn đi, header chuyển sang nền trắng.
+	   - Khi cuộn ngược lên đỉnh (scrollY <= 20): khôi phục card-header và header-transparent.
 	*/
 	const isHomeWithHero = document.body.classList.contains('pc-home-v3');
-
-	const updateHeaderTransparency = () => {
-		if (!isHomeWithHero) return;
-		const currentY = window.scrollY || window.pageYOffset || 0;
-		const atTop = currentY <= 20;
-		header.classList.toggle('header--transparent', atTop);
-	};
 
 	const closeHeaderCategories = () => {
 		const trigger = header.querySelector('.js-menu-toggle');
@@ -396,17 +389,28 @@
 	};
 
 	const handleScroll = () => {
-		updateHeaderTransparency();
-		const sticky = desktopHeader.matches && window.scrollY > offsetStickyHeader;
-		if (header.classList.contains('hSticky') === sticky) return;
-		closeHeaderCategories();
-		header.classList.toggle('hSticky', sticky);
+		const currentY = window.scrollY || window.pageYOffset || 0;
+		const isScrolled = currentY > 20;
+
+		// 1. Khi ở đầu trang chủ có Hero thì nền trong suốt (header-transparent)
+		if (isHomeWithHero) {
+			header.classList.toggle('header-transparent', !isScrolled);
+		}
+
+		// 2. Khi scroll thì card-header (topbar) ẩn đi (is-scrolled)
+		header.classList.toggle('is-scrolled', isScrolled);
+
+		// 3. Thanh dính khi cuộn qua header
+		const sticky = desktopHeader.matches && currentY > offsetStickyHeader;
+		if (header.classList.contains('hSticky') !== sticky) {
+			closeHeaderCategories();
+			header.classList.toggle('hSticky', sticky);
+		}
 	};
 
 	const measureHeader = () => {
-		/* 2026-10-14: chiều cao topbar ⇒ biến CSS cho header mobile dính (top âm = topbar cuộn đi, xem global_core pc-mh-sticky). */
-		const topbar = header.querySelector('.pc-topbar-v3');
-		/* 12/11/2026: cộng dải cảnh báo giao hàng (ui_notice_bar, nằm trên topbar) — cuộn đi cùng topbar; bấm ✕ ⇒ ui_notice_bar phát resize ⇒ đo lại. */
+		/* Chiều cao topbar card-header ⇒ biến CSS cho header mobile dính */
+		const topbar = header.querySelector('.card-header, .header-topbar');
 		const notice = header.querySelector('.pc-notice');
 		header.style.setProperty('--pc-topbar-h', (topbar ? topbar.offsetHeight : 0) + (notice ? notice.offsetHeight : 0) + 'px');
 		header.classList.remove('hSticky');
