@@ -165,44 +165,42 @@
     {%- endcomment -%}
     {%- comment -%}
       !important bắt buộc: assets/global_core.scss.bwt#.main-header (không nằm trong media query,
-      áp mọi độ rộng) và rule ở đây có ĐÚNG CÙNG ĐỘ ĐẶC HIỆU "header.header .main-header" — quyết
+      áp mọi độ rộng) và rule ở đây có ĐÚNG CÙNG ĐỘ ĐẶC HIỆU "header.header :is(.card, .main-header)" — quyết
       định bằng thứ tự nạp file, mà global_core.scss.css nạp SAU <style id="pharma-ui-kit"> trong
       <head> (xác nhận qua document.styleSheets thật) nên luôn thắng nếu không có !important.
     {%- endcomment -%}
-    header.header .main-header {
-      padding-bottom: 0 !important;
-    }
-    header.header .main-header .top-main-header {
+    
+    header.header :is(.card, .main-header) .top-main-header {
       margin-bottom: 0 !important;
       background: var(--bgHeader);
     }
-    header.header .box-hearder {
+    header.header :is(.card-body, .box-hearder) {
       background: #fff;
       border-bottom: 1px solid #E5E7EB;
     }
     {%- comment -%} 2026-10-13 (người dùng yêu cầu): bỏ nền trắng riêng của .header-menu — nền lấy theo .box-hearder; thanh dính khi cuộn (.hSticky) vẫn nền trắng ở storefront-v3.css. {%- endcomment -%}
-    header.header .box-hearder .header-menu {
+    header.header :is(.card-body, .box-hearder) .header-menu {
       flex: 1 1 0;
       min-width: 0;
       background: transparent;
     }
-    header.header .box-hearder .header-menu .container {
+    header.header :is(.card-body, .box-hearder) .header-menu .container {
       max-width: none;
       padding: 0;
       margin: 0;
     }
-    header.header .box-hearder .header-menu .sudes-main-header .col-menu #nav .nav-item.active > a {
+    header.header :is(.card-body, .box-hearder) .header-menu .sudes-main-header .col-menu #nav .nav-item.active > a {
       border-bottom: 2px solid var(--mainColor, #3CB371);
     }
-    header.header .box-hearder .pc-logo-master {
+    header.header :is(.card-body, .box-hearder) .pc-logo-master {
       display: inline-flex;
       align-items: center;
       height: 42px;
       width: auto;
       color: var(--mainColor, #3CB371);
     }
-    header.header .box-hearder .pc-logo-master .pc-logo-master-svg,
-    header.header .box-hearder .pc-logo-master .pc-logo-master-img {
+    header.header :is(.card-body, .box-hearder) .pc-logo-master .pc-logo-master-svg,
+    header.header :is(.card-body, .box-hearder) .pc-logo-master .pc-logo-master-img {
       height: 100%;
       width: auto;
       display: block;
@@ -213,22 +211,22 @@
       .box-hearder TRẮNG (từ T-121) → biến mất hoàn toàn kể cả KHÔNG hover, đúng như người dùng
       báo "chú ý màu sắc tránh hover trùng màu nền". Root cause: rule dưới đây trước đó KHÔNG có
       !important và thiếu ".main-header" trong chuỗi selector so với gốc
-      (assets/global_core.scss.bwt: "header.header .main-header .box-hearder .header-right
+      (assets/global_core.scss.bwt: "header.header :is(.card, .main-header) :is(.card-body, .box-hearder) .header-right
       .sudes-header-cart > a { color: var(--txtHeader) }") — selector gốc có specificity CAO HƠN
       (đủ 1 class ".main-header") nên luôn thắng bất kể thứ tự nạp file. Thêm !important để đảm
       bảo thắng chắc chắn (đúng quy ước đã dùng xuyên suốt file này khi selector chỉ hoà/thấp hơn
       gốc).
     {%- endcomment -%}
-    header.header .box-hearder .header-right .sudes-header-stores > a,
-    header.header .box-hearder .header-right .sudes-header-iwish > a,
-    header.header .box-hearder .header-right .sudes-header-cart > a,
-    header.header .box-hearder .header-right .menu-icon {
+    header.header :is(.card-body, .box-hearder) .header-right .sudes-header-stores > a,
+    header.header :is(.card-body, .box-hearder) .header-right .sudes-header-iwish > a,
+    header.header :is(.card-body, .box-hearder) .header-right .sudes-header-cart > a,
+    header.header :is(.card-body, .box-hearder) .header-right .menu-icon {
       color: var(--mainColor, #3CB371) !important;
     }
     /* L03b1 (30/10/2026): các quy tắc "svg path { fill }" trong file này chỉ áp SVG cũ (tô đặc) — bỏ qua icon nét ui_icon (svg fill="none"), không thì tim/giỏ bị tô đặc */
-    header.header .box-hearder .header-right .sudes-header-stores svg:not([fill="none"]) path,
-    header.header .box-hearder .header-right .sudes-header-iwish svg:not([fill="none"]) path,
-    header.header .box-hearder .header-right .sudes-header-cart svg:not([fill="none"]) path {
+    header.header :is(.card-body, .box-hearder) .header-right .sudes-header-stores svg:not([fill="none"]) path,
+    header.header :is(.card-body, .box-hearder) .header-right .sudes-header-iwish svg:not([fill="none"]) path,
+    header.header :is(.card-body, .box-hearder) .header-right .sudes-header-cart svg:not([fill="none"]) path {
       fill: currentColor !important;
     }
     {%- comment -%}
@@ -245,14 +243,14 @@
       thắng rule rest-state !important ở trên (cả 2 cùng !important thì rule sau trong cùng file
       thắng — thứ tự khai báo, không phải specificity).
     {%- endcomment -%}
-    header.header .box-hearder .header-right .sudes-header-stores > a:hover,
-    header.header .box-hearder .header-right .sudes-header-iwish > a:hover {
+    header.header :is(.card-body, .box-hearder) .header-right .sudes-header-stores > a:hover,
+    header.header :is(.card-body, .box-hearder) .header-right .sudes-header-iwish > a:hover {
       color: var(--mainColorDark, #1F5A3B) !important;
     }
-    header.header .box-hearder .header-right .sudes-header-stores > a:hover svg:not([fill="none"]) path {
+    header.header :is(.card-body, .box-hearder) .header-right .sudes-header-stores > a:hover svg:not([fill="none"]) path {
       fill: var(--mainColorDark, #1F5A3B) !important;
     }
-    header.header .box-hearder .header-right .sudes-header-cart > a:hover {
+    header.header :is(.card-body, .box-hearder) .header-right .sudes-header-cart > a:hover {
       color: var(--subColor, #1F5A3B) !important;
     }
     {%- comment -%}
@@ -262,14 +260,14 @@
       dropdown (bị line-clamp-1 cắt thành "Danh..."). Ép min-width cố định cho cột trigger, để
       cột nav lấy phần còn lại (flex:1) thay vì %  cứng.
     {%- endcomment -%}
-    header.header .box-hearder .header-menu .sudes-cate-header {
+    header.header :is(.card-body, .box-hearder) .header-menu .sudes-cate-header {
       display: none;
       flex: 0 0 auto;
       width: auto;
       max-width: none;
       min-width: 152px;
     }
-    header.header .box-hearder .header-menu .sudes-main-header {
+    header.header :is(.card-body, .box-hearder) .header-menu .sudes-main-header {
       flex: 1 1 0;
       max-width: none;
       min-width: 0;
@@ -288,7 +286,7 @@
       cùng 1 dòng, để cơ chế co dãn + cuộn ngang (.navigation-horizontal.overflow + #prev/#next,
       đã sửa T-103) xử lý phần dư, đúng như thiết kế ban đầu.
     {%- endcomment -%}
-    header.header .box-hearder .header-menu .navigation-horizontal > .row {
+    header.header :is(.card-body, .box-hearder) .header-menu .navigation-horizontal > .row {
       flex-wrap: nowrap;
     }
     {%- comment -%}
@@ -296,7 +294,7 @@
       vẫn đủ cho logo 42px và các target tương tác 44px, không thu nhỏ vùng bấm.
       2026-10-14 (chủ shop: khoảng cách header quá lớn): 68px ⇒ 64px (chuẩn thanh tiêu đề desktop), nội dung 44px cách đều 10px.
     {%- endcomment -%}
-    header.header .box-hearder :is(.header-row, .pc-header-row) {
+    header.header :is(.card-body, .box-hearder) :is(.header-row, .pc-header-row) {
       min-height: 64px;
     }
     {%- comment -%}
@@ -312,62 +310,62 @@
       Phần dư còn lại vẫn dùng cơ chế cuộn ngang có sẵn, nhưng thêm padding-right cho .col-menu
       để chữ không bị cắt sát mũi tên nữa.
     {%- endcomment -%}
-    header.header .box-hearder .header-menu .sudes-main-header #nav > .nav-item > a {
+    header.header :is(.card-body, .box-hearder) .header-menu .sudes-main-header #nav > .nav-item > a {
       font-size: var(--fs-base);
       padding-left: 7px;
       padding-right: 7px;
     }
-    header.header .box-hearder .header-menu .sudes-main-header .col-menu {
+    header.header :is(.card-body, .box-hearder) .header-menu .sudes-main-header .col-menu {
       padding-right: 4px;
     }
-    header.header .box-hearder .header-menu .navigation-horizontal > .row {
+    header.header :is(.card-body, .box-hearder) .header-menu .navigation-horizontal > .row {
       margin: 0;
     }
-    header.header .box-hearder .header-menu .sudes-main-header {
+    header.header :is(.card-body, .box-hearder) .header-menu .sudes-main-header {
       padding: 0;
     }
-    header.header .box-hearder .header-menu .navigation-horizontal .sudes-main-header .control-menu svg:not([fill="none"]) path {
+    header.header :is(.card-body, .box-hearder) .header-menu .navigation-horizontal .sudes-main-header .control-menu svg:not([fill="none"]) path {
       fill: var(--mainColor);
     }
-    header.header .box-hearder .header-right .box-icon {
+    header.header :is(.card-body, .box-hearder) .header-right .box-icon {
       color: inherit;
     }
-    header.header .box-hearder .header-mid .icon-fallback-text {
+    header.header :is(.card-body, .box-hearder) .header-mid .icon-fallback-text {
       background: transparent !important;
       color: var(--mainColor);
     }
-    header.header .box-hearder .header-mid .icon-fallback-text svg:not([fill="none"]) path {
+    header.header :is(.card-body, .box-hearder) .header-mid .icon-fallback-text svg:not([fill="none"]) path {
       fill: currentColor !important;
     }
-    header.header .box-hearder .header-mid .icon-fallback-text:hover,
-    header.header .box-hearder .header-right .header-action-search:hover {
+    header.header :is(.card-body, .box-hearder) .header-mid .icon-fallback-text:hover,
+    header.header :is(.card-body, .box-hearder) .header-right .header-action-search:hover {
       color: var(--subColor);
       background: var(--mainColorLight) !important;
     }
     /* When scrolled, only navigation occupies the fixed bar. */
     {%- comment -%} 2026-10-14 (chủ shop): thanh menu khi cuộn từng bó 960px ⇒ logo/giỏ hàng lệch vào giữa so với header gốc
       (1280px, lề --pc-container-gutter). Dùng đúng khung của header gốc để logo sát trái, giỏ hàng sát phải. {%- endcomment -%}
-    header.header.hSticky .box-hearder .header-menu > .container {
+    header.header.hSticky :is(.card-body, .box-hearder) .header-menu > .container {
       width: 100%;
       max-width: var(--pc-container-max, 1280px) !important;
       margin: 0 auto;
       padding: 0 var(--pc-container-gutter, 32px);
     }
-    header.header.hSticky .box-hearder .header-menu .sudes-cate-header {
+    header.header.hSticky :is(.card-body, .box-hearder) .header-menu .sudes-cate-header {
       display: block;
       padding-left: 0;
       padding-right: 20px;
     }
-    header.header .box-hearder .header-menu .navigation-horizontal .sudes-cate-header .title {
+    header.header :is(.card-body, .box-hearder) .header-menu .navigation-horizontal .sudes-cate-header .title {
       width: 100%;
       color: var(--mainColor);
       background: var(--mainColorLight);
       border-color: var(--mainColor);
     }
-    header.header .box-hearder .header-menu .navigation-horizontal .sudes-cate-header .title .scg_drop svg:not([fill="none"]) path {
+    header.header :is(.card-body, .box-hearder) .header-menu .navigation-horizontal .sudes-cate-header .title .scg_drop svg:not([fill="none"]) path {
       fill: currentColor;
     }
-    header.header .box-hearder .header-menu .navigation-horizontal .sudes-cate-header .title.active {
+    header.header :is(.card-body, .box-hearder) .header-menu .navigation-horizontal .sudes-cate-header .title.active {
       color: #fff;
       background: var(--mainColor);
     }
@@ -394,23 +392,22 @@
     Đây LÀ đánh đổi có chủ đích dựa trên đo đạc thật, không phải đoán.
   {%- endcomment -%}
   @media (max-width: 991px) {
-    header.header .main-header {
+    header.header :is(.card, .main-header) {
       background: #fff !important;
     }
-    header.header .box-hearder {
+    header.header :is(.card-body, .box-hearder) {
       --txtHeader: var(--mainColor);
       background: #fff;
       {%- comment -%} 2026-10-14 (chủ shop: "vừa padding vừa min-height ⇒ khoảng cách quá lớn"): trước = 10+48+10 = 69px cho
         nội dung 36–44px. Bỏ padding, hàng cao đúng 56px (chiều cao thanh tiêu đề chuẩn trên mobile, logo 36px cách đều 10px). {%- endcomment -%}
-      padding-top: 0 !important;
-      padding-bottom: 0 !important;
+      /* padding handled natively by Tailwind p-0 */
     }
-    header.header .box-hearder :is(.header-row, .pc-header-row) {
+    header.header :is(.card-body, .box-hearder) :is(.header-row, .pc-header-row) {
       min-height: 56px !important;
     }
     {%- comment -%} 2026-10-14 (chủ shop: "logo mobile bé quá"): 20px ⇒ 36px — mức thường gặp của logo chữ trên header
       mobile (32–40px, vùng chạm ≥44px), vẫn chừa chỗ cho menu/tìm kiếm bên trái và giỏ hàng bên phải. Máy ≤360px: 32px. {%- endcomment -%}
-    header.header .main-header .box-hearder :is(.row, .header-row, .pc-header-row) .header-logo .pc-logo-master {
+    header.header :is(.card, .main-header) :is(.card-body, .box-hearder) :is(.row, .header-row, .pc-header-row) .header-logo .pc-logo-master {
       height: 36px !important;
     }
     footer.footer .copyright,
@@ -419,32 +416,32 @@
     }
   }
   @media (max-width: 360px) {
-    header.header .main-header .box-hearder :is(.row, .header-row, .pc-header-row) .header-logo .pc-logo-master { height: 32px !important; }
+    header.header :is(.card, .main-header) :is(.card-body, .box-hearder) :is(.row, .header-row, .pc-header-row) .header-logo .pc-logo-master { height: 32px !important; }
   }
   {%- comment -%} 2026-10-14: vùng bấm icon header mobile chỉ 32×18 (menu), 34×34 (tìm), 36×28 (giỏ) — dưới mức tối thiểu 44×44
     (Apple HIG 44pt, Material 48dp). Nới vùng bấm lên 44×44, margin âm giữ nguyên vị trí icon nhìn thấy và chỗ cho logo. {%- endcomment -%}
   @media (max-width: 991px) {
-    header.header .box-hearder #btn-menu-mobile,
-    header.header .box-hearder #mb-search-open,
-    header.header .box-hearder .header-right .sudes-header-cart > a {
+    header.header :is(.card-body, .box-hearder) #btn-menu-mobile,
+    header.header :is(.card-body, .box-hearder) #mb-search-open,
+    header.header :is(.card-body, .box-hearder) .header-right .sudes-header-cart > a {
       display: inline-flex !important;
       align-items: center;
       justify-content: center;
       min-width: 44px;
       min-height: 44px;
     }
-    header.header .box-hearder #btn-menu-mobile { margin-left: -12px; margin-right: -6px; }
-    header.header .box-hearder #mb-search-open { margin-right: -5px; }
-    header.header .box-hearder .header-right .sudes-header-cart > a { margin-right: -8px; }
+    header.header :is(.card-body, .box-hearder) #btn-menu-mobile { margin-left: -12px; margin-right: -6px; }
+    header.header :is(.card-body, .box-hearder) #mb-search-open { margin-right: -5px; }
+    header.header :is(.card-body, .box-hearder) .header-right .sudes-header-cart > a { margin-right: -8px; }
   }
   @media (min-width: 992px) and (max-width: 1399px) {
-    header.header .box-hearder .header-mid { display: none !important; }
-    header.header .box-hearder .header-right .header-action-search {
+    header.header :is(.card-body, .box-hearder) .header-mid { display: none !important; }
+    header.header :is(.card-body, .box-hearder) .header-right .header-action-search {
       display: inline-flex; align-items: center; justify-content: center;
       width: 40px; height: 40px; color: var(--mainColor, #3CB371);
       background: transparent; border: none; cursor: pointer; padding: 0;
     }
-    header.header .box-hearder .header-right .header-action-search i { font-size: var(--fs-h4); line-height: 1; color: inherit; }
+    header.header :is(.card-body, .box-hearder) .header-right .header-action-search i { font-size: var(--fs-h4); line-height: 1; color: inherit; }
   }
   @media (min-width: 1400px) {
     {%- comment -%}
@@ -461,21 +458,21 @@
         (2) nới trần .container của riêng header lên 1560px từ 1600px trở lên — chỉ header, KHÔNG
             đụng container của phần thân trang (giữ nguyên nhịp đọc 1320px của nội dung).
     {%- endcomment -%}
-    header.header .box-hearder .header-mid {
+    header.header :is(.card-body, .box-hearder) .header-mid {
       display: block !important;
       flex: 0 0 180px !important;
       width: 180px !important;
       min-width: 0 !important;
     }
-    header.header .box-hearder .header-mid .list-search-key { display: none; }
-    header.header .box-hearder .header-mid form.search-bar {
+    header.header :is(.card-body, .box-hearder) .header-mid .list-search-key { display: none; }
+    header.header :is(.card-body, .box-hearder) .header-mid form.search-bar {
       border-color: var(--color-border-clinical, #E2E8F0);
     }
-    header.header .box-hearder .header-mid form.search-bar input {
+    header.header :is(.card-body, .box-hearder) .header-mid form.search-bar input {
       font-size: var(--fs-sm);
       padding-right: 40px;
     }
-    header.header .box-hearder .header-right .header-action-search { display: none; }
+    header.header :is(.card-body, .box-hearder) .header-right .header-action-search { display: none; }
   }
 
   {%- comment -%}
@@ -488,13 +485,13 @@
     lưới 1440 trên màn lớn và tự co sát mép trên màn hẹp, header thẳng hàng với thân trang.
   {%- endcomment -%}
   @media (min-width: 1200px) {
-    header.header .main-header > .container,
-    header.header .box-hearder > .container {
+    header.header :is(.card, .main-header) > .container,
+    header.header :is(.card-body, .box-hearder) > .container {
       max-width: min(1440px, calc(100vw - 40px)) !important;
     }
   }
   @media (min-width: 1400px) and (max-width: 1599px) {
-    header.header .box-hearder .header-menu .sudes-main-header #nav > .nav-item > a {
+    header.header :is(.card-body, .box-hearder) .header-menu .sudes-main-header #nav > .nav-item > a {
       font-size: var(--fs-body);
       padding-left: 6px;
       padding-right: 6px;

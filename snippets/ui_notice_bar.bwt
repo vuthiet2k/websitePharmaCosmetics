@@ -37,7 +37,7 @@
     var hd = document.querySelector('header.header'), hero = el.parentNode; if (!hd || !hero) return;
     var gap = window.innerWidth >= 1024 ? 24 : 12, hb = hd.getBoundingClientRect().bottom - hero.getBoundingClientRect().top;
     el.style.top = (hb > 0 && hb < hero.offsetHeight / 2 ? hb + gap : gap) + 'px';
-    var lg = window.innerWidth >= 1024 && hd.querySelector('.main-header a[href="/"] img, .main-header a[href="/"]'); /* desktop: thẳng mép logo như UNIQLO */
+    var lg = window.innerWidth >= 1024 && hd.querySelector(':is(.card, .main-header) a[href="/"] img, :is(.card, .main-header) a[href="/"]'); /* desktop: thẳng mép logo như UNIQLO */
     el.style.left = lg && lg.getBoundingClientRect().width ? Math.max(16, Math.round(lg.getBoundingClientRect().left - hero.getBoundingClientRect().left)) + 'px' : '';
   }
   place(); window.addEventListener('resize', place); window.addEventListener('load', place);
@@ -73,7 +73,7 @@
     el.hidden = true;
     try { if (store) store.setItem(key, String(Date.now())); } catch (e) {}
     try { window.dispatchEvent(new Event('resize')); } catch (e) {} /* header.bwt đo lại --pc-topbar-h */
-    var f = document.querySelectorAll('header.header .main-header a[href], header.header .main-header button');
+    var f = document.querySelectorAll('header.header :is(.card, .main-header) a[href], header.header :is(.card, .main-header) button');
     for (var i = 0; i < f.length; i++) { if (f[i].offsetWidth && f[i].offsetHeight) { f[i].focus(); break; } } /* focus không rơi về <body> */
   });
 })();
