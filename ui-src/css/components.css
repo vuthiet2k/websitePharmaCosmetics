@@ -173,40 +173,65 @@
   }
 }
 
-/* ===== v2.0 (03/11/2026) — 15. Hero trang chủ: slide video (snippets/section_hero.bwt + assets/home-hero.js), chuyển từ
-   assets/home-portal.css (đóng băng R1). Video phủ kín khung (container query; iframe 16:9 luôn lớn hơn khung ⇒ không viền đen),
-   hiện dần khi thật sự chạy (.is-playing); không nhận chuột (vuốt vẫn chuyển slide); lớp tối mờ mép trên để chữ menu trắng đọc
-   rõ. Nút loa 44px góc TRÁI dưới (góc phải là nút chatbot nổi). ===== */
+/* ===== v2.0 (03/11/2026) — 15. Hero trang chủ: slide ảnh/video toàn khổ (snippets/section_hero.bwt + assets/home-hero.js).
+   Thay thế hoàn toàn home-portal.css. ===== */
 @layer components {
+  .portal-hero { @apply relative p-0 overflow-hidden bg-slate-950; }
+  .portal-hero::before { content: ""; @apply absolute inset-x-0 top-0 z-[2] h-[200px] pointer-events-none bg-gradient-to-b from-slate-950/60 to-transparent; }
+  .portal-hero__media { @apply relative w-full h-[78svh] min-h-[420px] overflow-hidden lg:h-[100svh]; }
+  .portal-hero__media .swiper-wrapper, .portal-hero__media .swiper-slide { @apply w-full h-full !important; }
+  .portal-hero__slide { @apply relative w-full h-full overflow-hidden; }
+  .portal-hero__image { @apply block w-full h-full max-w-none object-cover object-center origin-center will-change-transform; }
+  .portal-hero__caption { @apply absolute z-[2] left-1/2 bottom-[clamp(40px,5vw,72px)] -translate-x-1/2 w-[min(92%,760px)] text-center text-white; }
+  .portal-hero__slide:not(.swiper-slide-active) .portal-hero__caption { visibility: hidden; }
+  .portal-hero__slide:first-child:not(.swiper-slide-active) .portal-hero__caption { visibility: visible; }
+  .swiper-container-initialized .portal-hero__slide:first-child:not(.swiper-slide-active) .portal-hero__caption { visibility: hidden; }
+  .portal-hero__title { @apply m-0 text-white/90 text-2xl lg:text-4xl font-bold uppercase tracking-wider text-balance; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+  .portal-hero__sub { @apply m-0 mt-3 text-white/80 text-sm lg:text-base; }
+  .portal-hero__cta { @apply mt-5 flex justify-center; }
+  .portal-hero__sr { @apply sr-only; }
+
+  .swiper-container-initialized .swiper-slide-active .portal-hero__image { animation: pc-hero-kb-in var(--pc-hero-dur, 5.3s) linear both; }
+  .swiper-container-initialized .swiper-slide-active:nth-child(even) .portal-hero__image { animation-name: pc-hero-kb-out; }
+  .portal-hero__media:not(.swiper-container-initialized) .portal-hero__slide:only-child .portal-hero__image { animation: pc-hero-kb-in 7s ease-in-out infinite alternate; }
+  .swiper-container-initialized .swiper-slide-active .portal-hero__caption { animation: pc-hero-rise .9s cubic-bezier(.2,.8,.2,1) .35s both; }
+
   :root .portal-hero__video { @apply pointer-events-none absolute inset-0 z-[1] overflow-hidden opacity-0 transition-opacity duration-500; container-type: size; }
   :root .portal-hero__slide.is-playing .portal-hero__video { @apply opacity-100; }
   :root .portal-hero__video::after { content: ""; @apply absolute inset-x-0 top-0 h-[180px] bg-gradient-to-b from-slate-950/45 to-transparent; }
   :root .portal-hero__video iframe { @apply absolute left-1/2 top-1/2 m-0 -translate-x-1/2 -translate-y-1/2 border-0; width: max(115cqw, 204.4cqh); height: max(115cqh, 64.7cqw); }
-  /* Phóng thêm 15% (cắt ~7,5% mỗi mép): YouTube luôn hiện tiêu đề video vài giây ở góc trên-trái kể cả controls=0 ⇒ đẩy ra ngoài khung */
   :root .portal-hero__video video { @apply absolute inset-0 h-full w-full object-cover; }
   :root .portal-hero__slide.is-video-failed .portal-hero__video { @apply hidden; }
   :root .portal-hero__sound { @apply absolute bottom-[12px] left-[12px] z-10 hidden h-[44px] w-[44px] cursor-pointer items-center justify-center rounded-full border border-solid border-white/45
                                      bg-slate-950/35 text-white/90 no-underline backdrop-blur transition-colors duration-200 hover:bg-slate-950/55
                                      md:bottom-[clamp(40px,5vw,72px)] md:left-[clamp(16px,3vw,40px)]; }
   :root .portal-hero__slide.is-playing .portal-hero__sound { @apply inline-flex; }
-  /* v2.1 (04/11/2026, chủ dự án: nút loa "không có icon"): CSS cũ `.pc-home-v3 .pc-portal a { color: inherit }` (0,2,1) thắng
-     `:root .portal-hero__sound` (0,2,0) ⇒ icon xanh đậm trên nền tối. Tăng độ ưu tiên để icon trắng. */
   :root .portal-hero a.portal-hero__sound { @apply text-white/90; }
   :root .portal-hero__sound .portal-hero__sound-on, :root .portal-hero__sound[aria-pressed="true"] .portal-hero__sound-off { @apply hidden; }
   :root .portal-hero__sound-off, :root .portal-hero__sound[aria-pressed="true"] .portal-hero__sound-on { @apply inline-flex; }
   :root .portal-hero__sound:focus-visible { @apply outline outline-2 outline-offset-2 outline-white; }
 }
 
-/* ===== v2.0 (03/11/2026, chủ dự án: "top-header nền trong suốt như header khi màn đang xem ở hero") — 16. Thanh trên
-   (.pc-topbar-v3, nằm trong .main-header) trong suốt cùng điều kiện với header trên Hero (assets/home-portal.css khối HEADER
-   TRONG SUỐT — đóng băng R1): trang chủ có Hero là khối đầu, hoặc trang Skin Health Beauty (.pc-shb-hero); chưa cuộn
-   (.main-header:not(.is-scrolled)), không rê chuột / focus vào header, không dính (.hSticky) ⇒ bỏ nền, chữ trắng giữ nguyên;
-   dải tối mờ mép trên Hero (.hero::before) giữ chữ đọc rõ. Ngoài @layer để Tailwind luôn xuất (class nằm trong header.bwt / JS). ===== */
-body.pc-home-v3:has(#portal-main > #section_hero:first-child) header.header:not(:hover):not(:focus-within):not(.hSticky) .main-header:not(.is-scrolled) .pc-topbar-v3,
-body:has(.pc-shb-hero #section_hero) header.header:not(:hover):not(:focus-within):not(.hSticky) .main-header:not(.is-scrolled) .pc-topbar-v3 {
-  background: transparent;
-  box-shadow: none;
-  border-color: transparent;
+@keyframes pc-hero-kb-in { from { transform: scale(1) translate3d(0,0,0); } to { transform: scale(1.18) translate3d(-2%,-1.5%,0); } }
+@keyframes pc-hero-kb-out { from { transform: scale(1.18) translate3d(2%,1.5%,0); } to { transform: scale(1) translate3d(0,0,0); } }
+@keyframes pc-hero-rise { from { transform: translate3d(-50%,14px,0); } to { transform: translate3d(-50%,0,0); } }
+
+/* ===== 16. Header trong suốt trên Hero trang chủ ===== */
+body.pc-home-v3:has(#portal-main > #section_hero:first-child) header.header:not(:hover):not(:focus-within):not(.hSticky) .main-header:not(.is-scrolled) {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+body.pc-home-v3:has(#portal-main > #section_hero:first-child) header.header:not(:hover):not(:focus-within):not(.hSticky) .main-header:not(.is-scrolled) .header-right :is(a,button,.box-icon,i) {
+  color: #fff !important;
+}
+@media (min-width: 992px) {
+  body.pc-home-v3:has(#portal-main > #section_hero:first-child) header.header:not(:hover):not(:focus-within):not(.hSticky) .main-header:not(.is-scrolled) .header-menu {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  body.pc-home-v3:has(#portal-main > #section_hero:first-child) header.header:not(:hover):not(:focus-within):not(.hSticky) .main-header:not(.is-scrolled) #nav > .nav-item > .nav-link {
+    color: #fff !important;
+  }
 }
 
 /* ===== v2.1 (04/11/2026) — 17. ĐÃ BỎ: bản đầu ép header về 1344px để khớp trang chủ ⇒ mọi trang khác lệch (chủ dự án báo lại cùng
