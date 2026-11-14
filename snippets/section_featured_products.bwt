@@ -1,6 +1,6 @@
 {%- comment -%}
   03/11/2026 (chủ dự án: trang chủ theo Figma "travel" node 5:2): nền xanh nhạt, eyebrow + tiêu đề + "Xem tất cả", hàng tab lọc theo
-  nhu cầu, 1 hàng 5 thẻ (home_product_card; mobile vuốt ngang). Bỏ carousel Swiper + khối <style> cũ.
+  nhu cầu, 1 hàng 5 thẻ (ui_product_card; mobile vuốt ngang). Bỏ carousel Swiper + khối <style> cũ.
   - Tab "Tất cả" = danh mục home_featured_collection (giữ nguyên), số thẻ home_featured_limit (tối đa 10, desktop hiện 5).
   - Tab còn lại = các mục của Menu settings.home_featured_tabs_menu (mặc định giai-phap-dieu-tri), mỗi mục trỏ tới 1 danh mục;
     nhãn ngắn theo thứ tự ở home_featured_tab_labels (phân cách ";", trống ⇒ tên mục menu). Danh mục không có SP ⇒ bỏ tab.
@@ -33,7 +33,7 @@
   {%- if feat_all_cols -%}
     {%- capture feat_one_tab -%}<a class="pc-h4-tab" role="tab" id="pc-h4-ft-{{ forloop.index }}" aria-controls="pc-h4-fp-{{ forloop.index }}" aria-selected="false" tabindex="-1" href="{{ link.url | escape }}">{{ feat_lbl | escape }}</a>{%- endcapture -%}
     {%- capture feat_one_panel -%}<div class="pc-h4-prow pc-h4-swipe2 pc-h4-prow--compact" role="tabpanel" id="pc-h4-fp-{{ forloop.index }}" aria-labelledby="pc-h4-ft-{{ forloop.index }}" hidden>
-      {%- for product in feat_c.products limit: feat_limit -%}{%- include 'home_product_card', product: product, eager: false, tone: '' -%}{%- endfor -%}
+      {%- for product in feat_c.products limit: feat_limit -%}{%- include 'ui_product_card', product: product, tone: '', eager: false, wish: false -%}{%- endfor -%}
     </div>{%- endcapture -%}
     {%- assign feat_tab_html = feat_tab_html | append: feat_one_tab -%}
     {%- assign feat_panel_html = feat_panel_html | append: feat_one_panel -%}
@@ -64,7 +64,7 @@
       </nav>
       {%- endif -%}
       <div class="pc-h4-prow pc-h4-swipe2 pc-h4-prow--compact"{% if feat_tab_html != blank %} role="tabpanel" id="pc-h4-fp-0" aria-labelledby="pc-h4-ft-0"{% endif %}>
-        {%- for product in collections[feat_col].products limit: feat_limit -%}{%- include 'home_product_card', product: product, eager: false, tone: '' -%}{%- endfor -%}
+        {%- for product in collections[feat_col].products limit: feat_limit -%}{%- include 'ui_product_card', product: product, tone: '', eager: false, wish: false -%}{%- endfor -%}
       </div>
       {{- feat_panel_html -}}
     </div>

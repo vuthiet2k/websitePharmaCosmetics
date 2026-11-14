@@ -6,17 +6,12 @@
 		{% if search.results.size > 0 %}
 		{% paginate search.results by settings.collection_number_product %}
 		{%include 'collection-sortby'%}
-		<div class="products-view products-view-grid list_hover_pro">
-			<div class="row">
-				{% for product in search.results %}
-				<div class="col-6 col-md-3">
-					<div class="item_product_main">
-						{%- comment -%} 2026-10-10: thẻ mới theo thiết kế trang danh mục (snippets/product_card_collection.bwt). {%- endcomment -%}{%- include 'product_card_collection' -%}
-					</div>
-				</div>
-				{% endfor %}
-			</div>
-		</div>
+		{%- comment -%} 14/11/2026: lưới + thẻ sản phẩm 100% class Tailwind (ui_product_card — thẻ duy nhất của theme). {%- endcomment -%}
+		<ul class="m-0 grid list-none grid-cols-2 gap-3 p-0 md:grid-cols-3 lg:gap-4 xl:grid-cols-4 [html[data-pc-view=list]_&]:grid-cols-1">
+			{% for product in search.results %}
+			<li class="min-w-0">{%- include 'ui_product_card', product: product, tone: '', eager: false, wish: true -%}</li>
+			{% endfor %}
+		</ul>
 		<div class="pagenav">
 			{% if paginate.pages > 1 %}
 			{% include 'collection-paginate-pages' %}

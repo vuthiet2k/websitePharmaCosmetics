@@ -48,15 +48,7 @@
   .pc-btn--block { @apply w-full; }
   .pc-btn[aria-busy="true"] { @apply pointer-events-none opacity-70; }
 
-  /* 3. Thẻ sản phẩm */
-  .pc-card { @apply flex h-full flex-col gap-3 border border-solid border-card-line bg-card p-3 rounded-xl shadow-none lg:rounded-none lg:p-4; }
-  .pc-card__media  { @apply relative aspect-square w-full overflow-hidden bg-slate-100 rounded-xl lg:rounded-none; }
-  .pc-card__media img { @apply h-full w-full object-cover; }
-  .pc-card__badge  { @apply absolute left-2 top-2; }
-  .pc-card__title  { @apply line-clamp-2 text-sm font-medium text-ink lg:text-base; }
-  .pc-card__price  { @apply text-base font-bold text-price; }
-  .pc-card__price-old { @apply ml-2 text-sm font-normal text-ink-secondary line-through; }
-  .pc-card__actions { @apply mt-auto; }
+  /* 3. Thẻ sản phẩm — 14/11/2026: không còn CSS; thẻ duy nhất snippets/ui_product_card.bwt viết 100% class Tailwind (đã gỡ .pc-card*, .pc-h4-pcard*). */
 
   /* 4. Ô nhập */
   .pc-field { @apply flex flex-col gap-1.5; }
@@ -271,30 +263,11 @@
   :root .pc-h4 :is(.pc-h4-prow, .pc-h4-tabs)::-webkit-scrollbar { display: none; }
   :root .pc-h4 .pc-h4-prow[hidden] { @apply hidden; }
   :root .pc-h4 .pc-h4-prow > :nth-child(n+6) { @apply lg:hidden; }
-  :root .pc-h4 .pc-h4-pcard { @apply relative box-border flex snap-start flex-col rounded-2xl border border-solid border-line-soft bg-white p-3; }
-  :root .pc-h4 .pc-h4-pcard__media { @apply relative block aspect-[218/190] overflow-hidden rounded-xl bg-brand-tint; }
-  :root .pc-h4 .pc-h4-pcard__media img { @apply block h-full w-full object-contain; }
-  :root .pc-h4 .pc-h4-pcard__off { @apply absolute left-2 top-2 rounded-full bg-sale px-2 py-0.5 text-xs font-bold text-white; }
-  :root .pc-h4 .pc-h4-pcard__v { @apply m-0 mt-3 truncate text-xs uppercase tracking-[.08em] text-ink-muted; }
-  :root .pc-h4 .pc-h4-pcard__t { @apply m-0 mt-1.5 line-clamp-2 text-sm font-semibold text-brand-deep lg:text-base; }
-  :root .pc-h4 .pc-h4-pcard__t a { @apply text-brand-deep no-underline hover:underline; }
-  :root .pc-h4 .pc-h4-pcard__d { @apply m-0 mt-2 line-clamp-2 text-xs text-ink-muted; }
-  :root .pc-h4 .pc-h4-pcard__p { @apply m-0 mt-auto flex flex-wrap items-baseline gap-x-2 pt-3 text-base font-bold text-brand-deep; }
-  :root .pc-h4 .pc-h4-pcard__p s { @apply text-xs font-normal text-ink-muted; }
-  :root .pc-h4 .pc-h4-pcard__rx { @apply m-0 mt-auto flex items-center gap-2 pt-3 text-xs font-semibold text-brand-deep; }
-  :root .pc-h4 .pc-h4-pcard__rx b { @apply rounded-[4px] bg-brand-deep px-2 py-1 text-xs font-bold text-white; }
   /* 09/11/2026 (QA: thẻ kê toa có nhãn «Cần tư vấn» + chữ «Liên hệ để được tư vấn» chen phía trên nút «Xem chi tiết» — từ khi thẻ Bán chạy
      có nút): chỉ giữ nhãn nhìn thấy, câu «Liên hệ…» để cho trình đọc màn hình (không bỏ nội dung cấu hình product_rx_card_label) */
-  :root .pc-h4 .pc-h4-pcard__rx:has(~ .pc-h4-pcard__a) span { @apply sr-only; }
   /* Nút thẻ (03/11/2026, chủ dự án): nền đặc, bo tròn; Flash Sale (tone 'sale') giá + nút màu đỏ */
-  :root .pc-h4 .pc-h4-pcard__a { @apply mt-3; }
-  :root .pc-h4 .pc-h4-pcard__a .pc-btn { @apply rounded-full; }
   /* <a class="pc-btn"> bị luật màu link của .pc-h4 ép chữ tối ⇒ ghi lại chữ trắng cho nút nền đặc */
-  :root .pc-h4 .pc-h4-pcard__a .pc-btn--primary { @apply text-white no-underline; }
   /* 09/11/2026 (QA: «Hết hàng» chữ trắng trên nền xanh/đỏ mờ 40% ≈ 1,5:1): nút vô hiệu của thẻ trang chủ = nền xám nhạt đặc, chữ xám đậm */
-  :root .pc-h4 .pc-h4-pcard__a .pc-btn:disabled { @apply cursor-not-allowed border border-solid border-line-soft bg-surface-soft text-ink-secondary opacity-100; }
-  :root .pc-h4 .pc-h4-pcard--sale .pc-h4-pcard__p > span { @apply text-sale; }
-  :root .pc-h4 .pc-h4-pcard--sale .pc-btn--primary { @apply bg-sale hover:brightness-90 active:brightness-90; }
   /* Flash sale: icon tia sét + tiêu đề đỏ; đồng hồ ô số đỏ (script cuối section_flash_sale dựng ô, .is-tick = hiệu ứng lật) */
   :root .pc-h4 .pc-h4-fs__top { @apply flex flex-wrap items-center gap-3 lg:gap-5; }
   :root .pc-h4 .pc-h4-fs__title { @apply inline-flex items-center gap-2 text-sale; }
@@ -533,23 +506,13 @@
 
     /* 14.17 Hàng sản phẩm mobile: nhãn hãng màu thương hiệu, ẩn mô tả; Bán chạy = lưới 2 × 2 vuốt ngang.
        09/11/2026 (chủ dự án): thẻ Bán chạy CÓ nút như Flash sale — bỏ luật ẩn .pc-h4-prow--compact .pc-h4-pcard__a */
-    :root .pc-h4 .pc-h4-pcard__d { @apply hidden; }
     /* 09/11/2026 (kế hoạch tinh chỉnh mobile PLAN-2026-MOBILE-UI-01, TASK-01/02/03 — chủ dự án giao):
        - Ảnh tràn viền: thẻ bỏ đệm 12px + khung ảnh lồng (bo 12px, nền riêng) — ảnh vuông 1:1 sát mép trên/trái/phải, thẻ bo 12px cắt góc ảnh;
          chữ / giá / nút lùi vào 10px. object-cover (ảnh SP Sapo vuông ⇒ không mất gì; ảnh lệch tỉ lệ cắt giữa, không méo).
        - Nhãn hãng (vendor «PHARMA COSMETICS» lặp ở mọi thẻ) ẩn trên mobile — hãng vẫn có ở trang chi tiết; nhãn kê toa (cùng class) cũng ẩn,
          thẻ kê toa vẫn còn nhãn «Cần tư vấn» ở chỗ giá. Tên SP luôn giữ đủ chỗ 2 dòng ⇒ giá + nút các thẻ thẳng hàng.
        - Nút thẻ: bo 8px thay viên thuốc 9999px, đệm ngang 8px, 1 dòng (nowrap + … khi chữ dài hơn) — «Chọn phiên bản» gãy 2 dòng ở 390px. */
-    :root .pc-h4 .pc-h4-pcard { @apply overflow-hidden rounded-xl p-0 pb-2.5; }
-    :root .pc-h4 .pc-h4-pcard > :not(.pc-h4-pcard__media) { @apply mx-2.5; }
-    :root .pc-h4 .pc-h4-pcard__media { @apply aspect-square rounded-none; }
-    :root .pc-h4 .pc-h4-pcard__media img { @apply object-cover object-center; }
-    :root .pc-h4 .pc-h4-pcard__off { @apply rounded-[4px]; }
-    :root .pc-h4 .pc-h4-pcard__v { @apply hidden; }
-    :root .pc-h4 .pc-h4-pcard__t { @apply mt-2.5 min-h-10; }
-    :root .pc-h4 .pc-h4-pcard__a { @apply mt-2.5; }
     /* chữ nút là nút văn bản trần (không bọc span) ⇒ «…» chỉ chạy với display:block; cao 44px giữ bằng line-height */
-    :root .pc-h4 .pc-h4-pcard__a .pc-btn { @apply block truncate rounded-[8px] px-2 text-center leading-[44px]; }
     :root .pc-h4 .pc-h4-prow.pc-h4-swipe2 { @apply gap-3; }
     :root .pc-h4 .pc-h4-fs__top { @apply grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-1; }
     :root .pc-h4 .pc-h4-fs__ic { @apply row-span-2 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-sale-tint; }

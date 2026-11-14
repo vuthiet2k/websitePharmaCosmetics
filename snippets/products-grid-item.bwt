@@ -1,16 +1,9 @@
-{%- comment -%} 2026-10-08: bật sao đánh giá thật trên thẻ ở trang danh mục (xem product_grid_office). {%- endcomment -%}
-{%- assign pc_card_rating = true -%}
-<div class="products-view products-view-grid list_hover_pro">
-	<div class="row">
-		{% for product in collection.products %}
-		<div class="col-6 col-xl-3 col-lg-4 col-md-4">
-			<div class="item_product_main">
-				{%- comment -%} 2026-10-10: thẻ mới theo thiết kế trang danh mục (snippets/product_card_collection.bwt). {%- endcomment -%}{%- include 'product_card_collection' -%}	
-			</div>
-		</div>			
-		{% endfor %}
-	</div>
-</div>
+{%- comment -%} 14/11/2026: lưới + thẻ sản phẩm 100% class Tailwind (ui_product_card — thẻ duy nhất của theme). {%- endcomment -%}
+<ul class="m-0 grid list-none grid-cols-2 gap-3 p-0 md:grid-cols-3 lg:gap-4 xl:grid-cols-4 [html[data-pc-view=list]_&]:grid-cols-1">
+	{% for product in collection.products %}
+	<li class="min-w-0">{%- include 'ui_product_card', product: product, tone: '', eager: false, wish: true -%}</li>
+	{% endfor %}
+</ul>
 <div class="pagenav">
 	{% if paginate.pages > 1 %}
 	{% include 'collection-paginate-pages' %}

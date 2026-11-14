@@ -1,58 +1,98 @@
 {%- comment -%}
-  snippets/ui_product_card.bwt — THƯ VIỆN PC (KHOÁ sau đợt 0, R5). Thẻ sản phẩm (C.2 #3).
-  Tham số: product (bắt buộc), context = home | catalog (mặc định catalog), eager (ảnh LCP ⇒ không lazy).
-  Ảnh 1:1 qua img_url; tên 2 dòng; nhãn -X% khi đang giảm; sao CHỈ khi có đánh giá thật (metafields.bpr) — không bịa số.
-  Nút "Thêm vào giỏ": secondary (home) / primary (catalog), form /cart/add + class JS add_to_cart (ajaxCart của theme).
-  Kê toa (pc_is_rx) ⇒ không giá, không giỏ, chỉ link tư vấn. Giá 0 ⇒ "Liên hệ". Hết hàng ⇒ nút vô hiệu. Nhiều phiên bản ⇒ mở trang SP.
+  snippets/ui_product_card.bwt — THẺ SẢN PHẨM DUY NHẤT của theme (14/11/2026, chủ dự án: "gộp các thẻ về 1, 100% class Tailwind").
+  Thay product_card_collection, home_product_card, product_grid_office, product_grid_office_sale (đã xoá cùng CSS của chúng).
+  Tham số (TRUYỀN ĐỦ mỗi lần include — biến include của Liquid lọt từ phạm vi cha):
+    product (bắt buộc) · tone = '' | 'sale' (khối Flash sale: giá + nút + nhãn theo màu flash) · eager (ảnh LCP ⇒ không lazy)
+    · wish (true ⇒ hiện nút tim; chỉ bật ở trang có JS yêu thích: danh mục / tìm kiếm).
+  Dữ liệu 100% từ object product: ảnh, vendor, tên, giá / giá gốc, tồn kho, phiên bản, đánh giá thật (metafields.bpr), tag
+  nhan:<chữ> (nhãn góc), voucher:<mức>, freeship. Không bịa số.
+  Màu: Cấu hình theme › Màu sắc (bg-card, border-card-line, bg-card-btn, text-price, bg-sale, bg-flash-badge…).
+  Kê toa (pc_is_rx) ⇒ không giá, không giỏ. Liệu trình (pc_is_service) / giá 0 ⇒ «Liên hệ», nút Xem chi tiết.
+  Hết hàng ⇒ nút vô hiệu. Nhiều phiên bản ⇒ mở trang sản phẩm. Còn lại ⇒ form /cart/add + nút .add_to_cart (ajaxCart).
+  Tên class không phải Tailwind (variants, add_to_cart, sapo-buyxgety-badge) và data-* là MÓC JS, không có CSS.
 {%- endcomment -%}
-{%- assign pc_pc_ctx = context | default: 'catalog' -%}
-{%- if pc_pc_ctx != 'home' and pc_pc_ctx != 'catalog' -%}<!-- PC-ERROR ui_product_card: context "{{ pc_pc_ctx }}" không hợp lệ -->
-{%- elsif product == blank -%}<!-- PC-ERROR ui_product_card: thiếu product -->
+{%- if product == blank -%}<!-- PC-ERROR ui_product_card: thiếu product -->
 {%- else -%}
 {%- assign pc_pc_name = product.name | default: product.title -%}
 {%- assign pc_pc_var = product.selected_or_first_available_variant | default: product.variants.first -%}
 {%- assign pc_pc_price = pc_pc_var.price | default: product.price -%}
 {%- assign pc_pc_compare = pc_pc_var.compare_at_price | default: product.compare_at_price | default: 0 -%}
 {%- include 'pc_is_rx' -%}
-{%- include 'pc_is_service' -%}{%- comment -%} 04/11/2026: liệu trình (pc_is_service) ⇒ ẩn giá / % giảm, nút Xem chi tiết. {%- endcomment -%}
-{%- assign pc_pc_btn = 'primary' -%}{%- if pc_pc_ctx == 'home' -%}{%- assign pc_pc_btn = 'secondary' -%}{%- endif -%}
+{%- include 'pc_is_service' -%}
+{%- assign pc_pc_sale = false -%}{%- if tone == 'sale' -%}{%- assign pc_pc_sale = true -%}{%- endif -%}
 {%- assign pc_pc_off = 0 -%}
 {%- if pc_pc_compare > pc_pc_price and pc_pc_price > 0 and pc_is_rx != true and pc_is_service != true -%}
   {%- assign pc_pc_off = pc_pc_compare | minus: pc_pc_price | times: 100 | divided_by: pc_pc_compare | round -%}
   {%- if pc_pc_off < 1 -%}{%- assign pc_pc_off = 1 -%}{%- endif -%}
 {%- endif -%}
-<article class="pc-card">
-  <div class="pc-card__media">
-    {%- comment -%} Ảnh trỏ cùng trang với tên SP ⇒ bỏ khỏi thứ tự Tab + trình đọc màn hình (tránh 2 link trùng), vẫn bấm được bằng tay. {%- endcomment -%}
-    <a class="block h-full w-full" href="{{ product.url }}" tabindex="-1" aria-hidden="true">
-      <img src="{% if product.featured_image.src != blank %}{{ product.featured_image.src | img_url: 'medium' }}{% else %}{% include 'placeholder_img_url' %}{% endif %}" alt="{{ product.featured_image.alt | default: pc_pc_name | escape }}" width="240" height="240"{% unless eager %} loading="lazy"{% endunless %}>
+{%- comment -%} Tag: KHÔNG so sánh kết quả slice (Sapo .NET) — thêm tiền tố § rồi dùng contains (2026-10-19). {%- endcomment -%}
+{%- assign pc_pc_tag = '' -%}{%- assign pc_pc_voucher = '' -%}{%- assign pc_pc_freeship = false -%}{%- assign pc_pc_preorder = false -%}
+{%- for tag in product.tags -%}
+  {%- assign pc_pc_tl = tag | downcase -%}{%- assign pc_pc_tm = pc_pc_tl | prepend: '§' -%}
+  {%- if pc_pc_tm contains '§nhan:' and pc_pc_tag == blank -%}{%- assign pc_pc_tag = tag | split: ':' | last | strip -%}{%- endif -%}
+  {%- if pc_pc_tm contains '§voucher:' -%}{%- assign pc_pc_voucher = tag | split: ':' | last | strip -%}{%- endif -%}
+  {%- if pc_pc_tm contains '§freeship' -%}{%- assign pc_pc_freeship = true -%}{%- endif -%}
+  {%- if pc_pc_tl contains 'pre-order' -%}{%- assign pc_pc_preorder = true -%}{%- endif -%}
+{%- endfor -%}
+{%- comment -%} Chuỗi class ghi NGUYÊN VĂN (Tailwind chỉ sinh CSS cho chuỗi nhìn thấy trong file). `!text-…`: thắng luật màu link của CSS cũ. {%- endcomment -%}
+{%- assign pc_pc_btn = 'mt-2 inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 border-0 bg-card-btn px-3 text-center text-sm font-semibold !text-card-btn-text no-underline rounded-full hover:bg-btn-hover' -%}
+{%- if pc_pc_sale -%}{%- assign pc_pc_btn = 'mt-2 inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 border-0 bg-flash-badge px-3 text-center text-sm font-semibold !text-flash-badge-text no-underline rounded-full hover:brightness-90' -%}{%- endif -%}
+<article class="relative flex h-full min-w-0 snap-start flex-col [html[data-pc-view=list]_&]:flex-row overflow-hidden border border-solid border-card-line bg-card text-left font-sans rounded-2xl">
+  {%- comment -%} html[data-pc-view=list] (nút lưới / danh sách ở trang danh mục) ⇒ thẻ nằm ngang, ảnh cố định bề rộng. {%- endcomment -%}
+  <div class="relative [html[data-pc-view=list]_&]:w-[120px] [html[data-pc-view=list]_&]:shrink-0 md:[html[data-pc-view=list]_&]:w-[200px]">
+    {%- comment -%} Ảnh trỏ cùng trang với tên SP ⇒ bỏ khỏi thứ tự Tab + trình đọc màn hình (tránh 2 link trùng). {%- endcomment -%}
+    <a class="block aspect-square w-full overflow-hidden bg-white" href="{{ product.url }}" tabindex="-1" aria-hidden="true">
+      <img class="block h-full w-full object-contain" src="{% if product.featured_image.src != blank %}{{ product.featured_image.src | img_url: 'large' }}{% else %}{% include 'placeholder_img_url' %}{% endif %}" alt="{{ product.featured_image.alt | default: pc_pc_name | escape }}" width="480" height="480"{% unless eager %} loading="lazy"{% endunless %}>
     </a>
-    {%- if pc_pc_off > 0 -%}<span class="pc-card__badge">{% capture pc_pc_bt %}-{{ pc_pc_off }}%{% endcapture %}{% include 'ui_badge', text: pc_pc_bt, tone: 'sale' %}</span>{%- endif -%}
-  </div>
-  <h3 class="pc-card__title notranslate" translate="no"><a href="{{ product.url }}">{{ pc_pc_name }}</a></h3>
-  {%- if product.metafields.bpr.votes > 0 -%}
-  <p class="flex items-center gap-1 text-sm text-ink-secondary">{% include 'ui_icon', name: 'star', size: 20, label: '' %}<span>{{ product.metafields.bpr.rating }}/5 ({{ product.metafields.bpr.votes }} đánh giá)</span></p>
-  {%- endif -%}
-  <p>
-    {%- if pc_is_rx or pc_is_service -%}<span class="pc-card__price">{% if pc_is_service %}{{ settings.lt_info_price_contact | default: 'Liên hệ tư vấn' | escape }}{% else %}{{ settings.product_rx_card_label | default: 'Liên hệ tư vấn' }}{% endif %}</span>
-    {%- elsif pc_pc_price == 0 -%}<span class="pc-card__price">Liên hệ</span>
-    {%- else -%}<span class="pc-card__price">{{ pc_pc_price | money }}</span>{% if pc_pc_compare > pc_pc_price %}<s class="pc-card__price-old"><span class="sr-only">Giá gốc </span>{{ pc_pc_compare | money }}</s>{% endif %}
+    {%- if pc_pc_off > 0 -%}
+      {%- if pc_pc_sale -%}<span class="absolute left-2 top-2 bg-flash-badge px-2 py-1 text-xs font-bold text-flash-badge-text rounded-full">-{{ pc_pc_off }}%</span>
+      {%- else -%}<span class="absolute left-2 top-2 bg-sale px-2 py-1 text-xs font-bold text-white rounded-full">-{{ pc_pc_off }}%</span>{%- endif -%}
+    {%- elsif pc_pc_tag != blank -%}<span class="absolute left-2 top-2 max-w-[70%] truncate bg-primary px-2 py-1 text-xs font-bold text-white rounded-full">{{ pc_pc_tag | escape }}</span>
     {%- endif -%}
-  </p>
-  <div class="pc-card__actions">
-    {%- capture pc_pc_aria -%}Thêm vào giỏ: {{ pc_pc_name | strip_html }}{%- endcapture -%}
-    {%- if pc_is_rx or pc_is_service or pc_pc_price == 0 -%}
-      {%- capture pc_pc_aria -%}Xem chi tiết: {{ pc_pc_name | strip_html }}{%- endcapture -%}
-      {% include 'ui_button', label: 'Xem chi tiết', variant: pc_pc_btn, href: product.url, type: '', size: 'md', block: true, disabled: false, loading: false, aria_label: pc_pc_aria, id: '', form: '', modal: '', js_class: '' %}
+    {%- if wish == true -%}
+    <button type="button" class="group absolute right-1 top-1 flex h-[44px] w-[44px] cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-ink-secondary aria-pressed:text-sale" data-pc-wish="{{ product.alias }}" aria-label="Yêu thích {{ pc_pc_name | escape }}" aria-pressed="false">
+      <span class="flex h-[36px] w-[36px] items-center justify-center bg-white rounded-full">
+        <i class="leading-none group-aria-pressed:hidden" data-pc-wish-off aria-hidden="true">{% include 'ui_icon', name: 'heart', size: 20, label: '' %}</i>
+        <i class="leading-none [display:none] group-aria-pressed:[display:block]" data-pc-wish-on aria-hidden="true">{% include 'ui_icon', name: 'heart-filled', size: 20, label: '' %}</i>
+      </span>
+    </button>
+    {%- endif -%}
+    <div class="sapo-buyxgety-badge" data-id="{{ product.id }}"></div>
+  </div>
+  <div class="flex min-w-0 flex-1 flex-col gap-1 p-3">
+    {%- if pc_is_rx -%}<p class="m-0 truncate text-xs font-medium uppercase text-ink-secondary">{{ settings.product_rx_card_kicker | default: 'Sản phẩm thuốc' | escape }}</p>
+    {%- elsif product.vendor != blank -%}<p class="notranslate m-0 truncate text-xs font-medium uppercase text-ink-secondary" translate="no">{{ product.vendor | escape }}</p>{%- endif -%}
+    {%- comment -%} RULE-P0-01: tên SP chứa nồng độ hoạt chất / thương hiệu quốc tế ⇒ notranslate. {%- endcomment -%}
+    <h3 class="notranslate m-0 line-clamp-2 !text-sm !font-semibold !leading-5 text-ink lg:!text-base lg:!leading-6" translate="no"><a class="!text-ink no-underline hover:!text-primary" href="{{ product.url }}">{{ pc_pc_name }}</a></h3>
+    {%- if product.metafields.bpr.votes > 0 -%}
+    <p class="m-0 flex items-center gap-1 text-xs text-ink-secondary" aria-label="Đánh giá {{ product.metafields.bpr.rating }} trên 5, {{ product.metafields.bpr.votes }} lượt"><i class="text-sm leading-none text-warning" aria-hidden="true">{% include 'ui_icon', name: 'star-filled', size: 'em' %}</i><span class="font-semibold text-ink">{{ product.metafields.bpr.rating }}</span><span>({{ product.metafields.bpr.votes }})</span></p>
+    {%- endif -%}
+    <p class="m-0 mt-auto flex flex-wrap items-baseline gap-x-2 pt-2">
+      {%- if pc_is_rx -%}<b class="bg-primary-deep px-2 py-0.5 text-xs font-bold text-white rounded-full">{{ settings.product_rx_card_badge | default: 'Cần tư vấn' | escape }}</b><span class="sr-only">{{ settings.product_rx_card_label | default: 'Liên hệ để được tư vấn' | escape }}</span>
+      {%- elsif pc_is_service -%}<span class="text-base font-bold text-price">{{ settings.lt_info_price_contact | default: 'Liên hệ tư vấn' | escape }}</span>
+      {%- elsif pc_pc_price == 0 -%}<span class="text-base font-bold text-price">{{ settings.product_card_contact_text | default: 'Liên hệ' | escape }}</span>
+      {%- else -%}
+        {%- if pc_pc_sale -%}<span class="text-base font-bold text-flash-text">{{ pc_pc_price | money }}</span>
+        {%- else -%}<span class="text-base font-bold text-price">{{ pc_pc_price | money }}</span>{%- endif -%}
+        {%- if pc_pc_compare > pc_pc_price -%}<s class="text-xs text-ink-secondary"><span class="sr-only">Giá gốc </span>{{ pc_pc_compare | money }}</s>{%- endif -%}
+      {%- endif -%}
+    </p>
+    {%- if pc_pc_voucher != blank or pc_pc_freeship -%}
+    <p class="m-0 flex flex-wrap gap-1">
+      {%- if pc_pc_voucher != blank -%}<span class="inline-flex items-center gap-1 bg-sale-tint px-2 py-0.5 text-xs font-medium text-sale rounded-full">{{ settings.collection_card_voucher_label | default: 'Voucher' | escape }} {{ pc_pc_voucher | escape }}</span>{%- endif -%}
+      {%- if pc_pc_freeship -%}<span class="inline-flex items-center gap-1 bg-primary-tint px-2 py-0.5 text-xs font-medium text-primary rounded-full">{{ settings.collection_card_freeship_label | default: 'Freeship' | escape }}</span>{%- endif -%}
+    </p>
+    {%- endif -%}
+    {%- if pc_is_rx or pc_is_service or pc_pc_price == 0 or pc_pc_preorder -%}
+    <a class="{{ pc_pc_btn }}" href="{{ product.url }}" aria-label="Xem chi tiết: {{ pc_pc_name | strip_html | escape }}">Xem chi tiết</a>
     {%- elsif product.available != true -%}
-      {% include 'ui_button', label: 'Hết hàng', variant: pc_pc_btn, href: '', type: 'button', size: 'md', block: true, disabled: true, loading: false, aria_label: '', id: '', form: '', modal: '', js_class: '' %}
+    <button type="button" class="mt-2 inline-flex min-h-[44px] w-full cursor-not-allowed items-center justify-center border border-solid border-line bg-surface-soft px-3 text-sm font-semibold text-ink-secondary rounded-full" disabled>Hết hàng</button>
     {%- elsif product.variants.size > 1 -%}
-      {%- capture pc_pc_aria -%}Chọn phiên bản: {{ pc_pc_name | strip_html }}{%- endcapture -%}
-      {% include 'ui_button', label: 'Chọn phiên bản', variant: pc_pc_btn, href: product.url, type: '', size: 'md', block: true, disabled: false, loading: false, aria_label: pc_pc_aria, id: '', form: '', modal: '', js_class: '' %}
+    <a class="{{ pc_pc_btn }}" href="{{ product.url }}" aria-label="Chọn phiên bản: {{ pc_pc_name | strip_html | escape }}">Chọn phiên bản</a>
     {%- else -%}
-    <form action="/cart/add" method="post" class="variants" data-cart-form data-id="product-actions-{{ product.id }}" enctype="multipart/form-data">
+    <form action="/cart/add" method="post" class="variants m-0" data-cart-form data-id="product-actions-{{ product.id }}" enctype="multipart/form-data">
       <input type="hidden" name="variantId" value="{{ pc_pc_var.id }}">
-      {% include 'ui_button', label: 'Thêm vào giỏ', variant: pc_pc_btn, href: '', type: 'submit', size: 'md', block: true, disabled: false, loading: false, aria_label: pc_pc_aria, id: '', form: '', modal: '', js_class: 'add_to_cart' %}
+      <button type="submit" class="add_to_cart {{ pc_pc_btn }}" aria-label="Thêm vào giỏ: {{ pc_pc_name | strip_html | escape }}">{% include 'ui_icon', name: 'shopping-cart', size: 20, label: '' %}<span>Thêm vào giỏ</span></button>
     </form>
     {%- endif -%}
   </div>
