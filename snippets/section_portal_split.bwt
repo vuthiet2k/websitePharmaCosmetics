@@ -1,57 +1,79 @@
 {%- comment -%}
-  03/11/2026 (chủ dự án: dựng trang chủ theo Figma "travel" node 5:2 — design/home-v4/full.png): khối ngay sau Hero gồm
-  (1) dải 4 cam kết (home_trust_N_title / _desc, tắt cả dải bằng home_trust_enable) và (2) chương I "Khám phá" với 2 thẻ lối vào
-  (giữ nguyên trường cũ portal_shop_* / portal_clinic_* / home_spa_btn_url). CSS: ui-src/css/components.css mục 14.2–14.3.
-  04/11/2026 (chủ dự án: giao diện mobile theo khung Main.png — CSS mục 14.14, chỉ < 1024px): ẩn dải cam kết; nhãn chương có tiền tố
-  portal_chapter_prefix ("Mục") + tiêu đề portal_split_title; 2 thẻ cạnh nhau: icon (portal_shop_icon / portal_clinic_icon — tên ui_icon)
-  + nhãn + tiêu đề 1 dòng + mô tả 2 dòng + nút tròn. Desktop giữ nguyên. Tiêu đề thẻ là <p role="heading" aria-level="2"> (không
-  phải <h2>): CSS cũ đóng băng ép mọi `.pc-portal h2` cỡ --ts-h2 (cờ ưu tiên tuyệt đối) ⇒ không thu được chữ trên mobile.
+  Khối sau Hero gồm:
+  (1) Dải 4 cam kết (home_trust_N_title / _desc, tắt bằng home_trust_enable)
+  (2) Khám phá: 2 thẻ lối vào (Shop dược mỹ phẩm & Skin Health Beauty trị liệu 1:1).
+  100% Tailwind utility class trực tiếp trên thẻ ngữ nghĩa, không dùng class CSS tự sinh.
 {%- endcomment -%}
 {%- unless settings.home_trust_enable == false or settings.home_trust_enable == 'false' -%}
-<div class="pc-h4 pc-h4-trust"><div class="pc-h4-wrap">
-  <ul class="pc-h4-trust__list">
-    {%- for i in (1..4) -%}
-      {%- capture k_t -%}home_trust_{{ i }}_title{%- endcapture -%}{%- capture k_d -%}home_trust_{{ i }}_desc{%- endcapture -%}
-      {%- case i -%}
-        {%- when 1 -%}{%- assign tr_t = settings[k_t] | default: 'Chính hãng, nhập khẩu' -%}{%- assign tr_d = settings[k_d] | default: 'Nguồn gốc rõ ràng' -%}
-        {%- when 2 -%}{%- assign tr_t = settings[k_t] | default: 'Giao hàng toàn quốc' -%}{%- assign tr_d = settings[k_d] | default: 'Đặt online, nhận tận nhà' -%}
-        {%- when 3 -%}{%- assign tr_t = settings[k_t] | default: 'Chuyên gia da 10+ năm' -%}{%- assign tr_d = settings[k_d] | default: 'Tư vấn & trị liệu 1:1' -%}
-        {%- else -%}{%- assign tr_t = settings[k_t] | default: 'Đổi trả rõ ràng' -%}{%- assign tr_d = settings[k_d] | default: 'Theo chính sách công khai' -%}
-      {%- endcase -%}
-      <li class="pc-h4-trust__item">
-        <span class="pc-h4-trust__icon">{% include 'ui_icon', name: 'check' %}</span>
-        <span><span class="pc-h4-trust__t block">{{ tr_t | escape }}</span><span class="pc-h4-trust__d block">{{ tr_d | escape }}</span></span>
-      </li>
-    {%- endfor -%}
-  </ul>
-</div></div>
+<div class="border-0 border-b border-solid border-line-soft bg-white py-5 lg:py-8">
+  <div class="container">
+    <ul class="m-0 grid list-none grid-cols-2 gap-4 p-0 lg:grid-cols-4">
+      {%- for i in (1..4) -%}
+        {%- capture k_t -%}home_trust_{{ i }}_title{%- endcapture -%}{%- capture k_d -%}home_trust_{{ i }}_desc{%- endcapture -%}
+        {%- case i -%}
+          {%- when 1 -%}{%- assign tr_t = settings[k_t] | default: 'Chính hãng, nhập khẩu' -%}{%- assign tr_d = settings[k_d] | default: 'Nguồn gốc rõ ràng' -%}
+          {%- when 2 -%}{%- assign tr_t = settings[k_t] | default: 'Giao hàng toàn quốc' -%}{%- assign tr_d = settings[k_d] | default: 'Đặt online, nhận tận nhà' -%}
+          {%- when 3 -%}{%- assign tr_t = settings[k_t] | default: 'Chuyên gia da 10+ năm' -%}{%- assign tr_d = settings[k_d] | default: 'Tư vấn & trị liệu 1:1' -%}
+          {%- else -%}{%- assign tr_t = settings[k_t] | default: 'Đổi trả rõ ràng' -%}{%- assign tr_d = settings[k_d] | default: 'Theo chính sách công khai' -%}
+        {%- endcase -%}
+        <li class="m-0 flex items-center gap-3 lg:gap-3.5">
+          <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand-deep">{% include 'ui_icon', name: 'check' %}</span>
+          <span><span class="m-0 block text-sm font-bold text-brand-deep lg:text-base">{{ tr_t | escape }}</span><span class="m-0 mt-0.5 block text-xs text-ink-muted">{{ tr_d | escape }}</span></span>
+        </li>
+      {%- endfor -%}
+    </ul>
+  </div>
+</div>
 {%- endunless -%}
-<section class="pc-h4 pc-h4-sec pc-h4-sec--tight-b" aria-labelledby="pc-h4-explore">
-  <div class="pc-h4-wrap">
-    <div class="pc-h4-chap"><p class="pc-h4-chap__tag" id="pc-h4-explore"><span class="pc-h4-sm-only">{{ settings.portal_chapter_prefix | default: 'Mục' | escape }} </span>I · {{ settings.portal_chapter_1 | default: 'Khám phá' | escape }}</p><span class="pc-h4-chap__rule" aria-hidden="true"></span></div>
-    {%- if settings.portal_split_title != blank -%}<p class="pc-h4-title pc-h4-split__title pc-h4-sm-only">{{ settings.portal_split_title | escape }}</p>{%- endif -%}
-    <div class="pc-h4-split">
-      <a class="pc-h4-entry" href="{{ settings.portal_shop_url | default: '/collections/all' | escape }}">
-        <div class="pc-h4-entry__hd">
-          <span class="pc-h4-entry__ic pc-h4-sm-only">{%- assign ps_ic = settings.portal_shop_icon | default: 'pill-bottle' -%}{% include 'ui_icon', name: ps_ic %}</span>
-          <div>
-            <p class="pc-h4-entry__k">{{ settings.portal_shop_kicker | default: 'Pharma Cosmetics' | escape }}</p>
-            <p class="pc-h4-entry__t" role="heading" aria-level="2">{{ settings.portal_shop_title | default: 'Mua dược mỹ phẩm chính hãng' | escape }}</p>
+<section class="m-0 bg-white px-0 py-10 lg:py-16 font-sans text-ink" aria-labelledby="section-portal-split-explore">
+  <div class="container">
+    <div class="mb-6 lg:mb-8 flex items-center gap-4">
+      <p class="m-0 whitespace-nowrap text-xs font-bold uppercase tracking-wider text-primary" id="section-portal-split-explore">
+        <span class="lg:hidden">{{ settings.portal_chapter_prefix | default: 'Mục' | escape }} </span>I · {{ settings.portal_chapter_1 | default: 'Khám phá' | escape }}
+      </p>
+      <span class="h-px flex-1 bg-line-soft" aria-hidden="true"></span>
+    </div>
+    {%- if settings.portal_split_title != blank -%}
+      <h3 class="m-0 mb-4 text-xl font-bold tracking-normal text-brand-deep lg:hidden">{{ settings.portal_split_title | escape }}</h3>
+    {%- endif -%}
+    <div class="grid grid-cols-2 gap-3 lg:gap-6">
+      <a class="group box-border flex min-w-0 flex-col rounded-2xl border border-solid border-line-soft bg-surface-soft p-4 lg:p-8 no-underline" href="{{ settings.portal_shop_url | default: '/collections/all' | escape }}">
+        <div class="flex min-w-0 items-center gap-2.5 lg:block">
+          <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-deep text-white lg:hidden">
+            {%- assign ps_ic = settings.portal_shop_icon | default: 'pill-bottle' -%}
+            {% include 'ui_icon', name: ps_ic %}
+          </span>
+          <div class="min-w-0">
+            <span class="m-0 block truncate text-xs font-bold uppercase tracking-wider text-brand-deep lg:text-primary">{{ settings.portal_shop_kicker | default: 'Pharma Cosmetics' | escape }}</span>
+            <h4 class="m-0 mt-0.5 lg:mt-3 truncate lg:whitespace-normal text-xs lg:text-2xl font-semibold lg:font-bold text-primary lg:text-brand-deep">{{ settings.portal_shop_title | default: 'Mua dược mỹ phẩm chính hãng' | escape }}</h4>
           </div>
         </div>
-        {%- if settings.portal_shop_desc != blank -%}<p class="pc-h4-entry__d">{{ settings.portal_shop_desc | escape }}</p>{%- endif -%}
-        <span class="pc-h4-go">{{ settings.portal_shop_btn_text | default: 'Vào cửa hàng' | escape }}{% include 'ui_icon', name: 'arrow-right' %}</span>
+        {%- if settings.portal_shop_desc != blank -%}
+          <p class="m-0 mt-3 lg:mt-4 line-clamp-2 lg:line-clamp-none text-xs lg:text-sm leading-relaxed text-ink-muted">{{ settings.portal_shop_desc | escape }}</p>
+        {%- endif -%}
+        <span class="mt-4 lg:mt-6 box-border flex min-h-11 w-full lg:w-auto lg:inline-flex items-center justify-between lg:justify-start gap-1.5 rounded-full lg:rounded-none bg-brand-deep lg:bg-transparent px-4 py-2 lg:p-0 text-xs lg:text-sm font-bold text-white lg:text-brand-deep group-hover:underline">
+          <span>{{ settings.portal_shop_btn_text | default: 'Vào cửa hàng' | escape }}</span>
+          <span class="transition-transform duration-200 group-hover:translate-x-1">{% include 'ui_icon', name: 'arrow-right' %}</span>
+        </span>
       </a>
-      <a class="pc-h4-entry pc-h4-entry--dark" href="{{ settings.home_spa_btn_url | default: '/skin-health-beauty' | escape }}" title="{{ settings.home_spa_btn_text | default: 'Khám phá Skin Health Beauty' | escape }}">
-        <div class="pc-h4-entry__hd">
-          <span class="pc-h4-entry__ic pc-h4-sm-only">{%- assign ps_ic = settings.portal_clinic_icon | default: 'shield-heart' -%}{% include 'ui_icon', name: ps_ic %}</span>
-          <div>
-            <p class="pc-h4-entry__k">{{ settings.portal_clinic_kicker | default: 'Skin Health Beauty' | escape }}</p>
-            <p class="pc-h4-entry__t" role="heading" aria-level="2">{{ settings.portal_clinic_title | default: 'Trị liệu da 1:1 tại Hà Nội' | escape }}</p>
+      <a class="group box-border flex min-w-0 flex-col rounded-2xl border border-solid border-brand-deep bg-brand-deep p-4 lg:p-8 text-white no-underline" href="{{ settings.home_spa_btn_url | default: '/skin-health-beauty' | escape }}" title="{{ settings.home_spa_btn_text | default: 'Khám phá Skin Health Beauty' | escape }}">
+        <div class="flex min-w-0 items-center gap-2.5 lg:block">
+          <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white lg:hidden">
+            {%- assign ps_ic = settings.portal_clinic_icon | default: 'shield-heart' -%}
+            {% include 'ui_icon', name: ps_ic %}
+          </span>
+          <div class="min-w-0">
+            <span class="m-0 block truncate text-xs font-bold uppercase tracking-wider text-white/80 lg:text-white/90">{{ settings.portal_clinic_kicker | default: 'Skin Health Beauty' | escape }}</span>
+            <h4 class="m-0 mt-0.5 lg:mt-3 truncate lg:whitespace-normal text-xs lg:text-2xl font-semibold lg:font-bold text-white">{{ settings.portal_clinic_title | default: 'Trị liệu da 1:1 tại Hà Nội' | escape }}</h4>
           </div>
         </div>
-        {%- if settings.portal_clinic_desc != blank -%}<p class="pc-h4-entry__d">{{ settings.portal_clinic_desc | escape }}</p>{%- endif -%}
-        <span class="pc-h4-go">{{ settings.portal_clinic_btn_text | default: 'Khám phá trị liệu' | escape }}{% include 'ui_icon', name: 'arrow-right' %}</span>
+        {%- if settings.portal_clinic_desc != blank -%}
+          <p class="m-0 mt-3 lg:mt-4 line-clamp-2 lg:line-clamp-none text-xs lg:text-sm leading-relaxed text-white/85">{{ settings.portal_clinic_desc | escape }}</p>
+        {%- endif -%}
+        <span class="mt-4 lg:mt-6 box-border flex min-h-11 w-full lg:w-auto lg:inline-flex items-center justify-between lg:justify-start gap-1.5 rounded-full lg:rounded-none bg-white lg:bg-transparent px-4 py-2 lg:p-0 text-xs lg:text-sm font-bold text-brand-deep lg:text-white group-hover:underline">
+          <span>{{ settings.portal_clinic_btn_text | default: 'Khám phá trị liệu' | escape }}</span>
+          <span class="transition-transform duration-200 group-hover:translate-x-1">{% include 'ui_icon', name: 'arrow-right' %}</span>
+        </span>
       </a>
     </div>
   </div>
