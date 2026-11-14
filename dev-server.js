@@ -641,7 +641,6 @@ function devCuratedGroups() {
       ['page.indexskinhealthy',           'SH · Trang chủ'],
       ['page.skinhealthy-services',       'SH · Dịch vụ'],
       ['page.skinhealthy-service-detail', 'SH · Chi tiết dịch vụ'],
-      ['page.getglowing-micro-peel',      'SH · GetGlowing Micro-Peel'],
       ['collection.skinhealthy',          'SH · Collection'],
     ]},
     { label: 'MOPS', items: [
@@ -988,7 +987,6 @@ const PAGE_HANDLE_MAP = {
   'soi-da':                      'page.ai-skin-quiz', // Soi da AI 2026-09-24: alias mở sẵn tab camera ở client.
   'chuyen-gia':                  'page.chuyen-gia',
   'chuyen-gia-detail':           'page.chuyen-gia-detail',
-  'clinical-proof':              'page.clinical-proof',
   // T-148 (2026-09-13): DEF-BK-02 — link "Chính sách bảo mật" ở form đặt lịch trỏ tới handle này
   // nhưng trang chưa từng tồn tại (404 thật trên production). "/chinh-sach" hiện có là trang
   // "Chính sách đổi trả" (khác nội dung), không dùng thay được.
@@ -1004,19 +1002,15 @@ const PAGE_HANDLE_MAP = {
   'skinhealthy-service-detail':  'page.skinhealthy-service-detail',
   'skin-health-beauty':         'page.indexskinhealthy',
   'skinhealthy-services':        'page.skinhealthy-services',
-  'getglowing-micro-peel-ha-noi': 'page.getglowing-micro-peel',
   'spa-services':                'page.spa-services',
-  'tra-cuu-hoat-chat':           'page.tra-cuu-hoat-chat',
   'tin-tuc':                     'page.tin-tuc', // 2026-10-13: trang tổng tin tức (mọi danh mục bài viết)
   // 2026-10-17: alias Trang nội dung THẬT trên Sapo (đối soát sitemap_pages + vân tay giao diện) — vào đúng URL Sapo ở local.
-  'truoc-sau-cham-soc-da-tu-xa':   'page.clinical-proof',
   'chuyen-gia-1':                  'page.chuyen-gia',
   'dich-vu-skin-healthy-beauty':   'page.skinhealthy-services',
   'skin-health-beauty-chi-tiet':   'page.skinhealthy-service-detail',
   'skin-health-beauty-thanh-toan': 'page.payment',
   'dang-ky-lieu-trinh-tri-mun':    'page.payment',
   'order':                         'page.order-lookup',
-  'canh-bao-lua-dao':              'page.canh-bao-lua-dao', // 12/11/2026: trang cảnh báo lừa đảo giao hàng COD
 };
 
 // Tập hợp tất cả slug 1-segment mà chính menu điều hướng của site (data/
@@ -1830,7 +1824,6 @@ async function requestHandler(req, res) {
   // đúng trang, kể cả sau khi đã click sang tab khác trong app.
   const PATH_ROUTES = {
     '/mops-admin': 'page.mops-admin',
-    '/dich-vu/getglowing-micro-peel-ha-noi': 'page.getglowing-micro-peel',
   };
   if (Object.prototype.hasOwnProperty.call(PATH_ROUTES, pathname)) {
     try {

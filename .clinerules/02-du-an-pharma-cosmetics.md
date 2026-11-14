@@ -355,9 +355,9 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
 - **Không bịa dữ liệu hiển thị cho khách (rà 2026-10-03):** đã gỡ khuyến mãi demo "Tặng tinh dầu
   Moroccanoil…" (`header_search_promo`, `header_search_gg_title`), số điện thoại giả fallback
   (`0987.654.321`, `1900xxxx` → dùng `settings.store_phone`), hồ sơ sức khoẻ bịa ở
-  `page.patient-portal` (chỉ giữ tên + đơn hàng thật), ca bệnh/số liệu bịa ở `page.clinical-proof`
+  `page.patient-portal` (chỉ giữ tên + đơn hàng thật), ca bệnh/số liệu bịa ở trang Trước & Sau (`blog.truoc-va-sau` + `snippets/clinical_proof_body.bwt`)
   (giới thiệu + 4 chỉ số = `clinical_*` settings, mặc định trống; ca điều trị = blog
-  `clinical_case_blog_handle`, mặc định `truoc-va-sau`). Mọi nơi đọc ca (/clinical-proof, `article.truoc-va-sau`,
+  `clinical_case_blog_handle`, mặc định `truoc-va-sau`). Mọi nơi đọc ca (/truoc-va-sau, `article.truoc-va-sau`,
   `lieu_trinh_cases`, mục "Hành trình da của khách hàng" trang chủ = bài có tag `home_testi_pin_tag` — mặc định
   `ghim-trang-chu`, tối đa 3) đi qua `snippets/ba_case_source.bwt`: ảnh = tag `anhtruoc:`/`anhsau:` hoặc 2 ảnh trong nội dung có Mô tả ảnh (alt) chứa "trước"/"sau"; không đánh dấu ⇒ **ca 1 ảnh** (ảnh đại diện + mọi ảnh nội dung, mỗi ảnh 1 slide nguyên khung — chỉ trang Trước & Sau nhận, 12/11/2026); hero trang Trước & Sau lấy video/ảnh từ ô Mô tả danh mục
   bài (trang chi tiết gỡ 2 ảnh đó khỏi nội dung). Hướng dẫn nhập: `docs/huong-dan-tao-ca-truoc-sau.md`.
@@ -567,7 +567,9 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
 - Chế độ danh sách: `html[data-pc-view]` + localStorage `pc_collection_view`, chỉ từ 768px; mobile luôn lưới.
 - CSS ở cuối `assets/page_collection.scss.bwt` (khối "2026-10-08 — Trang danh mục theo thiết kế").
 
-## Trang Trước & Sau (`templates/page.clinical-proof.bwt`, dựng lại theo thiết kế 2026-10-07)
+## Trang Trước & Sau (`templates/blog.truoc-va-sau.bwt` + `snippets/clinical_proof_body.bwt`, dựng lại theo thiết kế 2026-10-07)
+
+- 14/11/2026: bỏ `page.clinical-proof` (Trang nội dung `/truoc-sau-cham-soc-da-tu-xa`). Trang Trước & Sau = danh mục bài viết `/truoc-va-sau` gán giao diện `blog.truoc-va-sau`; link quay lại/menu trỏ `/truoc-va-sau`.
 
 - Câu chữ/link/ảnh hero: field `clinical_*` (Theme Settings → "Trang Trước & Sau"); header/footer dùng layout chung.
 - Ca khách hàng = bài trong blog `clinical_case_blog_handle`, tag khoá:giá trị: `anhtruoc:`/`anhsau:` (bắt buộc
@@ -580,7 +582,7 @@ Căn cứ: PRD "YÊU CẦU IT WEB: TINH GIẢN TRANG SẢN PHẨM" (Google Doc c
 
 Nguồn: `sitemap.xml` của pharmacosmetics-vn.com (pages / collections / blogs / products) + quét trang thật ở
 `?previewThemeId=1172249`. Sapo chuyển path KHÔNG tồn tại về trang chủ (HTTP 200, `url_effective` = `/`) — kiểm path bằng
-URL đích sau redirect, không bằng mã HTTP. Bản dev có route riêng (`/clinical-proof`, `/ai-skin-quiz`, `/blogs/<handle>`…)
+URL đích sau redirect, không bằng mã HTTP. Bản dev có route riêng (`/ai-skin-quiz`, `/blogs/<handle>`…)
 KHÔNG tồn tại trên Sapo. Mọi giá trị mặc định trong `settings_schema.json`/`settings_data.json`, `| default:` trong Liquid,
 `href` ghi cứng và tài liệu phải ghi theo bảng này; dữ liệu mẫu (`data/articles.js`, `data/navigation.js`) dùng cùng
 handle để localhost phản ánh đúng Sapo.
@@ -591,7 +593,7 @@ handle để localhost phản ánh đúng Sapo.
 | :-- | :-- | :-- |
 | `/kham-da-ai` | `page.ai-skin-quiz` | Trang quiz/soi da THẬT. `/ai-skin-quiz` **không tồn tại** (chỉ route dev); `?tab=camera` vẫn dùng được |
 | `/ai-skin-quiz-results` | `page.ai-skin-quiz-results` | |
-| `/truoc-sau-cham-soc-da-tu-xa` | `page.clinical-proof` | `/clinical-proof` chỉ có ở dev. Menu header "TRƯỚC VÀ SAU" trỏ về trang Trước & Sau |
+| `/truoc-va-sau` | **danh mục bài viết**, giao diện `blog.truoc-va-sau` | 14/11/2026: thay Trang nội dung `/truoc-sau-cham-soc-da-tu-xa` (`page.clinical-proof` đã xoá). Menu "TRƯỚC VÀ SAU" trỏ đây |
 | `/dich-vu` | **danh mục sản phẩm** (collection.bwt ⇒ lưới thẻ liệu trình vì nằm trong `lt_collection`) | Menu header "DỊCH VỤ" trỏ đây (đối soát preview 04/11/2026) — các sản phẩm liệu trình (GetGlowing Micro-Peel, Enzyme Therapy, WiQo PRX-Plus…) |
 | `/tin-tuc` | `page.tin-tuc` | KHÔNG có danh mục bài viết handle `tin-tuc` |
 | `/chuyen-gia-1` | `page.chuyen-gia` | `/chuyen-gia` trên Sapo là **danh mục bài viết** "Đội ngũ chuyên gia" |
@@ -599,11 +601,11 @@ handle để localhost phản ánh đúng Sapo.
 | `/skin-health-beauty-chi-tiet` | `page.skinhealthy-service-detail` | |
 | `/skin-health-beauty-thanh-toan`, `/dang-ky-lieu-trinh-tri-mun` | `page.payment` | |
 | `/skin-health-beauty` | `page.indexskinhealthy` | |
-| `/tra-cuu-hoat-chat` | `page.tra-cuu-hoat-chat` | "Thư viện hoạt chất" (thay `/thanh-phan-hoat-tinh` không tồn tại) |
+| `/hoat-chat` | **danh mục bài viết** `hoat-chat` | "Thư viện hoạt chất" (`skinhealthy_ing_url`). 14/11/2026: bỏ `page.tra-cuu-hoat-chat` — cần trang riêng thì làm giao diện danh mục bài viết (`blog.<tên>`) hoặc danh mục sản phẩm, không làm Trang nội dung |
 | `/gioi-thieu` | `page.about-us` | |
 | `/about-us` | **`page.about`** (đối soát site đang chạy 04/11/2026: `template = 'page.about'`) | Menu header "VỀ CHÚNG TÔI" trỏ đây. Theme có CẢ `page.about` và `page.about-us`, cùng thân `snippets/page_about.bwt` (trước 04/11 chỉ có page.about-us ⇒ preview rơi về `page` mặc định) |
 | `/order` | `page.order-lookup` | |
-| `/canh-bao-lua-dao` | `page.canh-bao-lua-dao` | Trang «Lưu ý khi nhận đơn COD» (12/11/2026, tham khảo UNIQLO). **Phải tạo Trang nội dung alias này trên Sapo** — popup «Nhận hàng an toàn» link tới (`delivery_alert_page_url`). Chữ: Admin › Trang Cảnh báo lừa đảo (`scam_page_*`) |
+| `/canh-bao-lua-dao` | `page` mặc định | Trang «Lưu ý khi nhận đơn COD» — nội dung + CSS soạn trong ô Mô tả trang trên Sapo (14/11/2026 bỏ `page.canh-bao-lua-dao` và nhóm cấu hình `scam_page_*`). Popup/thẻ cảnh báo link tới (`delivery_alert_page_url`), bật/tắt bằng `delivery_alert_enable` |
 | `/dat-lich-tu-van`, `/loyalty`, `/dai-ly-b2b`, `/chinh-sach-bao-mat` | cùng tên | |
 | `/phan-hoi-cua-khach-hang` | `page` mặc định | — (13/11/2026: danh mục ca đã đổi về `truoc-va-sau`, không còn Trang nội dung trùng alias) |
 
@@ -796,7 +798,7 @@ grep -o '"id"[[:space:]]*:[[:space:]]*"[a-z_]*"' configs/settings_schema.json
   `sanpham:<alias>`), `truoc-va-sau` (tag `lieutrinh:<alias>` + `anhtruoc:`/`anhsau:` hoặc 2 ảnh nội dung có Mô tả ảnh "trước"/"sau"). Chữ dùng chung: nhóm cấu hình "Trang liệu
   trình (sản phẩm)" (`lt_*`, `[ten]` = tên ngắn). Thiếu dữ liệu ⇒ phần đó ẩn. Hướng dẫn nhập liệu: `docs/huong-dan-tao-lieu-trinh.md`.
 - Tên vấn đề da / hoạt chất in CHỮ HOA theo bản bàn giao (người dùng chốt) — ngoại lệ có chủ đích của UI-2.7.
-- `page.getglowing-micro-peel` chỉ còn bọc hiển thị sản phẩm `settings.lt_page_product` + canonical về URL sản phẩm (link cũ).
+- 14/11/2026: bỏ `page.getglowing-micro-peel` + trường `lt_page_product` (trang liệu trình là SẢN PHẨM `product.lieu-trinh`).
 - Preview: sản phẩm mock có `template_suffix` ⇒ `dev-server.js` (`productTpl`) render `product.<suffix>`; `all_products` có trong context.
 - (04/11/2026) Danh mục liệu trình = `lt_collection`, NHIỀU handle cách nhau dấu phẩy (`dieu-tri-chuyen-nghiep,dich-vu`) ⇒ lưới
   `collection_lieu_trinh` + thẻ `lieu_trinh_card`. Ẩn giá (`lt_hide_price`, mặc định bật) ở thẻ liệu trình, bảng thông tin và mọi thẻ

@@ -41,7 +41,7 @@ const PAGES = (process.env.AUDIT_PAGES ? process.env.AUDIT_PAGES.replace(/,/g,'\
 /about-us
 /gioi-thieu
 /chuyen-gia
-/clinical-proof
+/blogs/truoc-va-sau
 /dat-lich-tu-van
 /skin-health-beauty
 /skinhealthy-services
@@ -50,13 +50,11 @@ const PAGES = (process.env.AUDIT_PAGES ? process.env.AUDIT_PAGES.replace(/,/g,'\
 /soi-da
 /kham-da-ai
 /ai-skin-quiz
-/tra-cuu-hoat-chat
 /tin-tuc
 /loyalty
 /order-lookup
 /dai-ly-b2b
 /chinh-sach-bao-mat
-/getglowing-micro-peel-ha-noi
 /seo-directory
 /patient-portal`).split('\n').map(s=>s.trim()).filter(Boolean);
 // = các bậc --fs-* (desktop + mobile) ở snippets/design_tokens.bwt — .clinerules/03 UI-2.2

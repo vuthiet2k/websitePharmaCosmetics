@@ -16,10 +16,10 @@ Tài liệu liên quan: tạo 1 liệu trình mới → [huong-dan-tao-lieu-trin
 | `/dich-vu-skin-healthy-beauty` | Trang nội dung | `page.skinhealthy-services` | Menu nhóm dịch vụ + danh mục sản phẩm (mục 4) |
 | `/dieu-tri-chuyen-nghiep` … | Danh mục sản phẩm | `collection.skinhealthy` | Sản phẩm trong danh mục |
 | Từng liệu trình (vd `/elaine-brennan-getglowing-…`) | **Sản phẩm** | **`product.lieu-trinh`** | Chính sản phẩm đó — xem tài liệu tạo liệu trình |
-| `/tra-cuu-hoat-chat` | Trang nội dung | `page.tra-cuu-hoat-chat` | Blog `hoat-chat` |
+| `/hoat-chat` | Danh mục bài viết | `blog` (14/11/2026 bỏ `page.tra-cuu-hoat-chat`) | Blog `hoat-chat` |
 | `/dat-lich-tu-van` | Trang nội dung | `page.dat_lich_tu_van` | Form đặt lịch |
 | `/kham-da-ai` | Trang nội dung | `page.ai-skin-quiz` | Soi da AI |
-| `/truoc-sau-cham-soc-da-tu-xa` | Trang nội dung | `page.clinical-proof` | Blog `truoc-va-sau-1` |
+| `/truoc-va-sau` | Danh mục bài viết | `blog.truoc-va-sau` (14/11/2026 bỏ `page.clinical-proof`) | Blog `truoc-va-sau` |
 | `/skin-health-beauty-chi-tiet` | Trang nội dung | `page.skinhealthy-service-detail` | **Không dùng để xem dịch vụ** — xem mục 6 |
 
 Cách chọn giao diện: Sapo Admin → mở trang / danh mục / sản phẩm → ô **Giao diện** (khung giao diện) ở cột phải → chọn → **Lưu**.

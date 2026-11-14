@@ -17,11 +17,11 @@ const ROUTES = [
   '/blogs/tin-tuc-va-kien-thuc', '/blogs/tin-tuc-va-kien-thuc/retinol-thanh-phan-vang-chong-lao-hoa', '/cart', '/search?query=serum',
   '/account/login', '/account/register', '/account',
   '/about-us', '/ai-skin-quiz', '/ai-skin-quiz-results', '/chuyen-gia',
-  '/chuyen-gia-detail', '/clinical-proof', '/chinh-sach-bao-mat', '/dai-ly-b2b',
+  '/chuyen-gia-detail', '/chinh-sach-bao-mat', '/dai-ly-b2b',
   '/dat-lich-tu-van', '/loyalty', '/order-lookup', '/order-tracking',
   '/patient-portal', '/payment', '/seo-directory', '/skin-health-beauty',
-  '/skinhealthy-services', '/getglowing-micro-peel-ha-noi', '/spa-services',
-  '/tra-cuu-hoat-chat', '/trang-khong-ton-tai-404',
+  '/skinhealthy-services', '/spa-services',
+  '/trang-khong-ton-tai-404',
 ];
 
 (async () => {

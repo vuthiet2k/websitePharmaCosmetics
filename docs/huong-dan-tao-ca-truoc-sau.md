@@ -5,7 +5,7 @@ tự hiện ở các nơi sau:
 
 | Nơi hiển thị | Hiện gì |
 | :-- | :-- |
-| Trang **/truoc-sau-cham-soc-da-tu-xa** — phần "Kết quả của khách hàng" | Thanh **tab lọc** theo nhóm vấn đề da (tự sinh từ tag `nhom:`; "Kết quả khác" luôn cuối) + **lưới thẻ theo nhóm** (2 cột, điện thoại 1 cột), **4 thẻ / trang** có phân trang. Mỗi thẻ: tên nhóm + "Case x / n", ảnh, nút ‹ › + chấm (vuốt trên điện thoại) để chuyển ca, dòng mô tả ngắn (tuổi · tỉnh · theo dõi n tuần / Phác đồ) và nút **Tư vấn phác đồ qua Zalo**. Ca có cặp ảnh đánh dấu ⇒ 2 ảnh TRƯỚC/SAU có nhãn; ca không đánh dấu ⇒ **mỗi ảnh 1 slide nguyên khung** (xem 2.1). Thẻ không link sang bài chi tiết. |
+| Trang **/truoc-va-sau** — phần "Kết quả của khách hàng" | Thanh **tab lọc** theo nhóm vấn đề da (tự sinh từ tag `nhom:`; "Kết quả khác" luôn cuối) + **lưới thẻ theo nhóm** (2 cột, điện thoại 1 cột), **4 thẻ / trang** có phân trang. Mỗi thẻ: tên nhóm + "Case x / n", ảnh, nút ‹ › + chấm (vuốt trên điện thoại) để chuyển ca, dòng mô tả ngắn (tuổi · tỉnh · theo dõi n tuần / Phác đồ) và nút **Tư vấn phác đồ qua Zalo**. Ca có cặp ảnh đánh dấu ⇒ 2 ảnh TRƯỚC/SAU có nhãn; ca không đánh dấu ⇒ **mỗi ảnh 1 slide nguyên khung** (xem 2.1). Thẻ không link sang bài chi tiết. |
 | **Trang chi tiết ca** `/<đường dẫn bài>` trên Sapo (bản dev: `/blogs/truoc-va-sau/<đường dẫn bài>`) (giao diện `article.truoc-va-sau`) | Khung **bài viết blog** như mọi bài khác. Cột chính: thẻ đầu bài (nhãn nhóm · H1 · chuyên gia · ngày/tỉnh · tóm tắt · hồ sơ ca 4 ô) → ảnh TRƯỚC/SAU 50/50 có nhãn tuần → nhận định chuyên gia → lộ trình diễn tiến → câu chuyện. Sidebar: đặt lịch + hotline + Zalo → liệu trình & sản phẩm đồng hành → ca khác cùng nhóm. Mobile: sidebar xuống dưới + thanh đặt lịch bám đáy |
 | Trang **liệu trình** (sản phẩm giao diện `product.lieu-trinh`) — phần "Trước – sau" | Chỉ khi bài có tag `lieutrinh:<alias sản phẩm>` (tối đa 8 ca, trình chiếu ‹ ›) |
 | **Trang chủ** — mục "Kết quả thực tế · Hành trình da của khách hàng" | Chỉ khi bài có tag **`ghim-trang-chu`** và đủ ảnh trước/sau (tối đa **3 bài mới nhất**). Tab = `nhom:` (trống ⇒ tiêu đề) – `khach:`; panel = ảnh TRƯỚC/SAU · tiêu đề · dòng khách (`khach:`, `tuoi:`, `tinh:` · Tác giả) · Tình trạng ban đầu (`tinhtrang:`, trống ⇒ `nhom:`) · Hành trình (danh sách số đầu tiên trong Nội dung, trống ⇒ Tóm tắt) · Sản phẩm sử dụng (`phacdo:`) · Thời gian theo dõi (`tuan:`) · link "Xem chi tiết ca". Đổi tag ghim: Cấu hình theme › Trước & Sau (Testimonials) › **Hành trình da — Tag ghim ca lên trang chủ**. Không bài nào được ghim ⇒ trang chủ dùng Thẻ 1–3 nhập tay như trước |
@@ -23,7 +23,7 @@ tự hiện ở các nơi sau:
 
 | Thành phần | Trên Sapo | Trạng thái |
 | :-- | :-- | :-- |
-| Trang giới thiệu Trước & Sau | Trang nội dung alias **`truoc-sau-cham-soc-da-tu-xa`**, giao diện `page.clinical-proof` → `/truoc-sau-cham-soc-da-tu-xa` | Đã có. **Không có** đường dẫn `/clinical-proof` trên Sapo (chỉ là tên route ở bản dev). |
+| Trang giới thiệu Trước & Sau | **Danh mục bài viết** `truoc-va-sau`, giao diện **`blog.truoc-va-sau`** → `/truoc-va-sau` | 14/11/2026: đã bỏ Trang nội dung `/truoc-sau-cham-soc-da-tu-xa` + giao diện `page.clinical-proof`. Đổi ô Giao diện của danh mục sang `blog.truoc-va-sau` (xem «Cách nhanh»). |
 | Danh mục bài viết ca | **Trước & Sau**, handle **`truoc-va-sau`** (`/truoc-va-sau` là Trang nội dung "Trước và sau", không phải danh mục) | Có 1 bài "[DEMO] Hành trình 8 tuần…" — gỡ/ẩn trước khi công bố. Ô **Blog ca điều trị** phải chọn danh mục này |
 | Ảnh / video hero | **Ô Mô tả của danh mục bài viết Trước & Sau** (Website › Bài viết › Danh mục bài viết › Trước & Sau): có nhúng video (iframe YouTube…) ⇒ hero là video; không có video, có ảnh ⇒ ảnh đầu tiên (1 ảnh, nguyên khung) | Mô tả không có ảnh/video ⇒ dùng cặp ảnh Cấu hình theme › Trang Trước & Sau › Hero (nếu đủ 2 ảnh) ⇒ ca đầu tiên; chưa có ca ⇒ hero chỉ còn chữ |
 
@@ -31,11 +31,11 @@ tự hiện ở các nơi sau:
 ảnh nào lên Sapo. Ảnh thật phải nhập theo mục 2.
 
 1. **Website › Bài viết › Danh mục bài viết**: đã có danh mục **Trước & Sau**, đường dẫn `truoc-va-sau`.
-   Nếu dùng đường dẫn khác thì chọn lại ở **Cấu hình theme › Trang Trước & Sau (/truoc-sau-cham-soc-da-tu-xa) › Blog ca điều trị**.
+   Nếu dùng đường dẫn khác thì chọn lại ở **Cấu hình theme › Trang Trước & Sau › Blog ca điều trị**.
 2. Ảnh / video hero (12/11/2026): mở danh mục bài viết **Trước & Sau**, trong ô **Mô tả** chèn **1 ảnh** (nút Chèn ảnh)
    hoặc **nhúng 1 video** (nút Mã HTML › dán mã `<iframe>` của YouTube). Có video thì ưu tiên video. Ô Mô tả trống ảnh/video
    ⇒ dùng **Cấu hình theme › Trang Trước & Sau › Hero — ảnh TRƯỚC + ảnh SAU** (đủ cả hai) ⇒ ca đầu tiên.
-3. Ô **Chi tiết ca — link nút quay lại** phải là `/truoc-sau-cham-soc-da-tu-xa` (bản cũ mặc định `/clinical-proof` ⇒ 404).
+3. Ô **Chi tiết ca — link nút quay lại** phải là `/truoc-va-sau` (14/11/2026; bản cũ `/truoc-sau-cham-soc-da-tu-xa` / `/clinical-proof` không còn).
 4. Trong cùng mục cấu hình đó, có thể sửa chữ dùng chung: tiêu đề phần kết quả, ghi chú dưới kết quả, nút Zalo,
    nhãn link **"Xem chi tiết ca"** (để trống thì ẩn link), và các nhãn của trang chi tiết (`Chi tiết ca — …`):
    nút quay lại và link của nút, tiêu đề phần nội dung, tiêu đề "Ca khác cùng nhóm", nhãn Tuổi / Tỉnh/thành /
@@ -139,9 +139,9 @@ Bản dev có sẵn ca mẫu này đủ 6 khối: `/blogs/truoc-va-sau/hanh-trin
 
 ## 4. Kiểm tra trước khi công bố (laptop + điện thoại)
 
-1. Mở **/truoc-sau-cham-soc-da-tu-xa** (Sapo; bản dev là `/clinical-proof`): ca nằm đúng nhóm, ảnh TRƯỚC bên trái và SAU bên phải, số "Case x / y" đúng, link "Xem chi tiết ca" mở được.
+1. Mở **/truoc-va-sau** (Sapo; bản dev là `/blogs/truoc-va-sau`): ca nằm đúng nhóm, ảnh TRƯỚC bên trái và SAU bên phải, số "Case x / y" đúng, link "Xem chi tiết ca" mở được.
 2. Mở trang chi tiết ca: có 1 tiêu đề H1, hồ sơ ca 4 ô đúng, nhãn tuần trên ảnh đúng, nhận định chuyên gia + lộ trình không lặp lại trong phần câu chuyện, thẻ liệu trình/sản phẩm mở đúng trang, nút đặt lịch + hotline đúng số; điện thoại: cuộn xuống thấy thanh "Đặt lịch tư vấn 1:1" bám đáy.
 3. Nếu có tag `lieutrinh:`: mở trang liệu trình đó và kiểm tra phần "Trước – sau".
 4. Dev: `npm run preview`, sau đó chạy
-   `AUDIT_PAGES="/clinical-proof,/blogs/truoc-va-sau/<đường dẫn bài>" npm run audit:ui` (route bản dev)
+   `AUDIT_PAGES="/blogs/truoc-va-sau,/blogs/truoc-va-sau/<đường dẫn bài>" npm run audit:ui` (route bản dev)
    (Git Bash thêm `MSYS_NO_PATHCONV=1`). Kết quả cần 0 lỗi ở 1440px và 390px.
