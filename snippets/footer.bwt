@@ -13,36 +13,38 @@
 {%- assign _ft_email = settings.store_email | default: store.customer_email -%}
 <footer class="footer bg-primary text-white py-10 lg:py-14">
   <div class="container">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-      <div>
-        {%- assign _ft_name = settings.store_name | default: store.name -%}
-        <a class="inline-flex items-center mb-4 text-white no-underline" href="/" title="{{ _ft_name | escape }}">
-          {%- if settings.footer_logo_use_image == true or settings.footer_logo_use_image == 'true' -%}
-            <img class="block h-auto w-48 lg:w-56" src="{{ 'logo_footer.png' | asset_url }}" width="270" height="56" alt="{{ _ft_name | escape }}" loading="lazy">
-          {%- else -%}
-            <img class="block h-auto w-48 lg:w-56 brightness-0 invert" src="{{ 'PharmaCosmetics.svg' | asset_url }}" width="341" height="70" alt="{{ _ft_name | escape }}" loading="lazy">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+      <div class="rounded-2xl bg-white/[0.06] border border-white/10 p-5 lg:p-6 flex flex-col justify-between">
+        <div>
+          {%- assign _ft_name = settings.store_name | default: store.name -%}
+          <a class="inline-flex items-center mb-4 text-white no-underline" href="/" title="{{ _ft_name | escape }}">
+            {%- if settings.footer_logo_use_image == true or settings.footer_logo_use_image == 'true' -%}
+              <img class="block h-auto w-48 lg:w-56" src="{{ 'logo_footer.png' | asset_url }}" width="270" height="56" alt="{{ _ft_name | escape }}" loading="lazy">
+            {%- else -%}
+              <img class="block h-auto w-48 lg:w-56 brightness-0 invert" src="{{ 'PharmaCosmetics.svg' | asset_url }}" width="341" height="70" alt="{{ _ft_name | escape }}" loading="lazy">
+            {%- endif -%}
+          </a>
+          {%- unless settings.enable_info_foo == false or settings.enable_info_foo == 'false' -%}
+            {%- if settings.content_info_foo != blank -%}
+              <div class="text-sm leading-relaxed text-white/90 mb-3">{{ settings.content_info_foo }}</div>
+            {%- endif -%}
+          {%- endunless -%}
+          {%- if _ft_addr != blank -%}
+            <p class="m-0 mb-2 text-sm leading-relaxed text-white/90">
+              {%- assign _ft_addr_lines = _ft_addr | newline_to_br | split: '<br />' -%}
+              {%- assign _ft_first = true -%}
+              {%- for _l in _ft_addr_lines -%}
+                {%- assign _l = _l | strip -%}
+                {%- if _l != blank -%}
+                  {%- unless _ft_first -%}<br>{%- endunless -%}{{ _l }}
+                  {%- assign _ft_first = false -%}
+                {%- endif -%}
+              {%- endfor -%}
+            </p>
           {%- endif -%}
-        </a>
-        {%- unless settings.enable_info_foo == false or settings.enable_info_foo == 'false' -%}
-          {%- if settings.content_info_foo != blank -%}
-            <div class="text-sm leading-relaxed text-white/90 mb-3">{{ settings.content_info_foo }}</div>
-          {%- endif -%}
-        {%- endunless -%}
-        {%- if _ft_addr != blank -%}
-          <p class="m-0 mb-2 text-sm leading-relaxed text-white/90">
-            {%- assign _ft_addr_lines = _ft_addr | newline_to_br | split: '<br />' -%}
-            {%- assign _ft_first = true -%}
-            {%- for _l in _ft_addr_lines -%}
-              {%- assign _l = _l | strip -%}
-              {%- if _l != blank -%}
-                {%- unless _ft_first -%}<br>{%- endunless -%}{{ _l }}
-                {%- assign _ft_first = false -%}
-              {%- endif -%}
-            {%- endfor -%}
-          </p>
-        {%- endif -%}
+        </div>
         {%- if _ft_phone != blank or _ft_email != blank -%}
-          <p class="m-0 text-sm leading-relaxed text-white/90">
+          <p class="m-0 pt-3 border-t border-white/10 text-sm leading-relaxed text-white/90">
             {%- if _ft_phone != blank -%}<a class="text-white hover:underline no-underline" href="tel:{{ _ft_phone | remove: ' ' | remove: '.' }}">{{ _ft_phone }}</a>{%- endif -%}
             {%- if _ft_phone != blank and _ft_email != blank %} · {% endif -%}
             {%- if _ft_email != blank -%}<a class="text-white hover:underline no-underline" href="mailto:{{ _ft_email }}">{{ _ft_email }}</a>{%- endif -%}
@@ -52,69 +54,86 @@
 
       {%- assign _fc_ll = linklists[settings.footer_custom_menu] -%}
       {%- if settings.footer_custom_menu != blank and _fc_ll.links.size > 0 -%}
-        <div class="border-b border-white/10 pb-4 lg:border-none lg:pb-0">
-          <h4 class="m-0 text-sm font-bold uppercase tracking-wider text-white mb-4">{{ settings.footer_custom_title | default: _fc_ll.title | escape }}</h4>
-          <ul class="m-0 p-0 list-none flex flex-col gap-2">
-            {%- for link in _fc_ll.links -%}
-              <li><a class="text-sm text-white/85 hover:text-white hover:underline no-underline" href="{{ link.url }}">{{ link.title }}</a></li>
-            {%- endfor -%}
-          </ul>
+        <div class="rounded-2xl bg-white/[0.06] border border-white/10 p-5 lg:p-6">
+          <details class="group" data-pc-acc open>
+            <summary class="flex items-center justify-between cursor-pointer list-none py-1 lg:py-0 lg:pointer-events-none [&::-webkit-details-marker]:hidden">
+              <h4 class="m-0 text-sm font-bold uppercase tracking-wider text-white">{{ settings.footer_custom_title | default: _fc_ll.title | escape }}</h4>
+              <span class="lg:hidden inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/80 transition-transform duration-200 group-open:rotate-180" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down' %}</span>
+            </summary>
+            <ul class="m-0 p-0 list-none flex flex-col gap-2 pt-3 mt-3 border-t border-white/10 lg:border-none lg:pt-0 lg:mt-4">
+              {%- for link in _fc_ll.links -%}
+                <li><a class="text-sm text-white/85 hover:text-white hover:underline no-underline inline-block py-0.5" href="{{ link.url }}">{{ link.title }}</a></li>
+              {%- endfor -%}
+            </ul>
+          </details>
         </div>
       {%- endif -%}
 
       {%- assign _fs_ll = linklists[settings.footer_support_menu] -%}
       {%- assign _fp_ll = linklists[settings.footer_policy_menu] -%}
       {%- if _fs_ll.links.size > 0 or _fp_ll.links.size > 0 -%}
-        <div class="border-b border-white/10 pb-4 lg:border-none lg:pb-0">
-          <h4 class="m-0 text-sm font-bold uppercase tracking-wider text-white mb-4">{{ settings.footer_support_title | default: settings.footer_policy_title | default: 'Chính sách' | escape }}</h4>
-          <ul class="m-0 p-0 list-none flex flex-col gap-2">
-            {%- assign _fs_urls = '|' -%}
-            {%- for link in _fs_ll.links -%}
-              <li><a class="text-sm text-white/85 hover:text-white hover:underline no-underline" href="{{ link.url }}">{{ link.title }}</a></li>
-              {%- assign _fs_urls = _fs_urls | append: link.url | append: '|' -%}
-            {%- endfor -%}
-            {%- for link in _fp_ll.links -%}
-              {%- capture _fs_mark -%}|{{ link.url }}|{%- endcapture -%}
-              {%- unless _fs_urls contains _fs_mark -%}
-                <li><a class="text-sm text-white/85 hover:text-white hover:underline no-underline" href="{{ link.url }}">{{ link.title }}</a></li>
-              {%- endunless -%}
-            {%- endfor -%}
-          </ul>
+        <div class="rounded-2xl bg-white/[0.06] border border-white/10 p-5 lg:p-6">
+          <details class="group" data-pc-acc open>
+            <summary class="flex items-center justify-between cursor-pointer list-none py-1 lg:py-0 lg:pointer-events-none [&::-webkit-details-marker]:hidden">
+              <h4 class="m-0 text-sm font-bold uppercase tracking-wider text-white">{{ settings.footer_support_title | default: settings.footer_policy_title | default: 'Chính sách' | escape }}</h4>
+              <span class="lg:hidden inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/80 transition-transform duration-200 group-open:rotate-180" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down' %}</span>
+            </summary>
+            <ul class="m-0 p-0 list-none flex flex-col gap-2 pt-3 mt-3 border-t border-white/10 lg:border-none lg:pt-0 lg:mt-4">
+              {%- assign _fs_urls = '|' -%}
+              {%- for link in _fs_ll.links -%}
+                <li><a class="text-sm text-white/85 hover:text-white hover:underline no-underline inline-block py-0.5" href="{{ link.url }}">{{ link.title }}</a></li>
+                {%- assign _fs_urls = _fs_urls | append: link.url | append: '|' -%}
+              {%- endfor -%}
+              {%- for link in _fp_ll.links -%}
+                {%- capture _fs_mark -%}|{{ link.url }}|{%- endcapture -%}
+                {%- unless _fs_urls contains _fs_mark -%}
+                  <li><a class="text-sm text-white/85 hover:text-white hover:underline no-underline inline-block py-0.5" href="{{ link.url }}">{{ link.title }}</a></li>
+                {%- endunless -%}
+              {%- endfor -%}
+            </ul>
+          </details>
         </div>
       {%- endif -%}
 
-      <div>
-        <h4 class="m-0 text-sm font-bold uppercase tracking-wider text-white mb-4">{{ settings.footer_help_title | default: 'Hỗ trợ' | escape }}</h4>
-        <ul class="m-0 p-0 list-none flex flex-col gap-2">
-          {%- assign _fh_phone = _ft_phone -%}
-          {%- if _fh_phone != blank -%}
-            <li class="text-sm text-white/85">
-              {{ settings.footer_help_hotline_label | default: 'Hotline' | escape }}: <a class="font-bold text-white hover:underline no-underline" href="tel:{{ _fh_phone | remove: ' ' | remove: '.' }}">{{ _fh_phone }}</a>
-            </li>
-          {%- endif -%}
-          {%- if settings.contact_zalo != blank -%}
-            <li class="text-sm text-white/85">
-              <a class="text-white hover:underline no-underline" href="https://zalo.me/{{ settings.contact_zalo | remove: ' ' | remove: '.' }}" target="_blank" rel="noopener">{{ settings.footer_help_zalo_label | default: 'Tư vấn qua Zalo' | escape }}</a>
-            </li>
-          {%- endif -%}
-          {%- if settings.footer_social_enable -%}
-            {%- capture _fh_social -%}
-              {%- if settings.footer_social_fb != blank -%}<a class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors" href="{{ settings.footer_social_fb }}" target="_blank" rel="noopener" aria-label="Facebook"><img src="{{ 'facebook_2.svg' | asset_url }}" alt="" width="20" height="20" loading="lazy"></a>{%- endif -%}
-              {%- if settings.footer_social_insta != blank -%}<a class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors" href="{{ settings.footer_social_insta }}" target="_blank" rel="noopener" aria-label="Instagram"><img src="{{ 'instagram_1.svg' | asset_url }}" alt="" width="20" height="20" loading="lazy"></a>{%- endif -%}
-              {%- if settings.footer_social_tiktok != blank -%}<a class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors" href="{{ settings.footer_social_tiktok }}" target="_blank" rel="noopener" aria-label="TikTok"><img src="{{ 'tiktok.svg' | asset_url }}" alt="" width="20" height="20" loading="lazy"></a>{%- endif -%}
-              {%- if settings.footer_social_whatsapp != blank -%}<a class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors" href="{{ settings.footer_social_whatsapp }}" target="_blank" rel="noopener" aria-label="WhatsApp"><img src="{{ 'whatsapp.svg' | asset_url }}" alt="" width="20" height="20" loading="lazy"></a>{%- endif -%}
-              {%- if settings.footer_social_shopee != blank -%}<a class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors" href="{{ settings.footer_social_shopee }}" target="_blank" rel="noopener" aria-label="Shopee"><img src="{{ 'shopee.svg' | asset_url }}" alt="" width="20" height="20" loading="lazy"></a>{%- endif -%}
-              {%- if settings.footer_social_lazada != blank -%}<a class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors" href="{{ settings.footer_social_lazada }}" target="_blank" rel="noopener" aria-label="Lazada"><img src="{{ 'lazada.svg' | asset_url }}" alt="" width="20" height="20" loading="lazy"></a>{%- endif -%}
-            {%- endcapture -%}
-            {%- if _fh_social != blank -%}<li class="flex flex-wrap items-center gap-2 mt-2">{{ _fh_social }}</li>{%- endif -%}
-          {%- endif -%}
-        </ul>
+      <div class="rounded-2xl bg-white/[0.06] border border-white/10 p-5 lg:p-6">
+        <details class="group" data-pc-acc open>
+          <summary class="flex items-center justify-between cursor-pointer list-none py-1 lg:py-0 lg:pointer-events-none [&::-webkit-details-marker]:hidden">
+            <h4 class="m-0 text-sm font-bold uppercase tracking-wider text-white">{{ settings.footer_help_title | default: 'Hỗ trợ' | escape }}</h4>
+            <span class="lg:hidden inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-white/80 transition-transform duration-200 group-open:rotate-180" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down' %}</span>
+          </summary>
+          <div class="pt-3 mt-3 border-t border-white/10 lg:border-none lg:pt-0 lg:mt-4">
+            <ul class="m-0 p-0 list-none flex flex-col gap-2.5">
+              {%- assign _fh_phone = _ft_phone -%}
+              {%- if _fh_phone != blank -%}
+                <li class="text-sm text-white/85">
+                  {{ settings.footer_help_hotline_label | default: 'Hotline' | escape }}: <a class="font-bold text-white hover:underline no-underline" href="tel:{{ _fh_phone | remove: ' ' | remove: '.' }}">{{ _fh_phone }}</a>
+                </li>
+              {%- endif -%}
+              {%- if settings.contact_zalo != blank -%}
+                <li class="text-sm text-white/85">
+                  <a class="text-white hover:underline no-underline" href="https://zalo.me/{{ settings.contact_zalo | remove: ' ' | remove: '.' }}" target="_blank" rel="noopener">{{ settings.footer_help_zalo_label | default: 'Tư vấn qua Zalo' | escape }}</a>
+                </li>
+              {%- endif -%}
+              {%- if settings.footer_social_enable -%}
+                {%- capture _fh_social -%}
+                  {%- if settings.footer_social_fb != blank -%}<a class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors" href="{{ settings.footer_social_fb }}" target="_blank" rel="noopener" aria-label="Facebook"><img src="{{ 'facebook_2.svg' | asset_url }}" alt="" width="20" height="20" loading="lazy"></a>{%- endif -%}
+                  {%- if settings.footer_social_insta != blank -%}<a class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors" href="{{ settings.footer_social_insta }}" target="_blank" rel="noopener" aria-label="Instagram"><img src="{{ 'instagram_1.svg' | asset_url }}" alt="" width="20" height="20" loading="lazy"></a>{%- endif -%}
+                  {%- if settings.footer_social_tiktok != blank -%}<a class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors" href="{{ settings.footer_social_tiktok }}" target="_blank" rel="noopener" aria-label="TikTok"><img src="{{ 'tiktok.svg' | asset_url }}" alt="" width="20" height="20" loading="lazy"></a>{%- endif -%}
+                  {%- if settings.footer_social_whatsapp != blank -%}<a class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors" href="{{ settings.footer_social_whatsapp }}" target="_blank" rel="noopener" aria-label="WhatsApp"><img src="{{ 'whatsapp.svg' | asset_url }}" alt="" width="20" height="20" loading="lazy"></a>{%- endif -%}
+                  {%- if settings.footer_social_shopee != blank -%}<a class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors" href="{{ settings.footer_social_shopee }}" target="_blank" rel="noopener" aria-label="Shopee"><img src="{{ 'shopee.svg' | asset_url }}" alt="" width="20" height="20" loading="lazy"></a>{%- endif -%}
+                  {%- if settings.footer_social_lazada != blank -%}<a class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors" href="{{ settings.footer_social_lazada }}" target="_blank" rel="noopener" aria-label="Lazada"><img src="{{ 'lazada.svg' | asset_url }}" alt="" width="20" height="20" loading="lazy"></a>{%- endif -%}
+                {%- endcapture -%}
+                {%- if _fh_social != blank -%}<li class="flex flex-wrap items-center gap-2 mt-2">{{ _fh_social }}</li>{%- endif -%}
+              {%- endif -%}
+            </ul>
+          </div>
+        </details>
       </div>
     </div>
 
-    <div class="border-t border-solid border-white/10 mt-8 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/80">
+    <div class="rounded-2xl bg-white/[0.04] border border-white/10 p-4 lg:p-5 mt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/80">
       {%- unless settings.footer_payment_enable == false or settings.footer_payment_enable == 'false' -%}
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-wrap items-center justify-center md:justify-start gap-2">
           {%- if settings.footer_payment_title != blank -%}<span class="font-medium text-white/90">{{ settings.footer_payment_title | escape }}:</span>{%- endif -%}
           {%- for i in (1..5) -%}
             {%- capture enable -%}footer_payment_{{ i }}_enable{%- endcapture -%}
@@ -129,7 +148,7 @@
 
       {%- if settings.footer_bct_url != blank -%}
         {%- if settings.footer_bct_logo != blank -%}{%- assign pc_bct_logo = settings.footer_bct_logo | img_url: 'large' -%}{%- else -%}{%- assign pc_bct_logo = 'https://fileserver.online.gov.vn/uploads/Resources/iconxacnhan/DaThongBao.png' -%}{%- endif -%}
-        <a href="{{ settings.footer_bct_url | escape }}" target="_blank" rel="noopener nofollow" title="Đã thông báo Bộ Công Thương">
+        <a href="{{ settings.footer_bct_url | escape }}" target="_blank" rel="noopener nofollow" title="Đã thông báo Bộ Công Thương" class="inline-flex items-center">
           <img src="{{ pc_bct_logo }}" alt="Đã thông báo Bộ Công Thương" width="130" height="49" loading="lazy">
         </a>
       {%- endif -%}
@@ -141,7 +160,7 @@
     </div>
 
     {%- if settings.footer_legal_enable == true or settings.footer_legal_enable == 'true' -%}
-      <div class="border-t border-solid border-white/10 mt-4 pt-4 text-xs leading-relaxed text-white/70 footer-legal">
+      <div class="rounded-2xl bg-white/[0.04] border border-white/10 p-4 lg:p-5 mt-4 text-xs leading-relaxed text-white/70 footer-legal text-center">
         <p class="m-0 mb-1">
           <b class="font-semibold text-white/90">{{ settings.footer_legal_company | default: settings.store_name | default: store.name }}</b>
           {%- assign _legal_addr = settings.footer_legal_address | default: settings.store_address -%}
@@ -168,6 +187,31 @@
       </div>
     {%- endif -%}
   </div>
+
+  <script>
+  (function() {
+    function syncFootAcc() {
+      var isDesktop = window.innerWidth >= 1024;
+      document.querySelectorAll('footer.footer details[data-pc-acc], section[aria-labelledby="footer-quick-title"] details[data-pc-acc]').forEach(function(el) {
+        if (isDesktop) {
+          el.setAttribute('open', '');
+        } else {
+          el.removeAttribute('open');
+        }
+      });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', syncFootAcc);
+    } else {
+      syncFootAcc();
+    }
+    var resizeTimer;
+    window.addEventListener('resize', function() {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(syncFootAcc, 150);
+    }, { passive: true });
+  })();
+  </script>
 
   {% if btt %}
     <a href="#" class="backtop" title="Lên đầu trang"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-up', size: 'em' %}</i></a>

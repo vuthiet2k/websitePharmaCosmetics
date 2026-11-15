@@ -9,7 +9,7 @@
 {%- assign _fcd = settings.footer_cate_display | default: 'all' -%}
 {%- assign _fsd = settings.footer_search_display | default: 'all' -%}
 {%- assign _fbd = settings.footer_brands_display | default: 'all' -%}
-{%- capture _fq_ic -%}<span class="lg:hidden text-ink-muted transition-transform group-open:rotate-180" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down' %}</span>{%- endcapture -%}
+{%- capture _fq_ic -%}<span class="lg:hidden inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-ink-muted transition-transform duration-200 group-open:rotate-180" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down' %}</span>{%- endcapture -%}
 {%- comment -%} (1) Thuong hieu / Loai SP {%- endcomment -%}
 {%- capture _fq_strips -%}
   {%- unless _fbd == 'none' -%}
@@ -17,9 +17,9 @@
     {%- if j == 1 -%}{%- assign _fx_ll = linklists[settings.footer_brands_menu] -%}{%- assign _fx_t = settings.footer_brands_title | default: 'Top thuong hieu noi bat' -%}{%- assign _fx_more = settings.footer_brands_viewall -%}
     {%- else -%}{%- assign _fx_ll = linklists[settings.footer_types_menu] -%}{%- assign _fx_t = settings.footer_types_title | default: 'Mua sam theo loai' -%}{%- assign _fx_more = settings.footer_types_viewall -%}{%- endif -%}
     {%- if _fx_ll.links.size > 0 -%}
-    <details class="group border-b border-line-soft lg:border-none py-2 lg:py-0 {% if _fbd == 'desktop' %}hidden lg:block{% elsif _fbd == 'mobile' %}lg:hidden{% endif %}" data-pc-acc open>
-      <summary class="flex items-center justify-between cursor-pointer list-none py-2 lg:py-0 lg:pointer-events-none [&::-webkit-details-marker]:hidden"><h3 class="m-0 text-sm lg:text-base font-bold text-ink">{{ _fx_t | escape }}</h3>{{ _fq_ic }}</summary>
-      <ul class="m-0 p-0 list-none flex flex-wrap gap-x-4 gap-y-2 mt-2 lg:mt-3">{%- for link in _fx_ll.links -%}<li><a class="text-sm text-ink-muted hover:text-primary no-underline transition-colors" href="{{ link.url }}">{{ link.title }}</a></li>{%- endfor -%}{%- if _fx_more != blank -%}<li><a class="text-sm font-semibold text-primary hover:underline no-underline" href="{{ _fx_more }}">{{ settings.footer_quick_viewall_text | default: 'Xem tat ca' | escape }}</a></li>{%- endif -%}</ul>
+    <details class="group rounded-2xl bg-white border border-line-soft p-4 lg:p-6 {% if _fbd == 'desktop' %}hidden lg:block{% elsif _fbd == 'mobile' %}lg:hidden{% endif %}" data-pc-acc open>
+      <summary class="flex items-center justify-between cursor-pointer list-none py-1 lg:py-0 lg:pointer-events-none [&::-webkit-details-marker]:hidden"><h3 class="m-0 text-sm lg:text-base font-bold text-ink">{{ _fx_t | escape }}</h3>{{ _fq_ic }}</summary>
+      <ul class="m-0 p-0 list-none flex flex-wrap gap-x-4 gap-y-2 pt-3 mt-3 border-t border-line-soft lg:border-none lg:pt-0 lg:mt-3">{%- for link in _fx_ll.links -%}<li><a class="text-sm text-ink-muted hover:text-primary no-underline transition-colors" href="{{ link.url }}">{{ link.title }}</a></li>{%- endfor -%}{%- if _fx_more != blank -%}<li><a class="text-sm font-semibold text-primary hover:underline no-underline" href="{{ _fx_more }}">{{ settings.footer_quick_viewall_text | default: 'Xem tat ca' | escape }}</a></li>{%- endif -%}</ul>
     </details>
     {%- endif -%}
   {%- endfor -%}
@@ -33,9 +33,9 @@
     {%- assign _fc_h = settings[_km] | default: '' -%}
     {%- if _fc_h != blank -%}{%- assign _fc_ll = linklists[_fc_h] -%}
     {%- if _fc_ll.links.size > 0 -%}
-    <details class="group border-b border-line-soft lg:border-none py-2 lg:py-0 {% if _fcd == 'desktop' %}hidden lg:block{% elsif _fcd == 'mobile' %}lg:hidden{% endif %}" data-pc-acc open>
-      <summary class="flex items-center justify-between cursor-pointer list-none py-2 lg:py-0 lg:pointer-events-none [&::-webkit-details-marker]:hidden"><h3 class="m-0 text-sm lg:text-base font-bold text-ink">{{ settings[_kt] | default: _fc_ll.title | escape }}</h3>{{ _fq_ic }}</summary>
-      <ul class="m-0 p-0 list-none flex flex-col gap-2 mt-2 lg:mt-3">{%- for link in _fc_ll.links -%}<li><a class="text-sm text-ink-muted hover:text-primary no-underline transition-colors" href="{{ link.url }}">{{ link.title }}</a></li>{%- endfor -%}</ul>
+    <details class="group rounded-2xl bg-white border border-line-soft p-4 lg:p-6 {% if _fcd == 'desktop' %}hidden lg:block{% elsif _fcd == 'mobile' %}lg:hidden{% endif %}" data-pc-acc open>
+      <summary class="flex items-center justify-between cursor-pointer list-none py-1 lg:py-0 lg:pointer-events-none [&::-webkit-details-marker]:hidden"><h3 class="m-0 text-sm lg:text-base font-bold text-ink">{{ settings[_kt] | default: _fc_ll.title | escape }}</h3>{{ _fq_ic }}</summary>
+      <ul class="m-0 p-0 list-none flex flex-col gap-2 pt-3 mt-3 border-t border-line-soft lg:border-none lg:pt-0 lg:mt-3">{%- for link in _fc_ll.links -%}<li><a class="text-sm text-ink-muted hover:text-primary no-underline transition-colors" href="{{ link.url }}">{{ link.title }}</a></li>{%- endfor -%}</ul>
     </details>
     {%- endif -%}
     {%- endif -%}
@@ -55,20 +55,20 @@
     {%- endif -%}
   {%- endcapture -%}
   {%- if _fs_items != blank -%}
-    <details class="group border-b border-line-soft lg:border-none py-2 lg:py-0 mt-6 lg:mt-8 {% if _fsd == 'desktop' %}hidden lg:block{% elsif _fsd == 'mobile' %}lg:hidden{% endif %}" data-pc-acc open>
-      <summary class="flex items-center justify-between cursor-pointer list-none py-2 lg:py-0 lg:pointer-events-none [&::-webkit-details-marker]:hidden"><h3 class="m-0 text-sm lg:text-base font-bold text-ink">{{ settings.footer_search_title_2 | default: 'Duoc tim nhieu' | escape }}</h3>{{ _fq_ic }}</summary>
-      <ul class="m-0 p-0 list-none flex flex-wrap gap-x-4 gap-y-2 mt-2 lg:mt-3">{{ _fs_items }}</ul>
+    <details class="group rounded-2xl bg-white border border-line-soft p-4 lg:p-6 mt-4 lg:mt-6 {% if _fsd == 'desktop' %}hidden lg:block{% elsif _fsd == 'mobile' %}lg:hidden{% endif %}" data-pc-acc open>
+      <summary class="flex items-center justify-between cursor-pointer list-none py-1 lg:py-0 lg:pointer-events-none [&::-webkit-details-marker]:hidden"><h3 class="m-0 text-sm lg:text-base font-bold text-ink">{{ settings.footer_search_title_2 | default: 'Duoc tim nhieu' | escape }}</h3>{{ _fq_ic }}</summary>
+      <ul class="m-0 p-0 list-none flex flex-wrap gap-x-4 gap-y-2 pt-3 mt-3 border-t border-line-soft lg:border-none lg:pt-0 lg:mt-3">{{ _fs_items }}</ul>
     </details>
   {%- endif -%}
   {%- endunless -%}
 {%- endcapture -%}
 {%- if _fq_strips != blank or _fq_cols != blank or _fq_kw != blank -%}
-<section class="border-t border-line-soft bg-surface-soft py-8 lg:py-12" aria-labelledby="footer-quick-title">
+<section class="bg-surface-soft py-8 lg:py-12" aria-labelledby="footer-quick-title">
   <div class="container">
     <h2 class="m-0 mb-4 lg:mb-6 text-base lg:text-lg font-bold uppercase tracking-wider text-ink" id="footer-quick-title">{{ settings.footer_cate_title | default: 'Danh muc nhanh' | escape }}</h2>
     {%- if settings.footer_cate_subtitle != blank -%}<p class="m-0 mb-6 text-sm text-ink-muted">{{ settings.footer_cate_subtitle | escape }}</p>{%- endif -%}
-    {%- if _fq_strips != blank -%}<div class="mb-6 lg:mb-8 flex flex-col gap-4 lg:gap-6">{{ _fq_strips }}</div>{%- endif -%}
-    {%- if _fq_cols != blank -%}<div class="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-8">{{ _fq_cols }}</div>{%- endif -%}
+    {%- if _fq_strips != blank -%}<div class="mb-4 lg:mb-6 flex flex-col gap-4">{{ _fq_strips }}</div>{%- endif -%}
+    {%- if _fq_cols != blank -%}<div class="grid grid-cols-1 lg:grid-cols-4 gap-4">{{ _fq_cols }}</div>{%- endif -%}
     {{ _fq_kw }}
   </div>
 </section>
