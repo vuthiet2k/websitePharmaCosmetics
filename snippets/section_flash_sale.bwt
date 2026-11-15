@@ -36,10 +36,23 @@
     </div>
 
     {%- if count > 0 -%}
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-      {%- for product in collections[settings.home_flashsale_collection].products limit: pc_fs_limit -%}
-        {%- include 'ui_product_card', product: product, tone: 'sale', eager: false, wish: false -%}
-      {%- endfor -%}
+    <div class="relative group/fs">
+      <div class="swiper-container overflow-hidden" id="flashsale-swiper">
+        <div class="swiper-wrapper">
+          {%- for product in collections[settings.home_flashsale_collection].products limit: pc_fs_limit -%}
+            <div class="swiper-slide !h-auto">
+              {%- include 'ui_product_card', product: product, tone: 'sale', eager: false, wish: false -%}
+            </div>
+          {%- endfor -%}
+        </div>
+      </div>
+      <button type="button" class="flashsale-prev hidden md:inline-flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-solid border-line-soft shadow-md items-center justify-center text-brand-deep hover:bg-primary hover:text-white hover:border-primary transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer" aria-label="Sản phẩm trước">
+        {% include 'ui_icon', name: 'chevron-left', size: '18' %}
+      </button>
+      <button type="button" class="flashsale-next hidden md:inline-flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-solid border-line-soft shadow-md items-center justify-center text-brand-deep hover:bg-primary hover:text-white hover:border-primary transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer" aria-label="Sản phẩm tiếp theo">
+        {% include 'ui_icon', name: 'chevron-right', size: '18' %}
+      </button>
+      <div class="flashsale-pagination flex justify-center items-center gap-1.5 mt-4 md:hidden"></div>
     </div>
     {%- else -%}
     <p class="text-sm text-ink-muted m-0">{{ settings.home_flashsale_empty_text | default: 'Danh mục đang cập nhật sản phẩm.' | escape }}</p>
@@ -102,6 +115,54 @@
   }
   function run() { Array.prototype.forEach.call(document.querySelectorAll('[data-countdown="countdown"]'), init); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
+})();
+</script>
+{%- endif -%}
+
+{%- if count > 0 -%}
+<script>
+(function () {
+  function initFlashSaleSwiper() {
+    var el = document.getElementById('flashsale-swiper');
+    if (!el || el.swiper) return;
+    if (typeof Swiper !== 'function') {
+      window.addEventListener('load', initFlashSaleSwiper);
+      return;
+    }
+    new Swiper(el, {
+      slidesPerView: 2.2,
+      spaceBetween: 12,
+      watchOverflow: true,
+      navigation: {
+        prevEl: '.flashsale-prev',
+        nextEl: '.flashsale-next'
+      },
+      pagination: {
+        el: '.flashsale-pagination',
+        clickable: true,
+        dynamicBullets: true
+      },
+      breakpoints: {
+        640: {
+          slidesPerView: 3,
+          spaceBetween: 16
+        },
+        768: {
+          slidesPerView: 4,
+          spaceBetween: 16
+        },
+        1024: {
+          slidesPerView: 5,
+          spaceBetween: 16
+        }
+      }
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFlashSaleSwiper);
+  } else {
+    initFlashSaleSwiper();
+  }
 })();
 </script>
 {%- endif -%}
