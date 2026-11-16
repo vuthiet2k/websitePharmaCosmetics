@@ -16,7 +16,7 @@
 			{% elsif template contains 'list_collections' %}
 			<li><strong><span>{{ settings.list_collections_title | default: page_title }}</span></strong></li>
 			{% elsif template contains 'collection' and collection.alias %}
-			{% if current_tags %}					
+			{% if current_tags.size > 0 %}					
 			{% capture url %}/collections/{{ collection.alias }}{% endcapture %}
 			<li>						
 				<a  href="{{ collection.url }}" title="{{ collection.name}}"><span >{{ collection.name}}</span></a>												
@@ -50,12 +50,12 @@
 			</li>
 			<li><strong><span >{{ article.title }}</span></strong></li>
 			{% elsif template == 'blog' or template == 'blog.duoc_si' or template == 'blog.video' %}
-			{% if current_tags %}
+			{% if current_tags.size > 0 %}
 			<li>
 				<a href="{{ blog.url }}" title="{{ blog.name }}"><span>{{ blog.name }}</span></a>
 				<span class="mr_lr">&nbsp;<i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'chevron-right', size: 'em' %}</i>&nbsp;</span>
 			</li>
-			<li><strong><span>{{current_tags}}</span></strong></li>
+			<li><strong><span>{{current_tags | join: ', '}}</span></strong></li>
 			{%else%}
 			<li><strong ><span>{{ blog.name }}</span></strong></li>
 			{%endif%}
