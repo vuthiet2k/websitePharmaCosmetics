@@ -1,119 +1,92 @@
 {% include 'breadcrumb' %}
 {%- comment -%}
-  2026-10-03 (review giao diện trang tìm kiếm): bỏ nền bg-gray-50 + padding-top của section — breadcrumb
-  đã có margin-bottom 30px, nền xám riêng của section tạo 1 dải màu rỗng lệch nền trang ngay dưới
-  breadcrumb. Gộp tiêu đề kết quả (h1, trước đây ẩn) + tab Sản phẩm/Tin tức vào 1 hàng đầu trang.
+  2026-11-16 (Refactor trang tìm kiếm mobile & desktop theo yêu cầu):
+  - Tiêu đề kết quả rõ ràng, thanh thoát.
+  - Bộ lọc sản phẩm: Desktop hiển thị cột trái; Mobile ẩn và chuyển thành Offcanvas drawer (trượt từ trái sang)
+    kích hoạt bằng nút "Bộ lọc" trên thanh công cụ (.btn-filter-mobile) kèm badge số lượng tiêu chí đang lọc (.count-filter-val).
+  - Lưới sản phẩm: 2 cột trên mobile (grid-cols-2 gap-3), 3 cột trên tablet/desktop (md:grid-cols-3 lg:gap-4),
+    sử dụng 100% khung thẻ ui_product_card dùng chung.
+  - Có phân trang phân trang trang (collection-paginate-pages.bwt / doSearch).
+  - Khối tin tức liên quan: chuyển xuống phía dưới danh sách sản phẩm thành 1 khối riêng biệt (không chia tab),
+    tự động tải bài viết liên quan qua search API / smartjsonar.
 {%- endcomment -%}
 {%- assign pc_search_keyword = search.terms | split: '(*' | last | split: '*)' | first -%}
 <section class="signup search-main wrap_background background_white clearfix pb-8">
 	<div class="container">
-		<div class="pc-search-head">
-		{%- if search.performed and search.terms != blank and search.results_count > 0 -%}
-		{%- unless search.types contains 'article' -%}
-		<h1 class="pc-search-title">Kết quả tìm kiếm cho &ldquo;{{ pc_search_keyword | escape }}&rdquo;</h1>
-		{%- endunless -%}
-		{%- endif -%}
-		<ul class="search-type flex flex-wrap items-center gap-2 text-xs font-medium">
-			<li>
-				<a {% if search.types contains 'product' %}class="active bg-clinical-700 text-white"{%else%}class="bg-white text-gray-600 border border-gray-200 hover:border-clinical-500"{%endif%} href="/search?query=name:(*{{search.terms | split: '(*' | last | split: '*)'}}*)&type=product" title="Tìm theo sản phẩm" style="padding:8px 16px;border-radius:9999px;display:inline-block;">Sản phẩm</a>
-			</li>
-			<li>
-				<a {% if search.types contains 'article' %}class="active bg-clinical-700 text-white"{%else%}class="bg-white text-gray-600 border border-gray-200 hover:border-clinical-500"{%endif%} href="search?query=(*{{search.terms | split: '(*' | last | split: '*)'}}*)&type=article" title="Tìm theo tin tức" style="padding:8px 16px;border-radius:9999px;display:inline-block;">Tin tức</a>
-			</li>
-		</ul>
+		<div class="pc-search-head mb-6">
+			{%- if search.performed and search.terms != blank and search.results_count > 0 -%}
+			<h1 class="pc-search-title">Kết quả tìm kiếm cho &ldquo;{{ pc_search_keyword | escape }}&rdquo;</h1>
+			{%- endif -%}
 		</div>
+
 		{% if search.performed and search.terms != blank %}
-		{% paginate search.results by 16 %}
+		{% paginate search.results by settings.collection_number_product | default: 16 %}
 		{% if search.results_count == 0 %}
-		{%- comment -%}
-		  T-133 (2026-09-12) — thay 2 khối "ngõ cụt" gần như giống hệt nhau (chỉ khác placeholder)
-		  bằng 1 snippet dùng chung: snippets/search_empty_state.bwt. Lý do thiết kế ghi trong chính
-		  snippet đó.
-		{%- endcomment -%}
-		{% if search.types contains 'product' %}
-		{% assign empty_type = 'product' %}
-		{% include 'search_empty_state' %}
-		{%else%}
-		{% assign empty_type = 'article' %}
-		{% include 'search_empty_state' %}
-		{%endif%}
+			{% assign empty_type = 'product' %}
+			{% include 'search_empty_state' %}
 		{% else %}
-		<div class="category-products">
+		<div class="category-products layout-collection">
 			<div class="d-none">
-				{% if search.types contains 'product' %}
 				{%unless search.terms contains 'name:' %}
 				<span class="search_content">{{search.terms}}</span>
 				<span class="search_count">{{search.results_count}}</span>
 				{%endunless%}
-				{%endif%}
 			</div>
-			<div class="products-view-grid">
-				<div class="row {% if search.types contains 'product' %}row-fix{%endif%}">
-					{% if search.types contains 'article' %}
-					<div class="right-content col-12 d-none">
-						<h1 class="title-page">
-							<span>Có {{ search.results_count }} kết quả tìm kiếm phù hợp</span>
-						</h1>
+
+			{%- comment -%} Offcanvas filter drawer (trượt từ trái vào trên Mobile, cố định cột trái trên Desktop) {%- endcomment -%}
+			<div class="grid grid-cols-1 gap-6 min-[992px]:grid-cols-[280px_minmax(0,1fr)] min-[992px]:items-start">
+				<aside class="left-content min-w-0 font-sans max-[991px]:fixed max-[991px]:inset-y-0 max-[991px]:left-0 max-[991px]:z-[99999] max-[991px]:w-[86%] max-[991px]:max-w-[360px] max-[991px]:-translate-x-full max-[991px]:overflow-y-auto max-[991px]:bg-white max-[991px]:p-4 max-[991px]:transition-transform max-[991px]:[&.active]:translate-x-0" aria-label="{{ settings.collection_filter_heading | default: 'Bộ lọc tìm kiếm' | escape }}">
+					<button type="button" class="close-filters ml-auto flex h-[44px] w-[44px] cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-ink min-[992px]:hidden" aria-label="Đóng bộ lọc">{% include 'ui_icon', name: 'x', size: 24, label: '' %}</button>
+					<div class="pc-search-filterbox section-box-bg min-[992px]:border min-[992px]:border-solid min-[992px]:border-line min-[992px]:bg-white min-[992px]:p-4 min-[992px]:rounded-2xl">
+						{%- include 'sidebar-collection' -%}
 					</div>
-					<div class="right-content col-lg-9 col-12">
-						<div class="row row-fix">
-							{% for article in search.results %}
-							{% if article.object_type == 'article' %}
-							<div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
-								{%include 'blog_item_all'%}
-							</div>
-							{% endif %}
-							{% endfor %}
-							<div class="col-md-12 col-sm-12 col-xs-12">
-								{% if paginate.pages > 1 %}<div class="text-xs-right text-center pagging-css">{% include 'paginate-pages' %}</div>{% endif %}
-							</div>
+				</aside>
+
+				<div class="min-w-0">
+					{%- comment -%} "Đang lọc N tiêu chí" chip bar {%- endcomment -%}
+					<div id="afw-active-bar" class="afw-bar mb-4" hidden>
+						<div class="afw-bar__head flex items-center justify-between">
+							<span class="afw-bar__count text-sm text-ink">Đang lọc <strong class="afw-bar__count-num text-primary">0</strong> tiêu chí</span>
+							<button type="button" class="afw-bar__clear text-sm text-sale cursor-pointer border-0 bg-transparent flex items-center gap-1" onclick="clearAllFiltered()">{% include 'ui_icon', name: 'x', size: 16, label: '' %} Bỏ chọn hết</button>
 						</div>
+						<div class="afw-bar__chips flex flex-wrap gap-2 mt-2" id="afw-active-chips"></div>
 					</div>
-					<div class="blog_left_base col-lg-3 col-12">
-						{%include 'aside-blog'%}
-					</div>
-					{%else%}
-					{%- comment -%}
-					  T-22: bỏ bộ lọc tĩnh giả (checkbox disabled cứng) — dùng lại
-					  ĐÚNG component filter thật snippets/aside-filter.bwt (đã chạy trên
-					  collection.bwt qua Bizweb.SearchFilter/col.js, vừa mở khoá thêm cho
-					  template 'search' trong footer_script.bwt). Layout theo
-					  Pharma_Cosmetics_Figma_Project/search-filter.html.
-					{%- endcomment -%}
-					<div class="grid grid-cols-1 lg:grid-cols-4 gap-8" style="display:grid;">
-						<div class="lg:col-span-1">
-							<div class="pc-search-filterbox bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
-								<h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider mb-4 pb-2 border-b border-gray-100">Bộ Lọc Tìm Kiếm Chuyên Sâu</h3>
-								{% include 'aside-filter' %}
-							</div>
+
+					<div id="ajax-result">
+						{%- comment -%} Hàng công cụ toolbar: Sắp xếp + Nút mở bộ lọc mobile {%- endcomment -%}
+						<div class="pc-search-toolbar mb-4">
+							{% include 'collection-sortby' %}
 						</div>
-						<div class="lg:col-span-3 space-y-6">
-							{%- comment -%}
-							  2026-10-03: style .sort-cate chỉ khai báo lồng trong .layout-collection (page_collection.scss) —
-							  thiếu wrapper này thì khối Sắp xếp bung thành h3 to + list dọc. Bỏ badge đếm riêng vì
-							  collection-sortby đã tự hiện "N sản phẩm" (paginate.items).
-							{%- endcomment -%}
-							<div class="layout-collection pc-search-toolbar">
-								{% include 'collection-sortby' %}
-							</div>
-							<div class="row row-fix grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" style="display:grid;">
+
+						{%- comment -%} Lưới sản phẩm: 2 cột trên mobile, 3 cột tablet/desktop {%- endcomment -%}
+						<ul class="m-0 grid list-none grid-cols-2 gap-3 p-0 md:grid-cols-3 lg:gap-4 xl:grid-cols-3 [html[data-pc-view=list]_&]:grid-cols-1">
 							{% for product in search.results %}
-							<div class="item_product_main">
+							<li class="min-w-0">
 								{%- include 'ui_product_card', product: product, tone: '', eager: false, wish: false -%}
-							</div>
+							</li>
 							{% endfor %}
-							</div>
+						</ul>
+
+						{% if paginate.pages > 1 %}
+						<div class="section pagenav clearfix a-center mt-8">
+							{% include 'collection-paginate-pages' %}
 						</div>
+						{% endif %}
 					</div>
-					{%endif%}
 				</div>
 			</div>
+
+			{%- comment -%}
+			  Khối tin tức liên quan: hiển thị ở phía dưới kết quả sản phẩm thành 1 khối riêng biệt
+			{%- endcomment -%}
+			<div class="pc-search-articles mt-12 pt-8 border-t border-solid border-line" id="pc-search-articles-wrap" style="display:none;">
+				<div class="flex items-center justify-between mb-4">
+					<h2 class="text-base font-bold text-ink uppercase tracking-wider m-0">Bài viết &amp; Tin tức liên quan</h2>
+				</div>
+				<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="pc-search-articles-list"></div>
+			</div>
+
 		</div>
-		{% if paginate.pages > 1 %}
-		<div class="section pagenav clearfix a-center mt-8">
-			{% include 'paginate-pages' %}
-		</div>
-		{% endif %}
 		{% endif %}
 		{% endpaginate %}
 		{% else %}
@@ -134,29 +107,62 @@
 		{% endif %}
 	</div>
 </section>
-{%if settings.header_search_recent%}
+
 <script>
-	$(document).ready(function () {
-		var $searchContent = $('.search_content');
-		var $searchCount = $('.search_count');
-		var searchCountValue = parseInt($searchCount.text());
-		var searchContentText = $searchContent.text().trim();
+var selectedViewData = "data";
 
-		if (searchCountValue > 0 && searchContentText.length > 1) {
+document.addEventListener('DOMContentLoaded', function () {
+	/* Tải danh sách bài viết liên quan phía dưới sản phẩm nếu có từ khóa */
+	var kw = "{{ pc_search_keyword | escape }}";
+	if (kw && kw.trim().length > 1 && typeof getItemSearch2 === 'function') {
+		getItemSearch2(kw, 'smartjsonar').then(function (res) {
+			if (!res) return;
+			var keys = Object.keys(res).filter(function (k) { return k !== 'searchResultCount'; });
+			if (keys.length === 0) return;
 
-			var searchRecentList = localStorage.getItem('search_recent_list');
-			var recentList = searchRecentList ? JSON.parse(searchRecentList) : [];
+			var wrap = document.getElementById('pc-search-articles-wrap');
+			var list = document.getElementById('pc-search-articles-list');
+			if (!wrap || !list) return;
 
-			if (!recentList.includes(searchContentText)) {
-				recentList.push(searchContentText);
+			var html = '';
+			keys.forEach(function (k) {
+				var item = res[k];
+				if (!item) return;
+				var imgHtml = item.image ? '<img src="' + item.image + '" alt="' + (item.name || '') + '" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">' : '<div class="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 text-xs">Pharma Cosmetics</div>';
+				html += [
+					'<a href="' + item.url + '" class="group flex flex-col overflow-hidden rounded-xl border border-solid border-line bg-white text-ink no-underline hover:border-primary transition-colors">',
+					'  <div class="relative aspect-[16/10] overflow-hidden bg-slate-100">' + imgHtml + '</div>',
+					'  <div class="p-3 flex flex-col flex-1">',
+					'    <h3 class="text-sm font-semibold line-clamp-2 text-ink group-hover:text-primary transition-colors m-0 leading-snug">' + item.name + '</h3>',
+					'    <span class="mt-auto pt-2 text-xs text-primary font-medium flex items-center gap-1">Đọc tiếp &rarr;</span>',
+					'  </div>',
+					'</a>'
+				].join('');
+			});
 
-				if (recentList.length > 10) {
-					recentList.shift();
-				}
+			list.innerHTML = html;
+			wrap.style.display = '';
+		});
+	}
 
-				localStorage.setItem('search_recent_list', JSON.stringify(recentList));
+	/* Lưu lịch sử tìm kiếm */
+	{% if settings.header_search_recent %}
+	var $searchContent = $('.search_content');
+	var $searchCount = $('.search_count');
+	var searchCountValue = parseInt($searchCount.text());
+	var searchContentText = $searchContent.text().trim();
+
+	if (searchCountValue > 0 && searchContentText.length > 1) {
+		var searchRecentList = localStorage.getItem('search_recent_list');
+		var recentList = searchRecentList ? JSON.parse(searchRecentList) : [];
+		if (!recentList.includes(searchContentText)) {
+			recentList.push(searchContentText);
+			if (recentList.length > 10) {
+				recentList.shift();
 			}
+			localStorage.setItem('search_recent_list', JSON.stringify(recentList));
 		}
-	});
+	}
+	{% endif %}
+});
 </script>
-{%endif%}

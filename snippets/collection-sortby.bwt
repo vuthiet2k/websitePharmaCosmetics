@@ -26,12 +26,12 @@
 			</select>
 		</label>
 		<div class="flex items-center gap-1" role="group" aria-label="Kiểu hiển thị">
-			<button type="button" class="pc-view-toggle__btn flex h-[44px] w-[44px] cursor-pointer items-center justify-center border border-solid border-line bg-white p-0 text-ink-secondary rounded-xl aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-white" data-pc-view="grid" aria-pressed="true" aria-label="Dạng lưới">{% include 'ui_icon', name: 'layout-grid', size: 20, label: '' %}</button>
-			<button type="button" class="pc-view-toggle__btn flex h-[44px] w-[44px] cursor-pointer items-center justify-center border border-solid border-line bg-white p-0 text-ink-secondary rounded-xl aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-white" data-pc-view="list" aria-pressed="false" aria-label="Dạng danh sách">{% include 'ui_icon', name: 'list', size: 20, label: '' %}</button>
+			<button type="button" class="pc-view-toggle__btn max-[991px]:hidden flex h-[44px] w-[44px] cursor-pointer items-center justify-center border border-solid border-line bg-white p-0 text-ink-secondary rounded-xl aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-white" data-pc-view="grid" aria-pressed="true" aria-label="Dạng lưới">{% include 'ui_icon', name: 'layout-grid', size: 20, label: '' %}</button>
+			<button type="button" class="pc-view-toggle__btn max-[991px]:hidden flex h-[44px] w-[44px] cursor-pointer items-center justify-center border border-solid border-line bg-white p-0 text-ink-secondary rounded-xl aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-white" data-pc-view="list" aria-pressed="false" aria-label="Dạng danh sách">{% include 'ui_icon', name: 'list', size: 20, label: '' %}</button>
 		</div>
 	</div>
 	{%- if settings.aside_filter_enable -%}
-	<button type="button" class="btn-filter-mobile inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 border-0 bg-primary-tint px-4 text-sm font-semibold text-primary rounded-full min-[992px]:hidden [.pc-quick-filters~*_&]:hidden [.pc-search-toolbar_&]:hidden" aria-label="Mở bộ lọc">
+	<button type="button" class="btn-filter-mobile inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 border-0 bg-primary-tint px-4 text-sm font-semibold text-primary rounded-full min-[992px]:hidden [.pc-quick-filters~*_&]:hidden aria-pressed:bg-primary aria-pressed:text-white" aria-label="Mở bộ lọc">
 		{% include 'ui_icon', name: 'sliders-horizontal', size: 20, label: '' %}
 		<span>Bộ lọc</span>
 		<span class="count-filter-val min-w-[20px] bg-sale px-1 text-center text-xs font-bold text-white rounded-full"></span>
@@ -79,7 +79,14 @@ function countFilterItem() {
 	/* Đếm chip trong thanh "Đang lọc" (#afw-active-chips) */
 	var n = $('#afw-active-chips .afw-chip').length;
 	var $badge = $('.count-filter-val');
-	if (n > 0) { $badge.text(n).show(); } else { $badge.text('').hide(); }
+	var $btn = $('.btn-filter-mobile');
+	if (n > 0) {
+		$badge.text(n).show();
+		$btn.attr('aria-pressed', 'true').addClass('!bg-primary !text-white');
+	} else {
+		$badge.text('').hide();
+		$btn.attr('aria-pressed', 'false').removeClass('!bg-primary !text-white');
+	}
 }
 countFilterItem();
 </script>

@@ -599,7 +599,24 @@
 								{%- endcase -%}
 								<li class="pc-pdp-trust__item">
 									<svg class="pc-pdp-trust__icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="{{ pc_trust_path }}"/></svg>
-									<span class="pc-pdp-trust__text"><strong>{{ pc_trust_t }}</strong><span class="pc-pdp-trust__desc">{{ pc_trust_d }}</span></span>
+									<span class="pc-pdp-trust__text">
+										<strong>
+											{%- if pc_pdp_rx -%}
+												{%- case i -%}
+												{%- when 1 -%}<span class="md:hidden">Tư vấn</span><span class="hidden md:inline">{{ pc_trust_t }}</span>
+												{%- when 2 -%}<span class="md:hidden">Chính hãng</span><span class="hidden md:inline">{{ pc_trust_t }}</span>
+												{%- else -%}<span class="md:hidden">Liệu trình</span><span class="hidden md:inline">{{ pc_trust_t }}</span>
+												{%- endcase -%}
+											{%- else -%}
+												{%- case i -%}
+												{%- when 1 -%}<span class="md:hidden">Toàn quốc</span><span class="hidden md:inline">{{ pc_trust_t }}</span>
+												{%- when 2 -%}<span class="md:hidden">Chính hãng</span><span class="hidden md:inline">{{ pc_trust_t }}</span>
+												{%- else -%}<span class="md:hidden">Tư vấn</span><span class="hidden md:inline">{{ pc_trust_t }}</span>
+												{%- endcase -%}
+											{%- endif -%}
+										</strong>
+										<span class="pc-pdp-trust__desc">{{ pc_trust_d }}</span>
+									</span>
 								</li>
 								{%- endfor -%}
 							</ul>
@@ -661,7 +678,8 @@
 								{%if product.content contains '<h6>'%} 
 								{% include "specifications" %}
 								{%endif%}
-								{%if settings.product_combo_compat_enable %} 
+								{%- comment -%} Ẩn khối 'Có thể bạn thích' theo yêu cầu người dùng {%- endcomment -%}
+								{%if false and settings.product_combo_compat_enable %} 
 								<div class="product-favorite">
 
 									<div class="section-title a-left txt-uppercese">
@@ -729,8 +747,11 @@
 					  bỏ Swiper: trên site thật khi JS chưa chạy, mỗi thẻ phình rộng hơn màn hình và trống ảnh (ảnh lỗi Android).
 					  Bề rộng thẻ do class quyết định (2 / 3 / 4 / 5 thẻ mỗi hàng), không phụ thuộc JS. {%- endcomment -%}
 					<section class="mt-8 min-w-0 lg:mt-12" aria-labelledby="pc-pdp-related-title">
-						<h2 id="pc-pdp-related-title" class="m-0 mb-4 text-xl font-bold text-ink lg:text-2xl"><a class="text-ink no-underline hover:text-primary" href="/{{ productRelate | handleize }}">{{ settings.product_same_cate_title }}</a></h2>
-						<ul class="m-0 flex list-none snap-x snap-mandatory gap-3 overflow-x-auto p-0 pb-2 lg:gap-4" tabindex="0" aria-label="{{ settings.product_same_cate_title | strip_html | escape }}">
+						<div class="mb-4 flex items-center justify-between gap-3">
+							<h2 id="pc-pdp-related-title" class="m-0 text-xl font-bold text-ink lg:text-2xl"><a class="text-ink no-underline hover:text-primary" href="/{{ productRelate | handleize }}">{{ settings.product_same_cate_title }}</a></h2>
+							<a class="shrink-0 text-sm font-semibold text-primary no-underline hover:underline" href="/{{ productRelate | handleize }}">Xem tất cả {% include 'ui_icon', name: 'arrow-right', size: 14, label: '' %}</a>
+						</div>
+						<ul class="m-0 flex list-none snap-x snap-mandatory gap-3 overflow-x-auto p-0 pb-2 scrollbar-none lg:gap-4" tabindex="0" aria-label="{{ settings.product_same_cate_title | strip_html | escape }}">
 							{%- comment -%} 2026-10-10: bỏ SP đang xem và SP đã có ở "Có thể bạn thích" (trước đây lặp lại 2 lần). {%- endcomment -%}
 							{%- assign pc_same_limit = settings.product_same_cate_limit | plus: 0 -%}
 							{%- assign pc_same_n = 0 -%}
@@ -746,9 +767,6 @@
 							{%- endunless -%}
 							{% endfor %}
 						</ul>
-						<p class="m-0 mt-4 text-center">
-							<a class="inline-flex min-h-11 items-center justify-center gap-2 bg-btn px-6 text-sm font-semibold text-btn-text no-underline rounded-full hover:bg-btn-hover" href="/{{ productRelate | handleize }}">Xem thêm {% include 'ui_icon', name: 'arrow-right', size: 20, label: '' %}</a>
-						</p>
 					</section>
 				</div>
 				{%- endif -%}
@@ -1250,7 +1268,8 @@
   {%- endif -%}
 {%- endfor -%}
 {%- endcapture -%}
-{%- if pc_pi_cards != blank -%}
+{%- comment -%} Ẩn khối 'Thành phần hoạt chất & Cơ chế tác động' theo yêu cầu người dùng {%- endcomment -%}
+{%- if false and pc_pi_cards != blank -%}
 <section class="pc-pdp-ingredients-section">
   <div class="container">
     <h2 class="pc-section-title pc-pdp-ingredients-title">Thành Phần Hoạt Chất &amp; Cơ Chế Tác Động Y Khoa</h2>
