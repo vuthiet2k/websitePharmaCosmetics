@@ -15,6 +15,9 @@ const data = require('./articles-data.json');
 const blogTitle = {};
 data.blogs.forEach((b) => { blogTitle[b.handle] = b.title; });
 
+// Sapo chọn giao diện riêng theo template_suffix của blog/bài (dev-server: templates/blog.<suffix>.bwt, article.<suffix>.bwt)
+const SUFFIX = { video: 'video', 'truoc-va-sau': 'truoc-va-sau' };
+
 const toImage = (src, alt) => (src ? { src, alt } : null);
 
 const articles = data.articles.map((a, i) => ({
@@ -35,6 +38,7 @@ const articles = data.articles.map((a, i) => ({
   tags:           a.tags,
   comments_count: 0,
   blog:           { handle: a.blog, title: blogTitle[a.blog] || a.blog },
+  ...(SUFFIX[a.blog] ? { template_suffix: SUFFIX[a.blog] } : {}),
 }));
 
 function withBlogMeta(blog) {
@@ -51,7 +55,7 @@ data.blogs.forEach((b, i) => {
     url:      `/blogs/${b.handle}`,
     description: b.description,
     // giao diện riêng blog Video / Trước & Sau (templates/blog.video.bwt, blog.truoc-va-sau.bwt) theo handle thật
-    ...(b.handle === 'video' ? { template_suffix: 'video' } : {}),
+    ...(SUFFIX[b.handle] ? { template_suffix: SUFFIX[b.handle] } : {}),
     articles: articles.filter((a) => a.blog.handle === b.handle),
   });
 });
