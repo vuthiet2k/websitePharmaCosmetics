@@ -202,15 +202,34 @@ class PaginateTag extends Tag {
         pageSize = parseInt(String(val)) || 12;
       } catch (_) { /* giữ default */ }
     }
+    // Lấy context hiện tại để tính toán số trang phân trang thực tế
+    let totalItems = 23; // Mặc định collection.products_count
+    try {
+      const scope = ctx.getAll ? ctx.getAll() : ctx.environments;
+      if (scope && scope.collection && (scope.collection.products_count || (scope.collection.products && scope.collection.products.length))) {
+        totalItems = scope.collection.products_count || scope.collection.products.length;
+      }
+    } catch (_) {}
+
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    const parts = [];
+    for (let i = 1; i <= totalPages; i++) {
+      parts.push({
+        title: String(i),
+        is_link: i !== 1,
+        url: `?page=${i}`
+      });
+    }
+
     ctx.push({
       paginate: {
-        pages: 1,
+        pages: totalPages,
         current_page: 1,
         page_size: pageSize,
-        items: 0,
+        items: totalItems,
         previous: false,
-        next: false,
-        parts: [],
+        next: totalPages > 1 ? { url: '?page=2' } : false,
+        parts: parts,
       },
     });
     yield this.liquid.renderer.renderTemplates(this.templates, ctx, emitter);
