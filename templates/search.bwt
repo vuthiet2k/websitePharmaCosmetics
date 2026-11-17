@@ -1,4 +1,5 @@
-{% include 'breadcrumb' %}
+{%- comment -%} M-10 (17/11/2026): breadcrumb trang tìm kiếm chỉ hiện từ desktop, mobile không có tác dụng. {%- endcomment -%}
+<div class="hidden lg:block">{% include 'breadcrumb' %}</div>
 {%- comment -%}
   2026-11-16 (Refactor trang tìm kiếm mobile & desktop theo yêu cầu):
   - Tiêu đề kết quả rõ ràng, thanh thoát.
@@ -35,28 +36,22 @@
 
 			{%- comment -%} Offcanvas filter drawer (trượt từ trái vào trên Mobile, cố định cột trái trên Desktop) {%- endcomment -%}
 			<div class="grid grid-cols-1 gap-6 min-[992px]:grid-cols-[280px_minmax(0,1fr)] min-[992px]:items-start">
-				<aside class="left-content min-w-0 font-sans max-[991px]:fixed max-[991px]:inset-y-0 max-[991px]:left-0 max-[991px]:z-[99999] max-[991px]:w-[86%] max-[991px]:max-w-[360px] max-[991px]:-translate-x-full max-[991px]:overflow-y-auto max-[991px]:bg-white max-[991px]:p-4 max-[991px]:transition-transform max-[991px]:[&.active]:translate-x-0" aria-label="{{ settings.collection_filter_heading | default: 'Bộ lọc tìm kiếm' | escape }}">
-					<button type="button" class="close-filters ml-auto flex h-[44px] w-[44px] cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-ink min-[992px]:hidden" aria-label="Đóng bộ lọc">{% include 'ui_icon', name: 'x', size: 24, label: '' %}</button>
-					<div class="pc-search-filterbox section-box-bg min-[992px]:border min-[992px]:border-solid min-[992px]:border-line min-[992px]:bg-white min-[992px]:p-4 min-[992px]:rounded-2xl">
-						{%- include 'sidebar-collection' -%}
-					</div>
-				</aside>
+				{%- include 'sidebar-collection' -%}
 
 				<div class="min-w-0">
 					{%- comment -%} "Đang lọc N tiêu chí" chip bar {%- endcomment -%}
 					<div id="afw-active-bar" class="afw-bar mb-4" hidden>
 						<div class="afw-bar__head flex items-center justify-between">
 							<span class="afw-bar__count text-sm text-ink">Đang lọc <strong class="afw-bar__count-num text-primary">0</strong> tiêu chí</span>
-							<button type="button" class="afw-bar__clear text-sm text-sale cursor-pointer border-0 bg-transparent flex items-center gap-1" onclick="clearAllFiltered()">{% include 'ui_icon', name: 'x', size: 16, label: '' %} Bỏ chọn hết</button>
+							<button type="button" class="afw-bar__clear text-sm text-sale cursor-pointer border-0 bg-transparent flex items-center gap-1" data-filter-reset>{% include 'ui_icon', name: 'x', size: 16, label: '' %} Bỏ chọn hết</button>
 						</div>
 						<div class="afw-bar__chips flex flex-wrap gap-2 mt-2" id="afw-active-chips"></div>
 					</div>
 
 					<div id="ajax-result">
 						{%- comment -%} Hàng công cụ toolbar: Sắp xếp + Nút mở bộ lọc mobile {%- endcomment -%}
-						<div class="pc-search-toolbar mb-4">
-							{% include 'collection-sortby' %}
-						</div>
+						{%- comment -%} M-12 (17/11/2026): mobile bỏ khung + chữ "Sản phẩm (N)" (còn sr-only), chỉ nút lọc + ô sắp xếp; 1 lớp mb-4 (nằm trong collection-sortby). {%- endcomment -%}
+						{% include 'collection-sortby', compact: true %}
 
 						{%- comment -%} Lưới sản phẩm: 2 cột trên mobile, 3 cột tablet/desktop {%- endcomment -%}
 						<ul class="m-0 grid list-none grid-cols-2 gap-3 p-0 md:grid-cols-3 lg:gap-4 xl:grid-cols-3 [html[data-pc-view=list]_&]:grid-cols-1">
@@ -79,12 +74,22 @@
 			{%- comment -%}
 			  Khối tin tức liên quan: hiển thị ở phía dưới kết quả sản phẩm thành 1 khối riêng biệt
 			{%- endcomment -%}
-			<div class="pc-search-articles mt-12 pt-8 border-t border-solid border-line" id="pc-search-articles-wrap" style="display:none;">
-				<div class="flex items-center justify-between mb-4">
-					<h2 class="text-base font-bold text-ink uppercase tracking-wider m-0">Bài viết &amp; Tin tức liên quan</h2>
+			{%- comment -%} M-13 (17/11/2026): không viền, card nhỏ trượt ngang bằng Swiper (mobile), lưới 4 cột từ lg. Bài do JS nạp từ search API (chỉ có name/url/image,
+			  không có object article) ⇒ dựng từ <template> bên dưới; ảnh giả placehold.co / không ảnh thì bỏ khung ảnh. {%- endcomment -%}
+			<div class="mt-8" id="pc-search-articles-wrap" hidden>
+				<h2 class="m-0 mb-3 text-base font-bold text-brand-deep lg:text-lg">Bài viết &amp; Tin tức liên quan</h2>
+				<div class="swiper-container overflow-hidden" data-pc-slider data-gap="12" data-desktop-off>
+					<div class="swiper-wrapper lg:grid lg:grid-cols-4 lg:gap-4" id="pc-search-articles-list"></div>
 				</div>
-				<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="pc-search-articles-list"></div>
+				<template id="pc-search-article-tpl">
+					<a class="swiper-slide group flex !w-56 flex-col text-ink no-underline lg:!w-auto" data-art-link href="#">
+						<span class="relative block aspect-video overflow-hidden rounded-xl bg-brand-tint" data-art-media><img class="block h-full w-full object-cover" data-art-img src="" alt="" width="320" height="180" loading="lazy"></span>
+						<span class="m-0 mt-2 line-clamp-2 text-sm font-semibold leading-snug group-hover:text-primary" data-art-title></span>
+						<span class="mt-1 inline-flex items-center gap-1 text-xs font-bold text-brand-deep">Đọc tiếp {% include 'ui_icon', name: 'arrow-right', size: 'em' %}</span>
+					</a>
+				</template>
 			</div>
+{%- include 'pc_swiper_boot' -%}
 
 		</div>
 		{% endif %}
@@ -124,24 +129,21 @@ document.addEventListener('DOMContentLoaded', function () {
 			var list = document.getElementById('pc-search-articles-list');
 			if (!wrap || !list) return;
 
-			var html = '';
+			var tpl = document.getElementById('pc-search-article-tpl');
 			keys.forEach(function (k) {
 				var item = res[k];
-				if (!item) return;
-				var imgHtml = item.image ? '<img src="' + item.image + '" alt="' + (item.name || '') + '" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">' : '<div class="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 text-xs">Pharma Cosmetics</div>';
-				html += [
-					'<a href="' + item.url + '" class="group flex flex-col overflow-hidden rounded-xl border border-solid border-line bg-white text-ink no-underline hover:border-primary transition-colors">',
-					'  <div class="relative aspect-[16/10] overflow-hidden bg-slate-100">' + imgHtml + '</div>',
-					'  <div class="p-3 flex flex-col flex-1">',
-					'    <h3 class="text-sm font-semibold line-clamp-2 text-ink group-hover:text-primary transition-colors m-0 leading-snug">' + item.name + '</h3>',
-					'    <span class="mt-auto pt-2 text-xs text-primary font-medium flex items-center gap-1">Đọc tiếp &rarr;</span>',
-					'  </div>',
-					'</a>'
-				].join('');
+				if (!item || !tpl) return;
+				var card = tpl.content.firstElementChild.cloneNode(true);
+				card.setAttribute('href', item.url);
+				card.querySelector('[data-art-title]').textContent = item.name || '';
+				var img = card.querySelector('[data-art-img]');
+				if (item.image && item.image.indexOf('placehold.co') < 0) { img.setAttribute('src', item.image); img.setAttribute('alt', item.name || ''); }
+				else card.querySelector('[data-art-media]').remove();
+				list.appendChild(card);
 			});
-
-			list.innerHTML = html;
-			wrap.style.display = '';
+			if (!list.children.length) return;
+			wrap.hidden = false;
+			if (typeof window.pcSliderSync === 'function') window.pcSliderSync();
 		});
 	}
 

@@ -464,6 +464,7 @@
 						  tag của bài đang xem tô đậm). Thay khối aside-blog (danh mục/tin nổi bật) ở trang chi tiết; trang danh
 						  sách blog vẫn dùng aside-blog. Widget sản phẩm khuyên dùng giữ bên dưới.
 						{%- endcomment -%}
+						{%- comment -%} M-17 (17/11/2026): widget bài viết viết lại 100% Tailwind (bỏ pc-art-widget/pc-art-rel/SVG vẽ tay ⇒ ui_icon); "Xem tất cả" = nút tròn icon (ui_section_head). {%- endcomment -%}
 						{%- capture pc_side_rel -%}
 						{%- assign pc_side_n = 0 -%}
 						{%- for pc_rel in blog.articles limit: 6 -%}
@@ -471,23 +472,21 @@
 						{%- assign pc_side_n = pc_side_n | plus: 1 -%}
 						{%- assign pc_rel_tag = '' -%}
 						{%- for pc_t in pc_rel.tags -%}{%- unless pc_t contains ':' or pc_t contains 'duocsi_' or pc_t contains 'video' -%}{%- assign pc_rel_tag = pc_t -%}{%- break -%}{%- endunless -%}{%- endfor -%}
-						<a class="pc-art-rel" href="{{ pc_rel.url }}">
-							<span class="pc-art-rel__img">{%- if pc_rel.image.src != blank -%}<img src="{{ pc_rel.image.src | img_url: 'small' }}" alt="{{ pc_rel.image.alt | default: pc_rel.title | escape }}" width="80" height="64" loading="lazy">{%- endif -%}</span>
-							<span class="pc-art-rel__body">
-								{%- if pc_rel_tag != blank -%}<span class="pc-art-rel__tag">{{ pc_rel_tag }}</span>{%- endif -%}
-								<span class="pc-art-rel__title">{{ pc_rel.title }}</span>
-								<span class="pc-art-rel__date"><svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>{{ pc_rel.published_on | date: 'dd/MM/yyyy' }}</span>
+						<a class="flex gap-3 border-0 border-b border-solid border-line-soft py-3 text-ink no-underline last:border-b-0" href="{{ pc_rel.url }}">
+							<span class="block h-16 w-20 shrink-0 overflow-hidden rounded-xl bg-brand-tint">{%- if pc_rel.image.src != blank -%}<img class="block h-full w-full object-cover" src="{{ pc_rel.image.src | img_url: 'small' }}" alt="{{ pc_rel.image.alt | default: pc_rel.title | escape }}" width="80" height="64" loading="lazy">{%- endif -%}</span>
+							<span class="flex min-w-0 flex-1 flex-col gap-0.5">
+								{%- if pc_rel_tag != blank -%}<span class="text-xs font-bold uppercase tracking-wider text-primary">{{ pc_rel_tag }}</span>{%- endif -%}
+								<span class="line-clamp-2 text-sm font-bold leading-snug">{{ pc_rel.title }}</span>
+								<span class="inline-flex items-center gap-1 text-xs text-ink-muted">{% include 'ui_icon', name: 'clock', size: 'em' %}{{ pc_rel.published_on | date: 'dd/MM/yyyy' }}</span>
 							</span>
 						</a>
 						{%- endif -%}
 						{%- endfor -%}
 						{%- endcapture -%}
 						{%- if pc_side_rel != blank -%}
-						<section class="pc-art-card pc-art-widget">
-							<div class="pc-art-widget__head">
-								<h2 class="pc-art-widget__title"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M6 3h9l4 4v14H6zM9 9h6M9 13h6M9 17h4"/></svg>{{ settings.article_related_title | default: 'Bài viết liên quan' }}</h2>
-								<a class="pc-art-widget__more" href="{{ blog.url }}">Xem tất cả ›</a>
-							</div>
+						<section class="mb-4 border-0 border-b border-solid border-line-soft pb-2 lg:rounded-2xl lg:border lg:border-solid lg:bg-white lg:p-5">
+							{%- capture pc_rel_title_html -%}<span class="inline-flex items-center gap-2"><span class="text-primary">{% include 'ui_icon', name: 'file-text', size: 20 %}</span>{{ settings.article_related_title | default: 'Bài viết liên quan' | escape }}</span>{%- endcapture -%}
+							{%- include 'ui_section_head', title_html: pc_rel_title_html, url: blog.url, label: 'Xem tất cả bài viết', title_class: 'text-base font-bold text-brand-deep', wrap_class: 'mb-1' -%}
 							{{ pc_side_rel }}
 						</section>
 						{%- endif -%}
@@ -504,11 +503,11 @@
 						{%- assign pc_topic_list = pc_topic_all | split: '|' | uniq -%}
 						{%- assign pc_topic_max = 1 -%}
 						{%- for pc_t in pc_topic_list -%}{%- if pc_t != blank -%}{%- assign pc_t_key = '|' | append: pc_t | append: '|' -%}{%- assign pc_t_cnt = pc_topic_all | split: pc_t_key | size | minus: 1 -%}{%- if pc_t_cnt > pc_topic_max -%}{%- assign pc_topic_max = pc_t_cnt -%}{%- endif -%}{%- endif -%}{%- endfor -%}
-						<section class="pc-art-card pc-art-widget">
-							<div class="pc-art-widget__head">
-								<h2 class="pc-art-widget__title"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M12 3a6 6 0 0 0-3.5 10.9V17h7v-3.1A6 6 0 0 0 12 3ZM9.5 20h5"/></svg>{{ settings.article_topics_title | default: 'Chủ đề phổ biến' }}</h2>
-							</div>
-							<div class="pc-art-topics">
+						<section class="mb-4 border-0 border-b border-solid border-line-soft pb-4 lg:rounded-2xl lg:border lg:border-solid lg:bg-white lg:p-5">
+							{%- capture pc_topic_title_html -%}<span class="inline-flex items-center gap-2"><span class="text-primary">{% include 'ui_icon', name: 'lightbulb', size: 20 %}</span>{{ settings.article_topics_title | default: 'Chủ đề phổ biến' | escape }}</span>{%- endcapture -%}
+							{%- include 'ui_section_head', title_html: pc_topic_title_html, title_class: 'text-base font-bold text-brand-deep', wrap_class: 'mb-2' -%}
+							<div class="swiper-container overflow-hidden" data-pc-slider data-gap="8" data-desktop-off>
+								<div class="swiper-wrapper lg:flex-wrap lg:gap-2">
 								{%- assign pc_topic_n = 0 -%}
 								{%- for pc_lvl in (1..pc_topic_max) reversed -%}
 								{%- for pc_t in pc_topic_list -%}
@@ -517,53 +516,40 @@
 								{%- assign pc_t_cnt = pc_topic_all | split: pc_t_key | size | minus: 1 -%}
 								{%- if pc_t_cnt == pc_lvl -%}
 								{%- assign pc_topic_n = pc_topic_n | plus: 1 -%}
-								<a class="pc-art-topic{% if article.tags contains pc_t %} is-active{% endif %}" href="/blogs/all/tagged/(({{ pc_t | replace: ' ', '%20' }}))">{{ pc_t }}</a>
+								<a class="swiper-slide inline-flex min-h-[44px] !w-auto items-center whitespace-nowrap rounded-full border border-solid px-4 text-sm no-underline transition-colors{% if article.tags contains pc_t %} border-primary bg-primary font-bold text-white{% else %} border-line-soft bg-surface-soft text-ink hover:bg-brand-tint{% endif %}" href="/blogs/all/tagged/(({{ pc_t | replace: ' ', '%20' }}))">{{ pc_t }}</a>
 								{%- endif -%}
 								{%- endif -%}
 								{%- endfor -%}
 								{%- endfor -%}
+								</div>
 							</div>
 						</section>
 						{%- endif -%}
 
+						{%- comment -%} M-15 (17/11/2026): widget phác đồ = thẻ chuẩn ui_product_card trong Swiper ngang (mobile), lưới 2 cột từ lg; không khung/nền bọc; dữ liệu đọc từ object sản phẩm. {%- endcomment -%}
 						{%- assign pw_col = collections[settings.product_related_collection] -%}
-						{%if pw_col.products_count > 0%}
-						<div class="pc-cmp-prescription-widget mb-4">
-							<div class="pc-cmp-prescription-widget__title">Sản phẩm khuyên dùng theo phác đồ</div>
-							{%for product in pw_col.products limit: 3%}
-							<a href="{{ product.url }}" class="pc-cmp-prescription-widget__item no-underline">
-								{%- comment -%} 2026-10-07: Sapo dùng product.name (product.title rỗng ⇒ widget mất tên sản phẩm).
-								  2026-10-13 (thiết kế): ảnh lớn hơn, tên 2 dòng, nút mũi tên bên phải. {%- endcomment -%}
-								<img src="{{ product.featured_image.src | default: 'no-image.jpg' | img_url: 'medium' }}" alt="{{ product.featured_image.alt | default: product.name | escape }}" width="64" height="64" loading="lazy">
-								<div class="min-w-0">
-									<div class="pc-cmp-prescription-widget__item-name">{{ product.name }}</div>
-									<div class="pc-cmp-prescription-widget__item-price">{{ product.price | money }}</div>
+						{%- if pw_col.products_count > 0 -%}
+						<section class="mb-4" aria-labelledby="pc-art-prescription-title">
+							{%- include 'ui_section_head', title: 'Sản phẩm khuyên dùng theo phác đồ', title_id: 'pc-art-prescription-title', title_class: 'text-base font-bold text-brand-deep', wrap_class: 'mb-2' -%}
+							<div class="swiper-container overflow-hidden" data-pc-slider data-gap="12" data-desktop-off>
+								<div class="swiper-wrapper lg:grid lg:grid-cols-2 lg:gap-3">
+									{%- for product in pw_col.products limit: 3 -%}
+									<div class="swiper-slide !h-auto !w-44 lg:!w-auto">
+										{%- include 'ui_product_card', product: product, tone: '', eager: false, wish: false -%}
+									</div>
+									{%- endfor -%}
 								</div>
-								<span class="pc-cmp-prescription-widget__go" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="m9 6 6 6-6 6"/></svg></span>
-							</a>
-							{%endfor%}
-						</div>
-						{%endif%}
+							</div>
+						</section>
+						{%- endif -%}
+						{%- include 'pc_swiper_boot' -%}
 					</div>
 					{% endif %}
 				</div>
 			</article>
 		</div>
 	</div>
-	{%if mucluc == true%} 
-	<div class="setmenuclick auto hidescroll">
-		<span class="tabClick" style="opacity: 0.996141;">
-			<img width="150" height="150" src="{{'icon-toc.svg' | asset_url}}" alt="Mục lục">
-		</span> 
-		<div class="fixMenu hidescroll"> 
-			<div class="closeftoc">
-				<img width="150" height="150" src="{{'icon-toc.svg' | asset_url}}" alt="Mục lục">Nội dung bài viết<span>x</span>
-			</div>
-			<div class="bean-toc-bottom"></div>
-		</div> 
-		<div class="bg"></div> 
-	</div>
-	{%endif%}
+	{%- comment -%} M-16 (17/11/2026, PO chốt bỏ hẳn): nút Mục lục nổi (setmenuclick/tabClick/fixMenu + icon-toc.svg) đã xoá; mục lục thu gọn đầu bài (.menu-toc) giữ nguyên. {%- endcomment -%}
 </section>
 {%if mucluc == true%}
 <script>
@@ -590,33 +576,6 @@
 		$(this).find('.fa').toggleClass('fa-angle-down'); 
 		$('.menu-toc').toggleClass('hidden');
 	});
-	$(document).ready(function (){
-		$('.setmenuclick.auto .tabClick').click(function() {
-			$(this).addClass('hidescroll'); 
-			$('.fixMenu').removeClass('hidescroll');
-		});
-		$('.fixMenu .closeftoc span').click( function(event) {
-			event.stopPropagation();
-			$('.setmenuclick.auto .tabClick').removeClass('hidescroll');
-			$('.fixMenu').addClass('hidescroll');
-		});
-		$(document).click( function(event){
-			if ( !$(event.target).closest('.setmenuclick.auto').length ) {
-				$('.setmenuclick.auto .tabClick').removeClass('hidescroll');
-				$('.setmenuclick.auto .fixMenu').addClass('hidescroll');
-			}
-		});
-
-		$(window).scroll(function() {
-			var khoan_cach_all = $('.product-content').height();
-			if ($(this).scrollTop() > 500 && $(this).scrollTop() < khoan_cach_all ){  
-				$('.setmenuclick').removeClass('hidescroll');
-			}
-			else{
-				$('.setmenuclick').addClass('hidescroll');
-			}
-		});
-	});
 </script>
 {{ 'https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.4.2/tocbot.min.js' | script_tag }}
 <script>
@@ -625,11 +584,6 @@
 			tocSelector: '.menu-toc',
 			contentSelector: '.article-content-main',
 			headingSelector: 'h2,h3',
-		});
-		tocbot.init({
-			tocSelector: '.bean-toc-bottom',
-			contentSelector: '.article-content-main',
-			headingSelector: 'h2,h3'
 		});
 	});
 </script>

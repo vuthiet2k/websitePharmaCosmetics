@@ -76,25 +76,13 @@
 								<div class="nav-row flex items-center flex-nowrap justify-center">
 									{%- comment -%} 2026-10-13 (người dùng): thanh menu khi cuộn (.hSticky, desktop) thiếu logo + giỏ hàng ⇒ thêm bản gọn,
 									  chỉ hiện ở trạng thái sticky (storefront-v3.css). Số lượng giỏ dùng chung class .count_item_pr ⇒ ajaxcart tự cập nhật. {%- endcomment -%}
-									<a href="/" class="pc-sticky-logo" title="{{ settings.store_name | default: store.name | escape }}" tabindex="-1">
+									<a href="/" class="pc-sticky-logo min-[992px]:order-first" title="{{ settings.store_name | default: store.name | escape }}" tabindex="-1">
 										{%- if settings.header_logo_use_image and settings.header_logo_image != blank -%}
 										<img src="{{ settings.header_logo_image | img_url: 'large' }}" width="313" height="77" alt="{{ settings.store_name | default: store.name | escape }}" loading="lazy">
 										{%- else -%}
 										<img class="pc-logo-root" src="{{ 'PharmaCosmetics.svg' | asset_url }}" width="341" height="70" alt="{{ settings.store_name | default: store.name | escape }}" loading="lazy">
 										{%- endif -%}
 									</a>
-									{%- comment -%} 2026-10-07: nút Danh mục (megamenu) bật/tắt bằng display_megamenu; menu riêng ở header_nav_cate. {%- endcomment -%}
-									{%- if settings.display_megamenu -%}
-									<div class="sudes-cate-header shrink-0">
-										<button type="button" class="title js-menu-toggle" aria-expanded="false" aria-controls="header-category-menu" aria-label="{{ settings.header_nav_title | default: 'Danh mục' | escape }}" title="{{ settings.header_nav_title | default: 'Danh mục' | escape }}">
-											{%- comment -%} 2026-10-17 (người dùng): hiện lại chữ "Danh mục" cạnh icon; 2026-10-17 theo ảnh mẫu: không nền, icon + chữ xanh đậm, hover/đang mở nền xanh nhạt, vạch ngăn với menu (storefront-v3.css). {%- endcomment -%}
-											<i class="pc-cate-ico" aria-hidden="true">{% include 'ui_icon', name: 'menu', size: 'em' %}</i>
-											<span class="line-clamp line-clamp-1">{{settings.header_nav_title}}</span>
-											<i class="scg_drop" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down', size: 'em' %}</i>
-										</button>
-										{%include 'bean-menu-cate'%}
-									</div>
-									{%- endif -%}
 									<div class="sudes-main-header flex-1 min-w-0">
 										<div class="col-menu {%if settings.btn_promotion_enable%}has-promo-btn{%endif%}">
 											{%include 'site-nav'%}
@@ -117,6 +105,19 @@
 										</div>
 										{%endif%}
 									</div>
+									{%- comment -%} M-20 (17/11/2026): trong DOM menu TRANG (Trang chủ, Dịch vụ…) đứng trước khối Danh mục để drawer mobile hiện trang trước; desktop giữ thứ tự cũ bằng order-first. {%- endcomment -%}
+									{%- comment -%} 2026-10-07: nút Danh mục (megamenu) bật/tắt bằng display_megamenu; menu riêng ở header_nav_cate. {%- endcomment -%}
+									{%- if settings.display_megamenu -%}
+									<div class="sudes-cate-header shrink-0 min-[992px]:order-first">
+										<button type="button" class="title js-menu-toggle" aria-expanded="false" aria-controls="header-category-menu" aria-label="{{ settings.header_nav_title | default: 'Danh mục' | escape }}" title="{{ settings.header_nav_title | default: 'Danh mục' | escape }}">
+											{%- comment -%} 2026-10-17 (người dùng): hiện lại chữ "Danh mục" cạnh icon; 2026-10-17 theo ảnh mẫu: không nền, icon + chữ xanh đậm, hover/đang mở nền xanh nhạt, vạch ngăn với menu (storefront-v3.css). {%- endcomment -%}
+											<i class="pc-cate-ico" aria-hidden="true">{% include 'ui_icon', name: 'menu', size: 'em' %}</i>
+											<span class="line-clamp line-clamp-1">{{settings.header_nav_title}}</span>
+											<i class="scg_drop" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down', size: 'em' %}</i>
+										</button>
+										{%include 'bean-menu-cate'%}
+									</div>
+									{%- endif -%}
 									<a href="/cart" class="pc-sticky-cart" aria-label="Giỏ hàng" title="Giỏ hàng" tabindex="-1">
 										<i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'shopping-cart', size: 'em' %}</i>
 										<span class="count_item count_item_pr{% if cart.item_count == 0 %} hidden-count{% endif %}">{{ cart.item_count }}</span>
@@ -132,16 +133,16 @@
 										page.loyalty, hạng loyalty_tier_1..6_* trong settings) giữ nguyên, chỉ ẩn đường điều hướng này.
 									{%- endcomment -%}
 									{%- if settings.header_loyalty_enable -%}
-									<li><a href="https://pharmacosmetics-vn.com/apps/tich-diem-doi-qua" title="Tích điểm đổi quà">Tích điểm đổi quà</a></li>
+									<li><a class="max-[991px]:text-base max-[991px]:font-semibold max-[991px]:normal-case max-[991px]:leading-snug max-[991px]:text-ink max-[991px]:flex max-[991px]:min-h-[44px] max-[991px]:items-center max-[991px]:px-2.5" href="https://pharmacosmetics-vn.com/apps/tich-diem-doi-qua" title="Tích điểm đổi quà">Tích điểm đổi quà</a></li>
 									{%- endif -%}
 									{%- if settings.home_ai_guide_menu_enable -%}
-									<li><a href="{{ settings.home_ai_guide_cta_url | default: '/kham-da-ai' | escape }}" title="Quiz da cùng AI">{{ settings.home_ai_guide_menu_label | default: 'Quiz da cùng AI' | escape }}</a></li>
+									<li><a class="max-[991px]:text-base max-[991px]:font-semibold max-[991px]:normal-case max-[991px]:leading-snug max-[991px]:text-ink max-[991px]:flex max-[991px]:min-h-[44px] max-[991px]:items-center max-[991px]:px-2.5" href="{{ settings.home_ai_guide_cta_url | default: '/kham-da-ai' | escape }}" title="Quiz da cùng AI">{{ settings.home_ai_guide_menu_label | default: 'Quiz da cùng AI' | escape }}</a></li>
 									{%- endif -%}
 									{%- if settings.iwish_enable -%}
-									<li><a href="{{ pages[settings.wishlist_page].url }}" title="Sản phẩm yêu thích">Sản phẩm yêu thích <span class="js-wishlist-count" style="display:none">0</span></a></li>
+									<li><a class="max-[991px]:text-base max-[991px]:font-semibold max-[991px]:normal-case max-[991px]:leading-snug max-[991px]:text-ink max-[991px]:flex max-[991px]:min-h-[44px] max-[991px]:items-center max-[991px]:px-2.5" href="{{ pages[settings.wishlist_page].url }}" title="Sản phẩm yêu thích">Sản phẩm yêu thích <span class="js-wishlist-count" style="display:none">0</span></a></li>
 									{%- endif -%}
 									{%- if settings.header_stores_enable -%}
-									<li><a href="{{settings.header_stores_url}}" title="{{settings.header_stores_title}}">{{settings.header_stores_title}}</a></li>
+									<li><a class="max-[991px]:text-base max-[991px]:font-semibold max-[991px]:normal-case max-[991px]:leading-snug max-[991px]:text-ink max-[991px]:flex max-[991px]:min-h-[44px] max-[991px]:items-center max-[991px]:px-2.5" href="{{settings.header_stores_url}}" title="{{settings.header_stores_title}}">{{settings.header_stores_title}}</a></li>
 									{%- endif -%}
 								</ul>
 

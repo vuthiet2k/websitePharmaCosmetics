@@ -1,0 +1,25 @@
+{%- comment -%}
+  snippets/ui_section_head.bwt — Đầu section dùng chung (M-11, 17/11/2026, chủ dự án duyệt snippet mới): tiêu đề bên trái + link "Xem tất cả".
+  Mobile: link là nút tròn chỉ có icon mũi tên (≥ 44px, aria-label), cùng hàng tiêu đề, dồn góc phải. Từ lg: hiện chữ (more_text).
+  Tham số: title (đã escape), title_id (id h2, cho aria-labelledby), url (trống ⇒ không hiện link), label (aria-label nút icon),
+           more_text (chữ từ lg:, mặc định "Xem tất cả"), eyebrow (nhãn nhỏ trên tiêu đề, chỉ từ lg:), desc (mô tả dưới tiêu đề), badge (pill nhỏ cạnh tiêu đề, vd "16 hoạt chất"), badge_class (vd 'lg:hidden'),
+           mobile_only (true ⇒ link chỉ hiện ở mobile, desktop tự có link riêng chỗ khác), title_html (có ⇒ dùng thay title, đã tự escape), title_class (đổi cỡ/màu chữ tiêu đề nếu cần), wrap_class (đổi khoảng cách dưới).
+  Chỉ Tailwind theo token (UI-0); màu: nền nút bg-brand-tint, icon text-brand-deep.
+{%- endcomment -%}
+{%- assign pc_sh_more = more_text | default: 'Xem tất cả' -%}
+<div class="{{ wrap_class | default: 'mb-4 lg:mb-8' }} flex items-center justify-between gap-3">
+  <div class="min-w-0">
+    {%- if eyebrow != blank -%}<p class="m-0 hidden text-xs font-bold uppercase tracking-wider text-primary lg:block">{{ eyebrow }}</p>{%- endif -%}
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+      <h2 class="m-0 {{ title_class | default: 'text-2xl lg:text-3xl font-bold text-brand-deep' }}"{% if title_id != blank %} id="{{ title_id }}"{% endif %}>{% if title_html != blank %}{{ title_html }}{% else %}{{ title }}{% endif %}</h2>
+      {%- if badge != blank -%}<span class="{{ badge_class }} inline-flex items-center rounded-full bg-brand-tint px-3 py-1 text-xs font-bold text-brand-deep">{{ badge }}</span>{%- endif -%}
+    </div>
+    {%- if desc != blank -%}<p class="m-0 mt-1 text-sm text-ink-muted">{{ desc }}</p>{%- endif -%}
+  </div>
+  {%- if url != blank -%}
+  <a class="{% if mobile_only %}lg:hidden {% endif %}inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center gap-2 rounded-full bg-brand-tint text-brand-deep no-underline transition-colors hover:bg-primary hover:text-btn-text lg:min-h-0 lg:min-w-0 lg:rounded-none lg:bg-transparent lg:text-sm lg:font-bold lg:hover:bg-transparent lg:hover:text-primary" href="{{ url }}" aria-label="{{ label | default: pc_sh_more }}">
+    <span class="hidden lg:inline">{{ pc_sh_more }}</span>
+    {% include 'ui_icon', name: 'arrow-right' %}
+  </a>
+  {%- endif -%}
+</div>

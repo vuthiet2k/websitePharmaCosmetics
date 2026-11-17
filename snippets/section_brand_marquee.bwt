@@ -2,42 +2,21 @@
   section_brand_marquee.bwt — Thương hiệu tiêu biểu.
   100% Tailwind utility class trực tiếp trên thẻ ngữ nghĩa, không dùng class CSS tự sinh.
 {%- endcomment -%}
+{%- comment -%} M-04 (17/11/2026): mobile = logo tròn 56px (viền trắng) + tên 1 dòng, 2 hàng Swiper (ui_circle_swiper); "Xem tất cả" = nút tròn icon (ui_section_head);
+  desktop giữ lưới chữ/logo. Logo đọc từ object collection của link menu; chưa có ảnh thì chữ cái đầu. Bỏ nhánh store.vendors (không có object ⇒ không có ảnh). {%- endcomment -%}
 {%- assign brand_ll = linklists[settings.home_brand_menu] -%}
 {%- assign brand_limit = settings.home_brand_limit | plus: 0 -%}
 {%- if brand_limit < 1 -%}{%- assign brand_limit = 12 -%}{%- endif -%}
+{%- assign brand_title_t = settings.home_brand_title | default: 'Thương hiệu tiêu biểu' | escape -%}
+{%- assign brand_lead_t = settings.home_brand_lead | default: 'Nhập khẩu chính hãng' | escape -%}
+{%- assign brand_sub_t = settings.home_brand_subtitle | escape -%}
+{%- assign brand_viewall_t = settings.home_brand_viewall_text | default: 'Xem tất cả' | escape -%}
+{%- assign brand_url = settings.home_brand_url | default: settings.portal_shop_url | default: '/collections/all' -%}
 <section class="border-t border-line-soft bg-surface-soft py-10 lg:py-16 font-sans text-ink" aria-labelledby="section-brand-title">
   <div class="container">
-    <div class="mb-6 lg:mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-      <div>
-        <p class="m-0 text-xs font-bold uppercase tracking-wider text-primary hidden lg:block">{{ settings.home_brand_lead | default: 'Nhập khẩu chính hãng' | escape }}</p>
-        <h2 class="m-0 text-2xl lg:text-3xl font-bold text-brand-deep mt-1" id="section-brand-title">{{ settings.home_brand_title | default: 'Thương hiệu tiêu biểu' | escape }}</h2>
-        {%- if settings.home_brand_subtitle != blank -%}<p class="m-0 mt-2 text-sm text-ink-muted">{{ settings.home_brand_subtitle | escape }}</p>{%- endif -%}
-      </div>
-      <a class="inline-flex items-center gap-1.5 text-sm font-bold text-brand-deep hover:text-primary no-underline transition-colors self-start md:self-auto" href="{{ settings.home_brand_url | default: settings.portal_shop_url | default: '/collections/all' | escape }}">
-        <span>{{ settings.home_brand_viewall_text | default: 'Xem tất cả' | escape }}</span>
-        {% include 'ui_icon', name: 'arrow-right' %}
-      </a>
-    </div>
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-      {%- if settings.home_brand_menu != blank and brand_ll.links.size > 0 -%}
-        {%- for link in brand_ll.links limit: brand_limit -%}
-          {%- capture k_logo -%}home_brand_marquee_image_{{ forloop.index }}{%- endcapture -%}
-          {%- capture k_txt -%}home_brand_marquee_text_{{ forloop.index }}{%- endcapture -%}
-          <a class="box-border flex min-h-[72px] items-center justify-center rounded-xl border border-solid border-line-soft bg-white p-3 text-center text-xs md:text-sm font-bold uppercase text-brand-deep hover:border-primary no-underline transition-all" href="{{ link.url | escape }}"{% if settings[k_txt] != blank %} title="{{ settings[k_txt] | escape }}"{% endif %}>
-            {%- if settings[k_logo] != blank -%}
-              <img class="block h-auto max-h-10 w-auto max-w-[80%] object-contain" src="{{ settings[k_logo] | img_url: 'medium' }}" alt="{{ link.title | escape }}" width="160" height="48" loading="lazy">
-            {%- else -%}
-              <span class="truncate">{{ link.title | escape }}</span>
-            {%- endif -%}
-          </a>
-        {%- endfor -%}
-      {%- else -%}
-        {%- for vendor in store.vendors limit: brand_limit -%}
-          <a class="box-border flex min-h-[72px] items-center justify-center rounded-xl border border-solid border-line-soft bg-white p-3 text-center text-xs md:text-sm font-bold uppercase text-brand-deep hover:border-primary no-underline transition-all" href="/collections/all?q=vendor:({{ vendor | url_encode }})&page=1&view=grid">
-            <span class="truncate">{{ vendor | escape }}</span>
-          </a>
-        {%- endfor -%}
-      {%- endif -%}
-    </div>
+    {%- include 'ui_section_head', title: brand_title_t, title_id: 'section-brand-title', eyebrow: brand_lead_t, desc: brand_sub_t, url: brand_url, more_text: brand_viewall_t, label: 'Xem tất cả thương hiệu', wrap_class: 'mb-4 lg:mb-8' -%}
+    {%- if settings.home_brand_menu != blank and brand_ll.links.size > 0 -%}
+    {%- include 'ui_circle_swiper', links: brand_ll.links, limit: brand_limit, kind: 'brand', cols: 'lg:grid-cols-6', desktop_logo_prefix: 'home_brand_marquee_image_' -%}
+    {%- endif -%}
   </div>
 </section>

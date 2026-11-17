@@ -7,100 +7,35 @@
 {%- if feat_limit < 1 or feat_limit > 16 -%}{%- assign feat_limit = 12 -%}{%- endif -%}
 {%- assign feat_count = collections[feat_col].products_count -%}
 {%- if feat_count > 0 -%}
-{%- assign feat_tabs_handle = settings.home_featured_tabs_menu | default: 'giai-phap-dieu-tri' -%}
-{%- assign feat_tabs_ll = linklists[feat_tabs_handle] -%}
-{%- assign feat_labels = settings.home_featured_tab_labels | split: ';' -%}
-{%- assign feat_tab_html = '' -%}
-{%- assign feat_link_html = '' -%}
-{%- assign feat_panel_html = '' -%}
-{%- assign feat_all_cols = true -%}
-{%- for link in feat_tabs_ll.links limit: 8 -%}
-  {%- assign feat_lbl = feat_labels[forloop.index0] | strip | default: link.title -%}
-  {%- assign feat_h = '' -%}{%- unless link.url contains '?' -%}{%- assign feat_h = link.url | remove_first: '/' | remove_first: 'collections/' -%}{%- endunless -%}
-  {%- assign feat_c = collections[feat_h] -%}
-  {%- if feat_h == blank or feat_c.products_count < 1 -%}{%- assign feat_all_cols = false -%}{%- endif -%}
-  {%- capture feat_one_link -%}
-    <a class="box-border inline-flex min-h-10 items-center whitespace-nowrap rounded-full border border-solid border-line-soft bg-white px-4 text-xs md:text-sm font-semibold text-brand-deep no-underline hover:border-primary transition-all" href="{{ link.url | escape }}">{{ feat_lbl | escape }}</a>
-  {%- endcapture -%}
-  {%- assign feat_link_html = feat_link_html | append: feat_one_link -%}
-  {%- if feat_all_cols -%}
-    {%- capture feat_one_tab -%}
-      <a class="box-border inline-flex min-h-10 items-center whitespace-nowrap rounded-full border border-solid border-line-soft bg-white px-4 text-xs md:text-sm font-semibold text-brand-deep no-underline hover:border-primary aria-selected:border-primary aria-selected:bg-primary aria-selected:text-white transition-all" role="tab" id="tab-feat-{{ forloop.index }}" aria-controls="panel-feat-{{ forloop.index }}" aria-selected="false" tabindex="-1" href="{{ link.url | escape }}">{{ feat_lbl | escape }}</a>
-    {%- endcapture -%}
-    {%- capture feat_one_panel -%}
-      <div class="relative group/feat" role="tabpanel" id="panel-feat-{{ forloop.index }}" aria-labelledby="tab-feat-{{ forloop.index }}" hidden>
-        <div class="swiper-container overflow-hidden featured-swiper" id="featured-swiper-{{ forloop.index }}">
-          <div class="swiper-wrapper">
-            {%- for product in feat_c.products limit: feat_limit -%}
-              <div class="swiper-slide !h-auto">
-                {%- include 'ui_product_card', product: product, tone: '', eager: false, wish: false -%}
-              </div>
-            {%- endfor -%}
-          </div>
-        </div>
-        <button type="button" class="featured-prev-{{ forloop.index }} hidden md:!inline-flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-solid border-line-soft shadow-md items-center justify-center text-brand-deep hover:bg-primary hover:text-white hover:border-primary transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer" aria-label="Sản phẩm trước">
-          {% include 'ui_icon', name: 'chevron-left', size: '18' %}
-        </button>
-        <button type="button" class="featured-next-{{ forloop.index }} hidden md:!inline-flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-solid border-line-soft shadow-md items-center justify-center text-brand-deep hover:bg-primary hover:text-white hover:border-primary transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer" aria-label="Sản phẩm tiếp theo">
-          {% include 'ui_icon', name: 'chevron-right', size: '18' %}
-        </button>
-        <div class="featured-pagination-{{ forloop.index }} flex justify-center items-center gap-1.5 mt-4 md:hidden"></div>
-      </div>
-    {%- endcapture -%}
-    {%- assign feat_tab_html = feat_tab_html | append: feat_one_tab -%}
-    {%- assign feat_panel_html = feat_panel_html | append: feat_one_panel -%}
-  {%- endif -%}
-{%- endfor -%}
-{%- unless feat_all_cols -%}{%- assign feat_tab_html = '' -%}{%- assign feat_panel_html = '' -%}{%- endunless -%}
 {%- assign feat_all_url = collections[feat_col].url | default: feat_col -%}
+{%- comment -%} M-14 (17/11/2026, PO chốt): bỏ hẳn thanh chip "Lọc theo nhu cầu" (+ tab/panel + 3 ô cấu hình home_featured_tab*). Link "Xem tất cả" theo M-11 (ui_section_head). {%- endcomment -%}
+{%- assign feat_title_t = settings.home_featured_title | default: 'Sản phẩm bán chạy' | escape -%}
+{%- assign feat_eyebrow_t = settings.home_featured_eyebrow | escape -%}
+{%- assign feat_sub_t = settings.home_featured_subtitle | escape -%}
+{%- assign feat_viewall_t = settings.home_featured_viewall_text | default: 'Xem tất cả' | escape -%}
 <section class="bg-surface-soft py-10 lg:py-16 font-sans text-ink section_featured_products" aria-labelledby="section-featured-products-title">
   <div class="container">
-    <div class="mb-6 lg:mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-      <div>
-        {%- if settings.home_featured_eyebrow != blank -%}<p class="m-0 text-xs font-bold uppercase tracking-wider text-primary hidden lg:block">{{ settings.home_featured_eyebrow | escape }}</p>{%- endif -%}
-        <h2 class="m-0 text-2xl lg:text-3xl font-bold text-brand-deep mt-1" id="section-featured-products-title">{{ settings.home_featured_title | default: 'Sản phẩm bán chạy' | escape }}</h2>
-        {%- if settings.home_featured_subtitle != blank -%}<p class="m-0 mt-2 text-sm text-ink-muted">{{ settings.home_featured_subtitle | escape }}</p>{%- endif -%}
-      </div>
-      <a class="inline-flex items-center gap-1.5 text-sm font-bold text-brand-deep hover:text-primary no-underline transition-colors self-start md:self-auto" href="{{ feat_all_url | escape }}">
-        <span>{{ settings.home_featured_viewall_text | default: 'Xem tất cả' | escape }}</span>
-        {% include 'ui_icon', name: 'arrow-right' %}
-      </a>
-    </div>
-    <div data-h4-tabs>
-      {%- if feat_tab_html != blank -%}
-      <div class="mb-6 flex items-center gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Lọc theo nhu cầu">
-        <a class="box-border inline-flex min-h-10 items-center whitespace-nowrap rounded-full border border-solid border-line-soft bg-white px-4 text-xs md:text-sm font-semibold text-brand-deep no-underline hover:border-primary aria-selected:border-primary aria-selected:bg-primary aria-selected:text-white transition-all" role="tab" id="tab-feat-0" aria-controls="panel-feat-0" aria-selected="true" tabindex="0" href="{{ feat_all_url | escape }}">{{ settings.home_featured_tab_all | default: 'Tất cả' | escape }}</a>
-        {{- feat_tab_html -}}
-      </div>
-      {%- elsif feat_link_html != blank -%}
-      <nav class="mb-6 flex items-center gap-2 overflow-x-auto pb-1" aria-label="Lọc theo nhu cầu">
-        <a class="box-border inline-flex min-h-10 items-center whitespace-nowrap rounded-full border border-solid border-primary bg-primary text-white px-4 text-xs md:text-sm font-semibold no-underline" aria-current="true" href="{{ feat_all_url | escape }}">{{ settings.home_featured_tab_all | default: 'Tất cả' | escape }}</a>
-        {{- feat_link_html -}}
-      </nav>
-      {%- endif -%}
-      <div class="relative group/feat"{% if feat_tab_html != blank %} role="tabpanel" id="panel-feat-0" aria-labelledby="tab-feat-0"{% endif %}>
-        <div class="swiper-container overflow-hidden featured-swiper" id="featured-swiper-0">
-          <div class="swiper-wrapper">
-            {%- for product in collections[feat_col].products limit: feat_limit -%}
-              <div class="swiper-slide !h-auto">
-                {%- include 'ui_product_card', product: product, tone: '', eager: false, wish: false -%}
-              </div>
-            {%- endfor -%}
-          </div>
+    {%- include 'ui_section_head', title: feat_title_t, title_id: 'section-featured-products-title', eyebrow: feat_eyebrow_t, desc: feat_sub_t, url: feat_all_url, more_text: feat_viewall_t, label: feat_viewall_t, wrap_class: 'mb-6 lg:mb-8' -%}
+    <div class="relative group/feat">
+      <div class="swiper-container overflow-hidden featured-swiper" id="featured-swiper-0">
+        <div class="swiper-wrapper">
+          {%- for product in collections[feat_col].products limit: feat_limit -%}
+            <div class="swiper-slide !h-auto">
+              {%- include 'ui_product_card', product: product, tone: '', eager: false, wish: false -%}
+            </div>
+          {%- endfor -%}
         </div>
-        <button type="button" class="featured-prev-0 hidden md:!inline-flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-solid border-line-soft shadow-md items-center justify-center text-brand-deep hover:bg-primary hover:text-white hover:border-primary transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer" aria-label="Sản phẩm trước">
-          {% include 'ui_icon', name: 'chevron-left', size: '18' %}
-        </button>
-        <button type="button" class="featured-next-0 hidden md:!inline-flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-solid border-line-soft shadow-md items-center justify-center text-brand-deep hover:bg-primary hover:text-white hover:border-primary transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer" aria-label="Sản phẩm tiếp theo">
-          {% include 'ui_icon', name: 'chevron-right', size: '18' %}
-        </button>
-        <div class="featured-pagination-0 flex justify-center items-center gap-1.5 mt-4 md:hidden"></div>
       </div>
-      {{- feat_panel_html -}}
+      <button type="button" class="featured-prev-0 hidden md:!inline-flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-solid border-line-soft shadow-md items-center justify-center text-brand-deep hover:bg-primary hover:text-white hover:border-primary transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer" aria-label="Sản phẩm trước">
+        {% include 'ui_icon', name: 'chevron-left', size: '18' %}
+      </button>
+      <button type="button" class="featured-next-0 hidden md:!inline-flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white border border-solid border-line-soft shadow-md items-center justify-center text-brand-deep hover:bg-primary hover:text-white hover:border-primary transition-all disabled:opacity-0 disabled:pointer-events-none cursor-pointer" aria-label="Sản phẩm tiếp theo">
+        {% include 'ui_icon', name: 'chevron-right', size: '18' %}
+      </button>
+      <div class="featured-pagination-0 flex justify-center items-center gap-1.5 mt-4 md:hidden"></div>
     </div>
   </div>
 </section>
-{%- if feat_tab_html != blank -%}{%- include 'home_tabs_script' -%}{%- endif -%}
 <script>
 (function () {
   function initFeaturedSwipers() {
@@ -148,19 +83,6 @@
     document.addEventListener('DOMContentLoaded', initFeaturedSwipers);
   } else {
     initFeaturedSwipers();
-  }
-  var tabContainer = document.querySelector('.section_featured_products [data-h4-tabs]');
-  if (tabContainer) {
-    tabContainer.addEventListener('click', function (e) {
-      if (e.target.closest('[role="tab"]')) {
-        setTimeout(function () {
-          var visibleSwiper = tabContainer.querySelector('[role="tabpanel"]:not([hidden]) .featured-swiper');
-          if (visibleSwiper && visibleSwiper.swiper) {
-            visibleSwiper.swiper.update();
-          }
-        }, 50);
-      }
-    });
   }
 })();
 </script>

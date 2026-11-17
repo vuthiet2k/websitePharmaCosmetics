@@ -32,6 +32,7 @@ const RULES = {
   extCdn:       { files: /\.bwt$/, re: /<(script|link)[^>]+(src|href)=["']https?:\/\/(?!(www\.)?(google|googletagmanager|facebook|zalo|sapo|bizweb|mysapo))[^"']+/gi, label: 'R7 tài nguyên CDN ngoài' },
   // rawButton: disabled in BATCH-09
   smallText:    { files: /\.bwt$/, re: /\btext-\[(?:[0-9]|1[01])px\]/g, label: 'A.3 chữ < 12px' },
+  offPalette:   { files: /.(bwt|js)$/, re: /class(?:Name)?s*=s*["'][^"']*(?:[a-z0-9-]+:)*(?:bg|text|border|ring|fill|stroke|from|to|via|divide|outline|accent|caret|decoration)-(?:red|green|blue|yellow|orange|amber|lime|emerald|teal|cyan|sky|indigo|violet|purple|fuchsia|pink|rose|gray|zinc|neutral|stone)-d{2,3}|class(?:Name)?s*=s*["'][^"']*(?:[a-z0-9-]+:)*(?:bg|text|border)-(?:black)/g, label: 'UI-0.1 class màu ngoài tailwind.pc.config.js' },
   decoAsText:   { files: /\.bwt$/, re: /\b(text-brand-deco|bg-brand-deco[^"']*text-white|text-white[^"']*bg-brand-deco)\b/g, label: 'A.3 #3CB371 làm chữ/nền chữ trắng' },
 };
 

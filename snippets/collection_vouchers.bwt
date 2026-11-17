@@ -12,19 +12,14 @@
   {%- if settings[pc_v_en] and settings[pc_v_code] != blank -%}{%- assign pc_v_count = pc_v_count | plus: 1 -%}{%- endif -%}
 {%- endfor -%}
 {%- if settings.aside_coupon_enable and pc_v_count > 0 -%}
-<section class="pc-vouchers" aria-label="{{ settings.collection_voucher_title | default: 'Voucher cho danh mục này' | escape }}" data-pc-vouchers>
-	<div class="pc-vouchers__head">
-		<span class="pc-vouchers__head-icon" aria-hidden="true"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'ticket', size: 'em' %}</i></span>
-		<div>
-			<p class="pc-vouchers__title">{{ settings.collection_voucher_title | default: 'Voucher cho danh mục này' | escape }}</p>
-			<p class="pc-vouchers__sub">{{ settings.collection_voucher_subtitle | default: 'Tiết kiệm ngay khi mua sản phẩm' | escape }}</p>
-		</div>
-		{%- comment -%} 2026-10-11 (thiết kế mobile): link "Xem tất cả" — trống URL thì ẩn. {%- endcomment -%}
-		{%- if settings.collection_voucher_more_url != blank -%}
-		<a class="pc-vouchers__more" href="{{ settings.collection_voucher_more_url | escape }}">{{ settings.collection_voucher_more_label | default: 'Xem tất cả' | escape }} <i class="inline-flex w-2 justify-center leading-none" aria-hidden="true">{% include 'ui_icon', name: 'chevron-right', size: 'em' %}</i></a>
-		{%- endif -%}
-	</div>
-	<div class="pc-vouchers__track" data-pc-vouchers-track>
+{%- comment -%} M-22 (17/11/2026): bỏ khung/nền thẻ ngoài, thẻ voucher gọn, khối giảm giá bg-primary, "Lấy mã" nhỏ (vùng bấm 44px mở bằng before:), dải trượt Swiper (pc_swiper_boot) — bỏ class pc-voucher*; giữ móc JS js-copy / info-button / popup-coupon. {%- endcomment -%}
+<section class="mb-4" aria-label="{{ settings.collection_voucher_title | default: 'Voucher cho danh mục này' | escape }}">
+	{%- capture pc_v_title_html -%}<span class="inline-flex items-center gap-2"><span class="text-primary">{% include 'ui_icon', name: 'ticket', size: 20 %}</span>{{ settings.collection_voucher_title | default: 'Voucher cho danh mục này' | escape }}</span>{%- endcapture -%}
+	{%- assign pc_v_sub_t = settings.collection_voucher_subtitle | default: 'Tiết kiệm ngay khi mua sản phẩm' | escape -%}
+	{%- assign pc_v_more_t = settings.collection_voucher_more_label | default: 'Xem tất cả' | escape -%}
+	{%- include 'ui_section_head', title_html: pc_v_title_html, desc: pc_v_sub_t, url: settings.collection_voucher_more_url, more_text: pc_v_more_t, label: pc_v_more_t, title_class: 'text-base font-bold text-brand-deep', wrap_class: 'mb-2' -%}
+	<div class="swiper-container overflow-hidden" data-pc-slider data-gap="12">
+		<div class="swiper-wrapper">
 		{%- for i in (1..6) -%}
 		{%- capture pc_v_en -%}promo_coupon_{{ i }}_enable{%- endcapture -%}
 		{%- capture pc_v_code -%}promo_coupon_{{ i }}_code{%- endcapture -%}
@@ -38,30 +33,29 @@
 		{%- if pc_v_type == blank or pc_v_type == 'auto' -%}
 			{%- if settings[pc_v_amount] contains '%' -%}{%- assign pc_v_type = 'percent' -%}{%- else -%}{%- assign pc_v_type = 'amount' -%}{%- endif -%}
 		{%- endif -%}
-		<article class="pc-voucher pc-voucher--{{ pc_v_type }}">
-			<div class="pc-voucher__badge" aria-hidden="true">
+		<article class="swiper-slide flex !h-auto !w-64 overflow-hidden rounded-xl border border-solid border-line-soft bg-white">
+			<div class="flex w-16 shrink-0 flex-col items-center justify-center gap-1 bg-primary px-1 text-center text-white" aria-hidden="true">
 				{%- if pc_v_type == 'freeship' -%}
-				<i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'truck', size: 'em' %}</i><span>{{ settings.collection_voucher_freeship_label | default: 'FREESHIP' | escape }}</span>
+				{% include 'ui_icon', name: 'truck', size: 20 %}<span class="text-xs font-bold">{{ settings.collection_voucher_freeship_label | default: 'FREESHIP' | escape }}</span>
 				{%- elsif settings[pc_v_amount] != blank -%}
-				<strong>-{{ settings[pc_v_amount] | remove: '-' | upcase | escape }}</strong>
+				<strong class="text-sm">-{{ settings[pc_v_amount] | remove: '-' | upcase | escape }}</strong>
 				{%- else -%}
-				<i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'ticket', size: 'em' %}</i>
+				{% include 'ui_icon', name: 'ticket', size: 20 %}
 				{%- endif -%}
 			</div>
-			<div class="pc-voucher__body">
-				<p class="pc-voucher__code notranslate" translate="no">{{ settings[pc_v_code] | escape }}</p>
-				{%- if settings[pc_v_value] != blank -%}<p class="pc-voucher__desc">{{ settings[pc_v_value] | escape }}</p>{%- endif -%}
-				<div class="pc-voucher__actions">
-					<button type="button" class="pc-voucher__take coupon-code js-copy" data-copy="{{ settings[pc_v_code] | escape }}" title="Sao chép mã {{ settings[pc_v_code] | escape }}">{{ settings.collection_voucher_take_label | default: 'Lấy mã' | escape }}</button>
-					<a href="javascript:void(0)" class="pc-voucher__info info-button" title="Điều kiện áp dụng" aria-label="Điều kiện áp dụng mã {{ settings[pc_v_code] | escape }}" data-coupon="{{ settings[pc_v_code] | escape }}" data-time="{{ settings[pc_v_time] | remove: 'Ngày hết hạn: ' | escape }}" data-content="{{ settings[pc_v_cond] | escape }}"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'info', size: 'em' %}</i></a>
+			<div class="flex min-w-0 flex-1 flex-col gap-1 p-2">
+				<p class="notranslate m-0 truncate text-sm font-bold text-brand-deep" translate="no">{{ settings[pc_v_code] | escape }}</p>
+				{%- if settings[pc_v_value] != blank -%}<p class="m-0 line-clamp-1 text-xs text-ink-muted">{{ settings[pc_v_value] | escape }}</p>{%- endif -%}
+				<div class="mt-auto flex items-center justify-between gap-2">
+					<button type="button" class="coupon-code js-copy relative h-8 cursor-pointer rounded-full border-0 bg-btn px-3 text-xs font-bold text-btn-text transition-colors before:absolute before:-inset-2 hover:bg-btn-hover" data-copy="{{ settings[pc_v_code] | escape }}" title="Sao chép mã {{ settings[pc_v_code] | escape }}">{{ settings.collection_voucher_take_label | default: 'Lấy mã' | escape }}</button>
+					<button type="button" class="info-button relative inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-ink-muted before:absolute before:-inset-1.5 hover:text-primary" title="Điều kiện áp dụng" aria-label="Điều kiện áp dụng mã {{ settings[pc_v_code] | escape }}" data-coupon="{{ settings[pc_v_code] | escape }}" data-time="{{ settings[pc_v_time] | remove: 'Ngày hết hạn: ' | escape }}" data-content="{{ settings[pc_v_cond] | escape }}">{% include 'ui_icon', name: 'info', size: 20 %}</button>
 				</div>
 			</div>
 		</article>
 		{%- endif -%}
 		{%- endfor -%}
+		</div>
 	</div>
-	<button type="button" class="pc-vouchers__nav pc-vouchers__nav--prev" data-pc-vouchers-prev aria-label="Voucher trước" hidden><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'chevron-left', size: 'em' %}</i></button>
-	<button type="button" class="pc-vouchers__nav pc-vouchers__nav--next" data-pc-vouchers-next aria-label="Voucher sau" hidden><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'chevron-right', size: 'em' %}</i></button>
 </section>
 <div class="popup-coupon">
 	<div class="content">
@@ -74,31 +68,5 @@
 		</ul>
 	</div>
 </div>
-<script>
-(function () {
-	var box = document.querySelector('[data-pc-vouchers]');
-	if (!box) return;
-	var track = box.querySelector('[data-pc-vouchers-track]');
-	var prev = box.querySelector('[data-pc-vouchers-prev]');
-	var next = box.querySelector('[data-pc-vouchers-next]');
-	function sync() {
-		var max = track.scrollWidth - track.clientWidth;
-		var hidePrev = track.scrollLeft <= 2;
-		var hideNext = track.scrollLeft >= max - 2;
-		var focused = document.activeElement;
-		prev.hidden = hidePrev;
-		next.hidden = hideNext;
-		// N43 (02/11/2026): nút đang giữ focus bị ẩn (Enter «Voucher sau» tới cuối track, hoặc Tab tới nút trước khi
-		// sync chạy) làm focus rơi về body ⇒ chuyển focus sang nút còn lại để người dùng bàn phím không mất vị trí.
-		if (focused === next && hideNext && !hidePrev) prev.focus();
-		else if (focused === prev && hidePrev && !hideNext) next.focus();
-	}
-	prev.addEventListener('click', function () { track.scrollBy({ left: -track.clientWidth * 0.8, behavior: 'smooth' }); });
-	next.addEventListener('click', function () { track.scrollBy({ left: track.clientWidth * 0.8, behavior: 'smooth' }); });
-	track.addEventListener('scroll', function () { window.requestAnimationFrame(sync); }, { passive: true });
-	window.addEventListener('resize', sync);
-	window.addEventListener('load', sync);
-	sync();
-})();
-</script>
+{%- include 'pc_swiper_boot' -%}
 {%- endif -%}

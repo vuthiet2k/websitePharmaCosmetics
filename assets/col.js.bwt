@@ -320,6 +320,9 @@ $(function () {
 		CollectionFilter.renderBar();
 	})();
 
+	/* M-24 (PO chốt 17/11/2026): trong ngăn kéo mobile (< 992px) tick CHƯA lọc — chỉ lọc khi bấm nút "Tìm kiếm" ([data-filter-apply]); desktop lọc ngay như cũ. */
+	function deferSearch() { return window.matchMedia('(max-width: 991px)').matches; }
+
 	/* Checkbox filter */
 	$(document).on('change', '.filter-checkbox-input', function () {
 		var $cb = $(this);
@@ -331,7 +334,7 @@ $(function () {
 		if ($item.length) $item.toggleClass('is-active', $cb.is(':checked'));
 		if ($cb.is(':checked')) filter.addValue(group, field, value, op);
 		else filter.deleteValue(group, field, value, op);
-		doSearch(1);
+		if (!deferSearch()) doSearch(1);
 	});
 
 	/* Pill button filter */
@@ -344,12 +347,12 @@ $(function () {
 		$btn.toggleClass('active');
 		if ($btn.hasClass('active')) filter.addValue(group, field, value, op);
 		else filter.deleteValue(group, field, value, op);
-		doSearch(1);
+		if (!deferSearch()) doSearch(1);
 	});
 
 	/* Price range — search on change event (fired by range slider on mouseup/touchend) */
 	$(document).on('change', '.filter-range-input', function () {
-		doSearch(1);
+		if (!deferSearch()) doSearch(1);
 	});
 
 	/* Mobile filter panel toggle */
@@ -379,9 +382,25 @@ $(function () {
 		}
 	});
 
-	/* Filter group collapse/expand (B4) */
+	/* Filter group collapse/expand (B4) — M-24: ẩn/hiện phần thân nhóm bằng class Tailwind hidden, aria-expanded theo trạng thái */
 	$(document).on('click', '.filter-group-toggle', function () {
-		$(this).closest('.filter-group').toggleClass('is-collapsed');
+		var $head = $(this).closest('h3');
+		var $body = $head.siblings();
+		var open = $body.first().hasClass('hidden');
+		$body.toggleClass('hidden', !open);
+		$(this).attr('aria-expanded', open ? 'true' : 'false').find('svg').toggleClass('rotate-180', !open);
+	});
+
+	$(document).on('click', '[data-filter-apply]', function () {
+		$('.layout-collection .left-content').removeClass('active');
+		$('body').removeClass('filter-open overflow-hidden');
+		$('.filter-overlay').removeClass('active');
+		doSearch(1);
+	});
+
+	/* "Thiết lập lại" / "Xóa tất cả" / "Bỏ chọn hết" (M-24: thay onclick trong markup bằng móc [data-filter-reset]) */
+	$(document).on('click', '[data-filter-reset]', function () {
+		clearAllFiltered();
 	});
 
 });

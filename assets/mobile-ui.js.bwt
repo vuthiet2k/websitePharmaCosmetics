@@ -72,37 +72,31 @@
 
     var items = getRecent();
     if (!items.length) {
-      section.style.display = 'none';
+      section.hidden = true;
       listEl.innerHTML = '';
       return;
     }
 
-    section.style.display = '';
+    section.hidden = false;
 
-    listEl.innerHTML = items.map(function (kw, idx) {
-      var enc  = encodeURIComponent(kw);
-      var safe = kw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      return [
-        '<li class="search-overlay__recent-item">',
-        '  <a class="search-overlay__recent-link"',
-        '     href="/search?query=' + enc + '&type=product">',
-        '    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">',
-        '      <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>',
-        '    </svg>',
-        '    <span class="search-overlay__recent-text">' + safe + '</span>',
-        '  </a>',
-        '  <button type="button" class="search-overlay__recent-del" data-idx="' + idx + '" aria-label="Xóa \'' + safe + '\'">',
-        '    <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true">',
-        '      <path d="M9.13.87L5 5 .87.87.87.87 0 1.74l.01.01L4.13 5 0 8.88l.87.87L5 5.87l4.13 4.13.87-.87L5.87 5 9.13 1.74z"/>',
-        '    </svg>',
-        '  </button>',
-        '</li>'
-      ].join('');
-    }).join('');
+    /* M-09: mục dựng từ <template id="mb-recent-tpl"> (class Tailwind nằm trong snippet mobile_search_popup, JS không chứa class) */
+    var tpl = document.getElementById('mb-recent-tpl');
+    listEl.innerHTML = '';
+    items.forEach(function (kw, idx) {
+      var li = tpl.content.firstElementChild.cloneNode(true);
+      li.querySelector('[data-mb-recent-link]').setAttribute('href', '/search?query=' + encodeURIComponent(kw) + '&type=product');
+      li.querySelector('[data-mb-recent-text]').textContent = kw;
+      var del = li.querySelector('[data-mb-recent-del]');
+      del.setAttribute('data-idx', idx);
+      del.setAttribute('aria-label', 'Xóa "' + kw + '"');
+      listEl.appendChild(li);
+    });
 
-    /* Bind nút xóa từng item — event delegation an toàn hơn querySelectorAll */
+    /* Bind nút xóa từng item — chỉ gắn 1 lần (delegation) */
+    if (listEl.getAttribute('data-bound')) return;
+    listEl.setAttribute('data-bound', '1');
     listEl.addEventListener('click', function (e) {
-      var btn = e.target.closest('.search-overlay__recent-del');
+      var btn = e.target.closest('[data-mb-recent-del]');
       if (!btn) return;
       e.preventDefault();
       var idx = parseInt(btn.getAttribute('data-idx'), 10);
@@ -145,7 +139,7 @@
       if (input) input.value = '';
       updateClearBtn();
       var _sr = document.getElementById('mb-smart-results');
-      if (_sr) _sr.style.display = 'none';
+      if (_sr) _sr.hidden = true;
     }
 
     /* Bind trực tiếp + delegation (fallback Sapo cache) */
@@ -165,14 +159,14 @@
         if (input) { input.value = ''; input.focus(); }
         updateClearBtn();
         var _sr = document.getElementById('mb-smart-results');
-        if (_sr) _sr.style.display = 'none';
+        if (_sr) _sr.hidden = true;
         var _ls = document.getElementById('mb-list-search');
         if (_ls) _ls.innerHTML = '';
         var _ls2 = document.getElementById('mb-list-search2');
         if (_ls2) _ls2.innerHTML = '';
         renderRecent();
         if (suggestWrap) {
-          var _ss = suggestWrap.closest('.search-overlay__section');
+          var _ss = suggestWrap.closest('[data-mb-section]');
           if (_ss) _ss.style.display = '';
         }
       });
@@ -193,7 +187,7 @@
     /* Lưu lịch sử khi bấm suggest tag */
     if (suggestWrap) {
       suggestWrap.addEventListener('click', function (e) {
-        var tag = e.target.closest('.search-overlay__tag');
+        var tag = e.target.closest('[data-mb-tag]');
         if (tag) addRecent(tag.textContent.trim());
       });
     }
@@ -207,20 +201,20 @@
     var mbTimer = null;
 
     function clearSmart() {
-      if (smartSection)  smartSection.style.display = 'none';
+      if (smartSection)  smartSection.hidden = true;
       if (mbListSearch)  mbListSearch.innerHTML = '';
       if (mbListSearch2) mbListSearch2.innerHTML = '';
     }
 
     function showContextSections() {
       renderRecent();
-      var suggestSection = suggestWrap ? suggestWrap.closest('.search-overlay__section') : null;
+      var suggestSection = suggestWrap ? suggestWrap.closest('[data-mb-section]') : null;
       if (suggestSection) suggestSection.style.display = '';
     }
 
     function hideContextSections() {
-      if (recentSection) recentSection.style.display = 'none';
-      var suggestSection = suggestWrap ? suggestWrap.closest('.search-overlay__section') : null;
+      if (recentSection) recentSection.hidden = true;
+      var suggestSection = suggestWrap ? suggestWrap.closest('[data-mb-section]') : null;
       if (suggestSection) suggestSection.style.display = 'none';
     }
 
@@ -270,7 +264,7 @@
                 + '<div class="not-pro">Không tìm thấy kết quả</div>';
             }
             if (mbListSearch) mbListSearch.innerHTML = html;
-            if (smartSection) smartSection.style.display = '';
+            if (smartSection) smartSection.hidden = false;
           });
 
           getItemSearch2(term, 'smartjsonar').then(function (data2) {
