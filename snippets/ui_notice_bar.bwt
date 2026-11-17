@@ -22,7 +22,7 @@
   trên-trái Hero (section_hero), cuộn đi cùng Hero (không dính màn, D.17). Bấm câu / «Xem thêm» ⇒ trang đầy đủ delivery_alert_page_url
   (Trang nội dung alias canh-bao-lua-dao, giao diện mặc định — 14/11/2026 bỏ page.canh-bao-lua-dao). ✕ dùng chung khoá nhớ với dải vàng các trang khác (tắt 1 nơi ⇒ ẩn cả 2). {%- endcomment -%}
 {%- assign pc_nb_page = settings.delivery_alert_page_url | default: '/canh-bao-lua-dao' -%}
-<aside class="pc-notice-hero" id="pc-notice-hero" aria-label="{{ settings.delivery_alert_aria | default: 'Cảnh báo an toàn khi nhận hàng' | escape }}" data-days="{{ pc_nb_days }}" data-key="delivery-{{ pc_nb_key }}">
+<aside class="pc-notice-hero opacity-0 transition-opacity duration-300 motion-reduce:transition-none" id="pc-notice-hero" aria-label="{{ settings.delivery_alert_aria | default: 'Cảnh báo an toàn khi nhận hàng' | escape }}" data-days="{{ pc_nb_days }}" data-key="delivery-{{ pc_nb_key }}">
   <a class="pc-notice-hero__msg" href="{{ pc_nb_page | escape }}"><strong class="pc-notice-hero__title">{{ pc_nb_title | escape }}</strong> {{ pc_nb_text | escape }} <span class="pc-notice-hero__more">{{ pc_nb_more | escape }}</span></a>
   <button type="button" class="pc-notice-hero__close" data-pc-notice-close aria-label="{{ settings.delivery_alert_close_label | default: 'Đóng cảnh báo' | escape }}">{% include 'ui_icon', name: 'x', size: 20, label: '' %}</button>
 </aside>
@@ -35,10 +35,12 @@
   /* Header trang chủ nằm ĐÈ lên Hero (absolute/fixed) ⇒ đặt thẻ ngay dưới mép header, không che menu */
   function place() {
     var hd = document.querySelector('header.header'), hero = el.parentNode; if (!hd || !hero) return;
-    var gap = window.innerWidth >= 1024 ? 24 : 12, hb = hd.getBoundingClientRect().bottom - hero.getBoundingClientRect().top;
+    /* M-28 (17/11/2026): hb = chiều cao header (cố định đầu trang) — KHÔNG phụ thuộc vị trí cuộn (trước: bottom − hero.top ⇒ tải lại giữa trang làm thẻ đè logo) */
+    var gap = window.innerWidth >= 1024 ? 24 : 12, hb = hd.offsetHeight;
     el.style.top = (hb > 0 && hb < hero.offsetHeight / 2 ? hb + gap : gap) + 'px';
     var lg = window.innerWidth >= 1024 && hd.querySelector(':is(.card, .main-header) a[href="/"] img, :is(.card, .main-header) a[href="/"]'); /* desktop: thẳng mép logo như UNIQLO */
     el.style.left = lg && lg.getBoundingClientRect().width ? Math.max(16, Math.round(lg.getBoundingClientRect().left - hero.getBoundingClientRect().left)) + 'px' : '';
+    el.classList.remove('opacity-0'); /* hiện bằng fade sau khi đã đặt đúng chỗ ⇒ không nhảy */
   }
   place(); window.addEventListener('resize', place); window.addEventListener('load', place);
   var btn = el.querySelector('[data-pc-notice-close]');

@@ -15,8 +15,8 @@
     {%- assign pc_fs_title = settings.home_flashsale_title | default: 'Flash sale' | escape -%}
     {%- assign pc_fs_hl = settings.home_flashsale_title_hl | escape -%}
     {%- capture pc_fs_hl_html -%}<em class="not-italic text-sale">{{ pc_fs_hl }}</em>{%- endcapture -%}
-    {%- capture pc_fs_title_html -%}<span class="flex items-center gap-2"><img src="{{ 'flash_-1.png' | asset_url }}" alt="" width="28" height="28" class="inline-block" aria-hidden="true">{%- if pc_fs_hl != blank and pc_fs_title contains pc_fs_hl -%}{{ pc_fs_title | replace_first: pc_fs_hl, pc_fs_hl_html }}{%- else -%}{{ pc_fs_title }}{%- endif -%}</span>{%- endcapture -%}
-    {%- capture pc_fs_countdown -%}{%- if settings.home_flashsale_countdown_enable -%}<span class="inline-flex items-center gap-2 rounded-full border border-solid border-sale bg-sale-tint px-3 py-1 text-xs font-semibold text-sale"><span>{{ settings.home_flashsale_countdown_title | default: 'Thời gian khuyến mãi' | escape }}</span><span class="inline-flex items-center" role="timer" data-countdown="countdown" data-date="{{ settings.home_flashsale_countdown_end }}" data-cycle-hours="{{ settings.home_flashsale_countdown_cycle_hours | default: 0 }}"></span></span>{%- endif -%}{%- endcapture -%}
+    {%- capture pc_fs_title_html -%}<span class="flex items-center gap-2"><img src="{{ 'flash_-1.png' | asset_url }}" alt="" width="28" height="28" class="inline-block animate-pulse motion-reduce:animate-none" aria-hidden="true">{%- if pc_fs_hl != blank and pc_fs_title contains pc_fs_hl -%}{{ pc_fs_title | replace_first: pc_fs_hl, pc_fs_hl_html }}{%- else -%}{{ pc_fs_title }}{%- endif -%}</span>{%- endcapture -%}
+    {%- capture pc_fs_countdown -%}{%- if settings.home_flashsale_countdown_enable -%}<span class="inline-flex items-center gap-1.5 text-sm font-semibold text-sale"><span>{{ settings.home_flashsale_countdown_title | default: 'Thời gian khuyến mãi' | escape }}</span><span class="inline-flex items-center" role="timer" data-countdown="countdown" data-date="{{ settings.home_flashsale_countdown_end }}" data-cycle-hours="{{ settings.home_flashsale_countdown_cycle_hours | default: 0 }}"></span></span>{%- endif -%}{%- endcapture -%}
     {%- if count > 0 -%}{%- assign pc_fs_url = flash_collection_url | escape -%}{%- else -%}{%- assign pc_fs_url = '' -%}{%- endif -%}
     {%- assign pc_fs_viewall_t = pc_fs_viewall | escape -%}
     {%- include 'ui_section_head', title_html: pc_fs_title_html, title_id: 'section-flash-sale-title', desc: pc_fs_countdown, url: pc_fs_url, more_text: pc_fs_viewall_t, label: pc_fs_viewall_t, wrap_class: 'mb-4 lg:mb-8' -%}
@@ -71,14 +71,14 @@
     UNITS.forEach(function (u, k) {
       if (k > 0) {
         var sep = document.createElement('span');
-        sep.className = 'text-sale font-bold mx-0.5';
+        sep.className = 'text-sale font-bold';
         sep.setAttribute('aria-hidden', 'true');
         sep.textContent = ':';
         el.appendChild(sep);
         boxes[u[0] + 'sep'] = sep;
       }
       var b = document.createElement('span');
-      b.className = 'inline-flex items-center justify-center min-w-6 h-5 px-1 rounded-xl bg-sale text-white text-xs font-bold leading-none';
+      b.className = 'inline-flex items-center font-bold text-sale';
       b.innerHTML = '<b></b><span class="sr-only">' + u[2] + '</span>';
       el.appendChild(b);
       boxes[u[0]] = b;
