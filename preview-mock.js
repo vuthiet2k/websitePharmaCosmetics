@@ -174,15 +174,15 @@ function buildMockCustomer() {
     const v = (p.variants && p.variants[0]) || { id: 1001 + idx };
     return {
       id: 9001 + idx,
-      title: p.name || ('Sản phẩm demo ' + (idx + 1)),
+      title: p.name || '',
       variant_title: 'Default Title',
       variant_id: v.id || (1001 + idx),
       variant: v,
-      sku: 'PC-DEMO-' + (idx + 1),
+      sku: v.sku || '',
       quantity: qty || 1,
       price: p.price || 350000,
       image: p.featured_image || { src: '', alt: '' },
-      product: { id: p.id || (idx + 1), name: p.name || 'Sản phẩm demo', url: p.url || '/products/demo' },
+      product: { id: p.id || (idx + 1), name: p.name || '', url: p.url || '' },
     };
   }
   const sampleLine = lineFrom(0, 2);
@@ -402,7 +402,7 @@ function getContext(templateName = 'index', routeParams = {}) {
   const currentPage = (templateName === 'page' || templateName.startsWith('page.'))
     ? {
         name:    PAGE_NAMES[templateName] || templateName,
-        content: '<p>Nội dung trang demo.</p>',
+        content: (pages[pageHandle] || {}).content || '',
         alias:   pageHandle || 'page',
         url:     '/' + (pageHandle || ''),
       }
@@ -448,7 +448,7 @@ function getContext(templateName = 'index', routeParams = {}) {
     const results = !q ? [] : pool.filter(hit).map((o) => ({ ...o, object_type: searchType }));
     search = { performed: true, terms: raw, types: [searchType], results, results_count: results.length };
   } else {
-    search = { results: products.slice(0, 6), results_count: products.length, terms: 'demo', performed: false, types: ['product'] };
+    search = { results: products.slice(0, 6), results_count: products.length, terms: '', performed: false, types: ['product'] };
   }
 
   return {
