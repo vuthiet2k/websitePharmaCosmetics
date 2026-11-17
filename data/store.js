@@ -1,35 +1,37 @@
 /**
- * data/store.js — Thông tin cửa hàng (giả lập Sapo `store` object)
+ * data/store.js — Thông tin cửa hàng THẬT (giả lập Sapo `store` object)
  *
- * Khớp đầy đủ với Sapo Liquid `store` object:
- * https://support.sapo.vn/sapo-liquid/object/store
+ * Nguồn: https://pharmacosmetics-vn.com/ (JSON-LD HealthAndBeautyBusiness, chân trang, products.json) — lấy 2026-11-17.
+ * vendors / types / products_count / collections_count được suy từ CHÍNH catalog thật (data/products.js, data/collections.js)
+ * để luôn khớp; email/điện thoại/địa chỉ/mạng xã hội chép từ trang live.
  */
+const _p = require('./products').products;
+const _uniqSorted = (arr) => [...new Set(arr.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi'));
 module.exports = {
   store: {
     // ── Thông tin cơ bản ──────────────────────────────────────────────────
     name:             'PHARMA COSMETICS',
     description:      'Nền tảng online dược mỹ phẩm toàn cầu — chuẩn quốc tế, hiệu quả thực sự.',
-    domain:           'pharmacosmetics-vn.mysapo.net',
+    domain:           'pharmacosmetics-vn.com',
     permanent_domain: 'pharmacosmetics-vn.bizwebvietnam.net',
-    url:              'https://pharmacosmetics-vn.mysapo.net',
-    email:            'info@pharmacosmetics-vn.com',
-    address:          'Tầng 4, Tòa nhà Hanoi Group, 442 Đội Cấn, Ba Đình, Hà Nội',
+    url:              'https://pharmacosmetics-vn.com',
+    email:            'support@pharmacosmetics-vn.com',
+    address:          'Số 897 Đường Giải Phóng, Phường Giáp Bát, Quận Hoàng Mai, Thành phố Hà Nội',
     phone_number:     '0967 194 063',
 
     // ── Tiền tệ ───────────────────────────────────────────────────────────
     currency:                    'VND',
     currency_symbol:             '₫',
     // 2026-10-16: theo định dạng VNĐ của Sapo (không số lẻ, dấu chấm ngăn nghìn, ký hiệu ₫ tách bằng khoảng trắng)
-    // — trước đây '{{ amount }}đ' làm JS giỏ hàng (Bizweb.formatMoney) in "480,000.00đ" lệch với Liquid "480.000 ₫".
-    // Trên Sapo thật giá trị này do Admin › Cấu hình › Định dạng tiền tệ quyết định.
+    // — trên Sapo thật giá trị này do Admin › Cấu hình › Định dạng tiền tệ quyết định.
     money_format:                '{{amount_no_decimals_with_comma_separator}} ₫',
     money_with_currency_format:  '{{amount_no_decimals_with_comma_separator}} VND',
     locale:                      'vi',
     country:                     'Việt Nam',
 
-    // ── Thống kê ─────────────────────────────────────────────────────────
-    products_count:    15,   // demo — store thật có nhiều hơn
-    collections_count: 50,   // từ console log thực tế
+    // ── Thống kê (suy từ catalog thật) ───────────────────────────────────
+    products_count:    _p.length,
+    collections_count: 456,   // số URL trong sitemap_collections_1.xml của store thật (2026-11-17)
 
     // ── Mật khẩu bảo vệ ──────────────────────────────────────────────────
     password_message: '',
@@ -37,41 +39,17 @@ module.exports = {
     // ── Metafields (Sapo API only — để trống trong mock) ─────────────────
     metafields: {},
 
-    // ── Nhà sản xuất / Thương hiệu (store.vendors) ───────────────────────
-    // Dùng trong {% for v in store.vendors %} hoặc section marquee
-    vendors: [
-      'La Roche-Posay',
-      'CeraVe',
-      'The Ordinary',
-      "Paula's Choice",
-      'Skin1004',
-      'COSRX',
-      'Bioderma',
-      'Avène',
-      'Obagi Medical',
-      'Hada Labo',
-    ],
+    // ── Nhà sản xuất / Thương hiệu (store.vendors) — toàn bộ vendor thật trong catalog ─────
+    vendors: _uniqSorted(_p.map((x) => x.vendor)),
 
-    // ── Loại sản phẩm (store.types) ──────────────────────────────────────
-    // Dùng trong {% for t in store.types %}
-    types: [
-      'Kem dưỡng',
-      'Serum',
-      'Kem chống nắng',
-      'Toner',
-      'Mặt nạ',
-      'Kem đặc trị',
-      'Gel đặc trị',
-      'Kem mắt',
-      'Làm sạch',
-    ],
+    // ── Loại sản phẩm (store.types) — toàn bộ product_type thật ──────────
+    types: _uniqSorted(_p.map((x) => x.type)),
 
-    // ── Social (custom — không phải Sapo standard, dùng trong footer) ─────
+    // ── Social (custom — dùng trong footer): chỉ các kênh LIVE có link ───
     social: {
-      facebook:  'https://facebook.com/pharmacosmetics.vn',
-      instagram: 'https://instagram.com/pharmacosmetics.vn',
-      youtube:   'https://youtube.com/@pharmacosmetics',
-      tiktok:    'https://tiktok.com/@pharmacosmetics.vn',
+      facebook:  'https://www.facebook.com/pharmacosmeticsvn',
+      instagram: 'https://www.instagram.com/pharmacosmeticsvietnam',
+      zalo:      'https://zalo.me/0967194063',
     },
   },
 };
