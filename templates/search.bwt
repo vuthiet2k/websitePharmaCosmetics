@@ -14,9 +14,9 @@
 {%- assign pc_search_keyword = search.terms | split: '(*' | last | split: '*)' | first -%}
 <section class="signup search-main wrap_background background_white clearfix pb-8">
 	<div class="container">
-		<div class="pc-search-head mb-6">
+		<div class="pb-4 pt-4 lg:pt-6">
 			{%- if search.performed and search.terms != blank and search.results_count > 0 -%}
-			<h1 class="pc-search-title">Kết quả tìm kiếm cho &ldquo;{{ pc_search_keyword | escape }}&rdquo;</h1>
+			<h1 class="m-0 text-xl font-bold normal-case text-brand-deep">Kết quả tìm kiếm cho &ldquo;{{ pc_search_keyword | escape }}&rdquo;</h1>
 			{%- endif -%}
 		</div>
 
@@ -35,10 +35,10 @@
 			</div>
 
 			{%- comment -%} Offcanvas filter drawer (trượt từ trái vào trên Mobile, cố định cột trái trên Desktop) {%- endcomment -%}
-			<div class="grid grid-cols-1 gap-6 min-[992px]:grid-cols-[280px_minmax(0,1fr)] min-[992px]:items-start">
+			<div class="grid grid-cols-1 gap-6 min-[992px]:grid-cols-4 min-[992px]:items-start">
 				{%- include 'sidebar-collection' -%}
 
-				<div class="min-w-0">
+				<div class="min-w-0 min-[992px]:col-span-3">
 					{%- comment -%} "Đang lọc N tiêu chí" chip bar {%- endcomment -%}
 					<div id="afw-active-bar" class="afw-bar mb-4" hidden>
 						<div class="afw-bar__head flex items-center justify-between">
@@ -95,20 +95,13 @@
 		{% endif %}
 		{% endpaginate %}
 		{% else %}
-		<h1 class="visually-hidden">Tìm kiếm</h1>
-		<div class="bg-white p-8 sm:p-12 rounded-2xl shadow-sm border border-gray-200 text-center max-w-xl mx-auto">
-			<h2 class="title-head title_search text-lg font-bold text-forest-900 font-heading mb-4"><a href="#" class="title-box">Nhập từ khóa để tìm kiếm</a></h2>
-			<div class="serachpc_searchpage">
-				<div class="searchform">
-					<form action="/search" method="get" class="input-group search-bar relative" role="search">
-						<input type="text" name="query" value="{{ search.terms }}" autocomplete="off" placeholder="Tìm kiếm..." class="input-group-field auto-search w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-clinical-600 text-sm {%if template contains 'index'%}visible_index{%endif%}">
-						<button type="submit" class="btn icon-fallback-text absolute left-1 top-1 bottom-1 px-3 text-gray-400" aria-label="Tìm kiếm">
-							<i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'search', size: 'em' %}</i>
-						</button>
-					</form>
-				</div>
-			</div>
-		</div>
+		{%- comment -%} M-33 (18/11/2026): chưa nhập từ khoá — viết lại bằng token (bỏ class màu/bóng ngoài config: gray-*, forest-*, clinical-*, shadow, font-heading; bỏ input-group/icon-fallback-text). Gợi ý như M-31. {%- endcomment -%}
+		<h1 class="m-0 pb-3 text-xl font-bold normal-case text-brand-deep">Nhập từ khóa để tìm kiếm</h1>
+		<form action="/search" method="get" class="relative mb-4" role="search">
+			<input type="search" name="query" value="{{ search.terms | escape }}" autocomplete="off" placeholder="Tìm sản phẩm, thương hiệu..." aria-label="Tìm kiếm" class="appearance-none min-h-[44px] w-full rounded-xl border border-solid border-line bg-surface-card text-base text-ink outline-none focus:border-primary">
+			<button type="submit" class="absolute right-1 top-1 inline-flex h-9 cursor-pointer items-center gap-1 rounded-xl border-0 bg-btn px-3 text-sm font-bold text-btn-text transition-colors hover:bg-btn-hover" aria-label="Tìm kiếm">{% include 'ui_icon', name: 'search', size: 20 %}Tìm</button>
+		</form>
+		{%- assign empty_type = 'none' -%}{%- include 'search_empty_state' -%}
 		{% endif %}
 	</div>
 </section>

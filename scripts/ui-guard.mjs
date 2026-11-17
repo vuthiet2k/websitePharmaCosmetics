@@ -25,14 +25,14 @@ const RULES = {
   styleTag:     { files: /\.bwt$/, re: /<style[\s>]/gi, label: 'R1 thẻ <style>' },
   important:    { files: /\.(bwt|css|js)$/, re: /!\s*important/gi, label: 'R1 !important' },
   hexInMarkup:  { files: /\.bwt$/, re: /(?:class|style)\s*=\s*["'][^"']*#[0-9a-fA-F]{3,8}\b/g, label: 'R2 mã hex trong markup' },
-  arbitrary:    { files: /\.(bwt|js)$/, re: /class(?:Name)?\s*=\s*["'][^"']*\b[a-z-]+-\[[^\]]+\]/g, label: 'R2 class giá trị tuỳ ý' },
+  arbitrary:    { files: /\.(bwt|js)$/, re: /class(?:Name)?\s*=\s*["'][^"']*\b[a-z-]+-\[[^\]]+\]/g, label: 'R2 class giá trị tuỳ ý', pre: (t) => t.replace(/\b(?:max|min)-\[(?:991|992)px\]:/g, '').replace(/\b(?:min-h|min-w|h|w)-\[44px\]/g, '').replace(/\bz-\[(?:9999|99998|99999)\]/g, '') /* UI-0.3 biến thể mốc 992 + UI-0.4b vùng chạm 44px là ngoại lệ hợp lệ; z-[9999+] của lớp phủ/ngăn kéo/popup phải > header legacy z 9980 (thang config max 70) — chờ PO gộp thang z */ },
   shadow:       { files: /\.(bwt|js)$/, re: /class(?:Name)?\s*=\s*["'][^"']*\b(shadow-(sm|md|lg|xl|2xl|inner)|drop-shadow)/g, label: 'R4 đổ bóng' },
   tailwindCdn:  { files: /\.bwt$/, re: /cdn\.tailwindcss\.com/g, label: 'R7 Tailwind CDN' },
   faIcon:       { files: /\.(bwt|js)$/, re: /\bfa-(solid|regular|brands)\b/g, label: 'R7 icon Font Awesome' },
   extCdn:       { files: /\.bwt$/, re: /<(script|link)[^>]+(src|href)=["']https?:\/\/(?!(www\.)?(google|googletagmanager|facebook|zalo|sapo|bizweb|mysapo))[^"']+/gi, label: 'R7 tài nguyên CDN ngoài' },
   // rawButton: disabled in BATCH-09
   smallText:    { files: /\.bwt$/, re: /\btext-\[(?:[0-9]|1[01])px\]/g, label: 'A.3 chữ < 12px' },
-  offPalette:   { files: /.(bwt|js)$/, re: /class(?:Name)?s*=s*["'][^"']*(?:[a-z0-9-]+:)*(?:bg|text|border|ring|fill|stroke|from|to|via|divide|outline|accent|caret|decoration)-(?:red|green|blue|yellow|orange|amber|lime|emerald|teal|cyan|sky|indigo|violet|purple|fuchsia|pink|rose|gray|zinc|neutral|stone)-d{2,3}|class(?:Name)?s*=s*["'][^"']*(?:[a-z0-9-]+:)*(?:bg|text|border)-(?:black)/g, label: 'UI-0.1 class màu ngoài tailwind.pc.config.js' },
+  offPalette:   { files: /.(bwt|js)$/, re: /class(?:Name)?s*=s*["'][^"']*(?:[a-z0-9-]+:)*(?:bg|text|border|ring|fill|stroke|from|to|via|divide|outline|accent|caret|decoration)-(?:forest|clinical|red|green|blue|yellow|orange|amber|lime|emerald|teal|cyan|sky|indigo|violet|purple|fuchsia|pink|rose|gray|zinc|neutral|stone)-d{2,3}|class(?:Name)?s*=s*["'][^"']*(?:[a-z0-9-]+:)*(?:bg|text|border)-(?:black)/g, label: 'UI-0.1 class màu ngoài tailwind.pc.config.js' },
   decoAsText:   { files: /\.bwt$/, re: /\b(text-brand-deco|bg-brand-deco[^"']*text-white|text-white[^"']*bg-brand-deco)\b/g, label: 'A.3 #3CB371 làm chữ/nền chữ trắng' },
 };
 
@@ -46,7 +46,7 @@ function collect() {
     if (/^assets\/.*\.(css|scss\.bwt)$/.test(rel) || /^snippets\/.*_style\.bwt$/.test(rel)) cssFiles.push(rel);
     if (!/\.(bwt|css|js)$/.test(rel)) continue;
     const src = stripComments(fs.readFileSync(path.join(ROOT, rel), 'utf8'), rel);
-    for (const [k, r] of Object.entries(RULES)) { if (!r.files.test(rel)) continue; if (r.skipLib && LIB.test(rel)) continue; const n = (src.match(r.re) || []).length; if (n) (counts[rel] = counts[rel] || {})[k] = n; }
+    for (const [k, r] of Object.entries(RULES)) { if (!r.files.test(rel)) continue; if (r.skipLib && LIB.test(rel)) continue; const n = ((r.pre ? r.pre(src) : src).match(r.re) || []).length; if (n) (counts[rel] = counts[rel] || {})[k] = n; }
   }
   return { counts, cssFiles: cssFiles.sort() };
 }

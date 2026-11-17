@@ -32,7 +32,7 @@
         {%- endif -%}
         <div class="hidden lg:flex mt-7 flex-wrap items-center gap-5">
           <a class="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-7 text-base font-bold text-primary no-underline hover:bg-surface-soft transition-colors" href="{{ spa_cta_url | escape }}">{{ settings.home_spa_cta_text | default: 'Dat lich phan tich da' | escape }}</a>
-          {%- if settings.home_spa_address != blank -%}<p class="m-0 max-w-[200px] text-sm leading-relaxed text-white/80">{{ settings.home_spa_address | escape | newline_to_br }}</p>{%- endif -%}
+          {%- if settings.home_spa_address != blank -%}<p class="m-0 max-w-52 text-sm leading-relaxed text-white/80">{{ settings.home_spa_address | escape | newline_to_br }}</p>{%- endif -%}
         </div>
       </div>
       <ol class="hidden lg:grid m-0 grid list-none gap-4 p-0 sm:grid-cols-2">
@@ -63,12 +63,12 @@
         {%- assign spa_m = spa_m | plus: 1 -%}
         {%- assign spa_lb = spa_lbls[forloop.index0] | strip | default: settings[k_t] -%}
         {%- assign spa_ic = spa_icos[forloop.index0] | strip -%}
-        {%- capture spa_tab -%}<a class="flex flex-col items-center justify-center py-2 px-1 rounded-lg text-center no-underline text-ink-muted transition-colors border border-transparent aria-selected:border-line-soft aria-selected:bg-white aria-selected:text-primary aria-selected:shadow-sm" role="tab" id="spa-rt-{{ i }}" aria-controls="spa-rp-{{ i }}" aria-selected="{% if spa_m == 1 %}true{% else %}false{% endif %}" tabindex="{% if spa_m == 1 %}0{% else %}-1{% endif %}" href="#spa-rp-{{ i }}"><b class="text-xs">0{{ spa_m }}</b>{%- if spa_ic != blank -%}{% include 'ui_icon', name: spa_ic %}{%- endif -%}<span class="text-[10px] mt-0.5 truncate max-w-full">{{ spa_lb | escape }}</span></a>{%- endcapture -%}
+        {%- capture spa_tab -%}<a class="flex flex-col items-center justify-center py-2 px-1 rounded-lg text-center no-underline text-ink-muted transition-colors border border-transparent aria-selected:border-line-soft aria-selected:bg-white aria-selected:text-primary" role="tab" id="spa-rt-{{ i }}" aria-controls="spa-rp-{{ i }}" aria-selected="{% if spa_m == 1 %}true{% else %}false{% endif %}" tabindex="{% if spa_m == 1 %}0{% else %}-1{% endif %}" href="#spa-rp-{{ i }}"><b class="text-xs">0{{ spa_m }}</b>{%- if spa_ic != blank -%}{% include 'ui_icon', name: spa_ic %}{%- endif -%}<span class="text-xs mt-0.5 truncate max-w-full">{{ spa_lb | escape }}</span></a>{%- endcapture -%}
         {%- capture spa_panel -%}<div class="flex items-start gap-3 rounded-xl bg-surface-soft p-3 text-xs leading-relaxed" role="tabpanel" id="spa-rp-{{ i }}" aria-labelledby="spa-rt-{{ i }}"{% if spa_m > 1 %} hidden{% endif %}>{% include 'ui_icon', name: 'circle-check' %}<p class="m-0"><b class="block text-ink text-sm mb-1">{{ settings.home_spa_step_prefix | default: 'Buoc' | escape }} 0{{ spa_m }}: {{ settings[k_t] | escape }}</b>{%- if settings[k_d] != blank -%}<span class="text-ink-muted">{{ settings[k_d] | escape }}</span>{%- endif -%}</p></div>{%- endcapture -%}
         {%- assign spa_tabs = spa_tabs | append: spa_tab -%}{%- assign spa_panels = spa_panels | append: spa_panel -%}
       {%- endif -%}
     {%- endfor -%}
-    <div class="lg:hidden mt-6 rounded-2xl bg-white p-4 shadow-sm border border-line-soft" data-h4-tabs>
+    <div class="lg:hidden mt-6 rounded-2xl bg-white p-4 border border-line-soft" data-h4-tabs>
       {%- if settings.home_spa_address != blank -%}<p class="m-0 mb-3 flex items-start gap-2 text-xs text-ink-muted">{% include 'ui_icon', name: 'map-pin' %}<span>{{ settings.home_spa_address | newline_to_br | replace: '<br />', ' ' | replace: '<br>', ' ' | strip_newlines | escape }}</span></p>{%- endif -%}
       <div class="mb-3 flex items-center justify-between"><p class="m-0 text-base font-bold text-ink">{{ spa_steps_t | escape }}</p>{%- assign spa_steps_tag = settings.home_spa_steps_tag | default: 'Phac do ca nhan' -%}<p class="m-0 text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded">{{ spa_steps_tag | escape }}</p></div>
       <div class="grid grid-cols-4 gap-1.5 p-1 bg-surface-soft rounded-xl mb-3" role="tablist" aria-label="{{ spa_steps_t | escape }}">{{ spa_tabs }}</div>
