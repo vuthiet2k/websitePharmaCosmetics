@@ -126,6 +126,9 @@ const overrideSettings = {
   // type="text/x-custom-template">). settings_data.json đang để popup_banner_enable=false và chưa có ảnh nên phải ghi đè ở đây
   // (settings thật thắng demoSettings) để dev-server hiện đúng như live. Nguồn: phase/mobile-parity-2026-11/du-lieu/06-popup-canh-bao.json
   popup_banner_enable: true,
+  popup_banner_url:    '/', // ảnh popup trỏ về trang chủ LOCAL (không nhảy sang live)
+  // Trang chủ live hiển thị đúng 16 hoạt chất (menu 'mua-sam-theo-thanh-phan' có 29) ⇒ dùng menu 16 mục như live
+  home_ing_menu:       'hoat-chat-trang-chu',
   popup_banner_image:  'https://bizweb.dktcdn.net/thumb/large/100/415/053/theme_temp/1180781/assets/798396ba-50c3-41aa-a587-79cb680df688-1-d33312b9-e283-47f9-94c1-dfeaae78e5af.jpg',
 };
 
