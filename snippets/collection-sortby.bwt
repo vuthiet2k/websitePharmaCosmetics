@@ -8,15 +8,21 @@
 {%- assign _result_count = paginate.items | default: collection.products_count | default: search.results_count -%}
 {%- comment -%} 2026-10-10: paginate.items = 0 (không phải nil) thì default không thay ⇒ lấy số SP của danh mục. {%- endcomment -%}
 {%- if _result_count == 0 and collection.products_count > 0 -%}{%- assign _result_count = collection.products_count -%}{%- endif -%}
-<div class="mb-4 flex flex-wrap items-center justify-between gap-3 font-sans">
+<div class="mb-4 flex items-center justify-between gap-3 font-sans">
 	{%- if _result_count > 0 -%}
-	<p class="m-0 text-lg font-bold text-ink">{{ settings.collection_products_label | default: 'Sản phẩm' | escape }} (<span class="sort-count-num">{{ _result_count }}</span>)</p>
+	<p class="m-0 text-base sm:text-lg font-bold text-ink whitespace-nowrap">{{ settings.collection_products_label | default: 'Sản phẩm' | escape }} (<span class="sort-count-num">{{ _result_count }}</span>)</p>
 	{%- endif -%}
 	<div class="ml-auto flex items-center gap-2">
-		<label class="m-0 !flex min-h-[44px] flex-nowrap items-center gap-2 whitespace-nowrap border border-solid border-line bg-white px-3 text-sm text-ink rounded-xl">
+		{%- if settings.aside_filter_enable -%}
+		<button type="button" class="btn-filter-mobile flex h-[44px] w-[44px] cursor-pointer items-center justify-center border border-solid border-line bg-white p-0 text-ink rounded-xl min-[992px]:hidden relative aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-white" aria-label="Mở bộ lọc">
+			{% include 'ui_icon', name: 'sliders-horizontal', size: 20, label: '' %}
+			<span class="count-filter-val absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-sale px-1 text-center text-[10px] leading-[18px] font-bold text-white rounded-full hidden"></span>
+		</button>
+		{%- endif -%}
+		<label class="m-0 !flex min-h-[44px] flex-nowrap items-center gap-1.5 whitespace-nowrap border border-solid border-line bg-white px-2.5 sm:px-3 text-sm text-ink rounded-xl">
 			<span class="sr-only">Sắp xếp</span>
-			{% include 'ui_icon', name: 'arrow-down-up', size: 20, label: '' %}
-			<select class="sort-cate-select__input !h-[42px] !w-auto cursor-pointer border-0 bg-transparent text-sm text-ink outline-none" onchange="sortby(this.value)" aria-label="Sắp xếp">
+			{% include 'ui_icon', name: 'arrow-down-up', size: 18, label: '' %}
+			<select class="sort-cate-select__input !h-[42px] !w-auto cursor-pointer border-0 bg-transparent text-xs sm:text-sm text-ink outline-none" onchange="sortby(this.value)" aria-label="Sắp xếp">
 				<option value="default">Sắp xếp</option>
 				<option value="alpha-asc">Tên A-Z</option>
 				<option value="alpha-desc">Tên Z-A</option>
@@ -30,13 +36,6 @@
 			<button type="button" class="pc-view-toggle__btn max-[991px]:hidden flex h-[44px] w-[44px] cursor-pointer items-center justify-center border border-solid border-line bg-white p-0 text-ink-secondary rounded-xl aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-white" data-pc-view="list" aria-pressed="false" aria-label="Dạng danh sách">{% include 'ui_icon', name: 'list', size: 20, label: '' %}</button>
 		</div>
 	</div>
-	{%- if settings.aside_filter_enable -%}
-	<button type="button" class="btn-filter-mobile inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 border-0 bg-primary-tint px-4 text-sm font-semibold text-primary rounded-full min-[992px]:hidden [.pc-quick-filters~*_&]:hidden aria-pressed:bg-primary aria-pressed:text-white" aria-label="Mở bộ lọc">
-		{% include 'ui_icon', name: 'sliders-horizontal', size: 20, label: '' %}
-		<span>Bộ lọc</span>
-		<span class="count-filter-val min-w-[20px] bg-sale px-1 text-center text-xs font-bold text-white rounded-full"></span>
-	</button>
-	{%- endif -%}
 </div>
 
 <script>

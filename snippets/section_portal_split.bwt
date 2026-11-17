@@ -5,37 +5,20 @@
   100% Tailwind utility class trực tiếp trên thẻ ngữ nghĩa, không dùng class CSS tự sinh.
 {%- endcomment -%}
 {%- unless settings.home_trust_enable == false or settings.home_trust_enable == 'false' -%}
-<div class="border-0 border-b border-solid border-line-soft bg-white py-5 lg:py-8">
+<div class="border-0 border-b border-solid border-line-soft bg-white py-4 sm:py-6">
   <div class="container">
-    <ul class="m-0 grid list-none grid-cols-2 gap-4 p-0 lg:grid-cols-4">
-      {%- for i in (1..4) -%}
-        {%- capture k_t -%}home_trust_{{ i }}_title{%- endcapture -%}{%- capture k_d -%}home_trust_{{ i }}_desc{%- endcapture -%}
-        {%- case i -%}
-          {%- when 1 -%}{%- assign tr_t = settings[k_t] | default: 'Chính hãng, nhập khẩu' -%}{%- assign tr_d = settings[k_d] | default: 'Nguồn gốc rõ ràng' -%}
-          {%- when 2 -%}{%- assign tr_t = settings[k_t] | default: 'Giao hàng toàn quốc' -%}{%- assign tr_d = settings[k_d] | default: 'Đặt online, nhận tận nhà' -%}
-          {%- when 3 -%}{%- assign tr_t = settings[k_t] | default: 'Chuyên gia da 10+ năm' -%}{%- assign tr_d = settings[k_d] | default: 'Tư vấn & trị liệu 1:1' -%}
-          {%- else -%}{%- assign tr_t = settings[k_t] | default: 'Đổi trả rõ ràng' -%}{%- assign tr_d = settings[k_d] | default: 'Theo chính sách công khai' -%}
-        {%- endcase -%}
-        <li class="m-0 flex items-center gap-3 lg:gap-3.5">
-          <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-tint text-brand-deep">{% include 'ui_icon', name: 'check' %}</span>
-          <span><span class="m-0 block text-sm font-bold text-brand-deep lg:text-base">{{ tr_t | escape }}</span><span class="m-0 mt-0.5 block text-xs text-ink-muted">{{ tr_d | escape }}</span></span>
-        </li>
-      {%- endfor -%}
-    </ul>
+    {% include 'ui_trust_badges' %}
   </div>
 </div>
 {%- endunless -%}
-<section class="m-0 bg-white px-0 py-10 lg:py-16 font-sans text-ink" aria-labelledby="section-portal-split-explore">
+<section class="m-0 bg-white px-0 py-8 lg:py-16 font-sans text-ink" aria-labelledby="section-portal-split-explore">
   <div class="container">
-    <div class="mb-6 lg:mb-8 flex items-center gap-4">
+    <div class="mb-4 lg:mb-8 flex items-center gap-4">
       <p class="m-0 whitespace-nowrap text-xs font-bold uppercase tracking-wider text-primary" id="section-portal-split-explore">
         <span class="lg:hidden">{{ settings.portal_chapter_prefix | default: 'Mục' | escape }} </span>I · {{ settings.portal_chapter_1 | default: 'Khám phá' | escape }}
       </p>
       <span class="h-px flex-1 bg-line-soft" aria-hidden="true"></span>
     </div>
-    {%- if settings.portal_split_title != blank -%}
-      <h3 class="m-0 mb-4 text-xl font-bold tracking-normal text-brand-deep lg:hidden">{{ settings.portal_split_title | escape }}</h3>
-    {%- endif -%}
     <div class="grid grid-cols-2 gap-3 lg:gap-6">
       <a class="group box-border flex min-w-0 flex-col rounded-2xl border border-solid border-line-soft bg-surface-soft p-4 lg:p-8 no-underline" href="{{ settings.portal_shop_url | default: '/collections/all' | escape }}">
         <div class="flex min-w-0 items-center gap-2.5 lg:block">

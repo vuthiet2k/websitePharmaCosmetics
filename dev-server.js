@@ -1914,6 +1914,53 @@ async function requestHandler(req, res) {
     }
   }
 
+  // ── Route: /api/settings — Local settings API
+  if (pathname === '/api/settings') {
+    if (req.method === 'GET') {
+      try {
+        const schemaRaw = fs.readFileSync(path.join(ROOT, 'configs/settings_schema.json'), 'utf8');
+        const dataRaw = fs.readFileSync(path.join(ROOT, 'configs/settings_data.json'), 'utf8');
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ schema: JSON.parse(schemaRaw), data: JSON.parse(dataRaw) }));
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: e.message }));
+      }
+      return;
+    }
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', () => {
+        try {
+          const newSettings = JSON.parse(body);
+          const dataFilePath = path.join(ROOT, 'configs/settings_data.json');
+          const backupPath = path.join(ROOT, 'configs', 'settings_data.backup.' + Date.now() + '.json');
+          if (fs.existsSync(dataFilePath)) fs.copyFileSync(dataFilePath, backupPath);
+          fs.writeFileSync(dataFilePath, JSON.stringify(newSettings, null, 2), 'utf8');
+          loadMock();
+          assetCache.clear();
+          broadcast('change', 'settings_data.json');
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ success: true, message: 'Settings saved successfully' }));
+        } catch (e) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: e.message }));
+        }
+      });
+      return;
+    }
+  }
+
+  // ── Route: /admin/settings — Local Theme Settings Dashboard
+  if (pathname === '/admin/settings') {
+    const htmlPath = path.join(ROOT, 'dev-preview/settings-admin.html');
+    if (fs.existsSync(htmlPath)) {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(fs.readFileSync(htmlPath, 'utf8'));
+      return;
+    }
+  }
   // ── Route: /__data.json — raw JSON context (dùng với fetch / Postman)
   if (pathname === '/__data.json') {
     const ctx = mockModule.getContext('index');

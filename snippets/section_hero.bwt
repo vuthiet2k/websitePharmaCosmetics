@@ -42,6 +42,7 @@
 {%- for i in (1..5) -%}
   {%- if i == 1 -%}
     {%- assign hero_image = settings.home_hero_image -%}
+    {%- assign hero_image_mobile = settings.home_hero_image_mobile -%}
     {%- assign hero_text = settings.home_hero_title -%}
     {%- assign hero_btn = settings.home_hero_btn1_text -%}
     {%- assign hero_url = settings.home_hero_btn1_url -%}
@@ -49,10 +50,12 @@
     {%- assign hero_video = settings.home_hero_video -%}
   {%- else -%}
     {%- capture k_img -%}home_hero_image_{{ i }}{%- endcapture -%}
+    {%- capture k_img_mobile -%}home_hero_image_mobile_{{ i }}{%- endcapture -%}
     {%- capture k_text -%}home_hero_title_{{ i }}{%- endcapture -%}
     {%- capture k_btn -%}home_hero_btn_text_{{ i }}{%- endcapture -%}
     {%- capture k_url -%}home_hero_btn_url_{{ i }}{%- endcapture -%}
     {%- assign hero_image = settings[k_img] -%}
+    {%- assign hero_image_mobile = settings[k_img_mobile] -%}
     {%- assign hero_text = settings[k_text] -%}
     {%- assign hero_btn = settings[k_btn] -%}
     {%- assign hero_url = settings[k_url] -%}
@@ -87,9 +90,14 @@
     {%- if hv_kind == 'yt' %} data-hero-video="yt" data-video-src="https://www.youtube.com/embed/{{ hv_id | escape }}?autoplay=1&amp;mute=1&amp;controls=0&amp;playsinline=1&amp;rel=0&amp;modestbranding=1&amp;iv_load_policy=3&amp;disablekb=1&amp;enablejsapi=1"
     {%- elsif hv_kind == 'file' %} data-hero-video="file" data-video-src="{{ hv | escape }}"{% endif %}>
     {%- if hero_poster != blank -%}
-    <img class="portal-hero__image" src="{{ hero_poster }}" data-hero-source="{{ hero_poster }}"
-      alt="{{ hero_text | default: settings.store_name | default: store.name | strip_newlines | escape }}" width="1920" height="1080"
-      {%- if hero_slide_count == 1 %} loading="eager" fetchpriority="high"{% else %} loading="lazy" fetchpriority="low"{% endif %}>
+    <picture>
+      {%- if hero_image_mobile != blank -%}
+      <source media="(max-width: 767px)" srcset="{{ hero_image_mobile | img_url: 'master' }}">
+      {%- endif -%}
+      <img class="portal-hero__image" src="{{ hero_poster }}" data-hero-source="{{ hero_poster }}"
+        alt="{{ hero_text | default: settings.store_name | default: store.name | strip_newlines | escape }}" width="1920" height="1080"
+        {%- if hero_slide_count == 1 %} loading="eager" fetchpriority="high"{% else %} loading="lazy" fetchpriority="low"{% endif %}>
+    </picture>
     {%- endif -%}
     {%- if hv_kind != '' -%}
     <div class="portal-hero__video" data-hero-video-box></div>
