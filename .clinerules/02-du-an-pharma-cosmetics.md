@@ -805,3 +805,12 @@ grep -o '"id"[[:space:]]*:[[:space:]]*"[a-z_]*"' configs/settings_schema.json
   sản phẩm chung (`snippets/pc_is_service.bwt`); nút Liên hệ tư vấn → Zalo (`lt_zalo_text`, `lt_zalo_url` / `contact_zalo`) + Đặt
   lịch (`lt_cta_url?handle=<alias>`). Video: tag `youtube:` / `facebook:` trên sản phẩm ⇒ khối `lieu_trinh_video` (sau Công nghệ &
   hoạt chất; `lt_video_eyebrow/_title`). Blog Trước & Sau thật là `truoc-va-sau` (13/11/2026 chủ dự án xoá `truoc-va-sau-1`, đổi về `truoc-va-sau`).
+
+## App Sapo nạp CSS SAU theme — chống đè (chốt 18/11/2026)
+
+Trên Sapo thật, app Đánh giá SP (`newproductreviews.sapoapps.vn/assets/css/bpr.min.css`) nạp **sau** `pc-ui.css` và khai báo lại
+`.swiper-container{overflow:hidden;margin:0 auto}`, `.swiper-wrapper{display:flex;width:100%;height:100%}`, `.swiper-slide{flex-shrink:0;width:100%;height:100%;position:relative}`.
+Local dev không nạp các sheet này ⇒ lỗi chỉ hiện trên live (vd lưới hoạt chất rơi về 1 hàng flex hẹp).
+**Quy tắc:** mọi layout desktop dựa vào override của `.swiper-wrapper` / `.swiper-slide` (grid, contents, kích thước) phải dùng
+important modifier Tailwind (`lg:!grid`, `!w-28`, `!h-auto`) — chỉ ở chỗ cần. Khi nghi bản live khác local: mở preview, tắt từng
+`document.styleSheets[i].disabled` để tìm sheet gây đè (cách đã dùng tìm ra bpr.min.css).

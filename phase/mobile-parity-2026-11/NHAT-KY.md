@@ -154,3 +154,4 @@ Chưa sửa: nút chat "Hỗ trợ" nổi đè lên thẻ SP/blog khi cuộn (wi
 
 ## 18/11/2026 — Sidebar lọc desktop gọn + hàng voucher không cắt
 - aside.left-content: min-[992px]:sticky top-24 max-h-screen overflow-y-auto (cao tối đa = màn hình, cuộn trong); dòng lọc/nút nhóm/pill desktop min-h-0 py-1.5/py-2 (cao 31px, vùng chạm 44px giữ mobile). Đo 1280/1440/1920: aside 896 (scrollHeight 1978), dòng 31px. Nhóm Loại SP/Thương hiệu vẫn 400+ mục ẩn sau Xem thêm (JS cũ). Gỡ min-[1024px]:max-[1599px]:pr-32 khỏi collection_vouchers và cart: hàng voucher chạy hết khung (1201/1220px), swiper peek ½ thẻ kế tiếp.
+- 18/11/2026 — Rà CSS app Sapo trên live: chỉ bpr.min.css có rule chung đè theme (.swiper-container/.swiper-wrapper/.swiper-slide); productReviews.min.css không có rule chung; buyxgety.css không đọc được (CORS). Đã chống đè lg:!grid ở article.bwt:498 (cùng ui_circle_swiper, expert_team, search); ghi quy tắc vào .clinerules/02. Còn: chụp so live 1440/390 cần zip mới.
