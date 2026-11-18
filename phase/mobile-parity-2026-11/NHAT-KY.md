@@ -85,3 +85,6 @@ Mỗi dòng: ngày | người | việc | quyết định | lý do.
 - ĐÃ SỬA: chữ topbar mobile 11px → 12px (`--fs-xs`); link breadcrumb vùng chạm 24px → 44px.
 - ĐÃ KIỂM OK (390px): /collections/all (nút lọc 44x44 có icon), /search?q=kem&page=2 (phân trang 44px, 1 h1), trang sản phẩm (1 h1, h2–h4 không in hoa, không tràn ngang), bài viết (1 h1, không tràn), popup cảnh báo (tick + đóng ⇒ lưu `popupClosedDate`, reload không hiện lại).
 - CHƯA SỬA: nút ngôn ngữ topbar cao 36px (vùng chạm đã nới 44px bằng ::after); link inline trong thân bài cao ~20px (chuẩn cho link trong đoạn văn); badge số lọc và 1440px chưa duyệt bằng mắt; chưa kiểm footer mobile bằng ảnh chụp.
+
+## 18/11/2026 — Đồng hồ Flash sale kiểu Shopee
+- Mỗi đơn vị giờ/phút/giây là ô bg-sale, chữ trắng, rounded, h-7 min-w-7, tabular-nums; dấu ":" text-sale. Số đổi thì gỡ/gắn lại `motion-safe:animate-tick` (keyframes `tick` mới trong tailwind.pc.config.js, trượt từ trên xuống 0.35s). Kiểm 390 và 1440: 1 dòng, ô 27x26, chữ 14px, không tràn ngang. Trình duyệt kiểm đang bật reduced-motion nên chưa quan sát được chuyển động, chỉ xác nhận class và CSS được sinh.

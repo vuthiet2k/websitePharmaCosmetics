@@ -46,11 +46,11 @@ module.exports = {
       0: '0', 10: '10', header: '30', bottomnav: '40', fab: '45',
       overlay: '50', modal: '55', toast: '60', skip: '70',
     },
-    /* 18/11/2026 (PO duyệt, quy trình C.6): đúng 1 animation 'shine' — vệt sáng quét ngang chữ CTA hero mobile (gradient primary→white→primary, bg-clip-text). Kích thước nền khai báo trong keyframes vì không dùng giá trị tuỳ ý. */
+    /* 18/11/2026 (PO duyệt, quy trình C.6): animation 'shine' —vệt sáng quét ngang chữ CTA hero mobile (gradient primary→white→primary, bg-clip-text). Kích thước nền khai báo trong keyframes vì không dùng giá trị tuỳ ý. */
     extend: {
       maxWidth: { content: '1280px' },
-      keyframes: { shine: { '0%': { backgroundSize: '250% 100%', backgroundPosition: '125% 0' }, '100%': { backgroundSize: '250% 100%', backgroundPosition: '-125% 0' } } },
-      animation: { shine: 'shine 3.5s linear infinite' },
+      keyframes: { shine: { '0%': { backgroundSize: '250% 100%', backgroundPosition: '125% 0' }, '100%': { backgroundSize: '250% 100%', backgroundPosition: '-125% 0' } }, tick: { '0%': { transform: 'translateY(-100%)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } } },
+      animation: { shine: 'shine 3.5s linear infinite', tick: 'tick 0.35s ease-out' },
     },
   },
   plugins: [],

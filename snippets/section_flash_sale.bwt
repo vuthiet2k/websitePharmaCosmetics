@@ -71,15 +71,15 @@
     UNITS.forEach(function (u, k) {
       if (k > 0) {
         var sep = document.createElement('span');
-        sep.className = 'text-sale font-bold';
+        sep.className = 'mx-0.5 text-base font-bold text-sale';
         sep.setAttribute('aria-hidden', 'true');
         sep.textContent = ':';
         el.appendChild(sep);
         boxes[u[0] + 'sep'] = sep;
       }
       var b = document.createElement('span');
-      b.className = 'inline-flex items-center font-bold text-sale';
-      b.innerHTML = '<b></b><span class="sr-only">' + u[2] + '</span>';
+      b.className = 'inline-flex h-7 min-w-7 items-center justify-center overflow-hidden rounded bg-sale px-1 text-sm font-bold tabular-nums text-white';
+      b.innerHTML = '<b class="inline-block"></b><span class="sr-only">' + u[2] + '</span>';
       el.appendChild(b);
       boxes[u[0]] = b;
     });
@@ -92,7 +92,11 @@
         var v = u[0] === 'd' ? Math.floor(left / 86400) : Math.floor(left / u[1]) % (u[0] === 'h' ? 24 : 60);
         var b = boxes[u[0]], num = b.firstChild, txt = pad(v);
         if (num.textContent !== txt) {
+          var changed = num.textContent !== '';
           num.textContent = txt;
+          /* Số mới trượt vào như Shopee: gỡ rồi gắn lại class để chạy lại animation (motion-safe: tôn trọng reduced-motion). */
+          num.classList.remove('motion-safe:animate-tick');
+          if (changed) { void num.offsetWidth; num.classList.add('motion-safe:animate-tick'); }
         }
       });
     }
