@@ -159,11 +159,11 @@
 							{%- capture pc_art_tags -%}
 							{%- for tag in article.tags -%}
 							{%- unless tag contains ':' or tag contains 'duocsi_' or tag contains 'video' -%}
-							<a class="pc-art-tag inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap rounded-full bg-brand-tint px-3 text-sm font-medium text-brand-deep no-underline hover:bg-primary hover:text-white" href="/blogs/all/tagged/(({{ tag | replace: ' ', '%20' }}))" title="{{ tag }}">{{ tag }}</a>
+							<a class="inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap rounded-full bg-brand-tint px-3 text-sm font-medium text-brand-deep no-underline hover:bg-primary hover:text-white" href="/blogs/all/tagged/(({{ tag | replace: ' ', '%20' }}))" title="{{ tag | replace: '%20', ' ' }}">{{ tag | replace: '%20', ' ' }}</a>
 							{%- endunless -%}
 							{%- endfor -%}
 							{%- endcapture -%}
-							{%- if pc_art_tags != blank -%}<div class="pc-art-tags -mx-1 mt-3 flex flex-nowrap gap-2 overflow-x-auto px-1 lg:flex-wrap lg:overflow-visible">{{ pc_art_tags }}</div>{%- endif -%}
+							{%- if pc_art_tags != blank -%}<div class="-mx-1 mt-3 flex flex-nowrap gap-2 overflow-x-auto px-1 lg:flex-wrap lg:overflow-visible">{{ pc_art_tags }}</div>{%- endif -%}
 							{%- endif -%}
 							{%if settings.article_social_enable%}
 							<div class="social-sharing">
@@ -229,9 +229,9 @@
 							{%endif%}
 							{%- assign pc_fbm_sum = article.summary | default: article.excerpt | strip_html | strip -%}
 							{%- if pc_fbm_sum != blank -%}<p class="pc-fbm-text">{{ pc_fbm_sum | truncate: 280 }}</p>{%- endif -%}
-							{%- capture pc_fbm_tags -%}{%- for tag in article.tags -%}{%- unless tag contains ':' or tag contains 'duocsi_' or tag contains 'video' -%}<a href="/blogs/all/tagged/(({{ tag | replace: ' ', '%20' }}))">#{{ tag | replace: ' ', '' | replace: '-', '' }}</a> {% endunless -%}{%- endfor -%}{%- endcapture -%}
+							{%- capture pc_fbm_tags -%}{%- for tag in article.tags -%}{%- unless tag contains ':' or tag contains 'duocsi_' or tag contains 'video' -%}<a class="inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap text-sm font-medium text-primary no-underline hover:underline" href="/blogs/all/tagged/(({{ tag | replace: ' ', '%20' }}))">#{{ tag | replace: '%20', '' | replace: ' ', '' | replace: '-', '' }}</a> {% endunless -%}{%- endfor -%}{%- endcapture -%}
 							{%- assign pc_fbm_tags_s = pc_fbm_tags | strip -%}
-							{%- if pc_fbm_tags_s != blank -%}<p class="pc-fbm-tags">{{ pc_fbm_tags }}</p>{%- endif -%}
+							{%- if pc_fbm_tags_s != blank -%}<p class="m-0 flex flex-nowrap gap-x-3 overflow-x-auto">{{ pc_fbm_tags }}</p>{%- endif -%}
 							{%- comment -%} Ảnh bài tràn ngang (bài có video: khối video ngay dưới đóng vai trò media ⇒ không lặp ảnh). {%- endcomment -%}
 							{%- assign pc_vs_article = article -%}{%- include 'video_source' -%}
 							{%- if pc_vs_src == '' and article.image.src != blank -%}
