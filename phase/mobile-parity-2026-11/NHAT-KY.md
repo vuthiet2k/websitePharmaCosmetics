@@ -130,3 +130,9 @@ Chưa sửa: nút chat "Hỗ trợ" nổi đè lên thẻ SP/blog khi cuộn (wi
 
 ## 18/11/2026 — 2 thẻ Khám phá cân đối tuyệt đối
 - Mobile: kicker min-h-8 + line-clamp-2, tiêu đề min-h-8 + line-clamp-2 + text-balance (hết chữ mồ côi «Hà / Nội»), mô tả flex-1 line-clamp-3, nút mt-auto. Đo offset từ đỉnh thẻ (kicker/tiêu đề/mô tả/nút) hai thẻ BẰNG NHAU ở 375, 390, 414, 430: 15.1/48.9/91.6/145.6px, cao 205px; 1440: 30.7/57.9/104.9/144.9, cao 220px (desktop reset min-h về 0).
+
+## 18/11/2026 — FE-4 đợt 4 (request [object Object], 404, ô trống, 1024)
+- ĐÃ SỬA: `GET /collections/[object Object]` và `/[object Object]` (404) — nguồn: `dev-server.js` (mock cart.js) trả `item.image` là OBJECT `{src}` còn Sapo thật trả CHUỖI URL ⇒ template ajaxcart `<img src="{{img}}">` ra `src="[object Object]"` (trình duyệt gọi URL tương đối). Đã trả chuỗi URL; kiểm bằng server riêng cổng 3025: `"image":"https://…jpg"`. Lỗi chỉ ở mock dev khi giỏ có hàng, không ảnh hưởng bản Sapo thật.
+- PHÂN LOẠI console/network: 426 = WebSocket dev; ERR_NAME_NOT_RESOLVED = máy không ra Internet (googletagmanager, google-analytics, cdnjs, bizweb CDN); 404 localhost chỉ còn `[object Object]` (đã sửa); `//cdnjs…touch-punch` là URL tương đối giao thức (https ở bản thật) — không phải lỗi; không asset theme nào thiếu.
+- Ô trống ~130–260px dưới form đặt lịch = iframe Google Maps (`.mops-booking-map`) không tải được khi offline ⇒ không phải lỗi giao diện.
+- 1024px: trang chủ, danh mục, sản phẩm xem ảnh chụp — header 1 hàng, không tràn.

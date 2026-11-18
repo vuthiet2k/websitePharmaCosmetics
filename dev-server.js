@@ -1213,7 +1213,7 @@ function buildCartFromLines(lines) {
       title: product.name,
       variant_title: variant.title,
       url: product.url,
-      image: product.featured_image,
+      image: (product.featured_image && product.featured_image.src) || product.featured_image || '', // cart.js của Sapo trả image là CHUỖI URL (trước đây trả object ⇒ template ajaxcart ra src="[object Object]" và sinh request 404)
       sku: variant.sku,
       quantity: line.quantity,
       price: variant.price,
