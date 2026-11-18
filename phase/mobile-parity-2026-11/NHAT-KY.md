@@ -92,3 +92,6 @@ Mỗi dòng: ngày | người | việc | quyết định | lý do.
 ## 18/11/2026 — Sidebar TIN LIÊN QUAN (article.bwt)
 - Gốc lỗi viền dày: bản build không có preflight, `border-solid` cho cạnh không đặt độ rộng sẽ ra 3px (medium). Thêm `border-x-0`/`border-t-0`/`border-b-0` ở các khối trong article.bwt. Chỉ 1 đường kẻ (divide-y), h3 normal-case tracking-normal, tiêu đề bọc span line-clamp-2 (class line-clamp-2 trên thẻ a bị rule cũ đè thành flow-root), bỏ thẻ tác giả. Emoji trong tiêu đề là dữ liệu; guardrails cấm ký tự emoji trong code nên không lọc bằng Liquid — cần DE sửa dữ liệu.
 - article.bwt đang có thay đổi chưa commit của phiên khác (lệch HEAD ~970 dòng) nên chưa commit file này.
+
+## 18/11/2026 — Sửa gốc viền 3px toàn cục
+- Thêm vào ui-src/css/tokens.css 2 rule :where() độ ưu tiên 0: `.border-solid/dashed/dotted` và con của `.divide-solid/dashed/dotted` về border-width 0; `border`, `border-t`…, CSS cũ vẫn thắng. Thay cho việc sửa lẻ 10 file. Đo computed border-width ở 390 và 1440 trên /, /collections/all, /search, /blogs, /cart, /products: chỉ còn border-2 có chủ ý. article.bwt ở HEAD đã là bản mới (M-17), không cần commit hunk sidebar; bản working copy là bản cũ của phiên khác.

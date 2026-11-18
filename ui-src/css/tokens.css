@@ -65,6 +65,10 @@
     scroll-padding-bottom: calc(var(--pc-bottomnav-h) + 8px);
   }
   :focus-visible { outline: 2px solid var(--pc-color-brand-primary); outline-offset: 2px; }
+  /* 18/11/2026 (BA duyệt): bản build không có preflight ⇒ `border-solid` + chỉ 1 cạnh (border-b, divide-y…) làm các cạnh còn lại
+     ra viền 3px (medium). :where() độ ưu tiên 0: mọi `border`, `border-t`… và CSS cũ vẫn thắng, chỉ cạnh chưa khai báo về 0. */
+  :where(.border-solid, .border-dashed, .border-dotted) { border-width: 0; }
+  :where(.divide-solid, .divide-dashed, .divide-dotted) > :where(*) { border-width: 0; }
   /* N02 (24/10/2026): :where() — độ ưu tiên 0 để CSS cũ (`a { text-decoration: none }`, menu, breadcrumb) vẫn thắng
      trong giai đoạn chuyển; link trong đoạn văn thư viện / sau đợt 12 (xoá CSS cũ) vẫn gạch chân + màu brand.
      `a { text-underline-offset: 3px }` toàn cục hoãn tới đợt 12 (D09) — CSS cũ không đặt offset nên quy tắc này dời gạch
