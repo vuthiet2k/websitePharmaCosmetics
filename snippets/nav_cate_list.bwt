@@ -10,9 +10,25 @@
 			{%- comment -%} N16 (24/10/2026): bỏ link về trang chủ khỏi cây danh mục — drawer ☰ đã có TRANG CHỦ của menu chính (#nav), đây không phải danh mục sản phẩm.
 			  Utility py-3/pl-2.5/pr-12 (+ lg:p-0) thay padding 4px cũ của drawer (đã xoá ở global_core) ⇒ mục cao ≥ 44px (B.7); desktop giữ quy tắc cũ. {%- endcomment -%}
 			{%- unless link.url == '/' -%}
-			{%- if linklists[link.alias] -%}
+			{%- assign _has_sublinks = false -%}
+			{%- if linklists[link.alias] and linklists[link.alias].links.size > 0 -%}
+				{%- assign _has_sublinks = true -%}
+			{%- endif -%}
+			{%- assign _target_col = link.object -%}
+			{%- assign _col_handle = link.alias -%}
+			{%- if _col_handle == blank and link.url contains '/collections/' -%}
+				{%- assign _col_handle = link.url | split: '/collections/' | last | split: '?' | first | split: '/' | first -%}
+			{%- elsif _col_handle == blank and link.url contains '/' -%}
+				{%- assign _col_handle = link.url | split: '?' | first | split: '/' | last -%}
+			{%- endif -%}
+			{%- if _col_handle != blank and collections[_col_handle] != blank -%}
+				{%- if _target_col == blank or _target_col.products.size == 0 -%}
+					{%- assign _target_col = collections[_col_handle] -%}
+				{%- endif -%}
+			{%- endif -%}
+			{%- if _has_sublinks -%}
 			<li class="sudes-main-cate-has-child menu-item-count max-[991px]:border-0 max-[991px]:border-b max-[991px]:border-solid max-[991px]:border-line-soft {%if link.active%}active{%endif%}">
-				<a {%if  linklists[link.alias].links.size > 0%}href="javascript:void(0)"{%else%}href="{{link.url}}"{%endif%} title="{{ link.title }}" class="py-0 pl-2.5 pr-12 lg:p-0 max-[991px]:text-sm max-[991px]:font-semibold max-[991px]:normal-case max-[991px]:leading-snug max-[991px]:text-ink max-[991px]:flex max-[991px]:min-h-[44px] max-[991px]:items-center ">
+				<a href="javascript:void(0)" title="{{ link.title }}" class="py-0 pl-2.5 pr-12 lg:p-0 max-[991px]:text-sm max-[991px]:font-semibold max-[991px]:normal-case max-[991px]:leading-snug max-[991px]:text-ink max-[991px]:flex max-[991px]:min-h-[44px] max-[991px]:items-center ">
 					{{ link.title }}<i class="icon_mask"></i>
 			</a>
 				{%- comment -%} N18 (24/10/2026): icon ≡ = SVG ui_icon 20px (thay ảnh nền ::before 10px đã xoá ở global_core) — WebKit không vẽ kịp ::before khi giảm chuyển động;
@@ -20,24 +36,22 @@
 				<i class="open_mnu down_icon h-12 w-12 transition-transform duration-200 motion-reduce:transition-none lg:hidden [&.current]:rotate-180">{% include 'ui_icon', name: 'chevron-down', sprite: 'use' %}</i>
 				<ul class="menu-child sub-menu sudes-sub-mega-menu">
 					{%- for childlink in linklists[link.alias].links -%}
-					{%- if linklists[childlink.alias] -%}
+					{%- if linklists[childlink.alias] and linklists[childlink.alias].links.size > 0 -%}
 					<li class="sudes-main-cate-has-child-2 clearfix">
 						<a class="image_thumb gap-3 py-3 pl-2.5 pr-12 lg:gap-0 lg:p-0" href="{{ childlink.url }}" title="{{ childlink.title }}">
 						<div class="image">
 						{%- if childlink.object.image.src != blank -%}<img class="image1" src="{{ childlink.object.image.src | img_url: 'large'}}" alt="{{ childlink.title }}" width="120" height="120" loading="lazy" decoding="async">{%- else -%}<span class="pc-mm-noimg lg:min-h-16" aria-hidden="true"><i class="inline-block leading-none">{% include 'ui_icon', name: 'layers', size: 'em', sprite: 'use' %}</i></span>{%- endif -%}
 											</div>
 						<span class="line-clamp line-clamp-2">{{ childlink.title }} </span> <i class="icon_mask"></i></a>
-						{%- comment -%} N16 (24/10/2026): icon ≡ chỉ khi menu con có link — linklists[x] của menu rỗng vẫn TRUE ⇒ icon thừa ở mục không có con.
-						  Giữ nguyên li/ul như cũ để mega-menu desktop không đổi cỡ ô. {%- endcomment -%}
-						{%- if linklists[childlink.alias].links.size > 0 -%}<i class="open_mnu down_icon h-12 w-12 lg:hidden">{% include 'ui_icon', name: 'menu', sprite: 'use' %}</i>{%- endif -%}
+						<i class="open_mnu down_icon h-12 w-12 lg:hidden">{% include 'ui_icon', name: 'menu', sprite: 'use' %}</i>
 						<ul class="menu-child menu-child-2 sub-menu clearfix">
 							{%- for childlink2 in linklists[childlink.alias].links -%}
 							<li>
 								<a href="{{ childlink2.url }}" title="{{ childlink2.title }}">{{ childlink2.title }}</a>
-			</li>
+							</li>
 							{%- endfor -%}
-			</ul>
-			</li>
+						</ul>
+					</li>
 					{%- else -%}
 					<li class="sudes-main-cate-has-child-2">
 						<a class="image_thumb gap-3 py-3 pl-2.5 pr-12 lg:gap-0 lg:p-0" href="{{ childlink.url }}" title="{{ childlink.title }}">
@@ -45,7 +59,7 @@
 						{%- if childlink.object.image.src != blank -%}<img class="image1" src="{{ childlink.object.image.src | img_url: 'large'}}" alt="{{ childlink.title }}" width="120" height="120" loading="lazy" decoding="async">{%- else -%}<span class="pc-mm-noimg lg:min-h-16" aria-hidden="true"><i class="inline-block leading-none">{% include 'ui_icon', name: 'layers', size: 'em', sprite: 'use' %}</i></span>{%- endif -%}
 											</div>
 						<span class="line-clamp line-clamp-2">{{ childlink.title }} </span></a>
-			</li>
+					</li>
 					{%- endif -%}
 					{%- endfor -%}
 					<li class="sudes-main-cate-has-child-2">
@@ -54,8 +68,56 @@
 						<img width="128" height="128" class="lazyload image1" src="{{ 'lazy.png' | asset_url}}"  data-src="{{ 'arrow-right.png' | asset_url}}" alt="Xem tất cả">
 											</div>
 						<span class="line-clamp line-clamp-2">XEM TẤT CẢ </span></a>
+					</li>
+				</ul>
 			</li>
-			</ul>
+			{%- elsif _target_col != blank and _target_col.products.size > 0 -%}
+			<li class="sudes-main-cate-has-child menu-item-count max-[991px]:border-0 max-[991px]:border-b max-[991px]:border-solid max-[991px]:border-line-soft {%if link.active%}active{%endif%}">
+				<a href="{{ link.url }}" title="{{ link.title }}" class="py-0 pl-2.5 pr-12 lg:p-0 max-[991px]:text-sm max-[991px]:font-semibold max-[991px]:normal-case max-[991px]:leading-snug max-[991px]:text-ink max-[991px]:flex max-[991px]:min-h-[44px] max-[991px]:items-center ">
+					{{ link.title }}<i class="icon_mask"></i>
+				</a>
+				<i class="open_mnu down_icon h-12 w-12 transition-transform duration-200 motion-reduce:transition-none lg:hidden [&.current]:rotate-180">{% include 'ui_icon', name: 'chevron-down', sprite: 'use' %}</i>
+				<ul class="menu-child sub-menu sudes-sub-mega-menu pc-menu-products-grid">
+					{%- for prod in _target_col.products limit: 7 -%}
+					{%- assign _prod_name = prod.name | default: prod.title -%}
+					<li class="sudes-main-cate-has-child-2 pc-mega-prod-item">
+						<a class="pc-mega-prod-card group" href="{{ prod.url }}" title="{{ _prod_name | escape }}">
+							<div class="pc-mega-prod-img-wrap">
+								{%- if prod.featured_image != blank -%}
+									<img class="pc-mega-prod-img" src="{{ prod.featured_image.src | img_url: 'medium' }}" alt="{{ prod.featured_image.alt | default: _prod_name | escape }}" width="140" height="140" loading="lazy" decoding="async">
+								{%- else -%}
+									<span class="pc-mm-noimg" aria-hidden="true"><i class="inline-block leading-none">{% include 'ui_icon', name: 'layers', size: 'em', sprite: 'use' %}</i></span>
+								{%- endif -%}
+								{%- if prod.compare_at_price > prod.price -%}
+									{%- assign discount = prod.compare_at_price | minus: prod.price | times: 100.0 | divided_by: prod.compare_at_price | round -%}
+									<span class="pc-mega-prod-badge">-{{ discount }}%</span>
+								{%- endif -%}
+							</div>
+							<div class="pc-mega-prod-info">
+								{%- if prod.vendor != blank -%}
+									<span class="pc-mega-prod-vendor">{{ prod.vendor | escape }}</span>
+								{%- endif -%}
+								<span class="pc-mega-prod-title">{{ _prod_name | escape }}</span>
+								<div class="pc-mega-prod-price-box">
+									<span class="pc-mega-prod-price">{{ prod.price | money }}</span>
+									{%- if prod.compare_at_price > prod.price -%}
+										<span class="pc-mega-prod-compare">{{ prod.compare_at_price | money }}</span>
+									{%- endif -%}
+								</div>
+							</div>
+						</a>
+					</li>
+					{%- endfor -%}
+					<li class="sudes-main-cate-has-child-2 pc-mega-prod-item pc-mega-viewall-item">
+						<a class="pc-mega-viewall-card group" href="{{ link.url }}" title="Xem tất cả {{ link.title | escape }}">
+							<div class="pc-mega-viewall-icon">
+								{% include 'ui_icon', name: 'chevron-right', sprite: 'use' %}
+							</div>
+							<span class="pc-mega-viewall-title">XEM TẤT CẢ</span>
+							<span class="pc-mega-viewall-sub">{{ link.title | escape }}{% if _target_col.all_products_count > 0 %} ({{ _target_col.all_products_count }}){% elsif _target_col.products.size > 0 %} ({{ _target_col.products.size }}){% endif %}</span>
+						</a>
+					</li>
+				</ul>
 			</li>
 			{%- else -%}
 			<li class="sudes-main-cate-has-child menu-item-count {%if link.active%}active{%endif%}">
