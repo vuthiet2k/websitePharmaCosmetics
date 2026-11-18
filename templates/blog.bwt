@@ -58,7 +58,7 @@
 					{%- comment -%} 13/11/2026 (chủ dự án): luôn hiện thanh phân trang; chỉ 1 trang ⇒ thanh tĩnh « 1 ». {%- endcomment -%}
 					<div class="pc-vblog__pagi">
 					{%- if paginate.pages > 1 -%}{% include 'paginate-pages' %}{%- else -%}
-					<nav class="nav_pagi w_100 mt-6 font-sans" aria-label="Phân trang"><ul class="pagination m-0 flex list-none flex-wrap items-center justify-center gap-2 p-0"><li class="page-item disabled"><span class="flex min-h-[44px] min-w-[44px] cursor-not-allowed items-center justify-center border border-solid border-line bg-white px-3 text-sm font-semibold text-ink-secondary opacity-40 rounded-xl" aria-hidden="true">{% include 'ui_icon', name: 'chevron-left', size: 16 %}</span></li><li class="active page-item disabled"><span class="flex min-h-[44px] min-w-[44px] items-center justify-center border border-solid border-primary bg-primary px-3 text-sm font-semibold text-white rounded-xl" aria-current="page">1</span></li><li class="page-item disabled"><span class="flex min-h-[44px] min-w-[44px] cursor-not-allowed items-center justify-center border border-solid border-line bg-white px-3 text-sm font-semibold text-ink-secondary opacity-40 rounded-xl" aria-hidden="true">{% include 'ui_icon', name: 'chevron-right', size: 16 %}</span></li></ul></nav>
+					<nav class="nav_pagi w_100 mt-6 font-sans" aria-label="Phân trang"><ul class="pagination m-0 flex list-none flex-wrap items-center justify-center gap-0 p-0 sm:gap-2"><li class="page-item disabled"><span class="flex min-h-[44px] min-w-[44px] cursor-not-allowed items-center justify-center border border-solid border-line bg-white px-3 text-sm font-semibold text-ink-secondary opacity-40 rounded-xl" aria-hidden="true">{% include 'ui_icon', name: 'chevron-left', size: 16 %}</span></li><li class="active page-item disabled"><span class="flex min-h-[44px] min-w-[44px] items-center justify-center border border-solid border-primary bg-primary px-3 text-sm font-semibold text-white rounded-xl" aria-current="page">1</span></li><li class="page-item disabled"><span class="flex min-h-[44px] min-w-[44px] cursor-not-allowed items-center justify-center border border-solid border-line bg-white px-3 text-sm font-semibold text-ink-secondary opacity-40 rounded-xl" aria-hidden="true">{% include 'ui_icon', name: 'chevron-right', size: 16 %}</span></li></ul></nav>
 					{%- endif -%}
 					</div>
 				{%- else -%}
@@ -70,7 +70,8 @@
 				{%- assign pc_nb_vcount = settings.video_hub_count | default: 4 | plus: 0 -%}
 				{%- if blogs[pc_nb_vblog].articles.size > 0 and pc_nb_vcount > 0 -%}
 				<section class="pc-nsec pc-vhub">
-					{%- include 'ui_section_head', title: (settings.video_hub_title | default: 'Video tư vấn' | escape), url: blogs[pc_nb_vblog].url, more_text: (settings.video_hub_more_label | default: 'Xem tất cả video' | escape), label: (settings.video_hub_more_label | default: 'Xem tất cả video' | escape), title_class: 'text-xl font-bold text-brand-deep', wrap_class: 'mb-4' -%}
+					{%- assign pc_vh_title = settings.video_hub_title | default: 'Video tư vấn' | escape -%}{%- assign pc_vh_more = settings.video_hub_more_label | default: 'Xem tất cả video' | escape -%}
+					{%- include 'ui_section_head', title: pc_vh_title, url: blogs[pc_nb_vblog].url, more_text: pc_vh_more, label: pc_vh_more, title_class: 'text-xl font-bold text-brand-deep', wrap_class: 'mb-4' -%}
 					<div class="pc-nvideo">
 						{%- assign pc_vc_layout = 'grid' -%}{%- assign pc_vc_heading = 'h3' -%}
 						{%- for pc_hub_item in blogs[pc_nb_vblog].articles limit: pc_nb_vcount -%}
