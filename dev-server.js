@@ -173,15 +173,19 @@ const engine = new Liquid({
 // ── Custom Liquid block tags (Sapo-specific, không có trong LiquidJS core) ──
 // paginate: tag đặc trưng của Sapo/Shopify — giới hạn số item/trang và cung cấp
 // đối tượng `paginate` (pages, current_page, parts...).
-// Trong dev preview, không phân trang thật — hiện toàn bộ dữ liệu mock (pages=1).
+// 18/11/2026: PHÂN TRANG THẬT như Sapo — {% paginate <mảng> by N %}: lấy mảng (search.results, collection.products, blog.articles...),
+// cắt đúng trang ?page=N, rồi GHI ĐÈ mảng đó trong scope bằng phần của trang (vòng for bên trong chỉ thấy N phần tử);
+// paginate.items = tổng thật, pages/parts có cửa sổ (… như Sapo). Trước đây tag này đổ TOÀN BỘ mảng (trang /search 1.600+ thẻ).
 class PaginateTag extends Tag {
   constructor(token, remainTokens, liquid, parser) {
     super(token, remainTokens, liquid);
     this.byExpr = null;
+    this.srcPath = null;
     try {
-      const byMatch = /\bby\s+(\S+(?:\.\S+)*)/.exec(token.args);
-      if (byMatch) {
-        const tok = new Tokenizer(byMatch[1], liquid.options);
+      const m = /^\s*(\S+)\s+by\s+(\S+(?:\.\S+)*)/.exec(token.args);
+      if (m) {
+        this.srcPath = m[1];
+        const tok = new Tokenizer(m[2], liquid.options);
         this.byExpr = tok.readValue();
       }
     } catch (_) { /* ignore — dùng pageSize mặc định 12 */ }
@@ -202,36 +206,45 @@ class PaginateTag extends Tag {
         pageSize = parseInt(String(val)) || 12;
       } catch (_) { /* giữ default */ }
     }
-    // Lấy context hiện tại để tính toán số trang phân trang thực tế
-    let totalItems = 23; // Mặc định collection.products_count
-    try {
-      const scope = ctx.getAll ? ctx.getAll() : ctx.environments;
-      if (scope && scope.collection && (scope.collection.products_count || (scope.collection.products && scope.collection.products.length))) {
-        totalItems = scope.collection.products_count || scope.collection.products.length;
-      }
-    } catch (_) {}
-
+    // Mảng nguồn theo đường dẫn (vd search.results / collection.products)
+    const path = this.srcPath ? this.srcPath.split('.') : [];
+    let arr = null;
+    try { arr = path.length ? ctx.get(path) : null; } catch (_) { arr = null; }
+    const isArr = Array.isArray(arr);
+    const totalItems = isArr ? arr.length : 0;
     const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-    const parts = [];
-    for (let i = 1; i <= totalPages; i++) {
-      parts.push({
-        title: String(i),
-        is_link: i !== 1,
-        url: `?page=${i}`
-      });
-    }
+    let cur = 1;
+    try { cur = parseInt(String(ctx.get(['__page']))) || 1; } catch (_) {}
+    cur = Math.min(Math.max(1, cur), totalPages);
 
-    ctx.push({
-      paginate: {
-        pages: totalPages,
-        current_page: 1,
-        page_size: pageSize,
-        items: totalItems,
-        previous: false,
-        next: totalPages > 1 ? { url: '?page=2' } : false,
-        parts: parts,
-      },
+    // Cửa sổ trang: 1 … cur-2..cur+2 … last
+    const shown = new Set([1, totalPages]);
+    for (let i = cur - 2; i <= cur + 2; i++) if (i >= 1 && i <= totalPages) shown.add(i);
+    const nums = Array.from(shown).sort((x, y) => x - y);
+    const parts = [];
+    nums.forEach((n, k) => {
+      if (k > 0 && n - nums[k - 1] > 1) parts.push({ title: '…', is_link: false, url: '' });
+      parts.push({ title: n, is_link: n !== cur, url: '?page=' + n });
     });
+
+    const pag = {
+      pages: totalPages,
+      current_page: cur,
+      page_size: pageSize,
+      items: totalItems,
+      previous: cur > 1 ? { url: '?page=' + (cur - 1), title: 'Trang trước', is_link: true } : false,
+      next: cur < totalPages ? { url: '?page=' + (cur + 1), title: 'Trang sau', is_link: true } : false,
+      parts,
+    };
+    const layer = { paginate: pag };
+    if (isArr && path.length >= 2) {
+      // ghi đè path[0].path[1]... = phần của trang, giữ nguyên các trường khác (results_count, products_count...)
+      const slice = arr.slice((cur - 1) * pageSize, cur * pageSize);
+      let parent = null;
+      try { parent = ctx.get([path[0]]); } catch (_) {}
+      if (parent && typeof parent === 'object') layer[path[0]] = Object.assign({}, parent, { [path[1]]: slice });
+    }
+    ctx.push(layer);
     yield this.liquid.renderer.renderTemplates(this.templates, ctx, emitter);
     ctx.pop();
   }
@@ -1315,6 +1328,8 @@ async function renderFullPage(tpl = 'index', queryParams = null, routeParams = {
     finalRouteParams.searchType = queryParams.get('type') || 'product';
   }
   const ctx = mockModule.getContext(tpl, finalRouteParams);
+  // 18/11/2026: số trang hiện tại cho tag paginate (?page=N)
+  ctx.__page = (queryParams && parseInt(queryParams.get('page'), 10)) || 1;
   // Alternate template `?view=<tên>` như Sapo thật: /<alias>?view=viewed → product.viewed.bwt.
   // Trước đây bị bỏ qua nên section "Sản phẩm đã xem" (snippets/section_product_viewed.bwt) nhận
   // về NGUYÊN trang (header + dev toolbar) và chèn vào swiper — lỗi preview local 2026-10-03.

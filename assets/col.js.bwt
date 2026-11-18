@@ -207,6 +207,14 @@ function doSearch(page) {
 
 	var url = filter.buildSearchUrl(settings);
 
+	/* 18/11/2026: trang /search — chưa chọn tiêu chí lọc thì buildSearchUrl trả "/search?q=" (mất từ khoá) ⇒ chuyển trang
+	   (page 2…) ra kết quả rỗng. Giữ từ khoá gốc (search.terms render ở .search_content) khi q rỗng. */
+	if (location.pathname.indexOf('/search') === 0) {
+		var kwEl = document.querySelector('.search_content');
+		var kw = kwEl ? kwEl.textContent.trim() : '';
+		if (kw && /[?&]q=(&|$)/.test(url)) url = url.replace(/([?&]q=)(&|$)/, '$1' + encodeURIComponent(kw) + '$2');
+	}
+
 	/* Price params — appended to AJAX URL as separate query params */
 	var priceQ = '';
 	var elMin = document.getElementById('afw-price-min');
