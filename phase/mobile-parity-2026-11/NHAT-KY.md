@@ -95,3 +95,6 @@ Mỗi dòng: ngày | người | việc | quyết định | lý do.
 
 ## 18/11/2026 — Sửa gốc viền 3px toàn cục
 - Thêm vào ui-src/css/tokens.css 2 rule :where() độ ưu tiên 0: `.border-solid/dashed/dotted` và con của `.divide-solid/dashed/dotted` về border-width 0; `border`, `border-t`…, CSS cũ vẫn thắng. Thay cho việc sửa lẻ 10 file. Đo computed border-width ở 390 và 1440 trên /, /collections/all, /search, /blogs, /cart, /products: chỉ còn border-2 có chủ ý. article.bwt ở HEAD đã là bản mới (M-17), không cần commit hunk sidebar; bản working copy là bản cũ của phiên khác.
+
+## 18/11/2026 — Rà nhanh 390px
+- Quét tự động 9 trang: không tràn ngang, 1 h1, viền dày chỉ còn viền 2px có chủ ý. Sửa: bậc chữ --fs-3xs/--fs-2xs lên 12px (hết chữ <12px ở /collections/all và /skin-health-beauty); footer logo, hotline, email min-h 44px. Chưa sửa: nút ngôn ngữ Tiếng Việt 36px và logo header 36px, nút Lấy mã/info 29px (đã có vùng chạm mở rộng bằng before:), link breadcrumb/CTA trong trang skin-health-beauty (sh-*) 22-27px, input mops-form 40px, link Chính sách 19px; chưa kiểm /products vì mock không tìm được URL.
