@@ -696,7 +696,9 @@
 					  bỏ Swiper: trên site thật khi JS chưa chạy, mỗi thẻ phình rộng hơn màn hình và trống ảnh (ảnh lỗi Android).
 					  Bề rộng thẻ do class quyết định (2 / 3 / 4 / 5 thẻ mỗi hàng), không phụ thuộc JS. {%- endcomment -%}
 					<section class="mt-8 min-w-0 lg:mt-12" aria-labelledby="pc-pdp-related-title">
-						{%- assign _pdp_rel_url = '/' | append: (productRelate | handleize) -%}
+						{%- comment -%} 18/11/2026: ngoặc đơn có bộ lọc (x | handleize) làm LiquidJS/DotLiquid báo 'invalid range syntax' ⇒ trang SP trắng; gán biến trước. {%- endcomment -%}
+						{%- assign _pdp_rel_h = productRelate | handleize -%}
+						{%- assign _pdp_rel_url = '/' | append: _pdp_rel_h -%}
 						{%- include 'ui_section_head', title: settings.product_same_cate_title, title_id: 'pc-pdp-related-title', url: _pdp_rel_url, label: settings.product_same_cate_title, more_text: 'Xem tất cả', title_class: 'text-xl font-bold text-ink lg:text-2xl', wrap_class: 'mb-4' -%}
 						<ul class="m-0 flex list-none snap-x snap-mandatory gap-3 overflow-x-auto p-0 pb-2 scrollbar-none lg:gap-4" tabindex="0" aria-label="{{ settings.product_same_cate_title | strip_html | escape }}">
 							{%- comment -%} 2026-10-10: bỏ SP đang xem và SP đã có ở "Có thể bạn thích" (trước đây lặp lại 2 lần). {%- endcomment -%}
