@@ -11,7 +11,7 @@
 {%- assign pc_cs_kind = kind | default: 'ingredient' -%}
 {%- assign pc_cs_cols = cols | default: 'lg:grid-cols-8' -%}
 <div class="swiper-container overflow-hidden" data-pc-slider data-gap="12" data-desktop-off>
-  <div class="swiper-wrapper lg:grid {{ pc_cs_cols }} lg:gap-3">
+  <div class="swiper-wrapper lg:!grid {{ pc_cs_cols }} lg:gap-3">
     {%- for link in links limit: pc_cs_limit -%}
       {%- assign pc_cs_idx = forloop.index0 | modulo: 2 -%}
       {%- if pc_cs_idx == 0 -%}<div class="swiper-slide flex !h-auto !w-28 flex-col gap-3 lg:contents">{%- endif -%}
@@ -26,7 +26,7 @@
         {%- if pc_cs_has_logo -%}
           {%- if settings[pc_cs_logo_key] != blank -%}<img class="max-lg:hidden h-auto max-h-10 w-auto max-w-full object-contain lg:block" src="{{ settings[pc_cs_logo_key] | img_url: 'medium' }}" alt="{{ link.title | escape }}" width="160" height="48" loading="lazy">{%- endif -%}
         {%- endif -%}
-        <span class="{% if pc_cs_kind == 'brand' %}w-full line-clamp-2{% else %}line-clamp-2{% endif %} text-xs font-bold leading-snug text-brand-deep lg:text-sm{% if pc_cs_kind == 'brand' %} lg:uppercase{% endif %}">{{ link.title | escape }}</span>
+        <span class="{% if pc_cs_kind == 'brand' %}w-full line-clamp-2{% else %}line-clamp-2 lg:line-clamp-none{% endif %} text-xs font-bold leading-snug text-brand-deep lg:text-sm{% if pc_cs_kind == 'brand' %} lg:uppercase{% endif %}">{{ link.title | escape }}</span>
         {%- if pc_cs_kind != 'brand' and link.object.products_count > 0 -%}<span class="text-xs font-semibold text-ink-muted lg:mt-1">{{ link.object.products_count }} SP</span>{%- endif -%}
       </a>
       {%- if pc_cs_idx == 1 or forloop.last -%}</div>{%- endif -%}
