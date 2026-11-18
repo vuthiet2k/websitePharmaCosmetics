@@ -24,7 +24,7 @@
 {%- assign pc_nb_page = settings.delivery_alert_page_url | default: '/canh-bao-lua-dao' -%}
 <aside class="absolute left-4 top-1/2 z-10 box-border flex w-1/2 -translate-y-1/2 items-start gap-1 rounded-2xl py-1 pl-4 pr-0 font-sans text-white opacity-0 transition-opacity duration-300 motion-reduce:transition-none" id="pc-notice-hero" aria-label="{{ settings.delivery_alert_aria | default: 'Cảnh báo an toàn khi nhận hàng' | escape }}" data-days="{{ pc_nb_days }}" data-key="delivery-{{ pc_nb_key }}">
   <span class="pointer-events-none absolute inset-0 rounded-2xl bg-sale opacity-80" aria-hidden="true"></span>
-  <a class="relative block min-h-[44px] flex-1 py-2 text-xs leading-relaxed text-white no-underline transition-colors hover:text-sale-tint md:text-sm" href="{{ pc_nb_page | escape }}"><strong class="font-bold">{{ pc_nb_title | escape }}</strong> {{ pc_nb_text | escape }} <span class="whitespace-nowrap font-semibold underline underline-offset-2">{{ pc_nb_more | escape }}</span></a>
+  <a class="relative block min-h-[44px] flex-1 py-2 text-xs leading-relaxed text-white no-underline transition-colors hover:text-sale-tint md:text-sm" href="{{ pc_nb_page | escape }}"><span class="line-clamp-3"><strong class="font-bold">{{ pc_nb_title | escape }}</strong> {{ pc_nb_text | escape }} <span class="whitespace-nowrap font-semibold underline underline-offset-2 max-md:hidden">{{ pc_nb_more | escape }}</span></span></a>
   <button type="button" class="relative m-0 inline-flex min-h-[44px] min-w-[44px] shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-white hover:opacity-80" data-pc-notice-close aria-label="{{ settings.delivery_alert_close_label | default: 'Đóng cảnh báo' | escape }}">{% include 'ui_icon', name: 'x', size: 20, label: '' %}</button>
 </aside>
 <script>
@@ -33,7 +33,7 @@
   var days = Number(el.getAttribute('data-days')) || 0, key = 'pc_notice_' + el.getAttribute('data-key'), store = null;
   try { store = days > 0 ? window.localStorage : window.sessionStorage; } catch (e) {}
   try { var at = store && Number(store.getItem(key)); if (at && (days <= 0 || Date.now() - at < days * 864e5)) { el.hidden = true; el.classList.add('!hidden'); } } catch (e) {}
-  /* 18/11/2026 (PO): vị trí/độ rộng bằng class Tailwind (PO chốt: rộng w-1/2 ở MỌI màn, góc TRÁI hero (left-4), chỉ căn giữa DỌC: top-1/2 -translate-y-1/2; nền đỏ mờ là lớp phụ bg-sale opacity-80 vì bg-sale/85 không sinh được với màu var()) — không còn style inline do JS đặt ⇒ không nhảy layout (M-28); chỉ còn fade-in sau khi trang vẽ xong. */
+  /* 18/11/2026 (PO): vị trí/độ rộng bằng class Tailwind (PO chốt: rộng w-1/2 ở MỌI màn, góc TRÁI hero (left-4), chỉ căn giữa DỌC: top-1/2 -translate-y-1/2; chữ tối đa 3 dòng (line-clamp-3, cả thanh vẫn là link tới trang đầy đủ); nền đỏ mờ là lớp phụ bg-sale opacity-80 vì bg-sale/85 không sinh được với màu var()) — không còn style inline do JS đặt ⇒ không nhảy layout (M-28); chỉ còn fade-in sau khi trang vẽ xong. */
   function show() { el.classList.remove('opacity-0'); }
   if (document.readyState === 'complete') show(); else { window.addEventListener('load', show); setTimeout(show, 800); }
   var btn = el.querySelector('[data-pc-notice-close]');
