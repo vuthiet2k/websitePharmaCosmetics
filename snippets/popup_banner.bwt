@@ -1,7 +1,7 @@
 {%- comment -%}
   popup_banner.bwt — popup banner trang chủ (cảnh báo lừa đảo giao hàng...). M-07 (17/11/2026): viết lại 100% Tailwind (bỏ CSS #modal-banner trong header_style, bỏ jQuery .show()/.hide()):
   hiện / ẩn có hiệu ứng FADE bằng class (transition-opacity + opacity-0 ⇄ opacity-100; motion-reduce:transition-none và JS bỏ chờ khi người dùng giảm chuyển động),
-  khoá cuộn nền khi mở (body overflow-hidden), Escape đóng, nút đóng 44px, ô "Không hiển thị hôm nay" (lưu theo ngày, localStorage) cao 44px, ảnh vừa khít màn hình.
+  khoá cuộn nền khi mở (body overflow-hidden), Escape đóng, nút đóng 44px, ô "Không hiển thị hôm nay" (lưu theo ngày, localStorage) dùng component thư viện .pc-check/.pc-check__box (18/11/2026: tự đặt class Tailwind bị CSS cũ input[type=checkbox]{opacity:0;position:absolute} và label{display:inline-block} (có cờ ưu tiên) đè ⇒ không thấy ô tích), đặt trong thanh trắng dưới ảnh, ảnh vừa khít màn hình.
   Ảnh = settings.popup_banner_image (Cấu hình theme › popup), chỉ tải sau khi hết thời gian chờ (template script). Chưa có ảnh / chưa bật ⇒ footer_script không nạp snippet này.
 {%- endcomment -%}
 <div id="modal-banner" class="fixed inset-0 z-[9999] hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300 motion-reduce:transition-none" data-delay="{{ settings.popup_banner_delay_time }}" role="dialog" aria-modal="true" aria-label="{{ settings.popup_banner_alt | default: 'Thông báo' | escape }}" tabindex="-1">
@@ -13,8 +13,8 @@
 			</script>
 		</a>
 		<button type="button" class="modalbanner-close absolute right-2 top-2 inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-0 bg-white p-0 text-ink hover:bg-brand-tint" aria-label="Đóng" data-popup-close>{% include 'ui_icon', name: 'x', size: 24 %}</button>
-		<label class="mt-2 flex min-h-[44px] cursor-pointer items-center justify-center gap-2 text-sm font-semibold text-white" for="check-close-banner">
-			<input type="checkbox" id="check-close-banner" class="h-5 w-5 shrink-0 cursor-pointer accent-primary">
+		<label class="pc-check mt-2 w-full cursor-pointer justify-center rounded-2xl bg-white px-3 font-semibold" for="check-close-banner">
+			<input type="checkbox" id="check-close-banner" class="pc-check__box">
 			<span>Không hiển thị hôm nay</span>
 		</label>
 	</div>
