@@ -144,3 +144,9 @@ Chưa sửa: nút chat "Hỗ trợ" nổi đè lên thẻ SP/blog khi cuộn (wi
 
 ## 18/11/2026 — Bộ +/- số lượng giỏ gọn 1 hàng
 - Gốc vỡ: rule vendor `.cart-mobile .cart_body .grid .cart_item_name{width:50%}` + display table-cell của .input-group-btn + min-w 44 làm nút + rớt dòng. Sửa: wrapper .ajaxcart__qty = flex flex-nowrap w-fit overflow-hidden rounded-lg border bg-white; nút 44x44 nền trong suốt; ô số 40x44 viền hai bên; cột số lượng/giá bỏ one-half (w-auto), lưới flex-wrap để giá xuống dòng khi hẹp; sửa 3 rule legacy .cart-page .cart-item-qty .ajaxcart__qty (wrapper, nút, input). Đo 320/375/390/430/1440: khối 130x46, 1 hàng [44|40|44], không tràn ngang.
+
+## 18/11/2026 — Tester độc lập (kiểm bằng mắt 360/390/1440)
+- Đã xem ảnh: SP MEDIK8 + Neo-Maxx (390), giỏ + mã giảm giá (390), trang chủ cuộn + SP Peptide (1440), đặt lịch + /blogs/bi-quyet (360); không tràn ngang ở các trang đo.
+- ĐÃ SỬA (1): nhãn tab «Soi da & Dịch vụ» ở thanh điều hướng dưới rớt 2 dòng, lệch hàng icon với tab khác ⇒ đổi `mobile_nav_blog_label` = «Soi da» (settings_data.json).
+- CHƯA SỬA: (a) nút chat giữa mép phải đè dòng «Tổng thanh toán» ở giỏ 390 (vị trí PO đã chốt, giữ); (b) /checkout?discount=… 404 ở dev (mock không có checkout, Sapo thật có); (c) tag «noibat» không dấu + tiêu đề bài lặp phụ đề ở thẻ blog = dữ liệu; (d) ảnh SP trong giỏ dev trống = placeholder mock; (e) chưa kiểm: 768/1024/1920, mega menu, phân trang search, gửi form đặt lịch (đã có người kiểm ở đợt trước).
+- Nguồn `/[object Object]` đã được FE-4 đợt 4 truy ra (mock cart.js trả image là object); không thấy request lạ phát sinh thêm ở các trang đã đi.
