@@ -1105,6 +1105,9 @@ function resolvePrettyPath(pathname, searchParams) {
   if (parts.length === 2 && parts[0] === 'pages' && PAGE_HANDLE_MAP[parts[1]]) {
     return { tpl: PAGE_HANDLE_MAP[parts[1]], routeParams: {} };
   }
+  if (parts.length === 2 && parts[0] === 'pages' && mockModule.realPages && mockModule.realPages[parts[1]]) {
+    return { tpl: 'page', routeParams: { pageHandle: parts[1] } };
+  }
 
   // /blogs/:blogHandle và /blogs/:blogHandle/:articleHandle
   // 2026-10-12: Sapo cho chọn giao diện riêng từng blog/bài (blog.video, article.video) — mock khai báo bằng
@@ -1148,6 +1151,8 @@ function resolvePrettyPath(pathname, searchParams) {
   if (parts.length === 1) {
     const slug = parts[0];
     if (PAGE_HANDLE_MAP[slug]) return { tpl: PAGE_HANDLE_MAP[slug], routeParams: {} };
+    // 2026-11-18: Trang nội dung thật trong data/pages-data.json chưa có template riêng ⇒ dùng templates/page.bwt (như Sapo).
+    if (mockModule.realPages && mockModule.realPages[slug]) return { tpl: 'page', routeParams: { pageHandle: slug } };
     if (mockModule.byAlias[slug]) return { tpl: productTpl(slug), routeParams: { productAlias: slug } };
     if (mockModule.collectionsData[slug]) return { tpl: 'collection', routeParams: { collectionHandle: slug } };
     if (getKnownNavSlugs().has(slug)) return { tpl: 'collection', routeParams: { collectionHandle: slug } };

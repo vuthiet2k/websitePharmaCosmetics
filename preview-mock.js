@@ -398,10 +398,11 @@ function getContext(templateName = 'index', routeParams = {}) {
   const SAPO_PAGE_HANDLE = {
     'page.clinical-proof': 'truoc-sau-cham-soc-da-tu-xa',
   };
-  const pageHandle = SAPO_PAGE_HANDLE[templateName] || templateName.replace(/^page\.?/, '');
+  const pageHandle = routeParams.pageHandle || SAPO_PAGE_HANDLE[templateName] || templateName.replace(/^page\.?/, '');
   const currentPage = (templateName === 'page' || templateName.startsWith('page.'))
     ? {
-        name:    PAGE_NAMES[templateName] || templateName,
+        name:    (routeParams.pageHandle && (pages[pageHandle] || {}).title) || PAGE_NAMES[templateName] || templateName,
+        title:   (pages[pageHandle] || {}).title || PAGE_NAMES[templateName] || '',
         content: (pages[pageHandle] || {}).content || '',
         alias:   pageHandle || 'page',
         url:     '/' + (pageHandle || ''),
@@ -527,4 +528,4 @@ function getContext(templateName = 'index', routeParams = {}) {
 // byAlias/collectionsData/blogsObj — export thêm để dev-server.js (resolvePrettyPath)
 // kiểm tra tồn tại 1 slug khi định tuyến URL đẹp (/:alias, /collections/:handle,
 // /blogs/:handle) mà không phải require lại từng file data/ riêng lẻ.
-module.exports = { getContext, settings, store, byAlias, collectionsData, blogsObj, linklistsObj };
+module.exports = { getContext, settings, store, byAlias, collectionsData, blogsObj, linklistsObj, realPages: pages };
