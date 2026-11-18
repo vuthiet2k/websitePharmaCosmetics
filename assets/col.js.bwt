@@ -156,7 +156,7 @@ var CollectionFilter = (function () {
 		var $chips = $('#afw-active-chips');
 		if (!$bar.length || !$chips.length) return;
 
-		if (!filters.length) { $bar.attr('hidden', 'hidden'); return; }
+		if (!filters.length) { $bar.attr('hidden', 'hidden'); $chips.empty(); if (typeof countFilterItem === 'function') countFilterItem(); return; }
 
 		/* Group by label, preserving insertion order */
 		var groups = {}, order = [];
@@ -185,6 +185,8 @@ var CollectionFilter = (function () {
 
 		$bar.removeAttr('hidden');
 		$('.afw-bar__count-num').text(filters.length);
+		/* 18/11/2026: badge số tiêu chí ở nút lọc mobile (thanh Đang lọc bị ẩn ở mobile) phải cập nhật ngay sau khi dựng chip, kể cả lúc nạp trang. */
+		if (typeof countFilterItem === 'function') countFilterItem();
 	}
 
 	return { parseQ: parseQ, renderBar: renderBar, removeFilter: removeFilter };
