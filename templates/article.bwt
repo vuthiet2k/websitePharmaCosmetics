@@ -159,11 +159,11 @@
 							{%- capture pc_art_tags -%}
 							{%- for tag in article.tags -%}
 							{%- unless tag contains ':' or tag contains 'duocsi_' or tag contains 'video' -%}
-							<a class="pc-art-tag" href="/blogs/all/tagged/(({{ tag | replace: ' ', '%20' }}))" title="{{ tag }}">{{ tag }}</a>
+							<a class="pc-art-tag inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap rounded-full bg-brand-tint px-3 text-sm font-medium text-brand-deep no-underline hover:bg-primary hover:text-white" href="/blogs/all/tagged/(({{ tag | replace: ' ', '%20' }}))" title="{{ tag }}">{{ tag }}</a>
 							{%- endunless -%}
 							{%- endfor -%}
 							{%- endcapture -%}
-							{%- if pc_art_tags != blank -%}<div class="pc-art-tags">{{ pc_art_tags }}</div>{%- endif -%}
+							{%- if pc_art_tags != blank -%}<div class="pc-art-tags -mx-1 mt-3 flex flex-nowrap gap-2 overflow-x-auto px-1 lg:flex-wrap lg:overflow-visible">{{ pc_art_tags }}</div>{%- endif -%}
 							{%- endif -%}
 							{%if settings.article_social_enable%}
 							<div class="social-sharing">
@@ -262,9 +262,19 @@
 							{%endif%}
 							{%- comment -%} 2026-10-12: bài gắn tag youtube:/facebook: ⇒ khối video (chính + bổ trợ) trước nội dung. {%- endcomment -%}
 							{% include 'article_video_block' %}
+							{%- comment -%} 2026-11-18: mỗi trang 1 <h1> (h1 duy nhất = tiêu đề đầu thẻ); h1 trong thân bài hạ xuống h2 và bỏ heading đầu nếu trùng tiêu đề bài. {%- endcomment -%}
+							{%- assign pc_art_c = article.content | replace: '<h1', '<h2' | replace: '</h1>', '</h2>' -%}
+							{%- assign pc_art_parts = pc_art_c | split: '</h2>' -%}
+							{%- assign pc_art_first = pc_art_parts[0] -%}
+							{%- if pc_art_parts.size > 1 and pc_art_first contains '<h2' -%}
+							{%- assign pc_art_pre = pc_art_first | split: '<h2' | first | strip_html | strip -%}
+							{%- assign pc_art_ht = pc_art_first | strip_html | strip | downcase -%}
+							{%- assign pc_art_tt = article.title | strip_html | strip | downcase -%}
+							{%- if pc_art_pre == blank and pc_art_ht == pc_art_tt -%}{%- assign pc_art_c = pc_art_c | remove_first: pc_art_first | remove_first: '</h2>' -%}{%- endif -%}
+							{%- endif -%}
 							<div class="rte article-content-main">
 								{%if article.content.size > 0%}
-								{% include 'shortcode' load: article.content %}
+								{% include 'shortcode' load: pc_art_c %}
 								{%else%}
 								<div class="alert alert-success alert-dismissible fade show" role="alert">
 									Nội dung bài viết đang cập nhật.	
