@@ -12,29 +12,11 @@
 	{%- assign relate_url = relate_b.url -%}
 	{%- if relate_url == blank -%}{%- assign relate_url = '/blogs/' | append: relate_handle -%}{%- endif -%}
 	<div class="blog_noibat">
-		<h2 class="h2_sidebar_blog">
-			<a href="{{ relate_url }}" title="{{ settings.news_relate | default: 'Tin nổi bật' | escape }}">{{ settings.news_relate | default: 'Tin nổi bật' | escape }}</a>
-		</h2>
+		{%- include 'ui_section_head', title: (settings.news_relate | default: 'Tin nổi bật' | escape), url: relate_url, label: 'Xem tất cả tin nổi bật', title_class: 'text-base font-bold text-brand-deep', wrap_class: 'mb-2' -%}
 		{%- if relate_b.articles.size > 0 -%}
-		<div class="blog_content">
+		<div class="blog_content flex flex-col">
 			{%- for article in relate_b.articles limit: relate_count -%}
-			<div class="item clearfix">
-				<div class="post-thumb">
-					<a class="image-blog" href="{{ article.url }}" title="{{ article.title | escape }}">
-						{%- if article.image != null and article.image.src != blank -%}
-						<img width="100" height="63" class="img_blog" src="{{ article.image.src | img_url: 'compact' }}" alt="{{ article.title | escape }}" loading="lazy">
-						{%- else -%}
-						<img width="100" height="63" class="img_blog" src="{% include 'placeholder_img_url' %}" alt="{{ article.title | escape }}" loading="lazy">
-						{%- endif -%}
-					</a>
-				</div>
-				<div class="contentright">
-					<h3><a title="{{ article.title | escape }}" href="{{ article.url }}">{{ article.title | escape }}</a></h3>
-					<p class="time-post">
-						<span>{{ article.published_on | date: 'dd/MM/yyyy' }}</span>
-					</p>
-				</div>
-			</div>
+				{%- include 'pc_article_card', article: article, pc_card_row: true -%}
 			{%- endfor -%}
 		</div>
 		{%- else -%}

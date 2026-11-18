@@ -77,7 +77,7 @@
 			{%- comment -%} M-13 (17/11/2026): không viền, card nhỏ trượt ngang bằng Swiper (mobile), lưới 4 cột từ lg. Bài do JS nạp từ search API (chỉ có name/url/image,
 			  không có object article) ⇒ dựng từ <template> bên dưới; ảnh giả placehold.co / không ảnh thì bỏ khung ảnh. {%- endcomment -%}
 			<div class="mt-8" id="pc-search-articles-wrap" hidden>
-				<h2 class="m-0 mb-3 text-base font-bold text-brand-deep lg:text-lg">Bài viết &amp; Tin tức liên quan</h2>
+				{%- include 'ui_section_head', title: 'Bài viết &amp; Tin tức liên quan', title_html: 'Bài viết &amp; Tin tức liên quan', title_class: 'text-base font-bold text-brand-deep lg:text-lg', wrap_class: 'mb-3' -%}
 				<div class="swiper-container overflow-hidden" data-pc-slider data-gap="12" data-desktop-off>
 					<div class="swiper-wrapper lg:grid lg:grid-cols-4 lg:gap-4" id="pc-search-articles-list"></div>
 				</div>
@@ -97,9 +97,9 @@
 		{% else %}
 		{%- comment -%} M-33 (18/11/2026): chưa nhập từ khoá — viết lại bằng token (bỏ class màu/bóng ngoài config: gray-*, forest-*, clinical-*, shadow, font-heading; bỏ input-group/icon-fallback-text). Gợi ý như M-31. {%- endcomment -%}
 		<h1 class="m-0 pb-3 text-xl font-bold normal-case text-brand-deep">Nhập từ khóa để tìm kiếm</h1>
-		<form action="/search" method="get" class="relative mb-4" role="search">
-			<input type="search" name="query" value="{{ search.terms | escape }}" autocomplete="off" placeholder="Tìm sản phẩm, thương hiệu..." aria-label="Tìm kiếm" class="appearance-none min-h-[44px] w-full rounded-xl border border-solid border-line bg-surface-card text-base text-ink outline-none focus:border-primary">
-			<button type="submit" class="absolute right-1 top-1 inline-flex h-9 cursor-pointer items-center gap-1 rounded-xl border-0 bg-btn px-3 text-sm font-bold text-btn-text transition-colors hover:bg-btn-hover" aria-label="Tìm kiếm">{% include 'ui_icon', name: 'search', size: 20 %}Tìm</button>
+		<form action="/search" method="get" class="relative mb-4 flex items-center" role="search">
+			<input type="search" name="query" value="{{ search.terms | escape }}" autocomplete="off" placeholder="Tìm sản phẩm, thương hiệu..." aria-label="Tìm kiếm" class="appearance-none min-h-[48px] h-12 w-full rounded-xl border border-solid border-line bg-surface-card pl-4 pr-24 text-base text-ink outline-none focus:border-primary">
+			<button type="submit" class="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex min-h-[44px] cursor-pointer items-center justify-center gap-1.5 rounded-xl border-0 bg-btn px-4 text-sm font-bold text-btn-text transition-colors hover:bg-btn-hover" aria-label="Tìm kiếm">{% include 'ui_icon', name: 'search', size: 20 %}Tìm</button>
 		</form>
 		{%- assign empty_type = 'none' -%}{%- include 'search_empty_state' -%}
 		{% endif %}

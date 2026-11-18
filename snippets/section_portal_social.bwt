@@ -1,7 +1,23 @@
-<section class="social"><div class="wrap">
-  <div class="social-top"><div><p class="eyebrow">{{ settings.portal_social_eyebrow | default: 'Theo dõi hành trình mỗi ngày' | escape }}</p><h2>{{ settings.store_name | default: store.name | escape }}</h2><p class="bio">{{ settings.portal_social_desc | escape }}</p></div><a class="btn btn-w" href="{{ settings.portal_booking_url | default: settings.home_hero_btn1_url | default: '/dat-lich-tu-van' | escape }}">{{ settings.portal_booking_text | default: 'Đặt lịch tư vấn' | escape }} <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-right', size: 'em' %}</i></a></div>
-  <div class="chan">
-    {% assign channels = 'fb,insta,tiktok,youtube' | split: ',' %}{% assign labels = 'Facebook,Instagram,TikTok,YouTube' | split: ',' %}
-    {% for channel in channels %}{% capture key %}footer_social_{{ channel }}{% endcapture %}{% if settings[key] != blank %}<a href="{{ settings[key] | escape }}" target="_blank" rel="noopener noreferrer"><div><b>{{ labels[forloop.index0] }}</b><small>Theo dõi chúng tôi <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'forward', size: 'em' %}</i></small></div></a>{% endif %}{% endfor %}
+{%- comment -%}
+  section_portal_social.bwt — Mạng xã hội & kênh theo dõi.
+  100% Tailwind utility class trực tiếp trên thẻ ngữ nghĩa, không dùng class CSS tự sinh.
+{%- endcomment -%}
+{%- assign pc_soc_eyebrow = settings.portal_social_eyebrow | default: 'Theo dõi hành trình mỗi ngày' | escape -%}
+{%- assign pc_soc_title = settings.store_name | default: store.name | escape -%}
+{%- assign pc_soc_desc = settings.portal_social_desc | escape -%}
+{%- assign pc_soc_btn_url = settings.portal_booking_url | default: settings.home_hero_btn1_url | default: '/dat-lich-tu-van' | escape -%}
+{%- assign pc_soc_btn_text = settings.portal_booking_text | default: 'Đặt lịch tư vấn' | escape -%}
+<section class="bg-surface-soft py-10 lg:py-16 font-sans text-ink" aria-labelledby="section-social-title">
+  <div class="container">
+    {%- include 'ui_section_head', title: pc_soc_title, title_id: 'section-social-title', eyebrow: pc_soc_eyebrow, desc: pc_soc_desc, url: pc_soc_btn_url, more_text: pc_soc_btn_text, label: pc_soc_btn_text, wrap_class: 'mb-6 lg:mb-8' -%}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
+      {% assign channels = 'fb,insta,tiktok,youtube' | split: ',' %}{% assign labels = 'Facebook,Instagram,TikTok,YouTube' | split: ',' %}
+      {% for channel in channels %}{% capture key %}footer_social_{{ channel }}{% endcapture %}{% if settings[key] != blank %}
+      <a class="flex min-h-[44px] items-center justify-between rounded-2xl border border-solid border-line-soft bg-white p-4 text-ink no-underline hover:border-primary hover:text-primary transition-colors" href="{{ settings[key] | escape }}" target="_blank" rel="noopener noreferrer">
+        <span class="text-sm font-bold">{{ labels[forloop.index0] }}</span>
+        <span class="text-xs text-ink-muted">{% include 'ui_icon', name: 'arrow-right' %}</span>
+      </a>
+      {% endif %}{% endfor %}
+    </div>
   </div>
-</div></section>
+</section>
