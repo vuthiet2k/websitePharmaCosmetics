@@ -88,3 +88,7 @@ Mỗi dòng: ngày | người | việc | quyết định | lý do.
 
 ## 18/11/2026 — Đồng hồ Flash sale kiểu Shopee
 - Mỗi đơn vị giờ/phút/giây là ô bg-sale, chữ trắng, rounded, h-7 min-w-7, tabular-nums; dấu ":" text-sale. Số đổi thì gỡ/gắn lại `motion-safe:animate-tick` (keyframes `tick` mới trong tailwind.pc.config.js, trượt từ trên xuống 0.35s). Kiểm 390 và 1440: 1 dòng, ô 27x26, chữ 14px, không tràn ngang. Trình duyệt kiểm đang bật reduced-motion nên chưa quan sát được chuyển động, chỉ xác nhận class và CSS được sinh.
+
+## 18/11/2026 — Sidebar TIN LIÊN QUAN (article.bwt)
+- Gốc lỗi viền dày: bản build không có preflight, `border-solid` cho cạnh không đặt độ rộng sẽ ra 3px (medium). Thêm `border-x-0`/`border-t-0`/`border-b-0` ở các khối trong article.bwt. Chỉ 1 đường kẻ (divide-y), h3 normal-case tracking-normal, tiêu đề bọc span line-clamp-2 (class line-clamp-2 trên thẻ a bị rule cũ đè thành flow-root), bỏ thẻ tác giả. Emoji trong tiêu đề là dữ liệu; guardrails cấm ký tự emoji trong code nên không lọc bằng Liquid — cần DE sửa dữ liệu.
+- article.bwt đang có thay đổi chưa commit của phiên khác (lệch HEAD ~970 dòng) nên chưa commit file này.
