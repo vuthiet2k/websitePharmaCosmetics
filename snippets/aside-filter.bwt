@@ -237,6 +237,9 @@
 			btn.querySelector('.afw-more-label').textContent = h > 0 ? 'Xem thêm (' + h + ')' : 'Thu gọn';
 			btn.querySelector('.afw-more-ico-down').classList.toggle('hidden', h === 0);
 			btn.querySelector('.afw-more-ico-up').classList.toggle('hidden', h > 0);
+			/* Mở rộng hết ⇒ vùng danh sách cuộn trong (không kéo dài sidebar) */
+			list.classList.toggle('max-h-64', h === 0);
+			list.classList.toggle('overflow-y-auto', h === 0);
 		}
 		btn.addEventListener('click', function () {
 			if (items.some(isHidden)) items.forEach(function (i) { i.classList.remove('hidden'); });
@@ -281,6 +284,7 @@
 				if (show) matched++;
 			});
 			noResults.classList.toggle('hidden', matched !== 0);
+			list.classList.add('max-h-64', 'overflow-y-auto');
 		});
 
 		/* Khi checkbox được check từ JS (restore-from-URL): un-hide item */
@@ -310,6 +314,13 @@
 			document.querySelectorAll('.filter-group').forEach(function (group) {
 				initCheckboxGroup(group);
 				initPillGroup(group);
+			});
+			/* Mặc định chỉ mở nhóm đầu; nhóm có mục đang chọn vẫn mở. */
+			document.querySelectorAll('.filter-group').forEach(function (group, idx) {
+				if (idx === 0) return;
+				if (group.querySelector('input:checked, .filter-pill-btn.active, .is-active')) return;
+				var tg = group.querySelector('.filter-group-toggle');
+				if (tg && tg.getAttribute('aria-expanded') === 'true') tg.click();
 			});
 		}, 0);
 	});
