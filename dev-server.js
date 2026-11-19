@@ -110,7 +110,7 @@ function preprocessBwt(content) {
   content = content.replace(/\{%-?\s*layout\s+(?:['"][^'"]*['"]|none)\s*-?%\}/g, '');
   // Sapo dùng {%elseif%} thay vì {% elsif %} chuẩn Liquid
   content = content.replace(/\{%-?\s*elseif\b/g, '{%- elsif');
-  return content.replace(/(\{%-?[\s\S]*?-?%\}|\{\{-?[\s\S]*?-?\}\})/g, (match) => {
+  return content.replace(/(\{%-[\s\S]*?-?%\}|\{\{-[\s\S]*?-?\}\})/g, (match) => {
     return match
       // JS-style logical operators → Liquid keywords
       .replace(/\|\|/g, ' or ')
@@ -692,6 +692,7 @@ function devCuratedGroups() {
       ['article.video', 'Video · Trang xem video',                      '/blogs/video/3-sai-lam-nghiem-trong-khi-dung-dau-tay-trang-khien-da-bi-mun'],
     ]},
     { label: 'Trang mới (Figma)', items: [
+      ['page.thuong-hieu',   'Tất cả thương hiệu (/thuong-hieu)'],
       ['page.chuyen-gia',    'Trang chuyên gia'],
       ['page.loyalty',       'Loyalty Rewards'],
       ['page.ai-skin-quiz',  'AI Skin Quiz'],
@@ -1017,6 +1018,8 @@ const PAGE_HANDLE_MAP = {
   'ai-skin-quiz-results':        'page.ai-skin-quiz-results',
   'kham-da-ai':                  'page.ai-skin-quiz', // alias tiếng Việt (T-113) — cùng 1 template, tránh 404 khi vào thẳng /kham-da-ai
   'soi-da':                      'page.ai-skin-quiz', // Soi da AI 2026-09-24: alias mở sẵn tab camera ở client.
+  'thuong-hieu':                 'page.thuong-hieu', // 19/11/2026: Trang nội dung Tất cả thương hiệu từ menu Sapo
+  'tat-ca-thuong-hieu':          'page.thuong-hieu',
   'chuyen-gia':                  'page.chuyen-gia',
   'chuyen-gia-detail':           'page.chuyen-gia-detail',
   // T-148 (2026-09-13): DEF-BK-02 — link "Chính sách bảo mật" ở form đặt lịch trỏ tới handle này
