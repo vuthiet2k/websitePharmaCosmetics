@@ -2,31 +2,28 @@
   templates/page.thuong-hieu.bwt (19/11/2026) — Trang nội dung hiển thị toàn bộ thương hiệu từ menu Sapo.
   Trên Sapo Admin: tạo Trang nội dung (ví dụ đường dẫn /thuong-hieu), chọn khung giao diện `page.thuong-hieu`.
   QUY ƯỚC: 100% class Tailwind (assets/pc-ui.css) — KHÔNG class CSS tự đặt, KHÔNG style="", KHÔNG <style>.
-  Dữ liệu lấy động từ menu thương hiệu của Sapo (`settings.all_brands_menu` | default: 'thuong-hieu') và object collection của từng thương hiệu.
+  Dữ liệu lấy động từ menu thương hiệu của Sapo (`linklists['thuong-hieu']` hoặc `linklists[settings.home_brand_menu]`).
 {%- endcomment -%}
-{%- assign pc_brands_menu_handle = settings.all_brands_menu | default: 'thuong-hieu' -%}
-{%- assign pc_brands_ll = linklists[pc_brands_menu_handle] -%}
+{%- assign pc_brands_ll = linklists['thuong-hieu'] -%}
 {%- if pc_brands_ll == blank or pc_brands_ll.links.size == 0 -%}
-  {%- assign pc_brands_ll = linklists['thuong-hieu'] -%}
+  {%- assign pc_brands_ll = linklists['tat-ca-thuong-hieu'] -%}
 {%- endif -%}
 {%- if pc_brands_ll == blank or pc_brands_ll.links.size == 0 -%}
   {%- assign pc_brands_ll = linklists[settings.home_brand_menu] -%}
 {%- endif -%}
 
-{%- assign pc_brands_eyebrow = settings.all_brands_eyebrow | default: settings.home_brand_lead | default: 'Nhập khẩu chính hãng' -%}
-{%- assign pc_brands_title = page.title | default: settings.all_brands_title | default: 'Tất cả thương hiệu' -%}
-{%- assign pc_brands_desc = settings.all_brands_subtitle | default: 'Danh sách toàn bộ các thương hiệu dược mỹ phẩm phân phối chính hãng tại Pharma Cosmetics.' -%}
-{%- assign pc_brands_search_ph = settings.all_brands_search_placeholder | default: 'Tìm kiếm tên thương hiệu...' -%}
+{%- assign pc_brands_eyebrow = settings.home_brand_lead | default: 'Nhập khẩu chính hãng' -%}
+{%- assign pc_brands_title = page.title | default: 'Tất cả thương hiệu' -%}
+{%- assign pc_brands_desc = settings.home_brand_subtitle | default: 'Danh sách toàn bộ các thương hiệu dược mỹ phẩm phân phối chính hãng tại Pharma Cosmetics.' -%}
 {%- assign pc_brands_usp_1 = settings.collection_hero_usp_1_title | default: '100% chính hãng' -%}
 {%- assign pc_brands_usp_2 = settings.collection_hero_usp_2_title | default: 'Tư vấn chuyên sâu' -%}
 {%- assign pc_brands_usp_3 = settings.collection_hero_usp_3_title | default: 'Giao hàng toàn quốc' -%}
-{%- assign pc_brands_empty = settings.all_brands_empty_text | default: 'Không tìm thấy thương hiệu phù hợp.' -%}
 
 {% include 'breadcrumb' %}
 
 <main class="bg-surface-page font-sans text-ink" id="main">
   <div class="container py-6 lg:py-10">
-    {%- comment -%} 1. Thanh tiêu đề & dải cam kết (tham khảo cấu trúc header Mall: Tiêu đề + 3 cam kết + số lượng) {%- endcomment -%}
+    {%- comment -%} 1. Thanh tiêu đề, 3 cam kết chính hãng & thanh tìm kiếm thương hiệu {%- endcomment -%}
     <section class="mb-6 rounded-2xl border border-solid border-line-soft bg-white p-4 lg:mb-8 lg:p-6" aria-labelledby="all-brands-heading">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div class="min-w-0">
@@ -58,7 +55,7 @@
 
         {%- comment -%} 2. Thanh tìm kiếm thương hiệu tức thời {%- endcomment -%}
         <div class="w-full shrink-0 lg:w-72">
-          <label class="sr-only" for="pc-brand-search-input">{{ pc_brands_search_ph | escape }}</label>
+          <label class="sr-only" for="pc-brand-search-input">Tìm kiếm tên thương hiệu</label>
           <div class="relative flex items-center">
             <span class="pointer-events-none absolute left-3 inline-flex items-center justify-center text-ink-muted" aria-hidden="true">
               {% include 'ui_icon', name: 'search', size: 20 %}
@@ -67,7 +64,7 @@
               id="pc-brand-search-input"
               type="search"
               autocomplete="off"
-              placeholder="{{ pc_brands_search_ph | escape }}"
+              placeholder="Tìm kiếm tên thương hiệu..."
               class="box-border h-11 w-full rounded-xl border border-solid border-line bg-surface-page pl-10 pr-9 text-base text-ink placeholder-slate-400 focus:border-primary focus:bg-white focus:outline-none lg:rounded-none"
               data-brand-search
             >
@@ -108,7 +105,7 @@
       {%- endif -%}
     </section>
 
-    {%- comment -%} 4. Lưới thẻ thương hiệu (tham khảo bố cục thẻ vuông + nhãn pill logo/tên + dòng phụ) {%- endcomment -%}
+    {%- comment -%} 4. Lưới thẻ thương hiệu (bố cục thẻ vuông + nhãn pill tên thương hiệu + số sản phẩm / dòng phụ) {%- endcomment -%}
     {%- if pc_brands_ll.links.size > 0 -%}
     <section aria-label="Danh sách thương hiệu">
       <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 lg:gap-4" data-brand-grid>
@@ -161,7 +158,7 @@
 
       {%- comment -%} Trạng thái rỗng khi tìm kiếm / lọc không khớp {%- endcomment -%}
       <div class="rounded-2xl border border-solid border-line-soft bg-white px-4 py-12 text-center" data-brand-empty hidden>
-        <p class="m-0 text-base font-semibold text-ink">{{ pc_brands_empty | escape }}</p>
+        <p class="m-0 text-base font-semibold text-ink">Không tìm thấy thương hiệu phù hợp.</p>
         <button
           type="button"
           class="mt-4 inline-flex min-h-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-btn px-6 text-sm font-semibold text-btn-text transition-colors hover:bg-btn-hover"
@@ -214,7 +211,6 @@
     return /^[A-Z]$/.test(f) ? f : '#';
   }
 
-  // Đánh dấu các nút chữ cái không có thương hiệu nào để người dùng dễ nhận biết
   if (alphaBtns.length) {
     var available = {};
     cards.forEach(function (card) {
