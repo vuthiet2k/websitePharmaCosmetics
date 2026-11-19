@@ -356,7 +356,7 @@
 
 								{%elseif contacts%}
 								<div class="special-price">
-									<span class="price product-price"><a style="color: #d31100;" target="_blank" href="https://zalo.me/{{ settings.contact_zalo | remove: ' '}}">Liên hệ </a></span>
+									<span class="price product-price"><a class="text-sale font-bold" target="_blank" href="https://zalo.me/{{ settings.contact_zalo | remove: ' '}}">Liên hệ </a></span>
 
 							</div>
 
@@ -395,7 +395,7 @@
 								{% endif %}
 								<div class="box-variant clearfix {% if settings.product_swatch_enable%} d-none {%endif%}">
 									{% if variantCount > 1 %} 
-									<select id="product-selectors" class="form-control form-control-lg" name="variantId" style="display:none">
+									<select id="product-selectors" class="form-control form-control-lg hidden" name="variantId">
 										{% for variant in product.variants %}
 										<option {% if variant == product.selected_or_first_available_variant %} selected="selected" {% endif %} value="{{ variant.id }}">{{ variant.title | escape}} - {{ variant.price | money }}</option>
 										{% endfor %}
@@ -419,9 +419,9 @@
 										<div class="custom custom-btn-number {% if product.available %}show{%else%}d-none{%endif%}">
 											<span>Số lượng: </span>
 											<div class="input_number_product">									
-												<button class="btn_num num_1 button button_qty" onClick="var result = document.getElementById('qtym'); var qtypro = result.value; if( !isNaN( qtypro ) &amp;&amp; qtypro &gt; 1 ) result.value--;return false;" type="button">-</button>
-												<input type="number" id="qtym" name="quantity" value="1" min="1" max="999" class="form-control prd_quantity" onchange="if(!this.value||this.value<1)this.value=1;">
-												<button class="btn_num num_2 button button_qty" onClick="var result = document.getElementById('qtym'); var qtypro = result.value; if( !isNaN( qtypro )) result.value++;return false;" type="button"><span>+</span></button>
+												<button class="btn_num num_1 button button_qty min-h-[44px] min-w-[44px]" onClick="var result = document.getElementById('qtym'); var qtypro = result.value; if( !isNaN( qtypro ) &amp;&amp; qtypro &gt; 1 ) result.value--;return false;" type="button">-</button>
+												<input type="number" id="qtym" name="quantity" value="1" min="1" max="999" class="form-control prd_quantity min-h-[44px]" onchange="if(!this.value||this.value<1)this.value=1;">
+												<button class="btn_num num_2 button button_qty min-h-[44px] min-w-[44px]" onClick="var result = document.getElementById('qtym'); var qtypro = result.value; if( !isNaN( qtypro )) result.value++;return false;" type="button"><span>+</span></button>
 											</div>
 										</div>
 										{%if preorder%}
@@ -434,12 +434,13 @@
 										<div class="btn-mua button_actions clearfix">
 											{% if product.available %}	
 											<div class="box_btn_acc">
-												<a href="javascript:void(0)" class="buynow btn-buyNow" title="">
+												<a href="javascript:void(0)" class="btn-buyNow flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border-0 bg-btn px-4 text-sm font-semibold text-btn-text no-underline hover:bg-btn-hover" title="">
 													<i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'zap', size: 'em' %}</i>
-													<div class="buynow-text">{{settings.product_buynow_title}}</div>
+													<div class="buynow-text flex flex-col items-start text-left font-semibold">{{settings.product_buynow_title}}</div>
 												</a>
-												<button type="submit" class="btn btn_base normal_button btn_add_cart add_to_cart btn-cart">
-													<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 4h2l2.4 11h10.2L20 8H6.2M10 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2ZM17 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"/></svg>
+												<button type="submit" class="normal_button add_to_cart btn-cart mt-2 flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-solid border-primary bg-white px-4 text-sm font-semibold text-brand-deep hover:bg-brand-tint">
+													<template id="pc-pdp-cart-icon">{% include 'ui_icon', name: 'shopping-cart', size: 18 %}</template>
+													{% include 'ui_icon', name: 'shopping-cart', size: 18 %}
 													<span class="txt-main text_1">Thêm vào giỏ hàng</span>
 												</button>
 											</div>
@@ -448,9 +449,9 @@
 											{%- comment -%} 2026-10-07: nút Shopee theo thiết kế PDP — viền đỏ cam, icon túi + icon mở tab mới. {%- endcomment -%}
 											<div class="mua_shop pc-shopee-btn">
 												<a href="{{ pc_shopee_url }}" target="_blank" rel="noopener">
-													{%- if settings.product_shopee_icon != blank -%}<img src="{{ settings.product_shopee_icon | img_url: 'small' }}" alt="" width="18" height="18" loading="lazy" />{%- else -%}<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 8h14l-1 12H6L5 8Zm4 0V6a3 3 0 0 1 6 0v2"/></svg>{%- endif -%}
+													{%- if settings.product_shopee_icon != blank -%}<img src="{{ settings.product_shopee_icon | img_url: 'small' }}" alt="" width="18" height="18" loading="lazy" />{%- else -%}{% include 'ui_icon', name: 'shopping-bag', size: 16 %}{%- endif -%}
 													<span>{{ settings.product_shopee_label | default: 'ĐẶT HÀNG TẠI SHOPEE MALL' }}</span>
-													<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+													{% include 'ui_icon', name: 'link', size: 14 %}
 												</a>
 											</div>
 
@@ -566,60 +567,8 @@
 						{%- endcomment -%}
 						{%- if settings.product_trust_enable != false -%}
 						{% unless product.tags contains "liệu trình" %}
-						<div class="pc-pdp-trust" data-pdp-trust>
-							{%- comment -%} Kê toa không bán trực tuyến ⇒ không hiện cam kết giao hàng. 2026-10-07 (thiết kế PDP kê toa): thay bằng
-							  bộ cam kết riêng product_rx_trust_* (tư vấn / chính hãng / đồng hành), icon bong bóng chat / khiên / trái tim. {%- endcomment -%}
-							{%- if pc_pdp_rx -%}
-							{%- assign pc_trust_t1 = settings.product_rx_trust_1_title | default: 'Tư vấn chuyên môn' -%}
-							{%- assign pc_trust_d1 = settings.product_rx_trust_1_desc | default: 'Bởi chuyên gia/dược sĩ' -%}
-							{%- assign pc_trust_t2 = settings.product_rx_trust_2_title | default: 'Sản phẩm chính hãng' -%}
-							{%- assign pc_trust_d2 = settings.product_rx_trust_2_desc | default: 'Nguồn gốc rõ ràng' -%}
-							{%- assign pc_trust_t3 = settings.product_rx_trust_3_title | default: 'Đồng hành suốt liệu trình' -%}
-							{%- assign pc_trust_d3 = settings.product_rx_trust_3_desc | default: 'Theo dõi trong quá trình dùng' -%}
-							{%- else -%}
-							{%- assign pc_trust_t1 = settings.product_trust_1_title | default: 'Giao hàng toàn quốc' -%}
-							{%- assign pc_trust_d1 = settings.product_trust_1_desc | default: 'Nhanh chóng, an toàn.' -%}
-							{%- assign pc_trust_t2 = settings.product_trust_2_title | default: 'Sản phẩm chính hãng' -%}
-							{%- assign pc_trust_d2 = settings.product_trust_2_desc | default: 'Nguồn gốc rõ ràng.' -%}
-							{%- assign pc_trust_t3 = settings.product_trust_3_title | default: 'Tư vấn chuyên môn' -%}
-							{%- assign pc_trust_d3 = settings.product_trust_3_desc | default: 'Đồng hành cùng làn da của bạn.' -%}
-							{%- endif -%}
-							<ul class="pc-pdp-trust__list">
-								{%- for i in (1..3) -%}
-								{%- case i -%}
-								{%- when 1 -%}{%- assign pc_trust_t = pc_trust_t1 -%}{%- assign pc_trust_d = pc_trust_d1 -%}
-								{%- when 2 -%}{%- assign pc_trust_t = pc_trust_t2 -%}{%- assign pc_trust_d = pc_trust_d2 -%}
-								{%- else -%}{%- assign pc_trust_t = pc_trust_t3 -%}{%- assign pc_trust_d = pc_trust_d3 -%}
-								{%- endcase -%}
-								{%- comment -%} 2026-10-07: theo thiết kế PDP — 3 cột ngang, icon riêng (xe giao hàng / khiên / bong bóng chat), tiêu đề trên mô tả. {%- endcomment -%}
-								{%- case i -%}
-								{%- when 1 -%}{%- if pc_pdp_rx -%}{%- assign pc_trust_path = 'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12ZM8 10h8M8 14h5' -%}{%- else -%}{%- assign pc_trust_path = 'M3 6h11v10H3zM14 9h4l3 3v4h-7M7.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3ZM17.5 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z' -%}{%- endif -%}
-								{%- when 2 -%}{%- assign pc_trust_path = 'M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6l-7-3ZM9 12l2 2 4-4' -%}
-								{%- else -%}{%- if pc_pdp_rx -%}{%- assign pc_trust_path = 'M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z' -%}{%- else -%}{%- assign pc_trust_path = 'M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12ZM8 10h8M8 14h5' -%}{%- endif -%}
-								{%- endcase -%}
-								<li class="pc-pdp-trust__item">
-									<svg class="pc-pdp-trust__icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="{{ pc_trust_path }}"/></svg>
-									<span class="pc-pdp-trust__text">
-										<strong>
-											{%- if pc_pdp_rx -%}
-												{%- case i -%}
-												{%- when 1 -%}<span class="md:hidden">Tư vấn</span><span class="hidden md:inline">{{ pc_trust_t }}</span>
-												{%- when 2 -%}<span class="md:hidden">Chính hãng</span><span class="hidden md:inline">{{ pc_trust_t }}</span>
-												{%- else -%}<span class="md:hidden">Liệu trình</span><span class="hidden md:inline">{{ pc_trust_t }}</span>
-												{%- endcase -%}
-											{%- else -%}
-												{%- case i -%}
-												{%- when 1 -%}<span class="md:hidden">Toàn quốc</span><span class="hidden md:inline">{{ pc_trust_t }}</span>
-												{%- when 2 -%}<span class="md:hidden">Chính hãng</span><span class="hidden md:inline">{{ pc_trust_t }}</span>
-												{%- else -%}<span class="md:hidden">Tư vấn</span><span class="hidden md:inline">{{ pc_trust_t }}</span>
-												{%- endcase -%}
-											{%- endif -%}
-										</strong>
-										<span class="pc-pdp-trust__desc">{{ pc_trust_d }}</span>
-									</span>
-								</li>
-								{%- endfor -%}
-							</ul>
+						<div class="pc-pdp-trust border border-solid border-line rounded-2xl bg-surface-soft p-4 my-4" data-pdp-trust>
+							{% include 'ui_trust_badges' %}
 						</div>
 						{% endunless %}
 						{%- endif -%}
@@ -747,10 +696,10 @@
 					  bỏ Swiper: trên site thật khi JS chưa chạy, mỗi thẻ phình rộng hơn màn hình và trống ảnh (ảnh lỗi Android).
 					  Bề rộng thẻ do class quyết định (2 / 3 / 4 / 5 thẻ mỗi hàng), không phụ thuộc JS. {%- endcomment -%}
 					<section class="mt-8 min-w-0 lg:mt-12" aria-labelledby="pc-pdp-related-title">
-						<div class="mb-4 flex items-center justify-between gap-3">
-							<h2 id="pc-pdp-related-title" class="m-0 text-xl font-bold text-ink lg:text-2xl"><a class="text-ink no-underline hover:text-primary" href="/{{ productRelate | handleize }}">{{ settings.product_same_cate_title }}</a></h2>
-							<a class="shrink-0 text-sm font-semibold text-primary no-underline hover:underline" href="/{{ productRelate | handleize }}">Xem tất cả {% include 'ui_icon', name: 'arrow-right', size: 14, label: '' %}</a>
-						</div>
+						{%- comment -%} 18/11/2026: ngoặc đơn có bộ lọc (x | handleize) làm LiquidJS/DotLiquid báo 'invalid range syntax' ⇒ trang SP trắng; gán biến trước. {%- endcomment -%}
+						{%- assign _pdp_rel_h = productRelate | handleize -%}
+						{%- assign _pdp_rel_url = '/' | append: _pdp_rel_h -%}
+						{%- include 'ui_section_head', title: settings.product_same_cate_title, title_id: 'pc-pdp-related-title', url: _pdp_rel_url, label: settings.product_same_cate_title, more_text: 'Xem tất cả', title_class: 'text-xl font-bold text-ink lg:text-2xl', wrap_class: 'mb-4' -%}
 						<ul class="m-0 flex list-none snap-x snap-mandatory gap-3 overflow-x-auto p-0 pb-2 scrollbar-none lg:gap-4" tabindex="0" aria-label="{{ settings.product_same_cate_title | strip_html | escape }}">
 							{%- comment -%} 2026-10-10: bỏ SP đang xem và SP đã có ở "Có thể bạn thích" (trước đây lặp lại 2 lần). {%- endcomment -%}
 							{%- assign pc_same_limit = settings.product_same_cate_limit | plus: 0 -%}
@@ -793,14 +742,14 @@
 {%- assign p = part | append: " " | split: "</h6>" | last | strip_html | replace: "&nbsp;", "" | replace: " ", "" | strip_newlines -%}
 {%- if p != "" or fp contains "<img" or fp contains "<iframe" -%}
 {%- if forloop.index0 == '1' -%}
-<div id="specificationsModal" class="modal-specifications" style="display:none;">
+<div id="specificationsModal" class="modal-specifications hidden">
 	<div class="modalsize-overlay fancybox-overlay fancybox-overlay-fixed"></div>
 	<div class="modal-specificationsModal-product">
 		<div class="chosee_size">
 			<p class="title-popup">
 				{{settings.product_specifications_title}}
 			</p>
-			<a title="Close" class="specifications-close close-window" href="javascript:;">
+			<a title="Close" class="specifications-close close-window min-h-[44px] min-w-[44px] inline-flex items-center justify-center" href="javascript:;">
 				{%- comment -%} L03b28 (03/11/2026): bỏ Font Awesome (fa-xmark) — ui_icon x size em; -mx-px bù gần bề rộng glyph cũ 0,75em (SVG 1em), nút lệch ≤ 2px. {%- endcomment -%}
 				<i class="inline-block leading-none -mx-px" aria-hidden="true">{% include 'ui_icon', name: 'x', size: 'em' %}</i>
 			</a>
@@ -816,11 +765,11 @@
 {%- endif -%}
 {%include 'popup_tragop'%} 
 {%if settings.product_store_enable%}
-<div id="modal-store-product" class="modalstore-product" style="display:none;">
+<div id="modal-store-product" class="modalstore-product hidden">
 	<div class="modalstore-overlay fancybox-overlay fancybox-overlay-fixed"></div>
 	<div class="modal-store-product">
 		{% include 'product-hethong' %}
-		<a title="Close" class="modalstore-close close-window" href="javascript:;">
+		<a title="Close" class="modalstore-close close-window min-h-[44px] min-w-[44px] inline-flex items-center justify-center" href="javascript:;">
 			{%- comment -%} L03b28 (03/11/2026): bỏ Font Awesome (fa-xmark) — ui_icon x size em; -mx-px bù gần bề rộng glyph cũ 0,75em. {%- endcomment -%}
 			<i class="inline-block leading-none -mx-px" aria-hidden="true">{% include 'ui_icon', name: 'x', size: 'em' %}</i>
 		</a>
@@ -830,7 +779,7 @@
 <div class="popup-video">
 	<div class="body-popup">
 	</div>
-	<div class="close-popup-video">
+	<div class="close-popup-video min-h-[44px] inline-flex items-center gap-1">
 		{%- comment -%} L03b28 (03/11/2026): bỏ Font Awesome (fa-xmark) — ui_icon x size em; -mx-px bù gần bề rộng glyph cũ 0,75em. {%- endcomment -%}
 		<i class="inline-block leading-none -mx-px" aria-hidden="true">{% include 'ui_icon', name: 'x', size: 'em' %}</i>
 		Đóng
@@ -917,7 +866,8 @@
 				qty.html('<span class="a-stock">Còn hàng</span>');
 			}
 			FastAddToCart.removeClass('d-none');
-			addToCart.html('<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 4h2l2.4 11h10.2L20 8H6.2M10 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2ZM17 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"/></svg><span class="txt-main">Thêm vào giỏ hàng</span>').removeAttr('disabled');	
+			var _cartIconHtml = $('#pc-pdp-cart-icon').html() || '';
+			addToCart.html(_cartIconHtml + '<span class="txt-main">Thêm vào giỏ hàng</span>').removeAttr('disabled');	
 			BtnSold.removeClass('btnsold');
 			qtyBtn.removeClass('d-none');
 			if(variant.price == 0){

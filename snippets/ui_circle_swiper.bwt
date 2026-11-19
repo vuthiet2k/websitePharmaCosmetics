@@ -1,0 +1,36 @@
+{%- comment -%}
+  snippets/ui_circle_swiper.bwt — Danh sách ảnh tròn + tên, dùng chung cho "Tìm theo hoạt chất" (M-01) và "Thương hiệu tiêu biểu" (M-04) (17/11/2026, chủ dự án duyệt snippet mới).
+  Mobile (< lg): mỗi mục = ảnh tròn 56px + tên (+ số SP), 2 hàng, trượt ngang bằng Swiper (pc_swiper_boot — không thanh cuộn, lộ một phần mục kế tiếp).
+  Desktop (≥ lg): Swiper huỷ, mỗi mục thành thẻ chữ trong lưới (số cột theo tham số cols). Ảnh/tên/số SP đọc từ object collection của link menu (UI-0.6):
+  link.object.image → img_url + alt riêng (alt = tên), link.object.products_count. Không có ảnh ⇒ chữ cái đầu trong vòng tròn.
+  Tham số: links (linklist.links, bắt buộc), limit (mặc định 16), kind ('ingredient' = hiện số SP · 'brand' = logo viền trắng + tên 1 dòng), cols (class lưới desktop, mặc định 'lg:grid-cols-8'; truyền nguyên chuỗi để Tailwind quét được),
+           desktop_logo_prefix (chỉ brand: tiền tố ô cấu hình logo desktop, vd 'home_brand_marquee_image_' ⇒ có ảnh thì desktop hiện logo thay chữ).
+  Chỉ Tailwind theo token (UI-0): bg-brand-tint, text-brand-deep, text-ink-muted, border-white, border-line-soft.
+{%- endcomment -%}
+{%- assign pc_cs_limit = limit | default: 16 -%}
+{%- assign pc_cs_kind = kind | default: 'ingredient' -%}
+{%- assign pc_cs_cols = cols | default: 'lg:grid-cols-8' -%}
+<div class="swiper-container overflow-hidden" data-pc-slider data-gap="12" data-desktop-off>
+  <div class="swiper-wrapper lg:!grid {{ pc_cs_cols }} lg:gap-3">
+    {%- for link in links limit: pc_cs_limit -%}
+      {%- assign pc_cs_idx = forloop.index0 | modulo: 2 -%}
+      {%- if pc_cs_idx == 0 -%}<div class="swiper-slide flex !h-auto !w-28 flex-col gap-3 lg:contents">{%- endif -%}
+      {%- assign pc_cs_img = link.object.image.src | default: link.object.featured_image.src -%}
+      {%- assign pc_cs_has_logo = false -%}
+      {%- if pc_cs_kind == 'brand' and desktop_logo_prefix != blank -%}{%- capture pc_cs_logo_key -%}{{ desktop_logo_prefix }}{{ forloop.index }}{%- endcapture -%}{%- if settings[pc_cs_logo_key] != blank -%}{%- assign pc_cs_has_logo = true -%}{%- endif -%}{%- endif -%}
+      {%- comment -%} 18/11/2026: thẻ thương hiệu desktop nửa dưới trống vì vòng tròn bị ẩn dù chưa cấu hình logo ⇒ chỉ ẩn vòng tròn khi CÓ logo desktop; chưa có thì dùng ảnh bộ sưu tập/chữ cái đầu. {%- endcomment -%}
+      <a class="group flex w-full min-w-0 flex-col items-center gap-1.5 text-center no-underline {% if pc_cs_kind == 'brand' %}min-h-28{% else %}min-h-36{% endif %} lg:min-h-24 lg:justify-between lg:rounded-xl lg:border lg:border-solid lg:border-line-soft lg:bg-white lg:p-4 lg:transition-all lg:hover:border-primary" href="{{ link.url | escape }}">
+        <span class="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-tint text-base font-bold text-brand-deep{% if pc_cs_kind == 'brand' %} border-2 border-solid border-white{% endif %}{% if pc_cs_kind == 'brand' %}{% if pc_cs_has_logo %} lg:hidden{% endif %}{% else %} lg:hidden{% endif %}" aria-hidden="true">
+          {%- if pc_cs_img != blank -%}<img class="block h-full w-full object-cover" src="{{ pc_cs_img | img_url: 'compact' }}" alt="" width="64" height="64" loading="lazy">{%- else -%}{{ link.title | strip | upcase | slice: 0, 1 }}{%- endif -%}
+        </span>
+        {%- if pc_cs_has_logo -%}
+          {%- if settings[pc_cs_logo_key] != blank -%}<img class="max-lg:hidden h-auto max-h-10 w-auto max-w-full object-contain lg:block" src="{{ settings[pc_cs_logo_key] | img_url: 'medium' }}" alt="{{ link.title | escape }}" width="160" height="48" loading="lazy">{%- endif -%}
+        {%- endif -%}
+        <span class="{% if pc_cs_kind == 'brand' %}w-full line-clamp-2{% else %}line-clamp-2 lg:line-clamp-none{% endif %} text-xs font-bold leading-snug text-brand-deep lg:text-sm{% if pc_cs_kind == 'brand' %} lg:uppercase{% endif %}">{{ link.title | escape }}</span>
+        {%- if pc_cs_kind != 'brand' and link.object.products_count > 0 -%}<span class="text-xs font-semibold text-ink-muted lg:mt-1">{{ link.object.products_count }} SP</span>{%- endif -%}
+      </a>
+      {%- if pc_cs_idx == 1 or forloop.last -%}</div>{%- endif -%}
+    {%- endfor -%}
+  </div>
+</div>
+{%- include 'pc_swiper_boot' -%}

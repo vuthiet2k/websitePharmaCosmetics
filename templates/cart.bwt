@@ -22,10 +22,10 @@
 			<div class="row">
 				<div class="col-xl-8 col-lg-7 col-12 col-cart-left">
 					<div class="bg-shadow margin-bottom-20">
-						<div class="header-cart border-b border-gray-100 pb-3 mb-2">
+						<div class="header-cart border-b border-line-soft pb-3 mb-2">
 							<div class="title-block-page">
-								<h1 class="title_cart font-heading text-forest-900 text-xl sm:text-2xl font-extrabold flex items-center gap-2">
-									<i class="inline-block leading-none text-clinical-700 text-lg" aria-hidden="true">{% include 'ui_icon', name: 'shopping-bag', size: 'em' %}</i>
+								<h1 class="title_cart font-heading text-brand-deep text-xl sm:text-2xl font-extrabold flex items-center gap-2">
+									<i class="inline-block leading-none text-brand-deep text-lg" aria-hidden="true">{% include 'ui_icon', name: 'shopping-bag', size: 'em' %}</i>
 									<span>Giỏ hàng của bạn</span>
 								</h1>
 								{%- comment -%} 2026-10-16 (thiết kế giỏ hàng): số sản phẩm dưới tiêu đề, thay dòng "Số sản phẩm" trong khung đơn hàng; JS cập nhật theo 'ajaxCart'. {%- endcomment -%}
@@ -48,7 +48,7 @@
 						</div>
 					</div>
 					{%- comment -%} 2026-10-16 (thiết kế giỏ hàng): "Tiếp tục mua hàng" chuyển từ khung đơn hàng xuống dưới bảng sản phẩm. {%- endcomment -%}
-					<a class="cart-continue-link" href="{{ settings.cart_continue_url | default: '/collections/all' | escape }}"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-left', size: 'em' %}</i> {{ settings.cart_continue_label | default: 'Tiếp tục mua hàng' | escape }}</a>
+					<a class="cart-continue-link inline-flex min-h-[44px] items-center gap-1.5" href="{{ settings.cart_continue_url | default: '/collections/all' | escape }}"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-left', size: 'em' %}</i> {{ settings.cart_continue_label | default: 'Tiếp tục mua hàng' | escape }}</a>
 					{%- comment -%} 2026-10-16: cá nhân hoá theo kết quả soi da / khảo sát (localStorage + GAS) — xem snippets/cart_skin_plan.bwt. {%- endcomment -%}
 					{%- if settings.cart_skin_enable -%}
 					{%- include 'customer_context_extractor' -%}
@@ -64,11 +64,7 @@
 					{% endif %}
 					<div class="bg-shadow margin-bottom-20">
 						<div class="product-suggest product-swipers">
-							<div class="section-title a-left txt-uppercese">
-								<h2>
-									<a href="/collections/{{ sudes_product_suggest }}" title="{{settings.cart_suggest_product_title | strip_html}}">{{settings.cart_suggest_product_title}}</a>
-								</h2>
-							</div>
+							{%- include 'ui_section_head', title: settings.cart_suggest_product_title, url: '/collections/' | append: sudes_product_suggest, label: settings.cart_suggest_product_title, title_class: 'text-xl font-bold text-brand-deep' -%}
 							{% assign count = collections[sudes_product_suggest].products_count %}
 							{% if count > 0 %}
 							<div class="swiper_suggest swiper-container">
@@ -81,17 +77,11 @@
 									</div>
 									{% endfor %}
 								</div>
-								<div class="swiper-button-prev">
-									<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-										<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-										<path d="M29 18.5L18.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-									</svg>
+								<div class="swiper-button-prev flex items-center justify-center">
+									{% include 'ui_icon', name: 'chevron-left', size: 24 %}
 								</div>
-								<div class="swiper-button-next">
-									<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-										<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-										<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-									</svg>
+								<div class="swiper-button-next flex items-center justify-center">
+									{% include 'ui_icon', name: 'chevron-right', size: 24 %}
 								</div>
 							</div>
 							{%else%}
@@ -208,9 +198,9 @@
 													<label for="checkbox-bill" class="box"></label>
 													<label for="checkbox-bill" class="title">Xuất hóa đơn công ty</label>
 												</div>
-												<p class="text-[11px] text-gray-500 mt-1.5 mb-2 leading-relaxed">
+												<p class="text-xs text-ink-muted mt-1.5 mb-2 leading-relaxed">
 													Thông tin công ty/mã số thuế chỉ dùng để xuất hoá đơn VAT theo quy định, không dùng cho mục đích khác.
-													Xem <a href="/chinh-sach-bao-mat" class="text-clinical-700 underline hover:text-clinical-600">Chính sách bảo mật</a>.
+													Xem <a href="/chinh-sach-bao-mat" class="text-brand-deep underline hover:text-primary">Chính sách bảo mật</a>.
 												</p>
 												<div class="bill-field">
 													<div class="form-group">
@@ -247,8 +237,8 @@
 									<div class="summary-coupon">
 										<label class="coupon-label" for="coupon-code-input"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'ticket', size: 'em' %}</i> {{ settings.cart_coupon_label | default: 'Mã giảm giá' | escape }}</label>
 										<div class="coupon-input-wrap">
-											<input type="text" class="coupon-code-input" id="coupon-code-input" placeholder="{{ settings.cart_coupon_placeholder | default: 'Nhập mã giảm giá' | escape }}" autocomplete="off">
-											<button type="button" class="coupon-apply-btn js-apply-coupon">{{ settings.cart_coupon_apply_label | default: 'Áp dụng' | escape }}</button>
+											<input type="text" class="coupon-code-input min-h-[44px]" id="coupon-code-input" placeholder="{{ settings.cart_coupon_placeholder | default: 'Nhập mã giảm giá' | escape }}" autocomplete="off">
+											<button type="button" class="coupon-apply-btn js-apply-coupon min-h-[44px]">{{ settings.cart_coupon_apply_label | default: 'Áp dụng' | escape }}</button>
 										</div>
 										<p class="coupon-feedback"></p>
 										{%- comment -%} 2026-10-16: mã voucher đang bật (Cài đặt › Mã giảm giá, promo_coupon_N_*) — bấm để điền vào ô, mô tả ưu đãi hiện bên dưới. {%- endcomment -%}
@@ -258,7 +248,7 @@
 										{%- capture _cp_code -%}promo_coupon_{{ i }}_code{%- endcapture -%}
 										{%- capture _cp_value -%}promo_coupon_{{ i }}_value{%- endcapture -%}
 										{%- if settings[_cp_en] and settings[_cp_code] != blank -%}
-										<button type="button" class="coupon-chip js-coupon-chip" data-code="{{ settings[_cp_code] | strip | escape }}" data-desc="{{ settings[_cp_value] | strip_html | strip | escape }}">{{ settings[_cp_code] | strip }}</button>
+										<button type="button" class="coupon-chip js-coupon-chip min-h-[44px] inline-flex items-center justify-center" data-code="{{ settings[_cp_code] | strip | escape }}" data-desc="{{ settings[_cp_value] | strip_html | strip | escape }}">{{ settings[_cp_code] | strip }}</button>
 										{%- endif -%}
 										{%- endfor -%}
 										{%- endcapture -%}
@@ -278,20 +268,12 @@
 									<div class="summary-button">
 										<div class="cart__btn-proceed-checkout-dt">
 											{%- assign _checkout_label = settings.cart_checkout_label | default: 'Đặt hàng ngay' -%}
-											<button onclick="cartGoToCheckout(event)" type="button" class="button btn btn-default cart__btn-proceed-checkout btn-primary duration-300" id="btn-proceed-checkout" title="{{ _checkout_label | escape }}"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'lock', size: 'em' %}</i> <span>{{ _checkout_label | escape }}</span> <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-right', size: 'em' %}</i></button>
+											{%- comment -%} M-23 (17/11/2026): nút chính duy nhất của khối, token nút (bỏ màu san hô + biến --pc-cart-cta); onclick → móc [data-cart-checkout] (JS bên dưới). {%- endcomment -%}
+											<button type="button" data-cart-checkout class="flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-0 bg-btn px-4 text-base font-bold text-btn-text transition-colors hover:bg-btn-hover" id="btn-proceed-checkout" title="{{ _checkout_label | escape }}">{% include 'ui_icon', name: 'lock', size: 'em' %}<span>{{ _checkout_label | escape }}</span>{% include 'ui_icon', name: 'arrow-right', size: 'em' %}</button>
 										</div>
-									{%- if settings.cart_trust_enable and settings.cart_trust_text != blank -%}
-									{%- assign _trust_items = settings.cart_trust_text | split: ';' -%}
-									{%- assign _trust_icons = settings.cart_trust_icons | default: 'hand-coins;refresh-cw;circle-check;headset' | split: ';' -%}
-									<div class="cart-trust-grid">
-										{%- for _trust in _trust_items limit: 4 -%}
-										<div class="cart-trust-item">
-											{%- assign _trust_icon = _trust_icons[forloop.index0] | strip | default: 'circle-check' -%}
-											<i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: _trust_icon, size: 'em' %}</i>
-											<span>{{ _trust | strip }}</span>
-										</div>
-										{%- endfor -%}
-									</div>
+									{%- comment -%} M-23: 4 cam kết dùng snippet dùng chung ui_trust_badges (nội dung theo ô cấu hình của snippet); bỏ markup + CSS cart-trust-*. {%- endcomment -%}
+									{%- if settings.cart_trust_enable -%}
+									<div class="mt-4">{%- include 'ui_trust_badges', cols: 'grid-cols-1 sm:grid-cols-2' -%}</div>
 									{%- endif -%}
 									</div>
 								</div>
@@ -307,11 +289,7 @@
 					{% endif %}
 					<div class="bg-shadow margin-bottom-20">
 						<div class="product-suggest-mob product-swipers">
-							<div class="section-title a-left txt-uppercese">
-								<h2>
-									<a href="/collections/{{ sudes_product_suggest }}" title="{{settings.cart_suggest_product_title | strip_html}}">{{settings.cart_suggest_product_title}}</a>
-								</h2>
-							</div>
+							{%- include 'ui_section_head', title: settings.cart_suggest_product_title, url: '/collections/' | append: sudes_product_suggest, label: settings.cart_suggest_product_title, title_class: 'text-xl font-bold text-brand-deep' -%}
 							{% assign count = collections[sudes_product_suggest].products_count %}
 							{% if count > 0 %}
 							<div class="swiper_suggest_mob swiper-container">
@@ -324,17 +302,11 @@
 									</div>
 									{% endfor %}
 								</div>
-								<div class="swiper-button-prev">
-									<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-										<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-										<path d="M29 18.5L18.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-									</svg>
+								<div class="swiper-button-prev flex items-center justify-center">
+									{% include 'ui_icon', name: 'chevron-left', size: 24 %}
 								</div>
-								<div class="swiper-button-next">
-									<svg width="58" height="58" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-										<path d="M18.5 29H39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-										<path d="M29 18.5L39.5 29L29 39.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-									</svg>
+								<div class="swiper-button-next flex items-center justify-center">
+									{% include 'ui_icon', name: 'chevron-right', size: 24 %}
 								</div>
 							</div>
 							{%else%}
@@ -399,6 +371,8 @@
 		{%- endif -%}
 		window.location.href = window.cartCheckoutUrl || '/checkout';
 	}
+
+	$(document).on('click', '[data-cart-checkout]', function (e) { window.cartGoToCheckout(e); });
 
 	/* 2026-10-16 (thiết kế giỏ hàng): số SP dưới tiêu đề, Phí vận chuyển, Tổng thanh toán nằm ngoài FooterCartTemplate
 	   ⇒ cập nhật theo sự kiện 'ajaxCart' (buildCart bắn kèm object giỏ sau mỗi lần thêm/xoá/đổi số lượng). */

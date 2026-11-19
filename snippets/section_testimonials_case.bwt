@@ -5,25 +5,18 @@
 {%- assign testi_n = testi_n | plus: 1 -%}
 {%- capture t_sel -%}{% if testi_n == 1 %}true{% else %}false{% endif %}{%- endcapture -%}
 {%- capture t_tab -%}
-<li class="m-0 shrink-0 md:shrink">
+<li class="swiper-slide m-0 !w-auto lg:!w-full">
   <a role="tab" id="tab-case-{{ t_key }}" aria-controls="panel-case-{{ t_key }}" aria-selected="{{ t_sel }}" tabindex="{% if testi_n == 1 %}0{% else %}-1{% endif %}" href="#panel-case-{{ t_key }}"
-     class="box-border inline-flex md:flex min-h-11 md:min-h-[50px] items-center whitespace-nowrap md:whitespace-normal rounded-full md:rounded-xl border border-solid border-line-soft bg-white px-4 md:px-5 text-xs md:text-sm font-semibold text-brand-deep no-underline hover:border-primary aria-selected:border-primary aria-selected:bg-primary aria-selected:text-white transition-all">
+     class="box-border inline-flex lg:flex min-h-[44px] lg:min-h-14 items-center whitespace-nowrap lg:whitespace-normal rounded-full lg:rounded-xl border border-solid border-line-soft bg-white px-4 lg:px-5 text-xs lg:text-sm font-semibold text-brand-deep no-underline hover:border-primary aria-selected:border-primary aria-selected:bg-primary aria-selected:text-white transition-all">
     0{{ testi_n }} · {{ t_concern | escape }}{% if t_tab_who != blank %} – {{ t_tab_who | escape }}{% endif %}
   </a>
 </li>
 {%- endcapture -%}
 {%- capture t_panel -%}
-<article role="tabpanel" id="panel-case-{{ t_key }}" aria-labelledby="tab-case-{{ t_key }}" class="rounded-2xl border border-solid border-line-soft bg-white p-4 md:p-6 lg:p-7 flex flex-col"{% if testi_n > 1 %} hidden{% endif %}>
-  <div class="grid grid-cols-2 gap-2 md:gap-3">
-    <figure class="relative m-0 aspect-square md:aspect-[364/300] overflow-hidden rounded-xl bg-brand-tint">
-      <span class="absolute left-2.5 top-2.5 rounded-full bg-brand-deep px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white">{{ testi_lb_before | escape }}</span>
-      {%- if t_img1 != blank -%}<img src="{{ t_img1 }}" alt="{{ testi_lb_before | escape }} — {{ t_title | escape }}" width="728" height="600" loading="lazy" decoding="async" class="block h-full w-full object-cover">{%- endif -%}
-    </figure>
-    <figure class="relative m-0 aspect-square md:aspect-[364/300] overflow-hidden rounded-xl bg-brand-tint">
-      <span class="absolute left-2.5 top-2.5 rounded-full bg-primary px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white">{{ testi_lb_after | escape }}{% if t_duration != blank %}<span class="md:hidden"> {{ t_duration | escape }}</span>{% endif %}</span>
-      {%- if t_img2 != blank -%}<img src="{{ t_img2 }}" alt="{{ testi_lb_after | escape }} — {{ t_title | escape }}" width="728" height="600" loading="lazy" decoding="async" class="block h-full w-full object-cover">{%- endif -%}
-    </figure>
-  </div>
+<article role="tabpanel" id="panel-case-{{ t_key }}" aria-labelledby="tab-case-{{ t_key }}" class="rounded-2xl bg-white p-4 md:p-6 lg:p-7 flex flex-col"{% if testi_n > 1 %} hidden{% endif %}>
+  {%- comment -%} M-18: cặp ảnh Trước/Sau dùng chung với trang /blogs/truoc-va-sau (pc_ba_pair). {%- endcomment -%}
+  {%- capture t_dur_sfx -%}{% if t_duration != blank %}{{ t_duration | escape }}{% endif %}{%- endcapture -%}
+  {%- include 'pc_ba_pair', ba_before: t_img1, ba_after: t_img2, ba_title: t_title, ba_bl: testi_lb_before, ba_al: testi_lb_after, ba_after_suffix: t_dur_sfx -%}
   <div class="flex flex-col mt-4 md:mt-6">
     <div class="flex flex-col">
       <h3 class="m-0 text-lg md:text-xl lg:text-2xl font-bold text-brand-deep leading-snug">{{ t_title | escape }}</h3>
@@ -31,7 +24,7 @@
       {%- if t_products != blank -%}<p class="md:hidden m-0 mt-2 inline-block self-start rounded-full bg-brand-tint px-3 py-1 text-xs font-bold text-brand-deep">{{ t_products | escape }}</p>{%- endif -%}
     </div>
     {%- if t_duration != blank or t_products != blank -%}
-      <ul class="m-0 mt-3 hidden md:flex list-none flex-wrap gap-2 p-0">
+      <ul class="m-0 mt-3 max-md:hidden md:flex list-none flex-wrap gap-2 p-0">
         {%- if t_duration != blank -%}
           <li class="inline-flex items-center gap-1.5 rounded-full bg-surface-soft px-3 py-1 text-xs font-semibold text-brand-deep">
             {% include 'ui_icon', name: 'clock' %}
@@ -49,18 +42,18 @@
     {%- if t_desc != blank -%}
       <p class="m-0 mt-3 line-clamp-3 text-sm leading-relaxed text-ink-muted">{{ t_desc | escape }}</p>
     {%- endif -%}
-    <div class="mt-4 pt-3 border-t border-solid border-line-soft flex flex-col md:flex-row md:items-center justify-between gap-3">
+    <div class="mt-4 pt-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
       <details class="cursor-pointer">
         <summary class="flex items-center gap-2 text-sm font-bold text-brand-deep list-none select-none">
           <span>{{ testi_lb_steps | escape }}</span>
           {% include 'ui_icon', name: 'chevron-down' %}
         </summary>
-        <dl class="m-0 mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-[160px_1fr]">
-          {%- if t_initial != blank -%}<dt class="font-bold text-brand-deep">{{ settings.home_testi_initial_label | default: 'Tình trạng ban đầu' | escape }}</dt><dd class="m-0 text-ink">{{ t_initial | escape }}</dd>{%- endif -%}
+        <dl class="m-0 mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
+          {%- if t_initial != blank -%}<dt class="font-bold text-brand-deep sm:col-span-1">{{ settings.home_testi_initial_label | default: 'Tình trạng ban đầu' | escape }}</dt><dd class="m-0 text-ink sm:col-span-3">{{ t_initial | escape }}</dd>{%- endif -%}
           {%- assign t_step_list = t_steps | split: testi_step_sep -%}
           {%- if t_steps != blank and t_step_list.size > 0 -%}
-            <dt class="font-bold text-brand-deep">{{ testi_lb_steps | escape }}</dt>
-            <dd class="m-0 text-ink">
+            <dt class="font-bold text-brand-deep sm:col-span-1">{{ testi_lb_steps | escape }}</dt>
+            <dd class="m-0 text-ink sm:col-span-3">
               <ol class="m-0 p-0 list-none flex flex-col gap-1.5">
                 {%- assign t_step_i = 0 -%}
                 {%- for st in t_step_list -%}
@@ -73,10 +66,10 @@
               </ol>
             </dd>
           {%- elsif t_desc != blank -%}
-            <dt class="font-bold text-brand-deep">{{ testi_lb_steps | escape }}</dt><dd class="m-0 text-ink">{{ t_desc | escape }}</dd>
+            <dt class="font-bold text-brand-deep sm:col-span-1">{{ testi_lb_steps | escape }}</dt><dd class="m-0 text-ink sm:col-span-3">{{ t_desc | escape }}</dd>
           {%- endif -%}
-          {%- if t_products != blank -%}<dt class="font-bold text-brand-deep">{{ settings.home_testi_products_label | default: 'Sản phẩm sử dụng' | escape }}</dt><dd class="m-0 text-ink">{{ t_products | escape }}</dd>{%- endif -%}
-          {%- if t_duration != blank -%}<dt class="font-bold text-brand-deep">{{ settings.home_testi_duration_label | default: 'Thời gian theo dõi' | escape }}</dt><dd class="m-0 text-ink">{{ t_duration | escape }}</dd>{%- endif -%}
+          {%- if t_products != blank -%}<dt class="font-bold text-brand-deep sm:col-span-1">{{ settings.home_testi_products_label | default: 'Sản phẩm sử dụng' | escape }}</dt><dd class="m-0 text-ink sm:col-span-3">{{ t_products | escape }}</dd>{%- endif -%}
+          {%- if t_duration != blank -%}<dt class="font-bold text-brand-deep sm:col-span-1">{{ settings.home_testi_duration_label | default: 'Thời gian theo dõi' | escape }}</dt><dd class="m-0 text-ink sm:col-span-3">{{ t_duration | escape }}</dd>{%- endif -%}
         </dl>
       </details>
       {%- assign t_zalo = settings.contact_zalo | remove: ' ' | remove: '.' | remove: '-' | remove: '+' | strip -%}

@@ -107,7 +107,7 @@ test('khảo sát có cờ thai kỳ ⇒ cảnh báo SP retinoid trong giỏ, gi
   await expect(stage3).toHaveClass(/is-blocked/);
   await expect(stage3.locator('[data-cart-skin-add]')).toHaveCount(0);
   // Không gợi ý SP chứa hoạt chất bị loại ở bất kỳ bước nào.
-  const picks = await box.locator('[data-cart-skin-pick] .pc-cart-skin__pick-name').allTextContents();
+  const picks = await box.locator('[data-cart-skin-pick] a.notranslate').allTextContents();
   picks.forEach((name) => expect(name).not.toMatch(/retin|bha|salicylic|aha|glycolic/i));
 });
 
@@ -121,7 +121,7 @@ test('Tier 1 (dấu hiệu cấp tính) ⇒ chỉ cảnh báo + liên hệ chuy�
   await page.goto('/cart');
   const box = page.locator('[data-cart-skin]');
   await expect(box).toHaveAttribute('data-state', 'red-flag');
-  await expect(box.locator('.pc-cart-skin__alert--danger')).toBeVisible();
-  await expect(box.locator('.pc-cart-skin__zalo')).toBeVisible();
+  await expect(box.locator('[data-cart-skin-alerts] p.text-sale')).toBeVisible();
+  await expect(box.locator('[data-cart-skin-alerts] a')).toBeVisible();
   await expect(box.locator('[data-cart-skin-body]')).toBeHidden();
 });

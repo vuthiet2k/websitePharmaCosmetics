@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Theme Settings Manager — Pharma Cosmetics Local</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root { --primary: #3CB371; --primary-dark: #2E8B57; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex h-screen overflow-hidden font-sans">
+  <!-- Sidebar -->
+  <aside class="w-80 bg-white border-r border-slate-200 flex flex-col shrink-0">
+    <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-900 text-white">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-sliders text-emerald-400"></i>
+        <h1 class="font-bold text-sm tracking-wide">THEME SETTINGS</h1>
+      </div>
+      <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono">LOCAL ONLY</span>
+    </div>
+    <div class="p-3 border-b border-slate-100">
+      <div class="relative">
+        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+        <input type="text" id="searchInput" placeholder="Tìm kiếm cài đặt hoặc ID..." 
+          class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-100 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-500 focus:bg-white transition-all">
+      </div>
+    </div>
+    <div class="flex-1 overflow-y-auto divide-y divide-slate-100 text-xs" id="groupsList"></div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col h-full bg-slate-50 overflow-hidden">
+    <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 shadow-sm">
+      <div class="flex items-center gap-3">
+        <h2 id="currentGroupTitle" class="font-bold text-base text-slate-900">Đang tải...</h2>
+        <span id="currentGroupCount" class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">0 trường</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="/" target="_blank" class="text-xs font-semibold px-3 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 transition-all flex items-center gap-1.5 no-underline">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem website
+        </a>
+        <button id="saveBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-4 py-2 rounded-lg shadow-sm transition-all flex items-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-floppy-disk"></i> Lưu cài đặt
+        </button>
+      </div>
+    </header>
+
+    <div class="flex-1 overflow-y-auto p-6" id="formContainer">
+      <div class="max-w-4xl mx-auto space-y-4" id="settingsForm"></div>
+    </div>
+  </main>
+
+  <script>
+    let appSchema = [];
+    let appData = {};
+    let activeGroupIndex = 0;
+
+    async function loadData() {
+      try {
+        const res = await fetch('/api/settings');
+        const json = await res.json();
+        appSchema = json.schema || [];
+        appData = json.data || {};
+        renderSidebar();
+        selectGroup(0);
+      } catch (e) {
+        alert('Lỗi tải dữ liệu settings: ' + e.message);
+      }
+    }
+
+    function renderSidebar() {
+      const list = document.getElementById('groupsList');
+      list.innerHTML = '';
+      appSchema.forEach((grp, idx) => {
+        const count = (grp.settings || []).filter(s => s.type !== 'header' && s.type !== 'paragraph').length;
+        const btn = document.createElement('button');
+        btn.className = 'w-full text-left px-4 py-3 hover:bg-slate-50 flex items-center justify-between transition-colors cursor-pointer ' + 
+          (idx === activeGroupIndex ? 'bg-emerald-50 text-emerald-800 font-bold border-l-4 border-emerald-600' : 'text-slate-700');
+        btn.onclick = () => selectGroup(idx);
+        btn.innerHTML = '<span>' + (grp.name || 'Nhóm ' + (idx+1)) + '</span>' + 
+          '<span class="px-1.5 py-0.5 rounded text-[10px] bg-slate-200/60 text-slate-600">' + count + '</span>';
+        list.appendChild(btn);
+      });
+    }
+
+    function selectGroup(idx) {
+      activeGroupIndex = idx;
+      renderSidebar();
+      const grp = appSchema[idx];
+      if (!grp) return;
+      document.getElementById('currentGroupTitle').textContent = grp.name || 'Cài đặt';
+      const fields = (grp.settings || []).filter(s => s.type !== 'header' && s.type !== 'paragraph');
+      document.getElementById('currentGroupCount').textContent = fields.length + ' trường';
+      renderFields(grp.settings || []);
+    }
+
+    function renderFields(settings) {
+      const container = document.getElementById('settingsForm');
+      container.innerHTML = '';
+
+      settings.forEach(field => {
+        if (field.type === 'header') {
+          const h = document.createElement('div');
+          h.className = 'pt-4 pb-1 border-b border-slate-200 font-bold text-sm text-slate-800 flex items-center gap-2';
+          h.innerHTML = '<i class="fa-solid fa-bookmark text-emerald-600 text-xs"></i> ' + field.content;
+          container.appendChild(h);
+          return;
+        }
+        if (field.type === 'paragraph') {
+          const p = document.createElement('div');
+          p.className = 'p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800';
+          p.textContent = field.content;
+          container.appendChild(p);
+          return;
+        }
+
+        const wrap = document.createElement('div');
+        wrap.className = 'bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm flex flex-col gap-2 hover:border-slate-300 transition-all';
+        wrap.setAttribute('data-field-id', field.id || '');
+
+        const labelRow = document.createElement('div');
+        labelRow.className = 'flex items-center justify-between';
+        labelRow.innerHTML = '<label class="font-semibold text-xs text-slate-800">' + (field.label || field.id) + '</label>' + 
+          '<span class="text-[10px] text-slate-400 font-mono">' + field.id + '</span>';
+        wrap.appendChild(labelRow);
+
+        if (field.info) {
+          const info = document.createElement('p');
+          info.className = 'text-[11px] text-slate-500 m-0';
+          info.textContent = field.info;
+          wrap.appendChild(info);
+        }
+
+        const val = appData[field.id] !== undefined ? appData[field.id] : (field.default || '');
+
+        if (field.type === 'checkbox') {
+          const toggleWrap = document.createElement('label');
+          toggleWrap.className = 'relative inline-flex items-center cursor-pointer mt-1';
+          toggleWrap.innerHTML = '<input type="checkbox" ' + (val ? 'checked' : '') + ' class="sr-only peer">' +
+            '<div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[\'\'] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>' +
+            '<span class="ml-2 text-xs text-slate-600">' + (val ? 'Bật (True)' : 'Tắt (False)') + '</span>';
+          toggleWrap.querySelector('input').addEventListener('change', function(e) {
+            appData[field.id] = e.target.checked;
+            toggleWrap.querySelector('span').textContent = e.target.checked ? 'Bật (True)' : 'Tắt (False)';
+          });
+          wrap.appendChild(toggleWrap);
+        } else if (field.type === 'color') {
+          const colorWrap = document.createElement('div');
+          colorWrap.className = 'flex items-center gap-3 mt-1';
+          colorWrap.innerHTML = '<input type="color" value="' + (val || '#3CB371') + '" class="w-8 h-8 rounded border border-slate-300 cursor-pointer p-0.5 bg-white">' +
+            '<input type="text" value="' + val + '" class="w-32 px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded font-mono focus:bg-white focus:outline-none focus:border-emerald-500">';
+          const colorPicker = colorWrap.querySelector('input[type=color]');
+          const textInput = colorWrap.querySelector('input[type=text]');
+          colorPicker.oninput = (e) => { textInput.value = e.target.value; appData[field.id] = e.target.value; };
+          textInput.oninput = (e) => { colorPicker.value = e.target.value; appData[field.id] = e.target.value; };
+          wrap.appendChild(colorWrap);
+        } else if (field.type === 'image') {
+          const imgWrap = document.createElement('div');
+          imgWrap.className = 'flex flex-col gap-2 mt-1';
+          imgWrap.innerHTML = '<input type="text" value="' + val + '" placeholder="Đường dẫn ảnh hoặc URL..." class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded focus:bg-white focus:outline-none focus:border-emerald-500">' +
+            (val ? '<div class="h-24 w-auto rounded border border-slate-200 overflow-hidden bg-slate-100 inline-flex items-center justify-center p-1"><img src="' + val + '" class="max-h-full max-w-full object-contain" onerror="this.src=\'/assets/PharmaCosmetics.svg\'"></div>' : '');
+          imgWrap.querySelector('input').oninput = (e) => { appData[field.id] = e.target.value; };
+          wrap.appendChild(imgWrap);
+        } else if (field.type === 'textarea') {
+          const ta = document.createElement('textarea');
+          ta.rows = 3;
+          ta.className = 'w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded focus:bg-white focus:outline-none focus:border-emerald-500 font-sans';
+          ta.value = val;
+          ta.oninput = (e) => { appData[field.id] = e.target.value; };
+          wrap.appendChild(ta);
+        } else {
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = val;
+          input.className = 'w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded focus:bg-white focus:outline-none focus:border-emerald-500 font-sans';
+          input.oninput = (e) => { appData[field.id] = e.target.value; };
+          wrap.appendChild(input);
+        }
+
+        container.appendChild(wrap);
+      });
+    }
+
+    async function saveSettings() {
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
+      try {
+        const res = await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(appData)
+        });
+        const json = await res.json();
+        if (json.success) {
+          btn.innerHTML = '<i class="fa-solid fa-check"></i> Đã lưu thành công!';
+          btn.className = 'bg-emerald-700 text-white font-semibold text-xs px-4 py-2 rounded-lg shadow-sm flex items-center gap-2';
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Lưu cài đặt';
+            btn.className = 'bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-4 py-2 rounded-lg shadow-sm transition-all flex items-center gap-2 cursor-pointer';
+          }, 1500);
+        } else {
+          alert('Lỗi: ' + json.error);
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Lưu cài đặt';
+        }
+      } catch (e) {
+        alert('Lỗi mạng: ' + e.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Lưu cài đặt';
+      }
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', saveSettings);
+
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+      const q = e.target.value.toLowerCase().trim();
+      const cards = document.querySelectorAll('#settingsForm > div[data-field-id]');
+      cards.forEach(c => {
+        const id = c.getAttribute('data-field-id').toLowerCase();
+        const text = c.textContent.toLowerCase();
+        if (id.includes(q) || text.includes(q)) {
+          c.style.display = '';
+        } else {
+          c.style.display = 'none';
+        }
+      });
+    });
+
+    loadData();
+  </script>
+</body>
+</html>

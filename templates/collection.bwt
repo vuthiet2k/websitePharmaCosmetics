@@ -26,27 +26,17 @@
 				{%include 'menu-col-cate'%}
 			</div>
 			{%endif%}
-			<aside class="left-content min-w-0 font-sans max-[991px]:fixed max-[991px]:inset-y-0 max-[991px]:left-0 max-[991px]:z-[99999] max-[991px]:w-[86%] max-[991px]:max-w-[360px] max-[991px]:-translate-x-full max-[991px]:overflow-y-auto max-[991px]:bg-white max-[991px]:p-4 max-[991px]:transition-transform max-[991px]:[&.active]:translate-x-0" aria-label="{{ settings.collection_filter_heading | default: 'Bộ lọc sản phẩm' | escape }}">
-				<button type="button" class="close-filters ml-auto flex h-[44px] w-[44px] cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-ink min-[992px]:hidden" aria-label="Đóng bộ lọc">{% include 'ui_icon', name: 'x', size: 24, label: '' %}</button>
-				{%- comment -%} section-box-bg / col-list-cate: lớp bọc CŨ giữ tạm cho ruột bộ lọc + menu danh mục (aside-filter, aside-cate, menu-col-cate chưa chuyển Tailwind). {%- endcomment -%}
-			<div class="section-box-bg min-[992px]:border min-[992px]:border-solid min-[992px]:border-line min-[992px]:bg-white min-[992px]:p-4 min-[992px]:rounded-2xl">
-					{%- include 'sidebar-collection' -%}
-					{%- comment -%} 2026-10-08: câu trang trí cuối cột lọc (Admin › Trang danh mục › Câu trang trí cuối cột lọc). {%- endcomment -%}
-					{%- if settings.collection_sidebar_quote != blank -%}
-					<p class="m-0 mt-6 border-0 border-t border-solid border-line pt-4 text-center text-sm italic text-ink-secondary" aria-hidden="true">{{ settings.collection_sidebar_quote }}</p>
-					{%- endif -%}
-				</div>
-			</aside>
+			{%- include 'sidebar-collection', quote: true -%}
 			<div class="min-w-0">
 				{%- comment -%} F02: ô danh mục con — trước bộ lọc / sắp xếp. 2026-10-10: h1 nằm ở banner; mã giảm giá ở dải voucher. {%- endcomment -%}
 				{%- include 'collection_subnav' -%}
 				{%- include 'collection_quick_filters' -%}
 		
 				{%- comment -%} "Đang lọc N tiêu chí" — col.js bật / tắt bằng thuộc tính hidden và dựng chip (.afw-chip). {%- endcomment -%}
-				<div id="afw-active-bar" class="afw-bar" hidden>
+				<div id="afw-active-bar" class="afw-bar max-[991px]:!hidden" hidden>
 					<div class="afw-bar__head">
 						<span class="afw-bar__count">Đang lọc <strong class="afw-bar__count-num">0</strong> tiêu chí</span>
-						<button type="button" class="afw-bar__clear" onclick="clearAllFiltered()">{% include 'ui_icon', name: 'x', size: 20, label: '' %} Bỏ chọn hết</button>
+						<button type="button" class="afw-bar__clear" data-filter-reset>{% include 'ui_icon', name: 'x', size: 20, label: '' %} Bỏ chọn hết</button>
 					</div>
 					<div class="afw-bar__chips" id="afw-active-chips"></div>
 				</div>

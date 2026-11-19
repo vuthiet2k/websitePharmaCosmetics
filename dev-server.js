@@ -173,15 +173,19 @@ const engine = new Liquid({
 // ── Custom Liquid block tags (Sapo-specific, không có trong LiquidJS core) ──
 // paginate: tag đặc trưng của Sapo/Shopify — giới hạn số item/trang và cung cấp
 // đối tượng `paginate` (pages, current_page, parts...).
-// Trong dev preview, không phân trang thật — hiện toàn bộ dữ liệu mock (pages=1).
+// 18/11/2026: PHÂN TRANG THẬT như Sapo — {% paginate <mảng> by N %}: lấy mảng (search.results, collection.products, blog.articles...),
+// cắt đúng trang ?page=N, rồi GHI ĐÈ mảng đó trong scope bằng phần của trang (vòng for bên trong chỉ thấy N phần tử);
+// paginate.items = tổng thật, pages/parts có cửa sổ (… như Sapo). Trước đây tag này đổ TOÀN BỘ mảng (trang /search 1.600+ thẻ).
 class PaginateTag extends Tag {
   constructor(token, remainTokens, liquid, parser) {
     super(token, remainTokens, liquid);
     this.byExpr = null;
+    this.srcPath = null;
     try {
-      const byMatch = /\bby\s+(\S+(?:\.\S+)*)/.exec(token.args);
-      if (byMatch) {
-        const tok = new Tokenizer(byMatch[1], liquid.options);
+      const m = /^\s*(\S+)\s+by\s+(\S+(?:\.\S+)*)/.exec(token.args);
+      if (m) {
+        this.srcPath = m[1];
+        const tok = new Tokenizer(m[2], liquid.options);
         this.byExpr = tok.readValue();
       }
     } catch (_) { /* ignore — dùng pageSize mặc định 12 */ }
@@ -202,17 +206,45 @@ class PaginateTag extends Tag {
         pageSize = parseInt(String(val)) || 12;
       } catch (_) { /* giữ default */ }
     }
-    ctx.push({
-      paginate: {
-        pages: 1,
-        current_page: 1,
-        page_size: pageSize,
-        items: 0,
-        previous: false,
-        next: false,
-        parts: [],
-      },
+    // Mảng nguồn theo đường dẫn (vd search.results / collection.products)
+    const path = this.srcPath ? this.srcPath.split('.') : [];
+    let arr = null;
+    try { arr = path.length ? ctx.get(path) : null; } catch (_) { arr = null; }
+    const isArr = Array.isArray(arr);
+    const totalItems = isArr ? arr.length : 0;
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    let cur = 1;
+    try { cur = parseInt(String(ctx.get(['__page']))) || 1; } catch (_) {}
+    cur = Math.min(Math.max(1, cur), totalPages);
+
+    // Cửa sổ trang: 1 … cur-2..cur+2 … last
+    const shown = new Set([1, totalPages]);
+    for (let i = cur - 2; i <= cur + 2; i++) if (i >= 1 && i <= totalPages) shown.add(i);
+    const nums = Array.from(shown).sort((x, y) => x - y);
+    const parts = [];
+    nums.forEach((n, k) => {
+      if (k > 0 && n - nums[k - 1] > 1) parts.push({ title: '…', is_link: false, url: '' });
+      parts.push({ title: n, is_link: n !== cur, url: '?page=' + n });
     });
+
+    const pag = {
+      pages: totalPages,
+      current_page: cur,
+      page_size: pageSize,
+      items: totalItems,
+      previous: cur > 1 ? { url: '?page=' + (cur - 1), title: 'Trang trước', is_link: true } : false,
+      next: cur < totalPages ? { url: '?page=' + (cur + 1), title: 'Trang sau', is_link: true } : false,
+      parts,
+    };
+    const layer = { paginate: pag };
+    if (isArr && path.length >= 2) {
+      // ghi đè path[0].path[1]... = phần của trang, giữ nguyên các trường khác (results_count, products_count...)
+      const slice = arr.slice((cur - 1) * pageSize, cur * pageSize);
+      let parent = null;
+      try { parent = ctx.get([path[0]]); } catch (_) {}
+      if (parent && typeof parent === 'object') layer[path[0]] = Object.assign({}, parent, { [path[1]]: slice });
+    }
+    ctx.push(layer);
     yield this.liquid.renderer.renderTemplates(this.templates, ctx, emitter);
     ctx.pop();
   }
@@ -1073,6 +1105,9 @@ function resolvePrettyPath(pathname, searchParams) {
   if (parts.length === 2 && parts[0] === 'pages' && PAGE_HANDLE_MAP[parts[1]]) {
     return { tpl: PAGE_HANDLE_MAP[parts[1]], routeParams: {} };
   }
+  if (parts.length === 2 && parts[0] === 'pages' && mockModule.realPages && mockModule.realPages[parts[1]]) {
+    return { tpl: 'page', routeParams: { pageHandle: parts[1] } };
+  }
 
   // /blogs/:blogHandle và /blogs/:blogHandle/:articleHandle
   // 2026-10-12: Sapo cho chọn giao diện riêng từng blog/bài (blog.video, article.video) — mock khai báo bằng
@@ -1116,6 +1151,8 @@ function resolvePrettyPath(pathname, searchParams) {
   if (parts.length === 1) {
     const slug = parts[0];
     if (PAGE_HANDLE_MAP[slug]) return { tpl: PAGE_HANDLE_MAP[slug], routeParams: {} };
+    // 2026-11-18: Trang nội dung thật trong data/pages-data.json chưa có template riêng ⇒ dùng templates/page.bwt (như Sapo).
+    if (mockModule.realPages && mockModule.realPages[slug]) return { tpl: 'page', routeParams: { pageHandle: slug } };
     if (mockModule.byAlias[slug]) return { tpl: productTpl(slug), routeParams: { productAlias: slug } };
     if (mockModule.collectionsData[slug]) return { tpl: 'collection', routeParams: { collectionHandle: slug } };
     if (getKnownNavSlugs().has(slug)) return { tpl: 'collection', routeParams: { collectionHandle: slug } };
@@ -1176,7 +1213,7 @@ function buildCartFromLines(lines) {
       title: product.name,
       variant_title: variant.title,
       url: product.url,
-      image: product.featured_image,
+      image: (product.featured_image && product.featured_image.src) || product.featured_image || '', // cart.js của Sapo trả image là CHUỖI URL (trước đây trả object ⇒ template ajaxcart ra src="[object Object]" và sinh request 404)
       sku: variant.sku,
       quantity: line.quantity,
       price: variant.price,
@@ -1296,6 +1333,8 @@ async function renderFullPage(tpl = 'index', queryParams = null, routeParams = {
     finalRouteParams.searchType = queryParams.get('type') || 'product';
   }
   const ctx = mockModule.getContext(tpl, finalRouteParams);
+  // 18/11/2026: số trang hiện tại cho tag paginate (?page=N)
+  ctx.__page = (queryParams && parseInt(queryParams.get('page'), 10)) || 1;
   // Alternate template `?view=<tên>` như Sapo thật: /<alias>?view=viewed → product.viewed.bwt.
   // Trước đây bị bỏ qua nên section "Sản phẩm đã xem" (snippets/section_product_viewed.bwt) nhận
   // về NGUYÊN trang (header + dev toolbar) và chèn vào swiper — lỗi preview local 2026-10-03.
@@ -1914,6 +1953,53 @@ async function requestHandler(req, res) {
     }
   }
 
+  // ── Route: /api/settings — Local settings API
+  if (pathname === '/api/settings') {
+    if (req.method === 'GET') {
+      try {
+        const schemaRaw = fs.readFileSync(path.join(ROOT, 'configs/settings_schema.json'), 'utf8');
+        const dataRaw = fs.readFileSync(path.join(ROOT, 'configs/settings_data.json'), 'utf8');
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ schema: JSON.parse(schemaRaw), data: JSON.parse(dataRaw) }));
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: e.message }));
+      }
+      return;
+    }
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', () => {
+        try {
+          const newSettings = JSON.parse(body);
+          const dataFilePath = path.join(ROOT, 'configs/settings_data.json');
+          const backupPath = path.join(ROOT, 'configs', 'settings_data.backup.' + Date.now() + '.json');
+          if (fs.existsSync(dataFilePath)) fs.copyFileSync(dataFilePath, backupPath);
+          fs.writeFileSync(dataFilePath, JSON.stringify(newSettings, null, 2), 'utf8');
+          loadMock();
+          assetCache.clear();
+          broadcast('change', 'settings_data.json');
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ success: true, message: 'Settings saved successfully' }));
+        } catch (e) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: e.message }));
+        }
+      });
+      return;
+    }
+  }
+
+  // ── Route: /admin/settings — Local Theme Settings Dashboard
+  if (pathname === '/admin/settings') {
+    const htmlPath = path.join(ROOT, 'dev-preview/settings-admin.html');
+    if (fs.existsSync(htmlPath)) {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(fs.readFileSync(htmlPath, 'utf8'));
+      return;
+    }
+  }
   // ── Route: /__data.json — raw JSON context (dùng với fetch / Postman)
   if (pathname === '/__data.json') {
     const ctx = mockModule.getContext('index');

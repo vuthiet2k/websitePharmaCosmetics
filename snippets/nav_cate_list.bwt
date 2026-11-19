@@ -11,20 +11,20 @@
 			  Utility py-3/pl-2.5/pr-12 (+ lg:p-0) thay padding 4px cũ của drawer (đã xoá ở global_core) ⇒ mục cao ≥ 44px (B.7); desktop giữ quy tắc cũ. {%- endcomment -%}
 			{%- unless link.url == '/' -%}
 			{%- if linklists[link.alias] -%}
-			<li class="sudes-main-cate-has-child menu-item-count {%if link.active%}active{%endif%}">
-				<a {%if  linklists[link.alias].links.size > 0%}href="javascript:void(0)"{%else%}href="{{link.url}}"{%endif%} title="{{ link.title }}" class="py-3 pl-2.5 pr-12 lg:p-0">
+			<li class="sudes-main-cate-has-child menu-item-count max-[991px]:border-0 max-[991px]:border-b max-[991px]:border-solid max-[991px]:border-line-soft {%if link.active%}active{%endif%}">
+				<a {%if  linklists[link.alias].links.size > 0%}href="javascript:void(0)"{%else%}href="{{link.url}}"{%endif%} title="{{ link.title }}" class="py-0 pl-2.5 pr-12 lg:p-0 max-[991px]:text-sm max-[991px]:font-semibold max-[991px]:normal-case max-[991px]:leading-snug max-[991px]:text-ink max-[991px]:flex max-[991px]:min-h-[44px] max-[991px]:items-center ">
 					{{ link.title }}<i class="icon_mask"></i>
 			</a>
 				{%- comment -%} N18 (24/10/2026): icon ≡ = SVG ui_icon 20px (thay ảnh nền ::before 10px đã xoá ở global_core) — WebKit không vẽ kịp ::before khi giảm chuyển động;
 				  lg:hidden — mega-menu desktop không có icon (trước là ô rỗng 0×0). {%- endcomment -%}
-				<i class="open_mnu down_icon h-12 w-12 lg:hidden">{% include 'ui_icon', name: 'menu', sprite: 'use' %}</i>
+				<i class="open_mnu down_icon h-12 w-12 transition-transform duration-200 motion-reduce:transition-none lg:hidden [&.current]:rotate-180">{% include 'ui_icon', name: 'chevron-down', sprite: 'use' %}</i>
 				<ul class="menu-child sub-menu sudes-sub-mega-menu">
 					{%- for childlink in linklists[link.alias].links -%}
 					{%- if linklists[childlink.alias] -%}
 					<li class="sudes-main-cate-has-child-2 clearfix">
 						<a class="image_thumb gap-3 py-3 pl-2.5 pr-12 lg:gap-0 lg:p-0" href="{{ childlink.url }}" title="{{ childlink.title }}">
 						<div class="image">
-						{%- if childlink.object.image.src != blank -%}<img  class="lazyload image1" src="{{ 'lazy.png' | asset_url}}"  data-src="{{ childlink.object.image.src | img_url: 'large'}}" alt="{{ childlink.title }}">{%- else -%}<span class="pc-mm-noimg lg:min-h-16" aria-hidden="true"><i class="inline-block leading-none">{% include 'ui_icon', name: 'layers', size: 'em', sprite: 'use' %}</i></span>{%- endif -%}
+						{%- if childlink.object.image.src != blank -%}<img class="image1" src="{{ childlink.object.image.src | img_url: 'large'}}" alt="{{ childlink.title }}" width="120" height="120" loading="lazy" decoding="async">{%- else -%}<span class="pc-mm-noimg lg:min-h-16" aria-hidden="true"><i class="inline-block leading-none">{% include 'ui_icon', name: 'layers', size: 'em', sprite: 'use' %}</i></span>{%- endif -%}
 											</div>
 						<span class="line-clamp line-clamp-2">{{ childlink.title }} </span> <i class="icon_mask"></i></a>
 						{%- comment -%} N16 (24/10/2026): icon ≡ chỉ khi menu con có link — linklists[x] của menu rỗng vẫn TRUE ⇒ icon thừa ở mục không có con.
@@ -42,7 +42,7 @@
 					<li class="sudes-main-cate-has-child-2">
 						<a class="image_thumb gap-3 py-3 pl-2.5 pr-12 lg:gap-0 lg:p-0" href="{{ childlink.url }}" title="{{ childlink.title }}">
 						<div class="image">
-						{%- if childlink.object.image.src != blank -%}<img  class="lazyload image1" src="{{ 'lazy.png' | asset_url}}"  data-src="{{ childlink.object.image.src | img_url: 'large'}}" alt="{{ childlink.title }}">{%- else -%}<span class="pc-mm-noimg lg:min-h-16" aria-hidden="true"><i class="inline-block leading-none">{% include 'ui_icon', name: 'layers', size: 'em', sprite: 'use' %}</i></span>{%- endif -%}
+						{%- if childlink.object.image.src != blank -%}<img class="image1" src="{{ childlink.object.image.src | img_url: 'large'}}" alt="{{ childlink.title }}" width="120" height="120" loading="lazy" decoding="async">{%- else -%}<span class="pc-mm-noimg lg:min-h-16" aria-hidden="true"><i class="inline-block leading-none">{% include 'ui_icon', name: 'layers', size: 'em', sprite: 'use' %}</i></span>{%- endif -%}
 											</div>
 						<span class="line-clamp line-clamp-2">{{ childlink.title }} </span></a>
 			</li>

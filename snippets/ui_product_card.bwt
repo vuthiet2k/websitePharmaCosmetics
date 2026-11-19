@@ -36,8 +36,8 @@
 {%- endfor -%}
 {%- comment -%} Vùng chạm ghi min-h-[44px] / h-[44px] (KHÔNG min-h-11 / h-11): thang rem của Tailwind co theo cỡ chữ gốc 14px ⇒ h-11 chỉ ra 38,5px (.clinerules/03 UI-0.4b). {%- endcomment -%}
 {%- comment -%} Chuỗi class ghi NGUYÊN VĂN (Tailwind chỉ sinh CSS cho chuỗi nhìn thấy trong file). `!text-…`: thắng luật màu link của CSS cũ. {%- endcomment -%}
-{%- assign pc_pc_btn = 'mt-2 inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 border-0 bg-card-btn px-3 text-center text-sm font-semibold !text-card-btn-text no-underline rounded-full hover:bg-btn-hover' -%}
-{%- if pc_pc_sale -%}{%- assign pc_pc_btn = 'mt-2 inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 border-0 bg-flash-badge px-3 text-center text-sm font-semibold !text-flash-badge-text no-underline rounded-full hover:brightness-90' -%}{%- endif -%}
+{%- assign pc_pc_btn = 'mt-2 inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap border-0 bg-card-btn px-2 text-center text-xs sm:gap-2 sm:px-3 sm:text-sm font-semibold !text-card-btn-text no-underline rounded-full hover:bg-btn-hover' -%}
+{%- if pc_pc_sale -%}{%- assign pc_pc_btn = 'mt-2 inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap border-0 bg-flash-badge px-2 text-center text-xs sm:gap-2 sm:px-3 sm:text-sm font-semibold !text-flash-badge-text no-underline rounded-full hover:brightness-90' -%}{%- endif -%}
 <article class="relative flex h-full min-w-0 snap-start flex-col [html[data-pc-view=list]_&]:flex-row overflow-hidden border border-solid border-card-line bg-card text-left font-sans rounded-2xl">
   {%- comment -%} html[data-pc-view=list] (nút lưới / danh sách ở trang danh mục) ⇒ thẻ nằm ngang, ảnh cố định bề rộng. {%- endcomment -%}
   <div class="relative [html[data-pc-view=list]_&]:w-28 [html[data-pc-view=list]_&]:shrink-0 md:[html[data-pc-view=list]_&]:w-48">
@@ -52,7 +52,7 @@
     {%- endif -%}
     {%- if wish == true -%}
     <button type="button" class="group absolute right-1 top-1 flex h-[44px] w-[44px] cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-ink-secondary aria-pressed:text-sale" data-pc-wish="{{ product.alias }}" aria-label="Yêu thích {{ pc_pc_name | escape }}" aria-pressed="false">
-      <span class="flex h-[36px] w-[36px] items-center justify-center bg-white rounded-full">
+      <span class="flex h-9 w-9 items-center justify-center bg-white rounded-full">
         <i class="leading-none group-aria-pressed:hidden" data-pc-wish-off aria-hidden="true">{% include 'ui_icon', name: 'heart', size: 20, label: '' %}</i>
         <i class="leading-none [display:none] group-aria-pressed:[display:block]" data-pc-wish-on aria-hidden="true">{% include 'ui_icon', name: 'heart-filled', size: 20, label: '' %}</i>
       </span>
@@ -93,7 +93,7 @@
     {%- else -%}
     <form action="/cart/add" method="post" class="variants m-0" data-cart-form data-id="product-actions-{{ product.id }}" enctype="multipart/form-data">
       <input type="hidden" name="variantId" value="{{ pc_pc_var.id }}">
-      <button type="submit" class="add_to_cart {{ pc_pc_btn }}" aria-label="Thêm vào giỏ: {{ pc_pc_name | strip_html | escape }}">{% include 'ui_icon', name: 'shopping-cart', size: 20, label: '' %}<span>Thêm vào giỏ</span></button>
+      <button type="submit" class="add_to_cart {{ pc_pc_btn }}" aria-label="Thêm vào giỏ: {{ pc_pc_name | strip_html | escape }}">{% include 'ui_icon', name: 'shopping-cart', size: 18, label: '' %}<span class="whitespace-nowrap sm:hidden">{{ settings.card_add_short | default: 'Thêm giỏ' | escape }}</span><span class="whitespace-nowrap max-sm:hidden">{{ settings.card_add_label | default: 'Thêm vào giỏ' | escape }}</span></button>
     </form>
     {%- endif -%}
   </div>

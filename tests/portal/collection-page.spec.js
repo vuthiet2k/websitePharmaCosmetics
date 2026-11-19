@@ -13,16 +13,16 @@ test('banner: h1 duy nhất = tên danh mục, có nhãn nhỏ và 4 cam kết',
 
 test('dải voucher riêng dưới banner: ô màu theo mức giảm, "Lấy mã" + popup điều kiện', async ({ page }) => {
   await page.goto(URL);
-  const vouchers = page.locator('.pc-voucher');
+  const vouchers = page.locator('[data-voucher]');
   await expect(vouchers.first()).toBeVisible();
   // Nằm giữa banner và cột lọc/sản phẩm.
   const heroBottom = await page.locator('.pc-col-hero').evaluate(e => e.getBoundingClientRect().bottom);
-  const stripTop = await page.locator('.pc-vouchers').evaluate(e => e.getBoundingClientRect().top);
+  const stripTop = await page.locator('[data-vouchers]').evaluate(e => e.getBoundingClientRect().top);
   const gridTop = await page.locator('.block-collection').evaluate(e => e.getBoundingClientRect().top);
   expect(stripTop).toBeGreaterThanOrEqual(heroBottom);
   expect(gridTop).toBeGreaterThan(stripTop);
-  await expect(vouchers.first().locator('.pc-voucher__badge')).toHaveText('-50K');
-  await expect(page.locator('.pc-voucher--percent .pc-voucher__badge')).toHaveText('-10%'); // mã VIP6 "10%" ⇒ phần trăm
+  await expect(vouchers.first().locator('[data-voucher-badge]')).toHaveText('-50K');
+  await expect(page.locator('[data-voucher-badge]', { hasText: '%' })).toHaveText('-10%'); // mã VIP6 "10%" ⇒ phần trăm
   await expect(vouchers.first().locator('.js-copy')).toHaveAttribute('data-copy', 'LAMQUEN');
   await vouchers.first().locator('.info-button').click();
   await expect(page.locator('.popup-coupon')).toHaveClass(/active/);
@@ -83,7 +83,7 @@ test.describe('điện thoại', () => {
   test.use({ viewport: { width: 375, height: 812 } });
   test('không tràn ngang, dải voucher có tiêu đề "Voucher cho danh mục này"', async ({ page }) => {
     await page.goto(URL);
-    await expect(page.locator('.pc-vouchers__title')).toBeVisible();
+    await expect(page.locator('[data-vouchers] h2')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0);
   });
 });

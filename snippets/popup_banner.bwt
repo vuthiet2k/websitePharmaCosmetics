@@ -1,89 +1,64 @@
-<div id="modal-banner" class="modal-banner" style="display:none;" data-delay="{{settings.popup_banner_delay_time}}">
-	<div class="modalbanner-overlay fancybox-overlay fancybox-overlay-fixed"></div>
-	<div class="modal-banner-promo">
-		<div class="modal-body" >
-
-			<form>
-				<a href="{{ settings.popup_banner_url }}" title="{{ settings.popup_banner_alt }}" class="banner-promotion" data-section="banner_popup">
-					<script type="text/x-custom-template" data-template="banner_popup">
-						<img width="{{settings.popup_banner_width}}" height="{{settings.popup_banner_height}}" alt="{{ settings.popup_banner_alt }}" src="{{ settings.popup_banner_image | img_url: 'large' }}" />
-					</script>
-				</a>
-				<div class="check-close">
-					<input type="checkbox" id="check-close-banner" name="vehicle1" value="Bike">
-					<label for="check-close-banner">Không hiển thị hôm nay</label>
-				</div>
-				<a title="Đóng" class="modalbanner-close close-window" href="javascript:;">
-					{%- comment -%} L03b30 (03/11/2026): bỏ Font Awesome (fa-regular fa-xmark — bản Free không có, hiện ô lỗi glyph) — ui_icon x size em. {%- endcomment -%}
-					<i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'x', size: 'em' %}</i>
-				</a>
-			</form>
-
+{%- comment -%}
+  popup_banner.bwt — popup banner trang chủ (cảnh báo lừa đảo giao hàng...). M-07 (17/11/2026): viết lại 100% Tailwind (bỏ CSS #modal-banner trong header_style, bỏ jQuery .show()/.hide()):
+  hiện / ẩn có hiệu ứng FADE bằng class (transition-opacity + opacity-0 ⇄ opacity-100; motion-reduce:transition-none và JS bỏ chờ khi người dùng giảm chuyển động),
+  khoá cuộn nền khi mở (body overflow-hidden), Escape đóng, nút đóng 44px, ô "Không hiển thị hôm nay" (lưu theo ngày, localStorage): 100% Tailwind, không nền, chữ trắng căn giữa. Checkbox gốc (peer) phủ kín hàng, tàng hình — CSS cũ cho input[type=checkbox] opacity 0 + position absolute, tận dụng làm vùng bấm; ô tích vẽ bằng span kế bên (peer-checked). Hàng là div flex, ô tích + chữ là 2 label anh em của input (peer-checked chỉ tác động anh em); CSS cũ ép label inline-block có cờ ưu tiên nên không dùng label làm khung flex. Lưu ý 18/11/2026 — đã bỏ .pc-check.
+  Ảnh = settings.popup_banner_image (Cấu hình theme › popup), chỉ tải sau khi hết thời gian chờ (template script). Chưa có ảnh / chưa bật ⇒ footer_script không nạp snippet này.
+{%- endcomment -%}
+<div id="modal-banner" class="fixed inset-0 z-[9999] hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300 motion-reduce:transition-none" data-delay="{{ settings.popup_banner_delay_time }}" role="dialog" aria-modal="true" aria-label="{{ settings.popup_banner_alt | default: 'Thông báo' | escape }}" tabindex="-1">
+	<div class="modalbanner-overlay absolute inset-0 bg-slate-900/80" data-popup-close></div>
+	<div class="relative flex max-h-full w-full max-w-sm flex-col">
+		<a href="{{ settings.popup_banner_url }}" title="{{ settings.popup_banner_alt | escape }}" class="banner-promotion block overflow-hidden rounded-2xl bg-white" data-section="banner_popup">
+			<script type="text/x-custom-template" data-template="banner_popup">
+				<img class="block h-auto max-h-screen w-full object-contain" width="{{ settings.popup_banner_width }}" height="{{ settings.popup_banner_height }}" alt="{{ settings.popup_banner_alt | escape }}" src="{{ settings.popup_banner_image | img_url: 'large' }}" />
+			</script>
+		</a>
+		<button type="button" class="modalbanner-close absolute right-2 top-2 inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-0 bg-white p-0 text-ink hover:bg-brand-tint" aria-label="Đóng" data-popup-close>{% include 'ui_icon', name: 'x', size: 24 %}</button>
+		<div class="relative mt-2 flex min-h-[44px] items-center justify-center gap-2 text-sm font-semibold text-white">
+			<input type="checkbox" id="check-close-banner" class="peer absolute left-0 top-0 min-h-[44px] cursor-pointer">
+			<label for="check-close-banner" class="pointer-events-none h-6 w-6 shrink-0 rounded-md border-2 border-solid border-white bg-transparent text-center leading-none text-transparent peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white peer-focus-visible:border-primary" aria-hidden="true">{% include 'ui_icon', name: 'check', size: 16, label: '' %}</label>
+			<label for="check-close-banner" class="pointer-events-none">Không hiển thị hôm nay</label>
 		</div>
 	</div>
 </div>
 
 <script>
-	$(document).ready(function($) {
-		var modalPopup = $('.modal-banner');
-		var close = $('.modalbanner-close');
-		var checkBox = $('#check-close-banner');
-		var banner = $('#modal-banner .banner-promotion');
+(function () {
+	var box = document.getElementById('modal-banner');
+	if (!box) return;
+	var check = document.getElementById('check-close-banner');
+	var link = box.querySelector('.banner-promotion');
+	var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	var DAY_KEY = 'popupClosedDate';
+	function today() { return new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }); }
+	function rememberToday() { try { localStorage.setItem(DAY_KEY, today()); } catch (e) {} }
+	function closedToday() { try { return localStorage.getItem(DAY_KEY) === today(); } catch (e) { return false; } }
 
-		function hidePopup() {
-			modalPopup.hide();
-		}
-
-		function isPopupClosed() {
-			// Kiểm tra xem cookie hoặc localStorage có thông tin ngày giống với ngày hiện tại hay không
-			var storedDate = localStorage.getItem('popupClosedDate');
-			if (storedDate) {
-				var currentDate = new Date().toLocaleDateString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
-				return storedDate === currentDate;
-			}
-			return false;
-		}
-
-		$(document).on('click', '#modal-banner .modalbanner-overlay, .fancybox-overlay', function(e) {
-			hidePopup();
-			if (checkBox.prop('checked')) {
-				// Lưu ngày hiện tại vào localStorage
-				var currentDate = new Date().toLocaleDateString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
-				localStorage.setItem('popupClosedDate', currentDate);
-			}
-		});
-
-		close.click(function() {
-			hidePopup();
-			if (checkBox.prop('checked')) {
-				// Lưu ngày hiện tại vào localStorage
-				var currentDate = new Date().toLocaleDateString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
-				localStorage.setItem('popupClosedDate', currentDate);
-			}
-		});
-
-		banner.click(function() {
-			// Lưu ngày hiện tại vào localStorage
-			var currentDate = new Date().toLocaleDateString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
-			localStorage.setItem('popupClosedDate', currentDate);
-		});
-
-		if (!isPopupClosed()) {
-			var delayTime = $('#modal-banner').data('delay') || 3000;
-			setTimeout(function() {
-				var section = $('#modal-banner .banner-promotion');
-				var template = $('script[data-template="banner_popup"]').html();
-				if(template) {
-					$('.banner-promotion[data-section="banner_popup"]').html(template);
-					var banner = $('#modal-banner .banner-promotion');
-					banner.click(function() {
-						// Lưu ngày hiện tại vào localStorage
-						var currentDate = new Date().toLocaleDateString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
-						localStorage.setItem('popupClosedDate', currentDate);
-					});
-				}
-				modalPopup.show();
-			}, delayTime);
-		}
-	});
+	function open() {
+		var tpl = box.querySelector('script[data-template="banner_popup"]');
+		if (tpl && link) link.innerHTML = tpl.innerHTML;
+		box.classList.remove('hidden');
+		box.classList.add('flex');
+		void box.offsetWidth; /* ép trình duyệt tính layout rồi mới đổi opacity ⇒ có fade-in */
+		box.classList.remove('opacity-0');
+		box.classList.add('opacity-100');
+		document.body.classList.add('overflow-hidden');
+		var c = box.querySelector('.modalbanner-close');
+		if (c) c.focus();
+	}
+	function close() {
+		if (check && check.checked) rememberToday();
+		box.classList.remove('opacity-100');
+		box.classList.add('opacity-0');
+		document.body.classList.remove('overflow-hidden');
+		var done = function () { box.classList.remove('flex'); box.classList.add('hidden'); };
+		if (reduce) done(); else box.addEventListener('transitionend', done, { once: true });
+	}
+	box.addEventListener('click', function (e) { if (e.target.closest('[data-popup-close]')) close(); });
+	if (link) link.addEventListener('click', rememberToday);
+	document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && box.classList.contains('opacity-100')) close(); });
+	if (!closedToday()) {
+		var delay = parseInt(box.getAttribute('data-delay'), 10) || 3000;
+		setTimeout(open, delay);
+	}
+})();
 </script>

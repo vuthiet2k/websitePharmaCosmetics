@@ -17,7 +17,9 @@
 {%- for testi_a in testi_case_blog.articles limit: 50 -%}
   {%- if testi_n < 3 and testi_a.tags contains testi_pin_tag -%}
     {%- assign pc_bs_article = testi_a -%}{%- include 'ba_case_source' -%}
-    {%- if pc_bs_before != blank and pc_bs_after != blank -%}
+    {%- comment -%} M-03 (17/11/2026): ẩn ca còn dữ liệu giả ([DEMO], ảnh placehold.co) cho tới khi có ca thật. {%- endcomment -%}
+    {%- assign testi_real = true -%}{%- if testi_a.title contains '[DEMO]' or pc_bs_before contains 'placehold.co' -%}{%- assign testi_real = false -%}{%- endif -%}
+    {%- if pc_bs_before != blank and pc_bs_after != blank and testi_real -%}
       {%- assign t_key = testi_a.id -%}
       {%- assign t_title = testi_a.title -%}
       {%- assign t_concern = pc_bs_group | default: t_title -%}
@@ -46,27 +48,28 @@
 {%- if testi_n > 0 -%}
 <section class="bg-surface-soft py-10 lg:py-16 font-sans text-ink" aria-labelledby="section-testimonials-title">
   <div class="container">
-    <div class="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-8 lg:gap-12 items-start" data-h4-tabs>
-      <div class="flex flex-col">
-        <p class="m-0 text-xs font-bold uppercase tracking-wider text-primary hidden lg:block">{{ settings.home_testi_eyebrow | default: 'Kết quả thực tế' | escape }}</p>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 items-start" data-h4-tabs>
+      <div class="flex flex-col lg:col-span-1">
         {%- capture testi_case_fb -%}/blogs/{{ testi_case_handle }}{%- endcapture -%}
         {%- assign testi_more_url = settings.home_testi_viewall_url | default: testi_case_blog.url | default: testi_case_fb -%}
-        <div class="flex items-center justify-between gap-3 mt-1 lg:mt-2">
-          <h2 class="m-0 text-2xl lg:text-3xl font-bold text-brand-deep" id="section-testimonials-title">{{ settings.home_testi_title | default: 'Hành trình da của khách hàng' | escape }}</h2>
-          <a class="inline-flex lg:hidden items-center gap-1 text-xs font-bold text-primary no-underline shrink-0" href="{{ testi_more_url | escape }}">{{ settings.home_testi_viewall_short | default: 'Tất cả' | escape }}{% include 'ui_icon', name: 'chevron-right' %}</a>
+        {%- capture testi_sub -%}{{ settings.home_testi_subtitle | default: 'Ảnh thật, đăng với sự đồng ý của khách. Kết quả phụ thuộc vào tình trạng da và cơ địa mỗi người.' | escape }}{% if settings.home_testi_disclaimer != blank %} {{ settings.home_testi_disclaimer | escape }}{% endif %}{%- endcapture -%}
+        {%- assign testi_title_t = settings.home_testi_title | default: 'Hành trình da của khách hàng' | escape -%}
+        {%- assign testi_eyebrow_t = settings.home_testi_eyebrow | default: 'Kết quả thực tế' | escape -%}
+        {%- include 'ui_section_head', title: testi_title_t, title_id: 'section-testimonials-title', eyebrow: testi_eyebrow_t, desc: testi_sub, url: testi_more_url, label: 'Xem tất cả kết quả trước và sau', mobile_only: true, wrap_class: 'mb-0' -%}
+        
+        <div class="swiper-container mt-6 overflow-hidden lg:overflow-visible" data-pc-slider data-gap="8" data-desktop-off>
+          <ul class="swiper-wrapper m-0 list-none p-0 lg:flex-col lg:gap-2" role="tablist" aria-label="Chọn câu chuyện khách hàng">{{ testi_tabs }}</ul>
         </div>
-        <p class="m-0 mt-3 text-sm leading-relaxed text-ink-muted">{{ settings.home_testi_subtitle | default: 'Ảnh thật, đăng với sự đồng ý của khách. Kết quả phụ thuộc vào tình trạng da và cơ địa mỗi người.' | escape }}{% if settings.home_testi_disclaimer != blank %} {{ settings.home_testi_disclaimer | escape }}{% endif %}</p>
         
-        <ul class="m-0 mt-6 flex list-none gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible p-0" role="tablist" aria-label="Chọn câu chuyện khách hàng">{{ testi_tabs }}</ul>
-        
-        <a class="hidden lg:inline-flex items-center gap-2 mt-8 text-sm font-bold text-brand-deep hover:text-primary no-underline transition-colors" href="{{ testi_more_url | escape }}">
+        <a class="max-lg:hidden lg:inline-flex items-center gap-2 mt-8 text-sm font-bold text-brand-deep hover:text-primary no-underline transition-colors" href="{{ testi_more_url | escape }}">
           <span>{{ settings.home_testi_viewall_text | default: 'Xem tất cả kết quả trước & sau' | escape }}</span>
           {% include 'ui_icon', name: 'arrow-right' %}
         </a>
       </div>
-      <div>{{ testi_panels }}</div>
+      <div class="lg:col-span-2">{{ testi_panels }}</div>
     </div>
   </div>
 </section>
 {%- include 'home_tabs_script' -%}
+{%- include 'pc_swiper_boot' -%}
 {%- endif -%}

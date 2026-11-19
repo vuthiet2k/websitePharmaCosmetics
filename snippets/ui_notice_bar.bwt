@@ -22,28 +22,25 @@
   trên-trái Hero (section_hero), cuộn đi cùng Hero (không dính màn, D.17). Bấm câu / «Xem thêm» ⇒ trang đầy đủ delivery_alert_page_url
   (Trang nội dung alias canh-bao-lua-dao, giao diện mặc định — 14/11/2026 bỏ page.canh-bao-lua-dao). ✕ dùng chung khoá nhớ với dải vàng các trang khác (tắt 1 nơi ⇒ ẩn cả 2). {%- endcomment -%}
 {%- assign pc_nb_page = settings.delivery_alert_page_url | default: '/canh-bao-lua-dao' -%}
-<aside class="pc-notice-hero" id="pc-notice-hero" aria-label="{{ settings.delivery_alert_aria | default: 'Cảnh báo an toàn khi nhận hàng' | escape }}" data-days="{{ pc_nb_days }}" data-key="delivery-{{ pc_nb_key }}">
-  <a class="pc-notice-hero__msg" href="{{ pc_nb_page | escape }}"><strong class="pc-notice-hero__title">{{ pc_nb_title | escape }}</strong> {{ pc_nb_text | escape }} <span class="pc-notice-hero__more">{{ pc_nb_more | escape }}</span></a>
-  <button type="button" class="pc-notice-hero__close" data-pc-notice-close aria-label="{{ settings.delivery_alert_close_label | default: 'Đóng cảnh báo' | escape }}">{% include 'ui_icon', name: 'x', size: 20, label: '' %}</button>
+<div class="max-lg:contents lg:pointer-events-none lg:absolute lg:inset-x-0 lg:top-32 lg:z-10"><div class="container max-lg:contents">
+<aside class="max-lg:absolute left-4 top-1/2 z-10 box-border flex w-1/2 -translate-y-1/2 items-start lg:pointer-events-auto lg:relative lg:-ml-1 lg:left-auto lg:top-auto lg:z-auto lg:translate-y-0 gap-1 rounded-2xl py-1 pl-4 pr-0 font-sans text-white opacity-0 transition-opacity duration-300 motion-reduce:transition-none" id="pc-notice-hero" aria-label="{{ settings.delivery_alert_aria | default: 'Cảnh báo an toàn khi nhận hàng' | escape }}" data-days="{{ pc_nb_days }}" data-key="delivery-{{ pc_nb_key }}">
+  <span class="pointer-events-none absolute inset-0 rounded-2xl bg-sale opacity-80" aria-hidden="true"></span>
+  <a class="relative block min-h-[44px] flex-1 py-2 text-xs leading-relaxed text-white no-underline transition-colors hover:text-sale-tint md:text-sm" href="{{ pc_nb_page | escape }}"><span class="max-md:line-clamp-2 md:block"><strong class="font-bold">{{ pc_nb_title | escape }}</strong> {{ pc_nb_text | escape }}</span><span class="block font-semibold underline underline-offset-2">{{ pc_nb_more | escape }}</span></a>
+  <button type="button" class="relative m-0 inline-flex min-h-[44px] min-w-[44px] shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-white hover:opacity-80" data-pc-notice-close aria-label="{{ settings.delivery_alert_close_label | default: 'Đóng cảnh báo' | escape }}">{% include 'ui_icon', name: 'x', size: 20, label: '' %}</button>
 </aside>
+</div></div>
 <script>
 (function () {
   var el = document.getElementById('pc-notice-hero'); if (!el) return;
   var days = Number(el.getAttribute('data-days')) || 0, key = 'pc_notice_' + el.getAttribute('data-key'), store = null;
   try { store = days > 0 ? window.localStorage : window.sessionStorage; } catch (e) {}
-  try { var at = store && Number(store.getItem(key)); if (at && (days <= 0 || Date.now() - at < days * 864e5)) el.hidden = true; } catch (e) {}
-  /* Header trang chủ nằm ĐÈ lên Hero (absolute/fixed) ⇒ đặt thẻ ngay dưới mép header, không che menu */
-  function place() {
-    var hd = document.querySelector('header.header'), hero = el.parentNode; if (!hd || !hero) return;
-    var gap = window.innerWidth >= 1024 ? 24 : 12, hb = hd.getBoundingClientRect().bottom - hero.getBoundingClientRect().top;
-    el.style.top = (hb > 0 && hb < hero.offsetHeight / 2 ? hb + gap : gap) + 'px';
-    var lg = window.innerWidth >= 1024 && hd.querySelector(':is(.card, .main-header) a[href="/"] img, :is(.card, .main-header) a[href="/"]'); /* desktop: thẳng mép logo như UNIQLO */
-    el.style.left = lg && lg.getBoundingClientRect().width ? Math.max(16, Math.round(lg.getBoundingClientRect().left - hero.getBoundingClientRect().left)) + 'px' : '';
-  }
-  place(); window.addEventListener('resize', place); window.addEventListener('load', place);
+  try { var at = store && Number(store.getItem(key)); if (at && (days <= 0 || Date.now() - at < days * 864e5)) { el.hidden = true; el.classList.add('!hidden'); } } catch (e) {}
+  /* 18/11/2026 (PO): vị trí bằng class Tailwind, không style inline do JS đặt (M-28). Mobile (dưới lg): aside w-1/2, góc trái left-4, căn giữa DỌC (top-1/2 -translate-y-1/2); 2 div bọc dùng max-lg:contents ⇒ không sinh hộp, mobile không đổi. Từ lg: div bọc absolute inset-x-0 top-32 (dưới chân header ~10px) + .container ⇒ lề trái thẳng hàng với logo/nội dung trang, aside static w-1/2 của container (KHÔNG căn giữa ngang/dọc). 3 hàng: 2 hàng chữ (line-clamp-2) + hàng 3 "Xem thêm" luôn hiện, gạch chân; cả thanh là link tới trang đầy đủ. Nền đỏ mờ là lớp phụ bg-sale opacity-80 (bg-sale/85 không sinh được với màu var()). */
+  function show() { el.classList.remove('opacity-0'); }
+  if (document.readyState === 'complete') show(); else { window.addEventListener('load', show); setTimeout(show, 800); }
   var btn = el.querySelector('[data-pc-notice-close]');
   if (btn) btn.addEventListener('click', function () {
-    el.hidden = true;
+    el.hidden = true; el.classList.add('!hidden');
     try { if (store) store.setItem(key, String(Date.now())); } catch (e) {}
     var h = el.parentNode && el.parentNode.querySelector('a[href], button'); if (h && h.focus) h.focus(); /* focus không rơi về <body> */
   });

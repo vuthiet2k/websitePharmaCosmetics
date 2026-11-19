@@ -224,7 +224,7 @@ async function flows(cr, wk) {
   } catch (e) { ok('L10', false, 'lỗi: ' + e.message.slice(0, 100)); } await ctx.close(); }
   // L15: popup voucher — Escape đóng, nút đóng ≥ 44px
   { const ctx = await mob(); const p = await ctx.newPage(); try { await p.goto(BASE + '/collections/all', { waitUntil: 'load' }); await p.waitForTimeout(800);
-    const info = p.locator('.pc-voucher__info, [data-pc-modal-open]').first(); if (await info.count()) { await info.scrollIntoViewIfNeeded(); await info.click(); await p.waitForTimeout(500);
+    const info = p.locator('.info-button, [data-pc-modal-open]').first(); if (await info.count()) { await info.scrollIntoViewIfNeeded(); await info.click(); await p.waitForTimeout(500);
       const st = await p.evaluate(() => { const m = [...document.querySelectorAll('[role=dialog], .pc-modal, .popup-coupon')].find((e) => e.getBoundingClientRect().height > 0); if (!m) return null; const c = m.querySelector('button[aria-label*="Đóng"], .pc-modal__close, button[class*=close]'); const r = c ? c.getBoundingClientRect() : { width: 0, height: 0 }; return { closeW: Math.round(r.width), closeH: Math.round(r.height), focusIn: m.contains(document.activeElement) }; });
       await p.keyboard.press('Escape'); await p.waitForTimeout(400);
       const open = await p.evaluate(() => [...document.querySelectorAll('[role=dialog], .pc-modal, .popup-coupon')].some((e) => e.getBoundingClientRect().height > 0 && getComputedStyle(e).visibility !== 'hidden'));

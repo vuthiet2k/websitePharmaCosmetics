@@ -36,11 +36,10 @@ const demoSettings = {
 
   // ── section_flash_sale ───────────────────────────────────────────────────
   home_flashsale_collection:        'flash-sale-1',
-  home_flashsale_title:             'Flash Sale Hôm Nay',
+  home_flashsale_title:             'Flash sale',
   home_flashsale_limit:             8,
   home_flashsale_countdown_enable:  true,
-  home_flashsale_countdown_title:   'Kết thúc sau:',
-  home_flashsale_countdown_end:     '2026-12-31T23:59:59',
+  home_flashsale_countdown_title:   'Thời gian khuyến mãi',
 
   // ── section_product_tab_1 ────────────────────────────────────────────────
   section_tab_1_title:    'Mua sắm theo nhu cầu',
@@ -84,21 +83,7 @@ const demoSettings = {
   home_hero_btn1_text:      'Khám phá ngay',
   home_hero_btn1_url:       '/san-pham-noi-bat',
 
-  // ── pc-section_stats ─────────────────────────────────────────────────────
-  home_stat_1_target: 98,    home_stat_1_suffix: '%',  home_stat_1_label: 'Khách hàng hài lòng',
-  home_stat_2_target: 15,    home_stat_2_suffix: '+',  home_stat_2_label: 'Thương hiệu độc quyền',
-  home_stat_3_target: 10000, home_stat_3_suffix: '+',  home_stat_3_label: 'Đơn hàng mỗi tháng',
-  home_stat_4_text:   '24/7',                           home_stat_4_label: 'Hỗ trợ tư vấn',
 
-  // ── pc-section_solutions ─────────────────────────────────────────────────
-  solutions_title:    'Giải pháp theo vấn đề da',
-  solutions_subtitle: 'Tìm đúng sản phẩm cho từng mối lo của làn da bạn.',
-  solutions_enable_1: true, solutions_icon_1: 'fa-solid fa-circle-dot', solutions_label_1: 'Trị mụn',       solutions_url_1: '/tri-mun',
-  solutions_enable_2: true, solutions_icon_2: 'fa-solid fa-sun',         solutions_label_2: 'Trị nám',       solutions_url_2: '/tri-nam',
-  solutions_enable_3: true, solutions_icon_3: 'fa-solid fa-face-smile',  solutions_label_3: 'Chống lão hoá', solutions_url_3: '/chong-lao-hoa',
-  solutions_enable_4: true, solutions_icon_4: 'fa-solid fa-droplet',     solutions_label_4: 'Dưỡng ẩm',     solutions_url_4: '/duong-am',
-  solutions_enable_5: true, solutions_icon_5: 'fa-solid fa-shield',      solutions_label_5: 'Chống nắng',   solutions_url_5: '/chong-nang',
-  solutions_enable_6: true, solutions_icon_6: 'fa-solid fa-leaf',        solutions_label_6: 'Phục hồi',     solutions_url_6: '/duong-am',
 
   // ── pc-section_brand_marquee ──────────────────────────────────────────────
   display_brand_1:  true,  brand_1_link:  'san-pham-ban-chay-noi-bat',
@@ -129,17 +114,22 @@ const demoSettings = {
   skinhealthy_col_invasive:         'tri-mun',
   skinhealthy_programs_url:         '/lieu-trinh',
   skinhealthy_services_url:         '/skinhealthy-services',
-  // Ưu tiên env (build:vercel / preview có .env với real GAS URL); demo fallback nếu thiếu.
+  // Ưu tiên env (build:vercel / preview có .env với real GAS URL); thiếu thì để trống (không dùng URL giả).
   // Xem .env.example — copy sang .env và điền Web App URL được phép trước khi build staging.
-  mops_gas_url:                     process.env.MOPS_GAS_URL || 'https://script.google.com/macros/s/demo/exec',
+  mops_gas_url:                     process.env.MOPS_GAS_URL || '',
 
 };
 
 // ── Override mạnh (luôn thắng settings thực — dùng khi test UI mới) ──────────
 const overrideSettings = {
-  // Ví dụ: ép màu chủ đạo để test palette mới
-  // main_color: '#0a3d62',
-  // sub_color:  '#1e5f74',
+  // 2026-11-18 (M-07): popup ảnh THẬT trên live (#modal-banner, https://pharmacosmetics-vn.com/ — ảnh nằm trong <script
+  // type="text/x-custom-template">). settings_data.json đang để popup_banner_enable=false và chưa có ảnh nên phải ghi đè ở đây
+  // (settings thật thắng demoSettings) để dev-server hiện đúng như live. Nguồn: phase/mobile-parity-2026-11/du-lieu/06-popup-canh-bao.json
+  popup_banner_enable: true,
+  popup_banner_url:    '/', // ảnh popup trỏ về trang chủ LOCAL (không nhảy sang live)
+  // Trang chủ live hiển thị đúng 16 hoạt chất (menu 'mua-sam-theo-thanh-phan' có 29) ⇒ dùng menu 16 mục như live
+  home_ing_menu:       'hoat-chat-trang-chu',
+  popup_banner_image:  'https://bizweb.dktcdn.net/thumb/large/100/415/053/theme_temp/1180781/assets/798396ba-50c3-41aa-a587-79cb680df688-1-d33312b9-e283-47f9-94c1-dfeaae78e5af.jpg',
 };
 
 module.exports = { demoSettings, overrideSettings };

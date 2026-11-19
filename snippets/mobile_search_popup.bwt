@@ -4,10 +4,8 @@
   {%- comment -%} Header: Back ← · Form (input + clear X) · Submit icon {%- endcomment -%}
   <div class="search-overlay__header">
 
-    <button class="search-overlay__back" id="mb-search-close" type="button" aria-label="Quay lại">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
-      </svg>
+    <button class="search-overlay__back min-h-[44px] min-w-[44px] inline-flex items-center justify-center" id="mb-search-close" type="button" aria-label="Quay lại">
+      {% include 'ui_icon', name: 'arrow-left', size: 24 %}
     </button>
 
     <form class="search-overlay__form" action="/search" method="get" id="mb-search-form">
@@ -22,17 +20,13 @@
         enterkeyhint="search"
       >
       <input type="hidden" name="type" value="product">
-      <button type="button" class="search-overlay__clear" id="mb-search-clear" aria-label="Xóa" hidden>
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true">
-          <path d="M9.13.87L5 5 .87.87.87.87 0 1.74l.01.01L4.13 5 0 8.88l.87.87L5 5.87l4.13 4.13.87-.87L5.87 5 9.13 1.74z"/>
-        </svg>
+      <button type="button" class="search-overlay__clear min-h-[44px] min-w-[44px] inline-flex items-center justify-center" id="mb-search-clear" aria-label="Xóa" hidden>
+        {% include 'ui_icon', name: 'x', size: 'em' %}
       </button>
     </form>
 
-    <button type="submit" form="mb-search-form" class="search-overlay__submit" aria-label="Tìm kiếm">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-      </svg>
+    <button type="submit" form="mb-search-form" class="search-overlay__submit min-h-[44px] min-w-[44px] inline-flex items-center justify-center" aria-label="Tìm kiếm">
+      {% include 'ui_icon', name: 'search', size: 20 %}
     </button>
 
   </div>
@@ -42,44 +36,43 @@
 
     {%- comment -%} 2026-10-07: dùng chung khuyến mãi tìm kiếm với desktop (header_search_gg_title/url) — trường riêng header_search_promo đã xoá theo yêu cầu. {%- endcomment -%}
     {%- if settings.header_search_gg_title != blank -%}
-    <a class="coupon_search" href="{{settings.header_search_gg_url}}" title="{{settings.header_search_gg_title}}">
-      <div class="search-overlay__promo">
-        <span class="search-overlay__promo-icon" aria-hidden="true">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 12 20 22 4 22 4 12"/>
-            <rect x="2" y="7" width="20" height="5"/>
-            <line x1="12" y1="22" x2="12" y2="7"/>
-            <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
-            <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
-          </svg>
-        </span>
-        <p class="search-overlay__promo-text">{{ settings.header_search_gg_title }}</p>
-      </div>
+    <a class="coupon_search mx-4 mt-3 flex items-center gap-3 rounded-xl bg-brand-tint p-3 text-brand-deep no-underline" href="{{settings.header_search_gg_url}}" title="{{settings.header_search_gg_title}}">
+      <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-primary" aria-hidden="true">{% include 'ui_icon', name: 'gift', size: 20 %}</span>
+      <p class="m-0 line-clamp-2 text-sm leading-snug">{{ settings.header_search_gg_title }}</p>
     </a>
     {%- endif -%}
 
     {%- comment -%} Lịch sử tìm kiếm — JS render từ localStorage {%- endcomment -%}
-    <div class="search-overlay__section" id="mb-recent" style="display:none">
-      <p class="search-overlay__section-label">Tìm kiếm gần đây</p>
-      <ul class="search-overlay__recent-list" id="mb-recent-list"></ul>
+    <div class="px-4 pt-3" id="mb-recent" hidden>
+      <p class="m-0 mb-1 text-xs font-bold normal-case text-ink-muted">Tìm kiếm gần đây</p>
+      <ul class="m-0 list-none p-0" id="mb-recent-list"></ul>
+      <template id="mb-recent-tpl">
+        <li class="flex items-center justify-between border-0 border-b border-solid border-line-soft last:border-b-0">
+          <a class="flex min-h-[44px] min-w-0 flex-1 items-center gap-3 text-sm text-ink no-underline" data-mb-recent-link href="/search">
+            <span class="shrink-0 text-ink-muted" aria-hidden="true">{% include 'ui_icon', name: 'history', size: 20 %}</span>
+            <span class="truncate" data-mb-recent-text></span>
+          </a>
+          <button type="button" class="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-ink-muted hover:text-sale" data-mb-recent-del aria-label="Xóa">{% include 'ui_icon', name: 'x', size: 20 %}</button>
+        </li>
+      </template>
     </div>
 
     {%- comment -%} Đề xuất phổ biến — từ settings, horizontal scroll {%- endcomment -%}
     {%- if settings.header_search_suggest and settings.header_search_suggest_list != blank -%}
-    <div class="search-overlay__section">
-      <p class="search-overlay__section-label">
+    <div class="px-4 pt-3" data-mb-section>
+      <p class="m-0 mb-2 text-xs font-bold normal-case tracking-wider text-ink-muted">
         {%- if settings.header_search_suggest_title != blank -%}
           {{ settings.header_search_suggest_title }}
         {%- else -%}
           Đề xuất phổ biến
         {%- endif -%}
       </p>
-      <div class="search-overlay__tags" id="mb-suggest-tags">
+      <div class="flex flex-wrap gap-2 pb-3" id="mb-suggest-tags">
         {%- assign mb_keywords = settings.header_search_suggest_list | split: ',' -%}
         {%- for mb_kw in mb_keywords -%}
           {%- assign mb_kw_clean = mb_kw | strip -%}
           {%- if mb_kw_clean != blank -%}
-          <a class="search-overlay__tag" href="/search?query={{ mb_kw_clean | url_encode }}&type=product">{{ mb_kw_clean }}</a>
+          <a class="inline-flex min-h-[44px] items-center rounded-full border border-solid border-line-soft bg-surface-soft px-4 py-2.5 text-sm text-ink no-underline hover:bg-brand-tint hover:text-brand-deep" data-mb-tag href="/search?query={{ mb_kw_clean | url_encode }}&type=product">{{ mb_kw_clean }}</a>
           {%- endif -%}
         {%- endfor -%}
       </div>
@@ -88,7 +81,7 @@
 
     {%- comment -%} Kết quả smart search AJAX — JS render, ẩn khi không có query {%- endcomment -%}
     {%- if settings.header_search_smart -%}
-    <div class="search-overlay__smart" id="mb-smart-results" style="display:none">
+    <div id="mb-smart-results" hidden>
       <div class="list-search list-search-style" id="mb-list-search"></div>
       <div class="list-search2 list-search-style" id="mb-list-search2"></div>
     </div>

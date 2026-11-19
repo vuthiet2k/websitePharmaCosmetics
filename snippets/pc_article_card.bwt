@@ -1,6 +1,8 @@
 {%- comment -%}
   pc_article_card.bwt — thẻ bài viết 100% Tailwind (BATCH-05/09 overhaul).
   Đầu vào: article, pc_card_i (thứ tự thẻ), pc_card_ex_blog (blog chuyên gia tra sẵn).
+  M-21 (17/11/2026): pc_card_row = true ⇒ biến thể NGANG (ảnh trái ~126px, chữ phải: nhãn nổi bật pc_card_badge tuỳ chọn, tiêu đề line-clamp-3, tác giả · ngày),
+  không viền/nền từng thẻ, ngăn bằng kẻ 1 cạnh — dùng cho danh sách bài trên mobile (trang chủ, trang tìm kiếm). Mặc định vẫn là thẻ dọc.
 {%- endcomment -%}
 {%- assign pc_card_cat = '' -%}
 {%- assign pc_card_ex_handle = '' -%}
@@ -22,6 +24,22 @@
 		{%- if pc_card_item_handle == pc_card_ex_handle -%}{%- assign pc_card_ex = pc_card_item -%}{%- endif -%}
 	{%- endfor -%}
 {%- endif -%}
+{%- if pc_card_row -%}
+<article class="group flex gap-3 border-0 border-b border-solid border-line-soft py-3 last:border-b-0">
+	<a class="block h-24 w-36 shrink-0 overflow-hidden rounded-xl bg-brand-tint" href="{{ article.url }}" tabindex="-1" aria-hidden="true">
+		{%- if article.image.src != blank -%}
+		<img src="{{ article.image.src | img_url: 'compact' }}" alt="{{ article.title | replace: '"', '' | escape }}" class="block h-full w-full object-cover" width="144" height="96" loading="lazy">
+		{%- else -%}
+		<img src="{{ 'PharmaCosmetics.svg' | asset_url }}" alt="{{ article.title | replace: '"', '' | escape }}" class="block h-full w-full bg-white object-contain p-3" width="144" height="96" loading="lazy">
+		{%- endif -%}
+	</a>
+	<div class="flex min-w-0 flex-1 flex-col">
+		{%- if pc_card_badge != blank -%}<span class="mb-1 inline-block self-start rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-white">{{ pc_card_badge | escape }}</span>{%- endif -%}
+		<h3 class="m-0 line-clamp-3 text-sm font-bold leading-snug"><a class="text-ink no-underline transition-colors hover:text-primary" href="{{ article.url }}">{{ article.title | escape }}</a></h3>
+		<p class="m-0 mt-auto flex flex-wrap gap-x-2 pt-2 text-xs text-ink-muted">{%- if article.author != blank -%}<span>{{ article.author | escape }}</span>{%- endif -%}<time datetime="{{ article.published_on | date: 'yyyy-MM-dd' }}">{{ article.published_on | date: 'dd/MM/yyyy' }}</time></p>
+	</div>
+</article>
+{%- else -%}
 <article class="group flex h-full flex-col overflow-hidden rounded-2xl bg-card border border-solid border-line transition-all duration-300">
 	<a class="relative block aspect-video overflow-hidden bg-surface" href="{{ article.url }}" tabindex="-1" aria-hidden="true">
 		{%- if article.image.src != blank -%}
@@ -30,9 +48,9 @@
 		<img src="{{ 'PharmaCosmetics.svg' | asset_url }}" alt="{{ article.title | replace: '"', '' | escape }}" class="block h-full w-full bg-white object-contain p-6" width="580" height="314" loading="lazy">
 		{%- endif -%}
 		{%- if pc_card_cat != blank -%}
-		<span class="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
+		<span class="absolute left-3 right-3 top-3 flex w-fit max-w-full items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-bold text-primary">
 			{% include 'ui_icon', name: 'leaf', size: 'em' %}
-			{{ pc_card_cat | escape }}
+			<span class="truncate">{{ pc_card_cat | escape }}</span>
 		</span>
 		{%- endif -%}
 	</a>
@@ -57,10 +75,11 @@
 					<time class="text-xs text-slate-400 whitespace-nowrap" datetime="{{ article.published_on | date: 'yyyy-MM-dd' }}">{{ article.published_on | date: 'dd/MM/yyyy' }}</time>
 				</div>
 			</div>
-			<a class="inline-flex items-center gap-1 text-xs font-bold uppercase text-primary transition-colors hover:text-secondary whitespace-nowrap no-underline" href="{{ article.url }}">
+			<a class="inline-flex min-h-[44px] items-center gap-1 text-xs font-bold normal-case text-primary transition-colors hover:text-secondary whitespace-nowrap no-underline" href="{{ article.url }}">
 				{{ settings.product_article_read_label | default: 'Đọc tiếp' | escape }}
 				{% include 'ui_icon', name: 'arrow-right', size: 'em' %}
 			</a>
 		</div>
 	</div>
 </article>
+{%- endif -%}

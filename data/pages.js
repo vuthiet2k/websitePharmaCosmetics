@@ -1,90 +1,11 @@
 /**
- * data/pages.js — Trang tĩnh (giả lập Sapo `pages[handle]`)
+ * data/pages.js — Trang nội dung THẬT (giả lập Sapo `pages[handle]`)
+ *
+ * Nguồn: https://pharmacosmetics-vn.com/ — 39 URL trong sitemap_pages_1.xml (trừ trang nội bộ MOPS admin, tra cứu đơn, so sánh SP).
+ * Tiêu đề = H1 trang; `content` = khối nội dung Sapo (.rte) với trang chính sách/bài giới thiệu. Trang dựng hoàn toàn bằng template
+ * của theme (page.*.bwt: Giới thiệu, Skin Health Beauty, Chuyên gia, Loyalty…) KHÔNG có nội dung Sapo ⇒ content rỗng (đúng như live).
+ * Dữ liệu thô: data/pages-data.json. Ngày lấy: 2026-11-17.
  */
-
-const pages = {
-
-  'gioi-thieu': {
-    id:      101,
-    title:   'Giới thiệu PHARMA COSMETICS',
-    alias:   'gioi-thieu',
-    handle:  'gioi-thieu',
-    url:     '/gioi-thieu',
-    content: `<p>PHARMA COSMETICS là nền tảng dược mỹ phẩm chất lượng cao, chuyên cung cấp các sản phẩm
-      điều trị da được kiểm chứng bởi chuyên gia da liễu hàng đầu.</p>`,
-    published: true,
-  },
-
-  'san-pham-yeu-thich': {
-    id:      102,
-    title:   'Sản phẩm yêu thích',
-    alias:   'san-pham-yeu-thich',
-    handle:  'san-pham-yeu-thich',
-    url:     '/san-pham-yeu-thich',
-    content: '<p>Danh sách sản phẩm yêu thích của bạn.</p>',
-    published: true,
-  },
-
-  'chinh-sach': {
-    id:      103,
-    title:   'Chính sách mua hàng',
-    alias:   'chinh-sach',
-    handle:  'chinh-sach',
-    url:     '/chinh-sach',
-    content: '<p>Chính sách đổi trả, giao hàng và bảo hành.</p>',
-    published: true,
-  },
-
-  'lien-he': {
-    id:      104,
-    title:   'Liên hệ',
-    alias:   'lien-he',
-    handle:  'lien-he',
-    url:     '/lien-he',
-    content: '<p>Hotline: <strong>0967 194 063</strong> — Email: info@pharmacosmetics-vn.com</p>',
-    published: true,
-  },
-
-  'chinh-sach-giao-hang': {
-    id:      105,
-    title:   'Chính sách giao hàng',
-    alias:   'chinh-sach-giao-hang',
-    handle:  'chinh-sach-giao-hang',
-    url:     '/chinh-sach-giao-hang',
-    content: '<p>Miễn phí vận chuyển cho đơn hàng từ 500.000₫.</p>',
-    published: true,
-  },
-
-  'kham-da-ai': {
-    id:      106,
-    title:   'Khám Da AI - Chuyên Gia Da Liễu AI Tư Vấn 1:1',
-    alias:   'kham-da-ai',
-    handle:  'kham-da-ai',
-    url:     '/kham-da-ai',
-    content: '<p>Trợ lý AI khám da lâm sàng trực tuyến 1:1</p>',
-    published: true,
-  },
-
-  'ai-skin-quiz': {
-    id:      107,
-    title:   'AI Skin Diagnostic Quiz',
-    alias:   'ai-skin-quiz',
-    handle:  'ai-skin-quiz',
-    url:     '/pages/ai-skin-quiz',
-    content: '<p>Trợ lý AI khám da lâm sàng trực tuyến 1:1</p>',
-    published: true,
-  },
-
-  'soi-da': {
-    id:      108,
-    title:   'Soi Da AI Miễn Phí - Phân Tích Làn Da 1:1',
-    alias:   'soi-da',
-    handle:  'soi-da',
-    url:     '/soi-da',
-    content: '<p>Soi da trực tuyến với quy trình chụp ba góc mặt tại thiết bị.</p>',
-    published: true,
-  },
-
-};
+const pages = require('./pages-data.json');
 
 module.exports = { pages };

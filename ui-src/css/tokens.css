@@ -54,6 +54,7 @@
     --pc-color-card-btn: var(--pc-color-btn);  --pc-color-card-btn-text: var(--pc-color-btn-text);
     --pc-color-flash: var(--pc-red-100);  --pc-color-flash-text: #7F1D1D;
     --pc-color-flash-badge: var(--pc-color-sale);  --pc-color-flash-badge-text: #FFFFFF;
+    --header-live-color: var(--pc-color-sale);
     --pc-header-h: 56px;  --pc-bottomnav-h: 64px;
   }
   @media (min-width: 1024px) { :root { --pc-header-h: 64px; --pc-bottomnav-h: 0px; } }
@@ -64,6 +65,10 @@
     scroll-padding-bottom: calc(var(--pc-bottomnav-h) + 8px);
   }
   :focus-visible { outline: 2px solid var(--pc-color-brand-primary); outline-offset: 2px; }
+  /* 18/11/2026 (BA duyệt): bản build không có preflight ⇒ `border-solid` + chỉ 1 cạnh (border-b, divide-y…) làm các cạnh còn lại
+     ra viền 3px (medium). :where() độ ưu tiên 0: mọi `border`, `border-t`… và CSS cũ vẫn thắng, chỉ cạnh chưa khai báo về 0. */
+  :where(.border-solid, .border-dashed, .border-dotted) { border-width: 0; }
+  :where(.divide-solid, .divide-dashed, .divide-dotted) > :where(*) { border-width: 0; }
   /* N02 (24/10/2026): :where() — độ ưu tiên 0 để CSS cũ (`a { text-decoration: none }`, menu, breadcrumb) vẫn thắng
      trong giai đoạn chuyển; link trong đoạn văn thư viện / sau đợt 12 (xoá CSS cũ) vẫn gạch chân + màu brand.
      `a { text-underline-offset: 3px }` toàn cục hoãn tới đợt 12 (D09) — CSS cũ không đặt offset nên quy tắc này dời gạch
@@ -71,9 +76,9 @@
   :where(p a, li a) { text-decoration: underline; color: var(--pc-color-brand-primary); }
   /* N17 (24/10/2026, chủ dự án duyệt C.6 — ui-loop/proposals/N17.md): transition-duration .01ms → 0s. Chuyển tiếp .01ms
      (property mặc định `all`) làm `visibility` kế thừa đổi trễ từng tầng — drawer ☰ hiện sau 1,3–3,4s ở WebKit khi giảm
-     chuyển động; 0s ⇒ không tạo chuyển tiếp. Animation giữ nguyên .01ms. */
+     chuyển động; 0s ⇒ không tạo chuyển tiếp. Animation giữ nguyên .01ms; ngoại lệ PO 18/11/2026: phần tử có data-pc-motion (icon tia sét Flash sale) vẫn chạy animation nhẹ. */
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
+    *:not([data-pc-motion]), *::before, *::after {
       animation-duration: .01ms !important; animation-iteration-count: 1 !important;
       transition-duration: 0s !important; scroll-behavior: auto !important;
     }

@@ -1,11 +1,36 @@
-{%- if settings.aside_category_enable -%}
-{%- include 'aside-cate' -%}
-{%- endif -%}
-{%- if settings.aside_filter_enable -%}
-{%- comment -%} 2026-10-10: đầu cột lọc "Bộ lọc sản phẩm" + "Xóa tất cả" theo thiết kế (clearAllFiltered trong col.js). {%- endcomment -%}
-<div class="mb-2 flex items-center justify-between gap-3 font-sans">
-	<p class="m-0 text-base font-bold text-ink">{{ settings.collection_filter_heading | default: 'Bộ lọc sản phẩm' | escape }}</p>
-	<button type="button" class="min-h-[44px] cursor-pointer border-0 bg-transparent p-0 text-sm font-semibold text-primary underline underline-offset-4" onclick="clearAllFiltered()">{{ settings.collection_filter_clear_label | default: 'Xóa tất cả' | escape }}</button>
-</div>
-{%- include 'aside-filter' -%}
-{%- endif -%}
+{%- comment -%}
+  sidebar-collection.bwt — ngăn Bộ lọc (collection + search). M-24 (17/11/2026): 100% Tailwind, dùng chung 2 trang (trước: <aside> chép ở 2 template).
+  Mobile (< 992px): ngăn kéo trượt từ trái (translate 300ms, tắt khi giảm chuyển động), đầu = tiêu đề + nút X cùng 1 hàng, ruột cuộn, chân cố định "Thiết lập lại" + "Tìm kiếm".
+  Desktop: cột trái như cũ (tiêu đề + "Xóa tất cả"). Móc JS (col.js, không CSS): left-content (+ .active), close-filters, [data-filter-reset].
+  Tham số: quote (true ⇒ in settings.collection_sidebar_quote cuối cột lọc — chỉ trang danh mục).
+{%- endcomment -%}
+{%- assign pc_sb_title = settings.collection_filter_heading | default: 'Bộ lọc sản phẩm' | escape -%}
+<aside class="left-content flex min-w-0 flex-col font-sans min-[992px]:sticky min-[992px]:top-24 min-[992px]:max-h-screen min-[992px]:overflow-y-auto max-[991px]:fixed max-[991px]:inset-y-0 max-[991px]:left-0 max-[991px]:z-[99999] max-[991px]:w-5/6 max-[991px]:max-w-sm max-[991px]:-translate-x-full max-[991px]:bg-white max-[991px]:transition-transform max-[991px]:duration-300 motion-reduce:transition-none max-[991px]:[&.active]:translate-x-0" aria-label="{{ pc_sb_title }}">
+	<div class="flex shrink-0 items-center justify-between gap-3 border-0 border-b border-solid border-line-soft py-1 pl-4 pr-1 min-[992px]:hidden">
+		<p class="m-0 text-base font-bold text-brand-deep">{{ pc_sb_title }}</p>
+		<button type="button" class="close-filters flex h-[44px] w-[44px] cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-ink" aria-label="Đóng bộ lọc">{% include 'ui_icon', name: 'x', size: 24, label: '' %}</button>
+	</div>
+	{%- comment -%} section-box-bg: lớp bọc CŨ giữ tạm cho ruột bộ lọc + menu danh mục (aside-cate chưa chuyển Tailwind). {%- endcomment -%}
+	<div class="section-box-bg min-h-0 flex-1 max-[991px]:overflow-y-auto max-[991px]:p-4 min-[992px]:rounded-2xl min-[992px]:border min-[992px]:border-solid min-[992px]:border-line min-[992px]:bg-white min-[992px]:p-4">
+		{%- if settings.aside_category_enable -%}
+		{%- include 'aside-cate' -%}
+		{%- endif -%}
+		{%- if settings.aside_filter_enable -%}
+		<div class="mb-2 hidden items-center justify-between gap-3 min-[992px]:flex">
+			<p class="m-0 text-base font-bold text-ink">{{ pc_sb_title }}</p>
+			<button type="button" class="min-h-[44px] cursor-pointer border-0 bg-transparent p-0 text-sm font-semibold text-primary underline underline-offset-4" data-filter-reset>{{ settings.collection_filter_clear_label | default: 'Xóa tất cả' | escape }}</button>
+		</div>
+		{%- include 'aside-filter' -%}
+		{%- endif -%}
+		{%- comment -%} 2026-10-08: câu trang trí cuối cột lọc (Admin › Trang danh mục › Câu trang trí cuối cột lọc). {%- endcomment -%}
+		{%- if quote and settings.collection_sidebar_quote != blank -%}
+		<p class="m-0 mt-6 border-0 border-t border-solid border-line pt-4 text-center text-sm italic text-ink-secondary" aria-hidden="true">{{ settings.collection_sidebar_quote }}</p>
+		{%- endif -%}
+	</div>
+	{%- if settings.aside_filter_enable -%}
+	<div class="flex shrink-0 gap-2 border-0 border-t border-solid border-line-soft bg-white p-3 min-[992px]:hidden">
+		<button type="button" class="min-h-[44px] flex-1 cursor-pointer rounded-full border-2 border-solid border-primary bg-transparent px-3 text-sm font-bold text-brand-deep transition-colors hover:bg-brand-tint" data-filter-reset>{{ settings.collection_filter_reset_label | default: 'Thiết lập lại' | escape }}</button>
+		<button type="button" data-filter-apply class="min-h-[44px] flex-1 cursor-pointer rounded-full border-0 bg-btn px-3 text-sm font-bold text-btn-text transition-colors hover:bg-btn-hover">{{ settings.collection_filter_apply_label | default: 'Tìm kiếm' | escape }}</button>
+	</div>
+	{%- endif -%}
+</aside>

@@ -1,12 +1,13 @@
 /**
- * data/cart.js — Giỏ hàng demo (giả lập Sapo `cart` object)
+ * data/cart.js — Giỏ hàng mẫu cho preview (dữ liệu phiên của khách — live không có giỏ công khai); dòng hàng dùng 2 SP thật của catalog (giả lập Sapo `cart` object)
  */
 
 const { products } = require('./products');
 
-// Lấy 2 sản phẩm đầu làm item mẫu
-const p1 = products[0]; // Retinol 0.3%
-const p2 = products[2]; // Kem chống nắng
+// Lấy sản phẩm thật còn hàng đầu tiên làm item mẫu
+const avail = products.filter((p) => p.available);
+const p1 = avail[0];
+const p2 = avail[1];
 
 const cartItems = [
   {

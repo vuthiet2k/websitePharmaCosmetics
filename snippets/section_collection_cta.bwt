@@ -1,194 +1,33 @@
 {%- comment -%}
   Banner CTA — đặt cuối trang collection, sau best seller.
   Mục đích: chuyển user còn lưỡng lự sang luồng tư vấn 1:1 với chuyên gia.
+  M-25 (17/11/2026): viết lại 100% Tailwind (bỏ <style> + class pc-col-cta*). Mobile: icon trái / chữ phải, 2 nút cùng hàng dưới chữ, không nền/viền/vòng trang trí;
+  desktop: 1 hàng icon · chữ · nút trên nền bg-brand-tint (bỏ gradient + 2 hình tròn trang trí vì token không có).
+  L03b22: settings.col_cta_icon nhận cả tên ui_icon lẫn giá trị cũ "fa-solid fa-…". Hotline lấy từ store_phone (không số giả).
 {%- endcomment -%}
-
-<section class="pc-section-v3 pc-col-cta-section">
+{%- assign pc_col_cta_icon = settings.col_cta_icon | default: 'stethoscope' -%}
+{%- assign pc_col_cta_phone = settings.store_phone | default: store.phone_number -%}
+<section class="py-8 lg:py-16 font-sans">
   <div class="container">
-    <div class="pc-col-cta">
-      <div class="pc-col-cta__decor pc-col-cta__decor--1" aria-hidden="true"></div>
-      <div class="pc-col-cta__decor pc-col-cta__decor--2" aria-hidden="true"></div>
-
-      {%- comment -%} L03b22 (03/11/2026): gỡ Font Awesome — ui_icon size em trong <i> bọc cũ (cỡ theo font-size của ô icon như glyph FA);
-        settings col_cta_icon nhận cả tên ui_icon lẫn giá trị cũ "fa-solid fa-…" (ui_icon tự ánh xạ, user-doctor → stethoscope). {%- endcomment -%}
-      {%- assign pc_col_cta_icon = settings.col_cta_icon | default: 'stethoscope' -%}
-      <div class="pc-col-cta__icon" aria-hidden="true">
-        <i class="inline-block leading-none">{%- include 'ui_icon', name: pc_col_cta_icon, size: 'em' -%}</i>
+    <div class="flex flex-wrap items-start gap-x-3 gap-y-3 lg:flex-nowrap lg:items-center lg:gap-8 lg:rounded-2xl lg:bg-brand-tint lg:p-10">
+      <span class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-tint text-primary lg:bg-white lg:h-16 lg:w-16" aria-hidden="true">{%- include 'ui_icon', name: pc_col_cta_icon, size: 24 -%}</span>
+      <div class="min-w-0 flex-1">
+        <p class="m-0 text-xs font-bold text-primary">{{ settings.col_cta_eyebrow | default: 'Cần thêm hỗ trợ?' | escape }}</p>
+        <h3 class="m-0 mt-0.5 text-base font-bold leading-snug text-brand-deep lg:text-xl">{{ settings.col_cta_title | default: 'Chưa biết chọn sản phẩm phù hợp với da của bạn?' | escape }}</h3>
+        <p class="m-0 mt-1 line-clamp-2 text-sm leading-relaxed text-ink-secondary lg:line-clamp-none">{{ settings.col_cta_desc | default: 'Chuyên gia của PHARMA COSMETICS tư vấn 1:1 miễn phí — gửi ảnh da và nhận phác đồ điều trị cá nhân hóa trong vòng 24 giờ.' | escape }}</p>
       </div>
-
-      <div class="pc-col-cta__body">
-        <p class="pc-col-cta__eyebrow">{{ settings.col_cta_eyebrow | default: 'Cần thêm hỗ trợ?' }}</p>
-        <h3 class="pc-col-cta__title">
-          {{ settings.col_cta_title | default: 'Chưa biết chọn sản phẩm phù hợp với da của bạn?' }}
-        </h3>
-        <p class="pc-col-cta__desc">
-          {{ settings.col_cta_desc | default: 'Chuyên gia của PHARMA COSMETICS tư vấn 1:1 miễn phí — gửi ảnh da và nhận phác đồ điều trị cá nhân hóa trong vòng 24 giờ.' }}
-        </p>
-      </div>
-
-      <div class="pc-col-cta__actions">
-        <a class="pc-col-cta__btn pc-col-cta__btn--primary"
-           href="{{ settings.col_cta_btn1_url | default: '/dat-lich-tu-van' }}">
-          <i class="pc-col-cta__btn-ico inline-block leading-none" aria-hidden="true">{%- include 'ui_icon', name: 'stethoscope', size: 'em' -%}</i>
-          {{ settings.col_cta_btn1_text | default: 'Tư vấn miễn phí' }}
+      <div class="flex w-full items-center gap-2 lg:w-auto lg:shrink-0 lg:gap-3">
+        <a class="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-btn px-4 text-sm font-bold text-btn-text no-underline transition-colors hover:bg-btn-hover lg:flex-none lg:px-6" href="{{ settings.col_cta_btn1_url | default: '/dat-lich-tu-van' | escape }}">
+          {%- include 'ui_icon', name: 'stethoscope', size: 'em' -%}
+          {{ settings.col_cta_btn1_text | default: 'Tư vấn miễn phí' | escape }}
         </a>
-        {%- comment -%} 2026-10-03: settings.hotline không tồn tại → dùng hotline cửa hàng; bỏ fallback số giả 1900xxxx. {%- endcomment -%}
-        {%- assign pc_col_cta_phone = settings.store_phone | default: store.phone_number -%}
         {%- if pc_col_cta_phone != blank -%}
-        <a class="pc-col-cta__btn pc-col-cta__btn--ghost"
-           href="tel:{{ pc_col_cta_phone | remove: '.' | remove: ' ' }}">
-          <i class="inline-block leading-none" aria-hidden="true">{%- include 'ui_icon', name: 'phone', size: 'em' -%}</i>
-          {{ pc_col_cta_phone }}
+        <a class="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full border-2 border-solid border-primary bg-transparent px-4 text-sm font-bold text-brand-deep no-underline transition-colors hover:bg-brand-tint lg:flex-none lg:px-6" href="tel:{{ pc_col_cta_phone | remove: '.' | remove: ' ' }}">
+          {%- include 'ui_icon', name: 'phone', size: 'em' -%}
+          {{ pc_col_cta_phone | escape }}
         </a>
         {%- endif -%}
       </div>
     </div>
   </div>
 </section>
-
-<style>
-.pc-col-cta-section {
-  padding-top: 64px;
-  padding-bottom: 64px;
-}
-.pc-col-cta {
-  position: relative;
-  background: var(--bg-gradient-green, linear-gradient(135deg, #f4fcf6 0%, #e8f5e9 100%));
-  border-radius: 20px;
-  padding: 40px 48px;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 32px;
-  align-items: center;
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--mainColor) 15%, transparent);
-}
-.pc-col-cta__decor {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 0;
-}
-.pc-col-cta__decor--1 {
-  width: 160px;
-  height: 160px;
-  background: rgba(60, 179, 113, 0.08);
-  top: -60px;
-  right: -30px;
-}
-.pc-col-cta__decor--2 {
-  width: 100px;
-  height: 100px;
-  background: rgba(38, 115, 72, 0.08);
-  bottom: -30px;
-  left: 280px;
-}
-.pc-col-cta__icon {
-  position: relative;
-  z-index: 1;
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: #fff;
-  color: var(--mainColorDark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--fs-h3);
-  box-shadow: 0 8px 24px rgba(60, 179, 113, 0.18);
-  flex-shrink: 0;
-}
-.pc-col-cta__body {
-  position: relative;
-  z-index: 1;
-}
-.pc-col-cta__eyebrow {
-  font-family: var(--font-secondary);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  color: var(--mainColor);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin: 0 0 6px;
-}
-.pc-col-cta__title {
-  font-family: var(--font-primary);
-  font-size: var(--fs-xl);
-  font-weight: 700;
-  color: var(--mainColorDark);
-  margin: 0 0 8px;
-  line-height: 1.3;
-}
-.pc-col-cta__desc {
-  font-family: var(--font-secondary);
-  font-size: var(--fs-sm);
-  color: var(--textBody);
-  margin: 0;
-  line-height: 1.6;
-  max-width: 560px;
-}
-.pc-col-cta__actions {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  flex-shrink: 0;
-}
-.pc-col-cta__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 22px;
-  border-radius: 50px;
-  font-family: var(--font-primary);
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  text-decoration: none;
-  transition: transform var(--dur-fast, 150ms) var(--ease-out, ease),
-              box-shadow var(--dur-fast, 150ms) var(--ease-out, ease),
-              background var(--dur-base, 300ms) var(--ease-out, ease);
-  white-space: nowrap;
-}
-/* L03b22 (03/11/2026): glyph FA stethoscope cũ rộng 1,125em (SVG ui_icon vuông 1em) — giữ hộp icon bằng cũ để nút không đổi rộng. */
-.pc-col-cta__btn-ico {
-  display: inline-flex;
-  justify-content: center;
-  width: 1.125em;
-}
-.pc-col-cta__btn--primary {
-  background: var(--mainColorDark);
-  color: #fff;
-}
-.pc-col-cta__btn--primary:hover {
-  background: var(--mainColor);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(38, 115, 72, 0.25);
-  color: #fff;
-}
-.pc-col-cta__btn--ghost {
-  background: transparent;
-  color: var(--mainColorDark);
-  border: 1.5px solid var(--mainColorDark);
-}
-.pc-col-cta__btn--ghost:hover {
-  background: var(--mainColorDark);
-  color: #fff;
-}
-@media (max-width: 991px) {
-  .pc-col-cta {
-    grid-template-columns: 1fr;
-    padding: 32px 24px;
-    gap: 20px;
-    text-align: center;
-  }
-  .pc-col-cta__icon { margin: 0 auto; }
-  .pc-col-cta__desc { margin-left: auto; margin-right: auto; }
-  .pc-col-cta__actions { justify-content: center; flex-wrap: wrap; }
-  .pc-col-cta__decor--2 { display: none; }
-}
-@media (max-width: 480px) {
-  .pc-col-cta__title { font-size: var(--fs-lg); }
-  .pc-col-cta__btn { width: 100%; justify-content: center; }
-}
-</style>

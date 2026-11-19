@@ -1,0 +1,16 @@
+{%- comment -%}
+  pc_ba_pair.bwt — cặp ảnh Trước / Sau DÙNG CHUNG (M-18, 17/11/2026): trang chủ (section_testimonials_case) và trang /blogs/truoc-va-sau (blog.truoc-va-sau) cùng gọi,
+  thay cho 2 bản riêng (Tailwind ở trang chủ + class pc-ba-pair / pc-ba-frame / pc-ba-badge ở trang Trước & Sau). 100% Tailwind theo token: nhãn TRƯỚC bg-brand-deep (điểm nhấn), nhãn SAU bg-primary.
+  Tham số (truyền giá trị THÔ, snippet tự escape): ba_before, ba_after (URL ảnh, bắt buộc), ba_title (alt), ba_bl / ba_al (nhãn Trước / Sau), ba_after_suffix (chữ thêm sau nhãn Sau, vd thời gian theo dõi, đã escape ở nơi gọi).
+  Ảnh qua URL đã qua img_url ở ba_case_source; alt riêng từng ảnh; width/height + loading lazy.
+{%- endcomment -%}
+<div class="grid grid-cols-2 gap-2">
+  <figure class="relative m-0 aspect-square overflow-hidden rounded-xl bg-brand-tint">
+    <figcaption class="absolute left-2 top-2 z-10 rounded-full bg-brand-deep px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white" aria-hidden="true">{{ ba_bl | default: 'Trước' | escape }}</figcaption>
+    <img class="block h-full w-full object-cover" src="{{ ba_before }}" alt="{{ ba_title | escape }} — {{ ba_bl | default: 'Trước' | escape }}" width="280" height="280" loading="lazy" decoding="async">
+  </figure>
+  <figure class="relative m-0 aspect-square overflow-hidden rounded-xl bg-brand-tint">
+    <figcaption class="absolute left-2 top-2 z-10 rounded-full bg-primary px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-white" aria-hidden="true">{{ ba_al | default: 'Sau' | escape }}{% if ba_after_suffix != blank %} {{ ba_after_suffix }}{% endif %}</figcaption>
+    <img class="block h-full w-full object-cover" src="{{ ba_after }}" alt="{{ ba_title | escape }} — {{ ba_al | default: 'Sau' | escape }}" width="280" height="280" loading="lazy" decoding="async">
+  </figure>
+</div>

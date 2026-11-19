@@ -198,7 +198,7 @@ dữ liệu Admin đã lưu trong `settings_data.json`.
 | 3 | Mua theo vấn đề da + thẻ Pharma AI | `section_solutions.bwt` | Menu `home_solutions_menu` (ảnh = ảnh danh mục link trỏ tới) + `home_solutions_N_sub`; chưa có menu ⇒ `home_solutions_N_*`; thẻ AI `home_sol_ai_*` (+ `home_sol_ai_icon`) |
 | 4 | Tìm theo hoạt chất | `section_ingredients.bwt` | Menu `home_ing_menu` (số SP + ảnh vòng tròn mobile = danh mục link trỏ tới), `home_ing_eyebrow/title/subtitle`, `home_ing_count_label`, `home_ing_icon`; chưa có menu ⇒ `ing_N_*` |
 | 5 | Flash Sale | `section_flash_sale.bwt` | `home_flashsale_*` (danh mục, số thẻ, đồng hồ chu kỳ), `promo_coupon_home_enable` |
-| 6 | Sản phẩm bán chạy (tab lọc) | `section_featured_products.bwt` | `home_featured_*` (Menu tab `home_featured_tabs_menu` + nhãn `home_featured_tab_labels`) |
+| 6 | Sản phẩm bán chạy | `section_featured_products.bwt` | `home_featured_*` (đã bỏ chip lọc + 3 ô `home_featured_tab*` ngày 17/11/2026, M-14) |
 | 7 | Chương II "Tin cậy" — Skin Health Beauty + lộ trình 4 bước | `section_spa.bwt` | `portal_chapter_2`, `home_spa_*` (mobile: `home_spa_steps_title/_tag`, `home_spa_step_labels/_icons/_prefix`), `portal_step_N_*`, `portal_clinic_chips*` |
 | 8 | Kết quả thực tế — Hành trình da khách hàng | `section_testimonials.bwt` + `section_testimonials_case.bwt` | Nguồn chính = tối đa 3 bài mới nhất có tag `home_testi_pin_tag` (`ghim-trang-chu`) trong blog `home_testi_blog` (trống ⇒ `clinical_case_blog_handle`), đọc qua `ba_case_source` (tag `nhom:` `khach:` `tuoi:` `tinh:` `tinhtrang:` `phacdo:` `tuan:` + `<ol>` đầu = hành trình); không có bài ghim ⇒ Thẻ 1–3 DỰ PHÒNG `home_testi_N_*`; chữ `home_testi_eyebrow/title/subtitle/disclaimer/viewall_*`, nhãn `home_testi_*_label` |
 | 9 | Thương hiệu tiêu biểu | `section_brand_marquee.bwt` | Menu `home_brand_menu` (chưa có ⇒ `store.vendors`), `home_brand_limit`, logo `home_brand_marquee_image_N` (mobile thiếu ⇒ ảnh danh mục ⇒ chữ viết tắt) |
@@ -805,3 +805,12 @@ grep -o '"id"[[:space:]]*:[[:space:]]*"[a-z_]*"' configs/settings_schema.json
   sản phẩm chung (`snippets/pc_is_service.bwt`); nút Liên hệ tư vấn → Zalo (`lt_zalo_text`, `lt_zalo_url` / `contact_zalo`) + Đặt
   lịch (`lt_cta_url?handle=<alias>`). Video: tag `youtube:` / `facebook:` trên sản phẩm ⇒ khối `lieu_trinh_video` (sau Công nghệ &
   hoạt chất; `lt_video_eyebrow/_title`). Blog Trước & Sau thật là `truoc-va-sau` (13/11/2026 chủ dự án xoá `truoc-va-sau-1`, đổi về `truoc-va-sau`).
+
+## App Sapo nạp CSS SAU theme — chống đè (chốt 18/11/2026)
+
+Trên Sapo thật, app Đánh giá SP (`newproductreviews.sapoapps.vn/assets/css/bpr.min.css`) nạp **sau** `pc-ui.css` và khai báo lại
+`.swiper-container{overflow:hidden;margin:0 auto}`, `.swiper-wrapper{display:flex;width:100%;height:100%}`, `.swiper-slide{flex-shrink:0;width:100%;height:100%;position:relative}`.
+Local dev không nạp các sheet này ⇒ lỗi chỉ hiện trên live (vd lưới hoạt chất rơi về 1 hàng flex hẹp).
+**Quy tắc:** mọi layout desktop dựa vào override của `.swiper-wrapper` / `.swiper-slide` (grid, contents, kích thước) phải dùng
+important modifier Tailwind (`lg:!grid`, `!w-28`, `!h-auto`) — chỉ ở chỗ cần. Khi nghi bản live khác local: mở preview, tắt từng
+`document.styleSheets[i].disabled` để tìm sheet gây đè (cách đã dùng tìm ra bpr.min.css).
