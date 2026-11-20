@@ -84,6 +84,15 @@ var CollectionFilter = (function () {
 		return clauses;
 	}
 
+	/* 20/11/2026: nhãn chip = tên nhóm chứa ô tick (data-group, vd "Thành phần hoạt tính" / "Vấn đề về da") — trước dùng cố định "Tình trạng da" cho MỌI tag. */
+	function _groupLabel(field, val, fallback) {
+		var els = document.querySelectorAll('.filter-checkbox-input[data-field], .filter-pill-btn[data-field]');
+		for (var i = 0; i < els.length; i++) {
+			if (els[i].getAttribute('data-field') === field && String(els[i].getAttribute('data-text')) === val) return els[i].getAttribute('data-group') || fallback;
+		}
+		return fallback;
+	}
+
 	/* Parse q= → [{field, value, display, label}] */
 	function parseQ(q) {
 		if (!q) return [];
@@ -115,12 +124,12 @@ var CollectionFilter = (function () {
 			if (qvs) {
 				qvs.forEach(function (v) {
 					var val = v.replace(/"/g, '');
-					filters.push({ field: field, value: val, display: val, label: lbl });
+					filters.push({ field: field, value: val, display: val, label: _groupLabel(field, val, lbl) });
 				});
 			} else {
 				/* Single unquoted: vendor:(Kozilar) or tags:(Da khô) */
 				var val = inner.trim();
-				filters.push({ field: field, value: val, display: val, label: lbl });
+				filters.push({ field: field, value: val, display: val, label: _groupLabel(field, val, lbl) });
 			}
 		});
 
