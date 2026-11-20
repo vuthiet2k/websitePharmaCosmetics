@@ -1090,6 +1090,7 @@ function resolvePrettyPath(pathname, searchParams) {
       routeParams: {
         searchQuery: searchParams.get('query') || searchParams.get('q') || '',
         searchType: searchParams.get('type') || 'product',
+        searchSort: searchParams.get('sortby') || '',
       },
     };
   }
@@ -1336,6 +1337,7 @@ async function renderFullPage(tpl = 'index', queryParams = null, routeParams = {
   if (tpl === 'search' && queryParams && !Object.prototype.hasOwnProperty.call(finalRouteParams, 'searchQuery')) {
     finalRouteParams.searchQuery = queryParams.get('query') || queryParams.get('q') || '';
     finalRouteParams.searchType = queryParams.get('type') || 'product';
+    finalRouteParams.searchSort = queryParams.get('sortby') || '';
   }
   const ctx = mockModule.getContext(tpl, finalRouteParams);
   // 18/11/2026: số trang hiện tại cho tag paginate (?page=N)
