@@ -39,3 +39,4 @@
    - Mọi thông tin về giá và tồn kho bắt buộc phải truy xuất qua hàm `query_sapo_inventory_and_price()`.
 3. **Luật Giao dịch điện tử 2023 (Điều 35 về Hợp đồng tự động)**:
    - Khi tạo đơn hàng tự động (`create_draft_order_with_otp`), hệ thống bắt buộc gửi mã OTP về số điện thoại khách hàng và lưu vết toàn vẹn (Audit log) để bảo vệ giá trị pháp lý.
+

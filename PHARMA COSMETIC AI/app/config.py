@@ -30,3 +30,4 @@ class Settings(BaseSettings):
     STRICT_ANTI_HALLUCINATION: bool = True
 
 settings = Settings()
+

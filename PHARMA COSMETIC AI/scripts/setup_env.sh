@@ -23,3 +23,4 @@ pip install -r requirements.txt
 
 echo "=== HOÀN TẤT CÀI ĐẶT MÔI TRƯỜNG! ==="
 echo "Khởi động server bằng lệnh: bash scripts/run_local.sh"
+

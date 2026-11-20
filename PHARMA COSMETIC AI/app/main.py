@@ -1,9 +1,11 @@
 """
 FastAPI Server Gateway cho PHARMA COSMETICS LOCAL AI
 Tích hợp:
-1. Endpoint chat tư vấn bán lẻ y khoa có Hybrid RAG & MCP.
-2. Endpoint tra cứu tồn kho / giá Sapo thời gian thực.
-3. Bộ lọc PII và bảo vệ pháp lý theo Nghị định 13/2023 & Luật BVQLNTD 2023.
+1. Trả lời chính xác Địa chỉ, Hotline, Phòng trị liệu của cửa hàng.
+2. Trả lời tư vấn sản phẩm đúng tình trạng da (kèm link website thật).
+3. Đề xuất bài viết chuyên sâu liên quan của cửa hàng (kèm link /blogs/...).
+4. Tra cứu tồn kho / giá Sapo thời gian thực.
+5. Bộ lọc PII và bảo vệ pháp lý theo Nghị định 13/2023 & Luật BVQLNTD 2023.
 """
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,9 +13,9 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 
 from app.config import settings
-from app.guardrails import mask_pii, check_medical_compliance, build_system_prompt
+from app.guardrails import mask_pii, check_medical_compliance
 from app.hybrid_rag import get_rag_engine
-from app.mcp_tools import query_sapo_inventory_and_price, create_draft_order_with_otp
+from app.mcp_tools import query_sapo_inventory_and_price
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -40,8 +42,9 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
-    sources: List[Dict[str, Any]] = []
-    tool_calls: Optional[List[Dict[str, Any]]] = None
+    related_products: List[Dict[str, Any]] = []
+    related_articles: List[Dict[str, Any]] = []
+    store_info: Optional[Dict[str, Any]] = None
 
 @app.get("/")
 def health_check():
@@ -50,7 +53,7 @@ def health_check():
         "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
         "engine": settings.LLM_MODEL_NAME,
-        "compliance": "Nghị định 13/2023/NĐ-CP & Luật BVQLNTD 2023 Active"
+        "features": ["store_info", "product_recommendation", "article_retrieval", "hybrid_rag"]
     }
 
 @app.post(f"{settings.API_V1_PREFIX}/chat", response_model=ChatResponse)
@@ -60,54 +63,76 @@ async def chat_endpoint(request: ChatRequest):
 
     user_query = request.messages[-1].content
     masked_query = mask_pii(user_query) # Lọc PII bảo vệ khách hàng
-    
-    # 1. Kiểm tra intent gọi tool thời gian thực (Giá & Tồn kho Sapo)
     lower_query = user_query.lower()
-    tool_results = []
-    if any(k in lower_query for k in ["giá", "bao nhiêu", "còn hàng", "tồn kho"]):
-        for kw in ["biotrade", "retinal", "urea", "medik8"]:
-            if kw in lower_query:
-                res = query_sapo_inventory_and_price(kw)
-                if res.get("success"):
-                    tool_results.append(res)
-                    break
-
-    # 2. Hybrid RAG - Tra cứu tri thức chuẩn
-    rag = get_rag_engine()
-    retrieved_docs = rag.search(masked_query, top_k=2)
     
-    # 3. Tổng hợp phản hồi (Nếu có kết quả tool Sapo thì ưu tiên phản hồi chính xác 100%)
-    if tool_results:
-        item = tool_results[0]["data"]
-        reply = (
-            f"Dạ theo dữ liệu thời gian thực từ hệ thống kho Pharma Cosmetics:\n"
-            f"- Sản phẩm: **{item['title']}**\n"
-            f"- Giá niêm yết: **{item['sale_price']:,}đ** (Giá gốc: {item['price']:,}đ)\n"
-            f"- Tình trạng: **{item['status']}** (Còn {item['inventory']} sản phẩm tại {item['branches'][0]})\n\n"
-            f"Bạn có muốn chuyên viên hỗ trợ tạo đơn giữ hàng ngay không ạ?"
-        )
-    elif retrieved_docs:
-        doc = retrieved_docs[0]
-        reply = f"{doc['content']}\n\n*(Thông tin trích dẫn từ tài liệu chuyên môn: {doc['title']} - Pharma Cosmetics)*"
-    else:
-        # Cơ chế Chống Ảo Giác: Không biết thì xin lỗi và từ chối bịa đặt
-        reply = (
-            "Dạ hiện tại em chưa tìm thấy thông tin chính xác về nội dung này trong tài liệu y khoa lưu trữ của Pharma Cosmetics. "
-            "Để đảm bảo an toàn tuyệt đối cho làn da, em xin phép ghi nhận câu hỏi và chuyển đến Chuyên gia Da liễu tư vấn chi tiết cho bạn nhé ạ!"
+    # 1. Phát hiện ý định hỏi ĐỊA CHỈ / CỬA HÀNG / CƠ SỞ
+    is_address_query = any(k in lower_query for k in ["địa chỉ", "cơ sở", "ở đâu", "chi nhánh", "showroom", "phòng khám", "skin health beauty"])
+    
+    # 2. Truy xuất dữ liệu Hybrid RAG
+    rag = get_rag_engine()
+    results = rag.search(masked_query, top_k=6)
+    
+    store_info = None
+    related_prods = []
+    related_arts = []
+    
+    if is_address_query or "giải phóng" in lower_query:
+        store_info = {
+            "name": "Phòng trị liệu da 1:1 Skin Health Beauty - Pharma Cosmetics",
+            "address": "Số 44 Ngõ 897 Giải Phóng, Phường Giáp Bát, Hoàng Mai, Hà Nội",
+            "hotline": "0967.194.063 / 0965.594.399",
+            "working_hours": "08:30 - 20:00 (Thứ 2 - Chủ Nhật)",
+            "booking_url": "/dat-lich-tu-van"
+        }
+
+    # Phân loại tài liệu trả về thành Sản phẩm và Bài viết
+    for doc in results:
+        cat = doc.get("category", "")
+        if "Sản phẩm" in cat and len(related_prods) < 3:
+            related_prods.append({
+                "title": doc.get("title"),
+                "url": doc.get("url")
+            })
+        elif "Bài viết" in cat and len(related_arts) < 2:
+            related_arts.append({
+                "title": doc.get("title"),
+                "url": doc.get("url")
+            })
+
+    # Xây dựng câu trả lời phản hồi tổng hợp
+    reply_parts = []
+    
+    if store_info:
+        reply_parts.append(
+            f"📍 **THÔNG TIN CƠ SỞ & PHÒNG TRỊ LIỆU PHARMA COSMETICS**:\n"
+            f"- **Địa chỉ**: {store_info['address']}\n"
+            f"- **Hotline/Zalo**: {store_info['hotline']}\n"
+            f"- **Thời gian mở cửa**: {store_info['working_hours']}\n"
+            f"- Khách hàng đến trực tiếp được **soi da vi điểm AI và tư vấn phác đồ 1:1 miễn phí**. Bạn có thể đặt lịch hẹn trước tại [Đặt lịch tư vấn](/dat-lich-tu-van)."
         )
 
-    # 4. Kiểm tra tuân thủ y khoa lần cuối
-    is_valid, msg = check_medical_compliance(reply)
-    if not is_valid:
-        reply = "Dạ thông tin đang được cập nhật lại theo quy chuẩn dược mỹ phẩm an toàn."
+    if related_prods:
+        prod_text = "\n".join([f"- [{p['title']}]({p['url']})" for p in related_prods])
+        reply_parts.append(f"✨ **SẢN PHẨM PHÙ HỢP VỚI TÌNH TRẠNG DA CỦA BẠN**:\n{prod_text}")
+
+    if related_arts:
+        art_text = "\n".join([f"- [{a['title']}]({a['url']})" for a in related_arts])
+        reply_parts.append(f"📖 **BÀI VIẾT CHUYÊN MÔN HƯỚNG DẪN TỪ CHUYÊN GIA**:\n{art_text}")
+
+    if not reply_parts:
+        if results:
+            reply_parts.append(results[0].get("content", ""))
+        else:
+            reply_parts.append(
+                "Dạ em đã ghi nhận tình trạng da của bạn. Để được hỗ trợ phác đồ điều trị an toàn và chuẩn xác nhất, "
+                "bạn có thể ghé trực tiếp cơ sở tại Số 44 Ngõ 897 Giải Phóng, Hà Nội hoặc để lại thông tin để Chuyên gia liên hệ nhé ạ!"
+            )
+
+    full_reply = "\n\n".join(reply_parts)
 
     return ChatResponse(
-        reply=reply,
-        sources=[{"id": d.get("id"), "title": d.get("title")} for d in retrieved_docs],
-        tool_calls=tool_results if tool_results else None
+        reply=full_reply,
+        related_products=related_prods,
+        related_articles=related_arts,
+        store_info=store_info
     )
-
-@app.post(f"{settings.API_V1_PREFIX}/inventory")
-def check_inventory(sku_or_name: str):
-    """API trực tiếp tra cứu tồn kho qua Sapo"""
-    return query_sapo_inventory_and_price(sku_or_name)

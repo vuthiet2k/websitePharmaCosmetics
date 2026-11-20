@@ -49,3 +49,4 @@ NGUYÊN TẮC CỐT LÕI (BẮT BUỘC TUÂN THỦ 100%):
 3. TRÌNH BÀY:
    - Ngắn gọn, chuyên nghiệp, khoa học, nêu rõ tên hoạt chất (vd: Niacinamide, BHA, Retinol, HA) và công dụng tương ứng.
 """
+

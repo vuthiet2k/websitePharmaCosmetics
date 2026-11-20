@@ -77,3 +77,4 @@ API Swagger Docs sẽ sẵn sàng tại: `http://localhost:8000/docs`
 - Endpoint trò chuyện: `POST http://localhost:8000/api/v1/chat`
 - Endpoint soi da / phân tích hoạt chất: `POST http://localhost:8000/api/v1/analyze-routine`
 - Có thể kết nối trực tiếp vào giao diện theme Sapo (`templates/page.ai-skin-quiz.bwt` hoặc widget chat nổi).
+
