@@ -397,7 +397,8 @@
 
 	const handleScroll = () => {
 		const currentY = window.scrollY || window.pageYOffset || 0;
-		const isScrolled = currentY > 20;
+		// 20/11/2026 SPEC-HOME-HEADER-01: ngưỡng >= 20 để mốc scrollY=20 đã ở trạng thái cuộn (AC-01.3/03.1), một nguồn duy nhất sau khi gỡ listener ở footer_script
+		const isScrolled = currentY >= 20;
 
 		// 1. Khi ở đầu trang chủ có Hero thì nền trong suốt (header-transparent)
 		if (isHomeWithHero) {
@@ -408,7 +409,8 @@
 		header.classList.toggle('is-scrolled', isScrolled);
 
 		// 3. Thanh dính khi cuộn qua header
-		const sticky = desktopHeader.matches && currentY > offsetStickyHeader;
+		// 20/11/2026 SPEC-HOME-HEADER-01: trang chủ chỉ dùng header fixed (is-scrolled), không bật thêm hSticky (tránh 2 lớp fixed chồng nhau)
+		const sticky = desktopHeader.matches && !isHomeWithHero && currentY > offsetStickyHeader;
 		if (header.classList.contains('hSticky') !== sticky) {
 			closeHeaderCategories();
 			header.classList.toggle('hSticky', sticky);
