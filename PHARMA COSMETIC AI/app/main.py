@@ -1,44 +1,93 @@
 """
-FastAPI Server Gateway cho PHARMA COSMETICS LOCAL AI
-Tích hợp:
-1. Trả lời chính xác Địa chỉ, Hotline, Phòng trị liệu của cửa hàng.
-2. Trả lời tư vấn sản phẩm đúng tình trạng da (kèm link website thật).
-3. Đề xuất bài viết chuyên sâu liên quan của cửa hàng (kèm link /blogs/...).
-4. Tra cứu tồn kho / giá Sapo thời gian thực.
-5. Bộ lọc PII và bảo vệ pháp lý theo Nghị định 13/2023 & Luật BVQLNTD 2023.
+API tra cứu Pharma Cosmetics (FastAPI, không cần GPU/DB — chạy được trên gói miễn phí).
+
+- Trả lời địa chỉ / hotline / giờ mở cửa từ dữ liệu cửa hàng thật (data/store_info.json, do sync_data.py sinh từ cấu hình website).
+- Gợi ý sản phẩm và bài viết liên quan bằng BM25 trên dữ liệu website (kèm đường dẫn thật). KHÔNG đưa giá/tồn kho/khuyến mại:
+  giá đổi theo thời gian nên chỉ dẫn khách vào trang sản phẩm.
+- Che SĐT/email/CMND trước khi xử lý; không ghi nội dung khách nhập vào log.
+- Giới hạn: CORS theo domain khai báo, rate limit theo IP, giới hạn số tin & độ dài.
 """
-from fastapi import FastAPI, HTTPException
+import json
+import os
+import time
+from collections import defaultdict, deque
+from typing import Any, Deque, Dict, List, Optional
+
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
 
 from app.config import settings
-from app.guardrails import mask_pii, check_medical_compliance
-from app.hybrid_rag import get_rag_engine
-from app.mcp_tools import query_sapo_inventory_and_price
+from app.guardrails import SAFE_FALLBACK, check_medical_compliance, mask_pii
+from app.hybrid_rag import fold, get_rag_engine
 
+_docs_on = settings.APP_ENV != "production"
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="Hệ thống Trí tuệ Nhân tạo Cục bộ (On-Premise AI) Dược Mỹ Phẩm Pharma Cosmetics"
+    docs_url="/docs" if _docs_on else None,
+    redoc_url=None,
+    openapi_url="/openapi.json" if _docs_on else None,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.origins,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type"],
 )
 
+
+# ---------- Dữ liệu cửa hàng ----------
+def _load_store() -> Optional[Dict[str, Any]]:
+    base = os.path.join(os.path.dirname(__file__), "..")
+    path = settings.STORE_FILE if os.path.isabs(settings.STORE_FILE) else os.path.join(base, settings.STORE_FILE)
+    if not os.path.exists(path):
+        return None
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+STORE = _load_store()
+STORE_KEYS = ("dia chi", "co so", "o dau", "chi nhanh", "showroom", "phong tri lieu", "skin health", "giai phong",
+              "hotline", "so dien thoai", "lien he", "gio mo cua", "mo cua", "dong cua", "zalo")
+
+
+# ---------- Giới hạn tần suất (trong bộ nhớ, đủ cho 1 instance miễn phí) ----------
+_hits: Dict[str, Deque[float]] = defaultdict(deque)
+
+
+def _client_ip(request: Request) -> str:
+    if settings.TRUST_PROXY:
+        xff = request.headers.get("x-forwarded-for", "")
+        if xff:
+            return xff.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+def _rate_limit(ip: str) -> None:
+    now = time.monotonic()
+    q = _hits[ip]
+    while q and now - q[0] > 60:
+        q.popleft()
+    if len(q) >= settings.RATE_LIMIT_PER_MIN:
+        raise HTTPException(status_code=429, detail="Bạn gửi quá nhanh, vui lòng thử lại sau ít phút.")
+    q.append(now)
+    if len(_hits) > 5000:  # tránh phình bộ nhớ
+        for k in [k for k, v in _hits.items() if not v or now - v[-1] > 60]:
+            _hits.pop(k, None)
+
+
+# ---------- Mô hình ----------
 class ChatMessage(BaseModel):
-    role: str = Field(..., description="user | assistant | system")
-    content: str = Field(..., description="Nội dung tin nhắn")
+    role: str = Field(..., pattern="^(user|assistant)$")
+    content: str = Field(..., max_length=2000)
+
 
 class ChatRequest(BaseModel):
     messages: List[ChatMessage]
-    user_id: Optional[str] = "anonymous"
-    temperature: Optional[float] = 0.2
+
 
 class ChatResponse(BaseModel):
     reply: str
@@ -46,93 +95,59 @@ class ChatResponse(BaseModel):
     related_articles: List[Dict[str, Any]] = []
     store_info: Optional[Dict[str, Any]] = None
 
+
 @app.get("/")
 def health_check():
-    return {
-        "status": "online",
-        "service": settings.PROJECT_NAME,
-        "version": settings.VERSION,
-        "engine": settings.LLM_MODEL_NAME,
-        "features": ["store_info", "product_recommendation", "article_retrieval", "hybrid_rag"]
-    }
+    return {"status": "online", "service": settings.PROJECT_NAME, "version": settings.VERSION}
+
+
+@app.get("/healthz")
+def healthz():
+    return {"ok": True, "documents": len(get_rag_engine().documents), "store": bool(STORE)}
+
 
 @app.post(f"{settings.API_V1_PREFIX}/chat", response_model=ChatResponse)
-async def chat_endpoint(request: ChatRequest):
-    if not request.messages:
-        raise HTTPException(status_code=400, detail="Danh sách tin nhắn không được rỗng.")
+async def chat_endpoint(body: ChatRequest, request: Request):
+    _rate_limit(_client_ip(request))
+    if not body.messages or len(body.messages) > settings.MAX_MESSAGES:
+        raise HTTPException(status_code=400, detail="Số lượng tin nhắn không hợp lệ.")
+    last = body.messages[-1]
+    if last.role != "user" or not last.content.strip():
+        raise HTTPException(status_code=400, detail="Tin nhắn cuối phải là câu hỏi của khách.")
+    if len(last.content) > settings.MAX_CHARS:
+        raise HTTPException(status_code=400, detail=f"Câu hỏi tối đa {settings.MAX_CHARS} ký tự.")
 
-    user_query = request.messages[-1].content
-    masked_query = mask_pii(user_query) # Lọc PII bảo vệ khách hàng
-    lower_query = user_query.lower()
-    
-    # 1. Phát hiện ý định hỏi ĐỊA CHỈ / CỬA HÀNG / CƠ SỞ
-    is_address_query = any(k in lower_query for k in ["địa chỉ", "cơ sở", "ở đâu", "chi nhánh", "showroom", "phòng khám", "skin health beauty"])
-    
-    # 2. Truy xuất dữ liệu Hybrid RAG
+    query = mask_pii(last.content)
+    folded = fold(query)
     rag = get_rag_engine()
-    results = rag.search(masked_query, top_k=6)
-    
-    store_info = None
-    related_prods = []
-    related_arts = []
-    
-    if is_address_query or "giải phóng" in lower_query:
-        store_info = {
-            "name": "Phòng trị liệu da 1:1 Skin Health Beauty - Pharma Cosmetics",
-            "address": "Số 44 Ngõ 897 Giải Phóng, Phường Giáp Bát, Hoàng Mai, Hà Nội",
-            "hotline": "0967.194.063 / 0965.594.399",
-            "working_hours": "08:30 - 20:00 (Thứ 2 - Chủ Nhật)",
-            "booking_url": "/dat-lich-tu-van"
-        }
 
-    # Phân loại tài liệu trả về thành Sản phẩm và Bài viết
-    for doc in results:
-        cat = doc.get("category", "")
-        if "Sản phẩm" in cat and len(related_prods) < 3:
-            related_prods.append({
-                "title": doc.get("title"),
-                "url": doc.get("url")
-            })
-        elif "Bài viết" in cat and len(related_arts) < 2:
-            related_arts.append({
-                "title": doc.get("title"),
-                "url": doc.get("url")
-            })
+    store_info = STORE if (STORE and any(k in folded for k in STORE_KEYS)) else None
+    products = [{"title": d["title"], "url": d["url"]} for d in rag.search(query, 3, "Sản phẩm")]
+    articles = [{"title": d["title"], "url": d["url"]} for d in rag.search(query, 2, "Bài viết")]
 
-    # Xây dựng câu trả lời phản hồi tổng hợp
-    reply_parts = []
-    
+    parts: List[str] = []
     if store_info:
-        reply_parts.append(
-            f"📍 **THÔNG TIN CƠ SỞ & PHÒNG TRỊ LIỆU PHARMA COSMETICS**:\n"
-            f"- **Địa chỉ**: {store_info['address']}\n"
-            f"- **Hotline/Zalo**: {store_info['hotline']}\n"
-            f"- **Thời gian mở cửa**: {store_info['working_hours']}\n"
-            f"- Khách hàng đến trực tiếp sẽ được **Chuyên gia Da liễu trực tiếp thăm khám, soi da và xây dựng phác đồ cá nhân hóa 1:1**. Bạn có thể đặt hẹn trước cùng Chuyên gia tại [Đặt lịch tư vấn](/dat-lich-tu-van)."
-        )
+        lines = [f"**{store_info.get('clinic_name', 'Pharma Cosmetics')}**"]
+        if store_info.get("address"):
+            lines.append(f"- Địa chỉ: {store_info['address']}")
+        if store_info.get("phone"):
+            lines.append(f"- Hotline/Zalo: {store_info['phone']}")
+        if store_info.get("hours"):
+            lines.append(f"- Giờ mở cửa: {store_info['hours']}")
+        lines.append(f"- Đặt lịch với {settings.EXPERT_TITLE}: [Đặt lịch tư vấn]({store_info.get('booking_url', '/dat-lich-tu-van')})")
+        parts.append("\n".join(lines))
+    if products:
+        parts.append("**Sản phẩm tham khảo** (xem giá và thành phần chi tiết tại trang sản phẩm):\n"
+                     + "\n".join(f"- [{p['title']}]({p['url']})" for p in products))
+    if articles:
+        parts.append("**Bài viết tham khảo**:\n" + "\n".join(f"- [{a['title']}]({a['url']})" for a in articles))
+    if not parts:
+        parts.append(SAFE_FALLBACK)
+    parts.append("Thông tin chỉ mang tính tham khảo, không thay thế tư vấn trực tiếp từ " + settings.EXPERT_TITLE + ".")
 
-    if related_prods:
-        prod_text = "\n".join([f"- [{p['title']}]({p['url']})" for p in related_prods])
-        reply_parts.append(f"✨ **SẢN PHẨM PHÙ HỢP VỚI TÌNH TRẠNG DA CỦA BẠN**:\n{prod_text}")
+    reply = "\n\n".join(parts)
+    ok, _ = check_medical_compliance(reply)
+    if not ok:
+        reply, products, articles = SAFE_FALLBACK, [], []
 
-    if related_arts:
-        art_text = "\n".join([f"- [{a['title']}]({a['url']})" for a in related_arts])
-        reply_parts.append(f"📖 **BÀI VIẾT CHUYÊN MÔN HƯỚNG DẪN TỪ CHUYÊN GIA**:\n{art_text}")
-
-    if not reply_parts:
-        if results:
-            reply_parts.append(results[0].get("content", ""))
-        else:
-            reply_parts.append(
-                "Dạ em đã ghi nhận tình trạng da của bạn. Để được hỗ trợ phác đồ điều trị an toàn và chuẩn xác nhất, "
-                "bạn có thể ghé trực tiếp cơ sở tại Số 44 Ngõ 897 Giải Phóng, Hà Nội hoặc để lại thông tin để Chuyên gia liên hệ nhé ạ!"
-            )
-
-    full_reply = "\n\n".join(reply_parts)
-
-    return ChatResponse(
-        reply=full_reply,
-        related_products=related_prods,
-        related_articles=related_arts,
-        store_info=store_info
-    )
+    return ChatResponse(reply=reply, related_products=products, related_articles=articles, store_info=store_info)

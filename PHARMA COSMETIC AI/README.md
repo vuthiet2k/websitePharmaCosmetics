@@ -1,80 +1,53 @@
-# PHARMA COSMETICS LOCAL AI (HỆ THỐNG TRÍ TUỆ NHÂN TẠO CỤC BỘ)
-> **Kiến trúc On-Premise AI chuyên sâu cho Thương mại Bán lẻ Dược - Mỹ phẩm**  
-> Tuân thủ Nghị định 13/2023/NĐ-CP, Luật Bảo vệ quyền lợi Người tiêu dùng 2023 & Luật Giao dịch điện tử 2023.
+# Pharma Cosmetics AI — API tra cứu (bản chạy được trên nền tảng miễn phí)
 
----
+API nhỏ (FastAPI) giúp khách hỏi nhanh: **địa chỉ / hotline / giờ mở cửa**, **sản phẩm** và **bài viết** liên quan tới tình trạng da.
+Nó tìm trong dữ liệu thật của website bằng BM25 và trả về đường dẫn thật. **Không dùng LLM, không GPU, không cơ sở dữ liệu.**
 
-## 1. TỔNG QUAN HỆ THỐNG
-Dự án **PHARMA COSMETIC AI** là hệ thống AI Assistant On-Premise được thiết kế chuyên biệt để giải quyết 3 bài toán thương mại bán lẻ cốt lõi:
-1. **Tra cứu & Tư vấn thông số sản phẩm / hoạt chất**: Kết hợp Hybrid RAG (Qdrant + BM25) chống ảo giác tuyệt đối.
-2. **Kiểm tra tồn kho, giá niêm yết thời gian thực**: Kết nối cơ chế MCP (Model Context Protocol) / Function Calling với cơ sở dữ liệu Sapo POS/ERP, không trả lời giá từ bộ nhớ LLM.
-3. **Bảo mật PII & Pháp lý giao dịch điện tử**: Toàn bộ dữ liệu nằm cục bộ, xác thực OTP trước khi tạo đơn, lưu trữ log giao dịch toàn vẹn.
+## Nó làm gì / không làm gì
+- Làm: tìm không phân biệt dấu (`mun an` = `mụn ẩn`), trả địa chỉ/hotline/giờ mở cửa lấy từ cấu hình website, gợi ý tối đa 3 sản phẩm + 2 bài viết.
+- Không làm: **không báo giá, tồn kho, khuyến mại** (đổi theo thời gian, chỉ dẫn vào trang sản phẩm); không tạo đơn; không chẩn đoán; không tư vấn phác đồ — việc này do Chuyên gia thực hiện.
+- Câu trả lời luôn kèm lời nhắc: chỉ mang tính tham khảo.
 
----
-
-## 2. CẤU TRÚC THƯ MỤC
+## Cấu trúc
 ```
-PHARMA COSMETIC AI/
-├── app/                      # Mã nguồn Python backend & AI pipeline
-│   ├── main.py               # FastAPI gateway phục vụ API AI
-│   ├── config.py             # Cấu hình môi trường, model, port, timeout
-│   ├── hybrid_rag.py         # Module Hybrid Search (Vector + BM25 keyword)
-│   ├── mcp_tools.py          # Function calling tra cứu giá, tồn kho, tạo đơn Sapo
-│   ├── guardrails.py         # Kiểm duyệt ảo giác, lọc PII và câu hỏi ngoài chuyên môn
-│   └── cache.py              # Semantic Caching trên Redis/Memory
-├── data/                     # Dữ liệu tri thức cục bộ (Sản phẩm, Hoạt chất, FAQ)
-│   ├── knowledge_base.json   # Tri thức tĩnh: chính sách, thông số kỹ thuật, bảo hành
-│   └── products_catalog.json # Danh mục sản phẩm & hoạt chất đồng bộ từ website
-├── docs/                     # Tài liệu nghiên cứu & pháp lý
-│   ├── NGHIEN-CUU-TRIEN-KHAI-AI-CUC-BO.md # Báo cáo nghiên cứu đầy đủ (400KB)
-│   └── KIEN-TRUC-HE-THONG.md              # Sơ đồ và luồng xử lý chi tiết
-├── scripts/                  # Kịch bản triển khai & kiểm thử
-│   ├── setup_env.sh          # Cài đặt môi trường ảo và thư viện
-│   ├── benchmark_load.py     # Đo hiệu năng, TTFT và TPS
-│   └── run_local.sh          # Chạy cụm dịch vụ cục bộ
-├── docker-compose.yml        # Docker compose dựng vLLM/Qdrant/Redis/App
-├── requirements.txt          # Danh sách thư viện Python
-└── README.md                 # Hướng dẫn cài đặt và vận hành
+app/main.py         API (/, /healthz, POST /api/v1/chat) + CORS + rate limit
+app/hybrid_rag.py   BM25 + chuẩn hoá tiếng Việt
+app/guardrails.py   che SĐT/email/CMND-CCCD, chặn phát ngôn y khoa vi phạm
+app/config.py       biến môi trường
+data/               knowledge_base.json + store_info.json (SINH RA từ website — xem bên dưới)
+scripts/sync_data.py  đồng bộ dữ liệu từ website
+tests/              pytest (11 test)
+Dockerfile          ảnh nhỏ, chạy user thường, đọc cổng từ biến PORT
 ```
 
----
-
-## 3. CÔNG NGHỆ & MÔ HÌNH KHUYẾN NGHỊ
-- **LLM Engine**: `vLLM` hoặc `SGLang` (khuyến cáo không dùng Ollama cho môi trường sản xuất đa luồng).
-- **Mô hình**: `Qwen2.5-7B-Instruct` hoặc `Qwen2.5-14B-Instruct` (hỗ trợ Tiếng Việt xuất sắc, định dạng JSON Structured Outputs chuẩn xác).
-- **Vector DB**: `Qdrant` (hiệu năng cao, hỗ trợ Payload filtering và Hybrid search native).
-- **Embedding Model**: `BAAI/bge-m3` (đa ngôn ngữ, hỗ trợ cả Dense và Sparse vectors).
-- **Backend API**: `FastAPI` (Python 3.11+ / Async / Streaming Response).
-
----
-
-## 4. HƯỚNG DẪN CÀI ĐẶT & CHẠY NHANH
-
-### Bước 1: Khởi tạo môi trường ảo Python
+## Chạy thử
 ```bash
-cd "PHARMA COSMETIC AI"
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+python -m venv .venv && . .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements-dev.txt
+python scripts/sync_data.py                          # chạy khi nội dung website đổi, rồi commit 2 file trong data/
+APP_ENV=development uvicorn app.main:app --reload    # /docs chỉ mở khi APP_ENV=development
+pytest -q tests
 ```
 
-### Bước 2: Chuẩn bị dữ liệu tri thức
-```bash
-python3 -c "from app.hybrid_rag import init_knowledge_base; init_knowledge_base()"
-```
+## Biến môi trường (xem `.env.example`)
+| Biến | Ý nghĩa | Mặc định |
+|---|---|---|
+| `ALLOWED_ORIGINS` | Domain được gọi API (CSV). **Bắt buộc đặt đúng domain website khi deploy**; trống = chặn mọi domain khác | trống |
+| `RATE_LIMIT_PER_MIN` | Số yêu cầu / phút / IP | 20 |
+| `TRUST_PROXY` | `true` khi chạy sau proxy của nền tảng để lấy đúng IP khách | false |
+| `MAX_CHARS` / `MAX_MESSAGES` | Giới hạn độ dài câu hỏi / số tin | 500 / 20 |
+| `APP_ENV` | `production` tắt `/docs` | production |
 
-### Bước 3: Chạy máy chủ AI Cục bộ
-```bash
-# Chạy ở chế độ phát triển
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
+## Deploy miễn phí
+Ảnh Docker chỉ cần ~100MB RAM, phù hợp các gói miễn phí hỗ trợ Docker hoặc Python (Hugging Face Spaces, Render, Cloud Run...). Điều kiện miễn phí của từng nền tảng hay đổi — kiểm tra lại trước khi chọn.
+1. Chạy `python scripts/sync_data.py`, commit `data/knowledge_base.json` và `data/store_info.json`.
+2. Đặt biến môi trường: `ALLOWED_ORIGINS=https://<domain website>`, `TRUST_PROXY=true`.
+3. Lưu ý gói miễn phí thường **ngủ khi không có khách**: lần gọi đầu có thể chậm hàng chục giây — widget chat nên hiển thị trạng thái «đang kết nối».
+4. Dữ liệu chạy trên máy chủ của bên thứ ba: **không còn là «on-premise»**. Chỉ lưu thông tin công khai của website; câu hỏi khách được che SĐT/email/CMND trước khi xử lý và **không bị ghi log**. Cập nhật chính sách bảo mật của website cho khớp.
 
-API Swagger Docs sẽ sẵn sàng tại: `http://localhost:8000/docs`
+## Gọi từ website
+`POST {API}/api/v1/chat` với `{"messages":[{"role":"user","content":"..."}]}` → `{reply, related_products, related_articles, store_info}`.
+Theme chưa gọi API này. Khi nối vào widget chat: lấy địa chỉ API từ **cấu hình theme** (không gõ cứng trong snippet), gọi qua HTTPS.
 
----
-
-## 5. TÍCH HỢP VỚI THEME WEBSITE PHARMA COSMETICS
-- Endpoint trò chuyện: `POST http://localhost:8000/api/v1/chat`
-- Endpoint soi da / phân tích hoạt chất: `POST http://localhost:8000/api/v1/analyze-routine`
-- Có thể kết nối trực tiếp vào giao diện theme Sapo (`templates/page.ai-skin-quiz.bwt` hoặc widget chat nổi).
-
+## Hướng phát triển (chưa làm)
+Nếu muốn câu trả lời tự nhiên bằng LLM: dùng API của nhà cung cấp, có đánh giá pháp lý riêng (chuyển dữ liệu ra ngoài, Nghị định 13/2023). Tài liệu nghiên cứu phương án máy chủ riêng nằm ở `docs/NGHIEN-CUU-TRIEN-KHAI-AI-CUC-BO.md` — đó là nghiên cứu, **không phải hiện trạng**.

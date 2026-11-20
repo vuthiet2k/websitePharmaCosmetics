@@ -1,15 +1,16 @@
 """
-Module Guardrails & Kiểm soát Tuân thủ Pháp lý (Nghị định 13/2023 & Luật BVQLNTD 2023)
-- Lọc bỏ PII (Số điện thoại, CCCD, Email, Địa chỉ nhà) trước khi ghi log.
-- Chặn ảo giác về giá và khuyến mại: Nếu không có trong Context thì bắt buộc trả lời lịch sự không biết.
-- Chặn các phát ngôn y khoa vi phạm: Chữa khỏi 100%, tự xưng Bác sĩ.
+Guardrails: che thông tin cá nhân trước khi xử lý/ghi log + chặn phát ngôn y khoa vi phạm trong câu trả lời.
 """
 import re
-from typing import Dict, Any, Tuple
+from typing import Tuple
 
-PHONE_REGEX = re.compile(r'(0|\+84)[3|5|7|8|9][0-9]{8}\b')
-ID_CARD_REGEX = re.compile(r'\b[0-9]{9,12}\b')
+# SĐT VN: 0xxxxxxxxx hoặc +84xxxxxxxxx, cho phép dấu chấm/cách/gạch giữa các số
+PHONE_REGEX = re.compile(r"(?<!\d)(?:\+?84|0)[35789](?:[\s.\-]?\d){8}(?!\d)")
+EMAIL_REGEX = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
+# CMND 9 số / CCCD 12 số (chỉ che khi đứng riêng, không che giá tiền, mã đơn dài hơn)
+ID_CARD_REGEX = re.compile(r"(?<![\d.,])(?:\d{9}|\d{12})(?![\d.,])")
 
+# Cụm bị cấm — khớp theo ranh giới từ (tránh «mai chăm sóc» bị nhận nhầm là «ai chăm sóc»)
 BANNED_MEDICAL_CLAIMS = [
     "chữa khỏi dứt điểm",
     "cam kết khỏi 100%",
@@ -19,42 +20,25 @@ BANNED_MEDICAL_CLAIMS = [
     "ai điều trị",
     "ai khám da",
     "ai tư vấn phác đồ",
-    "ai thay thế chuyên gia"
+    "ai thay thế chuyên gia",
 ]
+_BANNED_RE = [(p, re.compile(r"(?<!\w)" + re.escape(p) + r"(?!\w)", re.IGNORECASE)) for p in BANNED_MEDICAL_CLAIMS]
+
+SAFE_FALLBACK = (
+    "Dạ em chưa có thông tin phù hợp để trả lời chính xác. Bạn vui lòng liên hệ Chuyên gia của "
+    "Pharma Cosmetics để được tư vấn trực tiếp nhé ạ."
+)
+
 
 def mask_pii(text: str) -> str:
-    """Ẩn thông tin định danh khách hàng để bảo vệ dữ liệu cá nhân"""
-    masked = PHONE_REGEX.sub("[SỐ ĐIỆN THOẠI ĐÃ ẨN]", text)
-    masked = ID_CARD_REGEX.sub("[SỐ ĐỊNH DANH ĐÃ ẨN]", masked)
-    return masked
+    """Che SĐT, email, CMND/CCCD."""
+    masked = PHONE_REGEX.sub("[SĐT đã ẩn]", text)
+    masked = EMAIL_REGEX.sub("[email đã ẩn]", masked)
+    return ID_CARD_REGEX.sub("[số định danh đã ẩn]", masked)
+
 
 def check_medical_compliance(response_text: str) -> Tuple[bool, str]:
-    """Kiểm tra tuân thủ quy chuẩn dược mỹ phẩm và danh xưng chuyên môn"""
-    lower = response_text.lower()
-    for phrase in BANNED_MEDICAL_CLAIMS:
-        if phrase in lower:
-            return False, f"Vi phạm quy chuẩn truyền thông y tế: phát hiện cụm từ '{phrase}'."
+    for phrase, rx in _BANNED_RE:
+        if rx.search(response_text):
+            return False, f"Phát hiện cụm từ không được dùng: '{phrase}'."
     return True, "Hợp lệ"
-
-def build_system_prompt() -> str:
-    """System Prompt chuẩn hóa chống ảo giác tuyệt đối theo kiến trúc Astra"""
-    return """Bạn là Trợ lý AI Chuyên môn của hệ thống Dược Mỹ Phẩm Pharma Cosmetics.
-Nhiệm vụ: Cung cấp thông tin chuẩn xác, khoa học về chăm sóc da, thành phần hoạt chất và hướng dẫn mua sắm.
-
-NGUYÊN TẮC CỐT LÕI (BẮT BUỘC TUÂN THỦ 100%):
-1. CHỐNG ẢO GIÁC TUYỆT ĐỐI (ANTI-HALLUCINATION):
-   - Chỉ trả lời dựa trên TRI THỨC ĐƯỢC CUNG CẤP (Context) hoặc KẾT QUẢ GỌI HÀM (Tool Calling).
-   - Nếu thông tin không có trong tài liệu hoặc bạn không chắc chắn, bạn PHẢI trả lời lịch sự: "Dạ hiện tại em chưa có thông tin chính xác về vấn đề này trong hồ sơ lưu trữ của Pharma Cosmetics, em xin phép chuyển thông tin đến Chuyên gia tư vấn để giải đáp kỹ hơn cho bạn ạ."
-   - TUYỆT ĐỐI KHÔNG tự bịa giá sản phẩm, mức giảm giá, tỷ lệ % đã bán hoặc đánh giá khách hàng.
-
-2. QUY CHUẨN Y DƯỢC & VAI TRÒ CON NGƯỜI LÀ TRỌNG TÂM:
-   - AI CHỈ LÀ CÔNG CỤ TÌM KIẾM & HỖ TRỢ TRA CỨU TÀI LIỆU, KHÔNG PHẢI CHỦ THỂ Y TẾ.
-   - TUYỆT ĐỐI KHÔNG dùng từ "AI chăm sóc", "AI khám da", "AI điều trị", "AI lên phác đồ".
-   - Mọi hoạt động thăm khám, soi da, đánh giá tình trạng da và xây dựng phác đồ điều trị ĐỀU DO CHUYÊN GIA DA LIỄU VÀ DƯỢC SĨ CON NGƯỜI ĐẢM TRÁCH 1:1.
-   - Danh xưng chuẩn là "Chuyên gia Da liễu", "Dược sĩ tư vấn" (không tự xưng Bác sĩ nếu không có chứng chỉ CKI/CKII).
-   - Các sản phẩm bôi ngoài là dược mỹ phẩm hỗ trợ điều trị, KHÔNG tuyên bố chữa khỏi hoàn toàn hoặc thay thế chỉ định y khoa xâm lấn.
-
-3. TRÌNH BÀY:
-   - Ngắn gọn, chuyên nghiệp, khoa học, nêu rõ tên hoạt chất (vd: Niacinamide, BHA, Retinol, HA) và công dụng tương ứng.
-"""
-
