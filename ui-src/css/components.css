@@ -364,7 +364,8 @@
 @layer components {
 
 /* Header Card Pattern: Card bọc ngoài, card-header làm Topbar, card-body làm Thân Header */
-header.header .card{position:relative;display:flex;flex-direction:column;width:100%;border:0!important;border-radius:0!important;background:#FFFFFF;box-shadow:none;transition:background-color .25s ease,box-shadow .25s ease}
+/* 20/11/2026 SPEC-HOME-HEADER-01: khôi phục nền trắng + đệm 0 của .card (ec87393 làm lộ dải 5px xanh dưới header) */
+header.header .card{position:relative;display:flex;flex-direction:column;width:100%;border:0!important;border-radius:0!important;background:#FFFFFF!important;padding:0!important;box-shadow:none;transition:background-color .25s ease,box-shadow .25s ease}
 header.header .card-header{position:relative;z-index:10010;display:block!important;background:var(--pc-topbar-bg,#3CB371);color:var(--pc-topbar-fg,#FFFFFF);font-family:var(--pc-font-body,Montserrat,sans-serif);font-size:var(--fs-xs);font-weight:600;border:0!important;padding:0!important;overflow:visible;max-height:48px;transition:max-height .3s cubic-bezier(.4,0,.2,1),opacity .25s ease,transform .3s ease}
 header.header .card-body{position:relative;width:100%;padding:0!important;background:#FFFFFF;border-bottom:1px solid #DCE5DF;transition:background-color .25s ease,border-color .25s ease}
 header.header .card-header .pc-topbar__inner{display:flex!important;align-items:center;gap:20px;max-width:var(--pc-container-max,1280px)!important;width:100%;min-height:36px;margin:0 auto;padding:0 32px;box-sizing:border-box}
@@ -14355,7 +14356,9 @@ body.pc-site-v3{font-family:var(--pc-font-body);font-size:var(--fs-base)}
 .pc-clinic-v3 .pc-topbar-v3{position:sticky;top:0}
 .pc-clinic-v3 :is(h1,h2){font-family:var(--pc-font-display)!important}
 /* Header and footer still use the store's menu, identity, legal content and account/cart hooks. */
-.pc-site-v3 header.header :is(.card, .main-header){background:var(--bgHeader, var(--mainColor))!important}
+/* 20/11/2026 SPEC-HOME-HEADER-01: chỉ .main-header nhận nền --bgHeader; .card trắng, đệm 0 (tách lại như trước ec87393) */
+.pc-site-v3 header.header .main-header{background:var(--bgHeader, var(--mainColor))!important}
+.pc-site-v3 header.header .card{background:#FFFFFF!important;padding:0!important}
 .pc-site-v3 header.header :is(.card-body, .box-hearder){background:#fff!important;border-bottom:1px solid #DCE5DF;box-shadow:none}
 .pc-site-v3 header.header .top-main-header{min-height:34px}
 .pc-site-v3 header.header .top-main-header{background:transparent!important}
@@ -14900,7 +14903,8 @@ body.pc-home-v3 header.header.header-transparent:not(.is-scrolled) .sudes-header
  .pc-site-v3 header.header :is(.card-body, .box-hearder) .header-menu .sudes-main-header #nav>.nav-item>a{font-weight:500;color:var(--pc-color-ink-secondary)}
  .pc-site-v3 header.header :is(.card-body, .box-hearder) .header-menu .sudes-main-header #nav>.nav-item.active>a{font-weight:600}
  .pc-site-v3 header.header.hSticky .header-menu .navigation-horizontal>:is(.nav-row, .row){min-height:64px}
- .pc-site-v3 header.header.hSticky .pc-sticky-logo img{height:32px;max-width:160px}
+ /* 20/11/2026 SPEC-HOME-HEADER-01: trang chủ chỉ dính bằng header fixed (is-scrolled) — logo chính thu 32px như thanh dính trang thường */
+ .pc-site-v3 header.header.hSticky .pc-sticky-logo img,body.pc-home-v3 header.header.is-scrolled .header-logo .pc-logo-master-img{height:32px;max-width:160px}
 }
 
 /* ===== VENDOR BOOTSTRAP (merged) ===== */
