@@ -21,11 +21,11 @@
   <div class="container">
     <div class="flex flex-col lg:flex-row gap-6 lg:gap-10 items-start w-full">
 
-      <!-- 1. RIGHT TOOLBAR (Desktop only: Chỉnh cỡ chữ, Chia sẻ, Bình luận, Copy link, In) -->
-      <aside class="hidden lg:!flex flex-col gap-2.5 sticky top-24 w-11 select-none shrink-0 order-last items-end" aria-label="Thanh công cụ bài viết">
+      <!-- 1. LEFT TOOLBAR (Desktop only: 10 nút chức năng chuẩn) -->
+      <aside class="hidden lg:!flex flex-col gap-2.5 sticky top-24 w-11 select-none shrink-0" aria-label="Thanh công cụ bài viết">
         <!-- 1. + Zoom in -->
         <button type="button" id="btn-zoom-in" class="w-9 h-9 rounded-full border border-slate-300 bg-white text-slate-700 flex items-center justify-center text-sm font-semibold hover:border-primary hover:text-primary transition-colors cursor-pointer" title="Tăng cỡ chữ" aria-label="Tăng cỡ chữ">
-          <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'plus', size: 14 %}</i>
+          <span class="text-base font-bold leading-none select-none" aria-hidden="true">+</span>
         </button>
         <!-- 2. Aa Reset -->
         <button type="button" id="btn-zoom-reset" class="w-9 h-9 rounded-full border border-slate-300 bg-white text-slate-700 flex items-center justify-center text-xs font-semibold hover:border-primary hover:text-primary transition-colors cursor-pointer" title="Cỡ chữ mặc định" aria-label="Cỡ chữ mặc định">
@@ -35,19 +35,32 @@
         <button type="button" id="btn-zoom-out" class="w-9 h-9 rounded-full border border-slate-300 bg-white text-slate-700 flex items-center justify-center text-sm font-semibold hover:border-primary hover:text-primary transition-colors cursor-pointer" title="Giảm cỡ chữ" aria-label="Giảm cỡ chữ">
           <span class="text-base font-bold leading-none select-none" aria-hidden="true">−</span>
         </button>
-        <!-- 4. Share -->
+        <!-- 4. Heart / Like -->
+        <button type="button" class="w-9 h-9 rounded-full border border-slate-300 bg-white text-slate-700 flex items-center justify-center hover:border-primary hover:text-red-500 transition-colors cursor-pointer" title="Thích bài viết" aria-label="Thích bài viết" data-article-like>
+          <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'heart', size: 14 %}</i>
+        </button>
+        <!-- 5. Eye / Views -->
+        <div class="relative w-9 h-9 rounded-full border border-slate-300 bg-white text-slate-700 flex items-center justify-center select-none" title="Lượt xem" aria-label="Lượt xem">
+          <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'eye', size: 14 %}</i>
+          <span class="absolute -top-1 -right-1 bg-sky-600 text-white text-[9px] font-bold rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center">0</span>
+        </div>
+        <!-- 6. Bookmark / Save -->
+        <button type="button" class="w-9 h-9 rounded-full border border-slate-300 bg-white text-slate-700 flex items-center justify-center hover:border-primary hover:text-primary transition-colors cursor-pointer" title="Lưu bài viết" aria-label="Lưu bài viết" data-article-save>
+          <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'bookmark', size: 14 %}</i>
+        </button>
+        <!-- 7. Share -->
         <button type="button" class="w-9 h-9 rounded-full border border-slate-300 bg-white text-slate-700 flex items-center justify-center hover:border-primary hover:text-primary transition-colors cursor-pointer" title="Chia sẻ bài viết" aria-label="Chia sẻ bài viết" data-article-share>
           <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'share', size: 14 %}</i>
         </button>
-        <!-- 5. Comment bubble -->
+        <!-- 8. Comment bubble -->
         <a href="#article_comments_section" class="w-9 h-9 rounded-full border border-slate-300 bg-white text-slate-700 flex items-center justify-center hover:border-primary hover:text-primary transition-colors no-underline cursor-pointer" title="Bình luận" aria-label="Bình luận">
           <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'message-circle', size: 14 %}</i>
         </a>
-        <!-- 6. Copy Link -->
+        <!-- 9. Copy Link -->
         <button type="button" class="w-9 h-9 rounded-full border border-slate-300 bg-white text-slate-700 flex items-center justify-center hover:border-primary hover:text-primary transition-colors cursor-pointer" title="Sao chép liên kết" aria-label="Sao chép liên kết" data-article-copy>
           <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'link', size: 14 %}</i>
         </button>
-        <!-- 7. Print -->
+        <!-- 10. Print -->
         <button type="button" onclick="window.print()" class="w-9 h-9 rounded-full border border-slate-300 bg-white text-slate-700 flex items-center justify-center hover:border-primary hover:text-primary transition-colors cursor-pointer" title="In bài viết" aria-label="In bài viết">
           <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'file-text', size: 14 %}</i>
         </button>
@@ -234,7 +247,7 @@
       </main>
 
       <!-- 3. SIDEBAR CỘT DỌC (Desktop col-4 / w-[360px] bên cạnh bài viết; Mobile tự động rớt xuống dưới) -->
-      <aside class="w-full lg:w-[360px] lg:shrink-0 flex flex-col gap-6" aria-label="Thông tin liên quan và chủ đề">
+      <aside class="w-full lg:w-[360px] lg:shrink-0 flex flex-col gap-6 lg:sticky lg:top-24 lg:max-h-screen lg:overflow-y-auto lg:scrollbar-none self-start" aria-label="Thông tin liên quan và chủ đề">
         
         <!-- KHỐI CHỦ ĐỀ (ẨN HOÀN TOÀN NẾU RỖNG) -->
         {%- capture pc_topics_html -%}
@@ -451,5 +464,19 @@
         }
       });
     }
+
+    // 3. Tương tác Thích & Lưu bài viết (Like & Bookmark toggle)
+    document.querySelectorAll('[data-article-like]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        btn.classList.toggle('text-red-500');
+        btn.classList.toggle('border-red-500');
+      });
+    });
+    document.querySelectorAll('[data-article-save]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        btn.classList.toggle('text-primary');
+        btn.classList.toggle('border-primary');
+      });
+    });
   })();
 </script>
