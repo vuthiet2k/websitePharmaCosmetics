@@ -5,9 +5,9 @@
   - Tiêu đề kết quả rõ ràng, thanh thoát.
   - Bộ lọc sản phẩm: Desktop hiển thị cột trái; Mobile ẩn và chuyển thành Offcanvas drawer (trượt từ trái sang)
     kích hoạt bằng nút "Bộ lọc" trên thanh công cụ (.btn-filter-mobile) kèm badge số lượng tiêu chí đang lọc (.count-filter-val).
-  - Lưới sản phẩm: 2 cột trên mobile (grid-cols-2 gap-3), 3 cột trên tablet/desktop (md:grid-cols-3 lg:gap-4),
+  - Lưới sản phẩm: 2 cột mobile, 3 cột tablet, 4 cột ≥1280px (xl:grid-cols-4 — 20/11/2026 khớp search.data + danh mục; 12 SP/trang = 3 hàng),
     sử dụng 100% khung thẻ ui_product_card dùng chung.
-  - Có phân trang phân trang trang (collection-paginate-pages.bwt / doSearch).
+  - Có phân trang (ui_pagination pg_mode 'ajax' / doSearch).
   - Khối tin tức liên quan: chuyển xuống phía dưới danh sách sản phẩm thành 1 khối riêng biệt (không chia tab),
     tự động tải bài viết liên quan qua search API / smartjsonar.
 {%- endcomment -%}
@@ -54,7 +54,7 @@
 						{% include 'collection-sortby', compact: true %}
 
 						{%- comment -%} Lưới sản phẩm: 2 cột trên mobile, 3 cột tablet/desktop {%- endcomment -%}
-						<ul class="m-0 grid list-none grid-cols-2 gap-3 p-0 md:grid-cols-3 lg:gap-4 xl:grid-cols-3 [html[data-pc-view=list]_&]:grid-cols-1">
+						<ul class="m-0 grid list-none grid-cols-2 gap-3 p-0 md:grid-cols-3 lg:gap-4 xl:grid-cols-4 [html[data-pc-view=list]_&]:grid-cols-1">
 							{% for product in search.results %}
 							<li class="min-w-0">
 								{%- include 'ui_product_card', product: product, tone: '', eager: false, wish: false -%}
@@ -64,7 +64,7 @@
 
 						{% if paginate.pages > 1 %}
 						<div class="section pagenav clearfix a-center mt-8">
-							{% include 'collection-paginate-pages' %}
+							{% include 'ui_pagination', pg_mode: 'ajax' %}
 						</div>
 						{% endif %}
 					</div>

@@ -99,14 +99,24 @@
 {%- endcapture -%}
 {%- assign about_rail_items = about_rail_csv | split: ',' -%}
 
+{%- comment -%}
+  20/11/2026 (SPEC-TEAM-TRIAL-01 T1, UI-0): thay khối CSS tự viết bằng class Tailwind gán 1 chỗ. Khoảng đệm dọc 44px, viền dưới
+  line-soft; chế độ rail: panel đầu bỏ đệm trên, panel cuối bỏ viền + đệm dưới; chế độ 1 cột: giữ đệm 44px, chỉ panel cuối bỏ viền.
+{%- endcomment -%}
+{%- if about_rail_items.size > 1 -%}
+{%- assign about_panel_cls = 'py-[44px] border-0 border-b border-solid border-line-soft first:pt-0 last:border-b-0 last:pb-0' -%}
+{%- else -%}
+{%- assign about_panel_cls = 'py-[44px] border-0 border-b border-solid border-line-soft last:border-b-0' -%}
+{%- endif -%}
+
 {%- capture about_middle_content -%}
 
   {%- if has_story -%}
-  <div id="about-story" class="about-panel">
+  <div id="about-story" class="{{ about_panel_cls }}">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
       {%- if settings.about_story_img != blank -%}
       <div class="lg:col-span-5">
-        <img src="{{ settings.about_story_img | img_url: 'grande' }}" alt="{{ settings.about_story_title | escape }}" class="rounded-2xl shadow-xl w-full object-cover" style="max-height:560px">
+        <img src="{{ settings.about_story_img | img_url: 'grande' }}" alt="{{ settings.about_story_title | escape }}" class="rounded-2xl shadow-xl w-full max-h-[560px] object-cover">
       </div>
       {%- endif -%}
       <div class="{% if settings.about_story_img != blank %}lg:col-span-7{% else %}lg:col-span-12 max-w-3xl{% endif %} space-y-4">
@@ -125,7 +135,7 @@
   {%- endif -%}
 
   {%- if has_mission -%}
-  <div id="about-mission" class="about-panel">
+  <div id="about-mission" class="{{ about_panel_cls }}">
     <div class="max-w-3xl mb-12">
       {%- if settings.about_mission_eyebrow != blank -%}<span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">{{ settings.about_mission_eyebrow }}</span>{%- endif -%}
       <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 mt-2 font-heading">{{ settings.about_mission_title }}</h2>
@@ -174,7 +184,7 @@
   {%- endif -%}
 
   {%- if has_method -%}
-  <div id="about-method" class="about-panel">
+  <div id="about-method" class="{{ about_panel_cls }}">
     <div class="max-w-3xl mb-12">
       {%- if settings.about_method_eyebrow != blank -%}<span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">{{ settings.about_method_eyebrow }}</span>{%- endif -%}
       <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 mt-2 font-heading">{{ settings.about_method_title }}</h2>
@@ -206,7 +216,7 @@
   {%- endif -%}
 
   {%- if has_team -%}
-  <div id="about-team" class="about-panel">
+  <div id="about-team" class="{{ about_panel_cls }}">
     <div class="max-w-3xl mb-12">
       {%- if settings.about_team_eyebrow != blank -%}<span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">{{ settings.about_team_eyebrow }}</span>{%- endif -%}
       <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 mt-2 font-heading">{{ settings.about_team_title }}</h2>
@@ -237,7 +247,7 @@
   {%- endif -%}
 
   {%- if has_lab -%}
-  <div id="about-lab" class="about-panel">
+  <div id="about-lab" class="{{ about_panel_cls }}">
     <div class="relative overflow-hidden rounded-3xl bg-forest-900 text-white p-8 sm:p-12">
       {%- if settings.about_lab_bg_img != blank -%}
       <img src="{{ settings.about_lab_bg_img | img_url: 'grande' }}" alt="" width="1200" height="600" class="absolute inset-0 w-full h-full object-cover opacity-25">
@@ -259,7 +269,7 @@
   {%- endif -%}
 
   {%- if has_ing -%}
-  <div id="about-ing" class="about-panel">
+  <div id="about-ing" class="{{ about_panel_cls }}">
     <div class="max-w-3xl mb-10">
       {%- if settings.about_ing_eyebrow != blank -%}<span class="text-xs font-bold text-emerald-700 uppercase tracking-widest">{{ settings.about_ing_eyebrow }}</span>{%- endif -%}
       <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 mt-2 font-heading">{{ settings.about_ing_title }}</h2>
@@ -279,53 +289,33 @@
 <section class="py-16 bg-white">
   <div class="container">
     {%- if about_rail_items.size > 1 -%}
-    <div class="about-rail-wrap grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-12 items-start">
-      <nav class="about-rail" id="aboutRail" aria-label="Điều hướng nội dung trang Về chúng tôi">
+    <div class="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-12 items-start">
+      <nav class="max-lg:hidden lg:sticky lg:top-[96px] lg:flex lg:flex-col lg:gap-[4px]" id="aboutRail" aria-label="Điều hướng nội dung trang Về chúng tôi">
         {%- capture rail_label_story -%}Câu chuyện{%- endcapture -%}
         {%- capture rail_label_mission -%}Sứ mệnh{%- endcapture -%}
         {%- capture rail_label_method -%}Quy trình{%- endcapture -%}
         {%- capture rail_label_team -%}Đội ngũ{%- endcapture -%}
         {%- capture rail_label_lab -%}Cơ sở vật chất{%- endcapture -%}
         {%- capture rail_label_ing -%}Hoạt chất{%- endcapture -%}
-        {%- if has_story -%}<a href="#about-story"><span class="dot"></span>{{ rail_label_story }}</a>{%- endif -%}
-        {%- if has_mission -%}<a href="#about-mission"><span class="dot"></span>{{ rail_label_mission }}</a>{%- endif -%}
-        {%- if has_method -%}<a href="#about-method"><span class="dot"></span>{{ rail_label_method }}</a>{%- endif -%}
-        {%- if has_team -%}<a href="#about-team"><span class="dot"></span>{{ rail_label_team }}</a>{%- endif -%}
-        {%- if has_lab -%}<a href="#about-lab"><span class="dot"></span>{{ rail_label_lab }}</a>{%- endif -%}
-        {%- if has_ing -%}<a href="#about-ing"><span class="dot"></span>{{ rail_label_ing }}</a>{%- endif -%}
+        {%- if has_story -%}<a href="#about-story" class="group flex items-center gap-[10px] rounded-[8px] px-[12px] py-[9px] text-[length:var(--fs-body)] font-semibold text-ink-secondary no-underline transition-colors [&.is-active]:bg-primary-tint [&.is-active]:text-primary-deep"><span class="h-[7px] w-[7px] shrink-0 rounded-full bg-slate-200 transition-colors group-[.is-active]:bg-primary"></span>{{ rail_label_story }}</a>{%- endif -%}
+        {%- if has_mission -%}<a href="#about-mission" class="group flex items-center gap-[10px] rounded-[8px] px-[12px] py-[9px] text-[length:var(--fs-body)] font-semibold text-ink-secondary no-underline transition-colors [&.is-active]:bg-primary-tint [&.is-active]:text-primary-deep"><span class="h-[7px] w-[7px] shrink-0 rounded-full bg-slate-200 transition-colors group-[.is-active]:bg-primary"></span>{{ rail_label_mission }}</a>{%- endif -%}
+        {%- if has_method -%}<a href="#about-method" class="group flex items-center gap-[10px] rounded-[8px] px-[12px] py-[9px] text-[length:var(--fs-body)] font-semibold text-ink-secondary no-underline transition-colors [&.is-active]:bg-primary-tint [&.is-active]:text-primary-deep"><span class="h-[7px] w-[7px] shrink-0 rounded-full bg-slate-200 transition-colors group-[.is-active]:bg-primary"></span>{{ rail_label_method }}</a>{%- endif -%}
+        {%- if has_team -%}<a href="#about-team" class="group flex items-center gap-[10px] rounded-[8px] px-[12px] py-[9px] text-[length:var(--fs-body)] font-semibold text-ink-secondary no-underline transition-colors [&.is-active]:bg-primary-tint [&.is-active]:text-primary-deep"><span class="h-[7px] w-[7px] shrink-0 rounded-full bg-slate-200 transition-colors group-[.is-active]:bg-primary"></span>{{ rail_label_team }}</a>{%- endif -%}
+        {%- if has_lab -%}<a href="#about-lab" class="group flex items-center gap-[10px] rounded-[8px] px-[12px] py-[9px] text-[length:var(--fs-body)] font-semibold text-ink-secondary no-underline transition-colors [&.is-active]:bg-primary-tint [&.is-active]:text-primary-deep"><span class="h-[7px] w-[7px] shrink-0 rounded-full bg-slate-200 transition-colors group-[.is-active]:bg-primary"></span>{{ rail_label_lab }}</a>{%- endif -%}
+        {%- if has_ing -%}<a href="#about-ing" class="group flex items-center gap-[10px] rounded-[8px] px-[12px] py-[9px] text-[length:var(--fs-body)] font-semibold text-ink-secondary no-underline transition-colors [&.is-active]:bg-primary-tint [&.is-active]:text-primary-deep"><span class="h-[7px] w-[7px] shrink-0 rounded-full bg-slate-200 transition-colors group-[.is-active]:bg-primary"></span>{{ rail_label_ing }}</a>{%- endif -%}
       </nav>
-      <div class="about-rail-content min-w-0">
+      <div class="min-w-0">
         {{ about_middle_content }}
       </div>
     </div>
     {%- else -%}
-    <div class="about-rail-content about-rail-content--solo">
+    <div>
       {{ about_middle_content }}
     </div>
     {%- endif -%}
   </div>
 </section>
 
-<style>
-/* T-147: KHÔNG dùng Tailwind "max-lg:hidden lg:flex" ở đây — .hidden { display:none !important; }
-   đã bị theme này định nghĩa sẵn (assets/global_core.scss.bwt, dùng cho input ẩn v.v.) và
-   !important của nó đè luôn cả lg:flex responsive. Tự kiểm soát display bằng CSS riêng. */
-.about-rail{ display: none; }
-@media (min-width: 1024px) {
-  .about-rail{ display: flex; position: sticky; top: 96px; flex-direction: column; gap: 4px; }
-}
-.about-rail a{
-  display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px;
-  font-size: var(--fs-body); font-weight: 600; color: #4B5B54; text-decoration: none; transition: background .15s, color .15s;
-}
-.about-rail a .dot{ width: 7px; height: 7px; border-radius: 50%; background: #E2E8F0; flex-shrink: 0; transition: background .15s; }
-.about-rail a.is-active{ background: #E8F5E9; color: #267348; }
-.about-rail a.is-active .dot{ background: #3CB371; }
-.about-rail-content > .about-panel{ padding-block: 44px; border-bottom: 1px solid #EEF2F0; }
-.about-rail-content > .about-panel:first-child{ padding-top: 0; }
-.about-rail-content > .about-panel:last-child{ border-bottom: 0; padding-bottom: 0; }
-.about-rail-content--solo > .about-panel{ padding-block: 44px; }
-</style>
 <script>
 (function(){
   var rail = document.getElementById('aboutRail');

@@ -1,0 +1,104 @@
+{%- comment -%}
+  snippets/ui_pagination.bwt — THANH PHÂN TRANG DUY NHẤT CỦA TOÀN SITE (SSOT, 20/11/2026 — chủ dự án yêu cầu dùng chung 1 mẫu).
+  Thay cho paginate-pages.bwt, collection-paginate-pages.bwt và 2 bản JS tự dựng (page_thuong_hieu, page_skinhealthy_services).
+  Không tự dựng phân trang ở nơi khác — kể cả trong JS (lint:guardrails FAIL nếu thấy class/markup phân trang ngoài file này).
+
+  Tham số (tiền tố pg_ để không lọt sang ui_icon include bên trong):
+    pg_mode  = 'link' (mặc định) — đọc object paginate, nút là <a href> (blog, tài khoản, collection.skinhealthy…)
+             | 'ajax'           — đọc object paginate, nút gọi doSearch(n) của col.js (lưới sản phẩm / tìm kiếm tải AJAX)
+             | 'js'             — phân trang phía trình duyệt: in khung rỗng; JS của trang gọi
+                                  PcPagination.render(nav, tổngTrang, trangHiệnTại, function (trang) { … })
+    pg_label = aria-label của <nav> (mặc định 'Phân trang')
+    pg_id    = id của <nav> (chỉ cần ở chế độ js để JS tìm)
+  Giao diện: ô vuông bo góc min 44×44 (R5), trang hiện tại nền màu chính, nút trước/sau = chevron ui_icon, hết trang thì mờ + không bấm.
+  Rút gọn số trang: link/ajax theo paginate.parts của Sapo; js theo cùng quy tắc (≤7 trang hiện hết, nhiều hơn thì 1 … x-1 x x+1 … N).
+{%- endcomment -%}
+{%- assign pc_pg_mode = pg_mode | default: 'link' -%}
+{%- assign pc_pg_label = pg_label | default: 'Phân trang' -%}
+{%- assign pc_pg_ul = 'm-0 flex list-none flex-wrap items-center justify-center gap-1 p-0 sm:gap-2' -%}
+{%- assign pc_pg_link = 'flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-xl border border-solid border-line bg-white px-3 text-sm font-semibold !text-ink no-underline transition-colors hover:border-primary' -%}
+{%- assign pc_pg_cur = 'flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-solid border-primary bg-primary px-3 text-sm font-semibold !text-white' -%}
+{%- assign pc_pg_off = 'flex min-h-[44px] min-w-[44px] cursor-not-allowed items-center justify-center rounded-xl border border-solid border-line bg-white px-3 text-sm font-semibold text-ink-secondary opacity-40' -%}
+{%- assign pc_pg_gap = 'flex min-h-[44px] min-w-6 items-center justify-center text-sm text-ink-secondary' -%}
+{%- if pc_pg_mode == 'js' -%}
+<nav{% if pg_id != blank %} id="{{ pg_id }}"{% endif %} class="mt-6 font-sans" aria-label="{{ pc_pg_label | escape }}" data-pc-pagination hidden
+  data-cls-link="{{ pc_pg_link }}" data-cls-cur="{{ pc_pg_cur }}" data-cls-off="{{ pc_pg_off }}" data-cls-gap="{{ pc_pg_gap }}">
+  <ul class="{{ pc_pg_ul }}" data-pc-pagination-list></ul>
+  <template data-pc-pg-icon="prev">{% include 'ui_icon', name: 'chevron-left', size: 20, label: '' %}</template>
+  <template data-pc-pg-icon="next">{% include 'ui_icon', name: 'chevron-right', size: 20, label: '' %}</template>
+</nav>
+<script>
+/* PcPagination — bản JS của ui_pagination (dùng chung, định nghĩa 1 lần/trang). Class lấy từ data-cls-* của <nav> ⇒ giao diện
+   chỉ khai báo ở đầu snippet này. render(nav, total, current, onGo): total ≤ 1 ⇒ ẩn thanh. */
+window.PcPagination = window.PcPagination || {
+  pages: function (total, cur) {
+    var i, out = [];
+    if (total <= 7) { for (i = 1; i <= total; i++) out.push(i); return out; }
+    if (cur <= 4) return [1, 2, 3, 4, 5, '…', total];
+    if (cur >= total - 3) return [1, '…', total - 4, total - 3, total - 2, total - 1, total];
+    return [1, '…', cur - 1, cur, cur + 1, '…', total];
+  },
+  render: function (nav, total, cur, onGo) {
+    if (!nav) return;
+    var list = nav.querySelector('[data-pc-pagination-list]');
+    if (!list) return;
+    list.innerHTML = '';
+    nav.hidden = total <= 1;
+    if (total <= 1) return;
+    var ds = nav.dataset;
+    function icon(dir) { var t = nav.querySelector('[data-pc-pg-icon="' + dir + '"]'); return t ? t.innerHTML : (dir === 'prev' ? '‹' : '›'); }
+    function item(cls, html, page, extra) {
+      var li = document.createElement('li');
+      var el = document.createElement(page ? 'button' : 'span');
+      el.className = cls;
+      el.innerHTML = html;
+      if (page) {
+        el.type = 'button';
+        el.addEventListener('click', function () { onGo(page); });
+      }
+      if (extra) for (var k in extra) el.setAttribute(k, extra[k]);
+      li.appendChild(el);
+      list.appendChild(li);
+    }
+    if (cur > 1) item(ds.clsLink, icon('prev'), cur - 1, { 'aria-label': 'Trang trước' });
+    else item(ds.clsOff, icon('prev'), 0, { 'aria-hidden': 'true' });
+    this.pages(total, cur).forEach(function (p) {
+      if (p === '…') item(ds.clsGap, '…', 0);
+      else if (p === cur) item(ds.clsCur, String(p), 0, { 'aria-current': 'page' });
+      else item(ds.clsLink, String(p), p);
+    });
+    if (cur < total) item(ds.clsLink, icon('next'), cur + 1, { 'aria-label': 'Trang sau' });
+    else item(ds.clsOff, icon('next'), 0, { 'aria-hidden': 'true' });
+  }
+};
+</script>
+{%- else -%}
+<nav class="mt-6 font-sans" aria-label="{{ pc_pg_label | escape }}">
+  <ul class="{{ pc_pg_ul }}">
+    {%- if paginate.previous -%}
+    <li><a class="{{ pc_pg_link }}" {% if pc_pg_mode == 'ajax' %}href="javascript:;" onclick="doSearch({{ paginate.current_page | minus: 1 }})"{% else %}href="{{ paginate.previous.url }}"{% endif %} aria-label="Trang trước">{% include 'ui_icon', name: 'chevron-left', size: 20, label: '' %}</a></li>
+    {%- else -%}
+    <li><span class="{{ pc_pg_off }}" aria-hidden="true">{% include 'ui_icon', name: 'chevron-left', size: 20, label: '' %}</span></li>
+    {%- endif -%}
+    {%- if paginate.pages <= 1 -%}
+    {%- comment -%} Chỉ 1 trang (blog luôn hiện thanh — chủ dự án 13/11/2026) ⇒ « 1 » tĩnh, không phụ thuộc paginate.parts. {%- endcomment -%}
+    <li><span class="{{ pc_pg_cur }}" aria-current="page">1</span></li>
+    {%- else -%}
+    {%- for part in paginate.parts -%}
+    {%- if part.is_link -%}
+    <li><a class="{{ pc_pg_link }}" {% if pc_pg_mode == 'ajax' %}href="javascript:;" onclick="doSearch({{ part.title }})"{% else %}href="{{ part.url }}"{% endif %}>{{ part.title }}</a></li>
+    {%- elsif part.title == paginate.current_page -%}
+    <li><span class="{{ pc_pg_cur }}" aria-current="page">{{ part.title }}</span></li>
+    {%- else -%}
+    <li><span class="{{ pc_pg_gap }}">{{ part.title }}</span></li>
+    {%- endif -%}
+    {%- endfor -%}
+    {%- endif -%}
+    {%- if paginate.next -%}
+    <li><a class="{{ pc_pg_link }}" {% if pc_pg_mode == 'ajax' %}href="javascript:;" onclick="doSearch({{ paginate.current_page | plus: 1 }})"{% else %}href="{{ paginate.next.url }}"{% endif %} aria-label="Trang sau">{% include 'ui_icon', name: 'chevron-right', size: 20, label: '' %}</a></li>
+    {%- else -%}
+    <li><span class="{{ pc_pg_off }}" aria-hidden="true">{% include 'ui_icon', name: 'chevron-right', size: 20, label: '' %}</span></li>
+    {%- endif -%}
+  </ul>
+</nav>
+{%- endif -%}

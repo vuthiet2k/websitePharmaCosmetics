@@ -6,11 +6,11 @@
 {%- endcomment -%}
 <div class="filter-content">
 	<div class="filter-container">
-		<div class="aside-filter-groups">
+		<div class="aside-filter-groups flex w-full flex-col gap-[4px]">{%- comment -%} 20/11/2026: khoảng giữa nhóm 4px (CSS cũ gap 40px + padding 10px đã gỡ khỏi components.css) {%- endcomment -%}
 
 			{%- if settings.filter_type and collection.all_types.size > 0 -%}
 			<div class="filter-group border-0 border-b border-solid border-line-soft pb-2 last:border-b-0">
-				<h3 class="m-0"><button type="button" class="filter-group-toggle flex min-h-[44px] min-[992px]:min-h-0 min-[992px]:py-2 w-full cursor-pointer items-center justify-between gap-2 border-0 bg-transparent p-0 text-left text-sm font-bold uppercase tracking-wider text-brand-deep" aria-expanded="true"><span>{{ settings.filter_type_title | default: 'LOẠI SẢN PHẨM' }}</span>{% include 'ui_icon', name: 'chevron-down', size: 20 %}</button></h3>
+				<h3 class="m-0"><button type="button" class="filter-group-toggle [&[aria-expanded=true]>svg]:rotate-180 [&>svg]:transition-transform flex min-h-[44px] min-[992px]:min-h-0 min-[992px]:py-2 w-full cursor-pointer items-center justify-between gap-2 border-0 bg-transparent p-0 text-left text-sm font-bold uppercase tracking-wider text-brand-deep" aria-expanded="true"><span>{{ settings.filter_type_title | default: 'LOẠI SẢN PHẨM' }}</span>{% include 'ui_icon', name: 'chevron-down', size: 20 %}</button></h3>
 				<div class="filter-items-list flex flex-col">
 					{%- for type in collection.all_types -%}
 					{%- if type != '' -%}
@@ -26,7 +26,7 @@
 
 			{%- if settings.filter_tag1 and settings.filter_tag1_list != '' -%}
 			<div class="filter-group border-0 border-b border-solid border-line-soft pb-2 last:border-b-0">
-				<h3 class="m-0"><button type="button" class="filter-group-toggle flex min-h-[44px] min-[992px]:min-h-0 min-[992px]:py-2 w-full cursor-pointer items-center justify-between gap-2 border-0 bg-transparent p-0 text-left text-sm font-bold uppercase tracking-wider text-brand-deep" aria-expanded="true"><span>{{ settings.filter_tag1_title | default: 'BỘ LỌC' }}</span>{% include 'ui_icon', name: 'chevron-down', size: 20 %}</button></h3>
+				<h3 class="m-0"><button type="button" class="filter-group-toggle [&[aria-expanded=true]>svg]:rotate-180 [&>svg]:transition-transform flex min-h-[44px] min-[992px]:min-h-0 min-[992px]:py-2 w-full cursor-pointer items-center justify-between gap-2 border-0 bg-transparent p-0 text-left text-sm font-bold uppercase tracking-wider text-brand-deep" aria-expanded="true"><span>{{ settings.filter_tag1_title | default: 'BỘ LỌC' }}</span>{% include 'ui_icon', name: 'chevron-down', size: 20 %}</button></h3>
 				<div class="filter-items-list flex flex-col">
 					{%- assign tags1 = settings.filter_tag1_list | split: ';' -%}
 					{%- for t in tags1 -%}
@@ -43,14 +43,18 @@
 			{%- endif -%}
 
 			{%- if settings.filter_tag2 and settings.filter_tag2_list != '' -%}
-			<div class="filter-group border-0 border-b border-solid border-line-soft pb-3 last:border-b-0">
-				<h3 class="m-0"><button type="button" class="filter-group-toggle flex min-h-[44px] min-[992px]:min-h-0 min-[992px]:py-2 w-full cursor-pointer items-center justify-between gap-2 border-0 bg-transparent p-0 text-left text-sm font-bold uppercase tracking-wider text-brand-deep" aria-expanded="true"><span>{{ settings.filter_tag2_title | default: 'VẤN ĐỀ VỀ DA' }}</span>{% include 'ui_icon', name: 'chevron-down', size: 20 %}</button></h3>
-				<div class="filter-pills-wrapper flex flex-wrap gap-2">
+			<div class="filter-group border-0 border-b border-solid border-line-soft pb-2 last:border-b-0">
+				<h3 class="m-0"><button type="button" class="filter-group-toggle [&[aria-expanded=true]>svg]:rotate-180 [&>svg]:transition-transform flex min-h-[44px] min-[992px]:min-h-0 min-[992px]:py-2 w-full cursor-pointer items-center justify-between gap-2 border-0 bg-transparent p-0 text-left text-sm font-bold uppercase tracking-wider text-brand-deep" aria-expanded="true"><span>{{ settings.filter_tag2_title | default: 'VẤN ĐỀ VỀ DA' }}</span>{% include 'ui_icon', name: 'chevron-down', size: 20 %}</button></h3>
+				{%- comment -%} 20/11/2026 (chủ dự án): đồng nhất — nhóm này cũng dùng checkbox như các nhóm khác (bỏ nút viên thuốc pill). {%- endcomment -%}
+				<div class="filter-items-list flex flex-col">
 					{%- assign tags2 = settings.filter_tag2_list | split: ';' -%}
 					{%- for t in tags2 -%}
 					{%- assign tag = t | strip -%}
 					{%- if tag != '' -%}
-					<button type="button" class="filter-pill-btn min-h-[44px] min-[992px]:min-h-0 min-[992px]:py-1 py-1 cursor-pointer rounded-full border border-solid border-line-soft bg-surface-soft px-3.5 text-xs sm:text-sm text-ink transition-colors hover:bg-brand-tint [&.active]:border-primary [&.active]:bg-primary [&.active]:font-semibold [&.active]:text-white" data-group="{{ settings.filter_tag2_title | default: 'tag2' }}" data-field="tags" data-text="{{ tag }}" data-operator="OR" data-value="(&#34;{{ tag }}&#34;)">{{ tag }}</button>
+					<label class="sapo-filter-item flex min-h-[44px] min-[992px]:min-h-0 min-[992px]:py-1 cursor-pointer items-center gap-2.5 text-sm text-ink [&.is-active]:font-semibold [&.is-active]:text-brand-deep">
+						<input type="checkbox" class="sapo-filter-checkbox filter-checkbox-input h-5 w-5 shrink-0 cursor-pointer accent-primary" data-group="{{ settings.filter_tag2_title | default: 'tag2' }}" data-field="tags" data-text="{{ tag }}" data-operator="OR" value="(&#34;{{ tag }}&#34;)">
+						<span class="sapo-filter-text">{{ tag }}</span>
+					</label>
 					{%- endif -%}
 					{%- endfor -%}
 				</div>
@@ -59,7 +63,7 @@
 
 			{%- if settings.filter_tag3 and settings.filter_tag3_list != '' -%}
 			<div class="filter-group border-0 border-b border-solid border-line-soft pb-2 last:border-b-0">
-				<h3 class="m-0"><button type="button" class="filter-group-toggle flex min-h-[44px] min-[992px]:min-h-0 min-[992px]:py-2 w-full cursor-pointer items-center justify-between gap-2 border-0 bg-transparent p-0 text-left text-sm font-bold uppercase tracking-wider text-brand-deep" aria-expanded="true"><span>{{ settings.filter_tag3_title | default: 'BỘ LỌC' }}</span>{% include 'ui_icon', name: 'chevron-down', size: 20 %}</button></h3>
+				<h3 class="m-0"><button type="button" class="filter-group-toggle [&[aria-expanded=true]>svg]:rotate-180 [&>svg]:transition-transform flex min-h-[44px] min-[992px]:min-h-0 min-[992px]:py-2 w-full cursor-pointer items-center justify-between gap-2 border-0 bg-transparent p-0 text-left text-sm font-bold uppercase tracking-wider text-brand-deep" aria-expanded="true"><span>{{ settings.filter_tag3_title | default: 'BỘ LỌC' }}</span>{% include 'ui_icon', name: 'chevron-down', size: 20 %}</button></h3>
 				<div class="filter-items-list flex flex-col">
 					{%- assign tags3 = settings.filter_tag3_list | split: ';' -%}
 					{%- for t in tags3 -%}
@@ -77,7 +81,7 @@
 
 			{%- if settings.filter_vendor and collection.all_vendors.size > 0 -%}
 			<div class="filter-group border-0 border-b border-solid border-line-soft pb-2 last:border-b-0">
-				<h3 class="m-0"><button type="button" class="filter-group-toggle flex min-h-[44px] min-[992px]:min-h-0 min-[992px]:py-2 w-full cursor-pointer items-center justify-between gap-2 border-0 bg-transparent p-0 text-left text-sm font-bold uppercase tracking-wider text-brand-deep" aria-expanded="true"><span>{{ settings.filter_vendor_title | default: 'THƯƠNG HIỆU' }}</span>{% include 'ui_icon', name: 'chevron-down', size: 20 %}</button></h3>
+				<h3 class="m-0"><button type="button" class="filter-group-toggle [&[aria-expanded=true]>svg]:rotate-180 [&>svg]:transition-transform flex min-h-[44px] min-[992px]:min-h-0 min-[992px]:py-2 w-full cursor-pointer items-center justify-between gap-2 border-0 bg-transparent p-0 text-left text-sm font-bold uppercase tracking-wider text-brand-deep" aria-expanded="true"><span>{{ settings.filter_vendor_title | default: 'THƯƠNG HIỆU' }}</span>{% include 'ui_icon', name: 'chevron-down', size: 20 %}</button></h3>
 				<div class="filter-items-list flex flex-col">
 					{%- for vendor in collection.all_vendors -%}
 					{%- if vendor != '' -%}
@@ -93,7 +97,7 @@
 
 			{%- if settings.filter_price -%}
 			<div class="filter-group border-0 border-b border-solid border-line-soft pb-3 last:border-b-0">
-				<h3 class="m-0"><button type="button" class="filter-group-toggle flex min-h-[44px] min-[992px]:min-h-0 min-[992px]:py-2 w-full cursor-pointer items-center justify-between gap-2 border-0 bg-transparent p-0 text-left text-sm font-bold uppercase tracking-wider text-brand-deep" aria-expanded="true"><span>{{ settings.filter_price_title | default: 'KHOẢNG GIÁ' }}</span>{% include 'ui_icon', name: 'chevron-down', size: 20 %}</button></h3>
+				<h3 class="m-0"><button type="button" class="filter-group-toggle [&[aria-expanded=true]>svg]:rotate-180 [&>svg]:transition-transform flex min-h-[44px] min-[992px]:min-h-0 min-[992px]:py-2 w-full cursor-pointer items-center justify-between gap-2 border-0 bg-transparent p-0 text-left text-sm font-bold uppercase tracking-wider text-brand-deep" aria-expanded="true"><span>{{ settings.filter_price_title | default: 'KHOẢNG GIÁ' }}</span>{% include 'ui_icon', name: 'chevron-down', size: 20 %}</button></h3>
 				<div class="filter-price-slider pt-1">
 					<div class="relative h-12" id="afw-price-ui">
 						<div class="absolute inset-x-3 top-1/2 -translate-y-1/2" id="afw-price-track">
