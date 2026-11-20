@@ -33,7 +33,7 @@
         <div class="min-w-0">
           <div>
             <span class="inline-flex items-center gap-1.5 rounded-full bg-brand-tint px-3 py-1 font-heading text-xs font-bold uppercase tracking-wider text-brand-deep">
-              <i class="inline-flex leading-none text-primary" aria-hidden="true">{% include 'ui_icon', name: 'sparkles', size: 'em' %}</i>
+              <i class="inline-flex leading-none text-primary" aria-hidden="true">{% include 'ui_icon', name: 'wand-sparkles', size: 'em' %}</i>
               {{ pc_ing_eyebrow | escape }}
             </span>
           </div>
@@ -102,7 +102,7 @@
           <div class="relative flex flex-1 flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-brand-deep via-brand-darkest to-primary p-6 text-white shadow-md min-h-[380px] lg:min-h-[480px]">
             <div class="relative z-10">
               <span class="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 font-heading text-xs font-bold uppercase tracking-wider text-white backdrop-blur-sm">
-                <i class="inline-flex leading-none text-amber-300" aria-hidden="true">{% include 'ui_icon', name: 'sparkles', size: 'em' %}</i>
+                <i class="inline-flex leading-none text-amber-300" aria-hidden="true">{% include 'ui_icon', name: 'wand-sparkles', size: 'em' %}</i>
                 KHOA HỌC LÀN DA
               </span>
               <h3 class="m-0 mt-3 font-heading text-2xl font-black uppercase leading-tight text-white lg:text-3xl">
@@ -227,7 +227,9 @@
           </div>
 
           {%- comment -%} Thanh phân trang số trang (1, 2, 3...) {%- endcomment -%}
-          <div class="mt-5 flex flex-wrap items-center justify-center gap-1.5 pt-3 border-0 border-t border-solid border-line-soft" data-ing-pagination>
+          {%- comment -%} 20/11/2026: dùng chung ui_pagination (chế độ js, UI-4.5) — bỏ thanh nút tròn « Trước / Sau » tự dựng. {%- endcomment -%}
+          <div class="mt-5 pt-3 border-0 border-t border-solid border-line-soft" data-ing-pagination-wrap>
+            {% include 'ui_pagination', pg_mode: 'js', pg_id: 'ing-pagination', pg_label: 'Phân trang hoạt chất' %}
           </div>
 
           {%- comment -%} Trạng thái rỗng khi tìm kiếm / lọc không khớp {%- endcomment -%}
@@ -274,7 +276,7 @@
   var pageIndicator = document.querySelector('[data-ing-page-indicator]');
   var prevBtn = document.querySelector('[data-ing-prev]');
   var nextBtn = document.querySelector('[data-ing-next]');
-  var paginationBox = document.querySelector('[data-ing-pagination]');
+  var paginationBox = document.getElementById('ing-pagination');
 
   if (!grid) return;
 
@@ -298,64 +300,12 @@
     });
   }
 
+  /* 20/11/2026: thanh số trang = PcPagination (ui_pagination chế độ js) — giao diện chung toàn site (UI-4.5). */
   function renderPagination(totalPages) {
-    if (!paginationBox) return;
-    paginationBox.innerHTML = '';
-    if (totalPages <= 1) {
-      paginationBox.hidden = true;
-      return;
-    }
-    paginationBox.hidden = false;
-
-    function createPageBtn(page, label, isActive, isDisabled) {
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-solid text-xs font-bold transition-colors cursor-pointer px-3 ';
-      if (isActive) {
-        btn.className += 'border-primary bg-primary text-white';
-        btn.setAttribute('aria-current', 'page');
-      } else if (isDisabled) {
-        btn.className += 'border-transparent bg-transparent text-ink-muted cursor-default';
-        btn.disabled = true;
-      } else {
-        btn.className += 'border-line-soft bg-white text-ink hover:border-primary hover:bg-brand-tint';
-      }
-      btn.textContent = label;
-      if (!isDisabled && !isActive) {
-        btn.addEventListener('click', function () {
-          goToPage(page);
-        });
-      }
-      return btn;
-    }
-
-    var prev = createPageBtn(currentPage - 1, '« Trước', false, currentPage === 1);
-    paginationBox.appendChild(prev);
-
-    var pageNumbers = [];
-    if (totalPages <= 7) {
-      for (var i = 1; i <= totalPages; i++) pageNumbers.push(i);
-    } else {
-      if (currentPage <= 4) {
-        pageNumbers = [1, 2, 3, 4, 5, '...', totalPages];
-      } else if (currentPage >= totalPages - 3) {
-        pageNumbers = [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-      } else {
-        pageNumbers = [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
-      }
-    }
-
-    pageNumbers.forEach(function (p) {
-      if (p === '...') {
-        var dots = createPageBtn(null, '...', false, true);
-        paginationBox.appendChild(dots);
-      } else {
-        paginationBox.appendChild(createPageBtn(p, String(p), p === currentPage, false));
-      }
-    });
-
-    var next = createPageBtn(currentPage + 1, 'Sau »', false, currentPage === totalPages);
-    paginationBox.appendChild(next);
+    if (!paginationBox || !window.PcPagination) return;
+    window.PcPagination.render(paginationBox, totalPages, currentPage, goToPage);
+    var wrap = paginationBox.closest('[data-ing-pagination-wrap]');
+    if (wrap) wrap.hidden = totalPages <= 1;
   }
 
   function goToPage(page) {

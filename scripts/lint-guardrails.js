@@ -200,14 +200,14 @@ if (containerViolations.length && !process.argv.includes('--update-baseline')) {
 
 /* 20/11/2026 — phân trang dùng chung 1 mẫu (chủ dự án yêu cầu). Từng có 5 bản tự dựng (paginate-pages, collection-paginate-pages,
    JS ở page_thuong_hieu / page_skinhealthy_services / blog.truoc-va-sau). Chỉ snippets/ui_pagination.bwt được đọc paginate.parts
-   hay in <nav aria-label="Phân trang…">; nơi khác include 'ui_pagination' (pg_mode link | ajax | js). MOPS admin là ngoại lệ. */
+   hay in <nav aria-label="Phân trang…"> hoặc dựng nút số trang bằng JS (createPageBtn / « Trước / Sau » — page_hoat_chat chép bản cũ, 20/11); nơi khác include 'ui_pagination' (pg_mode link | ajax | js). MOPS admin là ngoại lệ. */
 const paginationViolations = [];
 for (const dir of ['snippets', 'templates', 'layouts']) {
   for (const file of walk(path.join(rootDir, dir))) {
     const rel = path.relative(rootDir, file).split(path.sep).join('/');
     if (!/\.bwt$/i.test(rel) || /mops/i.test(rel) || rel === 'snippets/ui_pagination.bwt') continue;
     stripComments(fs.readFileSync(file, 'utf8')).split(/\r?\n/).forEach((line, i) => {
-      if (/paginate\.parts|aria-label\s*=\s*["']Phân trang/.test(line)) paginationViolations.push(`${rel}:${i + 1}  tự dựng phân trang — dùng {% include 'ui_pagination' %}`);
+      if (/paginate\.parts|aria-label\s*=\s*["']Phân trang|createPageBtn|« Trước|Sau »/.test(line)) paginationViolations.push(`${rel}:${i + 1}  tự dựng phân trang — dùng {% include 'ui_pagination' %}`);
     });
   }
 }
