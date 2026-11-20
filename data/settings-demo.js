@@ -108,7 +108,6 @@ const demoSettings = {
   title_top_search_2:   'Tra cứu hàng đầu',
 
   // ── Skin Healthy pages ────────────────────────────────────────────────────
-  skinhealthy_services_groups_menu: 'skinhealthy-services',
   skinhealthy_col_maintenance:      'dieu-tri-chuyen-nghiep',
   skinhealthy_col_targeted:         'tri-nam',
   skinhealthy_col_invasive:         'tri-mun',
