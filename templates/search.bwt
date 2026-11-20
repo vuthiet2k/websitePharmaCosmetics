@@ -11,12 +11,13 @@
   - Khối tin tức liên quan: chuyển xuống phía dưới danh sách sản phẩm thành 1 khối riêng biệt (không chia tab),
     tự động tải bài viết liên quan qua search API / smartjsonar.
 {%- endcomment -%}
+{%- comment -%} T-08: search.terms đã được Sapo escape sẵn — KHÔNG | escape thêm để tránh double-encode &#234; → chỉ dùng biến thuần để in ra giao diện. {%- endcomment -%}
 {%- assign pc_search_keyword = search.terms | split: '(*' | last | split: '*)' | first -%}
 <section class="signup search-main wrap_background background_white clearfix pb-8">
 	<div class="container">
 		<div class="pb-4 pt-4 lg:pt-6">
 			{%- if search.performed and search.terms != blank and search.results_count > 0 -%}
-			<h1 class="m-0 text-xl font-bold normal-case text-brand-deep">Kết quả tìm kiếm cho &ldquo;{{ pc_search_keyword | escape }}&rdquo;</h1>
+			<h1 class="m-0 text-xl font-bold normal-case text-brand-deep">Kết quả tìm kiếm cho &ldquo;{{ pc_search_keyword }}&rdquo;</h1>
 			{%- endif -%}
 		</div>
 
@@ -54,7 +55,7 @@
 						{% include 'collection-sortby', compact: true %}
 
 						{%- comment -%} Lưới sản phẩm: 2 cột trên mobile, 3 cột tablet/desktop {%- endcomment -%}
-						<ul class="m-0 grid list-none grid-cols-2 gap-3 p-0 md:grid-cols-3 lg:gap-4 xl:grid-cols-4 [html[data-pc-view=list]_&]:grid-cols-1">
+						<ul class="m-0 grid list-none grid-cols-2 gap-3 p-0 md:grid-cols-3 lg:gap-4 xl:grid-cols-4 [html[data-pc-view=list]_&]:grid-cols-2">
 							{% for product in search.results %}
 							<li class="min-w-0">
 								{%- include 'ui_product_card', product: product, tone: '', eager: false, wish: false -%}
@@ -98,7 +99,7 @@
 		{%- comment -%} M-33 (18/11/2026): chưa nhập từ khoá — viết lại bằng token (bỏ class màu/bóng ngoài config: gray-*, forest-*, clinical-*, shadow, font-heading; bỏ input-group/icon-fallback-text). Gợi ý như M-31. {%- endcomment -%}
 		<h1 class="m-0 pb-3 text-xl font-bold normal-case text-brand-deep">Nhập từ khóa để tìm kiếm</h1>
 		<form action="/search" method="get" class="relative mb-4 flex items-center" role="search">
-			<input type="search" name="query" value="{{ search.terms | escape }}" autocomplete="off" placeholder="Tìm sản phẩm, thương hiệu..." aria-label="Tìm kiếm" class="appearance-none min-h-[44px] h-12 w-full rounded-xl border border-solid border-line bg-surface-card pl-4 pr-24 text-base text-ink outline-none focus:border-primary">
+			<input type="search" name="query" value="{{ search.terms }}" autocomplete="off" placeholder="Tìm sản phẩm, thương hiệu..." aria-label="Tìm kiếm" class="appearance-none min-h-[44px] h-12 w-full rounded-xl border border-solid border-line bg-surface-card pl-4 pr-24 text-base text-ink outline-none focus:border-primary">
 			<button type="submit" class="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex min-h-[44px] cursor-pointer items-center justify-center gap-1.5 rounded-xl border-0 bg-btn px-4 text-sm font-bold text-btn-text transition-colors hover:bg-btn-hover" aria-label="Tìm kiếm">{% include 'ui_icon', name: 'search', size: 20 %}Tìm</button>
 		</form>
 		{%- assign empty_type = 'none' -%}{%- include 'search_empty_state' -%}
@@ -111,7 +112,7 @@ var selectedViewData = "data";
 
 document.addEventListener('DOMContentLoaded', function () {
 	/* Tải danh sách bài viết liên quan phía dưới sản phẩm nếu có từ khóa */
-	var kw = "{{ pc_search_keyword | escape }}";
+	var kw = "{{ pc_search_keyword }}";
 	if (kw && kw.trim().length > 1 && typeof getItemSearch2 === 'function') {
 		getItemSearch2(kw, 'smartjsonar').then(function (res) {
 			if (!res) return;

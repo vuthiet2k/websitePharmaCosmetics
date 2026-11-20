@@ -155,10 +155,14 @@
 			<i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'x', size: 'em' %}</i>
 		</div>
 	</div>
-	{%- comment -%} 09/11/2026 (chủ dự án: robot liên hệ đè thẻ SP trên mobile, không có nút X, không kéo được): nút X ẩn nhanh
-	  ngay góc robot (cùng cơ chế data-contact-hide của «Ẩn nút liên hệ» — hiện lại ở chân trang), vùng chạm 44px. {%- endcomment -%}
-		<button type="button" class="pc-widget-dismiss" data-contact-hide aria-label="Ẩn nút liên hệ"><span class="pc-widget-dismiss__dot" aria-hidden="true">{% include 'ui_icon', name: 'x', size: 'em' %}</span></button>
 	</div>
+</div>
+
+<div id="pc-chat-drop-zone" class="fixed bottom-6 max-[991px]:bottom-20 left-1/2 -translate-x-1/2 z-[9990] flex flex-col items-center justify-center gap-1.5 pointer-events-none opacity-0 scale-75 transition-all duration-200 select-none motion-safe:transition-all" aria-hidden="true">
+	<div class="pc-chat-drop-target w-14 h-14 min-w-[44px] min-h-[44px] rounded-full bg-slate-900/80 text-white flex items-center justify-center border-2 border-white/40 transition-transform duration-150">
+		<i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'x', size: 24 %}</i>
+	</div>
+	<span class="text-xs font-semibold text-slate-700 bg-white/95 px-2.5 py-0.5 rounded-full shadow-sm">Kéo vào đây để ẩn</span>
 </div>
 
 <script>
@@ -194,11 +198,15 @@
 			}
 			widget.classList.toggle('widget-hidden', hide);
 			widget.setAttribute('aria-hidden', hide ? 'true' : 'false');
+			if (!hide) {
+				widget.style.setProperty('--pc-drag-x', '0px');
+			}
 			try {
 				if (hide) { sessionStorage.setItem(STORE_KEY, '1'); } else { sessionStorage.removeItem(STORE_KEY); }
 			} catch(e) {}
 		}
 		if (readHidden()) setHidden(true);
+		window.pcSetContactHidden = setHidden;
 		document.addEventListener('click', function(e){
 			if (!e.target.closest) return;
 			if (e.target.closest('[data-contact-hide]')) { e.preventDefault(); setHidden(true); }
@@ -212,6 +220,8 @@
 	(function(){
 		var widget = document.querySelector('.main-widget');
 		var handle = widget && widget.querySelector('#toggle-widget-btn');
+		var dropZone = document.getElementById('pc-chat-drop-zone');
+		var dropTarget = dropZone && dropZone.querySelector('.pc-chat-drop-target');
 		if (!widget || !handle || !window.PointerEvent) return;
 		try { localStorage.removeItem('pc_contact_widget_pos'); } catch(e){}
 		var POS_KEY = 'pc_contact_widget_pos2', TH = 8, EDGE = 8;
@@ -236,13 +246,33 @@
 		function save(){
 			try { localStorage.setItem(POS_KEY, JSON.stringify({ left: widget.classList.contains('pc-widget--left'), y: offY })); } catch(e){}
 		}
+		function checkOverlap(){
+			if (!dropZone) return false;
+			var target = dropTarget || dropZone;
+			var r1 = handle.getBoundingClientRect();
+			var r2 = target.getBoundingClientRect();
+			return !(r1.right < r2.left || r1.left > r2.right || r1.bottom < r2.top || r1.top > r2.bottom);
+		}
+		function showDropZone(){
+			if (!dropZone) return;
+			dropZone.classList.remove('opacity-0', 'scale-75', 'pointer-events-none');
+			dropZone.classList.add('opacity-100', 'scale-100');
+		}
+		function hideDropZone(){
+			if (!dropZone) return;
+			dropZone.classList.add('opacity-0', 'scale-75', 'pointer-events-none');
+			dropZone.classList.remove('opacity-100', 'scale-100');
+			if (dropTarget) {
+				dropTarget.classList.remove('scale-110', 'bg-sale', 'border-sale');
+				dropTarget.classList.add('bg-slate-900/80', 'border-white/40');
+			}
+		}
 		try {
 			var saved = JSON.parse(localStorage.getItem(POS_KEY) || 'null');
 			if (saved) { widget.classList.toggle('pc-widget--left', !!saved.left); offY = Number(saved.y) || 0; apply(0); offY = clampY(offY); apply(0); }
 		} catch(e){}
 		handle.addEventListener('pointerdown', function(e){
 			if (e.button !== 0 || widget.classList.contains('widget-opened')) return;
-			if (e.target.closest && e.target.closest('.pc-widget-dismiss')) return;
 			if (e.pointerType === 'mouse') e.preventDefault(); // chặn kéo-ảnh/bôi đen mặc định; click vẫn chạy
 			start = { x: e.clientX, y: e.clientY, offY: offY, id: e.pointerId };
 			dragging = false;
@@ -254,19 +284,41 @@
 				if (Math.abs(dx) < TH && Math.abs(dy) < TH) return;
 				dragging = true;
 				widget.classList.add('is-dragging');
+				showDropZone();
 			}
 			offY = clampY(start.offY + dy);
 			apply(dx);
+			if (dropZone && dropTarget) {
+				var isOver = checkOverlap();
+				dropTarget.classList.toggle('scale-110', isOver);
+				dropTarget.classList.toggle('bg-sale', isOver);
+				dropTarget.classList.toggle('border-sale', isOver);
+				dropTarget.classList.toggle('bg-slate-900/80', !isOver);
+				dropTarget.classList.toggle('border-white/40', !isOver);
+			}
 		});
 		function end(e){
 			if (!start || (e && e.pointerId !== start.id)) return;
 			if (dragging) {
-				var r = widget.getBoundingClientRect();
-				widget.classList.toggle('pc-widget--left', r.left + r.width / 2 < window.innerWidth / 2);
+				var isDropped = checkOverlap();
+				hideDropZone();
+				if (isDropped) {
+					if (window.pcSetContactHidden) {
+						window.pcSetContactHidden(true);
+					}
+					widget.classList.remove('pc-widget--left');
+					offY = 0;
+					apply(0);
+					save();
+				} else {
+					var r = widget.getBoundingClientRect();
+					widget.classList.toggle('pc-widget--left', r.left + r.width / 2 < window.innerWidth / 2);
+					apply(0);
+					offY = clampY(offY);
+					apply(0);
+					save();
+				}
 				widget.classList.remove('is-dragging');
-				apply(0);
-				offY = clampY(offY); apply(0);
-				save();
 				suppressClick = true;
 				setTimeout(function(){ suppressClick = false; }, 400);
 			}
@@ -380,41 +432,6 @@
 .pc-chat-pill-text-desktop { display: inline; }
 .pc-chat-pill-text-mobile { display: none; }
 
-/* Nút × đóng widget di chuyển theo nút chat */
-.pc-widget-dismiss {
-	position: absolute;
-	top: -14px;
-	right: -12px;
-	z-index: 5;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 52px; /* 52 × 0.85 (mobile) ≈ 44px vùng chạm tối thiểu */
-	height: 52px;
-	padding: 0;
-	margin: 0;
-	background: transparent;
-	border: 0;
-	border-radius: 50%;
-	cursor: pointer;
-}
-.pc-widget-dismiss__dot {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 20px;
-	height: 20px;
-	border-radius: 50%;
-	background: rgba(17, 24, 39, .75);
-	color: var(--white);
-	font-size: var(--fs-xs);
-	line-height: 1;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, .3);
-}
-.pc-widget-dismiss:hover .pc-widget-dismiss__dot {
-	background: rgba(17, 24, 39, .95);
-}
-
 /* Robot mascot */
 .out-circle {
 	cursor: pointer;
@@ -491,7 +508,6 @@
 /* Nút đóng bảng bên trong def-header */
 .main-widget .def-header .close-widget-btn::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; }
 .main-widget .def-header .close-widget-btn:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
-.main-widget.widget-opened .pc-widget-dismiss { display: none; }
 
 /* Mobile: thu nhỏ 85%, nhãn rút gọn "Hỗ trợ" */
 @media (max-width: 991px) {

@@ -28,22 +28,6 @@
 			{%- if pc_nb_desc != blank -%}<p class="pc-vblog__intro">{{ pc_nb_desc }}</p>{%- endif -%}
 		</header>
 
-		<nav class="pc-vfilter pc-nblog__cats" aria-label="{{ settings.news_cats_title | default: 'Chuyên mục' | escape }}">
-			{%- if settings.news_hub_url != blank -%}
-			<a class="pc-vfilter__btn min-h-[44px] inline-flex items-center" href="{{ settings.news_hub_url }}">{{ settings.news_all_label | default: 'Tất cả' | escape }}</a>
-			{%- endif -%}
-			{%- for pc_nb_h in pc_nb_list -%}
-			{%- assign pc_nb_hs = pc_nb_h | strip -%}
-			{%- assign pc_nb_b = blogs[pc_nb_hs] -%}
-			{%- if pc_nb_b.articles.size > 0 or pc_nb_b.url == blog.url -%}
-			<a class="pc-vfilter__btn min-h-[44px] inline-flex items-center" href="{{ pc_nb_b.url }}"{% if pc_nb_b.url == blog.url %} aria-current="page"{% endif %}>{{ pc_nb_b.name | default: pc_nb_b.title | escape }}</a>
-			{%- endif -%}
-			{%- endfor -%}
-			{%- if blogs[pc_nb_vblog].articles.size > 0 -%}
-			<a class="pc-vfilter__btn min-h-[44px] inline-flex items-center" href="{{ blogs[pc_nb_vblog].url }}">{{ blogs[pc_nb_vblog].name | default: blogs[pc_nb_vblog].title | escape }}</a>
-			{%- endif -%}
-		</nav>
-
 		<div class="pc-nblog__layout{% if pc_nb_aside_txt != blank %} has-aside{% endif %}">
 			<div class="pc-nblog__main">
 				{% paginate blog.articles by pc_nb_per %}
