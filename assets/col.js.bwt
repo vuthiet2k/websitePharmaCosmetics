@@ -18,10 +18,40 @@ function _formatPrice(val) {
 	return parseInt(val, 10).toLocaleString('vi-VN') + 'đ';
 }
 
-/* ── sortby() ── */
+/* ── Chuẩn Sapo (20/11/2026, đối chiếu support.sapo.vn "Hướng dẫn sử dụng chức năng tìm kiếm" + theme demo spa-1.mysapo.net) ──
+   · Sắp xếp: ô chọn giữ giá trị price-asc… (ghi ?sortby= trên URL để F5 giữ), khi gọi /search đổi sang chuỗi Sapo price_min:asc / name:asc / created_on:desc.
+   · Lọc giá: nằm TRONG q như mọi tiêu chí — nhóm "Khoảng giá", trường price_min, giá trị (>X AND <Y) (Sapo chỉ tài liệu hoá > <).
+     Trước đây gửi &price_min=&price_max= rời ⇒ Sapo bỏ qua, lọc giá không có tác dụng. */
+var SAPO_SORT = { 'price-asc': 'price_min:asc', 'price-desc': 'price_min:desc', 'alpha-asc': 'name:asc', 'alpha-desc': 'name:desc', 'created-desc': 'created_on:desc', 'created-asc': 'created_on:asc' };
+function _sapoSort(val) { return SAPO_SORT[val] || ''; }
+var PRICE_CAP = 5000000; /* bằng max của thanh trượt (aside-filter.bwt) — kéo hết ⇒ không giới hạn trên */
+function _priceExpr(min, max) {
+	var parts = [];
+	if (min > 0) parts.push('>' + (min - 1));
+	if (max < PRICE_CAP) parts.push('<' + (max + 1));
+	return parts.length ? '(' + parts.join(' AND ') + ')' : '';
+}
+/* Đọc lại khoảng giá từ q (nhận cả dạng cũ >= <= lẫn chuẩn > <) ⇒ [min, max] */
+function _parsePrice(str) {
+	var m = /price_min:\(([^()]*)\)/i.exec(str || '');
+	if (!m) return null;
+	var min = 0, max = PRICE_CAP;
+	m[1].split(/\s+AND\s+/i).forEach(function (p) {
+		var c = /^(>=|<=|>|<)\s*(-?\d+)$/.exec(p.trim());
+		if (!c) return;
+		var n = parseInt(c[2], 10);
+		if (c[1] === '>') min = n + 1; else if (c[1] === '>=') min = n; else if (c[1] === '<') max = n - 1; else max = n;
+	});
+	return [Math.max(0, min), Math.min(PRICE_CAP, max)];
+}
+
+/* ── sortby() — đổi thứ tự bằng AJAX như theme chuẩn Sapo (không tải lại trang) ── */
 function sortby(val) {
-	var url = _replaceParam(window.location.href, 'sortby', val);
-	window.location.href = url;
+	var params = new URLSearchParams(window.location.search);
+	if (val && val !== 'default') params.set('sortby', val); else params.delete('sortby');
+	var qs = params.toString();
+	history.replaceState(null, '', window.location.pathname + (qs ? '?' + qs : ''));
+	doSearch(1);
 }
 
 /* ── CollectionFilter — URL-based active filter bar ─────────────────────────
@@ -63,13 +93,13 @@ var CollectionFilter = (function () {
 			clause = clause.trim();
 			if (/^collections:\d/i.test(clause)) return; // implicit from URL path — skip
 
-			/* price_min:(>=200000 AND <=400000) */
-			var pm = /^price_min:\(>=(\d+)\s+AND\s+<=(\d+)\)$/i.exec(clause);
+			/* price_min:(>X AND <Y) — chuẩn Sapo (đọc cả dạng cũ >= <=) */
+			var pm = /^price_min:\(/i.test(clause) ? _parsePrice(clause) : null;
 			if (pm) {
 				filters.push({
 					field: 'price_min',
-					value: pm[1] + '__' + pm[2],
-					display: _formatPrice(pm[1]) + ' – ' + _formatPrice(pm[2]),
+					value: pm[0] + '__' + pm[1],
+					display: _formatPrice(pm[0]) + ' – ' + (pm[1] >= PRICE_CAP ? _formatPrice(PRICE_CAP) + '+' : _formatPrice(pm[1])),
 					label: LABELS['price_min']
 				});
 				return;
@@ -204,49 +234,42 @@ var _doSearchToken = 0;
 function doSearch(page) {
 	var view = (typeof selectedViewData !== 'undefined') ? selectedViewData : 'data';
 	var settings = { page: page || 1, view: view };
-	var sortVal = _getParam('sortby');
+	var sortVal = _sapoSort(_getParam('sortby'));
 	if (sortVal) settings.sortby = sortVal;
+
+	/* Khoảng giá ⇒ 1 tiêu chí price_min trong q (chuẩn Sapo), thay cho tham số rời &price_min/&price_max cũ. */
+	var elMin = document.getElementById('afw-price-min');
+	var elMax = document.getElementById('afw-price-max');
+	filter.deleteGroup('Khoảng giá');
+	if (elMin && elMax) {
+		var priceVal = _priceExpr(parseInt(elMin.value, 10) || 0, parseInt(elMax.value, 10) || PRICE_CAP);
+		if (priceVal) filter.addValue('Khoảng giá', 'price_min', priceVal, 'OR');
+	}
 
 	var url = filter.buildSearchUrl(settings);
 
-	/* 18/11/2026: trang /search — chưa chọn tiêu chí lọc thì buildSearchUrl trả "/search?q=" (mất từ khoá) ⇒ chuyển trang
-	   (page 2…) ra kết quả rỗng. Giữ từ khoá gốc (search.terms render ở .search_content) khi q rỗng. */
-	if (location.pathname.indexOf('/search') === 0) {
-		var kwEl = document.querySelector('.search_content');
-		var kw = kwEl ? kwEl.textContent.trim() : '';
-		if (kw && /[?&]q=(&|$)/.test(url)) url = url.replace(/([?&]q=)(&|$)/, '$1' + encodeURIComponent(kw) + '$2');
-	}
-
-	/* Price params — appended to AJAX URL as separate query params */
-	var priceQ = '';
-	var elMin = document.getElementById('afw-price-min');
-	var elMax = document.getElementById('afw-price-max');
-	if (elMin && elMax) {
-		var minVal = parseInt(elMin.value, 10);
-		var maxVal = parseInt(elMax.value, 10);
-		if (minVal > 0)       url += '&price_min=' + minVal;
-		if (maxVal < 5000000) url += '&price_max=' + maxVal;
-		if (minVal > 0 || maxVal < 5000000) {
-			priceQ = 'price_min:(>=' + minVal + ' AND <=' + maxVal + ')';
-		}
-	}
-
-	var $wrap = $('#ajax-result');
-	$wrap.addClass('is-loading').find('.afw-error').remove();
-
-	var myToken = ++_doSearchToken;
-
-	/* Pre-build the display q= for the address bar
-	   (strip the implicit collections: constraint — it's conveyed by the URL path) */
+	/* Pre-build the display q= for the address bar (chỉ tiêu chí lọc — không kèm ràng buộc danh mục, không kèm từ khoá trang tìm kiếm) */
 	var rawQ = (function () {
-		var m = /[?&]q=([^&]+)/.exec(url);
+		var m = /[?&]q=([^&]*)/.exec(url);
 		return m ? decodeURIComponent(m[1]) : '';
 	})();
 	var displayQ = rawQ
 		.replace(/^collections:\d+\s*AND\s*/i, '')
 		.replace(/\s*AND\s*collections:\d+/gi, '')
 		.trim();
-	if (priceQ) displayQ = displayQ ? displayQ + ' AND ' + priceQ : priceQ;
+
+	/* Trang /search: giữ từ khoá gốc (search.terms ở .search_content) — ghép "từ khoá AND tiêu chí lọc" (Sapo nối AND mặc định).
+	   18/11 chỉ ghép khi chưa lọc ⇒ chọn 1 tiêu chí là mất từ khoá, ra kết quả của cả cửa hàng. */
+	if (location.pathname.indexOf('/search') === 0) {
+		var kwEl = document.querySelector('.search_content');
+		var kw = kwEl ? kwEl.textContent.trim() : '';
+		if (kw) url = url.replace(/([?&]q=)[^&]*/, '$1' + encodeURIComponent(rawQ ? kw + ' AND ' + rawQ : kw));
+	}
+
+	var $wrap = $('#ajax-result');
+	$wrap.addClass('is-loading').find('.afw-error').remove();
+
+	var myToken = ++_doSearchToken;
 
 	$.get(url, function (html) {
 		if (myToken !== _doSearchToken) return; /* có request mới hơn đã gửi sau — bỏ kết quả cũ này */
@@ -316,18 +339,22 @@ $(function () {
 				filter.addValue($btn.data('group'), field, $btn.data('value'), $btn.data('operator') || 'OR');
 			});
 
-			/* Restore price slider from price_min:(>=X AND <=Y) */
-			var pm = /price_min:\(>=(\d+)\s+AND\s+<=(\d+)\)/i.exec(qVal);
+			/* Restore price slider from price_min:(>X AND <Y) — đọc cả dạng cũ >= <= */
+			var pm = _parsePrice(qVal);
 			if (pm) {
 				var elMin = document.getElementById('afw-price-min');
 				var elMax = document.getElementById('afw-price-max');
-				if (elMin) { elMin.value = pm[1]; elMin.dispatchEvent(new Event('input')); }
-				if (elMax) { elMax.value = pm[2]; elMax.dispatchEvent(new Event('input')); }
+				if (elMin) { elMin.value = pm[0]; elMin.dispatchEvent(new Event('input')); }
+				if (elMax) { elMax.value = pm[1]; elMax.dispatchEvent(new Event('input')); }
 			}
 		}
 
 		/* Always render bar from URL — handles all filter types including price */
 		CollectionFilter.renderBar();
+
+		/* 20/11/2026: URL đang có tiêu chí lọc / sắp xếp (F5, nút Back, link chia sẻ) ⇒ trang render sẵn từ server là danh sách GỐC
+		   (Sapo không áp q/sortby của theme vào collection.products) ⇒ tải lại kết quả đúng tiêu chí bằng AJAX như theme chuẩn. */
+		if (qVal || _sapoSort(_getParam('sortby'))) doSearch(parseInt(_getParam('page'), 10) || 1);
 	})();
 
 	/* M-24 (PO chốt 17/11/2026): trong ngăn kéo mobile (< 992px) tick CHƯA lọc — chỉ lọc khi bấm nút "Tìm kiếm" ([data-filter-apply]); desktop lọc ngay như cũ. */
@@ -398,7 +425,8 @@ $(function () {
 		var $body = $head.siblings();
 		var open = $body.first().hasClass('hidden');
 		$body.toggleClass('hidden', !open);
-		$(this).attr('aria-expanded', open ? 'true' : 'false').find('svg').toggleClass('rotate-180', !open);
+		/* 20/11/2026: mũi tên xoay theo aria-expanded bằng class Tailwind trên nút (aside-filter.bwt) — trước đây JS xoay ngược (đóng ⇒ mũi tên lên). */
+		$(this).attr('aria-expanded', open ? 'true' : 'false');
 	});
 
 	$(document).on('click', '[data-filter-apply]', function () {
