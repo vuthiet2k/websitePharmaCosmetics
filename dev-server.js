@@ -110,7 +110,7 @@ function preprocessBwt(content) {
   content = content.replace(/\{%-?\s*layout\s+(?:['"][^'"]*['"]|none)\s*-?%\}/g, '');
   // Sapo dùng {%elseif%} thay vì {% elsif %} chuẩn Liquid
   content = content.replace(/\{%-?\s*elseif\b/g, '{%- elsif');
-  return content.replace(/(\{%-?[\s\S]*?-?%\}|\{\{-?[\s\S]*?-?\}\})/g, (match) => {
+  return content.replace(/(\{%-[\s\S]*?-?%\}|\{\{-[\s\S]*?-?\}\})/g, (match) => {
     return match
       // JS-style logical operators → Liquid keywords
       .replace(/\|\|/g, ' or ')
@@ -692,6 +692,7 @@ function devCuratedGroups() {
       ['article.video', 'Video · Trang xem video',                      '/blogs/video/3-sai-lam-nghiem-trong-khi-dung-dau-tay-trang-khien-da-bi-mun'],
     ]},
     { label: 'Trang mới (Figma)', items: [
+      ['page.thuong-hieu',   'Tất cả thương hiệu (/thuong-hieu)'],
       ['page.chuyen-gia',    'Trang chuyên gia'],
       ['page.loyalty',       'Loyalty Rewards'],
       ['page.ai-skin-quiz',  'AI Skin Quiz'],
