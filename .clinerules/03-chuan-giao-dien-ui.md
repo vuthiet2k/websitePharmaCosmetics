@@ -76,6 +76,7 @@ Mâu thuẫn với mục khác của file này hoặc `docs/UI-STANDARD.md` (th�
 | UI-4.2 | Cỡ chữ nút 14px (mobile 13px), weight 600–700; nút chính cao 44–48px. Nút cùng vai trò trong cùng loại thẻ có **cùng** cỡ/độ đậm ở mọi section. | review + ảnh |
 | UI-4.3 ◇ | Mỗi khối tối đa một nút chính (filled); hành động phụ dạng viền hoặc link có mũi tên "→". | ảnh chụp |
 | UI-4.4 | Input/select cao ≥ 44px, chữ ≥ 14px (iOS không zoom khi focus cần ≥16px cho input trên mobile). | review |
+| UI-4.5 ✱ | **Phân trang = 1 mẫu duy nhất `snippets/ui_pagination.bwt`** (chủ dự án chốt 20/11/2026): ô vuông bo 12px, 44×44, trang hiện tại nền màu chính, trước/sau = chevron `ui_icon`, rút gọn bằng "…". Server: `{% include 'ui_pagination' %}` (link) hoặc `pg_mode: 'ajax'` (doSearch); phân trang phía trình duyệt: `pg_mode: 'js', pg_id: '…'` rồi `PcPagination.render(nav, tổng, trang, onGo)`. **Cấm** tự dựng thanh số trang (Liquid `paginate.parts` hay JS tạo nút) ở file khác. | `lint:guardrails` FAIL |
 
 ## UI-5. Thẻ sản phẩm & lưới sản phẩm
 

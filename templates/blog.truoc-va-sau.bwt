@@ -279,11 +279,8 @@
       {%- endif -%}
       {%- endfor -%}
     </div>
-    <nav class="mt-6 flex items-center justify-center gap-1" data-ba-pager aria-label="Phân trang kết quả" hidden>
-      <button type="button" class="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-brand-deep disabled:opacity-40" data-ba-page-prev aria-label="Trang trước">{% include 'ui_icon', name: 'chevron-left', size: 20 %}</button>
-      <span class="inline-flex items-center gap-1" data-ba-page-nums></span>
-      <button type="button" class="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-brand-deep disabled:opacity-40" data-ba-page-next aria-label="Trang sau">{% include 'ui_icon', name: 'chevron-right', size: 20 %}</button>
-    </nav>
+    {%- comment -%} 20/11/2026: phân trang dùng chung ui_pagination (chế độ js) thay thanh nút tròn tự dựng. {%- endcomment -%}
+    {% include 'ui_pagination', pg_mode: 'js', pg_id: 'ba-pagination', pg_label: 'Phân trang kết quả' %}
     {%- if settings.clinical_note != blank -%}<p class="m-0 mt-4 text-center text-xs text-ink-muted">{{ settings.clinical_note | escape }}</p>{%- endif -%}
   </section>
   {%- endif -%}
@@ -311,31 +308,18 @@
     var grid = document.querySelector('[data-ba-per]');
     if (!grid) return;
     var per = parseInt(grid.getAttribute('data-ba-per'), 10) || 4;
-    var pager = document.querySelector('[data-ba-pager]');
+    var pager = document.getElementById('ba-pagination');
     var tabs = document.querySelectorAll('[data-ba-filter]');
     var cards = [].slice.call(grid.querySelectorAll('[data-ba-group]'));
     var cat = '', page = 0;
-    var nums = pager.querySelector('[data-ba-page-nums]');
-    var prev = pager.querySelector('[data-ba-page-prev]'), next = pager.querySelector('[data-ba-page-next]');
-    prev.addEventListener('click', function () { page -= 1; render(true); });
-    next.addEventListener('click', function () { page += 1; render(true); });
     function render(scroll) {
       var list = cards.filter(function (c) { return cat === '' || c.getAttribute('data-ba-cat') === cat; });
       var pages = Math.max(1, Math.ceil(list.length / per));
       if (page >= pages) page = pages - 1;
       cards.forEach(function (c) { c.hidden = true; });
       list.slice(page * per, page * per + per).forEach(function (c) { c.hidden = false; });
-      pager.hidden = pages < 2;
-      prev.disabled = page === 0; next.disabled = page === pages - 1;
-      nums.innerHTML = '';
-      for (var i = 0; i < pages; i++) {
-        var b = document.createElement('button');
-        b.type = 'button'; b.textContent = i + 1; b.setAttribute('aria-label', 'Trang ' + (i + 1));
-        b.className = 'inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-0 p-0 text-sm font-bold ' + (i === page ? 'bg-primary text-white' : 'bg-transparent text-brand-deep hover:bg-brand-tint');
-        if (i === page) b.setAttribute('aria-current', 'page');
-        b.addEventListener('click', (function (k) { return function () { page = k; render(true); }; })(i));
-        nums.appendChild(b);
-      }
+      /* 20/11/2026: thanh số trang = PcPagination (ui_pagination) — page ở đây đếm từ 0, PcPagination đếm từ 1. */
+      if (pager && window.PcPagination) window.PcPagination.render(pager, pages, page + 1, function (p) { page = p - 1; render(true); });
       if (scroll) document.getElementById('pc-ba-results').scrollIntoView({ block: 'start' });
     }
     tabs.forEach(function (tab) {
