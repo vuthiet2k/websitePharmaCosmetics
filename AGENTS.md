@@ -22,6 +22,8 @@ Repo: **websitePharmaCosmetics** — theme giao diện **Sapo Web (.bwt)** cho P
    (tiêu chí UI-x.y: khung, chữ, màu, nút, thẻ SP, ảnh, header/footer) + công cụ kiểm `npm run audit:ui`
    (trình duyệt thật 1440/390px). Lệnh `/goal` (`.claude/commands/goal.md`) chạy review + sửa theo bộ rule này.
 5. [`README.md`](./README.md) — tổng quan dự án, cấu trúc thư mục, danh mục tài liệu.
+6. **Đội agent (Claude Code, từ 20/11/2026):** `.claude/agents/` — `ba-lead` (phân tích + nghiệm thu), `fe-core`,
+   `fe-feature`, `data-engineer`; giao việc bằng `/team <yêu cầu>`. Phạm vi ghi từng vai: `docs/TEAMWORK-WORKFLOW.md` chương 0.
 
 ## Tóm tắt nhanh (không thay thế 2 file rule ở trên)
 

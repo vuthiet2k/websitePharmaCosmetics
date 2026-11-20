@@ -16,6 +16,26 @@
 
 ---
 
+## CHƯƠNG 0: ĐỘI CLAUDE CODE (BA LEAD + 2 FE + DE) — ÁP DỤNG TỪ 20/11/2026
+
+Khi làm việc trên Claude Code, đội gồm 4 agent khai báo ở `.claude/agents/` (định nghĩa agent là nguồn chuẩn về
+phạm vi ghi & tự kiểm; các chương sau vẫn dùng cho mô hình Gemini/Tester cũ). Gọi cả đội bằng lệnh **`/team <yêu cầu>`**
+(`.claude/commands/team.md`).
+
+| Agent | Vai trò | Ghi được | Không được ghi |
+|---|---|---|---|
+| `ba-lead` | Phân tích yêu cầu, khảo sát hiện trạng, viết SPEC + thẻ việc, **nghiệm thu** (thay Tester: chạy cổng kiểm tra, PASS/FAIL theo AC) | `docs/specs/**` | mọi mã theme, `configs/`, `data/` |
+| `fe-core` | Layout, design tokens, Tailwind config/build, `ui_*`, header/footer, schema dùng chung (khi đã duyệt) | xem mục 3.3 + file thẻ việc ghi đích danh | section/template nghiệp vụ, `data/` |
+| `fe-feature` | Template, section, thẻ SP/bài viết, luồng mua hàng — tiêu thụ `ui_*` + token | xem mục 3.4 + file thẻ việc ghi đích danh | layout, token, `ui_*`, Tailwind config, `configs/`, `data/` |
+| `data-engineer` | Hồ sơ chất lượng dữ liệu, làm sạch/chuẩn hoá, gói nội dung có nguồn thật, dữ liệu mẫu dev preview | `data/**` (ghi đè gốc phải được duyệt), `docs/data/**`, `scripts/data-*`, `exports/*.xlsx` | mã theme, `configs/` (giá trị settings giao bảng cho BA/fe-core) |
+
+Luồng: yêu cầu → `ba-lead` (SPEC + `open_questions`; còn câu hỏi ⇒ hỏi chủ dự án) → thẻ việc chạy song song khi
+không chung file, tuần tự khi phụ thuộc → review chéo 2 FE → `ba-lead` nghiệm thu (tối đa 2 vòng trả lỗi/thẻ) →
+phiên chính kiểm lại diff và báo chủ dự án. Đổi schema/settings, đổi bố cục chưa có mockup, nội dung y dược/số liệu
+chưa có nguồn ⇒ luôn hỏi chủ dự án trước.
+
+---
+
 ## MỤC LỤC TỔNG QUAN
 
 - [CHƯƠNG 1: TỔNG QUAN, BỐI CẢNH & TRIẾT LÝ VẬN HÀNH](#chương-1-tổng-quan-bối-cảnh--triết-lý-vận-hành)

@@ -104,7 +104,7 @@ for (const [brn, fr, br, opt] of FRAMES) {
   if (fr === '1440') await p.screenshot({ path: `${OUT}/${MODE}-${brn}-${fr}-full.png`, fullPage: true }).catch((e) => console.log('   (bỏ ảnh full: ' + String(e).slice(0, 60) + ')'));
   const st = {};
   // Rail mục lục (chỉ hiện ở màn rộng): bấm «Đội ngũ» ⇒ #about-team vào màn hình
-  const rail = p.locator('.about-rail a[href="#about-team"]').first();
+  const rail = p.locator('#aboutRail a[href="#about-team"]').first();
   if (await rail.count() && await rail.isVisible()) { await rail.click(); await p.waitForTimeout(900); st.rail = await p.evaluate(() => { const r = document.getElementById('about-team').getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0; }); }
   // Bàn phím: nút hero 1 và nút Zalo — focus, Shift+Tab rồi Tab quay lại ⇒ viền focus
   for (const [sel, n] of [['section:has(h1) .pc-kit-btn-primary', 'hero'], ['a[href^="https://zalo.me/"].pc-kit-btn-primary.w-full', 'zalo']]) {
