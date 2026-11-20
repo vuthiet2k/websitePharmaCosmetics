@@ -94,44 +94,36 @@
 
       <div class="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-stretch">
         
-        {%- comment -%} Cột trái: Banner Khuyến mại & Đối tác độc quyền (chiếm 4/12 cột desktop) {%- endcomment -%}
-        <div class="lg:col-span-4 flex flex-col">
+        {%- comment -%} Cột trái: Banner cam kết chính hãng (ẩn trên mobile theo T-17) {%- endcomment -%}
+        <div class="hidden lg:flex lg:col-span-4 flex-col">
           <div class="relative flex flex-1 flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-brand-deep via-brand-darkest to-primary p-6 text-white shadow-md min-h-[380px] lg:min-h-[480px]">
             <div class="relative z-10">
               <span class="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 font-heading text-xs font-bold uppercase tracking-wider text-white backdrop-blur-sm">
-                <i class="inline-flex leading-none text-amber-300" aria-hidden="true">{% include 'ui_icon', name: 'star', size: 'em' %}</i>
-                TUẦN LỄ THƯƠNG HIỆU
+                <i class="inline-flex leading-none text-white" aria-hidden="true">{% include 'ui_icon', name: 'shield-check', size: 'em' %}</i>
+                {{ settings.brand_banner_badge | default: 'Thương hiệu đối tác chính hãng' }}
               </span>
-              <h3 class="m-0 mt-3 font-heading text-2xl font-black uppercase leading-tight text-white lg:text-3xl">
-                SĂN DEAL<br><span class="text-amber-300">SIÊU HOT</span>
+              <h3 class="m-0 mt-3 font-heading text-xl font-black leading-tight text-white lg:text-2xl">
+                {{ settings.brand_banner_title | default: 'Phân phối chính hãng từ các thương hiệu dược mỹ phẩm hàng đầu' }}
               </h3>
               <p class="m-0 mt-2 font-sans text-sm leading-relaxed text-slate-100">
-                Ưu đãi đặc quyền đến <strong class="font-bold text-white text-base">50%</strong> cùng quà tặng chính hãng theo đơn từ hơn 200 nhãn hàng dược mỹ phẩm quốc tế.
+                {{ settings.brand_banner_desc | default: 'Toàn bộ sản phẩm nhập khẩu chính ngạch, có hóa đơn, chứng từ kiểm định rõ ràng. Cam kết 100% hàng thật — hoàn tiền nếu phát hiện hàng giả.' }}
               </p>
             </div>
 
             <div class="relative z-10 my-4 space-y-2.5">
               <div class="flex items-center gap-2.5 rounded-xl border border-solid border-white/20 bg-white/10 p-2.5 backdrop-blur-sm">
-                <span class="flex h-8 w-14 shrink-0 items-center justify-center rounded-lg bg-sale font-heading text-xs font-bold text-white">DEAL</span>
-                <span class="text-xs font-bold text-white">Voucher 200.000đ đơn từ 1.500K</span>
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/20"><i class="inline-flex leading-none text-white" aria-hidden="true">{% include 'ui_icon', name: 'package-check', size: 16 %}</i></span>
+                <span class="text-xs font-bold text-white">{{ settings.brand_banner_point1 | default: 'Nhập khẩu chính ngạch 100%' }}</span>
               </div>
               <div class="flex items-center gap-2.5 rounded-xl border border-solid border-white/20 bg-white/10 p-2.5 backdrop-blur-sm">
-                <span class="flex h-8 w-14 shrink-0 items-center justify-center rounded-lg bg-amber-400 font-heading text-xs font-bold text-brand-darkest">QUÀ</span>
-                <span class="text-xs font-bold text-white">Bộ mẫu thử minisize cao cấp</span>
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/20"><i class="inline-flex leading-none text-white" aria-hidden="true">{% include 'ui_icon', name: 'award', size: 16 %}</i></span>
+                <span class="text-xs font-bold text-white">{{ settings.brand_banner_point2 | default: 'Chứng nhận kiểm định độc lập' }}</span>
               </div>
               <div class="flex items-center gap-2.5 rounded-xl border border-solid border-white/20 bg-white/10 p-2.5 backdrop-blur-sm">
-                <span class="flex h-8 w-14 shrink-0 items-center justify-center rounded-lg bg-emerald-400 font-heading text-xs font-bold text-brand-darkest">FREE</span>
-                <span class="text-xs font-bold text-white">Miễn phí giao hàng toàn quốc</span>
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/20"><i class="inline-flex leading-none text-white" aria-hidden="true">{% include 'ui_icon', name: 'store', size: 16 %}</i></span>
+                {%- assign pc_brand_count = pc_brands_ll.links.size -%}
+                <span class="text-xs font-bold text-white">{{ pc_brand_count }}{{ settings.brand_banner_point3 | default: '+ thương hiệu đối tác toàn cầu' }}</span>
               </div>
-            </div>
-
-            <div class="relative z-10 pt-2">
-              <a
-                href="#all-brands-heading"
-                class="inline-flex min-h-[44px] w-full items-center justify-center rounded-full bg-white px-5 text-sm font-bold text-brand-deep shadow-md transition-all hover:bg-brand-tint hover:shadow-lg no-underline"
-              >
-                Khám phá thương hiệu
-              </a>
             </div>
           </div>
         </div>
@@ -199,15 +191,12 @@
                     </span>
                   </div>
 
-                  {%- comment -%} Dòng ưu đãi màu đỏ/sale nổi bật {%- endcomment -%}
-                  <div class="mt-2 text-center">
-                    <span class="block text-xs font-bold text-sale group-hover:text-primary transition-colors">
-                      {{ b_tag }}
-                    </span>
-                    {%- if b_count > 0 -%}
-                    <span class="block text-[11px] font-medium text-ink-muted">{{ b_count }} sản phẩm</span>
-                    {%- endif -%}
-                  </div>
+                  {%- comment -%} T-17: Bỏ nhãn deal ảo, chỉ hiển thị số sản phẩm thật (b_count) {%- endcomment -%}
+                <div class="mt-2 text-center">
+                  {%- if b_count > 0 -%}
+                  <span class="block text-xs font-medium text-ink-muted">{{ b_count }} sản phẩm</span>
+                  {%- endif -%}
+                </div>
                 </a>
               {%- endfor -%}
             </div>

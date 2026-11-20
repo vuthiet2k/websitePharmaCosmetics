@@ -53,7 +53,7 @@
   </div>
 </section>
 
-<section class="py-10 bg-forest-900 text-white">
+<section class="py-10 bg-primary text-white" data-about-stats>
   <div class="container">
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
       {%- for i in (1..4) -%}
@@ -63,14 +63,41 @@
       {%- assign v_target = settings[k_target] -%}
       {%- if v_target != blank -%}
       <div>
-        <div class="text-3xl font-extrabold text-emerald-400 font-heading">{{ v_target }}{{ settings[k_suffix] }}</div>
-        <div class="text-xs text-gray-300 mt-1 uppercase tracking-wider">{{ settings[k_label] }}</div>
+        <div class="text-3xl font-extrabold text-white font-heading" data-count-up="{{ v_target | remove: '+' | remove: '%' | plus: 0 }}" data-count-suffix="{{ settings[k_suffix] }}">{{ v_target }}{{ settings[k_suffix] }}</div>
+        <div class="text-xs text-white/70 mt-1 uppercase tracking-wider">{{ settings[k_label] }}</div>
       </div>
       {%- endif -%}
       {%- endfor -%}
     </div>
   </div>
 </section>
+<script>
+(function(){
+  var stats = document.querySelector('[data-about-stats]');
+  if (!stats) return;
+  var observer = new IntersectionObserver(function(entries) {
+    if (!entries[0].isIntersecting) return;
+    observer.disconnect();
+    stats.querySelectorAll('[data-count-up]').forEach(function(el) {
+      var target = parseInt(el.getAttribute('data-count-up'), 10) || 0;
+      var suffix = el.getAttribute('data-count-suffix') || '';
+      var duration = 1500;
+      var start = performance.now();
+      function step(now) {
+        var progress = Math.min((now - start) / duration, 1);
+        var eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = Math.round(target * eased) + (progress >= 1 ? suffix : '');
+        if (progress < 1) requestAnimationFrame(step);
+      }
+      /* motion-safe: chỉ chạy nếu không yêu cầu giảm chuyển động */
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        requestAnimationFrame(step);
+      }
+    });
+  }, { threshold: 0.3 });
+  observer.observe(stats);
+})();
+</script>
 
 {%- comment -%}
   T-147 (2026-09-13) — Bố cục "Sidebar điều hướng bám dính" (phương án B đã chốt qua
@@ -229,15 +256,16 @@
       {%- capture k_desc -%}about_expert_{{ i }}_desc{%- endcapture -%}
       {%- capture k_img -%}about_expert_{{ i }}_img{%- endcapture -%}
       {%- assign v_name = settings[k_name] -%}
-      {%- if v_name != blank -%}
+      {%- assign v_role = settings[k_role] -%}
+      {%- if v_name != blank or v_role != blank -%}
       <div class="bg-white p-6 rounded-2xl border border-gray-200 text-center">
         {%- if settings[k_img] != blank -%}
-        <img src="{{ settings[k_img] | img_url: 'medium' }}" alt="{{ v_name | escape }}" width="80" height="80" class="w-20 h-20 rounded-xl object-cover mx-auto mb-4 shadow">
+        <img src="{{ settings[k_img] | img_url: 'medium' }}" alt="{{ v_role | default: 'Chuyên gia' | escape }}" width="80" height="80" class="w-20 h-20 rounded-xl object-cover mx-auto mb-4 shadow">
         {%- else -%}
         <div class="w-20 h-20 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-4 text-2xl"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'stethoscope', size: 'em' %}</i></div>
         {%- endif -%}
-        <h3 class="text-sm font-bold text-gray-900">{{ v_name }}</h3>
-        <p class="text-xs text-emerald-700 font-semibold mb-2">{{ settings[k_role] }}</p>
+        {%- comment -%} T-15: Ẩn tên riêng cá nhân — chỉ hiện vai trò chuyên môn (RULE-P0-02: không dùng "Bác sĩ") {%- endcomment -%}
+        <p class="text-xs text-emerald-700 font-semibold mb-2">{{ v_role }}</p>
         <p class="text-xs text-gray-600 leading-relaxed">{{ settings[k_desc] }}</p>
       </div>
       {%- endif -%}
@@ -275,10 +303,25 @@
       <h2 class="text-2xl sm:text-3xl font-extrabold text-forest-900 mt-2 font-heading">{{ settings.about_ing_title }}</h2>
     </div>
     {%- if settings.about_ing_menu != blank and linklists[settings.about_ing_menu].links.size > 0 -%}
-    <div class="flex flex-wrap gap-3">
-      {%- for link in linklists[settings.about_ing_menu].links -%}
-      <a href="{{ link.url }}" class="px-4 py-2 rounded-full bg-emerald-50 text-emerald-800 text-sm font-semibold border border-emerald-200 hover:bg-emerald-100 transition">{{ link.title }}</a>
-      {%- endfor -%}
+    {%- assign ing_links = linklists[settings.about_ing_menu].links -%}
+    {%- assign ing_count = ing_links.size -%}
+    {%- comment -%} T-16: Marquee 2 hàng ngược chiều, dữ liệu thật từ menu, motion-safe {%- endcomment -%}
+    <p class="text-xs text-brand-deep font-bold mb-4">{{ ing_count }}+ hoạt chất kiểm chứng lâm sàng</p>
+    <div class="relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]" aria-label="Danh sách hoạt chất">
+      {%- comment -%} Hàng 1: chạy trái {%- endcomment -%}
+      <div class="flex gap-3 mb-3 motion-safe:animate-marquee w-max" aria-hidden="true">
+        {%- for link in ing_links -%}<a href="{{ link.url }}" class="shrink-0 inline-flex min-h-[44px] items-center px-4 py-2 rounded-full bg-brand-tint text-brand-deep text-sm font-semibold border border-primary/20 hover:bg-primary hover:text-white transition-colors no-underline whitespace-nowrap">{{ link.title }}</a>{%- endfor -%}
+        {%- for link in ing_links -%}<a href="{{ link.url }}" class="shrink-0 inline-flex min-h-[44px] items-center px-4 py-2 rounded-full bg-brand-tint text-brand-deep text-sm font-semibold border border-primary/20 hover:bg-primary hover:text-white transition-colors no-underline whitespace-nowrap" tabindex="-1" aria-hidden="true">{{ link.title }}</a>{%- endfor -%}
+      </div>
+      {%- comment -%} Hàng 2: chạy phải (ngược chiều) {%- endcomment -%}
+      <div class="flex gap-3 motion-safe:animate-marquee-reverse w-max" aria-hidden="true">
+        {%- for link in ing_links -%}<a href="{{ link.url }}" class="shrink-0 inline-flex min-h-[44px] items-center px-4 py-2 rounded-full bg-primary/10 text-brand-deep text-sm font-semibold border border-primary/15 hover:bg-primary hover:text-white transition-colors no-underline whitespace-nowrap" tabindex="-1">{{ link.title }}</a>{%- endfor -%}
+        {%- for link in ing_links -%}<a href="{{ link.url }}" class="shrink-0 inline-flex min-h-[44px] items-center px-4 py-2 rounded-full bg-primary/10 text-brand-deep text-sm font-semibold border border-primary/15 hover:bg-primary hover:text-white transition-colors no-underline whitespace-nowrap" tabindex="-1" aria-hidden="true">{{ link.title }}</a>{%- endfor -%}
+      </div>
+    </div>
+    {%- comment -%} Fallback tĩnh khi prefers-reduced-motion bật {%- endcomment -%}
+    <div class="motion-reduce:flex motion-safe:hidden flex-wrap gap-3 mt-3">
+      {%- for link in ing_links -%}<a href="{{ link.url }}" class="px-4 py-2 rounded-full bg-brand-tint text-brand-deep text-sm font-semibold border border-primary/20 hover:bg-primary hover:text-white transition no-underline min-h-[44px] inline-flex items-center">{{ link.title }}</a>{%- endfor -%}
     </div>
     {%- endif -%}
   </div>
