@@ -108,7 +108,7 @@ async def chat_endpoint(request: ChatRequest):
             f"- **Địa chỉ**: {store_info['address']}\n"
             f"- **Hotline/Zalo**: {store_info['hotline']}\n"
             f"- **Thời gian mở cửa**: {store_info['working_hours']}\n"
-            f"- Khách hàng đến trực tiếp được **soi da vi điểm AI và tư vấn phác đồ 1:1 miễn phí**. Bạn có thể đặt lịch hẹn trước tại [Đặt lịch tư vấn](/dat-lich-tu-van)."
+            f"- Khách hàng đến trực tiếp sẽ được **Chuyên gia Da liễu trực tiếp thăm khám, soi da và xây dựng phác đồ cá nhân hóa 1:1**. Bạn có thể đặt hẹn trước cùng Chuyên gia tại [Đặt lịch tư vấn](/dat-lich-tu-van)."
         )
 
     if related_prods:

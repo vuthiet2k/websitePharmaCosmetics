@@ -30,7 +30,7 @@ def sync_knowledge_base():
             "id": "KB-STORE-01",
             "category": "Cửa hàng & Chi nhánh",
             "title": "Địa chỉ cơ sở và Phòng trị liệu chuyên sâu Pharma Cosmetics",
-            "content": f"Cơ sở chính và Phòng trị liệu 1:1 Skin Health Beauty: Số 44 Ngõ 897 Giải Phóng, Hoàng Mai, Hà Nội. Hotline / Zalo đặt lịch tư vấn: {store_info.get('phone')} hoặc 0965.594.399. Khách hàng tại Hà Nội được soi da vi điểm AI và lập phác đồ cá nhân hóa 1:1 miễn phí."
+            "content": f"Cơ sở chính và Phòng trị liệu 1:1 Skin Health Beauty: Số 44 Ngõ 897 Giải Phóng, Hoàng Mai, Hà Nội. Hotline / Zalo đặt lịch tư vấn: {store_info.get('phone')} hoặc 0965.594.399. Khách hàng tại Hà Nội được Chuyên gia Da liễu trực tiếp soi da và lập phác đồ cá nhân hóa 1:1."
         }
     ]
 
@@ -81,3 +81,4 @@ def sync_knowledge_base():
 
 if __name__ == '__main__':
     sync_knowledge_base()
+

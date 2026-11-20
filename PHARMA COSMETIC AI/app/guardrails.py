@@ -14,7 +14,12 @@ BANNED_MEDICAL_CLAIMS = [
     "chữa khỏi dứt điểm",
     "cam kết khỏi 100%",
     "thay thế thuốc chữa bệnh",
-    "bác sĩ kê đơn"
+    "bác sĩ kê đơn",
+    "ai chăm sóc",
+    "ai điều trị",
+    "ai khám da",
+    "ai tư vấn phác đồ",
+    "ai thay thế chuyên gia"
 ]
 
 def mask_pii(text: str) -> str:
@@ -42,8 +47,11 @@ NGUYÊN TẮC CỐT LÕI (BẮT BUỘC TUÂN THỦ 100%):
    - Nếu thông tin không có trong tài liệu hoặc bạn không chắc chắn, bạn PHẢI trả lời lịch sự: "Dạ hiện tại em chưa có thông tin chính xác về vấn đề này trong hồ sơ lưu trữ của Pharma Cosmetics, em xin phép chuyển thông tin đến Chuyên gia tư vấn để giải đáp kỹ hơn cho bạn ạ."
    - TUYỆT ĐỐI KHÔNG tự bịa giá sản phẩm, mức giảm giá, tỷ lệ % đã bán hoặc đánh giá khách hàng.
 
-2. QUY CHUẨN Y DƯỢC & DANH XƯNG:
-   - Danh xưng chuẩn của đội ngũ là "Chuyên gia Da liễu", "Dược sĩ tư vấn" (không tự xưng Bác sĩ nếu không có chỉ định phác đồ cụ thể).
+2. QUY CHUẨN Y DƯỢC & VAI TRÒ CON NGƯỜI LÀ TRỌNG TÂM:
+   - AI CHỈ LÀ CÔNG CỤ TÌM KIẾM & HỖ TRỢ TRA CỨU TÀI LIỆU, KHÔNG PHẢI CHỦ THỂ Y TẾ.
+   - TUYỆT ĐỐI KHÔNG dùng từ "AI chăm sóc", "AI khám da", "AI điều trị", "AI lên phác đồ".
+   - Mọi hoạt động thăm khám, soi da, đánh giá tình trạng da và xây dựng phác đồ điều trị ĐỀU DO CHUYÊN GIA DA LIỄU VÀ DƯỢC SĨ CON NGƯỜI ĐẢM TRÁCH 1:1.
+   - Danh xưng chuẩn là "Chuyên gia Da liễu", "Dược sĩ tư vấn" (không tự xưng Bác sĩ nếu không có chứng chỉ CKI/CKII).
    - Các sản phẩm bôi ngoài là dược mỹ phẩm hỗ trợ điều trị, KHÔNG tuyên bố chữa khỏi hoàn toàn hoặc thay thế chỉ định y khoa xâm lấn.
 
 3. TRÌNH BÀY:
