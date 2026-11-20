@@ -1,0 +1,276 @@
+{%- comment -%}
+  templates/page.hoat-chat.bwt (20/11/2026) — Trang nội dung hiển thị toàn bộ hoạt chất từ menu Sapo.
+  Trên Sapo Admin: tạo Trang nội dung (ví dụ đường dẫn /hoat-chat), chọn khung giao diện `page.hoat-chat`.
+  QUY ƯỚC: 100% class Tailwind (assets/pc-ui.css) — KHÔNG class CSS tự đặt, KHÔNG inline style, KHÔNG thẻ style.
+  Dữ liệu lấy động từ menu hoạt chất của Sapo (`linklists['hoat-chat']`, `linklists['tat-ca-hoat-chat']` hoặc `linklists['mua-sam-theo-thanh-phan']`).
+{%- endcomment -%}
+{%- assign pc_ingredients_ll = linklists['hoat-chat'] -%}
+{%- if pc_ingredients_ll == blank or pc_ingredients_ll.links.size == 0 -%}
+  {%- assign pc_ingredients_ll = linklists['tat-ca-hoat-chat'] -%}
+{%- endif -%}
+{%- if pc_ingredients_ll == blank or pc_ingredients_ll.links.size == 0 -%}
+  {%- assign pc_ingredients_ll = linklists['mua-sam-theo-thanh-phan'] -%}
+{%- endif -%}
+{%- if pc_ingredients_ll == blank or pc_ingredients_ll.links.size == 0 -%}
+  {%- assign pc_ingredients_ll = linklists['thanh-phan-hoat-chat'] -%}
+{%- endif -%}
+
+{%- assign pc_ing_eyebrow = 'Dược mỹ phẩm chuẩn khoa học' -%}
+{%- assign pc_ing_title = page.title | default: 'Thư viện Hoạt chất' -%}
+{%- assign pc_ing_desc = 'Tra cứu danh mục toàn bộ các hoạt chất vàng trong điều trị và chăm sóc da chuyên sâu tại Pharma Cosmetics.' -%}
+{%- assign pc_ing_usp_1 = settings.collection_hero_usp_1_title | default: '100% chính hãng' -%}
+{%- assign pc_ing_usp_2 = settings.collection_hero_usp_2_title | default: 'Tư vấn chuyên sâu' -%}
+{%- assign pc_ing_usp_3 = settings.collection_hero_usp_3_title | default: 'Giao hàng toàn quốc' -%}
+
+{% include 'breadcrumb' %}
+
+<main class="bg-surface-page font-sans text-ink" id="main">
+  <div class="container py-6 lg:py-10">
+    {%- comment -%} 1. Thanh tiêu đề, cam kết & thanh tìm kiếm hoạt chất {%- endcomment -%}
+    <section class="mb-6 rounded-2xl border border-solid border-line-soft bg-white p-4 lg:mb-8 lg:p-6" aria-labelledby="all-ingredients-heading">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div class="min-w-0">
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span class="inline-flex items-center rounded-full bg-brand-tint px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-deep">{{ pc_ing_eyebrow | escape }}</span>
+            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-ink-secondary">
+              <i class="inline-flex leading-none text-primary" aria-hidden="true">{% include 'ui_icon', name: 'shield-check', size: 'em' %}</i>
+              {{ pc_ing_usp_1 | escape }}
+            </span>
+            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-ink-secondary">
+              <i class="inline-flex leading-none text-primary" aria-hidden="true">{% include 'ui_icon', name: 'stethoscope', size: 'em' %}</i>
+              {{ pc_ing_usp_2 | escape }}
+            </span>
+            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-ink-secondary">
+              <i class="inline-flex leading-none text-primary" aria-hidden="true">{% include 'ui_icon', name: 'truck', size: 'em' %}</i>
+              {{ pc_ing_usp_3 | escape }}
+            </span>
+          </div>
+          <div class="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h1 class="m-0 font-heading text-2xl font-bold text-brand-deep lg:text-3xl" id="all-ingredients-heading">{{ pc_ing_title | escape }}</h1>
+            {%- if pc_ingredients_ll.links.size > 0 -%}
+            <span class="text-sm font-semibold text-ink-muted" data-ing-total>({{ pc_ingredients_ll.links.size }} hoạt chất)</span>
+            {%- endif -%}
+          </div>
+          {%- if pc_ing_desc != blank -%}
+          <p class="m-0 mt-1.5 max-w-3xl text-sm text-ink-secondary">{{ pc_ing_desc | escape }}</p>
+          {%- endif -%}
+        </div>
+
+        {%- comment -%} 2. Thanh tìm kiếm hoạt chất tức thời {%- endcomment -%}
+        <div class="w-full shrink-0 lg:w-72">
+          <label class="sr-only" for="pc-ing-search-input">Tìm kiếm tên hoạt chất</label>
+          <div class="relative flex items-center">
+            <span class="pointer-events-none absolute left-3 inline-flex items-center justify-center text-ink-muted" aria-hidden="true">
+              {% include 'ui_icon', name: 'search', size: 20 %}
+            </span>
+            <input
+              id="pc-ing-search-input"
+              type="search"
+              autocomplete="off"
+              placeholder="Tìm kiếm tên hoạt chất..."
+              class="box-border h-11 w-full rounded-xl border border-solid border-line bg-surface-page pl-10 pr-9 text-base text-ink placeholder-slate-400 focus:border-primary focus:bg-white focus:outline-none lg:rounded-none"
+              data-ing-search
+            >
+            <button
+              type="button"
+              class="absolute right-1 inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-ink-muted hover:bg-brand-tint hover:text-brand-deep"
+              aria-label="Xóa từ khóa tìm kiếm"
+              data-ing-search-clear
+              hidden
+            >
+              {% include 'ui_icon', name: 'x', size: 20 %}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {%- comment -%} 3. Dải lọc nhanh theo chữ cái đầu (A-Z / #) {%- endcomment -%}
+      {%- if pc_ingredients_ll.links.size > 0 -%}
+      {%- assign pc_alpha_list = 'A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,#' | split: ',' -%}
+      <div class="mt-4 border-0 border-t border-solid border-line-soft pt-4" role="region" aria-label="Lọc hoạt chất theo chữ cái">
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none" data-ing-alpha-bar>
+          <button
+            type="button"
+            aria-pressed="true"
+            data-alpha="ALL"
+            class="inline-flex min-h-[44px] shrink-0 cursor-pointer items-center justify-center rounded-full border border-solid border-primary bg-primary px-4 text-xs font-bold text-white transition-colors"
+          >Tất cả</button>
+          {%- for ch in pc_alpha_list -%}
+          <button
+            type="button"
+            aria-pressed="false"
+            data-alpha="{{ ch }}"
+            class="inline-flex min-h-[44px] min-w-[44px] shrink-0 cursor-pointer items-center justify-center rounded-full border border-solid border-line-soft bg-surface-page px-2.5 text-xs font-bold text-brand-deep transition-colors hover:border-primary hover:bg-brand-tint"
+          >{{ ch }}</button>
+          {%- endfor -%}
+        </div>
+      </div>
+      {%- endif -%}
+    </section>
+
+    {%- comment -%} 4. Lưới thẻ hoạt chất (bố cục thẻ tinh tế, chuẩn y khoa) {%- endcomment -%}
+    {%- if pc_ingredients_ll.links.size > 0 -%}
+    <section aria-label="Danh sách hoạt chất">
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 lg:gap-4" data-ing-grid>
+        {%- for link in pc_ingredients_ll.links -%}
+          {%- assign i_title = link.title | strip -%}
+          {%- assign i_first = i_title | upcase | slice: 0, 1 -%}
+          {%- assign i_col = link.object -%}
+          {%- assign i_count = i_col.products_count | plus: 0 -%}
+          <a
+            href="{{ link.url | escape }}"
+            class="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-solid border-line-soft bg-white p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary hover:shadow-md"
+            data-ing-card
+            data-ing-name="{{ i_title | escape }}"
+            data-ing-char="{{ i_first | escape }}"
+          >
+            <div>
+              <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-tint text-primary transition-colors group-hover:bg-primary group-hover:text-white">
+                <i class="inline-flex text-lg" aria-hidden="true">{% include 'ui_icon', name: 'sparkles', size: 20 %}</i>
+              </div>
+              <h2 class="m-0 font-heading text-sm font-bold text-brand-deep transition-colors group-hover:text-primary lg:text-base">
+                {{ i_title | escape }}
+              </h2>
+            </div>
+            <div class="mt-4 flex items-center justify-between border-0 border-t border-solid border-line-soft pt-2.5 text-xs text-ink-muted">
+              <span>{% if i_count > 0 %}{{ i_count }} sản phẩm{% else %}Khám phá{% endif %}</span>
+              <span class="inline-flex text-primary transition-transform group-hover:translate-x-1" aria-hidden="true">
+                {% include 'ui_icon', name: 'arrow-right', size: 14 %}
+              </span>
+            </div>
+          </a>
+        {%- endfor -%}
+      </div>
+
+      {%- comment -%} Hộp thông báo rỗng khi tìm kiếm không thấy {%- endcomment -%}
+      <div class="rounded-2xl border border-solid border-line-soft bg-white px-4 py-12 text-center" data-ing-empty hidden>
+        <p class="m-0 text-base font-semibold text-brand-deep">Không tìm thấy hoạt chất phù hợp</p>
+        <p class="m-0 mt-1 text-sm text-ink-secondary">Vui lòng thử lại với từ khóa khác hoặc bấm hiển thị tất cả.</p>
+        <button
+          type="button"
+          class="mt-4 inline-flex min-h-[44px] cursor-pointer items-center justify-center rounded-xl border border-solid border-primary bg-primary px-5 text-sm font-bold text-white transition-colors hover:bg-btn-hover"
+          data-ing-reset
+        >Xem tất cả hoạt chất</button>
+      </div>
+    </section>
+    {%- else -%}
+    <section class="rounded-2xl border border-solid border-line-soft bg-white px-4 py-12 text-center">
+      <p class="m-0 text-sm text-ink-muted">Danh sách hoạt chất đang được cập nhật.</p>
+    </section>
+    {%- endif -%}
+
+    {%- if page.content != blank -%}
+    <section class="mt-8 rounded-2xl border border-solid border-line-soft bg-white p-4 lg:p-6">
+      <div class="rte text-sm leading-relaxed text-ink-secondary">
+        {{ page.content }}
+      </div>
+    </section>
+    {%- endif -%}
+  </div>
+</main>
+
+<script>
+(function () {
+  var searchInput = document.querySelector('[data-ing-search]');
+  var clearBtn = document.querySelector('[data-ing-search-clear]');
+  var alphaBar = document.querySelector('[data-ing-alpha-bar]');
+  var grid = document.querySelector('[data-ing-grid]');
+  var emptyBox = document.querySelector('[data-ing-empty]');
+  var resetBtn = document.querySelector('[data-ing-reset]');
+  var totalEl = document.querySelector('[data-ing-total]');
+  if (!grid) return;
+
+  var cards = Array.prototype.slice.call(grid.querySelectorAll('[data-ing-card]'));
+  var alphaBtns = alphaBar ? Array.prototype.slice.call(alphaBar.querySelectorAll('[data-alpha]')) : [];
+  var activeAlpha = 'ALL';
+
+  function foldVi(str) {
+    return String(str || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .trim();
+  }
+
+  function normAlpha(ch) {
+    var f = foldVi(ch).toUpperCase().slice(0, 1);
+    return /^[A-Z]$/.test(f) ? f : '#';
+  }
+
+  if (alphaBtns.length) {
+    var available = {};
+    cards.forEach(function (card) {
+      available[normAlpha(card.getAttribute('data-ing-char'))] = true;
+    });
+    alphaBtns.forEach(function (btn) {
+      var code = btn.getAttribute('data-alpha');
+      if (code !== 'ALL' && !available[code]) {
+        btn.disabled = true;
+        btn.classList.add('opacity-40', 'cursor-not-allowed');
+      }
+    });
+  }
+
+  function setAlphaUI(selected) {
+    alphaBtns.forEach(function (btn) {
+      var isCurrent = btn.getAttribute('data-alpha') === selected;
+      btn.setAttribute('aria-pressed', isCurrent ? 'true' : 'false');
+      if (isCurrent) {
+        btn.classList.remove('border-line-soft', 'bg-surface-page', 'text-brand-deep');
+        btn.classList.add('border-primary', 'bg-primary', 'text-white');
+      } else {
+        btn.classList.remove('border-primary', 'bg-primary', 'text-white');
+        btn.classList.add('border-line-soft', 'bg-surface-page', 'text-brand-deep');
+      }
+    });
+  }
+
+  function applyFilter() {
+    var q = foldVi(searchInput ? searchInput.value : '');
+    if (clearBtn) clearBtn.hidden = !q;
+
+    var visibleCount = 0;
+    cards.forEach(function (card) {
+      var name = foldVi(card.getAttribute('data-ing-name'));
+      var ch = normAlpha(card.getAttribute('data-ing-char'));
+      var matchQuery = !q || name.indexOf(q) !== -1;
+      var matchAlpha = activeAlpha === 'ALL' || ch === activeAlpha;
+      var show = matchQuery && matchAlpha;
+      card.hidden = !show;
+      if (show) visibleCount++;
+    });
+
+    if (emptyBox) emptyBox.hidden = visibleCount > 0;
+    grid.hidden = visibleCount === 0;
+    if (totalEl) totalEl.textContent = '(' + visibleCount + ' hoạt chất)';
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', applyFilter);
+  }
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function () {
+      searchInput.value = '';
+      applyFilter();
+      searchInput.focus();
+    });
+  }
+  alphaBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (btn.disabled) return;
+      activeAlpha = btn.getAttribute('data-alpha') || 'ALL';
+      setAlphaUI(activeAlpha);
+      applyFilter();
+    });
+  });
+  if (resetBtn) {
+    resetBtn.addEventListener('click', function () {
+      if (searchInput) searchInput.value = '';
+      activeAlpha = 'ALL';
+      setAlphaUI('ALL');
+      applyFilter();
+    });
+  }
+})();
+</script>
