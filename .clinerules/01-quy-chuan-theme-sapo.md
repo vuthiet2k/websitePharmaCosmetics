@@ -127,10 +127,13 @@ Mỗi lần tải lên Sapo chỉ báo 1 lỗi đầu tiên ⇒ mọi quy tắc 
   fallback, bị SSOT đè. Không "vá" bằng cách sửa chúng hay thêm `!important`. Chúng từng chồng nhau với
   header 32px, footer 32px và `.container` của Tailwind CDN, làm khung nhảy lệch mép giữa các trang.
   Tailwind CDN đã tắt `container` (`corePlugins.container: false` trong `layouts/theme.bwt`).
-- Rule thân trang dùng `:where(.pc-site-v3) .container` (độ ưu tiên 0,1,0), **không `!important`**.
-  Nhờ vậy khung hẹp có chủ đích vẫn ghi đè được theo ngữ cảnh, ví dụ `.ot-page .container` 640px,
-  `.mops-hero .container` 720px, `.header-menu > .container`. Ngoại lệ mới phải scope theo class
-  trang/section, kèm comment lý do.
+- Rule thân trang là `.pc-site-v3 .container` (độ ưu tiên **0,2,0**, `ui-src/css/components.css`), **không
+  `!important`**. **Cấm hạ về `:where(.pc-site-v3) .container` (0,1,0)**: `components.css` còn các khối
+  `.container` cũ nạp SAU (vendor bootstrap 540/720/960/1140px, global_core 14px) ⇒ 0,1,0 thua, thân trang
+  lệch mép header/footer dưới 1200px (aa2ad90 sửa 19/11/2026; ec87393 dựng trên bản cũ làm mất, khôi phục
+  20/11/2026). `npm run lint:guardrails` FAIL cứng nếu rule SSOT mất hoặc bị đổi sang `:where()`.
+  Khung hẹp có chủ đích ghi đè theo ngữ cảnh bằng selector kép/`!important` có comment lý do, ví dụ
+  `.ot-page .container{max-width:640px!important}`. Ngoại lệ mới phải scope theo class trang/section.
 - Khung nội dung của **mọi** section storefront (breadcrumb, hero, các module) dùng class `.container`
   — **giống hệt** `snippets/header.bwt`. Nền full-width (gradient, màu nền) đặt ở thẻ `<section>` ngoài,
   `.container` nằm bên trong. Code CSS/JS không được ghi số px trùng giá trị container. Phải dùng
