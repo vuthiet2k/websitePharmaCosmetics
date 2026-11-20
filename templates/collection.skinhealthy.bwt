@@ -172,33 +172,6 @@
   font-size: var(--fs-lg);
   font-style: italic;
 }
-/* ── Pagination ── */
-.sh-col-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-.sh-col-pagination a,
-.sh-col-pagination span {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  font-family: var(--sh-sans);
-  font-size: var(--fs-2xs);
-  border: 1px solid var(--sh-line);
-  color: var(--sh-ink);
-  text-decoration: none;
-  transition: background 150ms, color 150ms;
-}
-.sh-col-pagination a:hover,
-.sh-col-pagination span.current {
-  background: var(--sh-ink);
-  border-color: var(--sh-ink);
-  color: var(--sh-ivory);
-}
 /* Responsive */
 @media (max-width: 991px) {
   .sh-col-layout { grid-template-columns: 1fr; }
@@ -336,21 +309,7 @@
       </div>
 
       {%- if paginate.pages > 1 -%}
-        <nav class="sh-col-pagination" aria-label="Phân trang">
-          {%- if paginate.previous -%}
-            <a href="{{ paginate.previous.url }}" aria-label="Trang trước">‹</a>
-          {%- endif -%}
-          {%- for part in paginate.parts -%}
-            {%- if part.is_link -%}
-              <a href="{{ part.url }}">{{ part.title }}</a>
-            {%- else -%}
-              <span class="current">{{ part.title }}</span>
-            {%- endif -%}
-          {%- endfor -%}
-          {%- if paginate.next -%}
-            <a href="{{ paginate.next.url }}" aria-label="Trang sau">›</a>
-          {%- endif -%}
-        </nav>
+        {% include 'paginate-pages' %}
       {%- endif -%}
 
     {%- else -%}

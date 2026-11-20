@@ -364,7 +364,7 @@
 @layer components {
 
 /* Header Card Pattern: Card bọc ngoài, card-header làm Topbar, card-body làm Thân Header */
-header.header .card{position:relative;display:flex;flex-direction:column;width:100%;border:0!important;border-radius:0!important;background:#FFFFFF!important;padding:0!important;box-shadow:none;transition:background-color .25s ease,box-shadow .25s ease}
+header.header .card{position:relative;display:flex;flex-direction:column;width:100%;border:0!important;border-radius:0!important;background:#FFFFFF;box-shadow:none;transition:background-color .25s ease,box-shadow .25s ease}
 header.header .card-header{position:relative;z-index:10010;display:block!important;background:var(--pc-topbar-bg,#3CB371);color:var(--pc-topbar-fg,#FFFFFF);font-family:var(--pc-font-body,Montserrat,sans-serif);font-size:var(--fs-xs);font-weight:600;border:0!important;padding:0!important;overflow:visible;max-height:48px;transition:max-height .3s cubic-bezier(.4,0,.2,1),opacity .25s ease,transform .3s ease}
 header.header .card-body{position:relative;width:100%;padding:0!important;background:#FFFFFF;border-bottom:1px solid #DCE5DF;transition:background-color .25s ease,border-color .25s ease}
 header.header .card-header .pc-topbar__inner{display:flex!important;align-items:center;gap:20px;max-width:var(--pc-container-max,1280px)!important;width:100%;min-height:36px;margin:0 auto;padding:0 32px;box-sizing:border-box}
@@ -14345,9 +14345,9 @@ body.pc-site-v3{font-family:var(--pc-font-body);font-size:var(--fs-base)}
    Phần tử sticky bên dưới header (subnav SHB, sidebar lọc…) dùng top:var(--pc-sticky-offset) — không ghi số riêng. */
 .pc-site-v3{--pc-sticky-offset:57px}
 @media (min-width:992px){.pc-site-v3{--pc-sticky-offset:64px}} /* 09/11/2026: thanh dính 44 → 64px (logo 40px) — xem khối HEADER 09/11 cuối file */
-/* Thân trang: SSOT .pc-site-v3 .container (0,2,0) thắng các định nghĩa framework cũ (1140px/960px).
-   Với các khung hẹp có chủ đích (.ot-page 640px, .mops-hero 720px…), chúng có selector kép nên vẫn áp dụng được. Header/footer tiếp tục giữ !important. */
-.pc-site-v3 .container{width:100%;max-width:var(--pc-container-max);margin-left:auto;margin-right:auto;padding-left:var(--pc-container-gutter);padding-right:var(--pc-container-gutter)}
+/* Thân trang: :where() giữ độ ưu tiên 0,1,0 — thắng vendor_bootstrap/global_core nhờ nạp sau, nhưng vẫn nhường
+   khung hẹp có chủ đích (.ot-page 640px, .mops-hero 720px…). Header/footer cần độ ưu tiên cao để thắng global_core/pharma_ui_kit. */
+:where(.pc-site-v3) .container{width:100%;max-width:var(--pc-container-max);margin-left:auto;margin-right:auto;padding-left:var(--pc-container-gutter);padding-right:var(--pc-container-gutter)}
 .pc-site-v3 header.header :is(.card, .main-header)>.container,.pc-site-v3 header.header :is(.card-body, .box-hearder)>.container,.pc-site-v3 .footer .container{width:100%;max-width:var(--pc-container-max)!important;padding-left:var(--pc-container-gutter);padding-right:var(--pc-container-gutter)}
 .pc-site-v3 :is(h1,h2){font-family:var(--pc-font-display)!important}
 .pc-site-v3 .bodywrap :is(input,select,textarea,button){font-family:var(--pc-font-body)}
@@ -14355,8 +14355,7 @@ body.pc-site-v3{font-family:var(--pc-font-body);font-size:var(--fs-base)}
 .pc-clinic-v3 .pc-topbar-v3{position:sticky;top:0}
 .pc-clinic-v3 :is(h1,h2){font-family:var(--pc-font-display)!important}
 /* Header and footer still use the store's menu, identity, legal content and account/cart hooks. */
-.pc-site-v3 header.header .main-header{background:var(--bgHeader, var(--mainColor))!important}
-.pc-site-v3 header.header .card{background:#FFFFFF!important;padding:0!important}
+.pc-site-v3 header.header :is(.card, .main-header){background:var(--bgHeader, var(--mainColor))!important}
 .pc-site-v3 header.header :is(.card-body, .box-hearder){background:#fff!important;border-bottom:1px solid #DCE5DF;box-shadow:none}
 .pc-site-v3 header.header .top-main-header{min-height:34px}
 .pc-site-v3 header.header .top-main-header{background:transparent!important}
@@ -14459,7 +14458,7 @@ body.pc-site-v3{font-family:var(--pc-font-body);font-size:var(--fs-base)}
  /* 2026-10-17 (người dùng: header bé, chữ nhỏ): menu 12px/500 ⇒ token menu --fs-body 14px/600, ≥1200px --fs-base 15px;
     nút "Danh mục" cùng cỡ, đậm 700, cao 40px. 992–1199px giữ 14px để 5 mục + nút không tràn (đo 1024px). */
  .pc-site-v3 header.header :is(.card-body, .box-hearder) .header-menu .sudes-main-header #nav>.nav-item>a{--pc-nav-pad:10px;font-size:var(--fs-body);font-weight:600;padding-left:var(--pc-nav-pad);padding-right:var(--pc-nav-pad)}
- html .pc-site-v3 header.header :is(.card-body, .box-hearder) .header-menu .sudes-cate-header .title.js-menu-toggle{font-size:var(--fs-body)!important;font-weight:700!important;height:40px!important;padding:0 16px!important}
+ html .pc-site-v3 header.header :is(.card-body, .box-hearder) .header-menu .sudes-cate-header .title.js-menu-toggle{font-size:var(--fs-body)!important;font-weight:700!important;height:36px!important;padding:0 16px!important}
  .pc-site-v3 header.header.hSticky .header-menu{z-index:10020!important;background:#fff!important;box-shadow:0 2px 8px rgba(0,46,35,.08)!important;isolation:isolate}
 }
 /* 992–1199px (đo 2026-10-17): 5 mục menu 14px cần 536px, chỗ trống chỉ 394–540px ⇒ nút "Danh mục" chỉ còn icon (đã có aria-label)
@@ -14901,7 +14900,7 @@ body.pc-home-v3 header.header.header-transparent:not(.is-scrolled) .sudes-header
  .pc-site-v3 header.header :is(.card-body, .box-hearder) .header-menu .sudes-main-header #nav>.nav-item>a{font-weight:500;color:var(--pc-color-ink-secondary)}
  .pc-site-v3 header.header :is(.card-body, .box-hearder) .header-menu .sudes-main-header #nav>.nav-item.active>a{font-weight:600}
  .pc-site-v3 header.header.hSticky .header-menu .navigation-horizontal>:is(.nav-row, .row){min-height:64px}
- .pc-site-v3 header.header.hSticky .pc-sticky-logo img{height:40px;max-width:210px}
+ .pc-site-v3 header.header.hSticky .pc-sticky-logo img{height:32px;max-width:160px}
 }
 
 /* ===== VENDOR BOOTSTRAP (merged) ===== */
@@ -15397,12 +15396,32 @@ pre code {
     max-height: 340px;
     overflow-y: scroll;
 }
-/* Container SSOT được quản lý tập trung ở đầu file qua .pc-site-v3 .container (1280px).
-   Đoạn override max-width cũ của Bootstrap (540/720/960/1140px) bị vô hiệu hoá để đảm bảo lề mép chuẩn UI-1.2. */
 .container {
     width: 100%;
+    padding-right: 15px;
+    padding-left: 15px;
     margin-right: auto;
     margin-left: auto;
+}
+@media (min-width: 576px) {
+    .container {
+        max-width: 540px;
+    }
+}
+@media (min-width: 768px) {
+    .container {
+        max-width: 720px;
+    }
+}
+@media (min-width: 992px) {
+    .container {
+        max-width: 960px;
+    }
+}
+@media (min-width: 1200px) {
+    .container {
+        max-width: 1140px;
+    }
 }
 .container-fluid {
     width: 100%;
@@ -16938,17 +16957,4 @@ h1{font-size:var(--fs-lg);margin-bottom:20px}header .top-cart-content{display:no
 .ab-most-view-product-module,
 .most-view-module {
   display: none !important;
-}
-
-/* 19/11/2026: Triệt tiêu hoàn toàn dải xanh thừa và đệm đáy của .card trong header ở MỌI kích thước màn hình */
-header.header .card,
-.pc-site-v3 header.header .card,
-header.header > .card {
-  background: #FFFFFF !important;
-  background-color: #FFFFFF !important;
-  padding: 0 !important;
-  padding-bottom: 0 !important;
-  margin: 0 !important;
-  border: 0 !important;
-  box-shadow: none !important;
 }
