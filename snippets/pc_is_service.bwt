@@ -10,6 +10,13 @@
   {%- if product.template_suffix == 'lieu-trinh' -%}{%- assign pc_is_service = true -%}{%- endif -%}
   {%- unless pc_is_service -%}
   {%- assign pc_sv_list = settings.lt_collection | default: 'dieu-tri-chuyen-nghiep' | split: ',' -%}
+  {%- if collection and collection.alias != blank -%}
+    {%- for pc_sv_t in pc_sv_list -%}
+      {%- assign pc_sv_t = pc_sv_t | strip -%}
+      {%- if pc_sv_t != blank and collection.alias == pc_sv_t -%}{%- assign pc_is_service = true -%}{%- break -%}{%- endif -%}
+    {%- endfor -%}
+  {%- endif -%}
+  {%- unless pc_is_service -%}
   {%- for pc_sv_col in product.collections -%}
     {%- assign pc_sv_h = pc_sv_col.url | remove: '/' -%}
     {%- for pc_sv_t in pc_sv_list -%}
@@ -20,5 +27,6 @@
     {%- endfor -%}
     {%- if pc_is_service -%}{%- break -%}{%- endif -%}
   {%- endfor -%}
+  {%- endunless -%}
   {%- endunless -%}
 {%- endunless -%}
