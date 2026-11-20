@@ -224,8 +224,9 @@
           </div>
 
           {%- comment -%} 5. Thanh điều khiển phân trang số trang (1, 2, 3... 29) {%- endcomment -%}
-          <div class="mt-5 flex flex-wrap items-center justify-center gap-1.5 pt-3 border-0 border-t border-solid border-line-soft" data-brand-pagination>
-            {%- comment -%} JS sẽ sinh các nút số trang và nút trước/sau tại đây {%- endcomment -%}
+          {%- comment -%} 20/11/2026: dùng chung ui_pagination (chế độ js) — bỏ mẫu nút tròn « Trước / Sau » tự dựng. {%- endcomment -%}
+          <div class="mt-5 pt-3 border-0 border-t border-solid border-line-soft" data-brand-pagination-wrap>
+            {% include 'ui_pagination', pg_mode: 'js', pg_id: 'brand-pagination', pg_label: 'Phân trang thương hiệu' %}
           </div>
 
           {%- comment -%} Trạng thái rỗng khi tìm kiếm / lọc không khớp {%- endcomment -%}
@@ -272,7 +273,7 @@
   var pageIndicator = document.querySelector('[data-brand-page-indicator]');
   var prevBtn = document.querySelector('[data-brand-prev]');
   var nextBtn = document.querySelector('[data-brand-next]');
-  var paginationBox = document.querySelector('[data-brand-pagination]');
+  var paginationBox = document.getElementById('brand-pagination');
 
   if (!grid) return;
 
@@ -295,68 +296,12 @@
     });
   }
 
+  /* 20/11/2026: thanh số trang vẽ bằng PcPagination (ui_pagination chế độ js) — giao diện chung toàn site. */
   function renderPagination(totalPages) {
-    if (!paginationBox) return;
-    paginationBox.innerHTML = '';
-    if (totalPages <= 1) {
-      paginationBox.hidden = true;
-      return;
-    }
-    paginationBox.hidden = false;
-
-    // Helper tạo nút phân trang
-    function createPageBtn(page, label, isActive, isDisabled) {
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-solid text-xs font-bold transition-colors cursor-pointer px-3 ';
-      if (isActive) {
-        btn.className += 'border-primary bg-primary text-white';
-        btn.setAttribute('aria-current', 'page');
-      } else if (isDisabled) {
-        btn.className += 'border-transparent bg-transparent text-ink-muted cursor-default';
-        btn.disabled = true;
-      } else {
-        btn.className += 'border-line-soft bg-white text-ink hover:border-primary hover:bg-brand-tint';
-      }
-      btn.textContent = label;
-      if (!isDisabled && !isActive) {
-        btn.addEventListener('click', function () {
-          goToPage(page);
-        });
-      }
-      return btn;
-    }
-
-    // Nút Trang trước
-    var prev = createPageBtn(currentPage - 1, '« Trước', false, currentPage === 1);
-    paginationBox.appendChild(prev);
-
-    // Tính toán dãy số trang hiển thị
-    var pageNumbers = [];
-    if (totalPages <= 7) {
-      for (var i = 1; i <= totalPages; i++) pageNumbers.push(i);
-    } else {
-      if (currentPage <= 4) {
-        pageNumbers = [1, 2, 3, 4, 5, '...', totalPages];
-      } else if (currentPage >= totalPages - 3) {
-        pageNumbers = [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-      } else {
-        pageNumbers = [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
-      }
-    }
-
-    pageNumbers.forEach(function (p) {
-      if (p === '...') {
-        var dots = createPageBtn(null, '...', false, true);
-        paginationBox.appendChild(dots);
-      } else {
-        paginationBox.appendChild(createPageBtn(p, String(p), p === currentPage, false));
-      }
-    });
-
-    // Nút Trang sau
-    var next = createPageBtn(currentPage + 1, 'Sau »', false, currentPage === totalPages);
-    paginationBox.appendChild(next);
+    if (!paginationBox || !window.PcPagination) return;
+    window.PcPagination.render(paginationBox, totalPages, currentPage, goToPage);
+    var wrap = paginationBox.closest('[data-brand-pagination-wrap]');
+    if (wrap) wrap.hidden = totalPages <= 1;
   }
 
   function goToPage(page) {

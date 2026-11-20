@@ -85,12 +85,8 @@
         {%- endif -%}
       </div>
 
-      {%- comment -%} Phân trang đồng bộ giao diện toàn site (UI-0, min 44x44, chevron SVG) {%- endcomment -%}
-      <nav id="svcs-pagination" class="mt-10 font-sans" aria-label="Phân trang dịch vụ" {% if total_svcs <= 12 %}style="display: none;"{% endif %}>
-        <ul class="m-0 flex list-none flex-wrap items-center justify-center gap-2 p-0" id="svcs-pagination-list">
-          <!-- JS rendered pagination buttons -->
-        </ul>
-      </nav>
+      {%- comment -%} 20/11/2026: phân trang dùng chung ui_pagination (chế độ js) — bỏ markup/JS tự dựng và thuộc tính style ẩn thanh {%- endcomment -%}
+      {% include 'ui_pagination', pg_mode: 'js', pg_id: 'svcs-pagination', pg_label: 'Phân trang dịch vụ' %}
     </div>
   </section>
 </div>
@@ -125,90 +121,36 @@
     var itemsPerPage = 12;
     var container = document.getElementById('svcs-grid-container');
     var pagination = document.getElementById('svcs-pagination');
-    var paginationList = document.getElementById('svcs-pagination-list');
     var countLabel = document.getElementById('svcs-count-label');
-    if (!container || !pagination || !paginationList) return;
+    if (!container || !pagination || !window.PcPagination) return;
 
     var items = Array.prototype.slice.call(container.querySelectorAll('.svcs-item'));
     var totalItems = items.length;
-    if (totalItems <= itemsPerPage) {
-      pagination.style.display = 'none';
+    var totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+    if (totalPages <= 1) {
+      window.PcPagination.render(pagination, 1, 1);
       if (countLabel) countLabel.textContent = 'Tổng số ' + totalItems + ' liệu trình';
       return;
     }
 
-    var totalPages = Math.ceil(totalItems / itemsPerPage);
-    var currentPage = 1;
-
-    // SVG chevron icons đồng bộ với UI toàn hệ thống (ui_icon chevron-left / chevron-right)
-    var iconPrev = '<svg class="inline-block transition-transform" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
-    var iconNext = '<svg class="inline-block transition-transform" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
-
-    var clsBtn = 'flex min-h-[44px] min-w-[44px] items-center justify-center border border-solid border-line bg-white px-3 text-sm font-semibold !text-ink no-underline rounded-xl hover:border-primary transition-colors cursor-pointer';
-    var clsActive = 'flex min-h-[44px] min-w-[44px] items-center justify-center border border-solid border-primary bg-primary px-3 text-sm font-semibold text-white !text-white rounded-xl cursor-default shadow-sm';
-    var clsDisabled = 'flex min-h-[44px] min-w-[44px] cursor-not-allowed items-center justify-center border border-solid border-line bg-white px-3 text-sm font-semibold text-ink-secondary opacity-40 rounded-xl';
-
-    function renderPage(page) {
-      currentPage = page;
+    /* 20/11/2026: thanh phân trang vẽ bằng PcPagination (ui_pagination chế độ js) — giao diện chung toàn site. */
+    function renderPage(page, scroll) {
       var start = (page - 1) * itemsPerPage;
       var end = start + itemsPerPage;
-
       items.forEach(function(item, idx) {
-        if (idx >= start && idx < end) {
-          item.style.display = 'flex';
-        } else {
-          item.style.display = 'none';
-        }
+        item.style.display = (idx >= start && idx < end) ? 'flex' : 'none';
       });
-
       if (countLabel) {
         countLabel.textContent = 'Hiển thị ' + (start + 1) + ' - ' + Math.min(end, totalItems) + ' / ' + totalItems + ' liệu trình';
       }
-
-      // Build pagination UI chuẩn theo design token và template paginate-pages.bwt
-      var html = '';
-
-      // Nút Trước
-      if (currentPage > 1) {
-        html += '<li class="page-item"><button type="button" class="' + clsBtn + '" data-p="' + (currentPage - 1) + '" aria-label="Trang trước">' + iconPrev + '</button></li>';
-      } else {
-        html += '<li class="page-item disabled"><span class="' + clsDisabled + '" aria-hidden="true">' + iconPrev + '</span></li>';
+      window.PcPagination.render(pagination, totalPages, page, function (p) { renderPage(p, true); });
+      if (scroll) {
+        var anchor = document.getElementById('danh-sach-dich-vu');
+        if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-
-      // Các trang số
-      for (var p = 1; p <= totalPages; p++) {
-        if (p === currentPage) {
-          html += '<li class="active page-item disabled"><span class="' + clsActive + '" aria-current="page">' + p + '</span></li>';
-        } else {
-          html += '<li class="page-item"><button type="button" class="' + clsBtn + '" data-p="' + p + '">' + p + '</button></li>';
-        }
-      }
-
-      // Nút Sau
-      if (currentPage < totalPages) {
-        html += '<li class="page-item"><button type="button" class="' + clsBtn + '" data-p="' + (currentPage + 1) + '" aria-label="Trang sau">' + iconNext + '</button></li>';
-      } else {
-        html += '<li class="page-item disabled"><span class="' + clsDisabled + '" aria-hidden="true">' + iconNext + '</span></li>';
-      }
-
-      paginationList.innerHTML = html;
-      pagination.style.display = 'block';
-
-      // Bind click
-      var btns = paginationList.querySelectorAll('button[data-p]');
-      btns.forEach(function(btn) {
-        btn.addEventListener('click', function() {
-          var targetPage = parseInt(btn.getAttribute('data-p'), 10);
-          renderPage(targetPage);
-          var anchor = document.getElementById('danh-sach-dich-vu');
-          if (anchor) {
-            anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        });
-      });
     }
 
-    renderPage(1);
+    renderPage(1, false);
   }
 
   if (document.readyState === 'loading') {
