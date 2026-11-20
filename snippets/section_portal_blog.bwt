@@ -12,7 +12,7 @@
       <p class="m-0 text-xs font-bold uppercase tracking-wider text-primary">
         III · {{ settings.portal_chapter_3 | default: 'Đồng hành' | escape }}
       </p>
-      <span class="max-lg:hidden lg:block h-px flex-1 bg-line-soft" aria-hidden="true"></span>
+      <span class="max-md:hidden md:block h-px flex-1 bg-line-soft" aria-hidden="true"></span>
     </div>
     {%- comment -%} M-11 (17/11/2026): đầu section = ui_section_head (link "Xem tất cả" = nút tròn icon ở mobile). {%- endcomment -%}
     {%- assign pb_title_t = settings.portal_blog_title | default: 'Blog Pharma Cosmetics' | escape -%}
@@ -20,17 +20,18 @@
     {%- assign pb_more_t = settings.portal_blog_viewall_text | default: 'Xem tất cả bài viết' | escape -%}
     {%- include 'ui_section_head', title: pb_title_t, title_id: 'portal-blog-title', eyebrow: pb_eyebrow_t, url: portal_blog.url, more_text: pb_more_t, label: pb_more_t, wrap_class: 'mb-4 lg:mb-6' -%}
     {%- if portal_blog.articles.size > 0 -%}
-    {%- comment -%} M-21: mobile = danh sách NGANG (pc_article_card biến thể row: ảnh trái / chữ phải); desktop giữ lưới 3 bài như cũ. {%- endcomment -%}
+    {%- comment -%} M-21: mobile = danh sách NGANG (pc_article_card biến thể row: ảnh trái / chữ phải); desktop giữ lưới 3 bài như cũ.
+      20/11/2026 (chủ dự án): lưới PC từ 768px (md) thay vì 1024px — màn tablet/laptop hẹp vẫn thấy giao diện PC; < 768px giữ danh sách mobile. {%- endcomment -%}
     {%- assign pb_feat_t = settings.portal_blog_featured_label | default: 'Bài nổi bật' -%}
-    <div class="lg:hidden">
+    <div class="md:hidden">
       {%- for article in portal_blog.articles limit: 3 -%}
         {%- if forloop.first -%}{%- assign pc_card_badge = pb_feat_t -%}{%- else -%}{%- assign pc_card_badge = '' -%}{%- endif -%}
         {%- include 'pc_article_card', article: article, pc_card_row: true, pc_card_badge: pc_card_badge -%}
       {%- endfor -%}
     </div>
-    <div class="max-lg:hidden lg:grid lg:grid-cols-4 lg:gap-6">
+    <div class="max-md:hidden md:grid md:grid-cols-4 md:gap-4 lg:gap-6">
       {%- for article in portal_blog.articles limit: 3 -%}
-      <a class="group flex flex-col no-underline{% if forloop.first %} lg:col-span-2{% endif %}" href="{{ article.url }}">
+      <a class="group flex flex-col no-underline{% if forloop.first %} md:col-span-2{% endif %}" href="{{ article.url }}">
         <span class="relative block h-56 overflow-hidden rounded-2xl bg-surface-soft">
           <img class="block h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" src="{% if article.image.src != blank %}{{ article.image.src | img_url: 'large' }}{% else %}{% include 'placeholder_img_url' %}{% endif %}" alt="{{ article.title | escape }}" width="{% if forloop.first %}1232{% else %}616{% endif %}" height="440" loading="lazy">
         </span>

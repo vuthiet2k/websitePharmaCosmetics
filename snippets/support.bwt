@@ -40,7 +40,8 @@
 			{%- if settings.contact_skinscan_enable -%}
 			<div class="item skinscan">
 				<a href="{{ settings.contact_skinscan_url | default: '/kham-da-ai?tab=camera' | escape }}">
-					<span class="img"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'camera', size: 'em' %}</i></span>
+					{%- comment -%} 20/11/2026: icon trắng trên nền trắng (thiếu nền như phone/zalo/mess) ⇒ nền màu chính. {%- endcomment -%}
+					<span class="img !bg-primary text-white"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'camera', size: 'em' %}</i></span>
 					<div class="detail">
 						<b class="arcu-item-title">{{ settings.contact_skinscan_title | default: 'Soi da AI' }}</b>
 						<span class="arcu-item-subtitle">{{ settings.contact_skinscan_sub | default: 'Phân tích da miễn phí' }}</span>
@@ -104,9 +105,18 @@
 	{%- assign pc_mascot = false -%}
 	{%- if settings.support_mascot_enable -%}{%- assign pc_mascot = true -%}{%- endif -%}
 	<div class="pc-chat-btn-wrapper" id="toggle-widget-btn" role="button" aria-label="Chat hỗ trợ">
-		<span class="pc-chat-pill" aria-hidden="true">
-			<span class="pc-chat-pill-text-desktop">Chat hỗ trợ</span>
-			<span class="pc-chat-pill-text-mobile">Hỗ trợ</span>
+		{%- comment -%} 20/11/2026 (chủ dự án): nhãn bật ra như tin nhắn đến — nảy ra từ robot (animate-chat-pop), 3 chấm đang gõ rồi hiện chữ.
+		  Trạng thái do JS đặt ở data-state (typing | text); class Tailwind theo group-data — không CSS riêng. {%- endcomment -%}
+		<span class="pc-chat-pill group" aria-hidden="true" data-chat-pill data-state="text">
+			<span class="[display:none] items-center gap-1 py-[5px] group-data-[state=typing]:inline-flex" data-chat-typing>
+				<i class="block h-[6px] w-[6px] rounded-full bg-white animate-typing"></i>
+				<i class="block h-[6px] w-[6px] rounded-full bg-white animate-typing [animation-delay:0.15s]"></i>
+				<i class="block h-[6px] w-[6px] rounded-full bg-white animate-typing [animation-delay:0.3s]"></i>
+			</span>
+			<span class="group-data-[state=typing]:[display:none]">
+				<span class="pc-chat-pill-text-desktop">Chat hỗ trợ</span>
+				<span class="pc-chat-pill-text-mobile">Hỗ trợ</span>
+			</span>
 		</span>
 		<div class="out-circle{% if pc_mascot %} has-mascot{% endif %}">
 		<div class="pregan"></div>
@@ -195,9 +205,107 @@
 			if (e.target.closest('[data-contact-show]')) { e.preventDefault(); setHidden(false); }
 		});
 	})();
-	// 18/11/2026: Nút chat cố định ở giữa mép phải (top: 50%, right: 16px, translateY(-50%))
+	// 20/11/2026 (chủ dự án: "icon không kéo được, AI tự ý bỏ chức năng"): khôi phục kéo robot (bản 09/11, bị gỡ ở f3a4f25 18/11).
+	// Mặc định vẫn giữa mép phải; kéo lên/xuống/sang ngang, thả ra tự hít về mép trái/phải gần nhất. Pointer Events (chuột + chạm);
+	// di chuyển < 8px ⇒ vẫn là bấm (mở bảng); đã kéo ⇒ chặn cú click ngay sau. Giữ trong màn: dưới đáy header, trên thanh đáy mobile.
+	// Vị trí nhớ ở localStorage (khoá mới — vị trí cũ theo mốc đáy trang không còn đúng); bị chặn ⇒ về chỗ gốc, không lỗi.
 	(function(){
+		var widget = document.querySelector('.main-widget');
+		var handle = widget && widget.querySelector('#toggle-widget-btn');
+		if (!widget || !handle || !window.PointerEvent) return;
 		try { localStorage.removeItem('pc_contact_widget_pos'); } catch(e){}
+		var POS_KEY = 'pc_contact_widget_pos2', TH = 8, EDGE = 8;
+		var offY = 0, start = null, dragging = false, suppressClick = false;
+		function apply(x){
+			widget.style.setProperty('--pc-drag-x', (x || 0) + 'px');
+			widget.style.setProperty('--pc-drag-y', offY + 'px');
+		}
+		function bounds(){
+			var hd = document.querySelector('header.header');
+			var top = Math.max(EDGE, (hd ? Math.min(hd.getBoundingClientRect().bottom, window.innerHeight / 3) : 0) + EDGE);
+			var nav = document.querySelector('.pc-bottom-nav, .mobile-bottom-nav, [data-bottom-nav]');
+			var navH = nav && nav.offsetParent ? nav.getBoundingClientRect().height : 0;
+			return { top: top, bottom: window.innerHeight - navH - EDGE };
+		}
+		function clampY(y){
+			var r = widget.getBoundingClientRect();
+			if (!r.height) return y;
+			var baseTop = r.top - offY, b = bounds();
+			return Math.min(b.bottom - r.height - baseTop, Math.max(b.top - baseTop, y));
+		}
+		function save(){
+			try { localStorage.setItem(POS_KEY, JSON.stringify({ left: widget.classList.contains('pc-widget--left'), y: offY })); } catch(e){}
+		}
+		try {
+			var saved = JSON.parse(localStorage.getItem(POS_KEY) || 'null');
+			if (saved) { widget.classList.toggle('pc-widget--left', !!saved.left); offY = Number(saved.y) || 0; apply(0); offY = clampY(offY); apply(0); }
+		} catch(e){}
+		handle.addEventListener('pointerdown', function(e){
+			if (e.button !== 0 || widget.classList.contains('widget-opened')) return;
+			if (e.target.closest && e.target.closest('.pc-widget-dismiss')) return;
+			if (e.pointerType === 'mouse') e.preventDefault(); // chặn kéo-ảnh/bôi đen mặc định; click vẫn chạy
+			start = { x: e.clientX, y: e.clientY, offY: offY, id: e.pointerId };
+			dragging = false;
+		});
+		window.addEventListener('pointermove', function(e){
+			if (!start || e.pointerId !== start.id) return;
+			var dx = e.clientX - start.x, dy = e.clientY - start.y;
+			if (!dragging) {
+				if (Math.abs(dx) < TH && Math.abs(dy) < TH) return;
+				dragging = true;
+				widget.classList.add('is-dragging');
+			}
+			offY = clampY(start.offY + dy);
+			apply(dx);
+		});
+		function end(e){
+			if (!start || (e && e.pointerId !== start.id)) return;
+			if (dragging) {
+				var r = widget.getBoundingClientRect();
+				widget.classList.toggle('pc-widget--left', r.left + r.width / 2 < window.innerWidth / 2);
+				widget.classList.remove('is-dragging');
+				apply(0);
+				offY = clampY(offY); apply(0);
+				save();
+				suppressClick = true;
+				setTimeout(function(){ suppressClick = false; }, 400);
+			}
+			start = null; dragging = false;
+		}
+		window.addEventListener('pointerup', end);
+		window.addEventListener('pointercancel', end);
+		// chạy trước bộ bật/tắt bảng (document) ⇒ thả tay sau khi kéo không mở bảng liên hệ
+		window.addEventListener('click', function(e){
+			if (suppressClick && handle.contains(e.target)) { e.stopPropagation(); e.preventDefault(); suppressClick = false; }
+		}, true);
+		window.addEventListener('resize', function(){ offY = clampY(offY); apply(0); });
+		// Bảng liên hệ mở PHÍA TRÊN robot như ô chat; không đủ chỗ phía trên (robot kéo lên cao) ⇒ lật xuống dưới.
+		// Đăng ký SAU bộ bật/tắt bảng ⇒ chạy khi class widget-opened đã đổi. offsetHeight không tính transform hiệu ứng.
+		document.addEventListener('click', function(){
+			var panel = widget.querySelector('.def-content');
+			widget.classList.remove('pc-widget--below');
+			if (!panel || !widget.classList.contains('widget-opened')) return;
+			var r = widget.getBoundingClientRect();
+			if (r.top - 14 - panel.offsetHeight < EDGE) widget.classList.add('pc-widget--below');
+		});
+	})();
+
+	// 20/11/2026: nhãn "Chat hỗ trợ" bật ra như tin nhắn đến — 3 chấm đang gõ ~1,3s rồi hiện chữ; nhắc lại mỗi 15s
+	// (dừng khi bảng đang mở / đang kéo / đã ẩn widget / người dùng chọn giảm chuyển động).
+	(function(){
+		var widget = document.querySelector('.main-widget');
+		var pill = widget && widget.querySelector('[data-chat-pill]');
+		if (!pill || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+		function play(){
+			if (widget.classList.contains('widget-opened') || widget.classList.contains('is-dragging') || widget.classList.contains('widget-hidden')) return;
+			pill.classList.remove('animate-chat-pop');
+			void pill.offsetWidth; // chạy lại animation
+			pill.setAttribute('data-state', 'typing');
+			pill.classList.add('animate-chat-pop');
+			setTimeout(function(){ pill.setAttribute('data-state', 'text'); }, 1300);
+		}
+		setTimeout(play, 1200);
+		setInterval(play, 15000);
 	})();
 	$(function(){
 		// 2. Logic Carousel Icon: Dùng Fade (mờ dần) thay vì trượt ngang bằng tọa độ (Rất mượt)
@@ -224,12 +332,17 @@
 	top: 50%;
 	right: 16px;
 	bottom: auto;
-	transform: translateY(-50%);
+	/* 20/11/2026: --pc-drag-x/--pc-drag-y do JS kéo thả đặt (mặc định 0) */
+	transform: translate(var(--pc-drag-x, 0px), calc(-50% + var(--pc-drag-y, 0px)));
 	z-index: 9991;
 	display: flex;
 	align-items: center;
 	pointer-events: auto;
 }
+.main-widget.is-dragging { transition: none; cursor: grabbing; }
+/* Thả về mép trái: robot sang trái, nhãn sang phải robot */
+.main-widget.pc-widget--left { right: auto; left: 16px; }
+.main-widget.pc-widget--left .pc-chat-btn-wrapper { flex-direction: row-reverse; }
 
 .pc-chat-btn-wrapper {
 	display: inline-flex;
@@ -239,6 +352,7 @@
 	cursor: pointer;
 	-webkit-user-select: none;
 	user-select: none;
+	touch-action: none; /* kéo robot không cuộn trang (chỉ vùng nút, bảng liên hệ vẫn cuộn được) */
 }
 
 /* Nhãn "Chat hỗ trợ": nền #1F5C45, chữ trắng, Montserrat 600, bo tròn */
@@ -335,15 +449,17 @@
 	filter: drop-shadow(0 10px 12px rgba(0, 46, 35, .38)) drop-shadow(0 3px 3px rgba(0, 0, 0, .2));
 }
 
-/* Bảng menu liên hệ: mở sang bên trái nút chat */
+/* Bảng menu liên hệ — 20/11/2026 (chủ dự án): mọi màn hình mở PHÍA TRÊN robot như ô chat (trước: laptop mở sang trái giữa màn).
+   Mép phải bảng thẳng mép phải robot; robot ở mép trái ⇒ mép trái; không đủ chỗ phía trên ⇒ .pc-widget--below lật xuống dưới. */
 .main-widget .def-content {
 	position: absolute;
-	right: calc(100% + 14px);
-	top: 50%;
-	transform: translateY(-50%) scale(0.9);
-	transform-origin: right center;
+	right: 0;
+	left: auto;
+	top: auto;
+	bottom: calc(100% + 14px);
+	transform: translateY(20px) scale(0.9);
+	transform-origin: bottom right;
 	margin: 0;
-	bottom: auto;
 	visibility: hidden;
 	opacity: 0;
 	transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1.2);
@@ -352,20 +468,25 @@
 .main-widget.widget-opened .def-content {
 	visibility: visible;
 	opacity: 1;
-	transform: translateY(-50%) scale(1);
+	transform: translateY(0) scale(1);
 	pointer-events: auto;
 }
 .main-widget .def-content::before {
 	content: "";
 	position: absolute;
-	top: 50%;
-	right: -8px;
-	transform: translateY(-50%);
-	border-width: 8px 0 8px 8px;
+	top: auto;
+	bottom: -8px;
+	right: 24px;
+	border-width: 8px 8px 0 8px;
 	border-style: solid;
-	border-color: transparent transparent transparent var(--white);
+	border-color: var(--white) transparent transparent transparent;
 	display: block;
 }
+.main-widget.pc-widget--left .def-content { right: auto; left: 0; transform-origin: bottom left; }
+.main-widget.pc-widget--left .def-content::before { right: auto; left: 24px; }
+.main-widget.pc-widget--below .def-content { bottom: auto; top: calc(100% + 14px); transform: translateY(-20px) scale(0.9); transform-origin: top right; }
+.main-widget.pc-widget--below.widget-opened .def-content { transform: translateY(0) scale(1); }
+.main-widget.pc-widget--below .def-content::before { bottom: auto; top: -8px; border-width: 0 8px 8px 8px; border-color: transparent transparent var(--white) transparent; }
 
 /* Nút đóng bảng bên trong def-header */
 .main-widget .def-header .close-widget-btn::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; }
@@ -378,9 +499,10 @@
 		top: 50%;
 		right: 12px;
 		bottom: auto;
-		transform: translateY(-50%) scale(0.85);
+		transform: translate(var(--pc-drag-x, 0px), calc(-50% + var(--pc-drag-y, 0px))) scale(0.85);
 		transform-origin: right center;
 	}
+	.main-widget.pc-widget--left { right: auto; left: 12px; transform-origin: left center; }
 	.pc-chat-pill {
 		padding: 6px 12px;
 		font-size: var(--fs-xs);
