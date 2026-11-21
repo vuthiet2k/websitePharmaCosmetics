@@ -6,7 +6,7 @@
 {%- endcomment -%}
 <div class="container pc-recommend-wrap">
   {%- comment -%} Primary Engine: Sapo Recommend App Box {%- endcomment -%}
-  <div class="product-recommend-module-box" style="display: none;">
+  <div class="product-recommend-module-box hidden">
     <link href="https://productsrecommend.sapoapps.vn/Content/styles/css/frontend/module-style.css" rel="stylesheet" />
     <div class="product-recommend-module-title"></div>
     <div id="owl-product-recommend" class=""></div>
@@ -70,7 +70,7 @@
       function activateFallback() {
         if (isResolved) return;
         isResolved = true;
-        if (primaryBox) primaryBox.style.display = 'none';
+        if (primaryBox) primaryBox.classList.add('hidden');
         if (!fallbackQuery || !fallbackSection || !fallbackGrid) return;
 
         function fetchAndRender(queryStr, onEmpty) {
@@ -149,7 +149,7 @@
         var observer = new MutationObserver(function() {
           var owl = primaryBox.querySelector('#owl-product-recommend');
           var items = owl ? owl.querySelectorAll('.item, .product-recommend-item, li') : null;
-          if (items && items.length > 0 && primaryBox.style.display !== 'none') {
+          if (items && items.length > 0 && window.getComputedStyle(primaryBox).display !== 'none') {
             isResolved = true;
             clearTimeout(checkTimer);
             observer.disconnect();
