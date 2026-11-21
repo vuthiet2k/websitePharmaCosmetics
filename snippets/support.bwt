@@ -49,6 +49,18 @@
 				</a>
 			</div>
 			{%- endif -%}
+				{%- comment -%} 21/11/2026: mục Chat AI — mở khung chat tra cứu (snippets/ai_chat.bwt). Chỉ hiện khi bật và đã có địa chỉ API. {%- endcomment -%}
+				{%- if settings.ai_chat_enable and settings.ai_chat_api_url != blank -%}
+				<div class="item aichat">
+					<a href="#" data-ai-chat-open role="button">
+						<span class="img !bg-primary text-white"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'comment-dots', size: 'em' %}</i></span>
+						<div class="detail">
+							<b class="arcu-item-title">{{ settings.ai_chat_title | default: 'Trợ lý AI Pharma Cosmetics' | escape }}</b>
+							<span class="arcu-item-subtitle">{{ settings.ai_chat_sub | default: 'Tra cứu sản phẩm, bài viết, giờ mở cửa' | escape }}</span>
+						</div>
+					</a>
+				</div>
+				{%- endif -%}
 			{%if settings.contact_messenger_enable%}
 			<div class="item mess">
 				<a target="_blank" href="https://m.me/{{ settings.contact_messenger | remove: 'https://www.facebook.com/' | remove: '/' | split: '?' | first }}">
@@ -157,6 +169,8 @@
 	</div>
 	</div>
 </div>
+
+{% include 'ai_chat' %}
 
 <div id="pc-chat-drop-zone" class="fixed bottom-6 max-[991px]:bottom-20 left-1/2 -translate-x-1/2 z-[9990] flex flex-col items-center justify-center gap-1.5 pointer-events-none opacity-0 scale-75 transition-all duration-200 select-none motion-safe:transition-all" aria-hidden="true">
 	<div class="pc-chat-drop-target w-14 h-14 min-w-[44px] min-h-[44px] rounded-full bg-slate-900/80 text-white flex items-center justify-center border-2 border-white/40 transition-transform duration-150">

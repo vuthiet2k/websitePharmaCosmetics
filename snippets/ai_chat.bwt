@@ -1,0 +1,169 @@
+{%- comment -%}
+  21/11/2026: khung chat AI tra cứu (nối API Cloudflare Workers — PHARMA COSMETIC AI/cloudflare).
+  Bật/tắt + địa chỉ API + chữ hiển thị: Cấu hình theme › Liên hệ › «Chat AI tư vấn». Không có địa chỉ API ⇒ không vẽ gì.
+  Mở từ mục «Chat AI» trong bảng liên hệ (snippets/support.bwt, nút có data-ai-chat-open).
+  Markup 100% Tailwind (UI-0; ẩn bằng [display:none], không dùng class hidden vì CSS legacy ép class đó thắng mọi data-variant); JS dựng DOM bằng createElement/textContent (không innerHTML) nên nội dung từ API không chèn được HTML.
+  Chỉ gửi câu hỏi + vài tin gần nhất; API che SĐT/email/CMND và không ghi log. Gợi ý chỉ mang tính tham khảo, không thay tư vấn của Chuyên gia.
+{%- endcomment -%}
+{%- assign pc_ai_url = settings.ai_chat_api_url | strip -%}
+{%- if settings.ai_chat_enable and pc_ai_url != blank -%}
+<section id="pc-ai-chat" class="fixed bottom-24 right-4 z-[9992] [display:none] h-[min(560px,calc(100dvh-8rem))] w-[380px] flex-col overflow-hidden rounded-2xl border border-line bg-white data-[open=true]:flex max-md:inset-x-3 max-md:bottom-20 max-md:w-auto" role="dialog" aria-label="{{ settings.ai_chat_title | default: 'Trợ lý AI Pharma Cosmetics' | escape }}" aria-hidden="true">
+	<div class="flex items-center gap-3 bg-primary px-4 py-3 text-white">
+		<span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'comment-dots', size: 20 %}</i></span>
+		<div class="min-w-0 flex-1">
+			<p class="truncate text-sm font-bold">{{ settings.ai_chat_title | default: 'Trợ lý AI Pharma Cosmetics' | escape }}</p>
+			<p class="truncate text-xs opacity-90">{{ settings.ai_chat_sub | default: 'Tra cứu sản phẩm, bài viết, giờ mở cửa' | escape }}</p>
+		</div>
+		<button type="button" class="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border-0 bg-transparent p-0 text-white" data-ai-chat-close aria-label="Đóng khung chat"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'x', size: 20 %}</i></button>
+	</div>
+
+	<div class="flex flex-1 flex-col gap-2 overflow-y-auto bg-surface-soft p-3" data-ai-chat-log role="log" aria-live="polite">
+		<div class="max-w-[88%] self-start whitespace-pre-line break-words rounded-2xl border border-line bg-white px-3 py-2 text-sm text-ink">{{ settings.ai_chat_welcome | default: 'Dạ em có thể giúp bạn tra cứu sản phẩm, bài viết hoặc thông tin cửa hàng. Bạn muốn tìm gì ạ?' | escape }}</div>
+	</div>
+
+	<form class="flex items-center gap-2 border-t border-line bg-white p-2" data-ai-chat-form autocomplete="off">
+		<label class="sr-only" for="pc-ai-chat-input">Câu hỏi của bạn</label>
+		<input id="pc-ai-chat-input" type="text" maxlength="500" class="min-h-[44px] min-w-0 flex-1 rounded-full border border-line-control bg-white px-4 text-base text-ink" placeholder="{{ settings.ai_chat_placeholder | default: 'Nhập câu hỏi của bạn…' | escape }}" data-ai-chat-input>
+		<button type="submit" class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full bg-btn text-btn-text disabled:opacity-50" data-ai-chat-send aria-label="Gửi câu hỏi"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'send', size: 20 %}</i></button>
+	</form>
+	<p class="bg-white px-3 pb-2 text-center text-xs text-ink-muted">{{ settings.ai_chat_note | default: 'Gợi ý tự động, chỉ mang tính tham khảo — không thay thế tư vấn trực tiếp từ Chuyên gia.' | escape }}</p>
+</section>
+
+<script>
+(function(){
+	var root = document.getElementById('pc-ai-chat');
+	if (!root) return;
+	var API = {{ pc_ai_url | json }};
+	// Chỉ gọi qua HTTPS (hoặc http://localhost khi dev) — chặn cấu hình nhầm giao thức khác.
+	if (!/^https:\/\//i.test(API) && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//i.test(API)) return;
+	var ENDPOINT = API.replace(/\/+$/, '') + '/api/v1/chat';
+	var log = root.querySelector('[data-ai-chat-log]');
+	var form = root.querySelector('[data-ai-chat-form]');
+	var input = root.querySelector('[data-ai-chat-input]');
+	var sendBtn = root.querySelector('[data-ai-chat-send]');
+	var history = []; // {role, content} — gửi tối đa 6 tin gần nhất
+	var busy = false;
+	var BOT = 'max-w-[88%] self-start break-words rounded-2xl border border-line bg-white px-3 py-2 text-sm text-ink';
+	var USER = 'max-w-[88%] self-end whitespace-pre-line break-words rounded-2xl bg-primary px-3 py-2 text-sm text-white';
+	var LINK = 'font-semibold text-primary underline';
+
+	function setOpen(open){
+		if (open) { root.setAttribute('data-open', 'true'); } else { root.removeAttribute('data-open'); }
+		root.setAttribute('aria-hidden', open ? 'false' : 'true');
+		if (open) {
+			var w = document.querySelector('.main-widget');
+			if (w) w.classList.remove('widget-opened'); // đóng bảng liên hệ khi mở chat
+			setTimeout(function(){ input.focus(); }, 50);
+		}
+	}
+	document.addEventListener('click', function(e){
+		if (!e.target.closest) return;
+		if (e.target.closest('[data-ai-chat-open]')) { e.preventDefault(); setOpen(true); }
+		else if (e.target.closest('[data-ai-chat-close]')) { e.preventDefault(); setOpen(false); }
+	});
+	document.addEventListener('keydown', function(e){
+		if (e.key === 'Escape' && root.hasAttribute('data-open')) setOpen(false);
+	});
+
+	function scrollEnd(){ log.scrollTop = log.scrollHeight; }
+	function bubble(cls){
+		var el = document.createElement('div');
+		el.className = cls;
+		log.appendChild(el);
+		return el;
+	}
+
+	// Dựng một dòng có **đậm** và [chữ](đường-dẫn) — chỉ nhận link bắt đầu bằng "/" hoặc "https://".
+	function inline(parent, text){
+		var re = /\*\*([^*]+)\*\*|\[([^\]]+)\]\(([^)\s]+)\)/g, last = 0, m;
+		while ((m = re.exec(text))) {
+			if (m.index > last) parent.appendChild(document.createTextNode(text.slice(last, m.index)));
+			if (m[1] !== undefined) {
+				var b = document.createElement('strong');
+				b.textContent = m[1];
+				parent.appendChild(b);
+			} else if (/^(\/(?!\/)|https:\/\/)/i.test(m[3])) {
+				var a = document.createElement('a');
+				a.className = LINK;
+				a.href = m[3];
+				a.textContent = m[2];
+				parent.appendChild(a);
+			} else {
+				parent.appendChild(document.createTextNode(m[2]));
+			}
+			last = re.lastIndex;
+		}
+		if (last < text.length) parent.appendChild(document.createTextNode(text.slice(last)));
+	}
+	function renderReply(el, text){
+		String(text || '').split('\n').forEach(function(line){
+			if (!line.trim()) return;
+			var row = document.createElement('div');
+			var bullet = /^\s*-\s+/.test(line);
+			row.className = bullet ? 'mt-1 pl-3' : 'mt-1 first:mt-0';
+			if (bullet) row.appendChild(document.createTextNode('• '));
+			inline(row, line.replace(/^\s*-\s+/, ''));
+			el.appendChild(row);
+		});
+	}
+
+	function typing(){
+		var el = bubble(BOT + ' flex items-center gap-1');
+		el.setAttribute('aria-label', 'Đang trả lời');
+		for (var i = 0; i < 3; i++) {
+			var d = document.createElement('i');
+			d.className = 'block h-[6px] w-[6px] rounded-full bg-primary animate-typing' + (i ? ' [animation-delay:' + (i * 0.15) + 's]' : '');
+			el.appendChild(d);
+		}
+		scrollEnd();
+		return el;
+	}
+
+	function ask(text){
+		busy = true;
+		sendBtn.disabled = true;
+		bubble(USER).textContent = text;
+		history.push({ role: 'user', content: text });
+		var wait = typing();
+		var payload = { messages: history.slice(-6) };
+		// Tin đầu của lịch sử gửi lên phải hợp lệ với API (user/assistant); API chỉ cần tin cuối là của khách.
+		fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+			.then(function(res){
+				return res.json().catch(function(){ return {}; }).then(function(data){ return { ok: res.ok, status: res.status, data: data }; });
+			})
+			.then(function(r){
+				wait.remove();
+				var el = bubble(BOT);
+				if (r.ok && r.data && r.data.reply) {
+					renderReply(el, r.data.reply);
+					history.push({ role: 'assistant', content: String(r.data.reply).slice(0, 2000) });
+				} else {
+					el.textContent = r.status === 429
+						? 'Bạn gửi hơi nhanh, vui lòng đợi ít phút rồi hỏi lại nhé ạ.'
+						: ((r.data && typeof r.data.detail === 'string' && r.data.detail) || 'Hệ thống đang bận, bạn thử lại sau hoặc liên hệ hotline giúp em nhé ạ.');
+					history.pop(); // câu hỏi lỗi không đưa vào ngữ cảnh
+				}
+			})
+			.catch(function(){
+				wait.remove();
+				bubble(BOT).textContent = 'Em chưa kết nối được. Bạn kiểm tra mạng hoặc liên hệ hotline giúp em nhé ạ.';
+				history.pop();
+			})
+			.then(function(){
+				busy = false;
+				sendBtn.disabled = false;
+				scrollEnd();
+				input.focus();
+			});
+	}
+
+	form.addEventListener('submit', function(e){
+		e.preventDefault();
+		var text = input.value.trim();
+		if (!text || busy) return;
+		input.value = '';
+		ask(text);
+	});
+})();
+</script>
+{%- endif -%}
