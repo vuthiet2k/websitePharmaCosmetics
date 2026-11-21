@@ -1,0 +1,478 @@
+{% layout 'chat' %}
+{%- comment -%}
+  21/11/2026 (chủ dự án): TRANG CHAT TOÀN NĂNG — layout riêng 'chat' (không header/footer), chỉ để NHÚNG IFRAME vào bất kỳ trang nào.
+  Một khung chat làm được 4 việc:
+   1) Chat AI tra cứu sản phẩm / bài viết / giờ mở cửa (POST {API}/api/v1/chat — Cloudflare Worker, xem PHARMA COSMETIC AI/cloudflare);
+   2) Gửi ảnh (nút +, tối đa 3: chính diện → má trái → má phải) ⇒ bộ phân tích da CHẠY NGAY TRÊN MÁY KHÁCH (assets/skin-*.js: kiểm sáng,
+      kiểm khuôn mặt, đo mụn / sắc tố / nếp nhăn / đỏ da / lỗ chân lông, ONNX nếu cửa hàng cấu hình) và trả kết quả NGAY TRONG chat;
+   3) Bật camera soi da ngay trong khung chat (cần iframe có allow="camera" — snippets/ai_chat.bwt đã đặt);
+   4) Lối vào quiz làm test da (mở ở trang chủ chứa iframe).
+  Ảnh KHÔNG gửi lên máy chủ nào: chỉ nằm trong bộ nhớ trình duyệt, đóng trang là mất. API chat chỉ nhận chữ khách gõ.
+  Kết quả là phép đo ảnh thử nghiệm / gợi ý tham khảo — không thay thế tư vấn trực tiếp từ Chuyên gia (hiện kèm trong thẻ kết quả).
+  Trên Sapo: tạo trang (Website › Trang nội dung) tên «Chat AI», đường dẫn chat-ai, giao diện page.chat. Địa chỉ trang khai ở
+  Cấu hình theme › Liên hệ › Chat AI tư vấn › «Đường dẫn trang chat». Markup 100% Tailwind (UI-0); ẩn/hiện bằng [display:none] + data-[show=true]
+  (không dùng class hidden vì CSS legacy ép class đó thắng mọi variant).
+{%- endcomment -%}
+{%- assign pc_api = settings.ai_chat_api_url | strip -%}
+{%- assign pc_skin_base = settings.ai_chat_skin_url | default: '/kham-da-ai' | split: '?' | first -%}
+{%- assign pc_title = settings.ai_chat_title | default: 'Chatbot Pharma Cosmetics' -%}
+
+<script src="{{ 'skin-liqa-lighting.js' | asset_url }}" defer></script>
+<script src="{{ 'skin-liqa-mesh.js' | asset_url }}" defer></script>
+<script src="{{ 'skin-deid-roi.js' | asset_url }}" defer></script>
+<script src="{{ 'skin-cv-engine.js' | asset_url }}" defer></script>
+<script src="{{ 'skin-onnx-engine.js' | asset_url }}" defer></script>
+<script src="{{ 'skin-mst-debiasing.js' | asset_url }}" defer></script>
+<script src="{{ 'skin-scoring-engine.js' | asset_url }}" defer></script>
+<script src="{{ 'skin-routine-matcher.js' | asset_url }}" defer></script>
+
+<div id="pc-chat" class="relative flex h-[100dvh] flex-col overflow-hidden bg-white text-ink" data-api="{{ pc_api | escape }}" data-min-light="{{ settings.ai_skin_scan_min_light | default: '80' | escape }}" data-model-url="{{ settings.ai_skin_scan_onnx_model_url | default: '' | escape }}" data-model-sha="{{ settings.ai_skin_scan_onnx_model_sha256 | default: '' | escape }}" data-deid="{{ settings.ai_skin_scan_deid_enable | default: true }}">
+	<header class="flex shrink-0 items-center gap-3 bg-primary px-4 py-3 text-white">
+		<span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'comment-dots', size: 20 %}</i></span>
+		<div class="min-w-0 flex-1">
+			<h1 class="m-0 truncate text-sm font-bold">{{ pc_title | escape }}</h1>
+			<p class="m-0 truncate text-xs opacity-90">{{ settings.ai_chat_sub | default: 'Hỏi đáp · Soi da AI · Quiz' | escape }}</p>
+		</div>
+		<button type="button" class="[display:none] min-h-[44px] min-w-[44px] items-center justify-center rounded-full border-0 bg-transparent p-0 text-white data-[show=true]:flex" data-chat-close aria-label="Đóng khung chat"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'x', size: 20 %}</i></button>
+	</header>
+
+	<div class="flex flex-1 flex-col gap-2 overflow-y-auto bg-surface-soft p-3" data-chat-log role="log" aria-live="polite">
+		<p class="px-2 pb-1 text-center text-xs text-ink-muted">{{ settings.ai_chat_note | default: 'Gợi ý tự động, chỉ mang tính tham khảo — không thay thế tư vấn trực tiếp từ Chuyên gia.' | escape }}</p>
+		<div class="max-w-[88%] self-start whitespace-pre-line break-words rounded-2xl border border-line bg-white px-3 py-2 text-sm text-ink">{{ settings.ai_chat_welcome | default: 'Dạ chào bạn, em là chatbot Pharma Cosmetics ạ. Em giúp bạn tra cứu sản phẩm, bài viết, thông tin cửa hàng và hướng dẫn soi da bằng ảnh. Bạn cần em hỗ trợ gì ạ?' | escape }}</div>
+	</div>
+
+	<div class="[display:none] shrink-0 items-start gap-3 overflow-x-auto border-t border-line bg-white px-3 pb-1 pt-3 data-[show=true]:flex" data-chat-tray aria-label="Ảnh sẽ gửi để phân tích da"></div>
+
+	<form class="relative flex shrink-0 items-center gap-2 border-t border-line bg-white p-2" data-chat-form autocomplete="off">
+		<div class="[display:none] absolute bottom-full left-2 z-10 mb-2 w-[260px] max-w-[calc(100%-1rem)] flex-col overflow-hidden rounded-2xl border border-line bg-white data-[show=true]:flex" data-chat-menu role="menu">
+			<button type="button" class="flex min-h-[44px] w-full items-center gap-3 border-0 bg-transparent px-4 py-2 text-left text-sm font-semibold text-ink" role="menuitem" data-chat-pick><i class="inline-block leading-none text-primary" aria-hidden="true">{% include 'ui_icon', name: 'image', size: 20 %}</i>{{ settings.ai_chat_menu_upload | default: 'Tải ảnh tình trạng da' | escape }}</button>
+			<button type="button" class="flex min-h-[44px] w-full items-center gap-3 border-0 border-t border-line bg-transparent px-4 py-2 text-left text-sm font-semibold text-ink" role="menuitem" data-chat-camera><i class="inline-block leading-none text-primary" aria-hidden="true">{% include 'ui_icon', name: 'camera', size: 20 %}</i>{{ settings.ai_chat_menu_camera | default: 'Soi da bằng camera' | escape }}</button>
+			<a class="flex min-h-[44px] items-center gap-3 border-t border-line px-4 py-2 text-sm font-semibold text-ink no-underline" role="menuitem" target="_top" href="{{ pc_skin_base | escape }}?tab=quiz"><i class="inline-block leading-none text-primary" aria-hidden="true">{% include 'ui_icon', name: 'clipboard-list', size: 20 %}</i>{{ settings.ai_chat_menu_quiz | default: 'Làm quiz test da' | escape }}</a>
+		</div>
+		<input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple class="sr-only" data-chat-file tabindex="-1" aria-hidden="true">
+		<button type="button" class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border border-line-control bg-white p-0 text-primary" data-chat-plus aria-haspopup="true" aria-expanded="false" aria-label="{{ settings.ai_chat_menu_label | default: 'Thêm: tải ảnh da, soi da, quiz' | escape }}"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'plus', size: 20 %}</i></button>
+		<label class="sr-only" for="pc-chat-input">Câu hỏi của bạn</label>
+		<input id="pc-chat-input" type="text" maxlength="500" class="min-h-[44px] min-w-0 flex-1 rounded-full border border-line-control bg-white px-4 text-base text-ink" placeholder="{{ settings.ai_chat_placeholder | default: 'Nhập câu hỏi của bạn…' | escape }}" data-chat-input>
+		<button type="submit" class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full bg-btn text-btn-text disabled:opacity-50" data-chat-send aria-label="Gửi"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'send', size: 20 %}</i></button>
+	</form>
+
+	{%- comment -%} Camera soi da ngay trong khung chat: phủ kín khung, chụp lần lượt chính diện → má trái → má phải. {%- endcomment -%}
+	<div class="[display:none] absolute inset-0 z-30 flex-col bg-black data-[show=true]:flex" data-chat-cam role="dialog" aria-label="{{ settings.ai_chat_menu_camera | default: 'Soi da bằng camera' | escape }}">
+		<div class="relative flex-1 overflow-hidden">
+			<video class="h-full w-full object-cover data-[mirror=true]:-scale-x-100" data-chat-video playsinline muted autoplay></video>
+			<div class="pointer-events-none absolute inset-x-[16%] bottom-[16%] top-[14%] rounded-full border-2 border-white/80"></div>
+			<p class="absolute inset-x-3 top-3 m-0 rounded-2xl bg-black/60 px-3 py-2 text-center text-sm font-semibold text-white" data-chat-cam-hint></p>
+		</div>
+		<div class="flex shrink-0 items-center justify-around bg-black px-4 py-4">
+			<button type="button" class="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border-0 bg-white/20 p-0 text-white" data-chat-cam-switch aria-label="Đổi camera trước / sau"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'rotate-cw', size: 22 %}</i></button>
+			<button type="button" class="h-16 w-16 rounded-full border-4 border-white bg-primary p-0" data-chat-cam-shot aria-label="Chụp ảnh"></button>
+			<button type="button" class="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border-0 bg-white/20 p-0 text-white" data-chat-cam-close aria-label="Xong, đóng camera"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'check', size: 22 %}</i></button>
+		</div>
+	</div>
+</div>
+
+<script>
+/* Chữ báo lỗi/trạng thái của bộ soi da: dùng chung cấu hình với trang soi da (ai_skin_scan_*) để sửa một chỗ. */
+window.PC_CHAT_COPY = {
+  noFace: {{ settings.ai_skin_scan_no_face | default: 'Chưa nhận diện được khuôn mặt. Hãy căn mặt vào khung.' | json }},
+  faceAdjust: {{ settings.ai_skin_scan_face_adjust | default: 'Hãy điều chỉnh góc mặt và khoảng cách theo khung hướng dẫn.' | json }},
+  cameraFallback: {{ settings.ai_skin_scan_camera_fallback | default: 'Không thể mở camera. Bạn có thể tải ảnh từ thiết bị để tiếp tục.' | json }},
+  lightDark: {{ settings.ai_skin_scan_light_dark | default: 'Không gian quá tối, vui lòng bổ sung ánh sáng.' | json }},
+  lightBright: {{ settings.ai_skin_scan_light_bright | default: 'Ảnh quá sáng, vui lòng tránh ánh sáng gắt hoặc ngược sáng.' | json }},
+  lightLowContrast: {{ settings.ai_skin_scan_light_low_contrast | default: 'Ảnh thiếu tương phản, vui lòng tìm nơi có ánh sáng dịu và rõ hơn.' | json }},
+  lightUneven: {{ settings.ai_skin_scan_light_uneven | default: 'Ánh sáng chưa đều, vui lòng điều chỉnh trước khi chụp.' | json }},
+  analyzing: {{ settings.ai_skin_scan_analyzing | default: 'Đang phân tích tại thiết bị…' | json }},
+  methodCanvas: {{ settings.ai_skin_scan_method_canvas | default: 'Đây là phép đo ảnh thử nghiệm trên thiết bị, không phải kết quả từ mô hình AI đã thẩm định. Các điểm số và gợi ý chỉ mang tính tham khảo.' | json }},
+  methodOnnx: {{ settings.ai_skin_scan_method_onnx | default: 'Báo cáo có sử dụng model ONNX được cấu hình cho cửa hàng. Kết quả vẫn chỉ mang tính tham khảo, không thay thế đánh giá của Chuyên gia.' | json }},
+  uploadTooLarge: {{ settings.ai_skin_scan_upload_too_large | default: 'Ảnh vượt dung lượng 12 MB. Hãy chọn ảnh nhỏ hơn để tránh quá tải thiết bị.' | json }},
+  dimensionsTooLarge: {{ settings.ai_skin_scan_dimensions_too_large | default: 'Độ phân giải ảnh vượt giới hạn xử lý an toàn trên thiết bị. Hãy giảm kích thước ảnh rồi thử lại.' | json }},
+  resultTitle: {{ settings.ai_chat_result_title | default: 'Kết quả soi da tham khảo' | json }},
+  productLinkLabel: {{ settings.skin_scan_product_link_label | default: 'Xem sản phẩm tham khảo' | json }}
+};
+window.PharmaSkinScanProductLabels = {
+  'sua-rua-mat-amino-acid': {{ settings.skin_scan_product_cleanser_label | default: 'Sữa Rửa Mặt Tạo Bọt Amino Acid Dịu Nhẹ' | json }},
+  'kem-phuc-hoi-ceramide-niacinamide': {{ settings.skin_scan_product_repair_label | default: 'Kem Phục Hồi Hàng Rào Da Ceramide + Niacinamide Chuyên Sâu' | json }},
+  'serum-aha-10-bha-2': {{ settings.skin_scan_product_aha_label | default: 'Serum Tái Tạo Da AHA 10% / BHA 2% Mịn Màng & Sáng Đều' | json }},
+  'kem-chong-nang-mineral-spf50': {{ settings.skin_scan_product_sunscreen_label | default: 'Kem Chống Nắng Mineral SPF50+ PA++++ Không Nhờn' | json }},
+  'serum-vitamin-c-15': {{ settings.skin_scan_product_vitamin_c_label | default: 'Serum Vitamin C 15% Làm Sáng & Đều Màu Da' | json }},
+  'serum-tranexamic-acid-3': {{ settings.skin_scan_product_tranexamic_label | default: 'Serum Mờ Thâm Tranexamic Acid 3% & Niacinamide Đều Màu Da' | json }},
+  'kem-duong-am-hyaluronic-acid': {{ settings.skin_scan_product_hyaluronic_label | default: 'Kem Dưỡng Ẩm Hyaluronic Acid 3 Tầng Căng Mướt Suốt Ngày' | json }},
+  'kem-duong-retinol-0-3-peptide': {{ settings.skin_scan_product_retinol_03_label | default: 'Kem Dưỡng Retinol 0.3% + Peptide Chống Lão Hoá' | json }},
+  'retinol-advanced-0-5-night-serum': {{ settings.skin_scan_product_retinol_05_label | default: 'Retinol Advanced 0.5% Night Serum Chống Lão Hoá Chuyên Sâu' | json }},
+  'toner-niacinamide-5-zinc': {{ settings.skin_scan_product_niacinamide_label | default: 'Toner Niacinamide 5% + Zinc Kiểm Soát Dầu & Thu Nhỏ Lỗ Chân Lông' | json }}
+};
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  'use strict';
+  var root = document.getElementById('pc-chat');
+  if (!root) return;
+  var COPY = window.PC_CHAT_COPY || {};
+  function $(sel) { return root.querySelector(sel); }
+  var log = $('[data-chat-log]'), form = $('[data-chat-form]'), input = $('[data-chat-input]'), sendBtn = $('[data-chat-send]');
+  var plus = $('[data-chat-plus]'), menu = $('[data-chat-menu]'), tray = $('[data-chat-tray]'), fileIn = $('[data-chat-file]');
+  var cam = $('[data-chat-cam]'), video = $('[data-chat-video]'), camHint = $('[data-chat-cam-hint]');
+  var API = (root.dataset.api || '').replace(/\/+$/, '');
+  // Chỉ gọi qua HTTPS (hoặc http://localhost khi dev) — chặn cấu hình nhầm giao thức khác.
+  var apiOk = /^https:\/\//i.test(API) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/i.test(API);
+  var ENDPOINT = API + '/api/v1/chat';
+  var SLOTS = [ { key: 'front', label: 'Chính diện' }, { key: 'left', label: 'Má trái' }, { key: 'right', label: 'Má phải' } ];
+  var METRICS = [ ['acne', 'Mụn'], ['pigmentation', 'Sắc tố'], ['wrinkles', 'Nếp nhăn'], ['redness', 'Đỏ da'], ['pores', 'Lỗ chân lông'] ];
+  var MAX_EDGE = 1280, MAX_BYTES = 12 * 1024 * 1024, MAX_PIXELS = 32000000;
+  var photos = [];      // { canvas, thumb, landmarks } theo thứ tự chính diện → má trái → má phải
+  var history = [];     // tin gửi API (tối đa 6 tin gần nhất)
+  var busy = false, stream = null, facing = 'user';
+
+  var BOT = 'max-w-[88%] self-start break-words rounded-2xl border border-line bg-white px-3 py-2 text-sm text-ink';
+  var USER = 'max-w-[88%] self-end whitespace-pre-line break-words rounded-2xl bg-primary px-3 py-2 text-sm text-white';
+  var LINK = 'font-semibold text-primary underline';
+
+  function show(el, on) { if (on) el.setAttribute('data-show', 'true'); else el.removeAttribute('data-show'); }
+  function scrollEnd() { log.scrollTop = log.scrollHeight; }
+  function bubble(cls) { var el = document.createElement('div'); el.className = cls; log.appendChild(el); scrollEnd(); return el; }
+  function notice(text) {
+    var el = document.createElement('p');
+    el.className = 'm-0 px-2 text-center text-xs text-ink-muted';
+    el.textContent = text;
+    log.appendChild(el); scrollEnd();
+    return el;
+  }
+  function refreshSend() {
+    sendBtn.disabled = busy || (!input.value.trim() && !photos.length);
+    input.placeholder = photos.length ? 'Thêm câu hỏi (không bắt buộc) rồi bấm gửi…' : input.getAttribute('data-ph');
+  }
+  input.setAttribute('data-ph', input.placeholder);
+  input.addEventListener('input', refreshSend);
+
+  // ---------- Khung nhúng iframe: nút đóng báo cho trang cha ----------
+  var closeBtn = $('[data-chat-close]');
+  if (window.parent && window.parent !== window) {
+    show(closeBtn, true);
+    closeBtn.addEventListener('click', function () { window.parent.postMessage({ type: 'pc-ai-chat:close' }, '*'); });
+  }
+
+  // ---------- Dựng chữ trả lời từ API: **đậm**, [chữ](link) — chỉ nhận link bắt đầu "/" hoặc "https://" ----------
+  function inline(parent, text) {
+    var re = /\*\*([^*]+)\*\*|\[([^\]]+)\]\(([^)\s]+)\)/g, last = 0, m;
+    while ((m = re.exec(text))) {
+      if (m.index > last) parent.appendChild(document.createTextNode(text.slice(last, m.index)));
+      if (m[1] !== undefined) {
+        var b = document.createElement('strong'); b.textContent = m[1]; parent.appendChild(b);
+      } else if (/^(\/(?!\/)|https:\/\/)/i.test(m[3])) {
+        var a = document.createElement('a'); a.className = LINK; a.href = m[3]; a.target = '_top'; a.textContent = m[2]; parent.appendChild(a);
+      } else { parent.appendChild(document.createTextNode(m[2])); }
+      last = re.lastIndex;
+    }
+    if (last < text.length) parent.appendChild(document.createTextNode(text.slice(last)));
+  }
+  function renderReply(el, text) {
+    String(text || '').split('\n').forEach(function (line) {
+      if (!line.trim()) return;
+      var row = document.createElement('div'), bullet = /^\s*-\s+/.test(line);
+      row.className = bullet ? 'mt-1 pl-3' : 'mt-1 first:mt-0';
+      if (bullet) row.appendChild(document.createTextNode('• '));
+      inline(row, line.replace(/^\s*-\s+/, ''));
+      el.appendChild(row);
+    });
+  }
+  function typing(label) {
+    var el = bubble(BOT + ' flex items-center gap-2');
+    el.setAttribute('aria-label', label || 'Đang trả lời');
+    for (var i = 0; i < 3; i++) {
+      var d = document.createElement('i');
+      d.className = 'block h-[6px] w-[6px] rounded-full bg-primary animate-typing' + (i ? ' [animation-delay:' + (i * 0.15) + 's]' : '');
+      el.appendChild(d);
+    }
+    if (label) { var s = document.createElement('span'); s.className = 'text-xs text-ink-muted'; s.textContent = label; el.appendChild(s); }
+    return el;
+  }
+
+  // ---------- 1) Chat AI (chỉ gửi chữ khách gõ) ----------
+  function ask(text, withBubble) {
+    if (withBubble !== false) bubble(USER).textContent = text;
+    history.push({ role: 'user', content: text });
+    if (!apiOk) {
+      history.pop();
+      bubble(BOT).textContent = 'Chat tra cứu chưa được cấu hình địa chỉ máy chủ. Bạn vẫn có thể gửi ảnh để soi da, hoặc liên hệ hotline giúp em nhé ạ.';
+      return Promise.resolve();
+    }
+    var wait = typing();
+    return fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: history.slice(-6) }) })
+      .then(function (res) { return res.json().catch(function () { return {}; }).then(function (data) { return { ok: res.ok, status: res.status, data: data }; }); })
+      .then(function (r) {
+        wait.remove();
+        var el = bubble(BOT);
+        if (r.ok && r.data && r.data.reply) {
+          renderReply(el, r.data.reply);
+          history.push({ role: 'assistant', content: String(r.data.reply).slice(0, 2000) });
+        } else {
+          el.textContent = r.status === 429 ? 'Bạn gửi hơi nhanh, vui lòng đợi ít phút rồi hỏi lại nhé ạ.'
+            : ((r.data && typeof r.data.detail === 'string' && r.data.detail) || 'Hệ thống đang bận, bạn thử lại sau hoặc liên hệ hotline giúp em nhé ạ.');
+          history.pop();
+        }
+      })
+      .catch(function () { wait.remove(); bubble(BOT).textContent = 'Em chưa kết nối được. Bạn kiểm tra mạng hoặc liên hệ hotline giúp em nhé ạ.'; history.pop(); });
+  }
+
+  // ---------- 2) Nhận ảnh: kiểm sáng + kiểm khuôn mặt (cùng bộ kiểm của trang soi da) ----------
+  function snapshot(src) {
+    var w = src.videoWidth || src.naturalWidth || src.width, h = src.videoHeight || src.naturalHeight || src.height;
+    var s = Math.min(1, MAX_EDGE / w, MAX_EDGE / h);
+    var c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(w * s)); c.height = Math.max(1, Math.round(h * s));
+    c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+    return c;
+  }
+  function lightMsg(reason) {
+    if (reason === 'too_dark') return COPY.lightDark;
+    if (reason === 'too_bright') return COPY.lightBright;
+    if (reason === 'low_contrast') return COPY.lightLowContrast;
+    return COPY.lightUneven;
+  }
+  function thumbOf(canvas) {
+    var t = document.createElement('canvas'), s = 112 / Math.max(canvas.width, canvas.height);
+    t.width = Math.max(1, Math.round(canvas.width * s)); t.height = Math.max(1, Math.round(canvas.height * s));
+    t.getContext('2d').drawImage(canvas, 0, 0, t.width, t.height);
+    return t.toDataURL('image/jpeg', 0.7);
+  }
+  // Trả về Promise<boolean>: true = ảnh hợp lệ đã vào khay
+  function addPhoto(src) {
+    if (photos.length >= SLOTS.length) { notice('Đã đủ ' + SLOTS.length + ' ảnh. Bấm gửi để phân tích hoặc xoá bớt ảnh.'); return Promise.resolve(false); }
+    var slot = SLOTS[photos.length], frame = snapshot(src);
+    var minLight = root.dataset.minLight;
+    var light = window.PharmaSkinLighting && window.PharmaSkinLighting.analyze(frame, minLight);
+    if (light && !light.valid) { notice(slot.label + ': ' + lightMsg(light.reason)); return Promise.resolve(false); }
+    var checking = notice('Đang kiểm tra khuôn mặt (' + slot.label.toLowerCase() + ')…');
+    var check = window.PharmaSkinMesh && window.PharmaSkinMesh.detectImage ? window.PharmaSkinMesh.detectImage(frame, slot.key) : Promise.resolve({ available: false, valid: true });
+    return check.catch(function () { return { available: false, valid: true }; }).then(function (face) {
+      checking.remove();
+      if (face.available && !face.valid) {
+        notice(slot.label + ': ' + (face.reason === 'no_face' ? COPY.noFace : (face.guidance || COPY.faceAdjust)));
+        return false;
+      }
+      photos.push({ canvas: frame, thumb: thumbOf(frame), landmarks: face.landmarks || null });
+      renderTray();
+      return true;
+    });
+  }
+  function renderTray() {
+    tray.textContent = '';
+    photos.forEach(function (p, i) {
+      var cell = document.createElement('div');
+      cell.className = 'relative flex w-14 shrink-0 flex-col items-center gap-1';
+      var img = document.createElement('img');
+      img.className = 'h-14 w-14 rounded-xl border border-line object-cover'; img.width = 56; img.height = 56; img.alt = 'Ảnh ' + SLOTS[i].label.toLowerCase(); img.src = p.thumb;
+      var cap = document.createElement('span'); cap.className = 'text-center text-xs leading-tight text-ink-muted'; cap.textContent = SLOTS[i].label;
+      var del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full border-0 bg-ink p-0 text-xs font-bold text-white after:absolute after:-inset-3';
+      del.setAttribute('aria-label', 'Xoá ảnh ' + SLOTS[i].label.toLowerCase());
+      del.textContent = '×';
+      del.addEventListener('click', function () { photos.splice(i, 1); renderTray(); });
+      cell.appendChild(img); cell.appendChild(cap); cell.appendChild(del);
+      tray.appendChild(cell);
+    });
+    show(tray, photos.length > 0);
+    refreshSend();
+  }
+  function loadFile(file) {
+    return new Promise(function (resolve) {
+      if (file.size > MAX_BYTES) { notice(COPY.uploadTooLarge); resolve(false); return; }
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        if (img.naturalWidth * img.naturalHeight > MAX_PIXELS) { URL.revokeObjectURL(url); notice(COPY.dimensionsTooLarge); resolve(false); return; }
+        addPhoto(img).then(function (ok) { URL.revokeObjectURL(url); resolve(ok); });
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); notice('Không đọc được ảnh này, bạn thử ảnh khác nhé.'); resolve(false); };
+      img.src = url;
+    });
+  }
+  fileIn.addEventListener('change', function () {
+    var files = Array.prototype.slice.call(fileIn.files || [], 0, SLOTS.length - photos.length);
+    fileIn.value = '';
+    if (!files.length) { notice('Đã đủ ' + SLOTS.length + ' ảnh.'); return; }
+    var chain = Promise.resolve();
+    files.forEach(function (f) { chain = chain.then(function () { return loadFile(f); }); });
+  });
+
+  // ---------- 3) Camera ngay trong chat ----------
+  function camHintText() {
+    return photos.length >= SLOTS.length ? 'Đã đủ ảnh — bấm nút xong để quay lại chat'
+      : 'Ảnh ' + (photos.length + 1) + '/' + SLOTS.length + ': chụp ' + SLOTS[photos.length].label.toLowerCase() + ', mặt trong khung, đủ sáng';
+  }
+  function stopCamera() {
+    if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
+    video.srcObject = null;
+  }
+  function openCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { notice(COPY.cameraFallback); return; }
+    stopCamera();
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 1280 } }, audio: false })
+      .then(function (s) {
+        stream = s; video.srcObject = s;
+        if (facing === 'user') video.setAttribute('data-mirror', 'true'); else video.removeAttribute('data-mirror');
+        show(cam, true); camHint.textContent = camHintText();
+        var p = video.play(); if (p && p.catch) p.catch(function () {});
+      })
+      .catch(function () { show(cam, false); notice(COPY.cameraFallback); });
+  }
+  function closeCamera() { stopCamera(); show(cam, false); input.focus(); }
+  $('[data-chat-camera]').addEventListener('click', function () { setMenu(false); if (photos.length >= SLOTS.length) { notice('Đã đủ ' + SLOTS.length + ' ảnh. Bấm gửi để phân tích hoặc xoá bớt ảnh.'); return; } openCamera(); });
+  $('[data-chat-cam-close]').addEventListener('click', closeCamera);
+  $('[data-chat-cam-switch]').addEventListener('click', function () { facing = facing === 'user' ? 'environment' : 'user'; openCamera(); });
+  $('[data-chat-cam-shot]').addEventListener('click', function () {
+    if (!stream || !video.videoWidth || photos.length >= SLOTS.length) return;
+    var shot = $('[data-chat-cam-shot]');
+    shot.disabled = true;
+    addPhoto(video).then(function (ok) {
+      shot.disabled = false;
+      camHint.textContent = ok ? camHintText() : 'Ảnh chưa đạt — xem hướng dẫn trong chat, chỉnh rồi chụp lại';
+      if (ok && photos.length >= SLOTS.length) closeCamera();
+    });
+  });
+  window.addEventListener('pagehide', stopCamera);
+
+  // ---------- Menu + ----------
+  function setMenu(open) { show(menu, open); plus.setAttribute('aria-expanded', open ? 'true' : 'false'); }
+  plus.addEventListener('click', function (e) { e.stopPropagation(); setMenu(menu.getAttribute('data-show') !== 'true'); });
+  $('[data-chat-pick]').addEventListener('click', function () { setMenu(false); fileIn.click(); });
+  document.addEventListener('click', function (e) {
+    if (menu.getAttribute('data-show') === 'true' && !(e.target.closest && e.target.closest('[data-chat-menu]'))) setMenu(false);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (cam.getAttribute('data-show') === 'true') closeCamera();
+    else if (menu.getAttribute('data-show') === 'true') { setMenu(false); plus.focus(); }
+    else if (window.parent !== window) window.parent.postMessage({ type: 'pc-ai-chat:close' }, '*');
+  });
+
+  // ---------- 4) Phân tích da — cùng pipeline với trang soi da (assets/skin-camera.js › analyzeLocal), không động DOM ----------
+  function engineReady() {
+    var w = window;
+    return w.PharmaSkinDeid && w.PharmaSkinCV && w.PharmaSkinMst && w.PharmaSkinScoring && w.PharmaSkinRoutine;
+  }
+  function analyzePhotos(list) {
+    var angles = SLOTS.slice(0, list.length).map(function (s) { return s.key; });
+    var images = {}, marks = {}, roi = {};
+    angles.forEach(function (a, i) { images[a] = list[i].canvas; marks[a] = list[i].landmarks; roi[a] = window.PharmaSkinDeid.extractRois(images[a]); });
+    function avg(items, key) { return items.reduce(function (sum, it) { return sum + it[key]; }, 0) / Math.max(1, items.length); }
+    var redMeasures = angles.map(function (a) { return window.PharmaSkinCV.analyzeRedness(roi[a].u_zone_left); });
+    var wrinkle = window.PharmaSkinCV.analyzeWrinkles(roi.front.neck);
+    var surfMeasures = angles.map(function (a) { return window.PharmaSkinCV.analyzeSurface(roi[a].t_zone); });
+    var surface = { acne_ratio: avg(surfMeasures, 'acne_ratio'), pigment_ratio: avg(surfMeasures, 'pigment_ratio'), texture_ratio: avg(surfMeasures, 'texture_ratio') };
+    var redness = { ratio: avg(redMeasures, 'ratio') };
+    var tone = window.PharmaSkinMst.sample(images.front, marks.front);
+    var modelUrl = root.dataset.modelUrl, modelSha = root.dataset.modelSha;
+    var detections = modelUrl && window.PharmaSkinOnnx
+      ? Promise.all(angles.map(function (a) { return window.PharmaSkinOnnx.detect(roi[a].t_zone, modelUrl, modelSha); }))
+      : Promise.resolve(angles.map(function () { return []; }));
+    return detections.catch(function () { return angles.map(function () { return []; }); }).then(function (sets) {
+      var detectionCount = sets.reduce(function (n, items) { return n + (items || []).length; }, 0);
+      var counts = { acne: 0, pigmentation: 0, pores: 0 };
+      var types = { 0: 'acne', 1: 'acne', 2: 'pigmentation', 3: 'pores' };
+      angles.forEach(function (a, i) {
+        var boxes = sets[i] || [];
+        if (boxes.length > 0) {
+          boxes.forEach(function (b) { var t = types[b.classId]; if (t) counts[t]++; });
+        } else if (window.PharmaSkinCV.detectFeatures) {
+          var cv = window.PharmaSkinCV.detectFeatures(images[a], roi[a], a) || [];
+          cv.forEach(function (b) { if (counts[b.type] !== undefined) counts[b.type]++; });
+          detectionCount += cv.length;
+        }
+      });
+      var melanin = tone.available ? tone.melanin_factor : 1, erythema = tone.available ? tone.erythema_factor : 1;
+      var raw = {
+        acne: detectionCount ? Math.min(1, counts.acne / 12) : surface.acne_ratio * 7,
+        pigmentation: detectionCount ? Math.min(1, counts.pigmentation / 10) : surface.pigment_ratio * 5 / melanin,
+        wrinkles: wrinkle.density,
+        redness: redness.ratio * 4 / erythema,
+        pores: detectionCount ? Math.min(1, counts.pores / 20) : surface.texture_ratio
+      };
+      var report = window.PharmaSkinScoring.make(raw);
+      var routine = window.PharmaSkinRoutine.match(report.scores);
+      return { report: report, routine: routine, onnx: !!(modelUrl && sets.some(function (s) { return (s || []).length; })), photos: list.length };
+    });
+  }
+
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; }
+  function renderResult(res) {
+    var card = bubble('w-full max-w-[96%] self-start rounded-2xl border border-line bg-white p-3 text-sm text-ink');
+    var scores = res.report.scores, keys = Object.keys(scores);
+    var overall = Math.round(keys.reduce(function (s, k) { return s + (scores[k].ui_score || 75); }, 0) / Math.max(1, keys.length));
+    var status = overall >= 85 ? 'Rất khỏe mạnh' : overall >= 72 ? 'Khá ổn định' : 'Cần chăm sóc phục hồi';
+    card.appendChild(el('p', 'm-0 text-xs font-semibold text-ink-muted', COPY.resultTitle));
+    var head = el('div', 'mt-1 flex items-baseline gap-2');
+    head.appendChild(el('span', 'text-2xl font-bold text-primary', overall + '/100'));
+    head.appendChild(el('span', 'text-sm font-semibold', status));
+    card.appendChild(head);
+    card.appendChild(el('p', 'm-0 mt-1 text-xs text-ink-muted', 'Dựa trên ' + res.photos + ' ảnh · xử lý ngay trên thiết bị của bạn, ảnh không gửi đi đâu.'));
+    var list = el('div', 'mt-3 flex flex-col gap-2');
+    METRICS.forEach(function (m) {
+      var s = scores[m[0]]; if (!s) return;
+      var row = el('div');
+      var top = el('div', 'flex items-center justify-between gap-2');
+      top.appendChild(el('span', 'font-semibold', m[1]));
+      top.appendChild(el('span', 'text-xs text-ink-muted', s.level + ' · ' + s.ui_score));
+      var track = el('div', 'mt-1 h-2 w-full overflow-hidden rounded-full bg-surface-soft');
+      var fill = el('div', 'h-full rounded-full bg-primary');
+      fill.style.width = Math.max(4, Math.min(100, s.ui_score)) + '%';
+      track.appendChild(fill); row.appendChild(top); row.appendChild(track); list.appendChild(row);
+    });
+    card.appendChild(list);
+    var concernName = (METRICS.filter(function (m) { return m[0] === res.routine.primary_concern; })[0] || ['', ''])[1];
+    if (concernName) card.appendChild(el('p', 'm-0 mt-3 font-semibold', 'Điểm cần ưu tiên chăm sóc: ' + concernName));
+    var stages = el('ol', 'm-0 mt-1 list-decimal pl-5');
+    (res.routine.stages || []).forEach(function (t) { stages.appendChild(el('li', 'mt-1', t)); });
+    card.appendChild(stages);
+    var prods = (res.routine.products || []).filter(function (p) { return p && p.label; });
+    if (prods.length) {
+      card.appendChild(el('p', 'm-0 mt-3 font-semibold', COPY.productLinkLabel));
+      var ul = el('ul', 'm-0 mt-1 list-none p-0');
+      prods.forEach(function (p) {
+        var li = el('li', 'mt-1');
+        var a = el('a', LINK, 'Giai đoạn ' + p.stage + ': ' + p.label);
+        a.href = '/products/' + p.handle; a.target = '_top';
+        li.appendChild(a); ul.appendChild(li);
+      });
+      card.appendChild(ul);
+    }
+    card.appendChild(el('p', 'm-0 mt-3 text-xs text-ink-muted', res.onnx ? COPY.methodOnnx : COPY.methodCanvas));
+    scrollEnd();
+  }
+
+  function runScan(text) {
+    var list = photos.slice();
+    var ub = bubble(USER + ' flex flex-col gap-2');
+    var grid = el('div', 'flex gap-2');
+    list.forEach(function (p, i) {
+      var im = el('img', 'h-16 w-16 rounded-xl object-cover'); im.width = 64; im.height = 64; im.alt = 'Ảnh ' + SLOTS[i].label.toLowerCase(); im.src = p.thumb; grid.appendChild(im);
+    });
+    ub.appendChild(grid);
+    if (text) ub.appendChild(el('span', '', text));
+    photos = []; renderTray();
+    if (!engineReady()) {
+      bubble(BOT).textContent = 'Bộ phân tích da chưa tải xong, bạn đợi vài giây rồi gửi lại ảnh giúp em nhé ạ.';
+      return Promise.resolve();
+    }
+    var wait = typing(COPY.analyzing);
+    // dừng ~1,2s để khung "đang phân tích" kịp hiện trước khi trình duyệt bận tính toán
+    return new Promise(function (r) { setTimeout(r, 1200); })
+      .then(function () { return analyzePhotos(list); })
+      .then(function (res) { wait.remove(); renderResult(res); })
+      .catch(function () { wait.remove(); bubble(BOT).textContent = 'Em chưa phân tích được các ảnh này. Bạn thử ảnh rõ mặt, đủ sáng hơn nhé ạ.'; })
+      .then(function () { list.forEach(function (p) { p.canvas = null; }); return text ? ask(text, false) : null; });
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var text = input.value.trim();
+    if (busy || (!text && !photos.length)) return;
+    input.value = '';
+    busy = true; refreshSend();
+    var job = photos.length ? runScan(text) : ask(text, true);
+    Promise.resolve(job).then(function () { busy = false; refreshSend(); scrollEnd(); input.focus(); });
+  });
+  refreshSend();
+});
+</script>

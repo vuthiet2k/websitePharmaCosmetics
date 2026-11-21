@@ -1016,6 +1016,7 @@ const PAGE_HANDLE_MAP = {
   'gioi-thieu':                 'page.about-us',
   'ai-skin-quiz':                'page.ai-skin-quiz',
   'ai-skin-quiz-results':        'page.ai-skin-quiz-results',
+  'chat-ai':                     'page.chat', // 21/11/2026: trang chat toàn năng nhúng iframe (layout 'chat')
   'kham-da-ai':                  'page.ai-skin-quiz', // alias tiếng Việt (T-113) — cùng 1 template, tránh 404 khi vào thẳng /kham-da-ai
   'soi-da':                      'page.ai-skin-quiz', // Soi da AI 2026-09-24: alias mở sẵn tab camera ở client.
   'thuong-hieu':                 'page.thuong-hieu',  // 19/11/2026: Trang nội dung Tất cả thương hiệu từ menu Sapo
