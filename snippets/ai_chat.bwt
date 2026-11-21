@@ -7,26 +7,33 @@
 {%- endcomment -%}
 {%- assign pc_ai_url = settings.ai_chat_api_url | strip -%}
 {%- if settings.ai_chat_enable and pc_ai_url != blank -%}
-<section id="pc-ai-chat" class="fixed bottom-24 right-4 z-[9992] [display:none] h-[min(560px,calc(100dvh-8rem))] w-[380px] flex-col overflow-hidden rounded-2xl border border-line bg-white data-[open=true]:flex max-md:inset-x-3 max-md:bottom-20 max-md:w-auto" role="dialog" aria-label="{{ settings.ai_chat_title | default: 'Trợ lý AI Pharma Cosmetics' | escape }}" aria-hidden="true">
+<section id="pc-ai-chat" class="fixed bottom-24 right-4 z-[9992] [display:none] h-[min(560px,calc(100dvh-8rem))] w-[380px] flex-col overflow-hidden rounded-2xl border border-line bg-white data-[open=true]:flex max-md:inset-x-3 max-md:bottom-20 max-md:w-auto" role="dialog" aria-label="{{ settings.ai_chat_title | default: 'Chatbot Pharma Cosmetics' | escape }}" aria-hidden="true">
 	<div class="flex items-center gap-3 bg-primary px-4 py-3 text-white">
 		<span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'comment-dots', size: 20 %}</i></span>
 		<div class="min-w-0 flex-1">
-			<p class="truncate text-sm font-bold">{{ settings.ai_chat_title | default: 'Trợ lý AI Pharma Cosmetics' | escape }}</p>
-			<p class="truncate text-xs opacity-90">{{ settings.ai_chat_sub | default: 'Tra cứu sản phẩm, bài viết, giờ mở cửa' | escape }}</p>
+			<p class="truncate text-sm font-bold">{{ settings.ai_chat_title | default: 'Chatbot Pharma Cosmetics' | escape }}</p>
+			<p class="truncate text-xs opacity-90">{{ settings.ai_chat_sub | default: 'Hỏi đáp · Soi da AI · Quiz' | escape }}</p>
 		</div>
 		<button type="button" class="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border-0 bg-transparent p-0 text-white" data-ai-chat-close aria-label="Đóng khung chat"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'x', size: 20 %}</i></button>
 	</div>
 
 	<div class="flex flex-1 flex-col gap-2 overflow-y-auto bg-surface-soft p-3" data-ai-chat-log role="log" aria-live="polite">
-		<div class="max-w-[88%] self-start whitespace-pre-line break-words rounded-2xl border border-line bg-white px-3 py-2 text-sm text-ink">{{ settings.ai_chat_welcome | default: 'Dạ em có thể giúp bạn tra cứu sản phẩm, bài viết hoặc thông tin cửa hàng. Bạn muốn tìm gì ạ?' | escape }}</div>
+		<p class="px-2 pb-1 text-center text-xs text-ink-muted">{{ settings.ai_chat_note | default: 'Gợi ý tự động, chỉ mang tính tham khảo — không thay thế tư vấn trực tiếp từ Chuyên gia.' | escape }}</p>
+		<div class="max-w-[88%] self-start whitespace-pre-line break-words rounded-2xl border border-line bg-white px-3 py-2 text-sm text-ink">{{ settings.ai_chat_welcome | default: 'Dạ chào bạn, em là chatbot Pharma Cosmetics ạ. Em giúp bạn tra cứu sản phẩm, bài viết, thông tin cửa hàng và hướng dẫn soi da bằng ảnh. Bạn cần em hỗ trợ gì ạ?' | escape }}</div>
 	</div>
 
-	<form class="flex items-center gap-2 border-t border-line bg-white p-2" data-ai-chat-form autocomplete="off">
+	<form class="relative flex items-center gap-2 border-t border-line bg-white p-2" data-ai-chat-form autocomplete="off">
+		{%- assign pc_skin_base = settings.ai_chat_skin_url | default: '/kham-da-ai' | split: '?' | first -%}
+		<div class="[display:none] absolute bottom-full left-2 z-10 mb-2 w-[260px] max-w-[calc(100%-1rem)] flex-col overflow-hidden rounded-2xl border border-line bg-white data-[open=true]:flex" data-ai-chat-menu role="menu">
+			<a class="flex min-h-[44px] items-center gap-3 px-4 py-2 text-sm font-semibold text-ink no-underline" role="menuitem" href="{{ pc_skin_base | escape }}?tab=camera&source=upload"><i class="inline-block leading-none text-primary" aria-hidden="true">{% include 'ui_icon', name: 'image', size: 20 %}</i>{{ settings.ai_chat_menu_upload | default: 'Tải ảnh tình trạng da' | escape }}</a>
+			<a class="flex min-h-[44px] items-center gap-3 border-t border-line px-4 py-2 text-sm font-semibold text-ink no-underline" role="menuitem" href="{{ pc_skin_base | escape }}?tab=camera"><i class="inline-block leading-none text-primary" aria-hidden="true">{% include 'ui_icon', name: 'camera', size: 20 %}</i>{{ settings.ai_chat_menu_camera | default: 'Soi da bằng camera' | escape }}</a>
+			<a class="flex min-h-[44px] items-center gap-3 border-t border-line px-4 py-2 text-sm font-semibold text-ink no-underline" role="menuitem" href="{{ pc_skin_base | escape }}?tab=quiz"><i class="inline-block leading-none text-primary" aria-hidden="true">{% include 'ui_icon', name: 'clipboard-list', size: 20 %}</i>{{ settings.ai_chat_menu_quiz | default: 'Làm quiz test da' | escape }}</a>
+		</div>
+		<button type="button" class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full border border-line-control bg-white p-0 text-primary" data-ai-chat-plus aria-haspopup="true" aria-expanded="false" aria-label="{{ settings.ai_chat_menu_label | default: 'Thêm: tải ảnh da, soi da, quiz' | escape }}"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'plus', size: 20 %}</i></button>
 		<label class="sr-only" for="pc-ai-chat-input">Câu hỏi của bạn</label>
 		<input id="pc-ai-chat-input" type="text" maxlength="500" class="min-h-[44px] min-w-0 flex-1 rounded-full border border-line-control bg-white px-4 text-base text-ink" placeholder="{{ settings.ai_chat_placeholder | default: 'Nhập câu hỏi của bạn…' | escape }}" data-ai-chat-input>
 		<button type="submit" class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full bg-btn text-btn-text disabled:opacity-50" data-ai-chat-send aria-label="Gửi câu hỏi"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'send', size: 20 %}</i></button>
 	</form>
-	<p class="bg-white px-3 pb-2 text-center text-xs text-ink-muted">{{ settings.ai_chat_note | default: 'Gợi ý tự động, chỉ mang tính tham khảo — không thay thế tư vấn trực tiếp từ Chuyên gia.' | escape }}</p>
 </section>
 
 <script>
@@ -41,6 +48,16 @@
 	var form = root.querySelector('[data-ai-chat-form]');
 	var input = root.querySelector('[data-ai-chat-input]');
 	var sendBtn = root.querySelector('[data-ai-chat-send]');
+	var menu = root.querySelector('[data-ai-chat-menu]');
+	var plus = root.querySelector('[data-ai-chat-plus]');
+	function setMenu(open){
+		if (open) { menu.setAttribute('data-open', 'true'); } else { menu.removeAttribute('data-open'); }
+		plus.setAttribute('aria-expanded', open ? 'true' : 'false');
+	}
+	plus.addEventListener('click', function(e){ e.stopPropagation(); setMenu(menu.getAttribute('data-open') !== 'true'); });
+	document.addEventListener('click', function(e){
+		if (menu.getAttribute('data-open') === 'true' && !(e.target.closest && e.target.closest('[data-ai-chat-menu]'))) setMenu(false);
+	});
 	var history = []; // {role, content} — gửi tối đa 6 tin gần nhất
 	var busy = false;
 	var BOT = 'max-w-[88%] self-start break-words rounded-2xl border border-line bg-white px-3 py-2 text-sm text-ink';
@@ -49,6 +66,7 @@
 
 	function setOpen(open){
 		if (open) { root.setAttribute('data-open', 'true'); } else { root.removeAttribute('data-open'); }
+		setMenu(false);
 		root.setAttribute('aria-hidden', open ? 'false' : 'true');
 		if (open) {
 			var w = document.querySelector('.main-widget');
@@ -62,7 +80,9 @@
 		else if (e.target.closest('[data-ai-chat-close]')) { e.preventDefault(); setOpen(false); }
 	});
 	document.addEventListener('keydown', function(e){
-		if (e.key === 'Escape' && root.hasAttribute('data-open')) setOpen(false);
+		if (e.key !== 'Escape') return;
+		if (menu.getAttribute('data-open') === 'true') { setMenu(false); plus.focus(); }
+		else if (root.hasAttribute('data-open')) setOpen(false);
 	});
 
 	function scrollEnd(){ log.scrollTop = log.scrollHeight; }

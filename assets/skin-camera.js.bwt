@@ -887,6 +887,13 @@
     return window.location.pathname === '/soi-da' ? 'camera' : 'quiz';
   }
   selectMode(initialMode());
+  // 21/11/2026: ?tab=camera&source=upload (từ nút + của khung chat) ⇒ mở sẵn khu tải ảnh
+  try {
+    if (new URLSearchParams(window.location.search).get('source') === 'upload' && upload) {
+      upload.hidden = false;
+      if (upload.scrollIntoView) upload.scrollIntoView({ block: 'center' });
+    }
+  } catch (e) {}
   update();
   syncMobileShutter();
 })(window, document);

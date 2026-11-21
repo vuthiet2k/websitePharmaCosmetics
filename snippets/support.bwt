@@ -36,27 +36,25 @@
 				</a>
 			</div>
 			{%endif%}
-			{%- comment -%} 2026-10-19: mục Soi da AI (miễn phí) — dẫn tới trang khám da AI, tab camera (cùng link nút soi da ở giỏ hàng). {%- endcomment -%}
-			{%- if settings.contact_skinscan_enable -%}
-			<div class="item skinscan">
-				<a href="{{ settings.contact_skinscan_url | default: '/kham-da-ai?tab=camera' | escape }}">
-					{%- comment -%} 20/11/2026: icon trắng trên nền trắng (thiếu nền như phone/zalo/mess) ⇒ nền màu chính. {%- endcomment -%}
-					<span class="img !bg-primary text-white"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'camera', size: 'em' %}</i></span>
-					<div class="detail">
-						<b class="arcu-item-title">{{ settings.contact_skinscan_title | default: 'Soi da AI' }}</b>
-						<span class="arcu-item-subtitle">{{ settings.contact_skinscan_sub | default: 'Phân tích da miễn phí' }}</span>
-					</div>
-				</a>
-			</div>
-			{%- endif -%}
-				{%- comment -%} 21/11/2026: mục Chat AI — mở khung chat tra cứu (snippets/ai_chat.bwt). Chỉ hiện khi bật và đã có địa chỉ API. {%- endcomment -%}
+				{%- comment -%} 21/11/2026 (chủ dự án): GỘP «Soi da AI» + «Chat AI» thành 1 mục chatbot chung. Bật chat (ai_chat_enable + địa chỉ API) ⇒ bấm mở khung chat
+				  (snippets/ai_chat.bwt; soi da/quiz nằm trong nút + của khung chat). Chưa bật ⇒ giữ lối vào trang soi da như trước. {%- endcomment -%}
 				{%- if settings.ai_chat_enable and settings.ai_chat_api_url != blank -%}
 				<div class="item aichat">
 					<a href="#" data-ai-chat-open role="button">
 						<span class="img !bg-primary text-white"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'comment-dots', size: 'em' %}</i></span>
 						<div class="detail">
-							<b class="arcu-item-title">{{ settings.ai_chat_title | default: 'Trợ lý AI Pharma Cosmetics' | escape }}</b>
-							<span class="arcu-item-subtitle">{{ settings.ai_chat_sub | default: 'Tra cứu sản phẩm, bài viết, giờ mở cửa' | escape }}</span>
+							<b class="arcu-item-title">{{ settings.ai_chat_title | default: 'Chatbot Pharma Cosmetics' | escape }}</b>
+							<span class="arcu-item-subtitle">{{ settings.ai_chat_sub | default: 'Hỏi đáp · Soi da AI · Quiz' | escape }}</span>
+						</div>
+					</a>
+				</div>
+				{%- elsif settings.contact_skinscan_enable -%}
+				<div class="item skinscan">
+					<a href="{{ settings.contact_skinscan_url | default: '/kham-da-ai?tab=camera' | escape }}">
+						<span class="img !bg-primary text-white"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'camera', size: 'em' %}</i></span>
+						<div class="detail">
+							<b class="arcu-item-title">{{ settings.contact_skinscan_title | default: 'Soi da AI' }}</b>
+							<span class="arcu-item-subtitle">{{ settings.contact_skinscan_sub | default: 'Phân tích da miễn phí' }}</span>
 						</div>
 					</a>
 				</div>
