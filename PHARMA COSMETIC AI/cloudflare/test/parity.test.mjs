@@ -1,0 +1,142 @@
+// Chạy: node test/parity.test.mjs  (không cần cài gì — Node ≥ 20). So kết quả Worker với bản Python và kiểm hành vi API.
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const AI_DIR = path.resolve(HERE, "..", "..");
+const PUBLIC = path.resolve(HERE, "..", "public");
+
+const worker = (await import("../src/index.js")).default;
+const { fold, tokenize, maskPii, complianceOk } = await import("../src/index.js");
+
+// ASSETS giả: đọc file trong public/ như Cloudflare sẽ làm
+const ASSETS = {
+  async fetch(req) {
+    try {
+      const file = await readFile(path.join(PUBLIC, new URL(req.url).pathname));
+      return new Response(file, { headers: { "Content-Type": "application/json" } });
+    } catch { return new Response("not found", { status: 404 }); }
+  },
+};
+const ENV = { ASSETS, ALLOWED_ORIGINS: "https://pharmacosmetics-vn.com", RATE_LIMIT_PER_MIN: "5", MAX_CHARS: "500" };
+
+let ipSeq = 0;
+function call(pathname, { method = "GET", body, origin, ip, env = ENV } = {}) {
+  const headers = { "CF-Connecting-IP": ip || `10.0.0.${++ipSeq}` };
+  if (origin) headers.Origin = origin;
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  return worker.fetch(new Request("https://ai.example.workers.dev" + pathname, {
+    method, headers, body: body === undefined ? undefined : (typeof body === "string" ? body : JSON.stringify(body)),
+  }), env);
+}
+const chat = (text, opts = {}) => call("/api/v1/chat", { method: "POST", body: { messages: [{ role: "user", content: text }] }, ...opts });
+
+let passed = 0;
+async function t(name, fn) { await fn(); passed++; console.log("  ok  " + name); }
+
+// ---- Song song với Python ----
+const QUERIES = ["kem trị mụn", "kem tri mun", "serum cho da nám tàn nhang", "retinol", "kem chống nắng cho da dầu",
+  "da nhạy cảm sau điều trị", "hyaluronic acid cấp ẩm", "địa chỉ phòng trị liệu ở đâu", "giờ mở cửa", "tazarotene",
+  "obagi", "niacinamide", "sẹo rỗ", "xin chào", "abcxyz không có từ này", "mụn ẩn mụn cám theo chu kỳ"];
+const py = spawnSync("python", ["-X", "utf8", "-c", `
+import json, sys
+sys.path.insert(0, ${JSON.stringify(AI_DIR)})
+from app.hybrid_rag import LocalHybridRAG
+r = LocalHybridRAG(sys.argv[2])
+qs = json.loads(sys.argv[1])
+print(json.dumps({q: {"p": [(d["title"], d["score"]) for d in r.search(q, 3, "Sản phẩm")], "a": [(d["title"], d["score"]) for d in r.search(q, 2, "Bài viết")]} for q in qs}, ensure_ascii=False))
+`, JSON.stringify(QUERIES), path.join(AI_DIR, "data", "knowledge_base.json")], { encoding: "utf-8", env: { ...process.env, PYTHONIOENCODING: "utf-8" } });
+assert.equal(py.status, 0, "Python lỗi: " + py.stderr);
+const expected = JSON.parse(py.stdout);
+
+console.log("So khớp với bản Python:");
+const { search } = await import("../src/index.js");
+for (const q of QUERIES) {
+  await t(`khớp «${q}»`, async () => {
+    const req = new Request("https://ai.example.workers.dev/");
+    const p = await search(ENV, req, q, 3, 2), a = await search(ENV, req, q, 2, 1);
+    // so điểm (không so thứ tự tên khi điểm bằng nhau — Python sắp xếp ổn định theo thứ tự chèn)
+    assert.deepEqual(p.map((x) => x.score), expected[q].p.map((x) => x[1]), "điểm sản phẩm");
+    assert.deepEqual(a.map((x) => x.score), expected[q].a.map((x) => x[1]), "điểm bài viết");
+    const rank = (arr) => arr.map((x) => `${x.score}|${x.title}`);
+    const pyP = expected[q].p.map((x) => `${x[1]}|${x[0]}`), pyA = expected[q].a.map((x) => `${x[1]}|${x[0]}`);
+    assert.deepEqual([...rank(p)].sort(), [...pyP].sort(), "sản phẩm");
+    assert.deepEqual([...rank(a)].sort(), [...pyA].sort(), "bài viết");
+  });
+}
+
+console.log("Hành vi API:");
+await t("chuẩn hoá tiếng Việt", () => {
+  assert.equal(fold("Mụn ẩn, Đẹp"), "mun an, dep");
+  assert.deepEqual(tokenize("Mụn,"), tokenize("mun"));
+});
+await t("không phân biệt dấu", async () => {
+  const a = await (await chat("kem tri mun")).json(), b = await (await chat("kem trị mụn")).json();
+  assert.ok(a.related_products.length && JSON.stringify(a.related_products) === JSON.stringify(b.related_products));
+});
+await t("đường dẫn thật", async () => {
+  const r = await (await chat("serum cho da nám tàn nhang")).json();
+  assert.ok(r.related_products.every((p) => p.url.startsWith("/products/")));
+  assert.ok(r.related_articles.every((x) => x.url.startsWith("/blogs/")));
+});
+await t("thông tin cửa hàng thật", async () => {
+  const r = await (await chat("địa chỉ phòng trị liệu ở đâu")).json();
+  assert.equal(r.store_info.address, "Số 44 Ngõ 897 Giải Phóng, Hoàng Mai, Hà Nội");
+  assert.ok(r.reply.includes("6h30"));
+});
+await t("không bịa giá", async () => {
+  const r = await (await chat("giá retinol bao nhiêu")).json();
+  assert.ok(!r.reply.includes("123456") && !r.reply.includes("650000"));
+});
+await t("che thông tin cá nhân", () => {
+  assert.ok(!maskPii("sdt 0967194063 mail a@b.com").includes("0967194063"));
+  assert.ok(!maskPii("mail a@b.com").includes("a@b.com"));
+  assert.ok(!maskPii("gọi 0967.194.063").includes("0967.194.063"));
+  assert.ok(maskPii("giá 1850000 đồng").includes("1850000"));
+});
+await t("kiểm tra phát ngôn theo ranh giới từ", () => {
+  assert.equal(complianceOk("mai chăm sóc da"), true);
+  assert.equal(complianceOk("AI chăm sóc da cho bạn"), false);
+  assert.equal(complianceOk("Cam kết khỏi 100% mụn"), false);
+});
+await t("giới hạn đầu vào", async () => {
+  assert.equal((await call("/api/v1/chat", { method: "POST", body: { messages: [] } })).status, 400);
+  assert.equal((await chat("x".repeat(501))).status, 400);
+  assert.equal((await call("/api/v1/chat", { method: "POST", body: { messages: [{ role: "system", content: "hi" }] } })).status, 422);
+  assert.equal((await call("/api/v1/chat", { method: "POST", body: "không phải json" })).status, 422);
+  assert.equal((await call("/api/v1/chat", { method: "POST", body: { messages: [{ role: "assistant", content: "hi" }] } })).status, 400);
+});
+await t("giới hạn tần suất theo IP", async () => {
+  const ip = "203.0.113.9";
+  const codes = [];
+  for (let i = 0; i < 7; i++) codes.push((await chat("mụn", { ip })).status);
+  assert.deepEqual(codes.slice(0, 5), [200, 200, 200, 200, 200]);
+  assert.ok(codes.slice(5).includes(429));
+  assert.equal((await chat("mụn", { ip: "203.0.113.10" })).status, 200); // IP khác không bị ảnh hưởng
+});
+await t("CORS chỉ cho domain khai báo", async () => {
+  const ok = await call("/", { origin: "https://pharmacosmetics-vn.com" });
+  const bad = await call("/", { origin: "https://evil.example" });
+  assert.equal(ok.headers.get("access-control-allow-origin"), "https://pharmacosmetics-vn.com");
+  assert.equal(bad.headers.get("access-control-allow-origin"), null);
+  const pre = await call("/api/v1/chat", { method: "OPTIONS", origin: "https://pharmacosmetics-vn.com" });
+  assert.equal(pre.status, 204);
+  assert.equal(pre.headers.get("access-control-allow-headers"), "Content-Type");
+});
+await t("ALLOWED_ORIGINS trống ⇒ chặn mọi domain", async () => {
+  const r = await call("/", { origin: "https://pharmacosmetics-vn.com", env: { ASSETS, ALLOWED_ORIGINS: "" } });
+  assert.equal(r.headers.get("access-control-allow-origin"), null);
+});
+await t("/ , /healthz, 404, 405", async () => {
+  assert.equal((await (await call("/")).json()).status, "online");
+  const h = await (await call("/healthz")).json();
+  assert.ok(h.ok && h.documents > 5000 && h.store === true);
+  assert.equal((await call("/docs")).status, 404);
+  assert.equal((await call("/idx/meta.json")).status, 404); // chỉ mục không công khai trực tiếp
+  assert.equal((await call("/api/v1/chat")).status, 405);
+});
+
+console.log(`\n${passed} kiểm tra đạt.`);

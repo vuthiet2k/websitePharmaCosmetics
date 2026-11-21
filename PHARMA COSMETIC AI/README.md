@@ -38,7 +38,13 @@ pytest -q tests
 | `MAX_CHARS` / `MAX_MESSAGES` | Giới hạn độ dài câu hỏi / số tin | 500 / 20 |
 | `APP_ENV` | `production` tắt `/docs` | production |
 
-## Deploy miễn phí
+## Deploy miễn phí trên Cloudflare Workers (khuyên dùng — không cần máy chủ, không cần thẻ)
+Thư mục [`cloudflare/`](./cloudflare/) là bản port cùng hành vi sang Cloudflare Workers (JavaScript). Gói miễn phí giới hạn **100.000 yêu cầu/ngày** và **~10ms CPU/lần gọi**, nên chỉ mục BM25 được **tính sẵn** (`python scripts/build_cf_index.py`) thay vì dựng lúc chạy.
+- Hướng dẫn cài từng bước (viết để giao cho Claude trong Chrome làm giúp): [`cloudflare/HUONG-DAN-CAI-DAT-CLOUDFLARE.md`](./cloudflare/HUONG-DAN-CAI-DAT-CLOUDFLARE.md)
+- Kiểm thử: `cd cloudflare && node test/parity.test.mjs` (so khớp điểm với bản Python + kiểm hành vi API)
+- Khi nội dung website đổi: `python scripts/sync_data.py && python scripts/build_cf_index.py`, commit `data/` và `cloudflare/` rồi push — Cloudflare tự triển khai lại.
+
+## Deploy miễn phí bằng Docker (Python)
 Ảnh Docker chỉ cần ~100MB RAM, phù hợp các gói miễn phí hỗ trợ Docker hoặc Python (Hugging Face Spaces, Render, Cloud Run...). Điều kiện miễn phí của từng nền tảng hay đổi — kiểm tra lại trước khi chọn.
 1. Chạy `python scripts/sync_data.py`, commit `data/knowledge_base.json` và `data/store_info.json`.
 2. Đặt biến môi trường: `ALLOWED_ORIGINS=https://<domain website>`, `TRUST_PROXY=true`.
