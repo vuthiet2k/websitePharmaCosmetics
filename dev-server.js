@@ -671,9 +671,6 @@ function devCuratedGroups() {
     ]},
     { label: 'Skin Healthy', items: [
       ['page.indexskinhealthy',           'SH · Trang chủ'],
-      ['page.skinhealthy-services',       'SH · Dịch vụ'],
-      ['page.skinhealthy-service-detail', 'SH · Chi tiết dịch vụ'],
-      ['collection.skinhealthy',          'SH · Collection'],
     ]},
     { label: 'MOPS', items: [
       ['page.payment',       'MOPS · Đặt lịch / Thanh toán'],
@@ -1037,16 +1034,12 @@ const PAGE_HANDLE_MAP = {
   'patient-portal':              'page.patient-portal',
   'payment':                     'page.payment',
   'seo-directory':               'page.seo-directory',
-  'skinhealthy-service-detail':  'page.skinhealthy-service-detail',
   'skin-health-beauty':         'page.indexskinhealthy',
-  'skinhealthy-services':        'page.skinhealthy-services',
   'spa-services':                'page.spa-services',
   'tin-tuc':                     'page.tin-tuc', // 2026-10-13: trang tổng tin tức (mọi danh mục bài viết)
   'ui-kit':                      'page.ui-kit', // 14/11/2026: trang kiểm tra tuỳ chỉnh màu / nút / thẻ (100% class Tailwind)
   // 2026-10-17: alias Trang nội dung THẬT trên Sapo (đối soát sitemap_pages + vân tay giao diện) — vào đúng URL Sapo ở local.
   'chuyen-gia-1':                  'page.chuyen-gia',
-  'dich-vu-skin-healthy-beauty':   'page.skinhealthy-services',
-  'skin-health-beauty-chi-tiet':   'page.skinhealthy-service-detail',
   'skin-health-beauty-thanh-toan': 'page.payment',
   'dang-ky-lieu-trinh-tri-mun':    'page.payment',
   'order':                         'page.order-lookup',

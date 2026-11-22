@@ -446,7 +446,7 @@ function getContext(templateName = 'index', routeParams = {}) {
 
   // `collection` chỉ có giá trị khi đang xem trang /collection — đúng hành vi Sapo thực.
   // Trên index / product / blog / ... → null.
-  const collectionTemplates = ['collection', 'collection.skinhealthy'];
+  const collectionTemplates = ['collection'];
   const currentCollection = routeParams.collectionHandle
     ? (collectionsObj[routeParams.collectionHandle] || makeFallbackCollection(routeParams.collectionHandle))
     : (collectionTemplates.includes(templateName)
@@ -472,8 +472,6 @@ function getContext(templateName = 'index', routeParams = {}) {
   const PAGE_NAMES = {
     'page':                          'Demo Page',
     'page.indexskinhealthy':         'Skin Healthy',
-    'page.skinhealthy-services':     'Dịch vụ Skin Healthy',
-    'page.skinhealthy-service-detail': 'Chi tiết dịch vụ',
     'page.payment':                  'Đặt lịch & Thanh toán',
     'page.order-lookup':             'Tra cứu đơn hàng',
     'page.order-tracking':           'Theo dõi đơn hàng',
