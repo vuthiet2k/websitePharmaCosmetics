@@ -62,59 +62,59 @@
 
 {%- comment -%}
   14/11/2026: viết lại 100% class Tailwind (bỏ assets/comp_mobile_nav.scss.bwt). `pc-bottom-nav` chỉ còn là móc JS (lieu-trinh.js,
-  article.truoc-va-sau đo chiều cao thanh), không có CSS. Nhãn dài xuống dòng TRỌN chữ: thanh cao tối thiểu 56px và tự cao thêm
-  (trước đây cao cứng 56px ⇒ "Danh mục" bị cắt còn "Danh" trên iPhone). Hiện ≤ 991px như cũ (min-[992px]:hidden).
+  article.truoc-va-sau đo chiều cao thanh), không có CSS. Thiết kế lại 22/11/2026: chỉ mục ĐANG CHỌN hiện viên thuốc (nền primary-tint, icon + chữ cạnh nhau, rộng gấp đôi);
+  mục còn lại chỉ icon, nhãn chuyển sr-only (vẫn đọc được bằng trình đọc màn hình). Vùng chạm ≥ 44px (min-h-11 + py-2). Hiện ≤ 991px như cũ (min-[992px]:hidden).
   Chừa chỗ cho thanh: class pb trên <body> ở layouts/theme.bwt.
 {%- endcomment -%}
 <nav class="pc-bottom-nav fixed inset-x-0 bottom-0 z-bottomnav border-0 border-t border-solid border-line bg-white pb-[env(safe-area-inset-bottom,0px)] font-sans min-[992px]:hidden" aria-label="Điều hướng">
   <ul class="m-0 flex list-none items-stretch p-0">
     {%- if settings.mobile_nav_home_enable -%}
-    <li class="min-w-0 flex-1">
-      <a href="{{ nav_home_url }}" class="flex min-h-14 flex-col items-center justify-center gap-1 px-1 py-1.5 text-center text-xs font-medium leading-tight no-underline hover:text-primary focus:text-primary {% if mb_active == 'home' %}font-semibold text-primary{% else %}text-ink-secondary{% endif %}"{% if mb_active == 'home' %} aria-current="page"{% endif %}>
+    <li class="flex min-w-0 items-center justify-center py-2 {% if mb_active == 'home' %}flex-[2]{% else %}flex-1{% endif %}">
+      <a href="{{ nav_home_url }}" class="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full px-2 text-xs leading-tight no-underline {% if mb_active == 'home' %}bg-primary-tint font-semibold text-primary-deep{% else %}font-medium text-ink-secondary hover:text-primary focus:text-primary{% endif %}"{% if mb_active == 'home' %} aria-current="page"{% endif %}>
         {%- capture mb_ico -%}{% include 'ui_icon', name: nav_home_icon, size: 24, label: '' %}{%- endcapture -%}
         {%- unless mb_ico contains '<svg' -%}{%- capture mb_ico -%}{% include 'ui_icon', name: 'house', size: 24, label: '' %}{%- endcapture -%}{%- endunless -%}
         <span class="flex h-6 w-6 items-center justify-center" aria-hidden="true">{{ mb_ico }}</span>
-        <span class="block max-w-full break-words">{{ nav_home_label | escape }}</span>
+        <span class="{% if mb_active == 'home' %}truncate whitespace-nowrap{% else %}sr-only{% endif %}">{{ nav_home_label | escape }}</span>
       </a>
     </li>
     {%- endif -%}
     {%- if settings.mobile_nav_products_enable -%}
-    <li class="min-w-0 flex-1">
-      <a href="{{ nav_products_url }}" class="flex min-h-14 flex-col items-center justify-center gap-1 px-1 py-1.5 text-center text-xs font-medium leading-tight no-underline hover:text-primary focus:text-primary {% if mb_active == 'products' %}font-semibold text-primary{% else %}text-ink-secondary{% endif %}"{% if mb_active == 'products' %} aria-current="page"{% endif %}>
+    <li class="flex min-w-0 items-center justify-center py-2 {% if mb_active == 'products' %}flex-[2]{% else %}flex-1{% endif %}">
+      <a href="{{ nav_products_url }}" class="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full px-2 text-xs leading-tight no-underline {% if mb_active == 'products' %}bg-primary-tint font-semibold text-primary-deep{% else %}font-medium text-ink-secondary hover:text-primary focus:text-primary{% endif %}"{% if mb_active == 'products' %} aria-current="page"{% endif %}>
         {%- capture mb_ico -%}{% include 'ui_icon', name: nav_products_icon, size: 24, label: '' %}{%- endcapture -%}
         {%- unless mb_ico contains '<svg' -%}{%- capture mb_ico -%}{% include 'ui_icon', name: 'shopping-bag', size: 24, label: '' %}{%- endcapture -%}{%- endunless -%}
         <span class="flex h-6 w-6 items-center justify-center" aria-hidden="true">{{ mb_ico }}</span>
-        <span class="block max-w-full break-words">{{ nav_products_label | escape }}</span>
+        <span class="{% if mb_active == 'products' %}truncate whitespace-nowrap{% else %}sr-only{% endif %}">{{ nav_products_label | escape }}</span>
       </a>
     </li>
     {%- endif -%}
     {%- if settings.mobile_nav_wishlist_enable -%}
-    <li class="min-w-0 flex-1">
-      <a href="{{ wishlist_url }}" class="flex min-h-14 flex-col items-center justify-center gap-1 px-1 py-1.5 text-center text-xs font-medium leading-tight no-underline hover:text-primary focus:text-primary {% if mb_active == 'wishlist' %}font-semibold text-primary{% else %}text-ink-secondary{% endif %}"{% if mb_active == 'wishlist' %} aria-current="page"{% endif %}>
+    <li class="flex min-w-0 items-center justify-center py-2 {% if mb_active == 'wishlist' %}flex-[2]{% else %}flex-1{% endif %}">
+      <a href="{{ wishlist_url }}" class="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full px-2 text-xs leading-tight no-underline {% if mb_active == 'wishlist' %}bg-primary-tint font-semibold text-primary-deep{% else %}font-medium text-ink-secondary hover:text-primary focus:text-primary{% endif %}"{% if mb_active == 'wishlist' %} aria-current="page"{% endif %}>
         {%- capture mb_ico -%}{% include 'ui_icon', name: nav_wishlist_icon, size: 24, label: '' %}{%- endcapture -%}
         {%- unless mb_ico contains '<svg' -%}{%- capture mb_ico -%}{% include 'ui_icon', name: 'heart', size: 24, label: '' %}{%- endcapture -%}{%- endunless -%}
         <span class="flex h-6 w-6 items-center justify-center" aria-hidden="true">{{ mb_ico }}</span>
-        <span class="block max-w-full break-words">{{ nav_wishlist_label | escape }}</span>
+        <span class="{% if mb_active == 'wishlist' %}truncate whitespace-nowrap{% else %}sr-only{% endif %}">{{ nav_wishlist_label | escape }}</span>
       </a>
     </li>
     {%- endif -%}
     {%- if settings.mobile_nav_blog_enable -%}
-    <li class="min-w-0 flex-1">
-      <a href="{{ nav_blog_url }}" class="flex min-h-14 flex-col items-center justify-center gap-1 px-1 py-1.5 text-center text-xs font-medium leading-tight no-underline hover:text-primary focus:text-primary {% if mb_active == 'blog' %}font-semibold text-primary{% else %}text-ink-secondary{% endif %}"{% if mb_active == 'blog' %} aria-current="page"{% endif %}>
+    <li class="flex min-w-0 items-center justify-center py-2 {% if mb_active == 'blog' %}flex-[2]{% else %}flex-1{% endif %}">
+      <a href="{{ nav_blog_url }}" class="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full px-2 text-xs leading-tight no-underline {% if mb_active == 'blog' %}bg-primary-tint font-semibold text-primary-deep{% else %}font-medium text-ink-secondary hover:text-primary focus:text-primary{% endif %}"{% if mb_active == 'blog' %} aria-current="page"{% endif %}>
         {%- capture mb_ico -%}{% include 'ui_icon', name: nav_blog_icon, size: 24, label: '' %}{%- endcapture -%}
         {%- unless mb_ico contains '<svg' -%}{%- capture mb_ico -%}{% include 'ui_icon', name: 'newspaper', size: 24, label: '' %}{%- endcapture -%}{%- endunless -%}
         <span class="flex h-6 w-6 items-center justify-center" aria-hidden="true">{{ mb_ico }}</span>
-        <span class="block max-w-full break-words">{{ nav_blog_label | escape }}</span>
+        <span class="{% if mb_active == 'blog' %}truncate whitespace-nowrap{% else %}sr-only{% endif %}">{{ nav_blog_label | escape }}</span>
       </a>
     </li>
     {%- endif -%}
     {%- if settings.mobile_nav_account_enable -%}
-    <li class="min-w-0 flex-1">
-      <a href="{{ nav_account_url }}" class="flex min-h-14 flex-col items-center justify-center gap-1 px-1 py-1.5 text-center text-xs font-medium leading-tight no-underline hover:text-primary focus:text-primary {% if mb_active == 'account' %}font-semibold text-primary{% else %}text-ink-secondary{% endif %}"{% if mb_active == 'account' %} aria-current="page"{% endif %}>
+    <li class="flex min-w-0 items-center justify-center py-2 {% if mb_active == 'account' %}flex-[2]{% else %}flex-1{% endif %}">
+      <a href="{{ nav_account_url }}" class="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full px-2 text-xs leading-tight no-underline {% if mb_active == 'account' %}bg-primary-tint font-semibold text-primary-deep{% else %}font-medium text-ink-secondary hover:text-primary focus:text-primary{% endif %}"{% if mb_active == 'account' %} aria-current="page"{% endif %}>
         {%- capture mb_ico -%}{% include 'ui_icon', name: nav_account_icon, size: 24, label: '' %}{%- endcapture -%}
         {%- unless mb_ico contains '<svg' -%}{%- capture mb_ico -%}{% include 'ui_icon', name: 'user', size: 24, label: '' %}{%- endcapture -%}{%- endunless -%}
         <span class="flex h-6 w-6 items-center justify-center" aria-hidden="true">{{ mb_ico }}</span>
-        <span class="block max-w-full break-words">{{ nav_account_label | escape }}</span>
+        <span class="{% if mb_active == 'account' %}truncate whitespace-nowrap{% else %}sr-only{% endif %}">{{ nav_account_label | escape }}</span>
       </a>
     </li>
     {%- endif -%}
