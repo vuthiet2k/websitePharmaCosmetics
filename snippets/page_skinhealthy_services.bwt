@@ -1,10 +1,7 @@
 {%- comment -%}
-  snippets/page_skinhealthy_services.bwt (19/11/2026)
-  Toàn bộ danh sách dịch vụ & liệu trình Skin Health Beauty:
-  - 100% font chữ Montserrat (UI-2.9, font-sans, font-heading, không dùng serif Playfair/italic).
-  - Không dùng subnav neo anchor 3 nhóm cũ ([ĐIỀU TRỊ CHUYÊN NGHIỆP][ĐIỀU TRỊ CHUYÊN SÂU]...).
-  - Hiển thị danh sách tất cả liệu trình/dịch vụ dạng lưới thẻ chuẩn lieu_trinh_card.
-  - Hỗ trợ phân trang phía client mượt mà, đồng bộ trải nghiệm với toàn trang Pharma Cosmetics.
+  snippets/page_skinhealthy_services.bwt (viết lại 22/11/2026 — chuẩn dùng chung, PO bỏ CSS riêng Skin Health)
+  Danh sách dịch vụ & liệu trình: hero → lưới thẻ ui_product_card (phân trang phía client ui_pagination) → CTA đặt lịch.
+  100% Tailwind theo token; không class svcs-*/lt-*, không style tĩnh. Nội dung cấu hình qua settings.skinhealthy_*.
 {%- endcomment -%}
 
 {%- assign hero_col = collections[settings.skinhealthy_col_maintenance | default: 'dieu-tri-chuyen-nghiep'] -%}
@@ -13,150 +10,108 @@
   {%- assign hero_img = hero_col.products.first.featured_image.src | default: hero_col.products.first.featured_image -%}
 {%- endif -%}
 
-{%- comment -%} 1. HERO BANNER — Chuẩn Montserrat, màu Semantic Brand {%- endcomment -%}
-<div class="relative overflow-hidden bg-brand-darkest py-14 lg:py-20 text-white text-center">
+{%- comment -%} 1. HERO {%- endcomment -%}
+<div class="relative overflow-hidden bg-primary-darkest py-14 text-center text-white font-sans lg:py-20">
   {%- if hero_img != blank -%}
-    <div class="absolute inset-0 z-0 pointer-events-none">
-      <img src="{{ hero_img | img_url: '1024x1024' }}" alt="{{ hero_col.name | default: 'Dịch vụ Skin Health Beauty' | escape }}" class="w-full h-full object-cover object-center opacity-25 filter blur-[1px]" loading="eager" fetchpriority="high">
-      <div class="absolute inset-0 bg-gradient-to-t from-brand-darkest via-brand-darkest/85 to-brand-darkest/75"></div>
-    </div>
+    <img src="{{ hero_img | img_url: '1024x1024' }}" alt="{{ hero_col.name | default: 'Dịch vụ Skin Health Beauty' | escape }}" width="1024" height="1024" class="pointer-events-none absolute inset-0 h-full w-full object-cover object-center opacity-25" loading="eager" fetchpriority="high">
   {%- endif -%}
-  <div class="container relative z-10">
-    <div class="max-w-4xl mx-auto">
-      <span class="inline-block text-xs font-semibold tracking-wider uppercase text-emerald-400 mb-3 font-sans">
-        {{ settings.skinhealthy_brand_name | default: 'Skin Health Beauty' }} by Pharma Cosmetics
-      </span>
-      <h1 class="text-2xl md:text-4xl font-extrabold text-white tracking-tight mb-4 font-sans leading-tight">
-        Liệu Trình Chăm Sóc Da Chuyên Sâu Chuẩn Y Khoa
-      </h1>
-      <p class="text-sm md:text-base text-gray-200 leading-relaxed font-sans max-w-2xl mx-auto mb-6">
-        Mỗi dịch vụ được thiết kế cá nhân hóa theo tình trạng da — từ chăm sóc phục hồi duy trì đến các liệu trình chuyên sâu nhắm mục tiêu, luôn có chuyên gia đồng hành tư vấn 1:1.
-      </p>
-      <div>
-        <a href="#danh-sach-dich-vu" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary text-white !text-white font-semibold text-sm hover:bg-brand-hover hover:text-white hover:!text-white transition-colors font-sans shadow-sm no-underline cursor-pointer">
-          <span>Khám phá dịch vụ</span>
-          <i class="inline-block leading-none text-white !text-white" aria-hidden="true">{% include 'ui_icon', name: 'chevron-down', size: 16 %}</i>
-        </a>
-      </div>
+  <div class="container relative">
+    <div class="mx-auto max-w-4xl">
+      <p class="m-0 mb-3 text-xs font-semibold uppercase tracking-wider text-primary-tint">{{ settings.skinhealthy_brand_name | default: 'Skin Health Beauty' }} by Pharma Cosmetics</p>
+      <h1 class="m-0 mb-4 text-2xl font-bold leading-tight tracking-tight text-white md:text-4xl">Liệu Trình Chăm Sóc Da Chuyên Sâu Chuẩn Y Khoa</h1>
+      <p class="mx-auto mb-6 max-w-2xl text-sm leading-relaxed text-white md:text-base">Mỗi dịch vụ được thiết kế cá nhân hóa theo tình trạng da — từ chăm sóc phục hồi duy trì đến các liệu trình chuyên sâu nhắm mục tiêu, luôn có chuyên gia đồng hành tư vấn 1:1.</p>
+      <a href="#danh-sach-dich-vu" class="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btn px-6 text-sm font-semibold !text-btn-text no-underline transition-colors hover:bg-btn-hover">
+        <span>Khám phá dịch vụ</span>
+        {% include 'ui_icon', name: 'chevron-down', size: 16, label: '' %}
+      </a>
     </div>
   </div>
 </div>
 
-{%- comment -%} 2. DANH SÁCH DỊCH VỤ TỔNG HỢP & PHÂN TRANG (Wrapper lt-page chuẩn liệu trình) {%- endcomment -%}
-<div class="lt-page">
-  <section id="danh-sach-dich-vu" class="py-10 md:py-16 bg-surface-soft scroll-mt-20">
-    <div class="container">
-      {%- comment -%} Đọc tất cả liệu trình từ các danh mục dịch vụ cấu hình {%- endcomment -%}
-      {%- assign col_handles = 'dieu-tri-chuyen-nghiep,dieu-tri-chuyen-nghiep-1,dieu-tri-chuyen-nghiep-2,dich-vu' | split: ',' -%}
-      
-      <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-line pb-4">
-        <div>
-          <p class="text-xs uppercase font-semibold text-primary font-sans mb-1">Danh mục liệu trình</p>
-          <h2 class="text-xl md:text-2xl font-bold text-ink font-sans">Tất cả dịch vụ & Liệu trình trị liệu</h2>
-        </div>
-        <div class="text-xs md:text-sm text-ink-muted font-sans" id="svcs-count-label">
-          Hiển thị liệu trình chuyên nghiệp
-        </div>
+{%- comment -%} 2. LƯỚI DỊCH VỤ + PHÂN TRANG {%- endcomment -%}
+<section id="danh-sach-dich-vu" class="scroll-mt-20 bg-surface-soft py-10 font-sans md:py-16">
+  <div class="container">
+    {%- assign col_handles = 'dieu-tri-chuyen-nghiep,dieu-tri-chuyen-nghiep-1,dieu-tri-chuyen-nghiep-2,dich-vu' | split: ',' -%}
+    <div class="mb-8 flex flex-col justify-between gap-4 border-0 border-b border-solid border-line pb-4 md:flex-row md:items-end">
+      <div>
+        <p class="m-0 mb-1 text-xs font-semibold uppercase text-primary">Danh mục liệu trình</p>
+        <h2 class="m-0 text-xl font-bold text-ink md:text-2xl">Tất cả dịch vụ &amp; Liệu trình trị liệu</h2>
       </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="svcs-grid-container">
-        {%- assign rendered_handles = '' -%}
-        {%- assign total_svcs = 0 -%}
-        {%- for handle in col_handles -%}
-          {%- assign c_obj = collections[handle] -%}
-          {%- if c_obj and c_obj.products.size > 0 -%}
-            {%- for prod in c_obj.products -%}
-              {%- unless rendered_handles contains prod.handle -%}
-                {%- assign rendered_handles = rendered_handles | append: prod.handle | append: ',' -%}
-                {%- assign total_svcs = total_svcs | plus: 1 -%}
-                <div class="svcs-item flex flex-col h-full" data-page="1">
-                  {%- assign lt_product = prod -%}
-                  {%- include 'lieu_trinh_card' -%}
-                </div>
-              {%- endunless -%}
-            {%- endfor -%}
-          {%- endif -%}
-        {%- endfor -%}
-
-        {%- if total_svcs == 0 -%}
-          <div class="col-span-full py-12 text-center text-ink-muted font-sans bg-white rounded-xl border border-line p-8">
-            Hiện chưa có dịch vụ nào trong danh mục. Vui lòng quay lại sau!
-          </div>
-        {%- endif -%}
-      </div>
-
-      {%- comment -%} 20/11/2026: phân trang dùng chung ui_pagination (chế độ js) — bỏ markup/JS tự dựng và thuộc tính style ẩn thanh {%- endcomment -%}
-      {% include 'ui_pagination', pg_mode: 'js', pg_id: 'svcs-pagination', pg_label: 'Phân trang dịch vụ' %}
+      <p class="m-0 text-xs text-ink-muted md:text-sm" id="svcs-count-label">Hiển thị liệu trình chuyên nghiệp</p>
     </div>
-  </section>
-</div>
 
-{%- comment -%} 3. CTA LIÊN HỆ ĐẶT LỊCH — Font Montserrat chuẩn {%- endcomment -%}
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" id="svcs-grid-container">
+      {%- assign rendered_handles = '' -%}
+      {%- assign total_svcs = 0 -%}
+      {%- for handle in col_handles -%}
+        {%- assign c_obj = collections[handle] -%}
+        {%- if c_obj and c_obj.products.size > 0 -%}
+          {%- for prod in c_obj.products -%}
+            {%- unless rendered_handles contains prod.handle -%}
+              {%- assign rendered_handles = rendered_handles | append: prod.handle | append: ',' -%}
+              {%- assign total_svcs = total_svcs | plus: 1 -%}
+              <div class="h-full" data-svc-item>
+                {%- include 'ui_product_card', product: prod, tone: '', eager: false, wish: false -%}
+              </div>
+            {%- endunless -%}
+          {%- endfor -%}
+        {%- endif -%}
+      {%- endfor -%}
+
+      {%- if total_svcs == 0 -%}
+        <p class="col-span-full m-0 rounded-2xl border border-solid border-line bg-white p-8 text-center text-ink-muted">Hiện chưa có dịch vụ nào trong danh mục. Vui lòng quay lại sau!</p>
+      {%- endif -%}
+    </div>
+
+    {% include 'ui_pagination', pg_mode: 'js', pg_id: 'svcs-pagination', pg_label: 'Phân trang dịch vụ' %}
+  </div>
+</section>
+
+{%- comment -%} 3. CTA ĐẶT LỊCH {%- endcomment -%}
 {%- assign sh_book_page = pages[settings.skinhealthy_booking_page] -%}
 {%- assign sh_book_url = sh_book_page.url | default: pages['dat-lich-tu-van'].url | default: '/dat-lich-tu-van' -%}
-<section class="py-12 md:py-16 bg-white border-t border-line text-center">
+<section class="bg-primary-darkest py-12 text-center font-sans text-white md:py-16">
   <div class="container">
-    <div class="max-w-3xl mx-auto">
-      <h2 class="text-xl md:text-3xl font-bold text-ink mb-3 font-sans">
-        Chưa Chắc Chắn Nên Bắt Đầu Từ Liệu Trình Nào?
-      </h2>
-      <p class="text-sm md:text-base text-ink-muted leading-relaxed font-sans mb-6">
-        Đặt lịch tư vấn miễn phí ngay hôm nay — chuyên gia sẽ phân tích tình trạng da và đề xuất phác đồ điều trị phù hợp nhất cho bạn.
-      </p>
+    <div class="mx-auto max-w-3xl">
+      <h2 class="m-0 mb-3 text-xl font-bold text-white md:text-3xl">Chưa Chắc Chắn Nên Bắt Đầu Từ Liệu Trình Nào?</h2>
+      <p class="m-0 mb-6 text-sm leading-relaxed text-white md:text-base">Đặt lịch tư vấn miễn phí ngay hôm nay — chuyên gia sẽ phân tích tình trạng da và đề xuất phác đồ điều trị phù hợp nhất cho bạn.</p>
       <div class="flex flex-wrap items-center justify-center gap-4">
-        <a href="{{ sh_book_url }}" class="inline-flex items-center justify-center min-h-11 px-6 rounded-xl bg-primary text-white !text-white font-semibold text-sm hover:bg-brand-hover hover:text-white hover:!text-white transition-colors font-sans shadow-sm no-underline cursor-pointer">
-          Đặt lịch tư vấn chuyên gia
-        </a>
-        <a href="{{ settings.header_stores_url | default: '/he-thong-cua-hang' }}" class="inline-flex items-center justify-center min-h-11 px-6 rounded-xl border border-line bg-surface-page text-ink font-semibold text-sm hover:border-primary hover:text-primary transition-colors font-sans no-underline cursor-pointer">
-          Xem phòng khám & Cơ sở
-        </a>
+        <a href="{{ sh_book_url }}" class="inline-flex min-h-[44px] items-center justify-center rounded-full bg-btn px-6 text-sm font-semibold !text-btn-text no-underline transition-colors hover:bg-btn-hover">Đặt lịch tư vấn chuyên gia</a>
+        <a href="{{ settings.header_stores_url | default: '/he-thong-cua-hang' }}" class="inline-flex min-h-[44px] items-center justify-center rounded-full border border-solid border-white bg-transparent px-6 text-sm font-semibold !text-white no-underline transition-colors hover:bg-white hover:!text-primary-darkest">Xem phòng khám &amp; Cơ sở</a>
       </div>
     </div>
   </div>
 </section>
 
 <script>
-(function() {
-  function initSvcsPagination() {
-    var itemsPerPage = 12;
-    var container = document.getElementById('svcs-grid-container');
-    var pagination = document.getElementById('svcs-pagination');
-    var countLabel = document.getElementById('svcs-count-label');
-    if (!container || !pagination || !window.PcPagination) return;
-
-    var items = Array.prototype.slice.call(container.querySelectorAll('.svcs-item'));
-    var totalItems = items.length;
-    var totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
-    if (totalPages <= 1) {
-      window.PcPagination.render(pagination, 1, 1);
-      if (countLabel) countLabel.textContent = 'Tổng số ' + totalItems + ' liệu trình';
+(function () {
+  /* 22/11/2026: phân trang phía client — ẩn/hiện bằng thuộc tính hidden (không style tĩnh, không CSS riêng). */
+  function init() {
+    var perPage = 12;
+    var box = document.getElementById('svcs-grid-container');
+    var nav = document.getElementById('svcs-pagination');
+    var label = document.getElementById('svcs-count-label');
+    if (!box || !nav || !window.PcPagination) return;
+    var items = Array.prototype.slice.call(box.querySelectorAll('[data-svc-item]'));
+    var total = items.length;
+    var pages = Math.ceil(total / perPage) || 1;
+    if (pages <= 1) {
+      window.PcPagination.render(nav, 1, 1);
+      if (label) label.textContent = 'Tổng số ' + total + ' liệu trình';
       return;
     }
-
-    /* 20/11/2026: thanh phân trang vẽ bằng PcPagination (ui_pagination chế độ js) — giao diện chung toàn site. */
-    function renderPage(page, scroll) {
-      var start = (page - 1) * itemsPerPage;
-      var end = start + itemsPerPage;
-      items.forEach(function(item, idx) {
-        item.style.display = (idx >= start && idx < end) ? 'flex' : 'none';
-      });
-      if (countLabel) {
-        countLabel.textContent = 'Hiển thị ' + (start + 1) + ' - ' + Math.min(end, totalItems) + ' / ' + totalItems + ' liệu trình';
-      }
-      window.PcPagination.render(pagination, totalPages, page, function (p) { renderPage(p, true); });
+    function show(page, scroll) {
+      var start = (page - 1) * perPage, end = start + perPage;
+      items.forEach(function (it, i) { it.hidden = !(i >= start && i < end); });
+      if (label) label.textContent = 'Hiển thị ' + (start + 1) + ' - ' + Math.min(end, total) + ' / ' + total + ' liệu trình';
+      window.PcPagination.render(nav, pages, page, function (p) { show(p, true); });
       if (scroll) {
-        var anchor = document.getElementById('danh-sach-dich-vu');
-        if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        var a = document.getElementById('danh-sach-dich-vu');
+        if (a) a.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
-
-    renderPage(1, false);
+    show(1, false);
   }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initSvcsPagination);
-  } else {
-    initSvcsPagination();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
 </script>

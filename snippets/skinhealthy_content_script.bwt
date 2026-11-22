@@ -1,4 +1,4 @@
-{%- comment -%}19/09/2026: giữ reveal và giỏ dịch vụ khi bỏ layout riêng; header/menu dùng theme.bwt.{%- endcomment -%}
+{%- comment -%}19/09/2026: giữ giỏ dịch vụ khi bỏ layout riêng (22/11/2026: bỏ hiệu ứng reveal cùng CSS riêng); header/menu dùng theme.bwt.{%- endcomment -%}
 {%- assign sh_book_page = pages[settings.skinhealthy_booking_page] -%}
 {%- comment -%} 22/11/2026 (chủ dự án: «sai hẳn thiết kế, màu button»): thanh giỏ dịch vụ làm lại 100% Tailwind theo token — nền trắng + viền trên (cùng ngôn ngữ thanh menu đáy), số lượng = chấm màu thương hiệu, nút Đặt lịch = nút chính (bg-btn) bo tròn, nút xoá bo tròn viền nhạt. Bỏ màu nâu «--sh-gold» + chữ hoa giãn chữ. Ẩn/hiện bằng data-open (JS bên dưới). Trên mobile nằm ngay trên thanh menu đáy. {%- endcomment -%}
 <div class="fixed inset-x-0 bottom-[calc(56px+env(safe-area-inset-bottom,0px))] z-[120] invisible translate-y-full border-0 border-t border-solid border-line bg-white font-sans text-ink transition-transform duration-300 data-[open=true]:visible data-[open=true]:translate-y-0 min-[992px]:bottom-0" id="sh-cart-bar" role="complementary" aria-label="{{ settings.skinhealthy_cart_aria | default: 'Dịch vụ đã chọn' | escape }}">
@@ -17,21 +17,6 @@
 </div>
 <script>
 (function () {
-  /* Scroll reveal */
-  if ('IntersectionObserver' in window) {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (e.isIntersecting) {
-          e.target.classList.add('is-visible');
-          io.unobserve(e.target);
-        }
-      });
-    }, { threshold: 0.1, rootMargin: '0px 0px -48px 0px' });
-    document.querySelectorAll('.sh-reveal').forEach(function (el) { io.observe(el); });
-  } else {
-    document.querySelectorAll('.sh-reveal').forEach(function (el) { el.classList.add('is-visible'); });
-  }
-
   /* ── SHCart — global service basket ───────────────────────── */
   {%- comment -%}
     skinhealthy_booking_page (setting "Trang đặt lịch / MOPS") tồn tại trong schema
