@@ -208,12 +208,13 @@ async function chat(request, env, c, cors) {
   }
   if (products.length) parts.push("**Sản phẩm tham khảo** (xem giá và thành phần chi tiết tại trang sản phẩm):\n" + products.map((p) => `- [${p.title}](${p.url})`).join("\n"));
   if (articles.length) parts.push("**Bài viết tham khảo**:\n" + articles.map((a) => `- [${a.title}](${a.url})`).join("\n"));
-  if (!parts.length) parts.push(SAFE_FALLBACK);
+  let needsContact = false; // không có gì để gợi ý ⇒ trang chat hiện số hotline + nút Zalo
+  if (!parts.length) { parts.push(SAFE_FALLBACK); needsContact = true; }
   parts.push(`Thông tin chỉ mang tính tham khảo, không thay thế tư vấn trực tiếp từ ${c.expert}.`);
 
   let reply = parts.join("\n\n");
-  if (!complianceOk(reply)) { reply = SAFE_FALLBACK; products = []; articles = []; }
-  return json({ reply, related_products: products, related_articles: articles, store_info: storeInfo }, 200, cors);
+  if (!complianceOk(reply)) { reply = SAFE_FALLBACK; products = []; articles = []; needsContact = true; }
+  return json({ reply, related_products: products, related_articles: articles, store_info: storeInfo, needs_contact: needsContact }, 200, cors);
 }
 
 export default {

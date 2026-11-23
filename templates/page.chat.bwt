@@ -16,6 +16,11 @@
 {%- assign pc_api = settings.ai_chat_api_url | strip -%}
 {%- assign pc_skin_base = settings.ai_chat_skin_url | default: '/kham-da-ai' | split: '?' | first -%}
 {%- assign pc_title = settings.ai_chat_title | default: 'Chatbot Pharma Cosmetics' -%}
+{%- comment -%} 23/11/2026 (chủ dự án): khi chat lỗi / chưa kết nối ⇒ gửi SỐ HOTLINE + nút ZALO để khách vẫn liên hệ được. Nguồn số như bảng liên hệ (support.bwt). {%- endcomment -%}
+{%- if settings.store_edit -%}{%- assign pc_phone = settings.store_phone | remove: ' ' | remove: '.' -%}{%- else -%}{%- assign pc_phone = store.phone_number | remove: ' ' | remove: '.' -%}{%- endif -%}
+{%- assign pc_zalo = '' -%}{%- if settings.contact_zalo_enable and settings.contact_zalo != blank -%}{%- assign pc_zalo = settings.contact_zalo | remove: ' ' | remove: '.' -%}{%- endif -%}
+{%- capture pc_ic_phone -%}{% include 'ui_icon', name: 'phone', size: 18 %}{%- endcapture -%}
+{%- capture pc_ic_zalo -%}{% include 'ui_icon', name: 'message-circle', size: 18 %}{%- endcapture -%}
 
 <script src="{{ 'skin-liqa-lighting.js' | asset_url }}" defer></script>
 <script src="{{ 'skin-liqa-mesh.js' | asset_url }}" defer></script>
@@ -26,7 +31,7 @@
 <script src="{{ 'skin-scoring-engine.js' | asset_url }}" defer></script>
 <script src="{{ 'skin-routine-matcher.js' | asset_url }}" defer></script>
 
-<div id="pc-chat" class="relative flex h-[100dvh] flex-col overflow-hidden bg-white text-ink" data-api="{{ pc_api | escape }}" data-min-light="{{ settings.ai_skin_scan_min_light | default: '80' | escape }}" data-model-url="{{ settings.ai_skin_scan_onnx_model_url | default: '' | escape }}" data-model-sha="{{ settings.ai_skin_scan_onnx_model_sha256 | default: '' | escape }}" data-deid="{{ settings.ai_skin_scan_deid_enable | default: true }}">
+<div id="pc-chat" class="relative flex h-[100dvh] flex-col overflow-hidden bg-white text-ink" data-api="{{ pc_api | escape }}" data-min-light="{{ settings.ai_skin_scan_min_light | default: '80' | escape }}" data-model-url="{{ settings.ai_skin_scan_onnx_model_url | default: '' | escape }}" data-model-sha="{{ settings.ai_skin_scan_onnx_model_sha256 | default: '' | escape }}" data-deid="{{ settings.ai_skin_scan_deid_enable | default: true }}" data-phone="{{ pc_phone | escape }}" data-zalo="{{ pc_zalo | escape }}">
 	<header class="flex shrink-0 items-center gap-3 bg-primary px-4 py-3 text-white">
 		<span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'comment-dots', size: 20 %}</i></span>
 		<div class="min-w-0 flex-1">
@@ -196,13 +201,48 @@ document.addEventListener('DOMContentLoaded', function () {
     return el;
   }
 
+  // ---------- Khối liên hệ khi chat lỗi: số hotline (gọi) + nút Zalo ----------
+  var IC_PHONE = {{ pc_ic_phone | strip_newlines | json }}, IC_ZALO = {{ pc_ic_zalo | strip_newlines | json }};
+  var PHONE = (root.dataset.phone || '').replace(/[^0-9+]/g, ''), ZALO = (root.dataset.zalo || '').replace(/[^0-9]/g, '');
+  function fmtPhone(n) { return /^0\d{9}$/.test(n) ? n.slice(0, 4) + '.' + n.slice(4, 7) + '.' + n.slice(7) : n; }
+  function addContact(el) {
+    if (PHONE || ZALO) {
+      var row = document.createElement('div');
+      row.className = 'mt-2 flex flex-wrap gap-2';
+      if (PHONE) {
+        var a = document.createElement('a');
+        a.className = 'inline-flex min-h-[44px] items-center gap-2 rounded-full bg-btn px-4 text-sm font-bold text-btn-text no-underline hover:bg-btn-hover';
+        a.href = 'tel:' + PHONE;
+        a.innerHTML = '<span aria-hidden="true">' + IC_PHONE + '</span>';
+        a.appendChild(document.createTextNode('Gọi ' + fmtPhone(PHONE)));
+        row.appendChild(a);
+      }
+      if (ZALO) {
+        var z = document.createElement('a');
+        z.className = 'inline-flex min-h-[44px] items-center gap-2 rounded-full border border-solid border-primary bg-white px-4 text-sm font-bold text-primary-deep no-underline hover:bg-brand-tint';
+        z.href = 'https://zalo.me/' + ZALO; z.target = '_blank'; z.rel = 'noopener';
+        z.innerHTML = '<span aria-hidden="true">' + IC_ZALO + '</span>';
+        z.appendChild(document.createTextNode('Chat Zalo'));
+        row.appendChild(z);
+      }
+      el.appendChild(row);
+    }
+    scrollEnd();
+    return el;
+  }
+  function errorBubble(text) {
+    var el = bubble(BOT);
+    el.appendChild(document.createTextNode(text));
+    return addContact(el);
+  }
+
   // ---------- 1) Chat AI (chỉ gửi chữ khách gõ) ----------
   function ask(text, withBubble) {
     if (withBubble !== false) bubble(USER).textContent = text;
     history.push({ role: 'user', content: text });
     if (!apiOk) {
       history.pop();
-      bubble(BOT).textContent = 'Chat tra cứu chưa được cấu hình địa chỉ máy chủ. Bạn vẫn có thể gửi ảnh để soi da, hoặc liên hệ hotline giúp em nhé ạ.';
+      errorBubble('Chat tra cứu chưa kết nối được máy chủ. Bạn vẫn có thể gửi ảnh để soi da, hoặc liên hệ trực tiếp với cửa hàng giúp em nhé ạ.');
       return Promise.resolve();
     }
     var wait = typing();
@@ -210,17 +250,18 @@ document.addEventListener('DOMContentLoaded', function () {
       .then(function (res) { return res.json().catch(function () { return {}; }).then(function (data) { return { ok: res.ok, status: res.status, data: data }; }); })
       .then(function (r) {
         wait.remove();
-        var el = bubble(BOT);
         if (r.ok && r.data && r.data.reply) {
+          var el = bubble(BOT);
           renderReply(el, r.data.reply);
+          if (r.data.needs_contact) addContact(el);
           history.push({ role: 'assistant', content: String(r.data.reply).slice(0, 2000) });
         } else {
-          el.textContent = r.status === 429 ? 'Bạn gửi hơi nhanh, vui lòng đợi ít phút rồi hỏi lại nhé ạ.'
-            : ((r.data && typeof r.data.detail === 'string' && r.data.detail) || 'Hệ thống đang bận, bạn thử lại sau hoặc liên hệ hotline giúp em nhé ạ.');
+          errorBubble(r.status === 429 ? 'Bạn gửi hơi nhanh, vui lòng đợi ít phút rồi hỏi lại nhé ạ. Cần gấp bạn liên hệ trực tiếp giúp em:'
+            : ((r.data && typeof r.data.detail === 'string' && r.data.detail) || 'Hệ thống đang bận. Bạn thử lại sau hoặc liên hệ trực tiếp với cửa hàng giúp em nhé ạ:'));
           history.pop();
         }
       })
-      .catch(function () { wait.remove(); bubble(BOT).textContent = 'Em chưa kết nối được. Bạn kiểm tra mạng hoặc liên hệ hotline giúp em nhé ạ.'; history.pop(); });
+      .catch(function () { wait.remove(); errorBubble('Em chưa kết nối được. Bạn kiểm tra mạng, hoặc liên hệ trực tiếp với cửa hàng giúp em nhé ạ:'); history.pop(); });
   }
 
   // ---------- 2) Nhận ảnh: kiểm sáng + kiểm khuôn mặt (cùng bộ kiểm của trang soi da) ----------

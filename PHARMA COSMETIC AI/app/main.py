@@ -102,6 +102,7 @@ class ChatResponse(BaseModel):
     related_products: List[Dict[str, Any]] = []
     related_articles: List[Dict[str, Any]] = []
     store_info: Optional[Dict[str, Any]] = None
+    needs_contact: bool = False
 
 
 @app.get("/")
@@ -183,13 +184,16 @@ async def chat_endpoint(body: ChatRequest, request: Request):
                      + "\n".join(f"- [{p['title']}]({p['url']})" for p in products))
     if articles:
         parts.append("**Bài viết tham khảo**:\n" + "\n".join(f"- [{a['title']}]({a['url']})" for a in articles))
+    needs_contact = False  # không có gì để gợi ý ⇒ trang chat hiện số hotline + nút Zalo
     if not parts:
         parts.append(SAFE_FALLBACK)
+        needs_contact = True
     parts.append("Thông tin chỉ mang tính tham khảo, không thay thế tư vấn trực tiếp từ " + settings.EXPERT_TITLE + ".")
 
     reply = "\n\n".join(parts)
     ok, _ = check_medical_compliance(reply)
     if not ok:
         reply, products, articles = SAFE_FALLBACK, [], []
+        needs_contact = True
 
-    return ChatResponse(reply=reply, related_products=products, related_articles=articles, store_info=store_info)
+    return ChatResponse(reply=reply, related_products=products, related_articles=articles, store_info=store_info, needs_contact=needs_contact)
