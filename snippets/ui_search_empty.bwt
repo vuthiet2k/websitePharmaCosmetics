@@ -1,0 +1,55 @@
+{%- comment -%}
+  snippets/ui_search_empty.bwt — «Không tìm thấy» DÙNG CHUNG (23/11/2026, chủ dự án: «đã có khung mẫu rồi mà làm lại chán thế»):
+  khung mẫu M-31 gọn kiểu Shopee của trang tìm kiếm rỗng (search_empty_state.bwt) được tách ra để TRANG TÌM KIẾM và Ô TÌM KIẾM NHANH (mobile + desktop) dùng chung 1 giao diện:
+    1 dòng thông báo (icon + chữ) → nút hỏi trợ lý AI (chỉ khi bật Chat AI) → 1 hàng chip từ khoá gợi ý (settings.footer_search_menu).
+  Tham số:
+    ue_popup (true ⇒ dùng trong ô tìm kiếm nhanh: từ khoá là <span data-empty-term> do JS điền, chip cuộn ngang thường; không ⇒ trang tìm kiếm: dùng search.terms, chip trong Swiper)
+    ue_kind  (chuỗi: «sản phẩm» | «bài viết» | «kết quả», mặc định «sản phẩm»)
+    ue_tag   (thẻ cho dòng thông báo: «h1» ở trang tìm kiếm, mặc định «p»)
+  Nút hỏi AI mang data-ai-ask (layouts/theme.bwt xử lý → window.pcAiChatAsk). Ở ô tìm kiếm nhanh JS gán data-ai-ask + chữ theo từ khoá.
+  search.terms đã được Sapo escape sẵn — KHÔNG escape thêm.
+{%- endcomment -%}
+{%- assign _ue_popup = ue_popup | default: false -%}
+{%- assign _ue_kind = ue_kind | default: 'sản phẩm' -%}
+{%- assign _ue_tag = ue_tag | default: 'p' -%}
+{%- assign _ue_kw = settings.footer_search_menu | default: 'Phục hồi da;Trị mụn;Trị nám;Trẻ hoá da;Kem chống nắng' | split: ';' -%}
+{%- assign _ue_ai = settings.search_label_ai | default: 'Hỏi trợ lý AI về “{q}”' -%}
+<div class="font-sans text-ink{% if _ue_popup %} px-4 pb-3{% endif %}">
+	<{{ _ue_tag }} class="m-0 flex items-center gap-2 py-3 text-sm font-semibold text-ink-secondary">
+		<span class="shrink-0 text-ink-muted" aria-hidden="true">{% include 'ui_icon', name: 'frown', size: 20 %}</span>
+		<span class="min-w-0">Không tìm thấy {{ _ue_kind }} cho “{% if _ue_popup %}<span data-empty-term></span>{% else %}{{ search.terms }}{% endif %}”</span>
+	</{{ _ue_tag }}>
+
+	{%- if settings.ai_chat_enable -%}
+	<div class="pb-3">
+		<button type="button" {% if _ue_popup %}data-ai-ask="" data-ai-label="{{ _ue_ai | escape }}"{% else %}data-ai-ask="{{ search.terms }}"{% endif %} class="inline-flex min-h-[44px] max-w-full cursor-pointer items-center gap-2 rounded-full border border-solid border-primary bg-white px-4 text-sm font-semibold text-primary-deep transition-colors hover:bg-brand-tint">
+			<span class="shrink-0" aria-hidden="true">{% include 'ui_icon', name: 'comment-dots', size: 18 %}</span>
+			<span class="min-w-0 truncate" data-ai-label-text>{% unless _ue_popup %}{{ _ue_ai | replace: '{q}', search.terms }}{% endunless %}</span>
+		</button>
+	</div>
+	{%- endif -%}
+
+	{%- if _ue_kw.size > 0 -%}
+	{%- if _ue_popup -%}
+	<div class="flex gap-2 overflow-x-auto pb-1">
+		{%- for _k in _ue_kw limit: 6 -%}
+		{%- assign _kw = _k | strip -%}
+		{%- if _kw != '' -%}
+		<a class="inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap rounded-full border border-solid border-line-soft bg-surface-soft px-4 text-sm text-ink no-underline transition-colors hover:border-primary hover:bg-brand-tint" href="/search?query={{ _kw | url_encode }}&amp;type=product">{{ _kw | escape }}</a>
+		{%- endif -%}
+		{%- endfor -%}
+	</div>
+	{%- else -%}
+	<div class="swiper-container mb-4 overflow-hidden" data-pc-slider data-gap="8">
+		<div class="swiper-wrapper">
+			{%- for _k in _ue_kw -%}
+			{%- assign _kw = _k | strip -%}
+			{%- if _kw != '' -%}
+			<a class="swiper-slide inline-flex min-h-[44px] !w-auto items-center whitespace-nowrap rounded-full border border-solid border-line-soft bg-surface-soft px-4 text-sm text-ink no-underline hover:bg-brand-tint" href="/search?query={{ _kw | url_encode }}&amp;type=product">{{ _kw | escape }}</a>
+			{%- endif -%}
+			{%- endfor -%}
+		</div>
+	</div>
+	{%- endif -%}
+	{%- endif -%}
+</div>

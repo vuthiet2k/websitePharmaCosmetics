@@ -84,23 +84,8 @@
     {%- comment -%} 23/11/2026 (chủ dự án: 2 ô vàng «Không tìm thấy kết quả» trông xấu): 1 khối trống gọn dùng chung cho tìm kiếm nhanh
       mobile (assets/mobile-ui.js.bwt) và desktop (layouts/theme.bwt) qua window.pcSearchEmptyHtml(term). Không có bài viết ⇒ ẩn mục Tin tức.
       Từ khoá gợi ý = settings.footer_search_menu (như trang tìm kiếm rỗng, search_empty_state.bwt). Template nằm ở đây vì snippet nạp mọi trang. {%- endcomment -%}
-    {%- assign _se_kw = settings.footer_search_menu | default: 'Phục hồi da;Trị mụn;Trị nám;Trẻ hoá da;Kem chống nắng' | split: ';' -%}
     <template id="pc-search-empty-tpl">
-      <div class="flex flex-col items-center gap-2 px-4 py-6 text-center font-sans">
-        <span class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-brand-tint text-primary" aria-hidden="true">{% include 'ui_icon', name: 'search', size: 24, label: '' %}</span>
-        <p class="m-0 text-sm font-semibold text-ink">Không tìm thấy kết quả cho “<span data-empty-term></span>”</p>
-        <p class="m-0 text-xs text-ink-muted">Thử từ khoá ngắn hơn, kiểm tra chính tả hoặc chọn gợi ý bên dưới.</p>
-        {%- if _se_kw.size > 0 -%}
-        <div class="mt-2 flex flex-wrap justify-center gap-2">
-          {%- for _k in _se_kw limit: 6 -%}
-          {%- assign _kw = _k | strip -%}
-          {%- if _kw != '' -%}
-          <a class="inline-flex min-h-[44px] items-center rounded-full border border-solid border-line-soft bg-surface-soft px-4 text-sm text-ink no-underline transition-colors hover:border-primary hover:bg-brand-tint" href="/search?query={{ _kw | url_encode }}&amp;type=product">{{ _kw | escape }}</a>
-          {%- endif -%}
-          {%- endfor -%}
-        </div>
-        {%- endif -%}
-      </div>
+      {%- include 'ui_search_empty', ue_popup: true, ue_kind: 'kết quả', ue_tag: 'p' -%}
     </template>
     <script>
       window.pcSearchEmptyHtml = function (term) {
@@ -109,6 +94,12 @@
         var frag = t.content.cloneNode(true);
         var s = frag.querySelector('[data-empty-term]');
         if (s) s.textContent = term;
+        var ai = frag.querySelector('[data-ai-ask]');
+        if (ai) {
+          ai.setAttribute('data-ai-ask', term);
+          var lt = ai.querySelector('[data-ai-label-text]');
+          if (lt) lt.textContent = (ai.getAttribute('data-ai-label') || '').replace('{q}', term);
+        }
         var box = document.createElement('div');
         box.appendChild(frag);
         return box.innerHTML;

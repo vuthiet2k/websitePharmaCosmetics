@@ -5,35 +5,12 @@
   Tham số: gọi kèm `assign empty_type = 'product'` hoặc 'article' trước khi include.
 {%- endcomment -%}
 {%- assign _es_type = empty_type | default: 'product' -%}
-{%- assign _es_kw = settings.footer_search_menu | default: 'Phục hồi da;Trị mụn;Trị nám;Trẻ hoá da;Kem chống nắng' | split: ';' -%}
 {%- assign _es_col = collections['san-pham-ban-chay-noi-bat'] -%}
 {%- if _es_col.products.size == 0 -%}{%- assign _es_col = collections['all'] -%}{%- endif -%}
 <div class="font-sans text-ink">
 	{%- if _es_type != 'none' -%}
-	<h1 class="m-0 flex items-center gap-2 py-3 text-sm font-semibold text-ink-secondary">
-		<span class="shrink-0 text-ink-muted" aria-hidden="true">{% include 'ui_icon', name: 'frown', size: 20 %}</span>
-		<span class="min-w-0">Không tìm thấy {% if _es_type == 'article' %}bài viết{% else %}sản phẩm{% endif %} cho “{{ search.terms }}”</span>
-	</h1>
-	{%- endif -%}
-
-	{%- comment -%} 23/11/2026 (chủ dự án): không có kết quả ⇒ thêm nút hỏi trợ lý AI (chỉ khi bật Chat AI). Nút do layouts/theme.bwt xử lý qua [data-ai-ask] ⇒ window.pcAiChatAsk. search.terms đã được Sapo escape sẵn. {%- endcomment -%}
-	{%- if settings.ai_chat_enable and _es_type != 'none' -%}
-	<div class="pb-4">
-		<button type="button" data-ai-ask="{{ search.terms }}" class="inline-flex min-h-[44px] cursor-pointer items-center justify-center gap-2 rounded-full border-0 bg-btn px-5 text-sm font-bold text-btn-text hover:bg-btn-hover">{{ settings.search_label_ai | default: 'Hỏi trợ lý AI về “{q}”' | replace: '{q}', search.terms }}</button>
-	</div>
-	{%- endif -%}
-
-	{%- if _es_kw.size > 0 -%}
-	<div class="swiper-container mb-4 overflow-hidden" data-pc-slider data-gap="8">
-		<div class="swiper-wrapper">
-			{%- for _k in _es_kw -%}
-			{%- assign _kw = _k | strip -%}
-			{%- if _kw != '' -%}
-			<a class="swiper-slide inline-flex min-h-[44px] !w-auto items-center whitespace-nowrap rounded-full border border-solid border-line-soft bg-surface-soft px-4 text-sm text-ink no-underline hover:bg-brand-tint" href="/search?query={{ _kw | url_encode }}&amp;type={% if _es_type == 'article' %}article{% else %}product{% endif %}" title="Tìm {{ _kw | escape }}">{{ _kw }}</a>
-			{%- endif -%}
-			{%- endfor -%}
-		</div>
-	</div>
+	{%- assign _es_kind = 'sản phẩm' -%}{%- if _es_type == 'article' -%}{%- assign _es_kind = 'bài viết' -%}{%- endif -%}
+	{%- include 'ui_search_empty', ue_kind: _es_kind, ue_tag: 'h1', ue_popup: false -%}
 	{%- endif -%}
 
 	{%- if _es_col.products.size > 0 -%}

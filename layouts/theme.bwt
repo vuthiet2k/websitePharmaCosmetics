@@ -151,16 +151,20 @@
 					});
 					var allRow = row('/search?q=' + encodeURIComponent(term) + '&type=product', esc(PC_SI_L.all.replace('{q}', term)), '');
 					if (n > 0) return '<div class="pc-suggest bg-white">' + out + allRow + '</div>';
+					// Không có gợi ý: dòng «Tìm …» + KHUNG TRỐNG DÙNG CHUNG (ui_search_empty: thông báo, nút hỏi trợ lý AI, chip từ khoá)
 					var empty = (typeof window.pcSearchEmptyHtml === 'function' && window.pcSearchEmptyHtml(term)) || '';
-					var ai = PC_AI_ON ? '<div class="px-4 pb-4"><button type="button" data-ai-ask="' + esc(term) + '" class="inline-flex min-h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-full border-0 bg-btn px-4 text-sm font-bold text-btn-text hover:bg-btn-hover">' + esc(PC_SI_L.ai.replace('{q}', term)) + '</button></div>' : '';
-					return '<div class="pc-suggest bg-white">' + allRow + empty + ai + '</div>';
+					return '<div class="pc-suggest bg-white">' + allRow + empty + '</div>';
 				};
 				// Nút «Hỏi trợ lý AI»: mở khung chat (snippets/ai_chat.bwt) kèm câu hỏi
 				document.addEventListener('click', function (e) {
 					var b = e.target.closest && e.target.closest('[data-ai-ask]');
 					if (!b) return;
 					e.preventDefault();
-					if (typeof window.pcAiChatAsk === 'function') window.pcAiChatAsk(b.getAttribute('data-ai-ask'));
+					// ô tìm kiếm mobile (z-index 9999) phủ trên khung chat ⇒ đóng trước khi mở chat
+					var mbClose = document.getElementById('mb-search-close'), mbBox = document.getElementById('mb-search-popup');
+					if (mbClose && mbBox && mbBox.classList.contains('is-active')) mbClose.click();
+					var q = b.getAttribute('data-ai-ask');
+					if (typeof window.pcAiChatAsk === 'function') window.pcAiChatAsk(q);
 				});
 			})();
 		window.addEventListener('error', function (e) {
