@@ -260,8 +260,9 @@
                 + '<a href="/search?query=' + enc + '&type=product" class="see-all-search">Xem tất cả »</a></div>';
               keys.forEach(function (k) { html += buildProductHtml(data[k]); });
             } else {
-              html = '<div class="title-search"><span>Sản phẩm</span></div>'
-                + '<div class="not-pro">Không tìm thấy kết quả</div>';
+              /* 23/11/2026: khối trống gọn dùng chung (mobile_search_popup.bwt #pc-search-empty-tpl) thay ô vàng «Không tìm thấy kết quả» */
+              html = (typeof window.pcSearchEmptyHtml === 'function' && window.pcSearchEmptyHtml(term))
+                || '<div class="title-search"><span>Sản phẩm</span></div><div class="not-pro">Không tìm thấy kết quả</div>';
             }
             if (mbListSearch) mbListSearch.innerHTML = html;
             if (smartSection) smartSection.hidden = false;
@@ -275,8 +276,7 @@
                 + '<a href="/search?query=' + enc + '&type=article" class="see-all-search">Xem tất cả »</a></div>';
               keys2.forEach(function (k) { html2 += buildArticleHtml(data2[k]); });
             } else {
-              html2 = '<div class="title-search"><span>Tin tức</span></div>'
-                + '<div class="not-pro">Không tìm thấy kết quả</div>';
+              html2 = ''; /* 23/11/2026: không có bài viết ⇒ ẩn hẳn mục Tin tức (không hiện thêm ô trống thứ 2) */
             }
             if (mbListSearch2) mbListSearch2.innerHTML = html2;
           });

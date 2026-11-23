@@ -176,8 +176,8 @@
 				var searchRecentList = localStorage.getItem('search_recent_list');
 				var recentList = searchRecentList ? JSON.parse(searchRecentList) : [];
 
-				if (recentList.length > 0) {
-					searchRecent.classList.remove('d-none');
+				if (searchRecent && recentList.length > 0) { // 23/11/2026: không có .search-recent ⇒ bỏ qua (tránh crash)
+					searchRecent && searchRecent.classList.remove('d-none');
 					var searchList = searchRecent.querySelector('.search-list');
 					// Chỉ hiển thị vài mục gần đây nhất (mới nhất lên đầu) cho gọn
 					var RECENT_SHOW = 5;
@@ -214,7 +214,7 @@
 								localStorage.setItem('search_recent_list', JSON.stringify(recentList));
 								searchList.removeChild(link);
 								if (recentList.length == 0) {
-									searchRecent.classList.toggle('d-none');
+									searchRecent && searchRecent.classList.toggle('d-none');
 								}
 							}
 						});
@@ -233,9 +233,9 @@
 						let data2 = '';
 						var resultbox2 = '';
 						if (term.length > 1) {
-							searchRecent.classList.add('d-none');
-							searchCoupon.classList.add('d-none');
-							searchSuggest.classList.add('d-none');
+							searchRecent && searchRecent.classList.add('d-none');
+							searchCoupon && searchCoupon.classList.add('d-none');
+							searchSuggest && searchSuggest.classList.add('d-none');
 							async function goawaySearch() {
 								data = await getItemSearch(term, 'smartjson');
 								data2 = await getItemSearch2(term, 'smartjsonar');
@@ -253,7 +253,7 @@
 										});
 										document.querySelector('.list-search').innerHTML = resultbox;
 									} else {
-										document.querySelector('.list-search').innerHTML = '<div class="title-search"><span>Sản phẩm</span></div><div class="not-pro">Không có thấy kết quả tìm kiếm</div>';
+										/* 23/11/2026: khối trống gọn dùng chung (mobile_search_popup.bwt #pc-search-empty-tpl) thay ô vàng */ document.querySelector('.list-search').innerHTML = (typeof window.pcSearchEmptyHtml === 'function' && window.pcSearchEmptyHtml(term)) || '<div class="title-search"><span>Sản phẩm</span></div><div class="not-pro">Không tìm thấy kết quả</div>';
 									}
 									if(sizeData2 > 0 ) {
 										resultbox2 +=`<div class="title-search"><span>Tin tức</span> <a href="/search?query=${term}&type=article" class="see-all-search" title="Xem tất cả">Xem tất cả »</a></div></div>`
@@ -266,17 +266,17 @@
 										});
 										document.querySelector('.list-search2').innerHTML = resultbox2;
 									} else {
-										document.querySelector('.list-search2').innerHTML = '<div class="title-search"><span>Tin tức</span></div><div class="not-pro">Không có thấy kết quả tìm kiếm</div>';
+										document.querySelector('.list-search2').innerHTML = ''; /* 23/11/2026: không có bài viết ⇒ ẩn mục Tin tức */
 									}
 								}, 200);
 							}
 
 							goawaySearch();
 						} else {
-							searchCoupon.classList.remove('d-none');
-							searchSuggest.classList.remove('d-none');
-							if (recentList.length > 0) {
-								searchRecent.classList.remove('d-none');
+							searchCoupon && searchCoupon.classList.remove('d-none');
+							searchSuggest && searchSuggest.classList.remove('d-none');
+							if (searchRecent && recentList.length > 0) { // 23/11/2026: tắt header_search_recent ⇒ không có .search-recent (null) — trước đây làm crash cả ô tìm kiếm nhanh
+								searchRecent && searchRecent.classList.remove('d-none');
 							}
 							document.querySelector('.list-search').innerHTML = '';
 							document.querySelector('.list-search2').innerHTML = '';
