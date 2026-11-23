@@ -219,6 +219,7 @@
     }
 
     // 23/11/2026 (review): chữ chèn vào HTML luôn qua escHtml; icon + từ khoá gợi ý lấy từ biến toàn cục do layouts/theme.bwt dựng (ui_icon + cấu hình footer_search_menu).
+    function plain(t) { var x = document.createElement('textarea'); x.innerHTML = String(t == null ? '' : t); return x.value; } // smartjson trả tên đã escape HTML (Ph&#225;p) ⇒ giải mã về chữ thường trước khi escHtml, tránh hiện «Ph&#225;p» nguyên văn
     function escHtml(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
     function highlightMatch(text, query) {
       var safe = escHtml(text);
@@ -265,7 +266,7 @@
               var addedPhrases = [];
               keys.forEach(function (k) {
                 var p = data[k];
-                var namePhrase = p.name ? p.name.trim() : '';
+                var namePhrase = p.name ? plain(p.name).trim() : '';
                 if (namePhrase && addedPhrases.indexOf(namePhrase.toLowerCase()) === -1) {
                   addedPhrases.push(namePhrase.toLowerCase());
                   html += buildSuggestionRow(namePhrase, term);

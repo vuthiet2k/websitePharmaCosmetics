@@ -248,6 +248,7 @@
 									var sizeData = Object.keys(data).length;
 									if (sizeData > 0) {
 										// 23/11/2026 (review): MỌI chữ chèn vào HTML đều qua escHtml (tên SP là dữ liệu Sapo); icon dựng sẵn bằng ui_icon (khai ở đầu <script>), màu theo token.
+										function plain(t) { var x = document.createElement('textarea'); x.innerHTML = String(t == null ? '' : t); return x.value; } // smartjson trả tên đã escape HTML (Ph&#225;p) ⇒ giải mã về chữ thường trước khi escHtml, tránh hiện «Ph&#225;p» nguyên văn
 										function escHtml(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 										function highlightMatch(text, query) {
 											var safe = escHtml(text);
@@ -258,7 +259,7 @@
 										resultbox = '<div class="pc-tiktok-suggestions">';
 										var added = [];
 										Object.keys(data).forEach(function (key) {
-											var name = data[key].name ? data[key].name.trim() : '';
+											var name = data[key].name ? plain(data[key].name).trim() : '';
 											if (name && added.indexOf(name.toLowerCase()) === -1) {
 												added.push(name.toLowerCase());
 												var enc = encodeURIComponent(name);
