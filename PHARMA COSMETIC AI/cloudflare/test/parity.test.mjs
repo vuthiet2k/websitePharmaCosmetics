@@ -87,6 +87,13 @@ await t("thông tin cửa hàng thật", async () => {
   assert.equal(r.store_info.address, "Số 44 Ngõ 897 Giải Phóng, Hoàng Mai, Hà Nội");
   assert.ok(r.reply.includes("6h30"));
 });
+await t("câu hỏi chỉ về cửa hàng không kèm SP/bài viết; câu hỏi lẫn sản phẩm vẫn kèm", async () => {
+  const only = await (await chat("giờ mở cửa và địa chỉ ở đâu")).json();
+  assert.equal(only.related_products.length, 0); assert.equal(only.related_articles.length, 0);
+  assert.ok(only.store_info && only.reply.includes("6h30"));
+  const mixed = await (await chat("địa chỉ mua kem trị mụn")).json();
+  assert.ok(mixed.related_products.length > 0);
+});
 await t("không bịa giá", async () => {
   const r = await (await chat("giá retinol bao nhiêu")).json();
   assert.ok(!r.reply.includes("123456") && !r.reply.includes("650000"));

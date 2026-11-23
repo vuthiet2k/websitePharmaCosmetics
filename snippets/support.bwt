@@ -249,7 +249,10 @@
 			var navH = nav && nav.offsetParent ? nav.getBoundingClientRect().height : 0;
 			return { top: top, bottom: window.innerHeight - navH - EDGE };
 		}
+		// 23/11/2026 (báo cáo cài đặt Sapo: robot bị đẩy ra y ≈ -7000px): script này chạy NGAY khi parse, lúc <style> của .main-widget (cuối file) chưa nạp
+		// ⇒ widget chưa position:fixed, nằm cuối trang (top ≈ cao cả trang) ⇒ baseTop khổng lồ ⇒ clampY trả offY ≈ -7000. Chỉ kẹp khi widget ĐÃ fixed.
 		function clampY(y){
+			if (getComputedStyle(widget).position !== 'fixed') return y;
 			var r = widget.getBoundingClientRect();
 			if (!r.height) return y;
 			var baseTop = r.top - offY, b = bounds();
@@ -281,7 +284,12 @@
 		}
 		try {
 			var saved = JSON.parse(localStorage.getItem(POS_KEY) || 'null');
-			if (saved) { widget.classList.toggle('pc-widget--left', !!saved.left); offY = Number(saved.y) || 0; apply(0); offY = clampY(offY); apply(0); }
+			if (saved) {
+				widget.classList.toggle('pc-widget--left', !!saved.left); offY = Number(saved.y) || 0; apply(0);
+				// kẹp lại SAU khi CSS đã nạp (sự kiện load) — không đo lúc widget chưa fixed
+				var reclamp = function(){ offY = clampY(offY); apply(0); };
+				if (document.readyState === 'complete') reclamp(); else window.addEventListener('load', reclamp);
+			}
 		} catch(e){}
 		handle.addEventListener('pointerdown', function(e){
 			if (e.button !== 0 || widget.classList.contains('widget-opened')) return;

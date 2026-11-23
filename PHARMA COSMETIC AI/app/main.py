@@ -9,6 +9,7 @@ API tra cứu Pharma Cosmetics (FastAPI, không cần GPU/DB — chạy được
 """
 import json
 import os
+import re
 import time
 from collections import defaultdict, deque
 from typing import Any, Deque, Dict, List, Optional
@@ -50,6 +51,7 @@ def _load_store() -> Optional[Dict[str, Any]]:
 
 
 STORE = _load_store()
+STORE_WORDS = frozenset("dia chi co so dau chi nhanh showroom phong tri lieu skin health giai phong hotline so dien thoai lien he gio mo cua dong zalo ha noi hoang mai ngo ngach website web phong kham hang cho toi minh em anh la va the nao nhu duoc khong co o tai ban oi vay a nhe nha di ve".split())  # từ thuộc câu hỏi về cửa hàng (+ từ đệm) — nếu mọi từ đều nằm ở đây thì không gợi ý SP/bài viết
 STORE_KEYS = ("dia chi", "co so", "o dau", "chi nhanh", "showroom", "phong tri lieu", "skin health", "giai phong",
               "hotline", "so dien thoai", "lien he", "gio mo cua", "mo cua", "dong cua", "zalo")
 
@@ -122,8 +124,10 @@ async def chat_endpoint(body: ChatRequest, request: Request):
     rag = get_rag_engine()
 
     store_info = STORE if (STORE and any(k in folded for k in STORE_KEYS)) else None
-    products = [{"title": d["title"], "url": d["url"]} for d in rag.search(query, 3, "Sản phẩm")]
-    articles = [{"title": d["title"], "url": d["url"]} for d in rag.search(query, 2, "Bài viết")]
+    # 23/11/2026: câu hỏi CHỈ về cửa hàng (địa chỉ / giờ mở cửa / hotline) ⇒ không kèm sản phẩm, bài viết (trước đây kèm vài mục không liên quan)
+    store_only = bool(store_info) and all(t in STORE_WORDS for t in re.findall(r"[a-z0-9]+", folded))
+    products = [] if store_only else [{"title": d["title"], "url": d["url"]} for d in rag.search(query, 3, "Sản phẩm")]
+    articles = [] if store_only else [{"title": d["title"], "url": d["url"]} for d in rag.search(query, 2, "Bài viết")]
 
     parts: List[str] = []
     if store_info:

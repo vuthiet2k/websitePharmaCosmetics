@@ -55,6 +55,8 @@ export function complianceOk(text) {
   return !BANNED_RE.some((rx) => rx.test(text));
 }
 
+// Từ thuộc câu hỏi về cửa hàng (+ từ đệm): mọi từ của câu hỏi đều nằm ở đây ⇒ không gợi ý SP/bài viết (khớp app/main.py)
+const STORE_WORDS = new Set("dia chi co so dau chi nhanh showroom phong tri lieu skin health giai phong hotline so dien thoai lien he gio mo cua dong zalo ha noi hoang mai ngo ngach website web phong kham hang cho toi minh em anh la va the nao nhu duoc khong co o tai ban oi vay a nhe nha di ve".split(" "));
 const STORE_KEYS = ["dia chi", "co so", "o dau", "chi nhanh", "showroom", "phong tri lieu", "skin health", "giai phong",
   "hotline", "so dien thoai", "lien he", "gio mo cua", "mo cua", "dong cua", "zalo"];
 
@@ -157,8 +159,10 @@ async function chat(request, env, c, cors) {
   const query = maskPii(last.content);
   const folded = fold(query);
   const storeInfo = STORE_KEYS.some((k) => folded.includes(k)) ? STORE : null;
-  let products = (await search(env, request, query, 3, 2)).map(({ title, url }) => ({ title, url }));
-  let articles = (await search(env, request, query, 2, 1)).map(({ title, url }) => ({ title, url }));
+  // 23/11/2026: câu hỏi CHỈ về cửa hàng (địa chỉ / giờ mở cửa / hotline) ⇒ không kèm sản phẩm, bài viết (trước đây kèm vài mục không liên quan)
+  const storeOnly = !!storeInfo && (folded.match(/[a-z0-9]+/g) || []).every((t) => STORE_WORDS.has(t));
+  let products = storeOnly ? [] : (await search(env, request, query, 3, 2)).map(({ title, url }) => ({ title, url }));
+  let articles = storeOnly ? [] : (await search(env, request, query, 2, 1)).map(({ title, url }) => ({ title, url }));
 
   const parts = [];
   if (storeInfo) {
