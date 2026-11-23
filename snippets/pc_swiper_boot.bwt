@@ -25,30 +25,34 @@
     return sw;
   }
 
+  // 23/11/2026 (chủ dự án: «tự động chạy — dùng Swiper»): băng chuyền thương hiệu tự chạy liên tục.
+  // delay 0 + easing linear (class ở markup) + loop ⇒ chạy mượt; hàng ngược chiều dùng dir="rtl" trên container (không dùng reverseDirection: loop nhảy cóc).
+  // Chạy cả khi bật «giảm chuyển động» (theo yêu cầu); rê chuột / chạm / focus ⇒ dừng.
   function buildBrandSlider(el) {
     if (el.swiper || typeof Swiper !== 'function') return;
-    var isReverse = el.getAttribute('data-direction') === 'reverse';
-    var speed = parseInt(el.getAttribute('data-speed'), 10) || 5000;
-    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var speed = parseInt(el.getAttribute('data-speed'), 10) || 6000;
+    var count = el.querySelectorAll('.swiper-slide').length;
     var sw = new Swiper(el, {
       slidesPerView: 'auto',
       spaceBetween: 16,
-      loop: true,
+      loop: count > 1,
+      loopedSlides: count,
       speed: speed,
-      autoplay: reduceMotion ? false : {
+      autoplay: {
         delay: 0,
         disableOnInteraction: false,
-        pauseOnMouseEnter: true,
-        reverseDirection: isReverse
+        pauseOnMouseEnter: true
       },
       observer: true,
       observeParents: true
     });
+    // Luật «giảm chuyển động» toàn cục (pc-ui.css) ép transition-duration:0s ⇒ Swiper không bao giờ phát transitionend ⇒ autoplay đứng. data-pc-motion = ngoại lệ có chủ đích (băng chuyền chạy theo yêu cầu).
+    if (sw.wrapperEl) sw.wrapperEl.setAttribute('data-pc-motion', '');
     el.addEventListener('focusin', function () {
       if (sw.autoplay && sw.autoplay.running) sw.autoplay.stop();
     });
     el.addEventListener('focusout', function () {
-      if (!reduceMotion && sw.autoplay && !sw.autoplay.running) sw.autoplay.start();
+      if (sw.autoplay && !sw.autoplay.running) sw.autoplay.start();
     });
     return sw;
   }
