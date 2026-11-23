@@ -51,6 +51,12 @@ def _load_store() -> Optional[Dict[str, Any]]:
 
 
 STORE = _load_store()
+SMALL = frozenset("xin chao hello hi hey alo ban oi a nhe nha ad admin shop em anh chi minh cam on thanks thank tks ok oke vang da bye tam biet".split())
+GENERIC = frozenset("gi lam nao tot nhat nen dung giup tu van san pham cho toi minh ban co the duoc nhung cac mot sao nhu khong hay la va cua ve voi em anh chi oi a nhe nha hoi can muon".split())
+HELP_RE = re.compile(r"(lam duoc gi|lam nhung gi|lam gi|giup duoc gi|giup gi|co the lam|chuc nang|ban la ai|ho tro gi|huong dan|su dung nhu the nao|ban biet gi)")
+BOOK_RE = re.compile(r"(dat lich|hen lich|lich hen|dat hen|gap chuyen gia|tu van truc tiep|kham truc tiep|dang ky kham|dang ky tu van)")
+SKIN_RE = re.compile(r"(soi da|phan tich da|kiem tra da|quiz|loai da cua|xac dinh loai da|tinh trang da cua|chan doan da)")
+STOP_WORDS = frozenset("la va cua cho toi minh em anh chi co khong the nao nhu bi duoc can muon hay mot nhung cac thi ma voi de o tai".split())
 STORE_WORDS = frozenset("dia chi co so dau chi nhanh showroom phong tri lieu skin health giai phong hotline so dien thoai lien he gio mo cua dong zalo ha noi hoang mai ngo ngach website web phong kham hang cho toi minh em anh la va the nao nhu duoc khong co o tai ban oi vay a nhe nha di ve".split())  # từ thuộc câu hỏi về cửa hàng (+ từ đệm) — nếu mọi từ đều nằm ở đây thì không gợi ý SP/bài viết
 STORE_KEYS = ("dia chi", "co so", "o dau", "chi nhanh", "showroom", "phong tri lieu", "skin health", "giai phong",
               "hotline", "so dien thoai", "lien he", "gio mo cua", "mo cua", "dong cua", "zalo")
@@ -123,13 +129,45 @@ async def chat_endpoint(body: ChatRequest, request: Request):
     folded = fold(query)
     rag = get_rag_engine()
 
-    store_info = STORE if (STORE and any(k in folded for k in STORE_KEYS)) else None
-    # 23/11/2026: câu hỏi CHỈ về cửa hàng (địa chỉ / giờ mở cửa / hotline) ⇒ không kèm sản phẩm, bài viết (trước đây kèm vài mục không liên quan)
-    store_only = bool(store_info) and all(t in STORE_WORDS for t in re.findall(r"[a-z0-9]+", folded))
-    products = [] if store_only else [{"title": d["title"], "url": d["url"]} for d in rag.search(query, 3, "Sản phẩm")]
-    articles = [] if store_only else [{"title": d["title"], "url": d["url"]} for d in rag.search(query, 2, "Bài viết")]
+    # 23/11/2026: nhận diện Ý ĐỊNH trước khi gợi ý sản phẩm/bài viết (book / skin / help) — khớp cloudflare/src/index.js
+    toks = re.findall(r"[a-z0-9]+", folded)
+    has_store_key = any(k in folded for k in STORE_KEYS)
+    intent = ""
+    if BOOK_RE.search(folded):
+        intent = "book"
+    elif SKIN_RE.search(folded):
+        intent = "skin"
+    elif not has_store_key and (HELP_RE.search(folded) or all(t in SMALL or t in GENERIC or t in STOP_WORDS for t in toks)):
+        intent = "help"
+    store_info = STORE if (STORE and (has_store_key or intent == "book")) else None
+    store_only = bool(store_info) and all(t in STORE_WORDS for t in toks)
+    no_suggest = bool(intent) or store_only
+    products = [] if no_suggest else [{"title": d["title"], "url": d["url"]} for d in rag.search(query, 3, "Sản phẩm")]
+    articles = [] if no_suggest else [{"title": d["title"], "url": d["url"]} for d in rag.search(query, 2, "Bài viết")]
+    book_url = (STORE or {}).get("booking_url") or "/dat-lich-tu-van"
+    skin_url = os.getenv("SKIN_PAGE_URL", "/kham-da-ai").rstrip("/")
+    expert = settings.EXPERT_TITLE
 
     parts: List[str] = []
+    if intent == "help":
+        thanks = re.search(r"(cam on|thanks|thank|tks)", folded)
+        hello = re.search(r"(xin chao|chao|hello|\bhi\b|hey|alo)", folded)
+        parts.append("Dạ không có gì ạ. Cần gì thêm bạn cứ hỏi em nhé." if thanks else "Dạ chào bạn ạ." if hello else "Dạ em là trợ lý tra cứu của Pharma Cosmetics ạ.")
+        parts.append("\n".join([
+            "Em có thể giúp bạn:",
+            "- **Địa chỉ, giờ mở cửa, hotline** của cửa hàng",
+            "- **Soi da bằng ảnh hoặc camera**: bấm dấu **+** cạnh ô nhập",
+            f"- **Làm quiz xác định loại da**: [Làm quiz]({skin_url}?tab=quiz)",
+            "- **Gợi ý sản phẩm, bài viết** khi bạn nói tình trạng da hoặc hoạt chất quan tâm (ví dụ «mụn ẩn», «retinol»)",
+            f"- **Đặt lịch với {expert}**: [Đặt lịch tư vấn]({book_url})"]))
+    elif intent == "skin":
+        parts.append("\n".join([
+            "Em hỗ trợ soi da theo 2 cách:",
+            "- **Gửi ảnh hoặc bật camera ngay trong khung chat**: bấm dấu **+** cạnh ô nhập (ảnh được phân tích ngay trên thiết bị của bạn, không gửi đi đâu)",
+            f"- **Làm quiz** trả lời vài câu hỏi để biết loại da: [Làm quiz]({skin_url}?tab=quiz)"]))
+        parts.append(f"Kết quả chỉ để tham khảo. Muốn có phác đồ phù hợp, bạn nên đặt lịch với {expert}: [Đặt lịch tư vấn]({book_url})")
+    elif intent == "book":
+        parts.append(f"Để được tư vấn trực tiếp, bạn đặt lịch với {expert} ạ:")
     if store_info:
         lines = [f"**{store_info.get('clinic_name', 'Pharma Cosmetics')}**"]
         if store_info.get("address"):

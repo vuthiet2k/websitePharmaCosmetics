@@ -94,6 +94,19 @@ await t("câu hỏi chỉ về cửa hàng không kèm SP/bài viết; câu hỏ
   const mixed = await (await chat("địa chỉ mua kem trị mụn")).json();
   assert.ok(mixed.related_products.length > 0);
 });
+await t("ý định: chào / làm được gì / soi da / đặt lịch ⇒ hướng dẫn, không kèm sản phẩm", async () => {
+  for (const q of ["bạn có thể làm những gì", "xin chào", "cảm ơn nhé", "tư vấn giúp mình"]) {
+    const r = await (await chat(q)).json();
+    assert.equal(r.related_products.length, 0, q); assert.equal(r.related_articles.length, 0, q);
+    assert.ok(r.reply.includes("Em có thể giúp bạn"), q);
+  }
+  const skin = await (await chat("soi da giúp mình")).json();
+  assert.ok(skin.reply.includes("dấu **+**") && skin.reply.includes("tab=quiz") && skin.related_products.length === 0);
+  const book = await (await chat("đặt lịch với chuyên gia")).json();
+  assert.ok(book.store_info && book.reply.includes("Đặt lịch") && book.related_products.length === 0);
+  const real = await (await chat("mụn ẩn")).json();
+  assert.ok(real.related_products.length > 0 && !real.reply.includes("Em có thể giúp bạn"));
+});
 await t("không bịa giá", async () => {
   const r = await (await chat("giá retinol bao nhiêu")).json();
   assert.ok(!r.reply.includes("123456") && !r.reply.includes("650000"));

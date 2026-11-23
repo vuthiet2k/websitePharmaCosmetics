@@ -57,6 +57,11 @@ export function complianceOk(text) {
 
 // Từ thuộc câu hỏi về cửa hàng (+ từ đệm): mọi từ của câu hỏi đều nằm ở đây ⇒ không gợi ý SP/bài viết (khớp app/main.py)
 const STORE_WORDS = new Set("dia chi co so dau chi nhanh showroom phong tri lieu skin health giai phong hotline so dien thoai lien he gio mo cua dong zalo ha noi hoang mai ngo ngach website web phong kham hang cho toi minh em anh la va the nao nhu duoc khong co o tai ban oi vay a nhe nha di ve".split(" "));
+const SMALL = new Set("xin chao hello hi hey alo ban oi a nhe nha ad admin shop em anh chi minh cam on thanks thank tks ok oke vang da bye tam biet".split(" "));
+const GENERIC = new Set("gi lam nao tot nhat nen dung giup tu van san pham cho toi minh ban co the duoc nhung cac mot sao nhu khong hay la va cua ve voi em anh chi oi a nhe nha hoi can muon".split(" "));
+const HELP_RE = /(lam duoc gi|lam nhung gi|lam gi|giup duoc gi|giup gi|co the lam|chuc nang|ban la ai|ho tro gi|huong dan|su dung nhu the nao|ban biet gi)/;
+const BOOK_RE = /(dat lich|hen lich|lich hen|dat hen|gap chuyen gia|tu van truc tiep|kham truc tiep|dang ky kham|dang ky tu van)/;
+const SKIN_RE = /(soi da|phan tich da|kiem tra da|quiz|loai da cua|xac dinh loai da|tinh trang da cua|chan doan da)/;
 const STORE_KEYS = ["dia chi", "co so", "o dau", "chi nhanh", "showroom", "phong tri lieu", "skin health", "giai phong",
   "hotline", "so dien thoai", "lien he", "gio mo cua", "mo cua", "dong cua", "zalo"];
 
@@ -158,13 +163,41 @@ async function chat(request, env, c, cors) {
 
   const query = maskPii(last.content);
   const folded = fold(query);
-  const storeInfo = STORE_KEYS.some((k) => folded.includes(k)) ? STORE : null;
-  // 23/11/2026: câu hỏi CHỈ về cửa hàng (địa chỉ / giờ mở cửa / hotline) ⇒ không kèm sản phẩm, bài viết (trước đây kèm vài mục không liên quan)
-  const storeOnly = !!storeInfo && (folded.match(/[a-z0-9]+/g) || []).every((t) => STORE_WORDS.has(t));
-  let products = storeOnly ? [] : (await search(env, request, query, 3, 2)).map(({ title, url }) => ({ title, url }));
-  let articles = storeOnly ? [] : (await search(env, request, query, 2, 1)).map(({ title, url }) => ({ title, url }));
+  // 23/11/2026 (chủ dự án: «người mới không hỏi ngay về sản phẩm»): nhận diện Ý ĐỊNH trước khi gợi ý sản phẩm/bài viết.
+  //   book = đặt lịch với Chuyên gia · skin = soi da/quiz · help = chào / «bạn làm được gì» / câu quá chung (không có từ khoá thật) ⇒ trả lời hướng dẫn, KHÔNG kèm sản phẩm/bài viết.
+  const toks = folded.match(/[a-z0-9]+/g) || [];
+  let intent = "";
+  if (BOOK_RE.test(folded)) intent = "book";
+  else if (SKIN_RE.test(folded)) intent = "skin";
+  else if (!STORE_KEYS.some((k) => folded.includes(k)) && (HELP_RE.test(folded) || toks.every((t) => SMALL.has(t) || GENERIC.has(t) || STOP.has(t)))) intent = "help";
+  const storeInfo = (STORE_KEYS.some((k) => folded.includes(k)) || intent === "book") ? STORE : null;
+  // câu hỏi CHỈ về cửa hàng (địa chỉ / giờ mở cửa / hotline) ⇒ không kèm sản phẩm, bài viết
+  const storeOnly = !!storeInfo && toks.every((t) => STORE_WORDS.has(t));
+  const noSuggest = !!intent || storeOnly;
+  let products = noSuggest ? [] : (await search(env, request, query, 3, 2)).map(({ title, url }) => ({ title, url }));
+  let articles = noSuggest ? [] : (await search(env, request, query, 2, 1)).map(({ title, url }) => ({ title, url }));
+  const bookUrl = (STORE && STORE.booking_url) || "/dat-lich-tu-van";
+  const skinUrl = String(env.SKIN_PAGE_URL || "/kham-da-ai").replace(/\/+$/, "");
 
   const parts = [];
+  if (intent === "help") {
+    const thanks = /(cam on|thanks|thank|tks)/.test(folded);
+    const hello = /(xin chao|chao|hello|\bhi\b|hey|alo)/.test(folded);
+    parts.push(thanks ? "Dạ không có gì ạ. Cần gì thêm bạn cứ hỏi em nhé." : hello ? "Dạ chào bạn ạ." : "Dạ em là trợ lý tra cứu của Pharma Cosmetics ạ.");
+    parts.push(["Em có thể giúp bạn:",
+      "- **Địa chỉ, giờ mở cửa, hotline** của cửa hàng",
+      "- **Soi da bằng ảnh hoặc camera**: bấm dấu **+** cạnh ô nhập",
+      `- **Làm quiz xác định loại da**: [Làm quiz](${skinUrl}?tab=quiz)`,
+      "- **Gợi ý sản phẩm, bài viết** khi bạn nói tình trạng da hoặc hoạt chất quan tâm (ví dụ «mụn ẩn», «retinol»)",
+      `- **Đặt lịch với ${c.expert}**: [Đặt lịch tư vấn](${bookUrl})`].join("\n"));
+  } else if (intent === "skin") {
+    parts.push(["Em hỗ trợ soi da theo 2 cách:",
+      "- **Gửi ảnh hoặc bật camera ngay trong khung chat**: bấm dấu **+** cạnh ô nhập (ảnh được phân tích ngay trên thiết bị của bạn, không gửi đi đâu)",
+      `- **Làm quiz** trả lời vài câu hỏi để biết loại da: [Làm quiz](${skinUrl}?tab=quiz)`].join("\n"));
+    parts.push(`Kết quả chỉ để tham khảo. Muốn có phác đồ phù hợp, bạn nên đặt lịch với ${c.expert}: [Đặt lịch tư vấn](${bookUrl})`);
+  } else if (intent === "book") {
+    parts.push(`Để được tư vấn trực tiếp, bạn đặt lịch với ${c.expert} ạ:`);
+  }
   if (storeInfo) {
     const lines = [`**${storeInfo.clinic_name || "Pharma Cosmetics"}**`];
     if (storeInfo.address) lines.push(`- Địa chỉ: ${storeInfo.address}`);

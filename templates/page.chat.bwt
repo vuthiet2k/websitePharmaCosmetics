@@ -39,6 +39,14 @@
 	<div class="flex flex-1 flex-col gap-2 overflow-y-auto bg-surface-soft p-3" data-chat-log role="log" aria-live="polite">
 		<p class="px-2 pb-1 text-center text-xs text-ink-muted">{{ settings.ai_chat_note | default: 'Gợi ý tự động, chỉ mang tính tham khảo — không thay thế tư vấn trực tiếp từ Chuyên gia.' | escape }}</p>
 		<div class="max-w-[88%] self-start whitespace-pre-line break-words rounded-2xl border border-line bg-white px-3 py-2 text-sm text-ink">{{ settings.ai_chat_welcome | default: 'Dạ chào bạn, em là chatbot Pharma Cosmetics ạ. Em giúp bạn tra cứu sản phẩm, bài viết, thông tin cửa hàng và hướng dẫn soi da bằng ảnh. Bạn cần em hỗ trợ gì ạ?' | escape }}</div>
+		{%- assign pc_chat_chips = settings.ai_chat_chips | default: 'Bạn có thể làm gì?;Soi da bằng ảnh;Làm quiz loại da;Địa chỉ và giờ mở cửa;Đặt lịch với chuyên gia' | split: ';' -%}
+		{%- if pc_chat_chips.size > 0 -%}
+		<div class="flex flex-wrap gap-2" data-chat-chips>
+			{%- for _c in pc_chat_chips limit: 5 -%}{%- assign _chip = _c | strip -%}{%- if _chip != '' -%}
+			<button type="button" class="inline-flex min-h-[44px] cursor-pointer items-center rounded-full border border-solid border-line-soft bg-white px-4 text-sm font-semibold text-primary-deep transition-colors hover:border-primary hover:bg-brand-tint" data-chat-chip>{{ _chip | escape }}</button>
+			{%- endif -%}{%- endfor -%}
+		</div>
+		{%- endif -%}
 	</div>
 
 	<div class="[display:none] shrink-0 items-start gap-3 overflow-x-auto border-t border-line bg-white px-3 pb-1 pt-3 data-[show=true]:flex" data-chat-tray aria-label="Ảnh sẽ gửi để phân tích da"></div>
@@ -485,6 +493,16 @@ document.addEventListener('DOMContentLoaded', function () {
     if (e.origin !== window.location.origin || !e.data || e.data.type !== 'pc-ai-chat:ask') return;
     autoAsk(e.data.text);
   });
+  // 23/11/2026 (chủ dự án: «người mới không hỏi ngay về sản phẩm»): chip gợi ý đầu chat — bấm là gửi câu đó; hết chip khi khách đã hỏi.
+  var chipBox = $('[data-chat-chips]');
+  function dropChips() { if (chipBox && chipBox.parentNode) { chipBox.parentNode.removeChild(chipBox); chipBox = null; } }
+  log.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-chat-chip]');
+    if (!b || busy) return;
+    input.value = b.textContent.trim();
+    form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+  });
+  form.addEventListener('submit', dropChips, true);
   refreshSend();
 });
 </script>
