@@ -16,6 +16,13 @@
 	</h1>
 	{%- endif -%}
 
+	{%- comment -%} 23/11/2026 (chủ dự án): không có kết quả ⇒ thêm nút hỏi trợ lý AI (chỉ khi bật Chat AI). Nút do layouts/theme.bwt xử lý qua [data-ai-ask] ⇒ window.pcAiChatAsk. search.terms đã được Sapo escape sẵn. {%- endcomment -%}
+	{%- if settings.ai_chat_enable and _es_type != 'none' -%}
+	<div class="pb-4">
+		<button type="button" data-ai-ask="{{ search.terms }}" class="inline-flex min-h-[44px] cursor-pointer items-center justify-center gap-2 rounded-full border-0 bg-btn px-5 text-sm font-bold text-btn-text hover:bg-btn-hover">{{ settings.search_label_ai | default: 'Hỏi trợ lý AI về “{q}”' | replace: '{q}', search.terms }}</button>
+	</div>
+	{%- endif -%}
+
 	{%- if _es_kw.size > 0 -%}
 	<div class="swiper-container mb-4 overflow-hidden" data-pc-slider data-gap="8">
 		<div class="swiper-wrapper">

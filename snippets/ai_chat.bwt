@@ -26,6 +26,20 @@
 			if (w) w.classList.remove('widget-opened'); // đóng bảng liên hệ khi mở chat
 		}
 	}
+	// 23/11/2026: mở khung chat kèm câu hỏi (nút «Hỏi trợ lý AI» ở gợi ý tìm kiếm / trang tìm kiếm rỗng).
+	// Lần đầu: gắn ?ask= vào địa chỉ iframe; đã nạp rồi: gửi postMessage cho trang chat.
+	window.pcAiChatAsk = function(text){
+		text = String(text || '').slice(0, 500);
+		var src = frame.getAttribute('src');
+		if (!src) {
+			var base = frame.getAttribute('data-src');
+			frame.setAttribute('src', base + (base.indexOf('?') > -1 ? '&' : '?') + 'ask=' + encodeURIComponent(text));
+			setOpen(true);
+		} else {
+			setOpen(true);
+			try { frame.contentWindow.postMessage({ type: 'pc-ai-chat:ask', text: text }, location.origin); } catch (err) {}
+		}
+	};
 	document.addEventListener('click', function(e){
 		if (e.target.closest && e.target.closest('[data-ai-chat-open]')) { e.preventDefault(); setOpen(true); }
 	});

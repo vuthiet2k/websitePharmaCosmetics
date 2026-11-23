@@ -473,6 +473,18 @@ document.addEventListener('DOMContentLoaded', function () {
     var job = photos.length ? runScan(text) : ask(text, true);
     Promise.resolve(job).then(function () { busy = false; refreshSend(); scrollEnd(); input.focus(); });
   });
+  // 23/11/2026: câu hỏi chuyển từ gợi ý tìm kiếm — ?ask=… (lần mở đầu) hoặc postMessage (khung đã mở). Chỉ nhận cùng nguồn.
+  function autoAsk(text) {
+    text = String(text || '').trim().slice(0, 500);
+    if (!text || busy) return;
+    input.value = text;
+    form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+  }
+  try { var qAsk = new URLSearchParams(window.location.search).get('ask'); if (qAsk) setTimeout(function () { autoAsk(qAsk); }, 150); } catch (e) {}
+  window.addEventListener('message', function (e) {
+    if (e.origin !== window.location.origin || !e.data || e.data.type !== 'pc-ai-chat:ask') return;
+    autoAsk(e.data.text);
+  });
   refreshSend();
 });
 </script>

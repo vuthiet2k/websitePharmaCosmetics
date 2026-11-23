@@ -218,31 +218,7 @@
       if (suggestSection) suggestSection.style.display = 'none';
     }
 
-    // 23/11/2026 (review): chữ chèn vào HTML luôn qua escHtml; icon + từ khoá gợi ý lấy từ biến toàn cục do layouts/theme.bwt dựng (ui_icon + cấu hình footer_search_menu).
-    function plain(t) { var x = document.createElement('textarea'); x.innerHTML = String(t == null ? '' : t); return x.value; } // smartjson trả tên đã escape HTML (Ph&#225;p) ⇒ giải mã về chữ thường trước khi escHtml, tránh hiện «Ph&#225;p» nguyên văn
-    function escHtml(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
-    function highlightMatch(text, query) {
-      var safe = escHtml(text);
-      if (!query) return safe;
-      var q = escHtml(query).replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-      return safe.replace(new RegExp('(' + q + ')', 'gi'), '<strong class="font-bold text-ink">$1</strong>');
-    }
-
-    function buildSuggestionRow(phrase, query) {
-      var highlighted = highlightMatch(phrase, query);
-      var enc = encodeURIComponent(phrase);
-      return '<div class="pc-tiktok-suggest-row flex min-h-[44px] items-center justify-between border-0 border-b border-solid border-line-soft px-4 py-2 transition-colors hover:bg-surface-soft">'
-        + '<a href="/search?query=' + enc + '&amp;type=product" class="flex min-w-0 flex-1 items-center gap-3 text-sm text-ink no-underline">'
-        + '<span class="shrink-0 text-ink-muted" aria-hidden="true">' + (window.PC_IC_SEARCH || '') + '</span>'
-        + '<span class="truncate">' + highlighted + '</span>'
-        + '</a>'
-        + '<button type="button" class="pc-tiktok-suggest-fill inline-flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-ink-muted hover:text-primary" data-fill="' + escHtml(phrase) + '" aria-label="Điền vào ô tìm kiếm">'
-        + '<span class="inline-block rotate-45" aria-hidden="true">' + (window.PC_IC_ARROW_UP || '') + '</span>'
-        + '</button>'
-        + '</div>';
-    }
-
-    if (input && smartSection && typeof getItemSearch === 'function') {
+    if (input && smartSection) {
       input.addEventListener('input', function () {
         clearTimeout(mbTimer);
         var term = (this.value || '').trim();
@@ -255,65 +231,12 @@
 
         hideContextSections();
 
+        // 23/11/2026 (chủ dự án chốt): KHÔNG gọi mạng — gợi ý thương hiệu / hoạt chất / danh mục khớp ngay trên máy khách (window.pcSearchSuggest, layouts/theme.bwt)
         mbTimer = setTimeout(function () {
-          var enc = encodeURIComponent(term);
-
-          getItemSearch(term, 'smartjson').then(function (data) {
-            var keys = Object.keys(data || {});
-            var html = '';
-            if (keys.length > 0) {
-              html = '<div class="pc-tiktok-suggestions">';
-              var addedPhrases = [];
-              keys.forEach(function (k) {
-                var p = data[k];
-                var namePhrase = p.name ? plain(p.name).trim() : '';
-                if (namePhrase && addedPhrases.indexOf(namePhrase.toLowerCase()) === -1) {
-                  addedPhrases.push(namePhrase.toLowerCase());
-                  html += buildSuggestionRow(namePhrase, term);
-                }
-              });
-              html += '</div>';
-
-              // Gợi ý từ khoá = cấu hình footer_search_menu (không ghi cứng, không gọi «xu hướng» khi chưa có số liệu thật)
-              var kws = window.PC_SEARCH_KEYWORDS || [];
-              if (kws.length) {
-                html += '<div class="pc-tiktok-trending bg-white px-4 pb-4 pt-5">'
-                  + '<div class="mb-3 text-xs font-bold uppercase tracking-wider text-primary-deep">Gợi ý tìm kiếm</div>'
-                  + '<div class="flex flex-wrap gap-2 text-xs">'
-                  + kws.map(function (kw) {
-                    return '<a href="/search?query=' + encodeURIComponent(kw) + '&amp;type=product" class="inline-flex min-h-[44px] items-center rounded-full border border-solid border-line-soft bg-surface-soft px-3 text-ink no-underline transition-colors hover:border-primary hover:bg-brand-tint">' + escHtml(kw) + '</a>';
-                  }).join('')
-                  + '</div></div>';
-              }
-            } else {
-              /* Khối trống gọn dùng chung */
-              html = (typeof window.pcSearchEmptyHtml === 'function' && window.pcSearchEmptyHtml(term))
-                || '<div class="p-6 text-center text-sm text-slate-500">Không tìm thấy từ khoá phù hợp</div>';
-            }
-            if (mbListSearch) mbListSearch.innerHTML = html;
-            if (smartSection) smartSection.hidden = false;
-
-            // Gán sự kiện cho các nút mũi tên chéo ↗ để điền vào ô input
-            if (mbListSearch) {
-              var fillBtns = mbListSearch.querySelectorAll('.pc-tiktok-suggest-fill');
-              fillBtns.forEach(function(b) {
-                b.addEventListener('click', function(ev) {
-                  ev.preventDefault();
-                  ev.stopPropagation();
-                  var val = b.getAttribute('data-fill');
-                  if (input && val) {
-                    input.value = val;
-                    input.focus();
-                    var event = new Event('input', { bubbles: true });
-                    input.dispatchEvent(event);
-                  }
-                });
-              });
-            }
-          });
-
+          if (mbListSearch) mbListSearch.innerHTML = (typeof window.pcSearchSuggest === 'function') ? window.pcSearchSuggest(term) : '';
           if (mbListSearch2) mbListSearch2.innerHTML = '';
-        }, 220);
+          if (smartSection) smartSection.hidden = false;
+        }, 120);
       });
     }
     }
