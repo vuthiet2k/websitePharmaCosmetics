@@ -22,8 +22,12 @@ $(document).ready(function ($) {
 			beforeSend: function() { },
 			success: function(line_item) {
 				ajaxCart.load();
-				$('.popup-cart-mobile, .backdrop__body-backdrop___1rvky').addClass('active');
-				AddCartMobile(line_item);
+				if (typeof window.showShopeeCartAlert === 'function') {
+					window.showShopeeCartAlert();
+				} else {
+					$('.popup-cart-mobile, .backdrop__body-backdrop___1rvky').addClass('active');
+					AddCartMobile(line_item);
+				}
 				if (typeof gtag === 'function') {
 					gtag('event', 'add_to_cart', {
 						currency: 'VND',
@@ -51,8 +55,12 @@ function callbackFuncGroup(sectionName) {
 			beforeSend: function() { },
 			success: function(line_item) {
 				ajaxCart.load();
-				$('.popup-cart-mobile, .backdrop__body-backdrop___1rvky').addClass('active');
-				AddCartMobile(line_item);
+				if (typeof window.showShopeeCartAlert === 'function') {
+					window.showShopeeCartAlert();
+				} else {
+					$('.popup-cart-mobile, .backdrop__body-backdrop___1rvky').addClass('active');
+					AddCartMobile(line_item);
+				}
 				if (typeof gtag === 'function') {
 					gtag('event', 'add_to_cart', {
 						currency: 'VND',
@@ -175,9 +183,13 @@ function getContentTab(url,selector){
 						dataType: 'json',
 						beforeSend: function() { },
 						success: function(line_item) {
-							$('.cart-popup-name').html(line_item.title).attr('href', line_item.url, 'title', line_item.title);
 							ajaxCart.load();
-							$('#popup-cart-desktop, .cart-sidebars, .backdrop__body-backdrop___1rvky').addClass('active');
+							if (typeof window.showShopeeCartAlert === 'function') {
+								window.showShopeeCartAlert();
+							} else {
+								$('.cart-popup-name').html(line_item.title).attr('href', line_item.url, 'title', line_item.title);
+								$('#popup-cart-desktop, .cart-sidebars, .backdrop__body-backdrop___1rvky').addClass('active');
+							}
 						},
 						cache: false
 					});
@@ -218,8 +230,12 @@ function getContentTab2(url,selector){
 							beforeSend: function() {},
 							success: function(line_item) {
 								ajaxCart.load();
-								$('.popup-cart-mobile, .backdrop__body-backdrop___1rvky').addClass('active');
-								AddCartMobile(line_item);
+								if (typeof window.showShopeeCartAlert === 'function') {
+									window.showShopeeCartAlert();
+								} else {
+									$('.popup-cart-mobile, .backdrop__body-backdrop___1rvky').addClass('active');
+									AddCartMobile(line_item);
+								}
 							},
 							cache: false
 						});

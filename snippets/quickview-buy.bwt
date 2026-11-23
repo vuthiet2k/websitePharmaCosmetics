@@ -801,14 +801,14 @@
 				beforeSend: function() {  
 				},
 				success: function(line_item) {
-					var qty = $('.quick-view-product').find('.prd_quantity').val();
-
-					$('.cart-popup-name').html(line_item.title).attr('href', line_item.url, 'title', line_item.title);
 					ajaxCart.load();
-					$('.popup-cart-mobile, .backdrop__body-backdrop___1rvky').addClass('active');
-					AddCartMobile(line_item);
-
-
+					if (typeof window.showShopeeCartAlert === 'function') {
+						window.showShopeeCartAlert();
+					} else {
+						$('.cart-popup-name').html(line_item.title).attr('href', line_item.url, 'title', line_item.title);
+						$('.popup-cart-mobile, .backdrop__body-backdrop___1rvky').addClass('active');
+						AddCartMobile(line_item);
+					}
 				},
 				cache: false
 			});

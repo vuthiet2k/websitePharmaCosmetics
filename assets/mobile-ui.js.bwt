@@ -218,21 +218,24 @@
       if (suggestSection) suggestSection.style.display = 'none';
     }
 
-    function buildProductHtml(item) {
-      var priceHtml = (item.compare_price && item.compare_price != 0)
-        ? '<div class="price-box"><span class="price">' + item.price + '</span><span class="compare-price">' + item.compare_price + '</span></div>'
-        : '<div class="price-box"><span class="price">' + item.price + '</span></div>';
-      return '<a class="product-smart" href="' + item.url + '">'
-        + '<div class="image_thumb"><img width="58" height="58" src="' + item.image + '" alt="' + item.name + '"></div>'
-        + '<div class="product-info"><h3 class="product-name"><span>' + item.name + '</span></h3>' + priceHtml + '</div>'
-        + '</a>';
+    function highlightMatch(text, query) {
+      if (!query) return text;
+      var q = query.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+      var regex = new RegExp('(' + q + ')', 'gi');
+      return text.replace(regex, '<strong class="font-bold text-ink">$1</strong>');
     }
 
-    function buildArticleHtml(item) {
-      if (!item.url) return '';
-      return '<div class="art-smart">'
-        + '<a class="image_thumb" href="' + item.url + '"><img width="58" height="58" src="' + item.image + '" alt="' + item.name + '"></a>'
-        + '<div class="product-info"><h3 class="product-name"><a href="' + item.url + '">' + item.name + '</a></h3></div>'
+    function buildSuggestionRow(phrase, query) {
+      var highlighted = highlightMatch(phrase, query);
+      var enc = encodeURIComponent(phrase);
+      return '<div class="pc-tiktok-suggest-row flex items-center justify-between min-h-[46px] py-2 px-4 border-b border-line-soft hover:bg-slate-50 transition-colors">'
+        + '<a href="/search?query=' + enc + '&type=product" class="flex items-center gap-3 flex-1 min-w-0 text-sm text-slate-700 no-underline">'
+        + '<span class="text-slate-400 shrink-0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>'
+        + '<span class="truncate">' + highlighted + '</span>'
+        + '</a>'
+        + '<button type="button" class="pc-tiktok-suggest-fill inline-flex items-center justify-center w-9 h-9 text-slate-400 hover:text-primary cursor-pointer border-0 bg-transparent" data-fill="' + phrase.replace(/"/g, '&quot;') + '" aria-label="Điền vào ô tìm kiếm">'
+        + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>'
+        + '</button>'
         + '</div>';
     }
 
@@ -256,31 +259,60 @@
             var keys = Object.keys(data || {});
             var html = '';
             if (keys.length > 0) {
-              html = '<div class="title-search"><span>Sản phẩm</span>'
-                + '<a href="/search?query=' + enc + '&type=product" class="see-all-search">Xem tất cả »</a></div>';
-              keys.forEach(function (k) { html += buildProductHtml(data[k]); });
+              html = '<div class="pc-tiktok-suggestions">';
+              var addedPhrases = [];
+              keys.forEach(function (k) {
+                var p = data[k];
+                var namePhrase = p.name ? p.name.trim() : '';
+                if (namePhrase && addedPhrases.indexOf(namePhrase.toLowerCase()) === -1) {
+                  addedPhrases.push(namePhrase.toLowerCase());
+                  html += buildSuggestionRow(namePhrase, term);
+                }
+              });
+              html += '</div>';
+
+              // Thêm khối Xu hướng tìm kiếm bên dưới gợi ý chuẩn TikTok
+              html += '<div class="pc-tiktok-trending px-4 pt-5 pb-4 bg-white">'
+                + '<div class="flex items-center gap-2 mb-3 text-xs font-bold text-amber-600 uppercase tracking-wider font-sans">'
+                + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>'
+                + '<span>Xu hướng tìm kiếm</span>'
+                + '</div>'
+                + '<div class="flex flex-wrap gap-2 text-xs font-sans">'
+                + '<a href="/search?query=Phục%20hồi%20da%20treatment&type=product" class="inline-flex items-center px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 hover:bg-brand-tint hover:text-primary transition-colors no-underline">#Phục hồi da treatment</a>'
+                + '<a href="/search?query=Kem%20chống%20nắng%20không%20cồn&type=product" class="inline-flex items-center px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 hover:bg-brand-tint hover:text-primary transition-colors no-underline">#Kem chống nắng không cồn</a>'
+                + '<a href="/search?query=Serum%20HA%20B5&type=product" class="inline-flex items-center px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 hover:bg-brand-tint hover:text-primary transition-colors no-underline">#Serum HA B5</a>'
+                + '<a href="/search?query=BHA%20trị%20mụn%20ẩn&type=product" class="inline-flex items-center px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 hover:bg-brand-tint hover:text-primary transition-colors no-underline">#BHA trị mụn ẩn</a>'
+                + '</div>'
+                + '</div>';
             } else {
-              /* 23/11/2026: khối trống gọn dùng chung (mobile_search_popup.bwt #pc-search-empty-tpl) thay ô vàng «Không tìm thấy kết quả» */
+              /* Khối trống gọn dùng chung */
               html = (typeof window.pcSearchEmptyHtml === 'function' && window.pcSearchEmptyHtml(term))
-                || '<div class="title-search"><span>Sản phẩm</span></div><div class="not-pro">Không tìm thấy kết quả</div>';
+                || '<div class="p-6 text-center text-sm text-slate-500">Không tìm thấy từ khoá phù hợp</div>';
             }
             if (mbListSearch) mbListSearch.innerHTML = html;
             if (smartSection) smartSection.hidden = false;
+
+            // Gán sự kiện cho các nút mũi tên chéo ↗ để điền vào ô input
+            if (mbListSearch) {
+              var fillBtns = mbListSearch.querySelectorAll('.pc-tiktok-suggest-fill');
+              fillBtns.forEach(function(b) {
+                b.addEventListener('click', function(ev) {
+                  ev.preventDefault();
+                  ev.stopPropagation();
+                  var val = b.getAttribute('data-fill');
+                  if (input && val) {
+                    input.value = val;
+                    input.focus();
+                    var event = new Event('input', { bubbles: true });
+                    input.dispatchEvent(event);
+                  }
+                });
+              });
+            }
           });
 
-          getItemSearch2(term, 'smartjsonar').then(function (data2) {
-            var keys2 = Object.keys(data2 || {});
-            var html2 = '';
-            if (keys2.length > 0) {
-              html2 = '<div class="title-search"><span>Tin tức</span>'
-                + '<a href="/search?query=' + enc + '&type=article" class="see-all-search">Xem tất cả »</a></div>';
-              keys2.forEach(function (k) { html2 += buildArticleHtml(data2[k]); });
-            } else {
-              html2 = ''; /* 23/11/2026: không có bài viết ⇒ ẩn hẳn mục Tin tức (không hiện thêm ô trống thứ 2) */
-            }
-            if (mbListSearch2) mbListSearch2.innerHTML = html2;
-          });
-        }, 280);
+          if (mbListSearch2) mbListSearch2.innerHTML = '';
+        }, 220);
       });
     }
     }

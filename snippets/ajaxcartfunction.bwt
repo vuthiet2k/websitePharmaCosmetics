@@ -31,15 +31,13 @@ Bizweb.addItemFromForm = function(form, callback, errorCallback) {
 		success: function(line_item) {
 			if ((typeof callback) === 'function') {
 				callback(line_item, form);
+			}
+			if (typeof window.showShopeeCartAlert === 'function') {
+				window.showShopeeCartAlert();
+			} else {
 				$('.popup-cart-mobile, .backdrop__body-backdrop___1rvky').addClass('active');
 				AddCartMobile(line_item);
 			}
-			/*
-      else {
-        Bizweb.onItemAdded(line_item, form);
-		$('#popup-cart-desktops, .cart-sidebar, .backdrop__body-backdrop___1rvky').addClass('active');
-      }
-	  */
 		},
 		error: function(XMLHttpRequest, textStatus) {
 			if ((typeof errorCallback) === 'function') {
