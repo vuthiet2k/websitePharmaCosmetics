@@ -107,6 +107,45 @@ await t("ý định: chào / làm được gì / soi da / đặt lịch ⇒ hư�
   const real = await (await chat("mụn ẩn")).json();
   assert.ok(real.related_products.length > 0 && !real.reply.includes("Em có thể giúp bạn"));
 });
+await t("24/11 cảnh báo đỏ (thai kỳ / kích ứng cấp) ⇒ không SP, chuyển Chuyên gia + hotline", async () => {
+  for (const q of ["tôi đang mang thai dùng retinol được không", "đang cho con bú dùng serum vitamin c được không",
+    "bôi kem xong mặt sưng đỏ rát", "dùng xong bị nổi mề đay, khó thở"]) {
+    const r = await (await chat(q)).json();
+    assert.equal(r.related_products.length + r.related_articles.length, 0, q);
+    assert.ok(r.needs_contact === true && r.store_info, q);
+    assert.ok(r.reply.includes("cơ sở y tế") && r.reply.includes("Chuyên gia"), q);
+  }
+});
+await t("24/11 FAQ giao hàng/thanh toán/đổi trả/chính hãng ⇒ hotline, không SP lạc đề", async () => {
+  for (const q of ["shop có giao hàng không", "thanh toán thế nào", "có ship COD không ạ", "đổi trả thế nào",
+    "hàng có chính hãng không", "còn hàng không shop"]) {
+    const r = await (await chat(q)).json();
+    assert.equal(r.related_products.length + r.related_articles.length, 0, q);
+    assert.ok(r.needs_contact === true && r.store_info.phone && r.reply.includes("Chính sách"), q);
+  }
+  const mixed = await (await chat("serum vitamin c có chính hãng không")).json();
+  assert.ok(mixed.related_products.length > 0 && mixed.needs_contact === true);
+});
+await t("24/11 tán gẫu / chỉ gửi SĐT ⇒ hướng dẫn, không SP", async () => {
+  for (const q of ["chào shop, mình mới vào", "hôm nay trời đẹp quá", "0967194063"]) {
+    const r = await (await chat(q)).json();
+    assert.equal(r.related_products.length + r.related_articles.length, 0, q);
+    assert.ok(r.reply.includes("Em có thể giúp bạn"), q);
+  }
+});
+await t("24/11 nhãn [SĐT đã ẩn] không lọt vào tìm kiếm", async () => {
+  const a = await (await chat("tư vấn retinol, sđt 0967194063")).json();
+  const b = await (await chat("tư vấn retinol")).json();
+  assert.deepEqual(a.related_products, b.related_products);
+  assert.ok(!a.reply.includes("0967194063"));
+});
+await t("24/11 ngưỡng liên quan: tiêu đề phải chứa từ khoá thật", async () => {
+  for (const q of ["da tôi bị mụn ẩn", "retinol", "kem chống nắng cho da dầu", "lỗ chân lông to", "dầu gội trị gàu"]) {
+    assert.ok((await (await chat(q)).json()).related_products.length > 0, q);
+  }
+  const none = await (await chat("abcxyz không có từ này")).json();
+  assert.ok(none.related_products.length === 0 && none.needs_contact === true);
+});
 await t("không bịa giá", async () => {
   const r = await (await chat("giá retinol bao nhiêu")).json();
   assert.ok(!r.reply.includes("123456") && !r.reply.includes("650000"));

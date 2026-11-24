@@ -81,3 +81,55 @@ def test_cors_only_allowed_origin():
 
 def test_docs_hidden_in_production():
     assert client.get("/docs").status_code == 404
+
+
+# ---- 24/11/2026: điểm mù từ báo cáo kiểm thử AI (khớp cloudflare/test/parity.test.mjs) ----
+RED_CASES = ["tôi đang mang thai dùng retinol được không", "đang cho con bú dùng serum vitamin c được không",
+             "bôi kem xong mặt sưng đỏ rát", "dùng xong bị nổi mề đay, khó thở"]
+FAQ_CASES = ["shop có giao hàng không", "thanh toán thế nào", "có ship COD không ạ", "đổi trả thế nào",
+             "hàng có chính hãng không", "còn hàng không shop"]
+CHAT_CASES = ["chào shop, mình mới vào", "hôm nay trời đẹp quá", "0967194063"]
+REAL_CASES = ["da tôi bị mụn ẩn", "retinol", "kem chống nắng cho da dầu", "lỗ chân lông to", "dầu gội trị gàu"]
+
+
+def test_red_flag_no_products_and_contact():
+    for q in RED_CASES:
+        r = chat(q).json()
+        assert r["related_products"] == [] and r["related_articles"] == [], q
+        assert r["needs_contact"] is True and r["store_info"], q
+        assert "cơ sở y tế" in r["reply"] and "Chuyên gia" in r["reply"], q
+
+
+def test_faq_routes_to_hotline_without_off_topic_products():
+    for q in FAQ_CASES:
+        r = chat(q).json()
+        assert r["related_products"] == [] and r["related_articles"] == [], q
+        assert r["needs_contact"] is True and r["store_info"]["phone"], q
+        assert "Chính sách" in r["reply"], q
+
+
+def test_faq_with_real_keyword_still_suggests():
+    r = chat("serum vitamin c có chính hãng không").json()
+    assert r["related_products"] and r["needs_contact"] is True
+
+
+def test_small_talk_and_bare_phone_give_help_not_products():
+    for q in CHAT_CASES:
+        r = chat(q).json()
+        assert r["related_products"] == [] and r["related_articles"] == [], q
+        assert "Em có thể giúp bạn" in r["reply"], q
+
+
+def test_pii_tag_does_not_leak_into_search():
+    with_phone = chat("tư vấn retinol, sđt 0967194063").json()
+    plain = chat("tư vấn retinol").json()
+    assert with_phone["related_products"] == plain["related_products"]
+    assert "0967194063" not in with_phone["reply"]
+
+
+def test_relevance_threshold_title_must_match():
+    for q in REAL_CASES:
+        r = chat(q).json()
+        assert r["related_products"], q
+    r = chat("abcxyz không có từ này").json()
+    assert r["related_products"] == [] and r["needs_contact"] is True

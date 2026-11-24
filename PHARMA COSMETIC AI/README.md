@@ -5,6 +5,8 @@ Nó tìm trong dữ liệu thật của website bằng BM25 và trả về đư�
 
 ## Nó làm gì / không làm gì
 - Làm: tìm không phân biệt dấu (`mun an` = `mụn ẩn`), trả địa chỉ/hotline/giờ mở cửa lấy từ cấu hình website, gợi ý tối đa 3 sản phẩm + 2 bài viết.
+- Thứ tự nhận diện ý định (24/11/2026): **cảnh báo đỏ** (mang thai/cho con bú, sưng, rát, mề đay, khó thở… ⇒ không gợi ý SP, khuyên ngừng sản phẩm, liên hệ Chuyên gia/cơ sở y tế, `needs_contact`) → đặt lịch → soi da → **FAQ mua bán** (giao hàng, COD, thanh toán, đổi trả, chính hãng, còn hàng ⇒ chỉ dẫn hotline/Zalo + mục Chính sách, không bịa chính sách) → chào/tán gẫu.
+- Ngưỡng liên quan: chỉ giữ SP/bài viết có **tiêu đề chứa ≥1 từ khoá thật** của câu hỏi (bỏ từ đệm, từ mua bán, nhãn `[SĐT đã ẩn]`); không còn gì ⇒ `needs_contact=true`.
 - Không làm: **không báo giá, tồn kho, khuyến mại** (đổi theo thời gian, chỉ dẫn vào trang sản phẩm); không tạo đơn; không chẩn đoán; không tư vấn phác đồ — việc này do Chuyên gia thực hiện.
 - Câu trả lời luôn kèm lời nhắc: chỉ mang tính tham khảo.
 
@@ -16,7 +18,7 @@ app/guardrails.py   che SĐT/email/CMND-CCCD, chặn phát ngôn y khoa vi phạ
 app/config.py       biến môi trường
 data/               knowledge_base.json + store_info.json (SINH RA từ website — xem bên dưới)
 scripts/sync_data.py  đồng bộ dữ liệu từ website
-tests/              pytest (11 test)
+tests/              pytest (17 test)
 Dockerfile          ảnh nhỏ, chạy user thường, đọc cổng từ biến PORT
 ```
 
@@ -53,7 +55,7 @@ Thư mục [`cloudflare/`](./cloudflare/) là bản port cùng hành vi sang Clo
 
 ## Gọi từ website
 `POST {API}/api/v1/chat` với `{"messages":[{"role":"user","content":"..."}]}` → `{reply, related_products, related_articles, store_info}`.
-Theme chưa gọi API này. Khi nối vào widget chat: lấy địa chỉ API từ **cấu hình theme** (không gõ cứng trong snippet), gọi qua HTTPS.
+Theme đã gọi API này: `templates/page.chat.bwt` (nhúng iframe qua `snippets/ai_chat.bwt`) đọc địa chỉ từ cấu hình theme `ai_chat_api_url`, bật/tắt bằng `ai_chat_enable`.
 
 ## Hướng phát triển (chưa làm)
 Nếu muốn câu trả lời tự nhiên bằng LLM: dùng API của nhà cung cấp, có đánh giá pháp lý riêng (chuyển dữ liệu ra ngoài, Nghị định 13/2023). Tài liệu nghiên cứu phương án máy chủ riêng nằm ở `docs/NGHIEN-CUU-TRIEN-KHAI-AI-CUC-BO.md` — đó là nghiên cứu, **không phải hiện trạng**.

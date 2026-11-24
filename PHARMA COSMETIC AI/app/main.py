@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 
 from app.config import settings
 from app.guardrails import SAFE_FALLBACK, check_medical_compliance, mask_pii
-from app.hybrid_rag import fold, get_rag_engine
+from app.hybrid_rag import fold, get_rag_engine, tokenize
 
 _docs_on = settings.APP_ENV != "production"
 app = FastAPI(
@@ -60,6 +60,22 @@ STOP_WORDS = frozenset("la va cua cho toi minh em anh chi co khong the nao nhu b
 STORE_WORDS = frozenset("dia chi co so dau chi nhanh showroom phong tri lieu skin health giai phong hotline so dien thoai lien he gio mo cua dong zalo ha noi hoang mai ngo ngach website web phong kham hang cho toi minh em anh la va the nao nhu duoc khong co o tai ban oi vay a nhe nha di ve".split())  # từ thuộc câu hỏi về cửa hàng (+ từ đệm) — nếu mọi từ đều nằm ở đây thì không gợi ý SP/bài viết
 STORE_KEYS = ("dia chi", "co so", "o dau", "chi nhanh", "showroom", "phong tri lieu", "skin health", "giai phong",
               "hotline", "so dien thoai", "lien he", "gio mo cua", "mo cua", "dong cua", "zalo")
+
+# 24/11/2026 (kiểm thử điểm mù AI) — khớp cloudflare/src/index.js:
+# Cảnh báo đỏ: thai kỳ/cho con bú hoặc phản ứng cấp ⇒ KHÔNG gợi ý sản phẩm, chuyển Chuyên gia / cơ sở y tế.
+RED_RE = re.compile(r"\b(mang thai|co thai|dang bau|mang bau|co bau|thai ky|bau bi|cho con bu|nuoi con bu|"
+                    r"sung do|sung tay|sung mat|sung moi|sung mi|bi sung|phu ne|phu mat|kho tho|tuc nguc|"
+                    r"noi me day|me day|phat ban|chay mu|ri dich|do rat|rat bong|bong rat|nong rat|"
+                    r"bi di ung|di ung nang|bi kich ung|kich ung nang|chay mau)\b")
+# Câu hỏi mua bán/chính sách: không bịa chính sách ⇒ chỉ dẫn hotline/Zalo + mục Chính sách ở cuối trang.
+FAQ_RE = re.compile(r"\b(giao hang|ship|cod|van chuyen|phi ship|thanh toan|chuyen khoan|tra gop|doi tra|doi hang|"
+                    r"tra hang|hoan tien|bao hanh|chinh hang|hang that|hang gia|hang fake|nguon goc|xuat xu|"
+                    r"con hang|het hang|khuyen mai|ma giam|voucher|don hang|dat hang|mua hang|mua online)\b")
+# Từ đệm/mua bán/tán gẫu: không tính là «từ khoá thật» khi tìm sản phẩm (tránh «giao hàng» ra sản phẩm có chữ «hàng»)
+NOISE = frozenset(("giao hang ship cod van chuyen phi thanh toan khoan tra gop doi hoan tien bao hanh chinh that gia "
+                   "fake nguon goc xuat xu con het khuyen mai giam voucher don dat mua online "
+                   "hom nay qua troi dep moi vao dang roi lan biet vay sao nhieu luc nhe sdt email so dinh danh").split())
+PII_TAG_RE = re.compile(r"\[(SĐT|email|số định danh) đã ẩn\]")
 
 
 # ---------- Giới hạn tần suất (trong bộ nhớ, đủ cho 1 instance miễn phí) ----------
@@ -126,31 +142,52 @@ async def chat_endpoint(body: ChatRequest, request: Request):
     if len(last.content) > settings.MAX_CHARS:
         raise HTTPException(status_code=400, detail=f"Câu hỏi tối đa {settings.MAX_CHARS} ký tự.")
 
-    query = mask_pii(last.content)
+    # 24/11/2026: bỏ nhãn «[SĐT đã ẩn]»… trước khi tìm — trước đây nhãn này sinh từ khoá «sdt da an» ⇒ ra sản phẩm lạc đề
+    query = PII_TAG_RE.sub(" ", mask_pii(last.content))
     folded = fold(query)
     rag = get_rag_engine()
 
-    # 23/11/2026: nhận diện Ý ĐỊNH trước khi gợi ý sản phẩm/bài viết (book / skin / help) — khớp cloudflare/src/index.js
+    # 23/11/2026: nhận diện Ý ĐỊNH trước khi gợi ý sản phẩm/bài viết — khớp cloudflare/src/index.js
+    # Thứ tự: red (cảnh báo y tế) > book > skin > faq (mua bán/chính sách) > help (chào / câu không có từ khoá thật)
     toks = re.findall(r"[a-z0-9]+", folded)
+    content = [t for t in dict.fromkeys(toks) if t not in SMALL and t not in GENERIC and t not in STOP_WORDS and t not in NOISE]
     has_store_key = any(k in folded for k in STORE_KEYS)
+    is_faq = bool(FAQ_RE.search(folded))
     intent = ""
-    if BOOK_RE.search(folded):
+    if RED_RE.search(folded):
+        intent = "red"
+    elif BOOK_RE.search(folded):
         intent = "book"
     elif SKIN_RE.search(folded):
         intent = "skin"
-    elif not has_store_key and (HELP_RE.search(folded) or all(t in SMALL or t in GENERIC or t in STOP_WORDS for t in toks)):
+    elif is_faq and not content:
+        intent = "faq"
+    elif not has_store_key and not is_faq and (HELP_RE.search(folded) or not content):
         intent = "help"
-    store_info = STORE if (STORE and (has_store_key or intent == "book")) else None
+    store_info = STORE if (STORE and (has_store_key or intent in ("book", "red", "faq"))) else None
     store_only = bool(store_info) and all(t in STORE_WORDS for t in toks)
-    no_suggest = bool(intent) or store_only
-    products = [] if no_suggest else [{"title": d["title"], "url": d["url"]} for d in rag.search(query, 3, "Sản phẩm")]
-    articles = [] if no_suggest else [{"title": d["title"], "url": d["url"]} for d in rag.search(query, 2, "Bài viết")]
+    no_suggest = bool(intent) or store_only or not content
+
+    def pick(cat: str, k: int) -> List[Dict[str, str]]:
+        # Ngưỡng liên quan: tiêu đề phải chứa ≥1 từ khoá thật của câu hỏi (điểm BM25 tuyệt đối không tách được câu lạc đề)
+        cs = set(content)
+        hits = [d for d in rag.search(" ".join(content), 8, cat) if cs & set(tokenize(d["title"]))]
+        return [{"title": d["title"], "url": d["url"]} for d in hits[:k]]
+
+    products = [] if no_suggest else pick("Sản phẩm", 3)
+    articles = [] if no_suggest else pick("Bài viết", 2)
     book_url = (STORE or {}).get("booking_url") or "/dat-lich-tu-van"
     skin_url = os.getenv("SKIN_PAGE_URL", "/kham-da-ai").rstrip("/")
     expert = settings.EXPERT_TITLE
 
     parts: List[str] = []
-    if intent == "help":
+    needs_contact = False  # true ⇒ trang chat hiện số hotline + nút Zalo
+    if intent == "red":
+        parts.append(f"Dạ, trường hợp này (đang mang thai/cho con bú, hoặc da có dấu hiệu sưng, rát, dị ứng) em không gợi ý "
+                     f"sản phẩm được ạ. Bạn nên **tạm ngừng sản phẩm đang dùng** và liên hệ {expert} để được tư vấn trực tiếp.")
+        parts.append("Nếu sưng nhiều, khó thở, tức ngực hoặc nổi mề đay toàn thân, bạn hãy **đến cơ sở y tế gần nhất ngay**.")
+        needs_contact = True
+    elif intent == "help":
         thanks = re.search(r"(cam on|thanks|thank|tks)", folded)
         hello = re.search(r"(xin chao|chao|hello|\bhi\b|hey|alo)", folded)
         parts.append("Dạ không có gì ạ. Cần gì thêm bạn cứ hỏi em nhé." if thanks else "Dạ chào bạn ạ." if hello else "Dạ em là trợ lý tra cứu của Pharma Cosmetics ạ.")
@@ -169,6 +206,11 @@ async def chat_endpoint(body: ChatRequest, request: Request):
         parts.append(f"Kết quả chỉ để tham khảo. Muốn có phác đồ phù hợp, bạn nên đặt lịch với {expert}: [Đặt lịch tư vấn]({book_url})")
     elif intent == "book":
         parts.append(f"Để được tư vấn trực tiếp, bạn đặt lịch với {expert} ạ:")
+    if is_faq and intent != "red":
+        parts.append("Về giao hàng, thanh toán, đổi trả, nguồn gốc hàng và tình trạng còn hàng: chính sách có thể thay đổi theo "
+                     "thời điểm nên em không trả lời thay được ạ. Bạn vui lòng gọi **hotline/Zalo** bên dưới hoặc xem mục "
+                     "**Chính sách** ở cuối trang website nhé.")
+        needs_contact = True
     if store_info:
         lines = [f"**{store_info.get('clinic_name', 'Pharma Cosmetics')}**"]
         if store_info.get("address"):
@@ -184,7 +226,6 @@ async def chat_endpoint(body: ChatRequest, request: Request):
                      + "\n".join(f"- [{p['title']}]({p['url']})" for p in products))
     if articles:
         parts.append("**Bài viết tham khảo**:\n" + "\n".join(f"- [{a['title']}]({a['url']})" for a in articles))
-    needs_contact = False  # không có gì để gợi ý ⇒ trang chat hiện số hotline + nút Zalo
     if not parts:
         parts.append(SAFE_FALLBACK)
         needs_contact = True
