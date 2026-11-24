@@ -11,6 +11,7 @@ import json
 import os
 import re
 import time
+import unicodedata
 from collections import defaultdict, deque
 from typing import Any, Deque, Dict, List, Optional
 
@@ -64,7 +65,7 @@ STORE_KEYS = ("dia chi", "co so", "o dau", "chi nhanh", "showroom", "phong tri l
 
 # 24/11/2026 (kiểm thử điểm mù AI) — khớp cloudflare/src/index.js:
 # Cảnh báo đỏ: thai kỳ/cho con bú hoặc phản ứng cấp ⇒ KHÔNG gợi ý sản phẩm, chuyển Chuyên gia / cơ sở y tế.
-RED_RE = re.compile(r"\b(mang thai|co thai|dang bau|mang bau|co bau|thai ky|bau bi|cho con bu|nuoi con bu|"
+RED_RE = re.compile(r"\b(me bau|ba bau|bau \d+ (?:thang|tuan)|cho be bu|dang cho bu|dang bu|mang thai|co thai|dang bau|mang bau|co bau|thai ky|bau bi|cho con bu|nuoi con bu|"
                     r"sung do|sung tay|sung mat|sung moi|sung mi|bi sung|phu ne|phu mat|kho tho|tuc nguc|"
                     r"noi me day|me day|phat ban|chay mu|ri dich|rat bong|bong rat|nong rat|"
                     r"bi di ung|di ung nang|bi kich ung|kich ung nang|chay mau|noi man|man do|man ngua|ngua rat)\b|"
@@ -106,6 +107,36 @@ VENT_RE = re.compile(r"\b(huhu|hu hu|hic|chan qua|chan da|chan nan|da (minh |em 
 VENT_WORDS = frozenset("huhu hic chan xau nan buon that vong met stress lang".split())
 ACK_CORE = frozenset("ok oke okie oki okay vang u uh um uhm hmm hm uk ukm roi da o".split())
 ACK_FILL = frozenset("em shop ad a nhe nha ne duoc ha ak ah".split())
+# 24/11/2026 SPEC-AI-LLM-01 (BUG-03): «rát» CÒN DẤU không trùng nghĩa (bỏ dấu mới trùng «rất») ⇒ khớp trên chữ có dấu trước,
+# allow-list RED_RE chỉ còn lo câu gõ không dấu. Trước đây «rát đỏ», «hơi đỏ rát», «bị ửng đỏ rát» lọt ra gợi ý kem.
+ACC_RED_RE = re.compile(r"(?<!\w)rát(?!\w)")
+# Viết tắt hay gõ (0 Neuron, khớp cloudflare/src/index.js)
+ABBR = {"kcn": "kem chong nang", "srm": "sua rua mat", "tdc": "tay da chet", "nhh": "nuoc hoa hong"}
+ABBR_RE = re.compile(r"\b(kcn|srm|tdc|nhh)\b")
+_WORD_RE = re.compile(r"[^\W_]+")
+
+
+def nfc_lower(s: str) -> str:
+    return unicodedata.normalize("NFC", s or "").lower()
+
+
+def accent_key(word: str) -> str:
+    """Khoá «chữ bỏ dấu|các dấu» — phân biệt nám/nấm, mấy/mày, gọi/gội, dầu/đầu; coi hoà/hòa là một."""
+    w = nfc_lower(word)
+    marks = sorted(c for c in unicodedata.normalize("NFD", w) if unicodedata.category(c) == "Mn")
+    return fold(w) + "|" + "".join(marks) + ("đ" if "đ" in w else "")
+
+
+def accent_map(text: str, only_marked: bool) -> Dict[str, set]:
+    out: Dict[str, set] = {}
+    for w in _WORD_RE.findall(nfc_lower(text)):
+        k = accent_key(w)
+        if only_marked and k.endswith("|"):
+            continue
+        out.setdefault(fold(w), set()).add(k)
+    return out
+
+
 KEEP2 = frozenset("ha uv ph bb cc".split())  # chữ ≤2 ký tự vẫn là từ khoá thật (HA, UV, pH, BB/CC cream); còn lại («u», «ừ», «ờ») bị bỏ
 NOISE = NOISE | frozenset("camon thks okie oki okay uh um uhm hmm hm uk ukm ak ah".split())
 # 24/11/2026 SPEC-AI-CHAT-TONE-01 vòng 2 (BUG-02, E4, E5/E6): cụm KHÔNG phải từ khoá sản phẩm — danh xưng (bác sĩ…), thứ/ngày, «gọi lại/gọi điện» («gọi» ≈ «gội»)
@@ -217,7 +248,7 @@ async def chat_endpoint(body: ChatRequest, request: Request):
     masked = mask_pii(last.content)
     has_pii = bool(PII_TAG_RE.search(masked))
     query = PII_TAG_RE.sub(" ", masked)
-    folded = fold(query)
+    folded = ABBR_RE.sub(lambda m: ABBR[m.group(1)], fold(query))
     rag = get_rag_engine()
     expert = settings.EXPERT_TITLE
 
@@ -239,7 +270,7 @@ async def chat_endpoint(body: ChatRequest, request: Request):
     is_ack = bool(toks) and all(t in ACK_CORE or t in ACK_FILL for t in toks) and any(t in ACK_CORE for t in toks)
 
     intent = ""
-    if RED_RE.search(folded):
+    if RED_RE.search(folded) or ACC_RED_RE.search(nfc_lower(query)):
         intent = "red"
     elif CLAIM_RE.search(folded) or (COMMIT_RE.search(folded) and not is_faq):
         intent = "claim"
@@ -270,12 +301,21 @@ async def chat_endpoint(body: ChatRequest, request: Request):
 
     def pick(cat: str, k: int) -> List[Dict[str, str]]:
         # Ngưỡng liên quan: tiêu đề phải chứa ≥1 từ khoá thật của câu hỏi (điểm BM25 tuyệt đối không tách được câu lạc đề)
+        # 24/11/2026 SPEC-AI-LLM-01: khách gõ CÓ DẤU thì từ khớp phải cùng dấu (nám ≠ nấm) — xét 20 ứng viên thay vì 8 để bù phần bị loại
         cs = set(content)
-        hits = [d for d in rag.search(" ".join(content), 8, cat) if cs & set(tokenize(d["title"]))]
+
+        def rel(title: str) -> bool:
+            tt, ta = set(tokenize(title)), accent_map(title, False)
+            if any(t in tt and t in q_acc and not (q_acc[t] & ta.get(t, set())) for t in cs):
+                return False  # có từ khoá trùng chữ nhưng khác dấu (nám/nấm) ⇒ lạc đề dù từ khác có khớp
+            return any(t in tt for t in cs)
+
+        hits = [d for d in rag.search(" ".join(content), 20, cat) if rel(d["title"])]
         if cat == "Sản phẩm":  # 24/11/2026 AC-01.5 (OQ-2): không bao giờ gợi ý SP «kê đơn» trong chat
             hits = [d for d in hits if "ke don" not in fold(d["title"])]
         return [{"title": d["title"], "url": d["url"]} for d in hits[:k]]
 
+    q_acc = accent_map(query, True)
     products: List[Dict[str, str]] = []
     articles: List[Dict[str, str]] = []
     if not intent:
