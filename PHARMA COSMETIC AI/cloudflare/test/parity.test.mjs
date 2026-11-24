@@ -33,6 +33,7 @@ function call(pathname, { method = "GET", body, origin, ip, env = ENV } = {}) {
   }), env);
 }
 const chat = (text, opts = {}) => call("/api/v1/chat", { method: "POST", body: { messages: [{ role: "user", content: text }] }, ...opts });
+const chatMsgs = (messages, opts = {}) => call("/api/v1/chat", { method: "POST", body: { messages }, ...opts });
 
 let passed = 0;
 async function t(name, fn) { await fn(); passed++; console.log("  ok  " + name); }
@@ -95,7 +96,7 @@ await t("câu hỏi chỉ về cửa hàng không kèm SP/bài viết; câu hỏ
   assert.ok(mixed.related_products.length > 0);
 });
 await t("ý định: chào / làm được gì / soi da / đặt lịch ⇒ hướng dẫn, không kèm sản phẩm", async () => {
-  for (const q of ["bạn có thể làm những gì", "xin chào", "cảm ơn nhé", "tư vấn giúp mình"]) {
+  for (const q of ["bạn có thể làm những gì", "xin chào", "tư vấn giúp mình"]) { // 24/11/2026 AC-03.2(b): «cảm ơn nhé» chuyển sang ý định thanks (kiểm ở khối kịch bản)
     const r = await (await chat(q)).json();
     assert.equal(r.related_products.length, 0, q); assert.equal(r.related_articles.length, 0, q);
     assert.ok(r.reply.includes("Em có thể giúp bạn"), q);
@@ -127,11 +128,17 @@ await t("24/11 FAQ giao hàng/thanh toán/đổi trả/chính hãng ⇒ hotline,
   assert.ok(mixed.related_products.length > 0 && mixed.needs_contact === true);
 });
 await t("24/11 tán gẫu / chỉ gửi SĐT ⇒ hướng dẫn, không SP", async () => {
-  for (const q of ["chào shop, mình mới vào", "hôm nay trời đẹp quá", "0967194063"]) {
+  for (const q of ["chào shop, mình mới vào", "hôm nay trời đẹp quá"]) {
     const r = await (await chat(q)).json();
     assert.equal(r.related_products.length + r.related_articles.length, 0, q);
     assert.ok(r.reply.includes("Em có thể giúp bạn"), q);
   }
+  // 24/11/2026 AC-03.2(a): chỉ gửi SĐT ⇒ báo đã ẩn số + hotline/Zalo, không còn ra menu
+  const ph = await (await chat("0967194063")).json();
+  assert.ok(ph.intent === "callback" && ph.reply.includes("đã ẩn") && !ph.reply.includes("0967194063") && ph.needs_contact === true);
+  assert.equal(ph.related_products.length, 0);
+  const th = await (await chat("cảm ơn nhé")).json();
+  assert.ok(th.intent === "thanks" && !th.reply.includes("Em có thể giúp bạn"));
 });
 await t("24/11 nhãn [SĐT đã ẩn] không lọt vào tìm kiếm", async () => {
   const a = await (await chat("tư vấn retinol, sđt 0967194063")).json();
@@ -145,6 +152,69 @@ await t("24/11 ngưỡng liên quan: tiêu đề phải chứa từ khoá thật
   }
   const none = await (await chat("abcxyz không có từ này")).json();
   assert.ok(none.related_products.length === 0 && none.needs_contact === true);
+});
+// ---- 24/11/2026 SPEC-AI-CHAT-TONE-01: kịch bản dùng chung với tests/test_app.py + file vàng sinh từ bản Python ----
+const SCEN = JSON.parse(await readFile(path.join(AI_DIR, "tests", "scenarios.json"), "utf-8")).scenarios;
+const GOLDEN = JSON.parse(await readFile(path.join(AI_DIR, "tests", "golden_replies.json"), "utf-8"));
+const INTENTS = ["red", "claim", "book", "skin", "callback", "faq", "price", "store", "bye", "thanks", "ack", "greet", "help", "vent", "product", "nomatch", "blocked"];
+const DISCLAIMER = "Thông tin chỉ mang tính tham khảo, không thay thế tư vấn trực tiếp từ Chuyên gia.";
+const DISCLAIMER_INTENTS = ["red", "skin", "claim", "nomatch", "blocked"];
+const MONEY_RE = /\d[\d.,]*\s*(đ|₫|k|vnđ|nghìn|triệu)/i;
+const EMOJI_RE = /\p{Extended_Pictographic}/u;
+const PRIOR_ASSISTANT = "Dạ em chào bạn ạ. Em là trợ lý tra cứu của Pharma Cosmetics.\n\nEm có thể giúp bạn:\n- ...";
+const scenarioMessages = (d) => [...(d.hist ? [{ role: "user", content: "xin chào" }, { role: "assistant", content: PRIOR_ASSISTANT }] : []), { role: "user", content: d.q }];
+const goldenView = (r) => ({ reply: r.reply, intent: r.intent, related_products: r.related_products, related_articles: r.related_articles,
+  needs_contact: r.needs_contact, store_info: !!r.store_info });
+
+await t("24/11 kịch bản: ≥46 dòng, mọi luật chung (Dạ, em-bạn, không emoji/số tiền/Bác sĩ, miễn trừ đúng chỗ)", async () => {
+  assert.ok(SCEN.length >= 46 && new Set(SCEN.map((d) => d.id)).size === SCEN.length);
+  const results = {};
+  for (const d of SCEN) {
+    const resp = await chatMsgs(scenarioMessages(d));
+    assert.equal(resp.status, 200, d.id);
+    const r = await resp.json();
+    results[d.id] = r;
+    assert.ok(INTENTS.includes(r.intent) && r.intent === d.intent, `${d.id} intent=${r.intent}`);
+    assert.equal(r.related_products.length > 0, d.products, d.id);
+    assert.equal(r.needs_contact, d.needs_contact, d.id);
+    assert.equal(!!r.store_info, d.store_info, d.id);
+    for (const m of d.must) assert.ok(r.reply.includes(m), `${d.id} thiếu «${m}»`);
+    for (const m of d.must_not) assert.ok(!r.reply.includes(m), `${d.id} không được chứa «${m}»`);
+    assert.ok(r.reply.startsWith("Dạ"), d.id);
+    assert.ok(!/\b(anh\/chị|quý khách)\b/i.test(r.reply), d.id);
+    // ©/®/™ có trong tên SP thật (vd «C-ESTA®») và cũng thuộc Extended_Pictographic ⇒ bỏ ra trước khi dò emoji
+    assert.ok(!EMOJI_RE.test(r.reply.replace(/[©®™]/g, "")) && !MONEY_RE.test(r.reply), d.id);
+    assert.ok(!r.reply.toLowerCase().includes("bác sĩ"), d.id);
+    for (const p of r.related_products) assert.ok(p.url.startsWith("/products/") && !p.title.toLowerCase().includes("kê đơn"), d.id);
+    for (const a of r.related_articles) assert.ok(a.url.startsWith("/blogs/"), d.id);
+    assert.equal(r.reply.includes(DISCLAIMER), r.related_products.length + r.related_articles.length > 0 || DISCLAIMER_INTENTS.includes(r.intent), d.id);
+    if (["bye", "thanks", "ack"].includes(r.intent)) {
+      assert.ok(!r.reply.includes("Em có thể giúp bạn") && r.reply.length <= { bye: 160, thanks: 160, ack: 120 }[r.intent], d.id);
+    }
+    if (["callback", "claim", "red"].includes(r.intent)) assert.equal(r.related_products.length + r.related_articles.length, 0, d.id);
+  }
+  for (const d of SCEN) if (d.same_products_as) assert.deepEqual(results[d.id].related_products, results[d.same_products_as].related_products, d.id);
+});
+await t("24/11 file vàng: Worker == Python từng ký tự (reply, intent, SP, bài viết, needs_contact, store_info)", async () => {
+  assert.deepEqual(Object.keys(GOLDEN).sort(), SCEN.map((d) => d.id).sort());
+  for (const d of SCEN) {
+    const r = await (await chatMsgs(scenarioMessages(d))).json();
+    assert.deepEqual(goldenView(r), GOLDEN[d.id], d.id);
+  }
+});
+await t("24/11 không bao giờ gợi ý SP «kê đơn»", async () => {
+  for (const q of ["mụn trứng cá nặng dùng thuốc gì", "isotretinoin", "accufine", "trị mụn nặng"]) {
+    const r = await (await chat(q)).json();
+    assert.ok(r.related_products.every((p) => !p.title.toLowerCase().includes("kê đơn")), q);
+  }
+});
+await t("24/11 chào lần 2 trong phiên không lặp menu; tin cũ của khách không vào tìm kiếm", async () => {
+  const first = await (await chat("xin chào")).json();
+  assert.ok(first.reply.includes("Em có thể giúp bạn"));
+  const again = await (await chatMsgs([{ role: "user", content: "xin chào" }, { role: "assistant", content: first.reply }, { role: "user", content: "xin chào" }])).json();
+  assert.ok(again.intent === "greet" && !again.reply.includes("Em có thể giúp bạn"));
+  const ok = await (await chatMsgs([{ role: "user", content: "retinol" }, { role: "assistant", content: "Dạ, em tìm được..." }, { role: "user", content: "ok" }])).json();
+  assert.ok(ok.intent === "ack" && ok.related_products.length === 0);
 });
 await t("không bịa giá", async () => {
   const r = await (await chat("giá retinol bao nhiêu")).json();

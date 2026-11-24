@@ -5,10 +5,12 @@ Nó tìm trong dữ liệu thật của website bằng BM25 và trả về đư�
 
 ## Nó làm gì / không làm gì
 - Làm: tìm không phân biệt dấu (`mun an` = `mụn ẩn`), trả địa chỉ/hotline/giờ mở cửa lấy từ cấu hình website, gợi ý tối đa 3 sản phẩm + 2 bài viết.
-- Thứ tự nhận diện ý định (24/11/2026): **cảnh báo đỏ** (mang thai/cho con bú, sưng, rát, mề đay, khó thở… ⇒ không gợi ý SP, khuyên ngừng sản phẩm, liên hệ Chuyên gia/cơ sở y tế, `needs_contact`) → đặt lịch → soi da → **FAQ mua bán** (giao hàng, COD, thanh toán, đổi trả, chính hãng, còn hàng ⇒ chỉ dẫn hotline/Zalo + mục Chính sách, không bịa chính sách) → chào/tán gẫu.
-- Ngưỡng liên quan: chỉ giữ SP/bài viết có **tiêu đề chứa ≥1 từ khoá thật** của câu hỏi (bỏ từ đệm, từ mua bán, nhãn `[SĐT đã ẩn]`); không còn gì ⇒ `needs_contact=true`.
+- Thứ tự nhận diện ý định (24/11/2026, SPEC-AI-CHAT-TONE-01; Python và Worker giống hệt từng ký tự): **cảnh báo đỏ** `red` (mang thai/cho con bú, sưng, rát, nổi mẩn, mề đay, khó thở… ⇒ không gợi ý SP, khuyên ngừng sản phẩm, liên hệ Chuyên gia/cơ sở y tế, `needs_contact`) → `claim` (hỏi cam kết «chữa khỏi / dứt điểm / bao lâu thì hết» ⇒ không cam kết, mời đặt lịch Chuyên gia) → `book` (đặt lịch, hỏi Chuyên gia/dược sĩ) → `skin` (soi da/quiz) → `callback` (khách gửi SĐT/email hoặc xin gọi lại ⇒ báo đã ẩn thông tin, KHÔNG hứa gọi lại, chỉ hotline/Zalo) → `faq` (giao hàng, COD, thanh toán, đổi trả, chính hãng, còn hàng ⇒ hotline/Zalo + mục Chính sách, không bịa chính sách) → `price` (hỏi giá không kèm tên SP ⇒ hỏi lại, không báo số tiền) → `store` (địa chỉ, giờ/ngày mở cửa, SĐT shop) → `bye` → `thanks` → `ack` («ok», «ừ», «dạ vâng») → `vent` (than phiền «da xấu quá» ⇒ đồng cảm + mời mô tả/soi da) → `greet`/`help` (chào lần đầu kèm menu; chào lần sau trong phiên không lặp menu) → `product` (có từ khoá thật + có SP/bài viết khớp tiêu đề) → `nomatch` (không khớp gì ⇒ gợi ý cách mô tả + mời liên hệ Chuyên gia, `needs_contact`); `blocked` = câu trả lời bị chặn bởi kiểm tra phát ngôn. Câu chào/«bye»/«cảm ơn» chỉ là ý định xã giao khi KHÔNG còn từ khoá thật (câu chào kèm «mụn ẩn» vẫn ra `product`).
+- Giọng điệu: xưng «em – bạn», mọi câu trả lời mở bằng «Dạ», chuỗi cố định (không random), không emoji, không «Bác sĩ». Câu «Thông tin chỉ mang tính tham khảo…» chỉ gắn khi có SP/bài viết hoặc ý định sức khoẻ (`red, skin, claim, nomatch, blocked`). Không bao giờ gợi ý SP có «kê đơn» trong tiêu đề.
+- Response có thêm trường `intent` (một trong: `red, claim, book, skin, callback, faq, price, store, bye, thanks, ack, greet, help, vent, product, nomatch, blocked`); các trường cũ giữ nguyên. Lịch sử hội thoại: chỉ đọc tin `assistant` để biết đã gửi menu chưa.
+- Ngưỡng liên quan: chỉ giữ SP/bài viết có **tiêu đề chứa ≥1 từ khoá thật** của câu hỏi (bỏ từ đệm, từ mua bán, danh xưng «bác sĩ / dược sĩ / chuyên gia / tư vấn viên», thứ/ngày trong tuần, «gọi lại/gọi điện», nhãn `[SĐT đã ẩn]`); không còn gì ⇒ `needs_contact=true`.
 - Không làm: **không báo giá, tồn kho, khuyến mại** (đổi theo thời gian, chỉ dẫn vào trang sản phẩm); không tạo đơn; không chẩn đoán; không tư vấn phác đồ — việc này do Chuyên gia thực hiện.
-- Câu trả lời luôn kèm lời nhắc: chỉ mang tính tham khảo.
+- Câu «Thông tin chỉ mang tính tham khảo…» chỉ kèm khi có SP/bài viết hoặc ý định sức khoẻ (`red, skin, claim, nomatch, blocked`); câu xã giao, cửa hàng, FAQ, báo giá, gọi lại, đặt lịch không kèm (AC-02.10).
 
 ## Cấu trúc
 ```
@@ -18,7 +20,7 @@ app/guardrails.py   che SĐT/email/CMND-CCCD, chặn phát ngôn y khoa vi phạ
 app/config.py       biến môi trường
 data/               knowledge_base.json + store_info.json (SINH RA từ website — xem bên dưới)
 scripts/sync_data.py  đồng bộ dữ liệu từ website
-tests/              pytest (17 test)
+tests/              pytest (24 test) + scenarios.json (123 kịch bản dùng chung với Worker) + golden_replies.json (response vàng sinh từ Python: UPDATE_GOLDEN=1 pytest -k golden)
 Dockerfile          ảnh nhỏ, chạy user thường, đọc cổng từ biến PORT
 ```
 
@@ -29,6 +31,7 @@ pip install -r requirements-dev.txt
 python scripts/sync_data.py                          # chạy khi nội dung website đổi, rồi commit 2 file trong data/
 APP_ENV=development uvicorn app.main:app --reload    # /docs chỉ mở khi APP_ENV=development
 pytest -q tests
+(cd cloudflare && node test/parity.test.mjs)    # Worker phải khớp bản Python + file vàng
 ```
 
 ## Biến môi trường (xem `.env.example`)

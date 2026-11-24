@@ -56,24 +56,90 @@ export function complianceOk(text) {
 }
 
 // Từ thuộc câu hỏi về cửa hàng (+ từ đệm): mọi từ của câu hỏi đều nằm ở đây ⇒ không gợi ý SP/bài viết (khớp app/main.py)
-const STORE_WORDS = new Set("dia chi co so dau chi nhanh showroom phong tri lieu skin health giai phong hotline so dien thoai lien he gio mo cua dong zalo ha noi hoang mai ngo ngach website web phong kham hang cho toi minh em anh la va the nao nhu duoc khong co o tai ban oi vay a nhe nha di ve".split(" "));
+const STORE_WORDS = new Set("dia chi co so dau chi nhanh showroom phong tri lieu skin health giai phong hotline so dien thoai lien he gio mo cua dong zalo ha noi hoang mai ngo ngach website web phong kham hang cho toi minh em anh la va the nao nhu duoc khong co o tai ban oi vay a nhe nha di ve shop may chu nhat thu ngay le tet cuoi tuan lam viec sdt dt ko hai bay sau nam 2 3 4 5 6 7".split(" "));
 const SMALL = new Set("xin chao hello hi hey alo ban oi a nhe nha ad admin shop em anh chi minh cam on thanks thank tks ok oke vang da bye tam biet".split(" "));
-const GENERIC = new Set("gi lam nao tot nhat nen dung giup tu van san pham cho toi minh ban co the duoc nhung cac mot sao nhu khong hay la va cua ve voi em anh chi oi a nhe nha hoi can muon".split(" "));
+const GENERIC = new Set("gi lam nao tot nhat nen dung giup tu van san pham cho toi minh ban co the duoc nhung cac mot sao nhu khong hay la va cua ve voi em anh chi oi a nhe nha hoi can muon may".split(" ")); // 24/11/2026 SPEC-AI-CHAT-TONE-01 vòng 2 (E3): «mấy loại serum» không thành từ khoá «mày»
 const HELP_RE = /(lam duoc gi|lam nhung gi|lam gi|giup duoc gi|giup gi|co the lam|chuc nang|ban la ai|ho tro gi|huong dan|su dung nhu the nao|ban biet gi)/;
 const BOOK_RE = /(dat lich|hen lich|lich hen|dat hen|gap chuyen gia|tu van truc tiep|kham truc tiep|dang ky kham|dang ky tu van)/;
 const SKIN_RE = /(soi da|phan tich da|kiem tra da|quiz|loai da cua|xac dinh loai da|tinh trang da cua|chan doan da)/;
 const STORE_KEYS = ["dia chi", "co so", "o dau", "chi nhanh", "showroom", "phong tri lieu", "skin health", "giai phong",
-  "hotline", "so dien thoai", "lien he", "gio mo cua", "mo cua", "dong cua", "zalo"];
+  "hotline", "so dien thoai", "lien he", "gio mo cua", "mo cua", "dong cua", "zalo",
+  "cua hang", "sdt shop", "sdt cua hang", "sdt ben", "so dt", "gio lam viec"];
 // 24/11/2026 (kiểm thử điểm mù AI) — khớp app/main.py:
 // Cảnh báo đỏ: thai kỳ/cho con bú hoặc phản ứng cấp ⇒ KHÔNG gợi ý sản phẩm, chuyển Chuyên gia / cơ sở y tế.
-const RED_RE = /\b(mang thai|co thai|dang bau|mang bau|co bau|thai ky|bau bi|cho con bu|nuoi con bu|sung do|sung tay|sung mat|sung moi|sung mi|bi sung|phu ne|phu mat|kho tho|tuc nguc|noi me day|me day|phat ban|chay mu|ri dich|do rat|rat bong|bong rat|nong rat|bi di ung|di ung nang|bi kich ung|kich ung nang|chay mau)\b/;
+const RED_RE = /\b(mang thai|co thai|dang bau|mang bau|co bau|thai ky|bau bi|cho con bu|nuoi con bu|sung do|sung tay|sung mat|sung moi|sung mi|bi sung|phu ne|phu mat|kho tho|tuc nguc|noi me day|me day|phat ban|chay mu|ri dich|rat bong|bong rat|nong rat|bi di ung|di ung nang|bi kich ung|kich ung nang|chay mau|noi man|man do|man ngua|ngua rat)\b|(?:^\W*|\b(?:bi|da|mat|moi|tay|mi|co|vung|xong|sau|vao|boi|thoa|nam|than|lung) )do rat\b|\b(?:bi|da|mat|moi|tay|mi|co|vung|xong|sau|vao|boi|thoa|nam|than|lung) rat do\b|\bbi rat(?= (?:do|ngua|bong|sung|rat|khi|sau|luc|va|o|mat|moi|tay|co|chan|lung|tran)\b|\W*$)/; // 24/11/2026 SPEC-AI-CHAT-TONE-01 AC-01.3: «bôi xong bị rát đỏ» trước lọt cảnh báo
+// 24/11/2026 SPEC-AI-CHAT-TONE-01 vòng 2 (E2): «bị rất»/«rất dở»/«đó rất» bỏ dấu trùng «bị rát»/«rát đỏ»/«đỏ rát» ⇒ chuyển sang allow-list
 // Câu hỏi mua bán/chính sách: không bịa chính sách ⇒ chỉ dẫn hotline/Zalo + mục Chính sách ở cuối trang.
-const FAQ_RE = /\b(giao hang|ship|cod|van chuyen|phi ship|thanh toan|chuyen khoan|tra gop|doi tra|doi hang|tra hang|hoan tien|bao hanh|chinh hang|hang that|hang gia|hang fake|nguon goc|xuat xu|con hang|het hang|khuyen mai|ma giam|voucher|don hang|dat hang|mua hang|mua online)\b/;
+const FAQ_RE = /\b(giao hang|ship|cod|van chuyen|phi ship|thanh toan|chuyen khoan|tra gop|doi tra|doi hang|tra hang|hoan tien|bao hanh|chinh hang|hang that|hang gia|hang fake|nguon goc|xuat xu|con hang|het hang|khuyen mai|ma giam|voucher|don hang|dat hang|mua hang|mua online|giao bao lau|ship bao lau|bao lau nhan|giao ngoai|giao tinh|giao xa|giao noi thanh|giao toan quoc|cam ket gi|bao dam gi)\b/; // 24/11/2026 SPEC-AI-CHAT-TONE-01 vòng 2 (BUG-01, E10): «giao ngoại tỉnh», «shop cam kết gì» là câu hỏi chính sách
 // Từ đệm/mua bán/tán gẫu: không tính là «từ khoá thật» khi tìm sản phẩm (tránh «giao hàng» ra sản phẩm có chữ «hàng»)
 const NOISE = new Set(("giao hang ship cod van chuyen phi thanh toan khoan tra gop doi hoan tien bao hanh chinh that gia " +
   "fake nguon goc xuat xu con het khuyen mai giam voucher don dat mua online " +
   "hom nay qua troi dep moi vao dang roi lan biet vay sao nhieu luc nhe sdt email so dinh danh").split(" "));
 const PII_TAG_RE = /\[(SĐT|email|số định danh) đã ẩn\]/g;
+
+// ---------- 24/11/2026 SPEC-AI-CHAT-TONE-01: ý định mới + giọng điệu (PHẢI khớp app/main.py từng ký tự) ----------
+// Thứ tự ưu tiên: red > claim > book > skin > callback > faq > price > store > bye > thanks > ack > vent > greet/help > product > nomatch
+// (vent đặt trước greet/help: «da tệ quá» chỉ gồm từ đệm nên nếu để sau sẽ rơi vào menu; câu chào kèm từ khoá thật vẫn ra product)
+const CLAIM_RE = /(chua khoi|khoi han|khoi hoan toan|dut diem|bao lau (thi |se )?(khoi|het)|co khoi (khong|duoc)|khoi duoc khong|\bco het (khong|duoc khong|mun|nam|tham|seo|ngua|benh|nhan|nep))/;
+const COMMIT_RE = /\b(cam ket|bao dam)\b/; // chỉ tính là «hỏi cam kết kết quả» khi KHÔNG phải câu hỏi chính sách (vd «cam kết chính hãng»)
+const DOCTOR_RE = /(bac si|duoc si|chuyen gia|tu van vien)/;
+const DOCASK_RE = /(\bco\b(?![a-z0-9 ]*\bkhuyen\b)[a-z0-9 ]*\bkhong\b|\bgap\b|\bhoi\b|noi chuyen)/;
+const CB_RE = /(goi lai|lien he lai|lien lac lai|de lai so|goi cho (em|minh|toi)|tu van qua (dien thoai|sdt|zalo)|goi dien (cho|lai))/;
+const CB_WORDS = new Set("goi lai lien he lac de so cho dien thoai qua tu van sdt em minh toi nhe nha nhan tin ngay som sau vui long xin ho tro".split(" "));
+const PRICE_RE = /((?<!chuyen )\bgia\b(?! hoa| dinh| vi| han| tang)|bao nhieu(?! tuoi| lan| ngay| lau| phut| gio| thang| phan tram)|\btien\b)/;
+const PRICE_WORDS = new Set("tien ca bang dong vnd re mac dat".split(" "));
+const FAQ_FILL = new Set("chua cam ket bao dam tinh bang gi may ngay lau bao ngoai thanh noi pho toan quoc hcm sg sai gon ha huyen mat".split(" ")); // từ đệm của câu hỏi giao hàng/thanh toán («giao hàng tỉnh», «thanh toán bằng gì»)
+const HOURS_RE = /(\b(chu nhat|ngay le|ngay tet|cuoi tuan|thu (2|3|4|5|6|7|hai|ba|bay|sau|nam))\b[a-z0-9 ]{0,20}\b(mo|lam|ban|dong)\b|\bco (mo|lam|ban) (cua )?(khong|ko)\b|\bmay gio (mo|dong|lam|ban)\b|\bgio (mo|dong|lam)\b|\bmay gio\W*$)/;
+const WEEKEND_RE = /(chu nhat|ngay le|ngay tet|cuoi tuan)/;
+const SOCIAL_RE = /\b(thoi em di day|thoi di day|bai bai|hen gap lai|chao nhe|di day|chuc ngu ngon|thank you|goodbye|good bye)\b/g;
+const BYE_RE = /\b(thoi em di day|thoi di day|tam biet|bye|bai bai|hen gap lai|chao nhe|di day|chuc ngu ngon|goodbye|good bye)\b/;
+const THANKS_RE = /\b(cam on|camon|thanks|thank|thank you|tks|thks)\b/;
+const GREET_RE = /\b(xin chao|chao|hello|hi|hey|alo)\b/;
+const VENT_RE = /\b(huhu|hu hu|hic|chan qua|chan da|chan nan|da (minh |em )?(xau|te)|tu ti|buon qua|buon vi|that vong|met moi qua|stress|lo lang)\b/;
+const VENT_WORDS = new Set("huhu hic chan xau nan buon that vong met stress lang".split(" "));
+const ACK_CORE = new Set("ok oke okie oki okay vang u uh um uhm hmm hm uk ukm roi da o".split(" "));
+const ACK_FILL = new Set("em shop ad a nhe nha ne duoc ha ak ah".split(" "));
+const KEEP2 = new Set("ha uv ph bb cc".split(" ")); // chữ ≤2 ký tự vẫn là từ khoá thật (HA, UV, pH, BB/CC cream); còn lại («u», «ừ», «ờ») bị bỏ
+for (const w of "camon thks okie oki okay uh um uhm hmm hm uk ukm ak ah".split(" ")) NOISE.add(w);
+// 24/11/2026 SPEC-AI-CHAT-TONE-01 vòng 2 (BUG-02, E4, E5/E6): cụm KHÔNG phải từ khoá sản phẩm — danh xưng (bác sĩ…), thứ/ngày, «gọi lại/gọi điện» («gọi» ≈ «gội»)
+const NONKEY_RE = /\b(?:(?:bac si|duoc si|chuyen gia|tu van vien)(?: da lieu)?|chu nhat|cuoi tuan|ngay le|ngay tet|thu (?:2|3|4|5|6|7|hai|ba|bay|sau|nam)|goi (?:dien(?: thoai)?|lai|cho|ngay|giup|minh|em|toi))\b/g;
+
+// Chuỗi giọng điệu — HẰNG SỐ (không random) để hai bản ra cùng chữ. Xưng hô «em – bạn». Giữ nguyên các chuỗi `must` của tests/scenarios.json.
+const HELP_MENU_HEAD = "Em có thể giúp bạn:";
+const GREET_FIRST = "Dạ em chào bạn ạ. Em là trợ lý tra cứu của Pharma Cosmetics.";
+const GREET_ASK = "Bạn đang quan tâm vấn đề da nào ạ?";
+const GREET_AGAIN = "Dạ em chào bạn ạ. Bạn đang quan tâm vấn đề da nào, cứ nhắn em nhé.";
+const HELP_INTRO = "Dạ em là trợ lý tra cứu của Pharma Cosmetics ạ.";
+const THANKS_REPLY = "Dạ không có gì ạ, em rất vui được hỗ trợ bạn. Cần gì thêm bạn cứ nhắn em nhé.";
+const BYE_REPLY = "Dạ em cảm ơn bạn đã ghé Pharma Cosmetics ạ. Chúc bạn một ngày vui, cần gì bạn cứ quay lại nhắn em nhé.";
+const ACK_REPLY = "Dạ vâng ạ. Bạn cần em hỗ trợ thêm gì cứ nhắn em nhé.";
+const PRODUCT_OPEN = "Dạ, em tìm được vài gợi ý liên quan để bạn tham khảo ạ:";
+const PRODUCT_OPEN_GREET = "Dạ em chào bạn ạ. Em tìm được vài gợi ý liên quan để bạn tham khảo ạ:";
+const PRODUCT_OPEN_ALSO = "Em cũng tìm được vài gợi ý liên quan để bạn tham khảo ạ:";
+const PRODUCT_CLOSE = "Bạn muốn em gợi ý kỹ hơn theo loại da, hay đặt lịch với {expert} để được tư vấn trực tiếp ạ?";
+const PRICE_NOTE = "Giá có thể thay đổi theo thời điểm, bạn bấm vào từng sản phẩm để xem giá mới nhất ạ.";
+const PRICE_ASK = "Dạ giá sản phẩm thay đổi theo thời điểm nên em không báo giá trực tiếp ạ. Bạn đang quan tâm sản phẩm nào hoặc vấn đề da gì, " +
+  "em gửi đường dẫn để bạn xem giá mới nhất nhé.";
+const STORE_OPEN = "Dạ, thông tin cửa hàng bên em đây ạ:";
+const STORE_CLOSE = "Bạn cần em hỗ trợ thêm gì cứ nhắn em nhé.";
+const FAQ_REPLY = "Dạ, về giao hàng, thanh toán, đổi trả, nguồn gốc và tình trạng còn hàng, chính sách có thể thay đổi theo thời điểm nên em không " +
+  "trả lời thay được ạ. Bạn gọi hoặc nhắn **hotline/Zalo** bên dưới, hoặc xem mục **Chính sách** ở cuối trang website nhé.";
+const FAQ_MIXED = "Về giao hàng, thanh toán, đổi trả, nguồn gốc và tình trạng còn hàng, chính sách có thể thay đổi theo thời điểm nên em không " +
+  "trả lời thay được ạ. Bạn gọi hoặc nhắn **hotline/Zalo** bên dưới, hoặc xem mục **Chính sách** ở cuối trang website nhé.";
+const BOOK_REPLY = "Dạ, bên em có {expert} tư vấn trực tiếp ạ. Bạn đặt lịch giúp em tại đây nhé:";
+const CALLBACK_REPLY = "Dạ, để bảo vệ thông tin của bạn, em đã ẩn số điện thoại/email bạn gửi và không lưu lại ạ. Em chưa tự liên hệ lại được, " +
+  "bạn gọi hoặc nhắn **hotline/Zalo** bên dưới để được hỗ trợ nhanh nhất nhé.";
+const PII_NOTE = "Em đã ẩn số điện thoại/email bạn gửi để bảo vệ thông tin của bạn ạ.";
+const CLAIM_REPLY = "Dạ, hiệu quả phụ thuộc cơ địa và mức độ của từng người nên em không thể cam kết kết quả ạ. Bạn nên đặt lịch với {expert} " +
+  "để được đánh giá và tư vấn lộ trình phù hợp nhé.";
+const VENT_REPLY = "Dạ em hiểu, da chưa như ý thật dễ khiến bạn lo lắng ạ. Bạn kể giúp em da đang gặp vấn đề gì (ví dụ mụn, thâm, nám, khô, nhạy cảm) " +
+  "để em gợi ý sát hơn, hoặc soi da bằng ảnh: bấm dấu **+** cạnh ô nhập nhé.";
+const NOMATCH_REPLY = "Dạ em chưa tìm thấy thông tin phù hợp với câu hỏi này ạ. Bạn thử mô tả cụ thể hơn (ví dụ loại da, vấn đề mụn, nám, khô) " +
+  "hoặc liên hệ {expert} để được tư vấn trực tiếp nhé.";
+const DISCLAIMER = "Thông tin chỉ mang tính tham khảo, không thay thế tư vấn trực tiếp từ {expert}.";
+// Câu miễn trừ chỉ gắn khi có SP/bài viết hoặc ý định nội dung sức khoẻ (AC-02.10, OQ-3)
+const DISCLAIMER_INTENTS = ["red", "skin", "claim", "nomatch", "blocked"];
+const withExpert = (s, expert) => s.replace("{expert}", expert);
 
 // ---------- Tìm kiếm BM25 trên chỉ mục đã chia mảnh ----------
 const cache = new Map(); // tên mảnh -> dữ liệu (sống theo isolate)
@@ -172,80 +238,145 @@ async function chat(request, env, c, cors) {
   if (last.content.length > c.maxChars) return json({ detail: `Câu hỏi tối đa ${c.maxChars} ký tự.` }, 400, cors);
 
   // 24/11/2026: bỏ nhãn «[SĐT đã ẩn]»… trước khi tìm — trước đây nhãn này sinh từ khoá «sdt da an» ⇒ ra sản phẩm lạc đề
-  const query = maskPii(last.content).replace(PII_TAG_RE, " ");
+  const masked = maskPii(last.content);
+  const hasPii = new RegExp(PII_TAG_RE.source).test(masked);
+  const query = masked.replace(PII_TAG_RE, " ");
   const folded = fold(query);
-  // 23/11/2026 (chủ dự án: «người mới không hỏi ngay về sản phẩm»): nhận diện Ý ĐỊNH trước khi gợi ý sản phẩm/bài viết.
-  //   Thứ tự (khớp app/main.py): red = cảnh báo y tế > book = đặt lịch > skin = soi da/quiz > faq = mua bán/chính sách
-  //   > help = chào / «bạn làm được gì» / câu không có từ khoá thật ⇒ trả lời hướng dẫn, KHÔNG kèm sản phẩm/bài viết.
+  const expert = c.expert;
+
+  // 24/11/2026 SPEC-AI-CHAT-TONE-01 AC-03.4: chỉ đọc tin `assistant` để biết đã gửi menu chưa (không đưa tin cũ vào tìm kiếm)
+  const histMenu = msgs.slice(0, -1).some((m) => m.role === "assistant" && m.content.includes(HELP_MENU_HEAD));
+
+  // 23/11/2026 (chủ dự án: «người mới không hỏi ngay về sản phẩm»): nhận diện Ý ĐỊNH trước khi gợi ý sản phẩm/bài viết (khớp app/main.py).
   const toks = folded.match(/[a-z0-9]+/g) || [];
-  const content = [...new Set(toks)].filter((t) => !SMALL.has(t) && !GENERIC.has(t) && !STOP.has(t) && !NOISE.has(t));
-  const hasStoreKey = STORE_KEYS.some((k) => folded.includes(k));
+  const ctoks = folded.replace(SOCIAL_RE, " ").replace(NONKEY_RE, " ").match(/[a-z0-9]+/g) || [];
   const isFaq = FAQ_RE.test(folded);
+  const content = [...new Set(ctoks)].filter((t) => !SMALL.has(t) && !GENERIC.has(t) && !STOP.has(t) && !NOISE.has(t)
+    && !(isFaq && FAQ_FILL.has(t)) && !(t.length <= 2 && !/\d/.test(t) && !KEEP2.has(t)));
+  const hasStoreKey = STORE_KEYS.some((k) => folded.includes(k)) || HOURS_RE.test(folded);
+  const isCb = (hasPii || CB_RE.test(folded)) && !content.some((t) => !CB_WORDS.has(t));
+  const priceOnly = PRICE_RE.test(folded) && !content.some((t) => !PRICE_WORDS.has(t));
+  const storeAsk = !!STORE && hasStoreKey && (!content.length || toks.every((t) => STORE_WORDS.has(t)));
+  const ventOnly = VENT_RE.test(folded) && !content.some((t) => !VENT_WORDS.has(t));
+  const isAck = toks.length > 0 && toks.every((t) => ACK_CORE.has(t) || ACK_FILL.has(t)) && toks.some((t) => ACK_CORE.has(t));
+
   let intent = "";
   if (RED_RE.test(folded)) intent = "red";
-  else if (BOOK_RE.test(folded)) intent = "book";
+  else if (CLAIM_RE.test(folded) || (COMMIT_RE.test(folded) && !isFaq)) intent = "claim";
+  else if (BOOK_RE.test(folded) || (DOCTOR_RE.test(folded) && DOCASK_RE.test(folded))) intent = "book";
   else if (SKIN_RE.test(folded)) intent = "skin";
+  else if (isCb) intent = "callback";
   else if (isFaq && !content.length) intent = "faq";
-  else if (!hasStoreKey && !isFaq && (HELP_RE.test(folded) || !content.length)) intent = "help";
-  const storeInfo = (hasStoreKey || ["book", "red", "faq"].includes(intent)) ? STORE : null;
-  // câu hỏi CHỈ về cửa hàng (địa chỉ / giờ mở cửa / hotline) ⇒ không kèm sản phẩm, bài viết
-  const storeOnly = !!storeInfo && toks.every((t) => STORE_WORDS.has(t));
-  const noSuggest = !!intent || storeOnly || !content.length;
+  else if (priceOnly) intent = "price";
+  else if (storeAsk) intent = "store";
+  else if (!content.length && BYE_RE.test(folded)) intent = "bye";
+  else if (!content.length && THANKS_RE.test(folded)) intent = "thanks";
+  else if (!content.length && isAck) intent = "ack";
+  else if (ventOnly) intent = "vent";
+  else if (!content.length) intent = (GREET_RE.test(folded) && !HELP_RE.test(folded)) ? "greet" : "help";
+
+  let storeInfo = (STORE && (hasStoreKey || ["book", "red", "faq", "claim", "callback"].includes(intent))) ? STORE : null;
   // Ngưỡng liên quan: tiêu đề phải chứa ≥1 từ khoá thật của câu hỏi (điểm BM25 tuyệt đối không tách được câu lạc đề)
-  const pick = async (catCode, k) => (await search(env, request, content.join(" "), 8, catCode))
-    .filter((d) => tokenize(d.title).some((t) => content.includes(t))).slice(0, k).map(({ title, url }) => ({ title, url }));
-  let products = noSuggest ? [] : await pick(2, 3);
-  let articles = noSuggest ? [] : await pick(1, 2);
+  const pick = async (catCode, k) => {
+    let hits = (await search(env, request, content.join(" "), 8, catCode)).filter((d) => tokenize(d.title).some((t) => content.includes(t)));
+    if (catCode === 2) hits = hits.filter((d) => !fold(d.title).includes("ke don")); // 24/11/2026 AC-01.5 (OQ-2): không bao giờ gợi ý SP «kê đơn» trong chat
+    return hits.slice(0, k).map(({ title, url }) => ({ title, url }));
+  };
+  let products = [], articles = [];
+  if (!intent) {
+    products = await pick(2, 3);
+    articles = await pick(1, 2);
+    if (products.length || articles.length) intent = "product";
+    else if (VENT_RE.test(folded)) intent = "vent";
+    else if (storeInfo) intent = "store";
+    else intent = "nomatch";
+  }
+  if (!["store", "book", "red", "faq", "claim", "callback", "product"].includes(intent)) storeInfo = null; // intent không in khối cửa hàng ⇒ không trả store_info
   const bookUrl = (STORE && STORE.booking_url) || "/dat-lich-tu-van";
   const skinUrl = String(env.SKIN_PAGE_URL || "/kham-da-ai").replace(/\/+$/, "");
 
+  const storeBlock = (si) => {
+    const lines = [`**${si.clinic_name || "Pharma Cosmetics"}**`];
+    if (si.address) lines.push(`- Địa chỉ: ${si.address}`);
+    if (si.phone) lines.push(`- Hotline/Zalo: ${si.phone}`);
+    if (si.hours) lines.push(`- Giờ mở cửa: ${si.hours}`);
+    lines.push(`- Đặt lịch với ${expert}: [Đặt lịch tư vấn](${si.booking_url || "/dat-lich-tu-van"})`);
+    return lines.join("\n");
+  };
+  const menu = [HELP_MENU_HEAD,
+    "- **Địa chỉ, giờ mở cửa, hotline** của cửa hàng",
+    "- **Soi da bằng ảnh hoặc camera**: bấm dấu **+** cạnh ô nhập",
+    `- **Làm quiz xác định loại da**: [Làm quiz](${skinUrl}?tab=quiz)`,
+    "- **Gợi ý sản phẩm, bài viết** khi bạn nói tình trạng da hoặc hoạt chất quan tâm (ví dụ «mụn ẩn», «retinol»)",
+    `- **Đặt lịch với ${expert}**: [Đặt lịch tư vấn](${bookUrl})`].join("\n");
+
   const parts = [];
-  let needsContact = false; // true ⇒ trang chat hiện số hotline + nút Zalo
+  let needsContact = ["red", "claim", "callback", "faq", "nomatch"].includes(intent); // true ⇒ trang chat hiện số hotline + nút Zalo
   if (intent === "red") {
     parts.push(`Dạ, trường hợp này (đang mang thai/cho con bú, hoặc da có dấu hiệu sưng, rát, dị ứng) em không gợi ý ` +
-      `sản phẩm được ạ. Bạn nên **tạm ngừng sản phẩm đang dùng** và liên hệ ${c.expert} để được tư vấn trực tiếp.`);
+      `sản phẩm được ạ. Bạn nên **tạm ngừng sản phẩm đang dùng** và liên hệ ${expert} để được tư vấn trực tiếp.`);
     parts.push("Nếu sưng nhiều, khó thở, tức ngực hoặc nổi mề đay toàn thân, bạn hãy **đến cơ sở y tế gần nhất ngay**.");
-    needsContact = true;
-  } else if (intent === "help") {
-    const thanks = /(cam on|thanks|thank|tks)/.test(folded);
-    const hello = /(xin chao|chao|hello|\bhi\b|hey|alo)/.test(folded);
-    parts.push(thanks ? "Dạ không có gì ạ. Cần gì thêm bạn cứ hỏi em nhé." : hello ? "Dạ chào bạn ạ." : "Dạ em là trợ lý tra cứu của Pharma Cosmetics ạ.");
-    parts.push(["Em có thể giúp bạn:",
-      "- **Địa chỉ, giờ mở cửa, hotline** của cửa hàng",
-      "- **Soi da bằng ảnh hoặc camera**: bấm dấu **+** cạnh ô nhập",
-      `- **Làm quiz xác định loại da**: [Làm quiz](${skinUrl}?tab=quiz)`,
-      "- **Gợi ý sản phẩm, bài viết** khi bạn nói tình trạng da hoặc hoạt chất quan tâm (ví dụ «mụn ẩn», «retinol»)",
-      `- **Đặt lịch với ${c.expert}**: [Đặt lịch tư vấn](${bookUrl})`].join("\n"));
+    if (storeInfo) parts.push(storeBlock(storeInfo));
+  } else if (intent === "claim") {
+    parts.push(withExpert(CLAIM_REPLY, expert));
+    if (storeInfo) parts.push(storeBlock(storeInfo));
+  } else if (intent === "book") {
+    parts.push(withExpert(BOOK_REPLY, expert));
+    if (storeInfo) parts.push(storeBlock(storeInfo));
   } else if (intent === "skin") {
-    parts.push(["Em hỗ trợ soi da theo 2 cách:",
+    parts.push(["Dạ, em hỗ trợ soi da theo 2 cách:",
       "- **Gửi ảnh hoặc bật camera ngay trong khung chat**: bấm dấu **+** cạnh ô nhập (ảnh được phân tích ngay trên thiết bị của bạn, không gửi đi đâu)",
       `- **Làm quiz** trả lời vài câu hỏi để biết loại da: [Làm quiz](${skinUrl}?tab=quiz)`].join("\n"));
-    parts.push(`Kết quả chỉ để tham khảo. Muốn có phác đồ phù hợp, bạn nên đặt lịch với ${c.expert}: [Đặt lịch tư vấn](${bookUrl})`);
-  } else if (intent === "book") {
-    parts.push(`Để được tư vấn trực tiếp, bạn đặt lịch với ${c.expert} ạ:`);
+    parts.push(`Kết quả chỉ để tham khảo. Muốn có phác đồ phù hợp, bạn nên đặt lịch với ${expert}: [Đặt lịch tư vấn](${bookUrl})`);
+  } else if (intent === "callback") {
+    parts.push(CALLBACK_REPLY);
+    if (storeInfo) parts.push(storeBlock(storeInfo));
+  } else if (intent === "faq") {
+    parts.push(FAQ_REPLY);
+    if (storeInfo) parts.push(storeBlock(storeInfo));
+  } else if (intent === "price") {
+    parts.push(PRICE_ASK);
+  } else if (intent === "store") {
+    parts.push(STORE_OPEN);
+    if (storeInfo) parts.push(storeBlock(storeInfo));
+    // chỉ nói «mở chủ nhật/ngày lễ» khi suy được từ store.hours (ANTI-FAB)
+    const hoursF = fold((storeInfo || {}).hours || "");
+    let weekend = "";
+    if (WEEKEND_RE.test(folded) && hoursF.includes("chu nhat")) weekend = hoursF.includes("ngay le") ? "Bên em mở cả chủ nhật và ngày lễ ạ. " : "Bên em mở cả chủ nhật ạ. ";
+    parts.push(weekend + STORE_CLOSE);
+  } else if (intent === "bye") {
+    parts.push(BYE_REPLY);
+  } else if (intent === "thanks") {
+    parts.push(THANKS_REPLY);
+  } else if (intent === "ack") {
+    parts.push(ACK_REPLY);
+  } else if (intent === "vent") {
+    parts.push(VENT_REPLY);
+  } else if (intent === "greet") {
+    if (histMenu) parts.push(GREET_AGAIN); // đã gửi menu trong phiên ⇒ chào ngắn, không lặp menu
+    else parts.push(GREET_FIRST, menu, GREET_ASK);
+  } else if (intent === "help") {
+    parts.push(HELP_INTRO, menu);
+  } else if (intent === "product") {
+    if (storeInfo) {
+      parts.push(STORE_OPEN, storeBlock(storeInfo), PRODUCT_OPEN_ALSO);
+    } else {
+      parts.push(GREET_RE.test(folded) ? PRODUCT_OPEN_GREET : PRODUCT_OPEN);
+    }
+    if (PRICE_RE.test(folded)) parts.push(PRICE_NOTE); // hỏi giá: không báo số tiền, chỉ dẫn xem tại trang sản phẩm
+    if (products.length) parts.push("**Sản phẩm tham khảo** (xem giá và thành phần chi tiết tại trang sản phẩm):\n" + products.map((p) => `- [${p.title}](${p.url})`).join("\n"));
+    if (articles.length) parts.push("**Bài viết tham khảo**:\n" + articles.map((a) => `- [${a.title}](${a.url})`).join("\n"));
+    if (isFaq) { parts.push(FAQ_MIXED); needsContact = true; }
+    parts.push(withExpert(PRODUCT_CLOSE, expert));
+    if (hasPii) parts.push(PII_NOTE);
+  } else { // nomatch
+    parts.push(withExpert(NOMATCH_REPLY, expert));
   }
-  if (isFaq && intent !== "red") {
-    parts.push("Về giao hàng, thanh toán, đổi trả, nguồn gốc hàng và tình trạng còn hàng: chính sách có thể thay đổi theo " +
-      "thời điểm nên em không trả lời thay được ạ. Bạn vui lòng gọi **hotline/Zalo** bên dưới hoặc xem mục " +
-      "**Chính sách** ở cuối trang website nhé.");
-    needsContact = true;
-  }
-  if (storeInfo) {
-    const lines = [`**${storeInfo.clinic_name || "Pharma Cosmetics"}**`];
-    if (storeInfo.address) lines.push(`- Địa chỉ: ${storeInfo.address}`);
-    if (storeInfo.phone) lines.push(`- Hotline/Zalo: ${storeInfo.phone}`);
-    if (storeInfo.hours) lines.push(`- Giờ mở cửa: ${storeInfo.hours}`);
-    lines.push(`- Đặt lịch với ${c.expert}: [Đặt lịch tư vấn](${storeInfo.booking_url || "/dat-lich-tu-van"})`);
-    parts.push(lines.join("\n"));
-  }
-  if (products.length) parts.push("**Sản phẩm tham khảo** (xem giá và thành phần chi tiết tại trang sản phẩm):\n" + products.map((p) => `- [${p.title}](${p.url})`).join("\n"));
-  if (articles.length) parts.push("**Bài viết tham khảo**:\n" + articles.map((a) => `- [${a.title}](${a.url})`).join("\n"));
-  if (!parts.length) { parts.push(SAFE_FALLBACK); needsContact = true; }
-  parts.push(`Thông tin chỉ mang tính tham khảo, không thay thế tư vấn trực tiếp từ ${c.expert}.`);
+  if (products.length || articles.length || DISCLAIMER_INTENTS.includes(intent)) parts.push(withExpert(DISCLAIMER, expert));
 
   let reply = parts.join("\n\n");
-  if (!complianceOk(reply)) { reply = SAFE_FALLBACK; products = []; articles = []; needsContact = true; }
-  return json({ reply, related_products: products, related_articles: articles, store_info: storeInfo, needs_contact: needsContact }, 200, cors);
+  if (!complianceOk(reply)) { reply = SAFE_FALLBACK; products = []; articles = []; needsContact = true; intent = "blocked"; }
+  return json({ reply, related_products: products, related_articles: articles, store_info: storeInfo, needs_contact: needsContact, intent }, 200, cors);
 }
 
 export default {
