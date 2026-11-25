@@ -1,230 +1,225 @@
 {%- comment -%}
-  section_testimonials.bwt — Khối "Trước & Sau" (T-19).
-  Phong cách Reels/Shorts với Swiper Slider & Hover-to-Play Video YouTube.
-  100% Tailwind class theo token (UI-0), màu thương hiệu primary (UI-BRAND).
+  section_testimonials.bwt — Khối "Trước & Sau" trang chủ (T-19).
+  25/11/2026 (chủ dự án, theo ảnh mẫu + kênh youtube.com/@pharmacosmetics/shorts): dựng lại dạng Shorts —
+  - Dữ liệu: bài trong blog Trước & Sau (settings.home_testi_blog ⇒ clinical_case_blog_handle). Tag mỗi bài:
+    youtube:<ID|link short> (video_source), dichvu:<nhóm dịch vụ> (tab lọc), thoigian:<"6 tháng"> (nhãn thẻ),
+    phacdo:<tiêu đề ngắn trên thẻ — trống thì dùng tiêu đề bài> (ba_case_source). Hướng dẫn: docs/huong-dan-tao-ca-truoc-sau.md.
+  - Danh sách = Swiper (pc_swiper_boot › buildReelsSlider: nút ←/→ ở đầu khối + thanh tiến trình).
+  - Ảnh thẻ = ảnh đại diện bài; chưa có thì ảnh dọc của short YouTube, rồi tới ảnh trong bài.
+  - Rê chuột (máy có chuột) ⇒ phát video tắt tiếng ngay trong thẻ; bấm/chạm thẻ ⇒ mở short trên YouTube (bài không có
+    video ⇒ mở trang chi tiết ca).
+  - Tab lọc tự sinh từ các giá trị dichvu: (không ghi cứng); số "N hành trình" tự đếm theo tab.
+  100% Tailwind theo token (UI-0), màu thương hiệu qua bg-primary / text-primary-deep (UI-BRAND).
 {%- endcomment -%}
 {%- assign testi_case_handle = settings.home_testi_blog | default: settings.clinical_case_blog_handle | default: 'truoc-va-sau' -%}
 {%- assign testi_case_blog = blogs[testi_case_handle] -%}
 {%- if testi_case_blog == blank -%}{%- assign testi_case_blog = blogs['truoc-va-sau'] -%}{%- endif -%}
 
+{%- assign testi_eyebrow_t = settings.home_testi_eyebrow | default: 'Hành trình thật · Khách hàng trên khắp Việt Nam' -%}
+{%- assign testi_title_t = settings.home_testi_title | default: 'Trước & Sau' -%}
+{%- assign testi_tagline_t = settings.home_testi_tagline | default: 'Cá nhân hoá chăm sóc da từ xa' -%}
+{%- assign testi_sub_t = settings.home_testi_subtitle | default: 'Mỗi video là một hành trình được theo dõi từ ảnh da ban đầu, qua phác đồ cá nhân hoá, đến kết quả sau nhiều tháng kiên trì tại nhà. Nhấn vào video để xem đầy đủ trên YouTube' -%}
+{%- assign testi_channel_url = settings.video_youtube_url | default: 'https://www.youtube.com/@pharmacosmetics' -%}
+{%- assign testi_channel_t = settings.home_testi_channel_label | default: '@pharmacosmetics' -%}
+{%- assign testi_all_t = settings.home_testi_all_label | default: 'Tất cả' -%}
+{%- assign testi_count_t = settings.home_testi_count_label | default: 'hành trình' -%}
+{%- assign testi_badge_t = settings.home_testi_brand_badge | default: 'PC' -%}
+{%- assign testi_yt_t = settings.video_open_youtube_label | default: 'Xem trên YouTube' -%}
+{%- assign testi_more_t = settings.clinical_case_more_label | default: 'Xem chi tiết ca' -%}
 {%- capture testi_case_fb -%}/blogs/{{ testi_case_handle }}{%- endcapture -%}
 {%- assign testi_more_url = settings.home_testi_viewall_url | default: testi_case_blog.url | default: testi_case_fb -%}
-{%- assign testi_more_lb = settings.home_testi_viewall_text | default: 'Xem tất cả kết quả trước & sau' | escape -%}
-{%- capture testi_sub -%}{{ settings.home_testi_subtitle | default: 'Ảnh thật, đăng với sự đồng ý của khách. Kết quả phụ thuộc vào tình trạng da và cơ địa mỗi người.' | escape }}{% if settings.home_testi_disclaimer != blank %} {{ settings.home_testi_disclaimer | escape }}{% endif %}{%- endcapture -%}
-{%- assign testi_title_t = settings.home_testi_title | default: 'Trước & Sau' | escape -%}
-{%- assign testi_eyebrow_t = settings.home_testi_eyebrow | default: 'Kết quả thực tế' | escape -%}
+{%- assign testi_more_lb = settings.home_testi_viewall_text | default: 'Xem tất cả kết quả trước & sau' -%}
+{%- assign testi_note_t = settings.home_testi_disclaimer | default: 'Hình ảnh khách hàng thực tế của Pharma Cosmetics. Kết quả khác nhau tuỳ tình trạng da, cơ địa và mức độ tuân thủ phác đồ.' -%}
 
 {%- if testi_case_blog.articles.size > 0 -%}
+{%- comment -%} Lượt 1: gom các nhóm dịch vụ (tag dichvu:) không trùng, theo thứ tự xuất hiện ⇒ tab lọc. {%- endcomment -%}
+{%- assign testi_services = '|' -%}
+{%- assign testi_total = 0 -%}
+{%- for testi_a in testi_case_blog.articles limit: 24 -%}
+  {%- assign testi_total = testi_total | plus: 1 -%}
+  {%- for testi_tag in testi_a.tags -%}
+    {%- assign testi_tk = testi_tag | split: ':' | first | strip | downcase -%}
+    {%- if testi_tk == 'dichvu' -%}
+      {%- assign testi_tv = testi_tag | split: ':' | first -%}
+      {%- assign testi_tv = testi_tag | remove_first: testi_tv | remove_first: ':' | strip -%}
+      {%- assign testi_tw = '|' | append: testi_tv | append: '|' -%}
+      {%- if testi_tv != blank -%}{%- unless testi_services contains testi_tw -%}{%- assign testi_services = testi_services | append: testi_tv | append: '|' -%}{%- endunless -%}{%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endfor -%}
+{%- assign testi_service_list = testi_services | remove_first: '|' | split: '|' -%}
+
 <section class="border-t border-line-soft bg-surface-soft py-10 lg:py-16 font-sans text-ink" aria-labelledby="section-testimonials-title" data-reels-section>
-  <div class="container mb-6 lg:mb-8">
-    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-      <div class="min-w-0">
-        {%- include 'ui_section_head', title: testi_title_t, title_id: 'section-testimonials-title', eyebrow: testi_eyebrow_t, desc: testi_sub, url: testi_more_url, more_text: testi_more_lb, label: 'Xem tất cả kết quả trước và sau', wrap_class: 'mb-0' -%}
+  <div class="container">
+    <div class="flex items-end justify-between gap-6">
+      <div class="min-w-0 max-w-2xl">
+        {%- if testi_eyebrow_t != blank -%}<p class="m-0 text-xs font-bold uppercase tracking-widest text-primary-deep">{{ testi_eyebrow_t | escape }}</p>{%- endif -%}
+        <h2 class="m-0 mt-2 text-3xl lg:text-4xl font-bold uppercase leading-tight text-primary-deep" id="section-testimonials-title">{{ testi_title_t | escape }}</h2>
+        {%- if testi_tagline_t != blank -%}<p class="m-0 mt-2 text-lg lg:text-xl font-semibold text-primary-deep">{{ testi_tagline_t | escape }}</p>{%- endif -%}
+        {%- if testi_sub_t != blank -%}
+        <p class="m-0 mt-3 text-sm leading-relaxed text-ink-secondary">
+          {{ testi_sub_t | escape }}
+          {%- if testi_channel_url != blank and testi_channel_t != blank %} <a href="{{ testi_channel_url | escape }}" target="_blank" rel="noopener" class="font-semibold text-primary-deep underline underline-offset-2 hover:text-primary">{{ testi_channel_t | escape }}</a>.{%- endif -%}
+        </p>
+        {%- endif -%}
+      </div>
+      <div class="flex shrink-0 items-center gap-3 max-md:hidden">
+        <button type="button" data-reels-prev aria-label="Hành trình trước" class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-solid border-primary-deep bg-white text-primary-deep transition-colors hover:bg-primary-tint disabled:cursor-default disabled:opacity-40">
+          {%- include 'ui_icon', name: 'arrow-left', size: 20 -%}
+        </button>
+        <button type="button" data-reels-next aria-label="Hành trình kế tiếp" class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-solid border-primary-deep bg-primary-deep text-white transition-colors hover:bg-primary-darkest disabled:cursor-default disabled:opacity-40">
+          {%- include 'ui_icon', name: 'arrow-right', size: 20 -%}
+        </button>
       </div>
     </div>
 
-    <!-- Danh mục lọc vấn đề da (Filter Tabs) -->
-    <div class="mt-6 flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 scrollbar-none" role="tablist" aria-label="Lọc theo nhóm vấn đề da">
-      <button type="button" data-reels-tab="all" aria-pressed="true" class="inline-flex shrink-0 whitespace-nowrap min-h-[44px] items-center justify-center rounded-full border border-solid border-primary bg-primary px-4 py-2 text-xs sm:text-sm font-bold text-white shadow-sm transition-all focus:outline-none">
-        Tất cả
-      </button>
-      <button type="button" data-reels-tab="Mụn" aria-pressed="false" class="inline-flex shrink-0 whitespace-nowrap min-h-[44px] items-center justify-center rounded-full border border-solid border-line-soft bg-white px-4 py-2 text-xs sm:text-sm font-semibold text-ink shadow-sm transition-all hover:border-primary hover:text-primary focus:outline-none">
-        Mụn
-      </button>
-      <button type="button" data-reels-tab="Nám" aria-pressed="false" class="inline-flex shrink-0 whitespace-nowrap min-h-[44px] items-center justify-center rounded-full border border-solid border-line-soft bg-white px-4 py-2 text-xs sm:text-sm font-semibold text-ink shadow-sm transition-all hover:border-primary hover:text-primary focus:outline-none">
-        Nám &amp; Sắc tố
-      </button>
-      <button type="button" data-reels-tab="Lão hóa" aria-pressed="false" class="inline-flex shrink-0 whitespace-nowrap min-h-[44px] items-center justify-center rounded-full border border-solid border-line-soft bg-white px-4 py-2 text-xs sm:text-sm font-semibold text-ink shadow-sm transition-all hover:border-primary hover:text-primary focus:outline-none">
-        Lão hóa
-      </button>
-      <button type="button" data-reels-tab="Phục hồi" aria-pressed="false" class="inline-flex shrink-0 whitespace-nowrap min-h-[44px] items-center justify-center rounded-full border border-solid border-line-soft bg-white px-4 py-2 text-xs sm:text-sm font-semibold text-ink shadow-sm transition-all hover:border-primary hover:text-primary focus:outline-none">
-        Phục hồi
-      </button>
+    {%- comment -%} Tab lọc theo nhóm dịch vụ — chỉ hiện khi có ≥ 1 bài gắn tag dichvu:. {%- endcomment -%}
+    <div class="mt-6 flex flex-nowrap items-center gap-2 overflow-x-auto pb-1" role="group" aria-label="Lọc theo dịch vụ">
+      {%- if testi_service_list.size > 0 -%}
+      <button type="button" data-reels-tab="all" aria-pressed="true" class="inline-flex min-h-[44px] shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-solid border-primary-deep bg-primary-deep px-4 text-xs sm:text-sm font-semibold text-white transition-colors">{{ testi_all_t | escape }}</button>
+      {%- for testi_sv in testi_service_list -%}
+      <button type="button" data-reels-tab="{{ testi_sv | escape }}" aria-pressed="false" class="inline-flex min-h-[44px] shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-solid border-line bg-white px-4 text-xs sm:text-sm font-semibold text-ink transition-colors hover:border-primary-deep hover:text-primary-deep">{{ testi_sv | escape }}</button>
+      {%- endfor -%}
+      {%- endif -%}
+      <span class="shrink-0 whitespace-nowrap pl-2 text-xs text-ink-muted" aria-live="polite"><span data-reels-count>{{ testi_total }}</span> {{ testi_count_t | escape }}</span>
     </div>
-  </div>
 
-  <!-- Bố cục Carousel Trượt Ngang Swiper Chuẩn -->
-  <div class="container relative">
-    <div class="relative w-full">
-      <!-- Nút Prev -->
-      <button type="button" data-reels-prev aria-label="Slide trước" class="absolute -left-2 sm:-left-4 top-1/2 -translate-y-1/2 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border border-solid border-line-soft bg-white/95 text-ink shadow-md transition-all hover:bg-white hover:text-primary hover:shadow-lg disabled:pointer-events-none disabled:opacity-25">
-        {%- include 'ui_icon', name: 'chevron-left', size: 20 -%}
-      </button>
-
-      <!-- Nút Next -->
-      <button type="button" data-reels-next aria-label="Slide kế tiếp" class="absolute -right-2 sm:-right-4 top-1/2 -translate-y-1/2 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border border-solid border-line-soft bg-white/95 text-ink shadow-md transition-all hover:bg-white hover:text-primary hover:shadow-lg disabled:pointer-events-none disabled:opacity-25">
-        {%- include 'ui_icon', name: 'chevron-right', size: 20 -%}
-      </button>
-
-      <!-- Swiper Container -->
-      <div class="swiper-container overflow-hidden py-2" data-reels-swiper>
-        <div class="swiper-wrapper">
-          {%- for testi_a in testi_case_blog.articles limit: 24 -%}
-            {%- assign pc_bs_article = testi_a -%}{%- include 'ba_case_source' -%}
-            {%- assign pc_vs_article = testi_a -%}{%- include 'video_source' -%}
-            
-            {%- assign r_cat = pc_bs_group | default: '' -%}
-            {%- assign r_plan = pc_bs_plan | default: testi_a.title -%}
-            {%- assign r_cover = pc_vs_thumb_card -%}
-            {%- if r_cover == blank or r_cover contains 'placeholder' -%}
-              {%- if pc_bs_after != blank -%}{%- assign r_cover = pc_bs_after -%}
-              {%- elsif pc_bs_before != blank -%}{%- assign r_cover = pc_bs_before -%}
-              {%- elsif testi_a.image.src != blank -%}{%- assign r_cover = testi_a.image.src | img_url: 'large' -%}
+    {%- comment -%} Swiper (pc_swiper_boot › buildReelsSlider). Rộng thẻ: mobile ~1.6 thẻ, md 3, lg 5 (khớp ảnh mẫu). {%- endcomment -%}
+    <div class="swiper-container mt-6 overflow-hidden" data-reels-swiper>
+      <div class="swiper-wrapper">
+        {%- for testi_a in testi_case_blog.articles limit: 24 -%}
+          {%- assign pc_bs_article = testi_a -%}{%- include 'ba_case_source' -%}
+          {%- assign pc_vs_article = testi_a -%}{%- include 'video_source' -%}
+          {%- assign r_title = pc_bs_plan | default: testi_a.title -%}
+          {%- assign r_vid = '' -%}{%- if pc_vs_src == 'youtube' -%}{%- assign r_vid = pc_vs_id -%}{%- endif -%}
+          {%- if r_vid != blank -%}
+            {%- assign r_href = 'https://www.youtube.com/shorts/' | append: r_vid -%}
+          {%- else -%}
+            {%- assign r_href = testi_a.url -%}
+          {%- endif -%}
+          {%- assign r_cover = '' -%}
+          {%- if testi_a.image.src != blank -%}{%- assign r_cover = testi_a.image.src | img_url: 'large' -%}
+          {%- elsif r_vid != blank -%}{%- assign r_cover = 'https://i.ytimg.com/vi/' | append: r_vid | append: '/oar2.jpg' -%}
+          {%- elsif pc_bs_after != blank -%}{%- assign r_cover = pc_bs_after -%}
+          {%- elsif pc_bs_imgs != blank -%}{%- assign r_cover = pc_bs_imgs | split: '|' | first -%}
+          {%- endif -%}
+          <div class="swiper-slide !w-[62%] sm:!w-[40%] md:!w-[30%] lg:!w-[calc((100%_-_4rem)/5)]" data-reels-slide data-category="{{ pc_bs_service | escape }}">
+            <a href="{{ r_href | escape }}"{% if r_vid != blank %} target="_blank" rel="noopener"{% endif %} title="{{ testi_a.title | escape }}" class="group relative block aspect-[9/16] w-full overflow-hidden rounded-2xl bg-slate-900 no-underline" data-reels-card{% if r_vid != blank %} data-video-id="{{ r_vid | escape }}"{% endif %}>
+              {%- if r_cover != blank -%}
+              <img src="{{ r_cover }}" alt="{{ testi_a.title | escape }}" width="360" height="640" loading="lazy" class="absolute inset-0 h-full w-full object-cover">
               {%- endif -%}
-            {%- endif -%}
+              <div class="pointer-events-none absolute inset-0 overflow-hidden opacity-0 transition-opacity duration-300" data-reels-frame></div>
 
-            <div class="swiper-slide !w-auto" data-reels-slide data-category="{{ r_cat | escape }}">
-              <div class="group relative flex flex-col justify-end w-[260px] sm:w-[280px] h-[460px] sm:h-[500px] overflow-hidden rounded-2xl border border-solid border-line-soft bg-black shadow-md transition-all duration-300 hover:shadow-xl" data-reels-card data-video-id="{{ pc_vs_id | escape }}">
-                <!-- Cover Image -->
-                <img src="{{ r_cover }}" alt="{{ testi_a.title | escape }}" width="280" height="500" loading="lazy" class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-reels-cover>
-
-                <!-- Video Frame Container (Hover-to-Play YouTube) -->
-                <div class="pointer-events-none absolute inset-0 z-10 hidden overflow-hidden" data-reels-frame></div>
-
-                <!-- Top Badges -->
-                <div class="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between p-3.5">
-                  {%- if r_cat != blank -%}
-                    <span class="inline-flex items-center rounded-full bg-black/60 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white backdrop-blur-sm">
-                      {{ r_cat | escape }}
-                    </span>
-                  {%- else -%}
-                    <span></span>
-                  {%- endif -%}
-                  {%- if pc_vs_dur != blank -%}
-                    <span class="inline-flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
-                      {{ pc_vs_dur | escape }}
-                    </span>
-                  {%- endif -%}
-                </div>
-
-                <!-- Center Play Badge (hiển thị khi có video) -->
-                {%- if pc_vs_id != blank -%}
-                <div class="pointer-events-none absolute inset-0 z-20 flex items-center justify-center transition-opacity duration-300 group-hover:opacity-0" data-reels-play-badge>
-                  <span class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-white shadow-lg backdrop-blur-sm transition-transform duration-300 group-hover:scale-110">
-                    {%- include 'ui_icon', name: 'play', size: 20 -%}
-                  </span>
-                </div>
-                {%- endif -%}
-
-                <!-- Bottom Overlay Card per media_1795226873887_e6ab7058.jpg -->
-                <div class="pointer-events-auto relative z-20 flex items-center gap-3 bg-gradient-to-t from-black/95 via-black/75 to-transparent p-3.5 sm:p-4 text-white">
-                  <!-- Thumbnail vuông bên trái -->
-                  <div class="relative h-11 w-11 sm:h-12 sm:w-12 shrink-0 overflow-hidden rounded-lg border border-solid border-white/20 bg-black/40 shadow-sm">
-                    {%- if pc_bs_after != blank -%}
-                      <img src="{{ pc_bs_after }}" alt="{{ r_plan | escape }}" width="48" height="48" loading="lazy" class="h-full w-full object-cover">
-                    {%- elsif pc_bs_before != blank -%}
-                      <img src="{{ pc_bs_before }}" alt="{{ r_plan | escape }}" width="48" height="48" loading="lazy" class="h-full w-full object-cover">
-                    {%- else -%}
-                      <img src="{{ r_cover }}" alt="{{ r_plan | escape }}" width="48" height="48" loading="lazy" class="h-full w-full object-cover">
-                    {%- endif -%}
-                  </div>
-
-                  <!-- Nội dung bên phải -->
-                  <div class="min-w-0 flex-1">
-                    <a href="{{ testi_a.url | escape }}" title="{{ testi_a.title | escape }}" class="block no-underline text-white transition-colors hover:text-primary">
-                      <h3 class="m-0 truncate text-xs sm:text-sm font-bold uppercase tracking-wide text-white">
-                        {{ r_plan | escape }}
-                      </h3>
-                      <p class="m-0 mt-0.5 truncate text-xs text-white/80">
-                        {%- if pc_bs_customer != blank -%}{{ pc_bs_customer | escape }}{%- endif -%}
-                        {%- if pc_bs_age != blank -%}{% if pc_bs_customer != blank %}, {% endif %}{{ pc_bs_age | escape }} tuổi{%- endif -%}
-                        {%- if pc_bs_weeks != blank -%}{% if pc_bs_customer != blank or pc_bs_age != blank %} · {% endif %}{{ pc_bs_weeks | escape }} tuần{%- endif -%}
-                      </p>
-                    </a>
-                  </div>
-                </div>
+              <div class="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between p-3">
+                {%- if pc_bs_time != blank -%}
+                <span class="inline-flex items-center rounded-full bg-primary px-2.5 py-1 text-xs font-bold uppercase text-white">{{ pc_bs_time | escape }}</span>
+                {%- else -%}<span></span>{%- endif -%}
+                {%- if r_vid != blank -%}<span class="inline-flex text-white" aria-hidden="true">{%- include 'ui_icon', name: 'video', size: 18 -%}</span>{%- endif -%}
               </div>
-            </div>
-          {%- endfor -%}
-        </div>
+
+              {%- if r_vid != blank -%}
+              <span class="pointer-events-none absolute left-1/2 top-1/2 inline-flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-ink transition-opacity duration-300" data-reels-play aria-hidden="true">
+                {%- include 'ui_icon', name: 'play', size: 18 -%}
+              </span>
+              {%- endif -%}
+
+              <div class="absolute inset-x-2.5 bottom-2.5 flex items-center gap-2.5 rounded-xl bg-white p-2.5">
+                <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-deep text-xs font-bold text-white" aria-hidden="true">{{ testi_badge_t | escape }}</span>
+                <span class="min-w-0 flex-1">
+                  <span class="line-clamp-2 block text-xs font-bold leading-snug text-ink">{{ r_title | escape }}</span>
+                  <span class="mt-0.5 block truncate text-xs text-ink-muted">{% if r_vid != blank %}{{ testi_yt_t | escape }}{% else %}{{ testi_more_t | escape }}{% endif %}</span>
+                </span>
+              </div>
+            </a>
+          </div>
+        {%- endfor -%}
       </div>
+    </div>
+
+    <div class="mt-4 h-1 w-full overflow-hidden rounded-full bg-line-soft" aria-hidden="true">
+      <div class="h-full w-full origin-left scale-x-0 rounded-full bg-primary transition-transform duration-300" data-reels-progress></div>
+    </div>
+    <div class="mt-3 flex flex-col gap-2 md:flex-row md:items-start md:justify-between md:gap-6">
+      {%- if testi_note_t != blank -%}<p class="m-0 text-xs text-ink-muted">{{ testi_note_t | escape }}</p>{%- endif -%}
+      {%- if testi_more_url != blank and testi_more_lb != blank -%}
+      <a href="{{ testi_more_url | escape }}" class="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-primary-deep no-underline hover:text-primary md:min-h-0">{{ testi_more_lb | escape }} {% include 'ui_icon', name: 'arrow-right', size: 16 %}</a>
+      {%- endif -%}
     </div>
   </div>
 </section>
 
 <script>
-(function() {
-  function initReelsVideo() {
-    var cards = document.querySelectorAll('[data-reels-card][data-video-id]');
-    var canHover = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-    if (!canHover) return;
-
-    Array.prototype.forEach.call(cards, function(card) {
+(function () {
+  // Rê chuột (chỉ máy có chuột) ⇒ phát short tắt tiếng ngay trong thẻ; rời chuột ⇒ gỡ iframe, trả lại ảnh đại diện.
+  function initReelsVideo(section) {
+    if (!(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches)) return;
+    Array.prototype.forEach.call(section.querySelectorAll('[data-reels-card][data-video-id]'), function (card) {
       if (card._reelsHoverBound) return;
       card._reelsHoverBound = true;
       var vid = card.getAttribute('data-video-id');
-      if (!vid) return;
       var frame = card.querySelector('[data-reels-frame]');
-      if (!frame) return;
-
+      var play = card.querySelector('[data-reels-play]');
+      if (!vid || !frame) return;
       var timer = null;
-      card.addEventListener('mouseenter', function() {
-        timer = setTimeout(function() {
-          frame.innerHTML = '<iframe class="w-full h-full border-0" src="https://www.youtube-nocookie.com/embed/' + encodeURIComponent(vid) + '?autoplay=1&mute=1&playsinline=1&controls=0&loop=1&playlist=' + encodeURIComponent(vid) + '&modestbranding=1&rel=0" allow="autoplay; encrypted-media" tabindex="-1"></iframe>';
-          frame.classList.remove('hidden');
-        }, 150);
+      card.addEventListener('mouseenter', function () {
+        timer = setTimeout(function () {
+          frame.innerHTML = '<iframe class="pointer-events-none absolute left-1/2 top-1/2 h-[120%] w-[220%] -translate-x-1/2 -translate-y-1/2 border-0" src="https://www.youtube-nocookie.com/embed/' + encodeURIComponent(vid) + '?autoplay=1&mute=1&playsinline=1&controls=0&loop=1&playlist=' + encodeURIComponent(vid) + '&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&cc_load_policy=0" allow="autoplay; encrypted-media" tabindex="-1" title=""></iframe>';
+          var ifr = frame.firstChild;
+          ifr.addEventListener('load', function () {
+            setTimeout(function () {
+              if (!frame.firstChild) return;
+              frame.classList.remove('opacity-0');
+              if (play) play.classList.add('opacity-0');
+            }, 400);
+          });
+        }, 200);
       });
-
-      card.addEventListener('mouseleave', function() {
+      card.addEventListener('mouseleave', function () {
         if (timer) clearTimeout(timer);
-        frame.classList.add('hidden');
+        frame.classList.add('opacity-0');
         frame.innerHTML = '';
+        if (play) play.classList.remove('opacity-0');
       });
     });
   }
 
-  function initReelsTabs() {
-    var container = document.querySelector('[data-reels-section]');
-    if (!container || container._reelsTabsBound) return;
-    container._reelsTabsBound = true;
-
-    var tabs = container.querySelectorAll('[data-reels-tab]');
-    var swiperEl = container.querySelector('[data-reels-swiper]');
-
-    Array.prototype.forEach.call(tabs, function(btn) {
-      btn.addEventListener('click', function() {
+  // Tab lọc theo dịch vụ (khớp đúng giá trị tag dichvu:) + đếm số hành trình đang hiện.
+  function initReelsTabs(section) {
+    if (section._reelsTabsBound) return;
+    section._reelsTabsBound = true;
+    var tabs = section.querySelectorAll('[data-reels-tab]');
+    var count = section.querySelector('[data-reels-count]');
+    var swiperEl = section.querySelector('[data-reels-swiper]');
+    var on = ['bg-primary-deep', 'border-primary-deep', 'text-white'];
+    var off = ['bg-white', 'border-line', 'text-ink'];
+    Array.prototype.forEach.call(tabs, function (btn) {
+      btn.addEventListener('click', function () {
         var cat = btn.getAttribute('data-reels-tab');
-        Array.prototype.forEach.call(tabs, function(b) {
-          var active = (b === btn);
+        Array.prototype.forEach.call(tabs, function (b) {
+          var active = b === btn;
           b.setAttribute('aria-pressed', active ? 'true' : 'false');
-          if (active) {
-            b.classList.remove('bg-white', 'text-ink', 'border-line-soft');
-            b.classList.add('bg-primary', 'text-white', 'border-primary');
-          } else {
-            b.classList.remove('bg-primary', 'text-white', 'border-primary');
-            b.classList.add('bg-white', 'text-ink', 'border-line-soft');
-          }
+          (active ? off : on).forEach(function (c) { b.classList.remove(c); });
+          (active ? on : off).forEach(function (c) { b.classList.add(c); });
         });
-
-        var slides = container.querySelectorAll('[data-reels-slide]');
-        Array.prototype.forEach.call(slides, function(slide) {
-          var sCat = slide.getAttribute('data-category') || '';
-          if (!cat || cat === 'all' || sCat.indexOf(cat) !== -1 || cat.indexOf(sCat) !== -1) {
-            slide.classList.remove('!hidden');
-          } else {
-            slide.classList.add('!hidden');
-          }
+        var shown = 0;
+        Array.prototype.forEach.call(section.querySelectorAll('[data-reels-slide]'), function (slide) {
+          var match = cat === 'all' || slide.getAttribute('data-category') === cat;
+          slide.classList.toggle('!hidden', !match);
+          if (match) shown++;
         });
-
-        if (swiperEl && swiperEl.swiper) {
-          swiperEl.swiper.update();
-          swiperEl.swiper.slideTo(0);
-        }
+        if (count) count.textContent = shown;
+        if (swiperEl && swiperEl.swiper) { swiperEl.swiper.update(); swiperEl.swiper.slideTo(0, 0); }
       });
     });
   }
 
   function boot() {
-    initReelsVideo();
-    initReelsTabs();
+    Array.prototype.forEach.call(document.querySelectorAll('[data-reels-section]'), function (section) {
+      initReelsVideo(section);
+      initReelsTabs(section);
+    });
   }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot);
-  } else {
-    boot();
-  }
-  window.addEventListener('load', boot);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();
 </script>
 {%- include 'pc_swiper_boot' -%}
