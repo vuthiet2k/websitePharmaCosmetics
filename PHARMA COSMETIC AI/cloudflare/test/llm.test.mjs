@@ -196,7 +196,10 @@ await t("lời dẫn nguy hiểm do khách chèn lệnh ⇒ bị chặn", () => 
 await t("cổng lời dẫn leadOk", () => {
   assert.equal(leadOk(LEAD, complianceOk), true);
   assert.equal(leadOk("Chào bạn, " + LEAD, complianceOk), false);
-  assert.equal(leadOk("Dạ, dùng 2 lần mỗi ngày ạ, rất hợp da dầu.", complianceOk), false);
+  assert.equal(leadOk("Dạ, dùng 2 lần mỗi ngày ạ, rất hợp da dầu.", complianceOk), true);
+  assert.equal(leadOk("Dạ, kem này giảm 50% cho da dầu ạ.", complianceOk), false);
+  assert.equal(leadOk("Dạ, kem này chỉ 100k cho da dầu ạ.", complianceOk), false);
+  assert.equal(leadOk("Dạ, kem này chứa Vitamin C và SPF dịu nhẹ ạ.", complianceOk), true);
   assert.equal(leadOk("Dạ, kem này có giá tốt cho da dầu ạ.", complianceOk), false);
 });
 

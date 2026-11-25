@@ -37,7 +37,7 @@ export function outputText(out) {
 }
 
 async function run(env, model, messages, maxTokens) {
-  const ms = parseInt(env.AI_TIMEOUT_MS, 10) > 0 ? parseInt(env.AI_TIMEOUT_MS, 10) : 4000;
+  const ms = parseInt(env.AI_TIMEOUT_MS, 10) > 0 ? parseInt(env.AI_TIMEOUT_MS, 10) : 6000;
   let timer;
   try {
     // Gemma 4 dùng max_completion_tokens (max_tokens đã bỏ); Llama dùng max_tokens
@@ -92,9 +92,11 @@ const VI_MARK = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽê�
 export function leadOk(t, complianceOk) {
   if (typeof t !== "string") return false;
   const s = t.trim();
-  return s.startsWith("Dạ") && s.length >= 20 && s.length <= 420 && !/\d/.test(s) && !s.includes("\n")
+  const sCheckCase = s.replace(/(?<![\p{L}\p{N}])(Vitamin\s+[A-E]\d?|Vitamin|SPF|AHA|BHA|HA|UV)(?![\p{L}\p{N}])/gu, (m) => m.toLowerCase());
+  const hasMoneyOrBigNum = /\d+\s*(?:đ|vnđ|vnd|k|tr|triệu|%)/i.test(s) || /\b\d{3,}\b/.test(s);
+  return s.startsWith("Dạ") && s.length >= 20 && s.length <= 420 && !hasMoneyOrBigNum && !s.includes("\n")
     && !BAD_LEAD.test(s) && !BAN_RE.test(s) && VI_MARK.test(s) && !/\p{Extended_Pictographic}/u.test(s)
-    && !/(?<!^|[.!?]\s)\p{Lu}/u.test(s) && (s.match(/[.!?]/g) || []).length <= 3 // không viết hoa giữa câu (tên thuốc/hãng), ≤3 câu
+    && !/(?<!^|[.!?]\s)\p{Lu}/u.test(sCheckCase) && (s.match(/[.!?]/g) || []).length <= 3 // chỉ cho phép viết hoa thuật ngữ lành tính phổ thông, ≤3 câu
     && !/[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/.test(s) && complianceOk(s);
 }
 
@@ -104,7 +106,7 @@ export async function llmChoose(env, query, products, complianceOk) {
   const text = await run(env, env.AI_MODEL_REPLY || MODEL_REPLY, [
     { role: "system", content: SYSTEM_CHOOSE },
     { role: "user", content: `Câu hỏi: ${query.trim()}\nSản phẩm ứng viên:\n${list}` },
-  ], 220);
+  ], 320);
   if (!text) return null;
   const m = text.match(/\{[\s\S]*\}/);
   if (!m) return null;

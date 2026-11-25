@@ -36,7 +36,7 @@ function fnv1a(s) {
 }
 
 // ---------- Che thông tin cá nhân + kiểm tra phát ngôn (khớp app/guardrails.py) ----------
-const PHONE_RE = /(?<!\d)(?:\+?84|0)[35789](?:[\s.\-]?\d){8}(?!\d)/g;
+const PHONE_RE = /(?<!\d)(?:\+?84|0)[\s.\-]?[35789](?:[\s.\-]?\d){8}(?!\d)/g;
 const EMAIL_RE = /[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/g;
 const ID_RE = /(?<![\d.,])(?:\d{9}|\d{12})(?![\d.,])/g;
 
@@ -439,7 +439,12 @@ async function chat(request, env, c, cors) {
     parts.push(withExpert(PRODUCT_CLOSE, expert));
     if (hasPii) parts.push(PII_NOTE);
   } else { // nomatch
-    parts.push(withExpert(NOMATCH_REPLY, expert));
+    const isFollowUp = /(?:cái|loại|sản phẩm|sp|chai|tuýp|lọ)\s*(?:đầu tiên|thứ\s*[123]|này|đó|kia|trên)/i.test(query);
+    if (isFollowUp) {
+      parts.push("Dạ, để em tư vấn chính xác hơn, bạn vui lòng gõ lại tên sản phẩm cụ thể mà bạn đang quan tâm giúp em nhé ạ.");
+    } else {
+      parts.push(withExpert(NOMATCH_REPLY, expert));
+    }
   }
   if (products.length || articles.length || DISCLAIMER_INTENTS.includes(intent)) parts.push(withExpert(DISCLAIMER, expert));
 
