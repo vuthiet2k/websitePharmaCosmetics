@@ -1,0 +1,291 @@
+{%- comment -%}
+  snippets/shb_sections_b.bwt — Skin Health Beauty, nhóm mục 07→13 (22/11/2026, PO: chuyển trang sang chuẩn dùng chung).
+  Gồm: 07 Trước & Sau theo nhóm giải pháp · 08 Hành trình 6 bước · 09 Câu chuyện quyết định · 10 Khối kết (cam kết) ·
+       11 Triết lý điều trị · 12 Chuyên gia phụ trách (tắt mặc định) · 13 FAQ + FAQPage JSON-LD · JS kéo so sánh + accordion FAQ.
+  100% Tailwind theo token (UI-0), không CSS riêng, không thuộc tính style tĩnh (vị trí kéo before/after do JS gán động).
+  Dùng: ui_section_head, ui_icon, Swiper chung (data-pc-slider + pc_swiper_boot). Không có <h1> (đã ở hero).
+  Biến đầu template không cần dùng ở đây; mọi biến cần thiết tự assign trong snippet (tiền tố sh_).
+  Nền xen kẽ: 07 surface-soft · 08 trắng · 09 surface-soft · 10 primary-darkest · 11 trắng · 12 surface-soft · 13 trắng.
+{%- endcomment -%}
+
+{%- comment -%} ═══ 07. ẢNH TRƯỚC & SAU THEO NHÓM GIẢI PHÁP (6 nhóm) ═══ {%- endcomment -%}
+{%- assign sh_ba_names = 'Phục Hồi Hàng Rào Bảo Vệ,Điều Trị Nám & Sắc Tố,Kiểm Soát Mụn,Chống Lão Hóa,Se Khít Lỗ Chân Lông,Cấp Ẩm Chuyên Sâu' | split: ',' -%}
+{%- assign sh_ba_any = false -%}
+{%- for n in (1..6) -%}
+  {%- capture bk -%}skinhealthy_cat_{{ n }}_before{%- endcapture -%}
+  {%- capture ak -%}skinhealthy_cat_{{ n }}_after{%- endcapture -%}
+  {%- capture antk -%}skinhealthy_cat_{{ n }}_annotation{%- endcapture -%}
+  {%- if settings[bk] != blank or settings[ak] != blank or settings[antk] != blank -%}
+    {%- assign sh_ba_any = true -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- if sh_ba_any -%}
+<section class="bg-surface-soft py-10 font-sans text-ink lg:py-16" aria-labelledby="shb-ba-title">
+  <div class="container">
+    {%- include 'ui_section_head', title: 'Trước & Sau Theo Từng Giải Pháp', title_id: 'shb-ba-title', eyebrow: 'Kết Quả Thực Tế', wrap_class: 'mb-6 lg:mb-8' -%}
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+      {%- for n in (1..6) -%}
+        {%- capture bk -%}skinhealthy_cat_{{ n }}_before{%- endcapture -%}
+        {%- capture ak -%}skinhealthy_cat_{{ n }}_after{%- endcapture -%}
+        {%- capture antk -%}skinhealthy_cat_{{ n }}_annotation{%- endcapture -%}
+        {%- assign sh_ba_before = settings[bk] -%}
+        {%- assign sh_ba_after = settings[ak] -%}
+        {%- assign sh_ba_annotation = settings[antk] -%}
+        {%- assign sh_ba_name = sh_ba_names[forloop.index0] -%}
+        {%- if sh_ba_before != blank or sh_ba_after != blank or sh_ba_annotation != blank -%}
+        <div class="min-w-0">
+          {%- if sh_ba_before != blank and sh_ba_after != blank -%}
+          {%- comment -%} Kéo bằng chuột/cảm ứng (pointer) hoặc phím ← → Home End; JS gán clip-path + left động (data-ba-after / data-ba-handle). {%- endcomment -%}
+          <div class="relative aspect-[4/5] w-full cursor-ew-resize touch-pan-y select-none overflow-hidden rounded-2xl bg-primary-tint focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:aspect-square" data-ba-slider tabindex="0" role="slider" aria-label="So sánh trước và sau — {{ sh_ba_name | escape }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+            <img class="absolute inset-0 block h-full w-full object-cover" src="{{ sh_ba_before | img_url: 'grande' }}" alt="{{ sh_ba_name | escape }} — trước điều trị" width="600" height="600" loading="lazy" draggable="false">
+            <img class="absolute inset-0 block h-full w-full object-cover [clip-path:inset(0_0_0_50%)]" src="{{ sh_ba_after | img_url: 'grande' }}" alt="{{ sh_ba_name | escape }} — sau điều trị" width="600" height="600" loading="lazy" draggable="false" data-ba-after>
+            <div class="pointer-events-none absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-white" data-ba-handle>
+              <span class="absolute left-1/2 top-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-solid border-line bg-white text-base text-ink" aria-hidden="true">{% include 'ui_icon', name: 'arrows-left-right', size: 'em' %}</span>
+            </div>
+            <span class="absolute left-3 top-3 z-10 rounded-full bg-primary-darkest px-3 py-1 text-xs font-bold text-white">Trước</span>
+            <span class="absolute right-3 top-3 z-10 rounded-full bg-primary-darkest px-3 py-1 text-xs font-bold text-white">Sau</span>
+          </div>
+          {%- endif -%}
+          <h3 class="m-0 mt-4 text-lg font-bold text-primary-deep">{{ sh_ba_name }}</h3>
+          {%- if sh_ba_annotation != blank -%}
+          <p class="m-0 mt-1 text-xs leading-relaxed text-ink-muted">{{ sh_ba_annotation }}</p>
+          {%- endif -%}
+        </div>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+{%- endif -%}
+
+{%- comment -%} ═══ 08. HÀNH TRÌNH 6 BƯỚC ═══
+  22/11/2026: bỏ timeline tự nhảy bước; mobile = Swiper chung (data-pc-slider, kéo ngang), từ lg = lưới 3 cột (data-desktop-off).
+  Tên bước lấy từ nhãn field ảnh trong settings_schema.json (không có setting text riêng cho tiêu đề bước). {%- endcomment -%}
+{%- assign sh_journey_titles = 'Khảo Sát Lâm Sàng,Số Hóa Hồ Sơ,Thiết Kế Phác Đồ,Trị Liệu 1:1,Kê Đơn Hoạt Chất,Tối Ưu Kết Quả' | split: ',' -%}
+{%- assign sh_journey_durs_default = '30–45 phút,15–20 phút,20–30 phút,60–120 phút,10–15 phút,Định kỳ theo phác đồ' | split: ',' -%}
+{%- assign sh_journey_icons = 'search,file-text,square-pen,hand-heart,pill-bottle,chart-line' | split: ',' -%}
+<section class="bg-white py-10 font-sans text-ink lg:py-16" aria-labelledby="shb-journey-title">
+  <div class="container">
+    {%- include 'ui_section_head', title: 'Hành Trình Điều Trị 6 Bước', title_id: 'shb-journey-title', eyebrow: 'Quy Trình', wrap_class: 'mb-6 lg:mb-8' -%}
+    <div class="swiper-container overflow-hidden lg:overflow-visible" data-pc-slider data-gap="16" data-desktop-off>
+      <ol class="swiper-wrapper m-0 list-none p-0 lg:!grid lg:grid-cols-3 lg:gap-6">
+        {%- for n in (1..6) -%}
+          {%- capture ik -%}skinhealthy_journey_img_{{ n }}{%- endcapture -%}
+          {%- capture dk -%}skinhealthy_journey_dur_{{ n }}{%- endcapture -%}
+          {%- capture ck -%}skinhealthy_journey_desc_{{ n }}{%- endcapture -%}
+          {%- assign sh_j_img = settings[ik] -%}
+          {%- assign sh_j_dur = settings[dk] | default: sh_journey_durs_default[forloop.index0] -%}
+          {%- assign sh_j_icon = sh_journey_icons[forloop.index0] -%}
+          <li class="swiper-slide flex !h-auto !w-72 flex-col overflow-hidden rounded-2xl border border-solid border-line-soft bg-white lg:!w-auto">
+            <div class="flex aspect-video w-full items-center justify-center overflow-hidden bg-primary-tint text-3xl text-primary">
+              {%- if sh_j_img != blank -%}
+              <img class="block h-full w-full object-cover" src="{{ sh_j_img | img_url: 'grande' }}" alt="{{ sh_journey_titles[forloop.index0] }}" width="600" height="338" loading="lazy">
+              {%- else -%}
+              <i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: sh_j_icon, size: 'em' %}</i>
+              {%- endif -%}
+            </div>
+            <div class="flex flex-1 flex-col items-start p-4 lg:p-5">
+              <span class="inline-flex h-11 min-w-[44px] items-center justify-center rounded-full bg-btn px-3 text-sm font-bold text-btn-text">{% if forloop.index < 10 %}0{% endif %}{{ forloop.index }}</span>
+              <span class="mt-3 text-xs font-bold tracking-wider text-primary">Giai đoạn {% if forloop.index < 10 %}0{% endif %}{{ forloop.index }} / 06</span>
+              <h3 class="m-0 mt-1 text-lg font-bold leading-snug text-primary-deep">{{ sh_journey_titles[forloop.index0] }}</h3>
+              <span class="mt-2 inline-flex items-center gap-1 rounded-full bg-surface-soft px-3 py-1 text-xs text-ink-secondary"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'clock', size: 'em' %}</i> {{ sh_j_dur }}</span>
+              {%- if settings[ck] != blank -%}<p class="m-0 mt-3 text-sm leading-relaxed text-ink-muted">{{ settings[ck] }}</p>{%- endif -%}
+            </div>
+          </li>
+        {%- endfor -%}
+      </ol>
+    </div>
+  </div>
+</section>
+{%- include 'pc_swiper_boot' -%}
+
+{%- comment -%} ═══ 09. CÂU CHUYỆN QUYẾT ĐỊNH ═══ Chỉ hiện khi Theme Settings có ít nhất 1 câu chuyện (tiêu đề hoặc nội dung). {%- endcomment -%}
+{%- if settings.skinhealthy_story_1_title != blank or settings.skinhealthy_story_1_body != blank or settings.skinhealthy_story_2_title != blank or settings.skinhealthy_story_2_body != blank -%}
+<section class="bg-surface-soft py-10 font-sans text-ink lg:py-16" aria-labelledby="shb-story-title">
+  <div class="container"><div class="mx-auto max-w-3xl">
+    {%- include 'ui_section_head', title: 'Câu Chuyện Quyết Định', title_id: 'shb-story-title', eyebrow: 'Ca Điều Trị Thật', wrap_class: 'mb-6 lg:mb-8' -%}
+    <div class="flex flex-col gap-6 lg:gap-8">
+      {%- if settings.skinhealthy_story_1_title != blank or settings.skinhealthy_story_1_body != blank -%}
+      <article class="rounded-2xl border border-solid border-line-soft bg-white p-5 lg:p-6">
+        <h3 class="m-0 text-xl font-bold text-primary-deep">{{ settings.skinhealthy_story_1_title | default: 'Khi phác đồ ban đầu không còn phù hợp' }}</h3>
+        <p class="m-0 mt-3 text-sm leading-relaxed text-ink-secondary lg:text-base">{{ settings.skinhealthy_story_1_body | default: 'Một khách hàng bắt đầu với liệu trình phục hồi hàng rào bảo vệ da tiêu chuẩn, nhưng sau 2 buổi da xuất hiện phản ứng kích ứng nhẹ. Thay vì tiếp tục theo kế hoạch cũ, chuyên gia đã đổi hoạt chất và giảm tần suất trị liệu để da có thời gian thích nghi trước khi quay lại lộ trình chính.' }}</p>
+        <p class="m-0 mt-4 border-0 border-l-2 border-solid border-primary pl-4 text-base italic leading-relaxed text-ink">{{ settings.skinhealthy_story_1_quote | default: 'Sản phẩm sử dụng không cố định, điều chỉnh theo tình trạng thực tế.' }}</p>
+      </article>
+      {%- endif -%}
+      {%- if settings.skinhealthy_story_2_title != blank or settings.skinhealthy_story_2_body != blank -%}
+      <article class="rounded-2xl border border-solid border-line-soft bg-white p-5 lg:p-6">
+        <h3 class="m-0 text-xl font-bold text-primary-deep">{{ settings.skinhealthy_story_2_title | default: 'Kết quả chậm hơn dự kiến, và tại sao điều đó ổn' }}</h3>
+        <p class="m-0 mt-3 text-sm leading-relaxed text-ink-secondary lg:text-base">{{ settings.skinhealthy_story_2_body | default: 'Một ca tăng sắc tố sau viêm cần thời gian dài hơn ước tính ban đầu vì cơ địa da đáp ứng chậm với hoạt chất điều hòa melanin. Thay vì tăng nồng độ để đẩy nhanh tiến độ, đội ngũ chọn giữ nguyên nồng độ an toàn và kéo dài thời gian theo dõi.' }}</p>
+        <p class="m-0 mt-4 border-0 border-l-2 border-solid border-primary pl-4 text-base italic leading-relaxed text-ink">{{ settings.skinhealthy_story_2_quote | default: 'Kết quả bền vững quan trọng hơn tốc độ.' }}</p>
+      </article>
+      {%- endif -%}
+    </div>
+  </div>
+  </div>
+</section>
+{%- endif -%}
+
+{%- comment -%} ═══ 10. KHỐI KẾT — CAM KẾT GIÁ TRỊ ═══ {%- endcomment -%}
+<section class="bg-primary-darkest py-10 text-center font-sans text-white lg:py-14">
+  <div class="container">
+    <p class="m-0 mx-auto max-w-4xl text-xl font-semibold leading-snug text-white lg:text-3xl">{{ settings.skinhealthy_commitment_tagline | default: 'Hiểu đúng làn da - Lựa chọn đúng giải pháp - Đồng hành đến kết quả' }}</p>
+  </div>
+</section>
+
+{%- comment -%} ═══ 11. TRIẾT LÝ ĐIỀU TRỊ ═══ Có ảnh: lưới 5/7 từ lg, 1 cột (ảnh trên) ở mobile; không ảnh: 1 cột. {%- endcomment -%}
+<section class="bg-white py-10 font-sans text-ink lg:py-16" aria-labelledby="shb-philo-title">
+  <div class="container grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-12">
+    {%- if settings.skinhealthy_philosophy_img != blank -%}
+    <div class="aspect-[4/5] w-full overflow-hidden rounded-2xl bg-primary-tint lg:col-span-5">
+      <img class="block h-full w-full object-cover" src="{{ settings.skinhealthy_philosophy_img | img_url: '1024x1024' }}" alt="{{ settings.skinhealthy_philosophy_title | default: 'Triết lý điều trị' | escape }}" width="800" height="1000" loading="lazy">
+    </div>
+    <div class="min-w-0 lg:col-span-7">
+    {%- else -%}
+    <div class="min-w-0 lg:col-span-12">
+    {%- endif -%}
+      <span class="block text-xs font-bold tracking-wider text-primary">{{ settings.skinhealthy_philosophy_eyebrow | default: 'Triết lý điều trị' }}</span>
+      <h2 class="m-0 mt-2 text-2xl font-bold text-primary-deep lg:text-3xl" id="shb-philo-title">{{ settings.skinhealthy_philosophy_title | default: 'Da khỏe không phải chỉ là da đẹp' }}</h2>
+      <p class="m-0 mt-4 text-sm leading-relaxed text-ink-secondary lg:text-base">{{ settings.skinhealthy_philosophy_body1 | default: 'Tại Skin Health Beauty, chúng tôi tiếp cận da theo cách một chuyên gia da liễu tiếp cận bệnh nhân — không phải như một beauty consultant tiếp cận khách hàng.' }}</p>
+      <p class="m-0 mt-4 text-sm leading-relaxed text-ink-secondary lg:text-base">{{ settings.skinhealthy_philosophy_body2 | default: 'Mỗi liệu trình bắt đầu bằng phân tích chuyên sâu: loại da, chỉ số ẩm và TEWL, hàng rào lipid, lịch sử điều trị và yếu tố lối sống. Từ đó, chúng tôi thiết kế phác đồ cá nhân hóa — không có công thức chung cho mọi người.' }}</p>
+      <p class="m-0 mt-6 border-0 border-l-2 border-solid border-primary pl-4 text-base italic leading-relaxed text-ink">{{ settings.skinhealthy_philosophy_quote | default: 'Làn da khỏe mạnh ở cấp độ tế bào là nền tảng của mọi vẻ đẹp. Chúng tôi không che giấu khuyết điểm — chúng tôi chữa lành từ bên trong.' }}</p>
+      <p class="m-0 mt-3 text-xs text-ink-muted">— {{ settings.skinhealthy_philosophy_cite | default: 'Đội ngũ chuyên gia, Skin Health Beauty' }}</p>
+    </div>
+  </div>
+</section>
+
+{%- comment -%} ═══ 12. CHUYÊN GIA PHỤ TRÁCH — mặc định TẮT theo settings.skinhealthy_team_enable ═══ {%- endcomment -%}
+{%- if settings.skinhealthy_team_enable -%}
+<section class="bg-surface-soft py-10 font-sans text-ink lg:py-16" aria-labelledby="shb-team-title">
+  <div class="container"><div class="mx-auto max-w-3xl">
+    <div class="flex flex-col items-center gap-6 rounded-2xl border border-solid border-line-soft bg-white p-5 sm:flex-row sm:items-center lg:gap-8 lg:p-6">
+      {%- if settings.skinhealthy_team_1_img != blank -%}
+      <div class="h-44 w-44 shrink-0 overflow-hidden rounded-2xl bg-primary-tint">
+        <img class="block h-full w-full object-cover" src="{{ settings.skinhealthy_team_1_img | img_url: 'large' }}" alt="{{ settings.skinhealthy_team_1_name | default: 'Chuyên gia phụ trách' | escape }}" width="400" height="400" loading="lazy">
+      </div>
+      {%- endif -%}
+      <div class="min-w-0 flex-1">
+        <span class="block text-xs font-bold tracking-wider text-primary">Chuyên Gia Phụ Trách</span>
+        <h2 class="m-0 mt-1 text-xl font-bold text-primary-deep" id="shb-team-title">{{ settings.skinhealthy_team_1_name | default: 'ThS. Nguyễn Thị An' }}</h2>
+        <p class="m-0 mt-1 text-sm text-ink-secondary">{{ settings.skinhealthy_team_1_title | default: 'Chuyên gia Da liễu · Trị liệu Lâm sàng' }}</p>
+        <p class="m-0 mt-2 text-xs text-ink-muted">{{ settings.skinhealthy_team_1_credential | default: '15 năm kinh nghiệm lâm sàng' }}</p>
+        {%- if settings.skinhealthy_team_1_tags != blank -%}
+        <div class="mt-3 flex flex-wrap gap-2">
+          {%- assign sh_team_tags = settings.skinhealthy_team_1_tags | split: ',' -%}
+          {%- for tag in sh_team_tags -%}
+          <span class="inline-flex items-center rounded-full bg-primary-tint px-3 py-1 text-xs font-medium text-primary-deep">{{ tag | strip }}</span>
+          {%- endfor -%}
+        </div>
+        {%- endif -%}
+        {%- if settings.skinhealthy_team_1_quote != blank -%}
+        <p class="m-0 mt-4 border-0 border-l-2 border-solid border-primary pl-4 text-base italic leading-relaxed text-ink">{{ settings.skinhealthy_team_1_quote }}</p>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+{%- endif -%}
+
+{%- comment -%} ═══ 13. CÂU HỎI THƯỜNG GẶP + FAQPage schema ═══ {%- endcomment -%}
+{%- assign sh_faq_defaults_q = 'Điều trị tại Skin Health Beauty có đau không?,Tôi cần bao nhiêu buổi để thấy kết quả?,Da nhạy cảm có điều trị được không?,Chi phí điều trị tại Skin Health Beauty như thế nào?,Sau mỗi buổi điều trị tôi cần lưu ý gì?,Tôi có thể kết hợp điều trị tại spa với sản phẩm tự dùng ở nhà không?' | split: ',' -%}
+{%- assign sh_faq_defaults_a = 'Tùy theo cấp độ liệu trình. Chăm sóc duy trì hoàn toàn không gây khó chịu. Điều trị nhắm mục tiêu có thể có cảm giác nhẹ như châm chích khi tẩy tế bào chết. Điều trị chuyên sâu sử dụng kem tê bề mặt trước khi thực hiện — hầu hết khách hàng mô tả là nhẹ và có thể chịu được tốt.@@@Phụ thuộc vào mức độ vấn đề ban đầu và loại liệu trình. Hầu hết khách hàng thấy cải thiện rõ sau 3–4 buổi. Lộ trình đầy đủ cho kết quả tối ưu thường từ 6–12 buổi, kết hợp với chăm sóc tại nhà theo hướng dẫn.@@@Có. Chúng tôi có phác đồ riêng cho da nhạy cảm với bước kiểm tra phản ứng (patch test) bắt buộc trước khi bắt đầu bất kỳ liệu trình nào.@@@Chi phí dao động tùy theo liệu trình và số buổi. Tư vấn ban đầu hoàn toàn miễn phí.@@@Chúng tôi cung cấp hướng dẫn chăm sóc sau điều trị bằng văn bản cho từng liệu trình cụ thể.@@@Hoàn toàn có thể và được khuyến khích. Đội ngũ Skin Health Beauty làm việc cùng hệ thống tư vấn sản phẩm của Pharma Cosmetics để thiết kế homecare routine bổ trợ.' | split: '@@@' -%}
+<section class="bg-white py-10 font-sans text-ink lg:py-16" aria-labelledby="shb-faq-title">
+  <div class="container"><div class="mx-auto max-w-3xl">
+    {%- include 'ui_section_head', title: 'Câu Hỏi Thường Gặp', title_id: 'shb-faq-title', eyebrow: 'Giải Đáp', wrap_class: 'mb-6 lg:mb-8' -%}
+    <div class="flex flex-col gap-3" data-faq-list>
+      {%- for n in (1..6) -%}
+        {%- capture qk -%}skinhealthy_faq_{{ n }}_q{%- endcapture -%}
+        {%- capture ak2 -%}skinhealthy_faq_{{ n }}_a{%- endcapture -%}
+        {%- assign sh_faq_q = settings[qk] | default: sh_faq_defaults_q[forloop.index0] -%}
+        {%- assign sh_faq_a = settings[ak2] | default: sh_faq_defaults_a[forloop.index0] -%}
+        <div class="group overflow-hidden rounded-2xl border border-solid border-line-soft bg-white" data-faq-item data-open="{% if forloop.first %}true{% else %}false{% endif %}">
+          <button type="button" class="flex min-h-[44px] w-full cursor-pointer items-center justify-between gap-4 border-0 bg-transparent px-4 py-3 text-left text-base font-bold text-primary-deep lg:px-5" data-faq-toggle aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}">
+            <span>{{ sh_faq_q }}</span>
+            <span class="shrink-0 text-ink-muted transition-transform duration-300 group-data-[open=true]:rotate-45 motion-reduce:transition-none" aria-hidden="true">{% include 'ui_icon', name: 'plus' %}</span>
+          </button>
+          <div class="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 group-data-[open=true]:grid-rows-[1fr] motion-reduce:transition-none">
+            <div class="min-h-0 overflow-hidden">
+              <p class="m-0 px-4 pb-4 text-sm leading-relaxed text-ink-muted lg:px-5">{{ sh_faq_a }}</p>
+            </div>
+          </div>
+        </div>
+      {%- endfor -%}
+    </div>
+  </div>
+  </div>
+</section>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {%- for n in (1..6) -%}
+      {%- capture qk -%}skinhealthy_faq_{{ n }}_q{%- endcapture -%}
+      {%- capture ak2 -%}skinhealthy_faq_{{ n }}_a{%- endcapture -%}
+      {%- assign sh_faq_q = settings[qk] | default: sh_faq_defaults_q[forloop.index0] -%}
+      {%- assign sh_faq_a = settings[ak2] | default: sh_faq_defaults_a[forloop.index0] -%}
+      {
+        "@type": "Question",
+        "name": {{ sh_faq_q | json }},
+        "acceptedAnswer": { "@type": "Answer", "text": {{ sh_faq_a | json }} }
+      }{% unless forloop.last %},{% endunless %}
+    {%- endfor -%}
+  ]
+}
+</script>
+
+{%- comment -%} ═══ SCRIPT: kéo so sánh Trước/Sau + accordion FAQ (22/11/2026) ═══ {%- endcomment -%}
+<script>
+(function () {
+  function init() {
+    /* Trước/Sau: kéo (pointer) hoặc phím ← → Home End; gán clip-path + left bằng JS vì vị trí là giá trị động. */
+    [].forEach.call(document.querySelectorAll('[data-ba-slider]'), function (el) {
+      var after = el.querySelector('[data-ba-after]');
+      var handle = el.querySelector('[data-ba-handle]');
+      var pos = 50, dragging = false;
+      function set(p) {
+        pos = Math.max(0, Math.min(100, p));
+        if (after) after.style.clipPath = 'inset(0 0 0 ' + pos + '%)';
+        if (handle) handle.style.left = pos + '%';
+        el.setAttribute('aria-valuenow', String(Math.round(pos)));
+      }
+      function fromX(x) { var r = el.getBoundingClientRect(); if (r.width) set(((x - r.left) / r.width) * 100); }
+      el.addEventListener('pointerdown', function (e) {
+        dragging = true;
+        if (el.setPointerCapture) { try { el.setPointerCapture(e.pointerId); } catch (err) {} }
+        fromX(e.clientX);
+      });
+      el.addEventListener('pointermove', function (e) { if (dragging) fromX(e.clientX); });
+      ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (t) {
+        el.addEventListener(t, function () { dragging = false; });
+      });
+      el.addEventListener('keydown', function (e) {
+        var k = e.key;
+        if (k === 'ArrowLeft' || k === 'ArrowDown') set(pos - 5);
+        else if (k === 'ArrowRight' || k === 'ArrowUp') set(pos + 5);
+        else if (k === 'Home') set(0);
+        else if (k === 'End') set(100);
+        else return;
+        e.preventDefault();
+      });
+      set(50);
+    });
+
+    /* FAQ accordion: mở 1 mục tại một thời điểm; trạng thái ở data-open (CSS group-data) + aria-expanded. */
+    [].forEach.call(document.querySelectorAll('[data-faq-toggle]'), function (btn) {
+      btn.addEventListener('click', function () {
+        var item = btn.closest('[data-faq-item]');
+        if (!item) return;
+        var wasOpen = item.getAttribute('data-open') === 'true';
+        [].forEach.call(item.parentElement.querySelectorAll('[data-faq-item]'), function (i) {
+          i.setAttribute('data-open', 'false');
+          var b = i.querySelector('[data-faq-toggle]');
+          if (b) b.setAttribute('aria-expanded', 'false');
+        });
+        if (!wasOpen) { item.setAttribute('data-open', 'true'); btn.setAttribute('aria-expanded', 'true'); }
+      });
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>

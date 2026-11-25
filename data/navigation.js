@@ -38,4 +38,22 @@ for (const [handle, menu] of Object.entries(sapoMenus)) {
   linklists[handle] = { title: menu.title, handle, links: (menu.links || []).map(toLink) };
 }
 
+// 20/11/2026: Bổ sung alias menu hoạt chất 'hoat-chat' và 'tat-ca-hoat-chat'
+// liên kết trực tiếp tới menu 'mua-sam-theo-thanh-phan' (29 hoạt chất chuẩn Sapo)
+// để template page.hoat-chat.bwt đọc trực tiếp: linklists['hoat-chat']
+if (!linklists['hoat-chat'] && linklists['mua-sam-theo-thanh-phan']) {
+  linklists['hoat-chat'] = {
+    title: 'Tất cả hoạt chất',
+    handle: 'hoat-chat',
+    links: linklists['mua-sam-theo-thanh-phan'].links,
+  };
+}
+if (!linklists['tat-ca-hoat-chat'] && linklists['mua-sam-theo-thanh-phan']) {
+  linklists['tat-ca-hoat-chat'] = {
+    title: 'Tất cả hoạt chất',
+    handle: 'tat-ca-hoat-chat',
+    links: linklists['mua-sam-theo-thanh-phan'].links,
+  };
+}
+
 module.exports = { linklists };

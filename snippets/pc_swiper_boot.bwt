@@ -1,16 +1,17 @@
 {%- comment -%}
-  pc_swiper_boot.bwt — 17/11/2026 (M-01/04/08/13/15/17/22): khởi tạo Swiper dùng chung cho danh sách ngang trên mobile, nạp 1 lần / trang
-  (như home_tabs_script). Không thanh cuộn, vuốt tự do, lộ một phần mục kế tiếp (slidesPerView auto).
-  Markup: <div class="swiper-container overflow-hidden" data-pc-slider data-gap="12" data-desktop-off> <ul class="swiper-wrapper"> <li class="swiper-slide !w-auto"> …
-    · data-gap (px, mặc định 12) · data-desktop-off ⇒ từ ≥ 1024px huỷ Swiper (desktop dùng lưới/cột của chính markup).
-    · Có [role=tab] trong slider ⇒ tab được chọn / focus tự trượt vào vùng nhìn thấy (WAI-ARIA tabs).
-  Không có style tĩnh hay CSS riêng; Swiper tự ghi transform lúc chạy.
+  pc_swiper_boot.bwt — 17/11/2026 (M-01/04/08/13/15/17/22, T-18, T-19):
+  Khởi tạo Swiper dùng chung cho:
+    1. Danh sách ngang mobile [data-pc-slider] (slidesPerView: 'auto', data-desktop-off)
+    2. Khối thương hiệu 2 hàng [data-pc-brand-slider] (T-18: continuous ticker loop, hover pause, reverseDirection)
+    3. Khối Reels Trước & Sau [data-reels-swiper] (T-19: slidesPerView: 'auto', navigation Next/Prev)
+  Nạp 1 lần / trang. Không có style tĩnh hay CSS riêng.
 {%- endcomment -%}
 <script>
 (function () {
   if (window.pcSliderBoot) return;
   window.pcSliderBoot = true;
   var mq = window.matchMedia ? window.matchMedia('(min-width: 1024px)') : { matches: false };
+
   function build(el) {
     if (el.swiper || typeof Swiper !== 'function') return;
     var gap = parseInt(el.getAttribute('data-gap'), 10);
@@ -23,15 +24,89 @@
     });
     return sw;
   }
+
+  // 23/11/2026 (chủ dự án: «tự động chạy — dùng Swiper»): băng chuyền thương hiệu tự chạy liên tục.
+  // delay 0 + easing linear (class ở markup) + loop ⇒ chạy mượt; hàng ngược chiều dùng dir="rtl" trên container (không dùng reverseDirection: loop nhảy cóc).
+  // Chạy cả khi bật «giảm chuyển động» (theo yêu cầu); rê chuột / chạm / focus ⇒ dừng.
+  function buildBrandSlider(el) {
+    if (el.swiper || typeof Swiper !== 'function') return;
+    var speed = parseInt(el.getAttribute('data-speed'), 10) || 6000;
+    var count = el.querySelectorAll('.swiper-slide').length;
+    var sw = new Swiper(el, {
+      slidesPerView: 'auto',
+      spaceBetween: 16,
+      loop: count > 1,
+      loopedSlides: count,
+      speed: speed,
+      autoplay: {
+        delay: 0,
+        disableOnInteraction: false,
+        pauseOnMouseEnter: true
+      },
+      observer: true,
+      observeParents: true
+    });
+    // Luật «giảm chuyển động» toàn cục (pc-ui.css) ép transition-duration:0s ⇒ Swiper không bao giờ phát transitionend ⇒ autoplay đứng. data-pc-motion = ngoại lệ có chủ đích (băng chuyền chạy theo yêu cầu).
+    if (sw.wrapperEl) sw.wrapperEl.setAttribute('data-pc-motion', '');
+    el.addEventListener('focusin', function () {
+      if (sw.autoplay && sw.autoplay.running) sw.autoplay.stop();
+    });
+    el.addEventListener('focusout', function () {
+      if (sw.autoplay && !sw.autoplay.running) sw.autoplay.start();
+    });
+    return sw;
+  }
+
+  function buildReelsSlider(el) {
+    if (el.swiper || typeof Swiper !== 'function') return;
+    var p = el.parentElement || el;
+    var nextEl = p.querySelector('[data-reels-next]');
+    var prevEl = p.querySelector('[data-reels-prev]');
+    var sw = new Swiper(el, {
+      slidesPerView: 'auto',
+      spaceBetween: 16,
+      watchOverflow: true,
+      observer: true,
+      observeParents: true,
+      navigation: (nextEl && prevEl) ? {
+        nextEl: nextEl,
+        prevEl: prevEl
+      } : false
+    });
+    return sw;
+  }
+
   function sync() {
     Array.prototype.forEach.call(document.querySelectorAll('[data-pc-slider]'), function (el) {
       var off = el.hasAttribute('data-desktop-off') && mq.matches;
       if (off && el.swiper) el.swiper.destroy(true, true);
       else if (!off) build(el);
     });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-pc-brand-slider]'), function (el) {
+      buildBrandSlider(el);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-reels-swiper]'), function (el) {
+      buildReelsSlider(el);
+    });
   }
-  window.pcSliderSync = function () { sync(); Array.prototype.forEach.call(document.querySelectorAll('[data-pc-slider]'), function (el) { if (el.swiper) el.swiper.update(); }); }; /* gọi lại sau khi JS chèn thêm mục */
-  function run() { if (typeof Swiper !== 'function') { window.addEventListener('load', sync); return; } sync(); }
+
+  window.buildBrandSlider = buildBrandSlider;
+  window.buildReelsSlider = buildReelsSlider;
+  window.pcSliderSync = function () {
+    sync();
+    Array.prototype.forEach.call(document.querySelectorAll('[data-pc-slider], [data-pc-brand-slider], [data-reels-swiper]'), function (el) {
+      if (el.swiper) el.swiper.update();
+    });
+  };
+
+  function run() {
+    if (typeof Swiper !== 'function') {
+      window.addEventListener('load', sync);
+      return;
+    }
+    sync();
+  }
+
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
   if (mq.addEventListener) mq.addEventListener('change', sync);
 })();

@@ -1,22 +1,99 @@
 {%- comment -%}
-  section_brand_marquee.bwt — Thương hiệu tiêu biểu.
-  100% Tailwind utility class trực tiếp trên thẻ ngữ nghĩa, không dùng class CSS tự sinh.
+  section_brand_marquee.bwt — Thương hiệu tiêu biểu (T-18).
+  Băng chuyền Swiper 2 hàng ngược chiều cùng tốc độ, tự chạy (23/11/2026), full width, hover pause, edge gradients.
+  100% Tailwind class theo token (UI-0), màu thương hiệu primary (UI-BRAND).
 {%- endcomment -%}
-{%- comment -%} M-04 (17/11/2026): mobile = logo tròn 56px (viền trắng) + tên 1 dòng, 2 hàng Swiper (ui_circle_swiper); "Xem tất cả" = nút tròn icon (ui_section_head);
-  desktop giữ lưới chữ/logo. Logo đọc từ object collection của link menu; chưa có ảnh thì chữ cái đầu. Bỏ nhánh store.vendors (không có object ⇒ không có ảnh). {%- endcomment -%}
-{%- assign brand_ll = linklists[settings.home_brand_menu] -%}
+{%- comment -%} 23/11/2026: mặc định alias menu Sapo 'thuong-hieu-san-pham', không có thì lùi về 'thuong-hieu'. {%- endcomment -%}
+{%- assign brand_menu_handle = settings.home_brand_menu | default: 'thuong-hieu-san-pham' -%}
+{%- assign brand_ll = linklists[brand_menu_handle] -%}
+{%- if brand_ll == blank or brand_ll.links.size == 0 -%}
+  {%- assign brand_ll = linklists['thuong-hieu'] -%}
+{%- endif -%}
+
 {%- assign brand_limit = settings.home_brand_limit | plus: 0 -%}
-{%- if brand_limit < 1 -%}{%- assign brand_limit = 12 -%}{%- endif -%}
+{%- if brand_limit < 1 -%}{%- assign brand_limit = 40 -%}{%- endif -%}
 {%- assign brand_title_t = settings.home_brand_title | default: 'Thương hiệu tiêu biểu' | escape -%}
 {%- assign brand_lead_t = settings.home_brand_lead | default: 'Nhập khẩu chính hãng' | escape -%}
 {%- assign brand_sub_t = settings.home_brand_subtitle | escape -%}
 {%- assign brand_viewall_t = settings.home_brand_viewall_text | default: 'Xem tất cả' | escape -%}
 {%- assign brand_url = settings.home_brand_url | default: '/thuong-hieu' -%}
+
 <section class="border-t border-line-soft bg-surface-soft py-10 lg:py-16 font-sans text-ink" aria-labelledby="section-brand-title">
-  <div class="container">
-    {%- include 'ui_section_head', title: brand_title_t, title_id: 'section-brand-title', eyebrow: brand_lead_t, desc: brand_sub_t, url: brand_url, more_text: brand_viewall_t, label: 'Xem tất cả thương hiệu', wrap_class: 'mb-4 lg:mb-8' -%}
-    {%- if settings.home_brand_menu != blank and brand_ll.links.size > 0 -%}
-    {%- include 'ui_circle_swiper', links: brand_ll.links, limit: brand_limit, kind: 'brand', cols: 'lg:grid-cols-6', desktop_logo_prefix: 'home_brand_marquee_image_' -%}
-    {%- endif -%}
+  <div class="container mb-6 lg:mb-8">
+    {%- include 'ui_section_head', title: brand_title_t, title_id: 'section-brand-title', eyebrow: brand_lead_t, desc: brand_sub_t, url: brand_url, more_text: brand_viewall_t, label: 'Xem tất cả thương hiệu', wrap_class: 'mb-0' -%}
   </div>
+
+  {%- if brand_ll.links.size > 0 -%}
+  {%- comment -%} 23/11/2026 (chủ dự án: «tự động chạy — dùng Swiper»): 2 hàng Swiper băng chuyền, tự chạy liên tục (autoplay delay 0, easing linear, loop), 2 hàng CÙNG tốc độ (cùng bề rộng thẻ + cùng speed 5000ms/thẻ).
+    Hàng dưới chạy NGƯỢC bằng dir="rtl" (Swiper tự đảo hướng) — KHÔNG dùng reverseDirection (bản cũ nhảy cóc + chạy nhanh). Thẻ đặt dir="ltr" để chữ/ellipsis không bị lật.
+    Rê chuột / chạm / focus ⇒ dừng. Chạy cả khi máy bật «giảm chuyển động» theo yêu cầu chủ dự án. Khởi tạo ở snippets/pc_swiper_boot.bwt (data-pc-brand-slider).
+    Nguồn: 1 menu thương hiệu, mục lẻ hàng trên / mục chẵn hàng dưới. {%- endcomment -%}
+  <div class="relative flex w-full flex-col gap-3 sm:gap-4 overflow-hidden">
+    <!-- Gradient mép trái -->
+    <div class="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 sm:w-24 lg:w-36 bg-gradient-to-r from-surface-soft to-transparent" aria-hidden="true"></div>
+    <!-- Gradient mép phải -->
+    <div class="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 sm:w-24 lg:w-36 bg-gradient-to-l from-surface-soft to-transparent" aria-hidden="true"></div>
+
+    <!-- Hàng 1: chạy sang trái (mục 1, 3, 5…) -->
+    <div class="swiper-container w-full max-w-full overflow-hidden [&>.swiper-wrapper]:!ease-linear" data-pc-brand-slider data-speed="5000">
+      <div class="swiper-wrapper">
+        {%- for link in brand_ll.links limit: brand_limit -%}
+        {%- assign mod = forloop.index0 | modulo: 2 -%}
+        {%- if mod == 0 -%}
+          {%- assign b_title = link.title | strip -%}
+          {%- assign b_first = b_title | upcase | slice: 0, 1 -%}
+          {%- assign b_img = link.object.image.src | default: link.object.featured_image.src -%}
+          <div class="swiper-slide !w-auto">
+              <a dir="ltr" href="{{ link.url | escape }}" title="{{ b_title | escape }}" class="group/card flex shrink-0 flex-col justify-between items-center w-36 sm:w-44 h-28 sm:h-32 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-solid border-line-soft bg-white text-center transition-all duration-200 hover:border-primary no-underline">
+                <span class="relative flex h-14 sm:h-[72px] w-full items-center justify-center overflow-hidden rounded-xl bg-surface-soft p-1.5">
+                  {%- if b_img != blank -%}
+                    <img src="{{ b_img | img_url: 'medium' }}" alt="{{ b_title | escape }}" width="120" height="60" loading="lazy" class="block max-h-full max-w-full object-contain transition-transform duration-300 group-hover/card:scale-105">
+                  {%- else -%}
+                    <span class="inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-brand-tint font-sans text-sm sm:text-base font-bold text-brand-deep">{{ b_first }}</span>
+                  {%- endif -%}
+                </span>
+                <span class="mt-1.5 sm:mt-2 flex w-full justify-center">
+                  <span class="inline-flex max-w-full items-center justify-center rounded-full border border-solid border-line-soft bg-white px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-brand-deep transition-colors group-hover/card:border-primary group-hover/card:bg-brand-tint">
+                    <span class="truncate">{{ b_title | escape }}</span>
+                  </span>
+                </span>
+              </a>
+          </div>
+        {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </div>
+
+    <!-- Hàng 2: chạy sang phải, ngược chiều (mục 2, 4, 6…) -->
+    <div class="swiper-container w-full max-w-full overflow-hidden [&>.swiper-wrapper]:!ease-linear" data-pc-brand-slider data-speed="5000" dir="rtl">
+      <div class="swiper-wrapper">
+        {%- for link in brand_ll.links limit: brand_limit -%}
+        {%- assign mod = forloop.index0 | modulo: 2 -%}
+        {%- if mod == 1 -%}
+          {%- assign b_title = link.title | strip -%}
+          {%- assign b_first = b_title | upcase | slice: 0, 1 -%}
+          {%- assign b_img = link.object.image.src | default: link.object.featured_image.src -%}
+          <div class="swiper-slide !w-auto">
+              <a dir="ltr" href="{{ link.url | escape }}" title="{{ b_title | escape }}" class="group/card flex shrink-0 flex-col justify-between items-center w-36 sm:w-44 h-28 sm:h-32 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border border-solid border-line-soft bg-white text-center transition-all duration-200 hover:border-primary no-underline">
+                <span class="relative flex h-14 sm:h-[72px] w-full items-center justify-center overflow-hidden rounded-xl bg-surface-soft p-1.5">
+                  {%- if b_img != blank -%}
+                    <img src="{{ b_img | img_url: 'medium' }}" alt="{{ b_title | escape }}" width="120" height="60" loading="lazy" class="block max-h-full max-w-full object-contain transition-transform duration-300 group-hover/card:scale-105">
+                  {%- else -%}
+                    <span class="inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-brand-tint font-sans text-sm sm:text-base font-bold text-brand-deep">{{ b_first }}</span>
+                  {%- endif -%}
+                </span>
+                <span class="mt-1.5 sm:mt-2 flex w-full justify-center">
+                  <span class="inline-flex max-w-full items-center justify-center rounded-full border border-solid border-line-soft bg-white px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-brand-deep transition-colors group-hover/card:border-primary group-hover/card:bg-brand-tint">
+                    <span class="truncate">{{ b_title | escape }}</span>
+                  </span>
+                </span>
+              </a>
+          </div>
+        {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+  {%- endif -%}
 </section>
+{%- include 'pc_swiper_boot' -%}

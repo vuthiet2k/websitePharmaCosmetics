@@ -10,12 +10,12 @@
     {%- if sol_img == blank -%}{%- assign sol_img = link.object.featured_image.src -%}{%- endif -%}
     {%- if sol_img != blank -%}{%- assign sol_src = sol_img | img_url: 'large' -%}{%- elsif forloop.index <= 6 -%}{%- capture sol_asset -%}home_concern_{{ forloop.index }}.jpg{%- endcapture -%}{%- assign sol_src = sol_asset | asset_url -%}{%- else -%}{%- assign sol_src = '' -%}{%- endif -%}
     {%- capture k_sub -%}home_solutions_{{ forloop.index }}_sub{%- endcapture -%}
-    <a class="flex flex-col overflow-hidden rounded-2xl border border-solid border-line-soft bg-white no-underline hover:border-primary transition-all group" href="{{ link.url | escape }}">
+    <a class="flex flex-col overflow-hidden rounded-xl md:rounded-2xl border border-solid border-line-soft max-md:border-transparent bg-white no-underline hover:border-primary transition-all group" href="{{ link.url | escape }}">
       <span class="block aspect-video w-full overflow-hidden bg-brand-tint">
         {%- if sol_src != blank -%}<img class="block h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" src="{{ sol_src }}" alt="{{ link.title | escape }}" width="614" height="260" loading="lazy">{%- endif -%}
       </span>
-      <span class="p-3 md:p-4 flex flex-col">
-        <span class="m-0 block text-xs md:text-sm font-bold text-brand-deep group-hover:text-primary transition-colors">{{ link.title | escape }}</span>
+      <span class="px-2 py-2 md:p-4 flex flex-col">
+        <span class="m-0 md:block max-md:line-clamp-2 text-xs md:text-sm font-bold leading-snug text-brand-deep group-hover:text-primary transition-colors">{{ link.title | escape }}</span>
         {%- if settings[k_sub] != blank -%}<span class="m-0 mt-1 max-md:hidden md:block text-xs text-ink-muted">{{ settings[k_sub] | escape }}</span>{%- endif -%}
       </span>
     </a>
@@ -28,11 +28,16 @@
     {%- assign sol_eyebrow_t = settings.home_solutions_eyebrow | default: 'Mua theo vấn đề da' | escape -%}
     {%- assign sol_sub_t = settings.home_solutions_subtitle | escape -%}
     {%- include 'ui_section_head', title: sol_title_t, title_id: 'section-solutions-title', eyebrow: sol_eyebrow_t, desc: sol_sub_t, wrap_class: 'mb-6 lg:mb-8' -%}
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+    <div class="grid grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
       {{ sol_tiles }}
       {%- unless settings.home_sol_ai_enable == false or settings.home_sol_ai_enable == 'false' -%}
       {%- assign sol_ai_icon = settings.home_sol_ai_icon | default: 'wand-sparkles' -%}
-      <a class="col-span-2 md:col-span-1 flex min-h-[44px] flex-col justify-between rounded-2xl bg-brand-tint p-5 md:p-6 text-brand-deep no-underline hover:opacity-95 transition-opacity" href="{{ settings.home_sol_ai_cta_url | default: settings.home_ai_guide_cta_url | default: '/kham-da-ai' | escape }}">
+      {%- comment -%} 20/11/2026 (chủ dự án): thẻ khảo sát da giãn hết các ô còn trống của hàng cuối (2/3/4 cột theo màn hình) ⇒ không thừa ô trống bên phải; thẻ rộng nên thấp hơn ⇒ thẻ tình trạng da cùng hàng không bị kéo dài thừa chân. Class viết nguyên văn để Tailwind quét được. {%- endcomment -%}
+      {%- assign sol_n = sol_ll.links.size -%}{%- if sol_n > 7 -%}{%- assign sol_n = 7 -%}{%- endif -%}
+      {%- assign sol_r3 = sol_n | modulo: 3 -%}{%- assign sol_r4 = sol_n | modulo: 4 -%}
+      {%- case sol_r3 -%}{%- when 1 -%}{%- assign sol_span = 'col-span-2' -%}{%- when 2 -%}{%- assign sol_span = 'col-span-1' -%}{%- else -%}{%- assign sol_span = 'col-span-3' -%}{%- endcase -%}
+      {%- case sol_r4 -%}{%- when 1 -%}{%- assign sol_span_lg = 'lg:col-span-3' -%}{%- when 2 -%}{%- assign sol_span_lg = 'lg:col-span-2' -%}{%- when 3 -%}{%- assign sol_span_lg = 'lg:col-span-1' -%}{%- else -%}{%- assign sol_span_lg = 'lg:col-span-4' -%}{%- endcase -%}
+      <a class="{{ sol_span }} {{ sol_span_lg }} flex min-h-[44px] flex-col justify-between rounded-2xl bg-brand-tint p-5 md:p-6 text-brand-deep no-underline hover:opacity-95 transition-opacity" href="{{ settings.home_sol_ai_cta_url | default: settings.home_ai_guide_cta_url | default: '/kham-da-ai' | escape }}">
         <div>
           <span class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-deep">{% include 'ui_icon', name: sol_ai_icon %}{{ settings.home_sol_ai_eyebrow | default: 'Pharma AI' | escape }}</span>
           <span class="block text-base md:text-lg font-bold text-brand-deep mt-2 leading-snug">{{ settings.home_sol_ai_title | default: 'Chưa biết da mình thuộc nhóm nào?' | escape }}</span>

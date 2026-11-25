@@ -20,7 +20,7 @@
         enterkeyhint="search"
       >
       <input type="hidden" name="type" value="product">
-      <button type="button" class="search-overlay__clear min-h-[44px] min-w-[44px] inline-flex items-center justify-center" id="mb-search-clear" aria-label="Xóa" hidden>
+      <button type="button" class="search-overlay__clear relative inline-flex !h-6 !w-6 !min-h-0 !min-w-0 items-center justify-center after:absolute after:-inset-[10px]" id="mb-search-clear" aria-label="Xóa" hidden>
         {% include 'ui_icon', name: 'x', size: 'em' %}
       </button>
     </form>
@@ -81,6 +81,31 @@
 
     {%- comment -%} Kết quả smart search AJAX — JS render, ẩn khi không có query {%- endcomment -%}
     {%- if settings.header_search_smart -%}
+    {%- comment -%} 23/11/2026 (chủ dự án: 2 ô vàng «Không tìm thấy kết quả» trông xấu): 1 khối trống gọn dùng chung cho tìm kiếm nhanh
+      mobile (assets/mobile-ui.js.bwt) và desktop (layouts/theme.bwt) qua window.pcSearchEmptyHtml(term). Không có bài viết ⇒ ẩn mục Tin tức.
+      Từ khoá gợi ý = settings.footer_search_menu (như trang tìm kiếm rỗng, search_empty_state.bwt). Template nằm ở đây vì snippet nạp mọi trang. {%- endcomment -%}
+    <template id="pc-search-empty-tpl">
+      {%- include 'ui_search_empty', ue_popup: true, ue_kind: 'kết quả', ue_tag: 'p' -%}
+    </template>
+    <script>
+      window.pcSearchEmptyHtml = function (term) {
+        var t = document.getElementById('pc-search-empty-tpl');
+        if (!t || !t.content) return '';
+        var frag = t.content.cloneNode(true);
+        var s = frag.querySelector('[data-empty-term]');
+        if (s) s.textContent = term;
+        var ai = frag.querySelector('[data-ai-ask]');
+        if (ai) {
+          ai.setAttribute('data-ai-ask', term);
+          var lt = ai.querySelector('[data-ai-label-text]');
+          if (lt) lt.textContent = (ai.getAttribute('data-ai-label') || '').replace('{q}', term);
+        }
+        var box = document.createElement('div');
+        box.appendChild(frag);
+        return box.innerHTML;
+      };
+    </script>
+
     <div id="mb-smart-results" hidden>
       <div class="list-search list-search-style" id="mb-list-search"></div>
       <div class="list-search2 list-search-style" id="mb-list-search2"></div>

@@ -14,21 +14,21 @@
 {%- endfor -%}
 {%- assign lt_gtitles = lt_gtitles | split: '§' -%}{%- assign lt_gdescs = lt_gdescs | split: '§' -%}
 <div class="lt-page lt-collection">
-  <section class="lt-intro lt-intro--collection">
+  <section class="lt-intro lt-intro--collection !py-4 lg:!py-6">
     <div class="container">
       <p class="lt-eyebrow">{{ settings.lt_eyebrow | escape }}</p>
       <h1 class="lt-intro__title">{{ collection.title | default: collection.name | escape }}</h1>
       {%- if lt_intro != blank -%}<p class="lt-lead">{{ lt_intro }}</p>{%- endif -%}
     </div>
   </section>
-  <section class="lt-section lt-section--white">
+  <section class="lt-section lt-section--white !py-5 lg:!py-8">
     <div class="container">
-      {%- if lt_gtitles[0] != blank -%}<header class="lt-head"><h2 class="lt-title">{{ lt_gtitles[0] | escape }}</h2>{% if lt_gdescs[0] != blank %}<p class="lt-lead">{{ lt_gdescs[0] | escape }}</p>{% endif %}</header>{%- endif -%}
+      {%- if lt_gtitles[0] != blank -%}<header class="lt-head mb-4 lg:mb-6"><h2 class="lt-title">{{ lt_gtitles[0] | escape }}</h2>{% if lt_gdescs[0] != blank %}<p class="lt-lead">{{ lt_gdescs[0] | escape }}</p>{% endif %}</header>{%- endif -%}
       {%- if collection.products.size > 0 -%}
       <div class="lt-pgrid">
         {%- for product in collection.products -%}{%- assign lt_product = product -%}{%- include 'lieu_trinh_card' -%}{%- endfor -%}
       </div>
-      {%- if paginate.pages > 1 -%}<div class="pagenav">{% include 'collection-paginate-pages' %}</div>{%- endif -%}
+      {%- if paginate.pages > 1 -%}<div class="pagenav">{% include 'ui_pagination', pg_mode: 'ajax' %}</div>{%- endif -%}
       {%- else -%}
       <p class="lt-lead">Danh mục chưa có liệu trình.</p>
       {%- endif -%}
@@ -41,9 +41,9 @@
     {%- assign lt_gc = collections[lt_gh] -%}
     {%- if lt_gh != blank and lt_gc.products.size > 0 -%}
     {%- assign lt_gi = forloop.index -%}
-    <section class="lt-section {% cycle 'lt-section--soft', 'lt-section--white' %}">
+    <section class="lt-section {% cycle 'lt-section--soft', 'lt-section--white' %} !py-5 lg:!py-8">
       <div class="container">
-        <header class="lt-head">
+        <header class="lt-head mb-4 lg:mb-6">
           <h2 class="lt-title">{{ lt_gtitles[lt_gi] | default: lt_gc.title | default: lt_gc.name | escape }}</h2>
           {%- if lt_gdescs[lt_gi] != blank -%}<p class="lt-lead">{{ lt_gdescs[lt_gi] | escape }}</p>{%- endif -%}
         </header>

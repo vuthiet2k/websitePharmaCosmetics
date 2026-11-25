@@ -17,7 +17,19 @@
 		{%- assign pc_ni_key = pc_ni_tag | split: ':' | first | strip | downcase -%}
 		{%- if pc_ni_key == 'chude' -%}{%- assign pc_ni_topic = pc_ni_tag | remove_first: 'chude:' | strip -%}{%- endif -%}
 	{%- elsif pc_ni_first == '' -%}
-		{%- unless pc_ni_tag contains 'duocsi_' or pc_ni_tag == settings.news_featured_tag -%}{%- assign pc_ni_first = pc_ni_tag | replace: '-', ' ' -%}{%- endunless -%}
+		{%- unless pc_ni_tag contains 'duocsi_' or pc_ni_tag == settings.news_featured_tag -%}
+			{%- if pc_ni_tag contains '#' and pc_ni_tag contains ' ' -%}
+				{%- assign pc_ni_sub_tags = pc_ni_tag | split: ' ' -%}
+				{%- for pc_ni_st in pc_ni_sub_tags -%}
+					{%- if pc_ni_first == '' -%}
+						{%- assign pc_ni_st_clean = pc_ni_st | replace: '#', '' | strip -%}
+						{%- if pc_ni_st_clean != blank -%}{%- assign pc_ni_first = pc_ni_st_clean | replace: '-', ' ' -%}{%- endif -%}
+					{%- endif -%}
+				{%- endfor -%}
+			{%- else -%}
+				{%- assign pc_ni_first = pc_ni_tag | replace: '#', '' | replace: '-', ' ' | strip -%}
+			{%- endif -%}
+		{%- endunless -%}
 	{%- endif -%}
 {%- endfor -%}
 {%- if pc_ni_topic == '' -%}{%- assign pc_ni_topic = pc_ni_first -%}{%- endif -%}

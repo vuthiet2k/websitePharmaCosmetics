@@ -1,15 +1,163 @@
-{%- comment -%} 2026-10-19: khung app Sapo Product Recommend (PDP + giỏ hàng). Nằm trong .container để thẳng mép logo (UI-1.2);
-  style ở assets/storefront-v3.css (RECOMMEND-APP) — bỏ <style> inline cũ ép ảnh rộng 50%. {%- endcomment -%}
+{%- comment -%}
+  product-recommend.bwt (T-20 Hybrid Dual-Engine PDP Related Products).
+  Động cơ chính (Primary): Gọi App Sapo Product Recommend (productsrecommend.sapoapps.vn).
+  Động cơ dự phòng (Fail-safe Fallback): Tìm kiếm nội bộ /search?q=...&view=data theo tag hoạt chất/thành phần/nhu cầu khi app lỗi/rỗng/timeout ~1.8s.
+  100% Tailwind utility class, màu thương hiệu primary (UI-BRAND).
+{%- endcomment -%}
 <div class="container pc-recommend-wrap">
-<div class="product-recommend-module-box" style="display: none;">
+  {%- comment -%} Primary Engine: Sapo Recommend App Box {%- endcomment -%}
+  <div class="product-recommend-module-box hidden">
     <link href="https://productsrecommend.sapoapps.vn/Content/styles/css/frontend/module-style.css" rel="stylesheet" />
-    <div class="product-recommend-module-title">
-    </div>
-    <div id="owl-product-recommend" class="">
-    </div>
+    <div class="product-recommend-module-title"></div>
+    <div id="owl-product-recommend" class=""></div>
     <script>
-        var BizwebProductRecommendApp = BizwebProductRecommendApp || {};
-        BizwebProductRecommendApp.productId = "{{ product.id }}";
+      var BizwebProductRecommendApp = BizwebProductRecommendApp || {};
+      BizwebProductRecommendApp.productId = "{{ product.id }}";
     </script>
-</div>
+  </div>
+
+  {%- if product != blank and product.id != blank -%}
+    {%- assign pc_ing_query = '' -%}
+    {%- for tag in product.tags -%}
+      {%- if tag contains 'hoatchat:' or tag contains 'hoatchat_' or tag contains 'thanhphan:' or tag contains 'thanhphan_' -%}
+        {%- if pc_ing_query != '' -%}{%- assign pc_ing_query = pc_ing_query | append: ' OR ' -%}{%- endif -%}
+        {%- assign pc_ing_query = pc_ing_query | append: '(' | append: tag | append: ')' -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- if pc_ing_query != '' -%}
+      {%- assign pc_ing_query = 'tags:(' | append: pc_ing_query | append: ')' -%}
+    {%- endif -%}
+
+    {%- assign pc_backup_query = '' -%}
+    {%- for tag in product.tags -%}
+      {%- if tag contains 'vande:' or tag contains 'vande_' -%}
+        {%- if pc_backup_query != '' -%}{%- assign pc_backup_query = pc_backup_query | append: ' OR ' -%}{%- endif -%}
+        {%- assign pc_backup_query = pc_backup_query | append: '(' | append: tag | append: ')' -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- if pc_backup_query != '' -%}
+      {%- assign pc_backup_query = 'tags:(' | append: pc_backup_query | append: ')' -%}
+    {%- elsif product.vendor != blank -%}
+      {%- assign pc_backup_query = 'vendor:(' | append: product.vendor | append: ')' -%}
+    {%- elsif product.type != blank -%}
+      {%- assign pc_backup_query = 'product_type:(' | append: product.type | append: ')' -%}
+    {%- endif -%}
+
+    {%- comment -%} Fallback Engine: Internal Search Recommendations Container {%- endcomment -%}
+    <section id="pc-pdp-fallback-recommend" class="hidden my-10 lg:my-16" data-product-id="{{ product.id }}" data-product-alias="{{ product.alias }}">
+      <div class="mb-6 flex items-center justify-between">
+        <h2 class="m-0 text-xl font-bold text-ink sm:text-2xl">{{ settings.product_related_title | strip_html | default: 'Sản phẩm tương tự' }}</h2>
+      </div>
+      <ul id="pc-pdp-fallback-grid" class="m-0 grid list-none grid-cols-2 gap-3 p-0 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 [html[data-pc-view=list]_&]:grid-cols-1">
+      </ul>
+    </section>
+
+    <script>
+    (function() {
+      var currentProductId = "{{ product.id }}";
+      var currentProductAlias = "{{ product.alias }}";
+      var ingQuery = "{{ pc_ing_query | escape }}";
+      var backupQuery = "{{ pc_backup_query | escape }}";
+      var fallbackQuery = ingQuery || backupQuery;
+
+      var wrap = document.querySelector('.pc-recommend-wrap');
+      if (!wrap) return;
+      var primaryBox = wrap.querySelector('.product-recommend-module-box');
+      var fallbackSection = document.getElementById('pc-pdp-fallback-recommend');
+      var fallbackGrid = document.getElementById('pc-pdp-fallback-grid');
+      var isResolved = false;
+
+      function activateFallback() {
+        if (isResolved) return;
+        isResolved = true;
+        if (primaryBox) primaryBox.classList.add('hidden');
+        if (!fallbackQuery || !fallbackSection || !fallbackGrid) return;
+
+        function fetchAndRender(queryStr, onEmpty) {
+          fetch('/search?q=' + encodeURIComponent(queryStr) + '&view=data')
+            .then(function(res) {
+              if (!res.ok) throw new Error('Search request failed: ' + res.status);
+              return res.text();
+            })
+            .then(function(html) {
+              var parser = new DOMParser();
+              var doc = parser.parseFromString(html, 'text/html');
+              var items = doc.querySelectorAll('ul > li');
+              var filtered = [];
+
+              Array.prototype.forEach.call(items, function(li) {
+                var htmlContent = li.innerHTML || '';
+                var hasCurrentId = currentProductId && (
+                  li.getAttribute('data-id') === currentProductId ||
+                  htmlContent.indexOf('data-id="' + currentProductId + '"') !== -1 ||
+                  htmlContent.indexOf('product-actions-' + currentProductId) !== -1
+                );
+                var hasCurrentAlias = currentProductAlias && (
+                  li.getAttribute('data-alias') === currentProductAlias ||
+                  htmlContent.indexOf('data-pc-wish="' + currentProductAlias + '"') !== -1 ||
+                  htmlContent.indexOf('/' + currentProductAlias) !== -1
+                );
+                if (!hasCurrentId && !hasCurrentAlias) {
+                  filtered.push(li);
+                }
+              });
+
+              if (filtered.length === 0 && onEmpty) {
+                onEmpty();
+                return;
+              }
+
+              if (filtered.length > 0) {
+                fallbackGrid.innerHTML = '';
+                var maxItems = Math.min(filtered.length, 8);
+                for (var i = 0; i < maxItems; i++) {
+                  fallbackGrid.appendChild(filtered[i]);
+                }
+                fallbackSection.classList.remove('hidden');
+                if (window.pcSliderSync) window.pcSliderSync();
+              }
+            })
+            .catch(function() {
+              if (onEmpty) onEmpty();
+            });
+        }
+
+        fetchAndRender(fallbackQuery, function() {
+          if (fallbackQuery !== backupQuery && backupQuery) {
+            fetchAndRender(backupQuery, null);
+          }
+        });
+      }
+
+      var checkTimer = setTimeout(function() {
+        var hasContent = false;
+        if (primaryBox) {
+          var owl = primaryBox.querySelector('#owl-product-recommend');
+          var items = owl ? owl.querySelectorAll('.item, .product-recommend-item, li') : null;
+          if (items && items.length > 0 && primaryBox.offsetParent !== null) {
+            hasContent = true;
+          }
+        }
+        if (!hasContent) {
+          activateFallback();
+        } else {
+          isResolved = true;
+        }
+      }, 1800);
+
+      if (window.MutationObserver && primaryBox) {
+        var observer = new MutationObserver(function() {
+          var owl = primaryBox.querySelector('#owl-product-recommend');
+          var items = owl ? owl.querySelectorAll('.item, .product-recommend-item, li') : null;
+          if (items && items.length > 0 && window.getComputedStyle(primaryBox).display !== 'none') {
+            isResolved = true;
+            clearTimeout(checkTimer);
+            observer.disconnect();
+          }
+        });
+        observer.observe(primaryBox, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+      }
+    })();
+    </script>
+  {%- endif -%}
 </div>

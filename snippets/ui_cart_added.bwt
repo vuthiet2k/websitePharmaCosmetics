@@ -1,0 +1,33 @@
+{%- comment -%}
+  snippets/ui_cart_added.bwt — Thông báo «đã thêm vào giỏ hàng» DÙNG CHUNG (23/11/2026, chủ dự án: «mobile vẫn giao diện cũ — viết snippet dùng chung»).
+
+  Một hộp giữa màn hình (kiểu Shopee) cho MỌI màn hình, thay toast mobile cũ (#popup-cart-mobile) + HUD CSS riêng. 100% Tailwind theo token.
+  Gọi từ mọi nơi thêm giỏ: window.pcCartAdded(line_item) — line_item (nếu có) hiện tên SP dưới chữ chính.
+  Tên cũ vẫn dùng được cho mã đang gọi: window.showShopeeCartAlert, window.AddCartMobile (đều trỏ về pcCartAdded).
+  Chữ: settings.cart_added_label (Cấu hình theme › Giỏ hàng). Tự tắt sau 1,6s; giảm chuyển động ⇒ không phóng to.
+  Nạp 1 lần / trang (đặt trong snippets/ajaxcart.bwt).
+{%- endcomment -%}
+<div id="pc-cart-added" class="group pointer-events-none fixed inset-0 z-[9998] flex items-center justify-center opacity-0 transition-opacity duration-200 data-[active=true]:opacity-100" role="status" aria-live="polite" aria-hidden="true">
+  <div class="flex w-[min(300px,86vw)] scale-90 flex-col items-center gap-3 rounded-2xl bg-slate-900/90 px-5 py-6 text-center text-white transition-transform duration-200 group-data-[active=true]:scale-100 motion-reduce:scale-100">
+    <span class="inline-flex h-[52px] w-[52px] items-center justify-center rounded-full bg-primary text-white" aria-hidden="true">{% include 'ui_icon', name: 'check', size: 28 %}</span>
+    <p class="m-0 text-base font-medium leading-snug">{{ settings.cart_added_label | default: 'Sản phẩm đã được thêm vào giỏ hàng' | escape }}</p>
+    <p class="m-0 max-w-full truncate text-xs text-white/80" data-cart-added-name></p>
+  </div>
+</div>
+<script>
+(function () {
+  var box = document.getElementById('pc-cart-added');
+  if (!box) return;
+  var timer = null;
+  window.pcCartAdded = function (item) {
+    var name = box.querySelector('[data-cart-added-name]');
+    if (name) name.textContent = (item && item.title) ? item.title : '';
+    box.setAttribute('data-active', 'true');
+    box.setAttribute('aria-hidden', 'false');
+    clearTimeout(timer);
+    timer = setTimeout(function () { box.removeAttribute('data-active'); box.setAttribute('aria-hidden', 'true'); }, 1600);
+  };
+  window.showShopeeCartAlert = window.pcCartAdded;
+  window.AddCartMobile = window.pcCartAdded;
+})();
+</script>

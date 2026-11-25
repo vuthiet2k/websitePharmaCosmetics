@@ -1,10 +1,26 @@
 {%- comment -%}
   snippets/ui_trust_badges.bwt — Khối 4 cam kết thương hiệu dùng chung (SSOT).
-  Áp dụng đồng bộ cho: Trang chủ (section_portal_split), Trang chi tiết sản phẩm (product.bwt), và Trang danh mục (collection_hero).
-  Layout: dạng thẻ tròn bo tròn nền trắng, icon FontAwesome/ui_icon, tiêu đề đậm + mô tả phụ (chuẩn theo collection_hero).
+
+  Tham số:
+    cols  (chuỗi class Tailwind, tuỳ chọn) — class lưới cột của <ul>.
+          Mặc định: 'grid-cols-2 lg:grid-cols-4'.
+          Lưu ý: biến include có thể lọt từ phạm vi cha (DotLiquid) — nơi cần cột khác mặc định
+          phải truyền rõ `cols:`, nơi dùng mặc định thì không đặt biến `cols` ở phạm vi cha.
+
+  Nơi include (kiểm 20/11/2026, T2 SPEC-TEAM-TRIAL-01):
+    - templates/cart.bwt           — truyền cols: 'grid-cols-2' (23/11/2026: 2 cột mọi màn hình — mobile không xếp mỗi mục 1 hàng)
+    - templates/product.bwt        — mặc định
+    - snippets/collection_hero.bwt — mặc định
+    - snippets/section_portal_split.bwt — mặc định (trang chủ)
+    - snippets/page_thuong_hieu.bwt — mặc định (không truyền cols)
+
+  Nguồn chữ mỗi cam kết N (1–4): settings.collection_hero_usp_N_title/desc
+    -> fallback settings.home_trust_N_title/desc -> chuỗi default trong file.
+  Icon: chỉ dùng snippet ui_icon (shield-check, message-circle, truck, gift).
+  Layout: thẻ tròn nền trắng, icon + tiêu đề đậm + mô tả phụ (chuẩn collection_hero).
 {%- endcomment -%}
 {%- assign pc_tb_cols = cols | default: 'grid-cols-2 lg:grid-cols-4' -%}
-<ul class="pc-trust-badges m-0 p-0 list-none grid {{ pc_tb_cols }} gap-4 sm:gap-6">
+<ul class="m-0 p-0 list-none grid {{ pc_tb_cols }} gap-4 sm:gap-6">
   <li class="flex items-center gap-2.5 sm:gap-3">
     <span class="inline-flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-white text-primary border border-line-soft" aria-hidden="true">
       {% include 'ui_icon', name: 'shield-check', size: 18 %}

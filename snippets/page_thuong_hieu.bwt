@@ -1,0 +1,351 @@
+{%- comment -%}
+  snippets/page_thuong_hieu.bwt (19/11/2026) — Khối nội dung hiển thị toàn bộ thương hiệu từ menu Sapo.
+  Thiết kế theo chuẩn Shopee Mall: Header cam kết, Cột trái banner ưu đãi, Cột phải lưới 2 hàng x 4 cột có phân trang mượt mà.
+  QUY ƯỚC: 100% class Tailwind (assets/pc-ui.css) — KHÔNG class CSS tự đặt, không inline style attribute, không thẻ style.
+  Dữ liệu lấy động từ menu thương hiệu của Sapo (`settings.all_brands_menu` | default: 'thuong-hieu') và object collection của từng thương hiệu.
+{%- endcomment -%}
+{%- comment -%} 23/11/2026: menu thương hiệu trên Sapo có alias 'thuong-hieu-san-pham' (chủ dự án) — mặc định ưu tiên alias này, không có thì lùi về 'thuong-hieu'. {%- endcomment -%}
+{%- assign pc_brands_menu_handle = settings.all_brands_menu | default: 'thuong-hieu-san-pham' -%}
+{%- assign pc_brands_ll = linklists[pc_brands_menu_handle] -%}
+{%- if pc_brands_ll == blank or pc_brands_ll.links.size == 0 -%}
+  {%- assign pc_brands_ll = linklists['thuong-hieu'] -%}
+{%- endif -%}
+{%- if pc_brands_ll == blank or pc_brands_ll.links.size == 0 -%}
+  {%- assign pc_brands_ll = linklists[settings.home_brand_menu] -%}
+{%- endif -%}
+
+{%- assign pc_brands_eyebrow = settings.all_brands_eyebrow | default: 'PHARMA MALL' -%}
+{%- assign pc_brands_title = page.title | default: settings.all_brands_title | default: 'Tất cả thương hiệu' -%}
+{%- assign pc_brands_desc = settings.all_brands_subtitle | default: 'Danh sách toàn bộ các thương hiệu dược mỹ phẩm phân phối chính hãng tại Pharma Cosmetics.' -%}
+{%- assign pc_brands_search_ph = settings.all_brands_search_placeholder | default: 'Tìm kiếm tên thương hiệu...' -%}
+{%- assign pc_brands_empty = settings.all_brands_empty_text | default: 'Không tìm thấy thương hiệu phù hợp.' -%}
+
+{% include 'breadcrumb' %}
+
+<main class="bg-surface-page font-sans text-ink" id="main">
+  <div class="container py-6 lg:py-8">
+    
+    {%- comment -%} 1. Thanh tiêu đề & dải cam kết thương hiệu (đồng bộ ui_trust_badges) {%- endcomment -%}
+    <section class="mb-5 rounded-2xl border border-solid border-line-soft bg-white p-4 lg:p-6 shadow-sm" aria-labelledby="all-brands-heading">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div class="min-w-0">
+          <div>
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-sale-tint px-3 py-1 font-heading text-xs font-bold uppercase tracking-wider text-sale">
+              <i class="inline-flex leading-none text-sale" aria-hidden="true">{% include 'ui_icon', name: 'star', size: 'em' %}</i>
+              {{ pc_brands_eyebrow | escape }}
+            </span>
+          </div>
+          <div class="mt-2.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h1 class="m-0 font-heading text-2xl font-bold text-brand-deep lg:text-3xl" id="all-brands-heading">{{ pc_brands_title | escape }}</h1>
+            {%- if pc_brands_ll.links.size > 0 -%}
+            <span class="text-sm font-semibold text-ink-muted" data-brand-total>({{ pc_brands_ll.links.size }} thương hiệu)</span>
+            {%- endif -%}
+          </div>
+          {%- if pc_brands_desc != blank -%}
+          <p class="m-0 mt-1 max-w-3xl text-xs text-ink-secondary sm:text-sm">{{ pc_brands_desc | escape }}</p>
+          {%- endif -%}
+        </div>
+
+        {%- comment -%} 2. Ô tìm kiếm thương hiệu tức thời {%- endcomment -%}
+        <div class="w-full shrink-0 lg:w-80">
+          <label class="sr-only" for="pc-brand-search-input">{{ pc_brands_search_ph | escape }}</label>
+          <div class="relative flex items-center">
+            <span class="pointer-events-none absolute left-3.5 inline-flex items-center justify-center text-ink-muted" aria-hidden="true">
+              {% include 'ui_icon', name: 'search', size: 18 %}
+            </span>
+            <input
+              id="pc-brand-search-input"
+              type="search"
+              autocomplete="off"
+              placeholder="{{ pc_brands_search_ph | escape }}"
+              class="box-border h-11 w-full rounded-full border border-solid border-line bg-surface-page !pl-12 !pr-12 text-sm text-ink placeholder-slate-400 focus:border-primary focus:bg-white focus:outline-none transition-colors [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+              data-brand-search
+            >
+            <button
+              type="button"
+              class="absolute right-0.5 inline-flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-ink-muted hover:bg-brand-tint hover:text-brand-deep transition-colors"
+              aria-label="Xóa từ khóa tìm kiếm"
+              data-brand-search-clear
+              hidden
+            >
+              {% include 'ui_icon', name: 'x', size: 18 %}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-5 border-0 border-t border-solid border-line-soft pt-4">
+        {% include 'ui_trust_badges' %}
+      </div>
+    </section>
+
+    {%- comment -%} 4. Khu vực chính: Cột trái Banner Deal + Cột phải Lưới 2 hàng x 4 cột có phân trang {%- endcomment -%}
+    {%- if pc_brands_ll.links.size > 0 -%}
+    <section class="rounded-2xl border border-solid border-line-soft bg-white p-4 lg:p-6 shadow-sm" aria-label="Danh sách thương hiệu đối tác">
+      
+      {%- comment -%} Thanh tiêu đề khối Mall {%- endcomment -%}
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-2 border-0 border-b border-solid border-line-soft pb-3">
+        <div class="flex items-center gap-2">
+          <h2 class="m-0 font-heading text-base font-bold uppercase tracking-wide text-brand-deep lg:text-lg">THƯƠNG HIỆU ĐỐI TÁC CHÍNH HÃNG</h2>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-xs font-semibold text-ink-muted" data-brand-page-indicator>Trang 1 / 29</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-stretch">
+        
+        {%- comment -%} Cột phải: Lưới 2 hàng x 4 cột kèm mũi tên chuyển trang và thanh phân trang số (chiếm 8/12 cột desktop) {%- endcomment -%}
+        <div class="lg:col-span-12 flex flex-col justify-between relative">
+          
+          <div class="relative flex-1">
+            {%- comment -%} Nút mũi tên lật trang Trước (Tròn, nổi mép trái) {%- endcomment -%}
+            <button
+              type="button"
+              data-brand-prev
+              class="absolute -left-3.5 top-1/2 -translate-y-1/2 z-20 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-solid border-line-soft bg-white text-ink shadow-lg transition-transform hover:scale-110 disabled:opacity-30 disabled:pointer-events-none"
+              aria-label="Trang thương hiệu trước"
+            >
+              <i class="inline-flex leading-none text-ink" aria-hidden="true">{% include 'ui_icon', name: 'chevron-left', size: 20 %}</i>
+            </button>
+
+            {%- comment -%} Lưới thương hiệu hiển thị 8 thẻ / trang (2 hàng x 4 cột desktop, 2 hàng x 2 cột mobile) {%- endcomment -%}
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 h-full" data-brand-grid>
+              {%- for link in pc_brands_ll.links -%}
+                {%- assign b_col = link.object -%}
+                {%- assign b_img = b_col.image.src | default: b_col.featured_image.src -%}
+                {%- assign b_title = link.title | strip -%}
+                {%- assign b_first = b_title | upcase | slice: 0, 1 -%}
+                {%- assign b_count = b_col.products_count | plus: 0 -%}
+                
+
+                <a
+                  href="{{ link.url | escape }}"
+                  title="{{ b_title | escape }}"
+                  data-brand-card
+                  data-brand-name="{{ b_title | downcase | escape }}"
+                  data-brand-char="{{ b_first | escape }}"
+                  class="group flex flex-col justify-between items-center overflow-hidden rounded-xl border border-solid border-line-soft bg-white p-3 text-center no-underline transition-all duration-200 hover:border-primary hover:shadow-md"
+                >
+                  {%- comment -%} Ảnh thương hiệu / sản phẩm đại diện {%- endcomment -%}
+                  <div class="relative flex h-24 sm:h-28 w-full items-center justify-center overflow-hidden rounded-lg bg-surface-soft/60 p-2">
+                    {%- if b_img != blank -%}
+                    <img
+                      src="{{ b_img | img_url: 'medium' }}"
+                      alt="{{ b_title | escape }}"
+                      width="140"
+                      height="100"
+                      loading="lazy"
+                      class="block max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
+                    >
+                    {%- else -%}
+                    <span class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-brand-tint font-heading text-lg font-bold text-brand-deep">{{ b_first }}</span>
+                    {%- endif -%}
+                  </div>
+
+                  {%- comment -%} Logo Pill bo tròn chính giữa {%- endcomment -%}
+                  <div class="mt-2.5 w-full flex justify-center">
+                    <span class="inline-flex max-w-[95%] items-center justify-center rounded-full border border-solid border-line-soft bg-white px-3 py-1 text-xs font-bold uppercase tracking-wide text-brand-deep shadow-sm transition-colors group-hover:border-primary group-hover:bg-brand-tint">
+                      <span class="truncate">{{ b_title | escape }}</span>
+                    </span>
+                  </div>
+
+                  {%- comment -%} T-17: Bỏ nhãn deal ảo, chỉ hiển thị số sản phẩm thật (b_count) {%- endcomment -%}
+                <div class="mt-2 text-center">
+                  {%- if b_count > 0 -%}
+                  <span class="block text-xs font-medium text-ink-muted">{{ b_count }} sản phẩm</span>
+                  {%- endif -%}
+                </div>
+                </a>
+              {%- endfor -%}
+            </div>
+
+            {%- comment -%} Nút mũi tên lật trang Sau (Tròn, nổi mép phải) {%- endcomment -%}
+            <button
+              type="button"
+              data-brand-next
+              class="absolute -right-3.5 top-1/2 -translate-y-1/2 z-20 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-solid border-line-soft bg-white text-ink shadow-lg transition-transform hover:scale-110 disabled:opacity-30 disabled:pointer-events-none"
+              aria-label="Trang thương hiệu sau"
+            >
+              <i class="inline-flex leading-none text-ink" aria-hidden="true">{% include 'ui_icon', name: 'chevron-right', size: 20 %}</i>
+            </button>
+          </div>
+
+          {%- comment -%} 5. Thanh điều khiển phân trang số trang (1, 2, 3... 29) {%- endcomment -%}
+          {%- comment -%} 20/11/2026: dùng chung ui_pagination (chế độ js) — bỏ mẫu nút tròn « Trước / Sau » tự dựng. {%- endcomment -%}
+          <div class="mt-5 pt-3 border-0 border-t border-solid border-line-soft" data-brand-pagination-wrap>
+            {% include 'ui_pagination', pg_mode: 'js', pg_id: 'brand-pagination', pg_label: 'Phân trang thương hiệu' %}
+          </div>
+
+          {%- comment -%} Trạng thái rỗng khi tìm kiếm / lọc không khớp {%- endcomment -%}
+          <div class="rounded-2xl border border-solid border-line-soft bg-surface-soft/40 px-4 py-12 text-center" data-brand-empty hidden>
+            <p class="m-0 text-base font-semibold text-ink">{{ pc_brands_empty | escape }}</p>
+            <button
+              type="button"
+              class="mt-4 inline-flex min-h-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-btn px-6 text-sm font-semibold text-btn-text transition-colors hover:bg-btn-hover"
+              data-brand-reset
+            >Xem tất cả thương hiệu</button>
+          </div>
+
+        </div>
+      </div>
+    </section>
+    {%- else -%}
+    <section class="rounded-2xl border border-solid border-line-soft bg-white px-4 py-12 text-center">
+      <p class="m-0 text-sm text-ink-muted">Danh sách thương hiệu đang được cập nhật.</p>
+    </section>
+    {%- endif -%}
+
+    {%- if page.content != blank -%}
+    <section class="mt-8 rounded-2xl border border-solid border-line-soft bg-white p-4 lg:p-6">
+      <div class="rte text-sm leading-relaxed text-ink-secondary">
+        {{ page.content }}
+      </div>
+    </section>
+    {%- endif -%}
+  </div>
+</main>
+
+<script>
+(function () {
+  var PAGE_SIZE = 8; // 2 hàng x 4 cột theo đúng layout mẫu Shopee Mall
+  var currentPage = 1;
+  var searchQuery = '';
+
+  var searchInput = document.querySelector('[data-brand-search]');
+  var clearBtn = document.querySelector('[data-brand-search-clear]');
+  var grid = document.querySelector('[data-brand-grid]');
+  var emptyBox = document.querySelector('[data-brand-empty]');
+  var resetBtn = document.querySelector('[data-brand-reset]');
+  var totalEl = document.querySelector('[data-brand-total]');
+  var pageIndicator = document.querySelector('[data-brand-page-indicator]');
+  var prevBtn = document.querySelector('[data-brand-prev]');
+  var nextBtn = document.querySelector('[data-brand-next]');
+  var paginationBox = document.getElementById('brand-pagination');
+
+  if (!grid) return;
+
+  var cards = Array.prototype.slice.call(grid.querySelectorAll('[data-brand-card]'));
+
+  function foldVi(str) {
+    return String(str || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .trim();
+  }
+
+  function getMatchingCards() {
+    var q = foldVi(searchQuery);
+    return cards.filter(function (card) {
+      var name = foldVi(card.getAttribute('data-brand-name'));
+      return !q || name.indexOf(q) !== -1;
+    });
+  }
+
+  /* 20/11/2026: thanh số trang vẽ bằng PcPagination (ui_pagination chế độ js) — giao diện chung toàn site. */
+  function renderPagination(totalPages) {
+    if (!paginationBox || !window.PcPagination) return;
+    window.PcPagination.render(paginationBox, totalPages, currentPage, goToPage);
+    var wrap = paginationBox.closest('[data-brand-pagination-wrap]');
+    if (wrap) wrap.hidden = totalPages <= 1;
+  }
+
+  function goToPage(page) {
+    var matching = getMatchingCards();
+    var totalPages = Math.ceil(matching.length / PAGE_SIZE) || 1;
+    if (page < 1) page = 1;
+    if (page > totalPages) page = totalPages;
+    currentPage = page;
+    render();
+  }
+
+  function render() {
+    var matching = getMatchingCards();
+    var totalPages = Math.ceil(matching.length / PAGE_SIZE) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    var startIdx = (currentPage - 1) * PAGE_SIZE;
+    var endIdx = startIdx + PAGE_SIZE;
+
+    // Ẩn tất cả thẻ
+    cards.forEach(function (card) {
+      card.hidden = true;
+    });
+
+    // Hiện các thẻ của trang hiện tại
+    matching.slice(startIdx, endIdx).forEach(function (card) {
+      card.hidden = false;
+    });
+
+    // Cập nhật trạng thái rỗng
+    var hasResults = matching.length > 0;
+    if (emptyBox) emptyBox.hidden = hasResults;
+    grid.hidden = !hasResults;
+
+    // Cập nhật chỉ số
+    if (totalEl) totalEl.textContent = '(' + matching.length + ' thương hiệu)';
+    if (pageIndicator) pageIndicator.textContent = 'Trang ' + currentPage + ' / ' + totalPages;
+
+    // Cập nhật nút lật trang nhanh
+    if (prevBtn) {
+      prevBtn.disabled = currentPage <= 1 || !hasResults;
+      prevBtn.hidden = !hasResults || totalPages <= 1;
+    }
+    if (nextBtn) {
+      nextBtn.disabled = currentPage >= totalPages || !hasResults;
+      nextBtn.hidden = !hasResults || totalPages <= 1;
+    }
+
+    renderPagination(totalPages);
+  }
+
+  // Sự kiện tìm kiếm
+  if (searchInput) {
+    searchInput.addEventListener('input', function () {
+      searchQuery = searchInput.value;
+      if (clearBtn) clearBtn.hidden = !searchQuery;
+      currentPage = 1;
+      render();
+    });
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function () {
+      searchInput.value = '';
+      searchQuery = '';
+      clearBtn.hidden = true;
+      currentPage = 1;
+      render();
+      searchInput.focus();
+    });
+  }
+
+  // Nút lật trang trái/phải
+  if (prevBtn) {
+    prevBtn.addEventListener('click', function () {
+      goToPage(currentPage - 1);
+    });
+  }
+  if (nextBtn) {
+    nextBtn.addEventListener('click', function () {
+      goToPage(currentPage + 1);
+    });
+  }
+
+  // Nút reset khi rỗng
+  if (resetBtn) {
+    resetBtn.addEventListener('click', function () {
+      if (searchInput) searchInput.value = '';
+      searchQuery = '';
+      if (clearBtn) clearBtn.hidden = true;
+      currentPage = 1;
+      render();
+    });
+  }
+
+  // Khởi động trang đầu tiên
+  render();
+})();
+</script>

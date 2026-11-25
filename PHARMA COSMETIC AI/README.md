@@ -1,0 +1,64 @@
+# Pharma Cosmetics AI — API tra cứu (bản chạy được trên nền tảng miễn phí)
+
+API nhỏ (FastAPI) giúp khách hỏi nhanh: **địa chỉ / hotline / giờ mở cửa**, **sản phẩm** và **bài viết** liên quan tới tình trạng da.
+Nó tìm trong dữ liệu thật của website bằng BM25 và trả về đường dẫn thật. **Không dùng LLM, không GPU, không cơ sở dữ liệu.**
+
+## Nó làm gì / không làm gì
+- Làm: tìm không phân biệt dấu (`mun an` = `mụn ẩn`), trả địa chỉ/hotline/giờ mở cửa lấy từ cấu hình website, gợi ý tối đa 3 sản phẩm + 2 bài viết.
+- Thứ tự nhận diện ý định (24/11/2026, SPEC-AI-CHAT-TONE-01; Python và Worker giống hệt từng ký tự): **cảnh báo đỏ** `red` (mang thai/cho con bú, sưng, rát, nổi mẩn, mề đay, khó thở… ⇒ không gợi ý SP, khuyên ngừng sản phẩm, liên hệ Chuyên gia/cơ sở y tế, `needs_contact`) → `claim` (hỏi cam kết «chữa khỏi / dứt điểm / bao lâu thì hết» ⇒ không cam kết, mời đặt lịch Chuyên gia) → `book` (đặt lịch, hỏi Chuyên gia/dược sĩ) → `skin` (soi da/quiz) → `callback` (khách gửi SĐT/email hoặc xin gọi lại ⇒ báo đã ẩn thông tin, KHÔNG hứa gọi lại, chỉ hotline/Zalo) → `faq` (giao hàng, COD, thanh toán, đổi trả, chính hãng, còn hàng ⇒ hotline/Zalo + mục Chính sách, không bịa chính sách) → `price` (hỏi giá không kèm tên SP ⇒ hỏi lại, không báo số tiền) → `store` (địa chỉ, giờ/ngày mở cửa, SĐT shop) → `bye` → `thanks` → `ack` («ok», «ừ», «dạ vâng») → `vent` (than phiền «da xấu quá» ⇒ đồng cảm + mời mô tả/soi da) → `greet`/`help` (chào lần đầu kèm menu; chào lần sau trong phiên không lặp menu) → `product` (có từ khoá thật + có SP/bài viết khớp tiêu đề) → `nomatch` (không khớp gì ⇒ gợi ý cách mô tả + mời liên hệ Chuyên gia, `needs_contact`); `blocked` = câu trả lời bị chặn bởi kiểm tra phát ngôn. Câu chào/«bye»/«cảm ơn» chỉ là ý định xã giao khi KHÔNG còn từ khoá thật (câu chào kèm «mụn ẩn» vẫn ra `product`).
+- Giọng điệu: xưng «em – bạn», mọi câu trả lời mở bằng «Dạ», chuỗi cố định (không random), không emoji, không «Bác sĩ». Câu «Thông tin chỉ mang tính tham khảo…» chỉ gắn khi có SP/bài viết hoặc ý định sức khoẻ (`red, skin, claim, nomatch, blocked`). Không bao giờ gợi ý SP có «kê đơn» trong tiêu đề.
+- Response có thêm trường `intent` (một trong: `red, claim, book, skin, callback, faq, price, store, bye, thanks, ack, greet, help, vent, product, nomatch, blocked`); các trường cũ giữ nguyên. Lịch sử hội thoại: chỉ đọc tin `assistant` để biết đã gửi menu chưa.
+- Ngưỡng liên quan: chỉ giữ SP/bài viết có **tiêu đề chứa ≥1 từ khoá thật** của câu hỏi (bỏ từ đệm, từ mua bán, danh xưng «bác sĩ / dược sĩ / chuyên gia / tư vấn viên», thứ/ngày trong tuần, «gọi lại/gọi điện», nhãn `[SĐT đã ẩn]`); không còn gì ⇒ `needs_contact=true`.
+- Không làm: **không báo giá, tồn kho, khuyến mại** (đổi theo thời gian, chỉ dẫn vào trang sản phẩm); không tạo đơn; không chẩn đoán; không tư vấn phác đồ — việc này do Chuyên gia thực hiện.
+- Câu «Thông tin chỉ mang tính tham khảo…» chỉ kèm khi có SP/bài viết hoặc ý định sức khoẻ (`red, skin, claim, nomatch, blocked`); câu xã giao, cửa hàng, FAQ, báo giá, gọi lại, đặt lịch không kèm (AC-02.10).
+
+## Cấu trúc
+```
+app/main.py         API (/, /healthz, POST /api/v1/chat) + CORS + rate limit
+app/hybrid_rag.py   BM25 + chuẩn hoá tiếng Việt
+app/guardrails.py   che SĐT/email/CMND-CCCD, chặn phát ngôn y khoa vi phạm
+app/config.py       biến môi trường
+data/               knowledge_base.json + store_info.json (SINH RA từ website — xem bên dưới)
+scripts/sync_data.py  đồng bộ dữ liệu từ website
+tests/              pytest (24 test) + scenarios.json (123 kịch bản dùng chung với Worker) + golden_replies.json (response vàng sinh từ Python: UPDATE_GOLDEN=1 pytest -k golden)
+Dockerfile          ảnh nhỏ, chạy user thường, đọc cổng từ biến PORT
+```
+
+## Chạy thử
+```bash
+python -m venv .venv && . .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements-dev.txt
+python scripts/sync_data.py                          # chạy khi nội dung website đổi, rồi commit 2 file trong data/
+APP_ENV=development uvicorn app.main:app --reload    # /docs chỉ mở khi APP_ENV=development
+pytest -q tests
+(cd cloudflare && node test/parity.test.mjs)    # Worker phải khớp bản Python + file vàng
+```
+
+## Biến môi trường (xem `.env.example`)
+| Biến | Ý nghĩa | Mặc định |
+|---|---|---|
+| `ALLOWED_ORIGINS` | Domain được gọi API (CSV). **Bắt buộc đặt đúng domain website khi deploy**; trống = chặn mọi domain khác | trống |
+| `RATE_LIMIT_PER_MIN` | Số yêu cầu / phút / IP | 20 |
+| `TRUST_PROXY` | `true` khi chạy sau proxy của nền tảng để lấy đúng IP khách | false |
+| `MAX_CHARS` / `MAX_MESSAGES` | Giới hạn độ dài câu hỏi / số tin | 500 / 20 |
+| `APP_ENV` | `production` tắt `/docs` | production |
+
+## Deploy miễn phí trên Cloudflare Workers (khuyên dùng — không cần máy chủ, không cần thẻ)
+Thư mục [`cloudflare/`](./cloudflare/) là bản port cùng hành vi sang Cloudflare Workers (JavaScript). Gói miễn phí giới hạn **100.000 yêu cầu/ngày** và **~10ms CPU/lần gọi**, nên chỉ mục BM25 được **tính sẵn** (`python scripts/build_cf_index.py`) thay vì dựng lúc chạy.
+- Hướng dẫn cài từng bước (viết để giao cho Claude trong Chrome làm giúp): [`cloudflare/HUONG-DAN-CAI-DAT-CLOUDFLARE.md`](./cloudflare/HUONG-DAN-CAI-DAT-CLOUDFLARE.md)
+- Kiểm thử: `cd cloudflare && node test/parity.test.mjs` (so khớp điểm với bản Python + kiểm hành vi API)
+- Khi nội dung website đổi: `python scripts/sync_data.py && python scripts/build_cf_index.py`, commit `data/` và `cloudflare/` rồi push — Cloudflare tự triển khai lại.
+
+## Deploy miễn phí bằng Docker (Python)
+Ảnh Docker chỉ cần ~100MB RAM, phù hợp các gói miễn phí hỗ trợ Docker hoặc Python (Hugging Face Spaces, Render, Cloud Run...). Điều kiện miễn phí của từng nền tảng hay đổi — kiểm tra lại trước khi chọn.
+1. Chạy `python scripts/sync_data.py`, commit `data/knowledge_base.json` và `data/store_info.json`.
+2. Đặt biến môi trường: `ALLOWED_ORIGINS=https://<domain website>`, `TRUST_PROXY=true`.
+3. Lưu ý gói miễn phí thường **ngủ khi không có khách**: lần gọi đầu có thể chậm hàng chục giây — widget chat nên hiển thị trạng thái «đang kết nối».
+4. Dữ liệu chạy trên máy chủ của bên thứ ba: **không còn là «on-premise»**. Chỉ lưu thông tin công khai của website; câu hỏi khách được che SĐT/email/CMND trước khi xử lý và **không bị ghi log**. Cập nhật chính sách bảo mật của website cho khớp.
+
+## Gọi từ website
+`POST {API}/api/v1/chat` với `{"messages":[{"role":"user","content":"..."}]}` → `{reply, related_products, related_articles, store_info}`.
+Theme đã gọi API này: `templates/page.chat.bwt` (nhúng iframe qua `snippets/ai_chat.bwt`) đọc địa chỉ từ cấu hình theme `ai_chat_api_url`, bật/tắt bằng `ai_chat_enable`.
+
+## Hướng phát triển (chưa làm)
+Nếu muốn câu trả lời tự nhiên bằng LLM: dùng API của nhà cung cấp, có đánh giá pháp lý riêng (chuyển dữ liệu ra ngoài, Nghị định 13/2023). Tài liệu nghiên cứu phương án máy chủ riêng nằm ở `docs/NGHIEN-CUU-TRIEN-KHAI-AI-CUC-BO.md` — đó là nghiên cứu, **không phải hiện trạng**.

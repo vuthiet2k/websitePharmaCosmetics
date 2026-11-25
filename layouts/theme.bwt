@@ -3,12 +3,8 @@
 	<head>
 		{% include 'router' %}
         {%- assign is_skinhealthy_content = false -%}
-        {%- assign is_skinhealthy_cart = false -%}
-        {%- if template contains 'indexskinhealthy' or template contains 'page.skinhealthy-services' or template contains 'collection.skinhealthy' or template contains 'page.skinhealthy-service-detail' -%}
+        {%- if template contains 'indexskinhealthy' -%}
           {%- assign is_skinhealthy_content = true -%}
-        {%- endif -%}
-        {%- if template contains 'indexskinhealthy' or template contains 'page.skinhealthy-services' or template contains 'collection.skinhealthy' -%}
-          {%- assign is_skinhealthy_cart = true -%}
         {%- endif -%}
 		<meta charset="UTF-8" />
 		{%- if settings.ga_id != blank -%}
@@ -45,7 +41,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 		{% if template contains 'mops-admin' %}<meta name="robots" content="noindex,nofollow" />{% else %}<meta name="robots" content="noodp,index,follow" />{% endif %}
 		{% if current_page != 1 %}<meta name="description" content="{{ page_description }} | Trang {{ current_page }}">{% else %}<meta name="description" content="{{ page_description }}">{% endif %}
-		<title>{%if page_title == 'All'%}Tất cả sản phẩm{%else%}{{ page_title }}{%endif%}{% if current_tags %} tagged "{{ current_tags | join: ', ' }}"{% endif %}{% if current_page != 1 %} - Trang {{ current_page }}{% endif %}{% if settings.seo_title_suffix != blank %} {{ settings.seo_title_suffix | strip | escape }}{% endif %}		</title>
+		<title>{%if page_title == 'All'%}Tất cả sản phẩm{%else%}{{ page_title }}{%endif%}{% if current_tags.size > 0 %} tagged "{{ current_tags | join: ', ' }}"{% endif %}{% if current_page != 1 %} - Trang {{ current_page }}{% endif %}{% if settings.seo_title_suffix != blank %} {{ settings.seo_title_suffix | strip | escape }}{% endif %}		</title>
 		{%if template contains 'index' and is_skinhealthy_content == false%}{%if settings.home_page_keywords != '' and settings.home_page_keywords != null%}<meta name="keywords" content="{{settings.home_page_keywords}}"/>{%else%}<meta name="keywords" content="{{store.name}}, {{store.domain}}"/>{%endif%}{%elsif template contains 'product'%}<meta name="keywords" content="{{product.name}}, {%for collection in product.collections%}{{collection.name}}, {%endfor%}{%if product.tags.size > 0%}{% for tag in product.tags %}{{tag}}, {%endfor%}{%endif%}{{store.name}}, {{store.domain}}"/>{%elsif template contains 'collection'%}<meta name="keywords" content="{{collection.name }}, {{store.name}}, {{store.domain}}"/>{%elsif template contains 'blog'%}<meta name="keywords" content="{{blog.name }}, {{store.name}}, {{store.domain}}"/>{%elsif template contains 'article'%}<meta name="keywords" content="{{article.title}}, {{blog.name}}, {%if article.tags.size > 0%}{% for tag in article.tags %}{{tag}}, {%endfor%}{%endif%} {{store.name}}, {{store.domain}}"/>{%else%}<meta name="keywords" content="{{page_title}}, {{store.name}}, {{store.domain}}"/>{%endif%}
 		{% include 'fb-open-graph-tags' %}
 		{%if settings.theme_favicon_enable%}<link rel="icon" href="{{ 'favicon.png' | asset_url }}" type="image/x-icon" />{%endif%}
@@ -93,6 +89,84 @@
 		  xám. Gắn cờ dataset để không lặp vô hạn nếu chính ảnh dự phòng cũng lỗi.
 		{%- endcomment -%}
 		<script>
+			{%- comment -%} 23/11/2026 (chủ dự án chốt): gợi ý tìm kiếm = THƯƠNG HIỆU / HOẠT CHẤT / DANH MỤC lấy từ các menu có sẵn của theme, khớp NGAY trên máy khách (không gọi mạng). Nguồn menu theo cấu hình; không có menu thì mục đó trống. {%- endcomment -%}
+			{%- assign _h = settings.home_brand_menu | default: 'thuong-hieu-san-pham' -%}
+			{%- assign pc_si_brand = linklists[_h] -%}
+			{%- if pc_si_brand == blank or pc_si_brand.links.size == 0 -%}{%- assign pc_si_brand = linklists['thuong-hieu'] -%}{%- endif -%}
+			{%- assign _h = settings.all_ing_menu | default: 'hoat-chat' -%}
+			{%- assign pc_si_ing = linklists[_h] -%}
+			{%- if pc_si_ing == blank or pc_si_ing.links.size == 0 -%}{%- assign pc_si_ing = linklists['mua-sam-theo-thanh-phan'] -%}{%- endif -%}
+			{%- if pc_si_ing == blank or pc_si_ing.links.size == 0 -%}{%- assign pc_si_ing = linklists['thanh-phan-hoat-chat'] -%}{%- endif -%}
+			{%- if pc_si_ing == blank or pc_si_ing.links.size == 0 -%}{%- assign pc_si_ing = linklists['hoat-chat-trang-chu'] -%}{%- endif -%}
+			{%- assign pc_si_cat1 = linklists[settings.footer_cate_group_1_menu] -%}
+			{%- assign pc_si_cat2 = linklists[settings.footer_cate_group_2_menu] -%}
+			{%- assign pc_si_cat3 = linklists[settings.footer_cate_group_3_menu] -%}
+			{%- capture pc_ic_search -%}{% include 'ui_icon', name: 'search', size: 16 %}{%- endcapture -%}
+			var PC_AI_ON = {% if settings.ai_chat_enable %}true{% else %}false{% endif %};
+			var PC_SI_L = { brand: {{ settings.search_label_brand | default: 'Thương hiệu' | json }}, ing: {{ settings.search_label_ing | default: 'Hoạt chất' | json }}, cat: {{ settings.search_label_cat | default: 'Danh mục' | json }}, all: {{ settings.search_label_all | default: 'Tìm “{q}” trong cửa hàng' | json }}, ai: {{ settings.search_label_ai | default: 'Hỏi trợ lý AI về “{q}”' | json }} };
+			var PC_SI_ICON = {{ pc_ic_search | strip_newlines | json }};
+			var PC_SEARCH_INDEX = [
+			{%- assign _f = true -%}
+			{%- for l in pc_si_brand.links -%}{%- unless _f -%},{%- endunless -%}{%- assign _f = false -%}{"t":{{ l.title | json }},"u":{{ l.url | json }},"k":"brand"}{%- endfor -%}
+			{%- for l in pc_si_ing.links -%}{%- unless _f -%},{%- endunless -%}{%- assign _f = false -%}{"t":{{ l.title | json }},"u":{{ l.url | json }},"k":"ing"}{%- endfor -%}
+			{%- for l in pc_si_cat1.links -%}{%- unless _f -%},{%- endunless -%}{%- assign _f = false -%}{"t":{{ l.title | json }},"u":{{ l.url | json }},"k":"cat"}{%- endfor -%}
+			{%- for l in pc_si_cat2.links -%}{%- unless _f -%},{%- endunless -%}{%- assign _f = false -%}{"t":{{ l.title | json }},"u":{{ l.url | json }},"k":"cat"}{%- endfor -%}
+			{%- for l in pc_si_cat3.links -%}{%- unless _f -%},{%- endunless -%}{%- assign _f = false -%}{"t":{{ l.title | json }},"u":{{ l.url | json }},"k":"cat"}{%- endfor -%}
+			];
+			(function () {
+				function fold(s) { return String(s || '').toLowerCase().replace(/đ/g, 'd').normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+				function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+				var seen = {};
+				var ITEMS = PC_SEARCH_INDEX.filter(function (it) { if (!it.t || !it.u || seen[it.u]) return false; seen[it.u] = 1; it.f = fold(it.t); return true; });
+				var CAP = { brand: 4, ing: 3, cat: 3 };
+				function highlight(title, qf) {
+					var f = fold(title), i = f.indexOf(qf);
+					if (i < 0 || title.length !== f.length) return esc(title);
+					return esc(title.slice(0, i)) + '<strong class="font-bold text-ink">' + esc(title.slice(i, i + qf.length)) + '</strong>' + esc(title.slice(i + qf.length));
+				}
+				function row(href, inner, label) {
+					return '<a href="' + esc(href) + '" class="pc-suggest-row flex min-h-[44px] items-center gap-3 border-0 border-b border-solid border-line-soft px-4 py-2 text-sm text-ink no-underline transition-colors hover:bg-surface-soft">'
+						+ '<span class="shrink-0 text-ink-muted" aria-hidden="true">' + PC_SI_ICON + '</span>'
+						+ '<span class="min-w-0 flex-1 truncate">' + inner + '</span>'
+						+ (label ? '<span class="shrink-0 rounded-full bg-brand-tint px-2 py-0.5 text-xs font-semibold text-primary-deep">' + esc(label) + '</span>' : '')
+						+ '</a>';
+				}
+				// Trả về HTML gợi ý cho từ khoá term. Có kết quả ⇒ danh sách + dòng «Tìm … trong cửa hàng»; không có ⇒ khối trống + nút hỏi AI (nếu bật chatbot).
+				window.pcSearchSuggest = function (term) {
+					var qf = fold(term).trim();
+					if (!qf) return '';
+					var toks = qf.split(/\s+/);
+					var hits = ITEMS.map(function (it) {
+						var ok = toks.every(function (t) { return it.f.indexOf(t) > -1; });
+						if (!ok) return null;
+						var score = it.f.indexOf(qf) === 0 ? 0 : (it.f.indexOf(' ' + qf) > -1 ? 1 : 2);
+						return { it: it, score: score };
+					}).filter(Boolean).sort(function (a, b) { return a.score - b.score || a.it.t.length - b.it.t.length; });
+					var out = '', counts = { brand: 0, ing: 0, cat: 0 }, n = 0;
+					hits.forEach(function (h) {
+						var k = h.it.k;
+						if (counts[k] >= CAP[k]) return;
+						counts[k]++; n++;
+						out += row(h.it.u, highlight(h.it.t, qf), PC_SI_L[k]);
+					});
+					var allRow = row('/search?q=' + encodeURIComponent(term) + '&type=product', esc(PC_SI_L.all.replace('{q}', term)), '');
+					if (n > 0) return '<div class="pc-suggest bg-white">' + out + allRow + '</div>';
+					// Không có gợi ý: dòng «Tìm …» + KHUNG TRỐNG DÙNG CHUNG (ui_search_empty: thông báo, nút hỏi trợ lý AI, chip từ khoá)
+					var empty = (typeof window.pcSearchEmptyHtml === 'function' && window.pcSearchEmptyHtml(term)) || '';
+					return '<div class="pc-suggest bg-white">' + allRow + empty + '</div>';
+				};
+				// Nút «Hỏi trợ lý AI»: mở khung chat (snippets/ai_chat.bwt) kèm câu hỏi
+				document.addEventListener('click', function (e) {
+					var b = e.target.closest && e.target.closest('[data-ai-ask]');
+					if (!b) return;
+					e.preventDefault();
+					// ô tìm kiếm mobile (z-index 9999) phủ trên khung chat ⇒ đóng trước khi mở chat
+					var mbClose = document.getElementById('mb-search-close'), mbBox = document.getElementById('mb-search-popup');
+					if (mbClose && mbBox && mbBox.classList.contains('is-active')) mbClose.click();
+					var q = b.getAttribute('data-ai-ask');
+					if (typeof window.pcAiChatAsk === 'function') window.pcAiChatAsk(q);
+				});
+			})();
 		window.addEventListener('error', function (e) {
 			var el = e.target;
 			if (!el || el.tagName !== 'IMG' || el.dataset.fallbackApplied) return;
@@ -180,8 +254,8 @@
 				var searchRecentList = localStorage.getItem('search_recent_list');
 				var recentList = searchRecentList ? JSON.parse(searchRecentList) : [];
 
-				if (recentList.length > 0) {
-					searchRecent.classList.remove('d-none');
+				if (searchRecent && recentList.length > 0) { // 23/11/2026: không có .search-recent ⇒ bỏ qua (tránh crash)
+					searchRecent && searchRecent.classList.remove('d-none');
 					var searchList = searchRecent.querySelector('.search-list');
 					// Chỉ hiển thị vài mục gần đây nhất (mới nhất lên đầu) cho gọn
 					var RECENT_SHOW = 5;
@@ -218,7 +292,7 @@
 								localStorage.setItem('search_recent_list', JSON.stringify(recentList));
 								searchList.removeChild(link);
 								if (recentList.length == 0) {
-									searchRecent.classList.toggle('d-none');
+									searchRecent && searchRecent.classList.toggle('d-none');
 								}
 							}
 						});
@@ -237,50 +311,19 @@
 						let data2 = '';
 						var resultbox2 = '';
 						if (term.length > 1) {
-							searchRecent.classList.add('d-none');
-							searchCoupon.classList.add('d-none');
-							searchSuggest.classList.add('d-none');
-							async function goawaySearch() {
-								data = await getItemSearch(term, 'smartjson');
-								data2 = await getItemSearch2(term, 'smartjsonar');
-								setTimeout(function () {
-									var sizeData = Object.keys(data).length;
-									var sizeData2 = Object.keys(data2).length;
-									if (sizeData > 0) {
-										resultbox +=`<div class="title-search"><span>Sản phẩm</span> <a href="/search?query=${term}&type=product" class="see-all-search" title="Xem tất cả">Xem tất cả »</a></div>`
-										Object.keys(data).forEach(function (key) {
-											if (data[key].compare_price != 0) {
-												resultbox += `<a class="product-smart" href="${data[key].url}" title="${data[key].name}"><div class="image_thumb"><img width="58" height="58" class="lazyload loaded" src="${data[key].image}" data-src="${data[key].image}" alt="${data[key].name}" data-was-processed="true"></div><div class="product-info"><h3 class="product-name"><span>${data[key].name}</span></h3><div class="price-box"><span class="price">${data[key].price}</span><span class="compare-price">${data[key].compare_price}</span></div></div></a>`;
-											} else {
-												resultbox += `<a class="product-smart" href="${data[key].url}" title="${data[key].name}"><div class="image_thumb"><img width="58" height="58" class="lazyload loaded" src="${data[key].image}" data-src="${data[key].image}" alt="${data[key].name}" data-was-processed="true"></div><div class="product-info"><h3 class="product-name"><span>${data[key].name}</span></h3><div class="price-box"><span class="price">${data[key].price}</span></div></div></a>`;
-											}
-										});
-										document.querySelector('.list-search').innerHTML = resultbox;
-									} else {
-										document.querySelector('.list-search').innerHTML = '<div class="title-search"><span>Sản phẩm</span></div><div class="not-pro">Không có thấy kết quả tìm kiếm</div>';
-									}
-									if(sizeData2 > 0 ) {
-										resultbox2 +=`<div class="title-search"><span>Tin tức</span> <a href="/search?query=${term}&type=article" class="see-all-search" title="Xem tất cả">Xem tất cả »</a></div></div>`
-										Object.keys(data2).forEach(function(key) {
-											if (data2[key].url == undefined){
-
-											}else{
-												resultbox2 += `<div class="art-smart"><a class="image_thumb" href="${data2[key].url}" title="${data2[key].name}"><img width="370" height="480" class="lazyload loaded" src="${data2[key].image}" data-src="${data2[key].image}" alt="${data2[key].name}" data-was-processed="true"></a><div class="product-info"><h3 class="product-name"><a href="${data2[key].url}" title="${data2[key].name}">${data2[key].name}</a></h3></div></div>`
-											}
-										});
-										document.querySelector('.list-search2').innerHTML = resultbox2;
-									} else {
-										document.querySelector('.list-search2').innerHTML = '<div class="title-search"><span>Tin tức</span></div><div class="not-pro">Không có thấy kết quả tìm kiếm</div>';
-									}
-								}, 200);
-							}
-
-							goawaySearch();
+							searchRecent && searchRecent.classList.add('d-none');
+							searchCoupon && searchCoupon.classList.add('d-none');
+							searchSuggest && searchSuggest.classList.add('d-none');
+							// 23/11/2026: KHÔNG gọi mạng — gợi ý thương hiệu / hoạt chất / danh mục khớp ngay trên máy khách (window.pcSearchSuggest, dựng ở đầu file).
+							var listEl = document.querySelector('.list-search');
+							if (listEl) listEl.innerHTML = (typeof window.pcSearchSuggest === 'function') ? window.pcSearchSuggest(term) : '';
+							var l2 = document.querySelector('.list-search2');
+							if (l2) l2.innerHTML = '';
 						} else {
-							searchCoupon.classList.remove('d-none');
-							searchSuggest.classList.remove('d-none');
-							if (recentList.length > 0) {
-								searchRecent.classList.remove('d-none');
+							searchCoupon && searchCoupon.classList.remove('d-none');
+							searchSuggest && searchSuggest.classList.remove('d-none');
+							if (searchRecent && recentList.length > 0) { // 23/11/2026: tắt header_search_recent ⇒ không có .search-recent (null) — trước đây làm crash cả ô tìm kiếm nhanh
+								searchRecent && searchRecent.classList.remove('d-none');
 							}
 							document.querySelector('.list-search').innerHTML = '';
 							document.querySelector('.list-search2').innerHTML = '';
@@ -305,7 +348,6 @@
 <script defer src="{{ 'home-hero.js' | asset_url }}"></script>
 <script defer src="{{ 'testimonial-swiper.js' | asset_url }}"></script>
 {% endif %}
-{% if is_skinhealthy_content %}{% include 'skinhealthy_content_style' %}{% endif %}
 {%- comment -%} D03 (UI-STANDARD B.5): thư viện pc-* nạp SAU mọi CSS cũ để class pc-* thắng khi trùng thứ tự. {%- endcomment -%}
 {%- comment -%} D05 (UI-STANDARD C.5): hành vi thư viện (popup, thông báo, slider, form) — JS thuần, defer, sau swiper.js. {%- endcomment -%}
 <script defer src="{{ 'pc-ui.js' | asset_url }}"></script>
@@ -320,7 +362,7 @@
 		<div class="bodywrap">
 			{% if is_skinhealthy_content %}<div class="pc-clinic-v3 pc-clinic-content"><main class="sh-main" id="sh-main">{% endif %}
             {{ content_for_layout }}
-			{% if is_skinhealthy_content %}</main>{% if is_skinhealthy_cart %}{% include 'skinhealthy_content_script' %}{% endif %}</div>{% endif %}
+			{% if is_skinhealthy_content %}</main></div>{% endif %}
 			<div id="js-global-alert" class="alert alert-success" role="alert">
 				<button type="button" class="close"><span aria-hidden="true"><span aria-hidden="true">&times;</span></span></button>
 				<h5 class="alert-heading"></h5>

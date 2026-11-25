@@ -218,25 +218,7 @@
       if (suggestSection) suggestSection.style.display = 'none';
     }
 
-    function buildProductHtml(item) {
-      var priceHtml = (item.compare_price && item.compare_price != 0)
-        ? '<div class="price-box"><span class="price">' + item.price + '</span><span class="compare-price">' + item.compare_price + '</span></div>'
-        : '<div class="price-box"><span class="price">' + item.price + '</span></div>';
-      return '<a class="product-smart" href="' + item.url + '">'
-        + '<div class="image_thumb"><img width="58" height="58" src="' + item.image + '" alt="' + item.name + '"></div>'
-        + '<div class="product-info"><h3 class="product-name"><span>' + item.name + '</span></h3>' + priceHtml + '</div>'
-        + '</a>';
-    }
-
-    function buildArticleHtml(item) {
-      if (!item.url) return '';
-      return '<div class="art-smart">'
-        + '<a class="image_thumb" href="' + item.url + '"><img width="58" height="58" src="' + item.image + '" alt="' + item.name + '"></a>'
-        + '<div class="product-info"><h3 class="product-name"><a href="' + item.url + '">' + item.name + '</a></h3></div>'
-        + '</div>';
-    }
-
-    if (input && smartSection && typeof getItemSearch === 'function') {
+    if (input && smartSection) {
       input.addEventListener('input', function () {
         clearTimeout(mbTimer);
         var term = (this.value || '').trim();
@@ -249,38 +231,12 @@
 
         hideContextSections();
 
+        // 23/11/2026 (chủ dự án chốt): KHÔNG gọi mạng — gợi ý thương hiệu / hoạt chất / danh mục khớp ngay trên máy khách (window.pcSearchSuggest, layouts/theme.bwt)
         mbTimer = setTimeout(function () {
-          var enc = encodeURIComponent(term);
-
-          getItemSearch(term, 'smartjson').then(function (data) {
-            var keys = Object.keys(data || {});
-            var html = '';
-            if (keys.length > 0) {
-              html = '<div class="title-search"><span>Sản phẩm</span>'
-                + '<a href="/search?query=' + enc + '&type=product" class="see-all-search">Xem tất cả »</a></div>';
-              keys.forEach(function (k) { html += buildProductHtml(data[k]); });
-            } else {
-              html = '<div class="title-search"><span>Sản phẩm</span></div>'
-                + '<div class="not-pro">Không tìm thấy kết quả</div>';
-            }
-            if (mbListSearch) mbListSearch.innerHTML = html;
-            if (smartSection) smartSection.hidden = false;
-          });
-
-          getItemSearch2(term, 'smartjsonar').then(function (data2) {
-            var keys2 = Object.keys(data2 || {});
-            var html2 = '';
-            if (keys2.length > 0) {
-              html2 = '<div class="title-search"><span>Tin tức</span>'
-                + '<a href="/search?query=' + enc + '&type=article" class="see-all-search">Xem tất cả »</a></div>';
-              keys2.forEach(function (k) { html2 += buildArticleHtml(data2[k]); });
-            } else {
-              html2 = '<div class="title-search"><span>Tin tức</span></div>'
-                + '<div class="not-pro">Không tìm thấy kết quả</div>';
-            }
-            if (mbListSearch2) mbListSearch2.innerHTML = html2;
-          });
-        }, 280);
+          if (mbListSearch) mbListSearch.innerHTML = (typeof window.pcSearchSuggest === 'function') ? window.pcSearchSuggest(term) : '';
+          if (mbListSearch2) mbListSearch2.innerHTML = '';
+          if (smartSection) smartSection.hidden = false;
+        }, 120);
       });
     }
     }

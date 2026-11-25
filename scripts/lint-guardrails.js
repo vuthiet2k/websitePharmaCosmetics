@@ -180,6 +180,43 @@ if (frameViolations.length && !process.argv.includes('--update-baseline')) {
   process.exit(1);
 }
 
+/* 20/11/2026 — chặn hồi quy CONTAINER-SSOT (UI-1.2). ec87393 dựng trên bản components.css cũ đã khôi phục khối
+   Bootstrap .container 540/720/960/1140px + hạ SSOT về :where() ⇒ thân trang lệch mép header/footer dưới 1200px
+   (fix gốc aa2ad90 bị mất). FAIL cứng nếu khối cũ quay lại, kể cả khi commit trên bản file cũ. */
+const containerViolations = [];
+for (const rel of ['ui-src/css/components.css', 'assets/pc-ui.css']) {
+  const file = path.join(rootDir, rel);
+  if (!fs.existsSync(file)) continue;
+  const css = fs.readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  if (!/\.pc-site-v3 \.container\s*\{/.test(css)) containerViolations.push(`${rel}: thiếu rule SSOT ".pc-site-v3 .container{…}" (độ ưu tiên 0,2,0)`);
+  if (/:where\(\.pc-site-v3\)\s*\.container/.test(css)) containerViolations.push(`${rel}: SSOT bị hạ về ":where(.pc-site-v3) .container" (0,1,0) — thua khối Bootstrap/global_core .container (540–1140px) nạp sau`);
+  // Các khối .container cũ (vendor bootstrap, global_core) chỉ có độ ưu tiên 0,1,0 nên vô hại khi SSOT giữ 0,2,0.
+}
+if (containerViolations.length && !process.argv.includes('--update-baseline')) {
+  console.error(`[lint:guardrails] FAIL — CONTAINER-SSOT bị hồi quy (.clinerules/01 2.1, UI-1.2; xem aa2ad90):`);
+  for (const v of containerViolations) console.error(`  ✗ ${v}`);
+  process.exit(1);
+}
+
+/* 20/11/2026 — phân trang dùng chung 1 mẫu (chủ dự án yêu cầu). Từng có 5 bản tự dựng (paginate-pages, collection-paginate-pages,
+   JS ở page_thuong_hieu / page_skinhealthy_services / blog.truoc-va-sau). Chỉ snippets/ui_pagination.bwt được đọc paginate.parts
+   hay in <nav aria-label="Phân trang…"> hoặc dựng nút số trang bằng JS (createPageBtn / « Trước / Sau » — page_hoat_chat chép bản cũ, 20/11); nơi khác include 'ui_pagination' (pg_mode link | ajax | js). MOPS admin là ngoại lệ. */
+const paginationViolations = [];
+for (const dir of ['snippets', 'templates', 'layouts']) {
+  for (const file of walk(path.join(rootDir, dir))) {
+    const rel = path.relative(rootDir, file).split(path.sep).join('/');
+    if (!/\.bwt$/i.test(rel) || /mops/i.test(rel) || rel === 'snippets/ui_pagination.bwt') continue;
+    stripComments(fs.readFileSync(file, 'utf8')).split(/\r?\n/).forEach((line, i) => {
+      if (/paginate\.parts|aria-label\s*=\s*["']Phân trang|createPageBtn|« Trước|Sau »/.test(line)) paginationViolations.push(`${rel}:${i + 1}  tự dựng phân trang — dùng {% include 'ui_pagination' %}`);
+    });
+  }
+}
+if (paginationViolations.length && !process.argv.includes('--update-baseline')) {
+  console.error(`[lint:guardrails] FAIL — ${paginationViolations.length} chỗ tự dựng phân trang (chỉ dùng snippets/ui_pagination.bwt):`);
+  for (const v of paginationViolations) console.error(`  ✗ ${v}`);
+  process.exit(1);
+}
+
 const current = collect();
 const totals = {};
 for (const metrics of Object.values(current)) {

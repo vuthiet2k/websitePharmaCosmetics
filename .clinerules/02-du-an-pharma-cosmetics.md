@@ -419,6 +419,22 @@ Dùng chung toàn trang: topbar (`site_topbar.bwt`, `header_topbar_*`), design t
   "bộ lọc giả chỉ ẩn card" như khảo sát cũ. Thêm 20/09/2026 (F03): token tăng dần chống request
   chồng ghi đè kết quả mới bằng kết quả cũ (gõ nhanh/bấm nhiều filter liên tiếp), và banner lỗi +
   nút "Thử lại" (`.afw-error`) khi AJAX fail — trước đây fail chỉ gỡ lặng `is-loading`, không báo gì.
+- **CHUẨN BỘ LỌC / SẮP XẾP SAPO (chốt 20/11/2026 — đối chiếu [hướng dẫn tìm kiếm Sapo](https://support.sapo.vn/huong-dan-su-dung-chuc-nang-tim-kiem-tren-website)
+  + mã theme demo chính thức `spa-1.mysapo.net`). Mọi tiêu chí nằm TRONG tham số `q` của `/search` (thư viện `assets/search_filter.js`
+  = `Bizweb.SearchFilter` gốc, không sửa), nối `AND`; giá trị trong 1 nhóm nối `OR`:**
+  - Trường Sapo: `name, price_min, alias, vendor, product_type, collections, tags, sku` (theme dùng thêm `product_type.filter_key`).
+    Markup: `data-group` (tên nhóm) · `data-field` · `value` dạng `("Retinol")` · `data-operator="OR"`; danh mục hiện tại =
+    `filter.addValue("collection","collections","{{ collection.id }}","AND")` (`footer_script.bwt`, chỉ khi `collection.id > 0`).
+  - **Giá:** nhóm `Khoảng giá`, trường `price_min`, giá trị `(>X AND <Y)` trong `q` (Sapo chỉ tài liệu hoá `>` `<`). CẤM gửi
+    `&price_min=`/`&price_max=` rời — Sapo bỏ qua (lỗi cũ: kéo thanh giá không lọc gì).
+  - **Sắp xếp:** ô chọn giữ `price-asc|price-desc|alpha-asc|alpha-desc|created-desc` (ghi `?sortby=` để F5 giữ) nhưng khi gọi
+    `/search` phải đổi sang `price_min:asc|desc`, `name:asc|desc`, `created_on:desc|asc` (`SAPO_SORT` trong `col.js.bwt`) và
+    tải bằng AJAX `doSearch(1)` — không tải lại trang với `sortby=price-asc` (Sapo không hiểu).
+  - **Trang tìm kiếm:** `q` = `từ khoá AND <tiêu chí>` — thiếu từ khoá thì chọn 1 tiêu chí là ra kết quả cả cửa hàng.
+    Trang search không có object `collection` ⇒ nhóm Loại SP / Thương hiệu (`collection.all_types/all_vendors`) không hiện ở đây.
+  - **Tải lại / Back / link chia sẻ** có `q`/`sortby` ⇒ khôi phục ô tick + thanh giá + ô sắp xếp rồi `doSearch()` (server Sapo
+    render danh sách gốc, không áp `q` của theme).
+  - Dev-server giả lập đủ cú pháp này (`preview-mock.js` `sapoQueryMatcher`/`sapoSort`) ⇒ sửa bộ lọc phải bấm thử trên `npm run preview`.
 - Ô danh mục con trên trang collection cha (F01/F02, `snippets/collection_subnav.bwt`, include trong
   `templates/collection.bwt` ngay sau H1): tối đa 3 quy tắc cấu hình `collection_subnav_{1,2,3}_
   collection` (type `collection`) + `_menu` (type `link_list`) + `_title`. Khớp `collection.alias`

@@ -31,15 +31,12 @@ Bizweb.addItemFromForm = function(form, callback, errorCallback) {
 		success: function(line_item) {
 			if ((typeof callback) === 'function') {
 				callback(line_item, form);
-				$('.popup-cart-mobile, .backdrop__body-backdrop___1rvky').addClass('active');
+			}
+			if (typeof window.showShopeeCartAlert === 'function') {
+				window.showShopeeCartAlert();
+			} else {
 				AddCartMobile(line_item);
 			}
-			/*
-      else {
-        Bizweb.onItemAdded(line_item, form);
-		$('#popup-cart-desktops, .cart-sidebar, .backdrop__body-backdrop___1rvky').addClass('active');
-      }
-	  */
 		},
 		error: function(XMLHttpRequest, textStatus) {
 			if ((typeof errorCallback) === 'function') {
@@ -57,28 +54,8 @@ Bizweb.addItemFromForm = function(form, callback, errorCallback) {
 Popup cart mobile
 =========================*/
 function AddCartMobile(line_item) {
-	//console.log(line_item);
-	$('.bodycart-mobile').html('');
-	var imagepop = Bizweb.resizeImage(line_item.image, 'compact');
-	if(imagepop=="null" || imagepop =='' || imagepop ==null){
-		imagepop = 'https://bizweb.dktcdn.net/thumb/compact/assets/themes_support/noimage.gif';
-	}
-
-	var variant_title = line_item.variant_title;
-	if (variant_title === 'Default Title')
-		variant_title = '';
-	var carttem = ''
-	+ '<div class="thumb-1x1">'
-	+ '<img src="'+imagepop+'" alt="'+line_item.title+'">'
-	+ '</div>'
-	+ '<div class="body_content">'
-	+ '<h4 class="product-title"><a href="'+line_item.url+'" title="'+ line_item.title +'">'+line_item.title+'</a></h4>'
-	+ '<span class="variant">'+variant_title+'</span>'
-	+ '<div class="product-new-price">'
-	+ '<b>'+ Bizweb.formatMoney(line_item.price, "{{store.money_format}}") + '</b>'
-								+ '</div>'
-								+ '</div>';
-								$('.bodycart-mobile').append(carttem);
+	// 23/11/2026: toast mobile cũ đã gỡ — dùng thông báo chung snippets/ui_cart_added.bwt
+	if (typeof window.pcCartAdded === 'function') window.pcCartAdded(line_item);
 }
 
 /*============================================================================

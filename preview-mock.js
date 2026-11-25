@@ -323,6 +323,94 @@ const BA_DEMO_SETTINGS = {
   },
 };
 
+/* ── Giả lập cú pháp tìm kiếm Sapo (20/11/2026) ─────────────────────────────────────────────────────────────
+   Trường tài liệu Sapo: name, price_min, alias, vendor, product_type, collections, tags, sku (+ biến thể .filter_key theme dùng).
+   Toán tử: AND (mặc định giữa từ), OR, -từ (NOT), ngoặc nhóm, so sánh > < >= <= cho price_min. Chỉ dùng cho dev-server. */
+function sapoSplitTop(str, op) {
+  const out = []; let depth = 0, quote = false, cur = '';
+  const re = new RegExp('^\\s+' + op + '\\s+', 'i');
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+    if (ch === '"') quote = !quote;
+    if (!quote && ch === '(') depth++;
+    if (!quote && ch === ')') depth--;
+    if (!quote && depth === 0 && /\s/.test(ch)) {
+      const m = re.exec(str.slice(i));
+      if (m) { out.push(cur); cur = ''; i += m[0].length - 1; continue; }
+    }
+    cur += ch;
+  }
+  out.push(cur);
+  return out.map((s) => s.trim()).filter(Boolean);
+}
+function sapoUnwrap(s) {
+  s = s.trim();
+  while (s.startsWith('(') && s.endsWith(')')) {
+    let depth = 0, wraps = true;
+    for (let i = 0; i < s.length; i++) {
+      if (s[i] === '(') depth++;
+      else if (s[i] === ')') { depth--; if (depth === 0 && i < s.length - 1) { wraps = false; break; } }
+    }
+    if (!wraps) break;
+    s = s.slice(1, -1).trim();
+  }
+  return s;
+}
+const SAPO_FIELDS = /^(-?)(name|title|price_min|alias|vendor|vendor\.filter_key|product_type|product_type\.filter_key|collections|collectionid|tags|tag|tags\.filter_key|sku):(.+)$/i;
+function sapoFieldValue(field, o, collections) {
+  const f = field.toLowerCase().replace('.filter_key', '');
+  if (f === 'name' || f === 'title') return [String(o.name || o.title || '')];
+  if (f === 'alias') return [String(o.alias || '')];
+  if (f === 'vendor') return [String(o.vendor || '')];
+  if (f === 'product_type') return [String(o.type || '')];
+  if (f === 'tags' || f === 'tag') return (o.tags || []).map(String);
+  if (f === 'sku') return (o.variants || []).map((v) => String(v.sku || ''));
+  if (f === 'collections' || f === 'collectionid') {
+    return Object.values(collections || {}).filter((c) => (c.products || []).some((p) => (p.id || p) === o.id || p === o.alias)).map((c) => String(c.id));
+  }
+  return [];
+}
+function sapoPriceMin(o) {
+  const ps = (o.variants || []).map((v) => Number(v.price)).filter((n) => !isNaN(n));
+  return ps.length ? Math.min(...ps) : Number(o.price) || 0;
+}
+function sapoEvalValue(field, expr, o, collections) {
+  expr = sapoUnwrap(expr);
+  const ors = sapoSplitTop(expr, 'OR');
+  if (ors.length > 1) return ors.some((e) => sapoEvalValue(field, e, o, collections));
+  const ands = sapoSplitTop(expr, 'AND');
+  if (ands.length > 1) return ands.every((e) => sapoEvalValue(field, e, o, collections));
+  const cmp = /^(>=|<=|>|<)\s*(-?\d+(?:\.\d+)?)$/.exec(expr);
+  if (cmp && field.toLowerCase() === 'price_min') {
+    const p = sapoPriceMin(o), n = Number(cmp[2]);
+    return cmp[1] === '>' ? p > n : cmp[1] === '<' ? p < n : cmp[1] === '>=' ? p >= n : p <= n;
+  }
+  const lit = expr.replace(/^"|"$/g, '').toLowerCase();
+  if (field.toLowerCase() === 'price_min') return sapoPriceMin(o) === Number(lit);
+  const vals = sapoFieldValue(field, o, collections).map((v) => v.toLowerCase());
+  return /^(name|title|sku)$/i.test(field) ? vals.some((v) => v.includes(lit)) : vals.some((v) => v === lit);
+}
+function sapoQueryMatcher(raw, searchType, collections) {
+  const clauses = sapoSplitTop(String(raw || '').trim(), 'AND');
+  return (o) => clauses.every((clause) => {
+    const m = SAPO_FIELDS.exec(clause.trim());
+    if (m) { const ok = sapoEvalValue(m[2], m[3], o, collections); return m[1] ? !ok : ok; }
+    // Từ khoá tự do: `(*x*)` = chứa; các từ nối AND, `-từ` = loại trừ; so với tên (bài viết: tiêu đề).
+    const text = String(searchType === 'article' ? o.title : o.name).toLowerCase();
+    const kw = sapoUnwrap(clause).replace(/^\*|\*$/g, '').toLowerCase();
+    const ors = sapoSplitTop(kw, 'OR');
+    return ors.some((alt) => alt.split(/\s+/).filter(Boolean).every((w) => (w[0] === '-' ? !text.includes(w.slice(1)) : text.includes(w))));
+  });
+}
+function sapoSort(list, sortby) {
+  const m = /^(price_min|name|created_on):(asc|desc)$/i.exec(String(sortby || ''));
+  if (!m) return list;
+  const dir = m[2].toLowerCase() === 'desc' ? -1 : 1;
+  const key = m[1].toLowerCase();
+  const val = (o) => (key === 'price_min' ? sapoPriceMin(o) : key === 'name' ? String(o.name || o.title || '').toLowerCase() : Number(o.id) || 0);
+  return [...list].sort((a, b) => { const x = val(a), y = val(b); return (x > y ? 1 : x < y ? -1 : 0) * dir; });
+}
+
 function getContext(templateName = 'index', routeParams = {}) {
   // Sản phẩm đơn dùng cho template product.bwt — ưu tiên alias thật từ URL.
   let currentProduct = routeParams.productAlias
@@ -358,7 +446,7 @@ function getContext(templateName = 'index', routeParams = {}) {
 
   // `collection` chỉ có giá trị khi đang xem trang /collection — đúng hành vi Sapo thực.
   // Trên index / product / blog / ... → null.
-  const collectionTemplates = ['collection', 'collection.skinhealthy'];
+  const collectionTemplates = ['collection'];
   const currentCollection = routeParams.collectionHandle
     ? (collectionsObj[routeParams.collectionHandle] || makeFallbackCollection(routeParams.collectionHandle))
     : (collectionTemplates.includes(templateName)
@@ -384,8 +472,6 @@ function getContext(templateName = 'index', routeParams = {}) {
   const PAGE_NAMES = {
     'page':                          'Demo Page',
     'page.indexskinhealthy':         'Skin Healthy',
-    'page.skinhealthy-services':     'Dịch vụ Skin Healthy',
-    'page.skinhealthy-service-detail': 'Chi tiết dịch vụ',
     'page.payment':                  'Đặt lịch & Thanh toán',
     'page.order-lookup':             'Tra cứu đơn hàng',
     'page.order-tracking':           'Theo dõi đơn hàng',
@@ -438,15 +524,15 @@ function getContext(templateName = 'index', routeParams = {}) {
     // (snippets/header.bwt, tab_product.bwt; link tag bài viết L08), `(*x*)` = chứa từ khoá (nút chuyển loại ở search.bwt).
     // Mỗi kết quả mang object_type như Sapo: search.bwt / search.smartjson(ar).bwt lọc theo trường này — thiếu thì trang
     // bài viết hiện 0 thẻ và gợi ý tìm kiếm trả {} (L14).
-    const tagMatch = raw.trim().match(/^tags:\(+([^()]+)\)+$/i);
-    const q = (tagMatch ? tagMatch[1] : raw.replace(/^\(\*|\*\)$/g, '')).toLowerCase().trim();
+    // 20/11/2026: giả lập ĐỦ cú pháp tìm kiếm/lọc chuẩn Sapo (support.sapo.vn/huong-dan-su-dung-chuc-nang-tim-kiem-tren-website +
+    // theme demo spa-1.mysapo.net): `từ khoá AND tags:((A) OR (B)) AND vendor:(X) AND price_min:(>N AND <M) AND collections:ID`,
+    // sortby=price_min:asc|desc, name:asc|desc, created_on:desc|asc — để bộ lọc (assets/col.js.bwt + search_filter.js) kiểm được trên dev.
     const pool = searchType === 'article'
       ? [...new Set(Object.values(blogsObj).flatMap((b) => b.articles || []))]
       : products;
-    const hit = tagMatch
-      ? (o) => (o.tags || []).some((t) => String(t).toLowerCase() === q)
-      : (o) => String(searchType === 'article' ? o.title : o.name).toLowerCase().includes(q);
-    const results = !q ? [] : pool.filter(hit).map((o) => ({ ...o, object_type: searchType }));
+    const hit = sapoQueryMatcher(raw, searchType, collectionsData);
+    let results = !raw.trim() ? [] : pool.filter(hit).map((o) => ({ ...o, object_type: searchType }));
+    results = sapoSort(results, routeParams.searchSort);
     search = { performed: true, terms: raw, types: [searchType], results, results_count: results.length };
   } else {
     search = { results: products.slice(0, 6), results_count: products.length, terms: '', performed: false, types: ['product'] };

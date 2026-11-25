@@ -1,0 +1,55 @@
+{%- comment -%}
+  21/11/2026 (chủ dự án): khung chat nổi = IFRAME nhúng trang chat toàn năng (templates/page.chat.bwt, layout riêng 'chat').
+  Toàn bộ chat AI (Cloudflare Worker), gửi ảnh soi da, camera, kết quả trả trong chat… nằm trong trang đó; chỗ nào cần chat chỉ việc nhúng:
+    <iframe src="/pages/chat-ai" title="Chat" allow="camera" loading="lazy" class="h-[640px] w-full rounded-2xl border-0"></iframe>
+  (allow="camera" bắt buộc để bật camera soi da trong iframe.) Snippet này chỉ là nút mở/đóng khung nổi chứa iframe đó trên mọi trang theme.
+  Bật/tắt + đường dẫn trang chat + chữ hiển thị: Cấu hình theme › Liên hệ › «Chat AI tư vấn». iframe chỉ nạp khi khách mở lần đầu (không tốn tải trang).
+  Ẩn bằng [display:none] (không dùng class hidden vì CSS legacy ép class đó thắng mọi data-variant).
+{%- endcomment -%}
+{%- assign pc_ai_page = settings.ai_chat_page_url | default: '/pages/chat-ai' | strip -%}
+{%- if settings.ai_chat_enable and pc_ai_page != blank -%}
+<section id="pc-ai-chat" class="fixed bottom-24 right-4 z-[9992] [display:none] h-[min(640px,calc(100dvh-8rem))] w-[400px] overflow-hidden rounded-2xl border border-line bg-white data-[open=true]:block max-md:inset-0 max-md:h-auto max-md:w-auto max-md:rounded-none max-md:border-0" role="dialog" aria-label="{{ settings.ai_chat_title | default: 'Chatbot Pharma Cosmetics' | escape }}" aria-hidden="true">
+	<iframe class="block h-full w-full border-0 bg-white" title="{{ settings.ai_chat_title | default: 'Chatbot Pharma Cosmetics' | escape }}" data-ai-chat-frame data-src="{{ pc_ai_page | escape }}" allow="camera"></iframe>
+</section>
+
+<script>
+(function(){
+	var root = document.getElementById('pc-ai-chat');
+	if (!root) return;
+	var frame = root.querySelector('[data-ai-chat-frame]');
+	function setOpen(open){
+		if (open) { root.setAttribute('data-open', 'true'); } else { root.removeAttribute('data-open'); }
+		root.setAttribute('aria-hidden', open ? 'false' : 'true');
+		if (open) {
+			if (!frame.getAttribute('src')) frame.setAttribute('src', frame.getAttribute('data-src')); // nạp lần đầu khi mở
+			var w = document.querySelector('.main-widget');
+			if (w) w.classList.remove('widget-opened'); // đóng bảng liên hệ khi mở chat
+		}
+	}
+	// 23/11/2026: mở khung chat kèm câu hỏi (nút «Hỏi trợ lý AI» ở gợi ý tìm kiếm / trang tìm kiếm rỗng).
+	// Lần đầu: gắn ?ask= vào địa chỉ iframe; đã nạp rồi: gửi postMessage cho trang chat.
+	window.pcAiChatAsk = function(text){
+		text = String(text || '').slice(0, 500);
+		var src = frame.getAttribute('src');
+		if (!src) {
+			var base = frame.getAttribute('data-src');
+			frame.setAttribute('src', base + (base.indexOf('?') > -1 ? '&' : '?') + 'ask=' + encodeURIComponent(text));
+			setOpen(true);
+		} else {
+			setOpen(true);
+			try { frame.contentWindow.postMessage({ type: 'pc-ai-chat:ask', text: text }, location.origin); } catch (err) {}
+		}
+	};
+	document.addEventListener('click', function(e){
+		if (e.target.closest && e.target.closest('[data-ai-chat-open]')) { e.preventDefault(); setOpen(true); }
+	});
+	document.addEventListener('keydown', function(e){
+		if (e.key === 'Escape' && root.getAttribute('data-open') === 'true') setOpen(false);
+	});
+	// Trang chat trong iframe báo đóng (nút X / phím Esc trong khung)
+	window.addEventListener('message', function(e){
+		if (e.source === frame.contentWindow && e.data && e.data.type === 'pc-ai-chat:close') setOpen(false);
+	});
+})();
+</script>
+{%- endif -%}

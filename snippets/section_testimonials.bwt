@@ -1,75 +1,231 @@
 {%- comment -%}
-  section_testimonials.bwt — "Hành trình da của khách hàng".
-  100% Tailwind utility class trực tiếp trên thẻ ngữ nghĩa, không dùng class CSS tự sinh.
+  section_testimonials.bwt — Khối "Trước & Sau" (T-19).
+  Phong cách Reels/Shorts với Swiper Slider & Hover-to-Play Video YouTube.
+  100% Tailwind class theo token (UI-0), màu thương hiệu primary (UI-BRAND).
 {%- endcomment -%}
-{%- assign testi_tabs = '' -%}
-{%- assign testi_panels = '' -%}
-{%- assign testi_n = 0 -%}
-{%- assign testi_step_sep = '§§' -%}
-{%- assign testi_lb_before = settings.home_testi_before_label | default: 'Trước' -%}
-{%- assign testi_lb_after = settings.home_testi_after_label | default: 'Sau' -%}
-{%- assign testi_lb_steps = settings.home_testi_steps_label | default: 'Hành trình' -%}
 {%- assign testi_case_handle = settings.home_testi_blog | default: settings.clinical_case_blog_handle | default: 'truoc-va-sau' -%}
 {%- assign testi_case_blog = blogs[testi_case_handle] -%}
 {%- if testi_case_blog == blank -%}{%- assign testi_case_blog = blogs['truoc-va-sau'] -%}{%- endif -%}
-{%- assign testi_pin_tag = settings.home_testi_pin_tag | default: 'ghim-trang-chu' | strip -%}
-{%- assign testi_more_lb = settings.clinical_case_more_label | default: 'Xem chi tiết ca' -%}
-{%- for testi_a in testi_case_blog.articles limit: 50 -%}
-  {%- if testi_n < 3 and testi_a.tags contains testi_pin_tag -%}
-    {%- assign pc_bs_article = testi_a -%}{%- include 'ba_case_source' -%}
-    {%- comment -%} M-03 (17/11/2026): ẩn ca còn dữ liệu giả ([DEMO], ảnh placehold.co) cho tới khi có ca thật. {%- endcomment -%}
-    {%- assign testi_real = true -%}{%- if testi_a.title contains '[DEMO]' or pc_bs_before contains 'placehold.co' -%}{%- assign testi_real = false -%}{%- endif -%}
-    {%- if pc_bs_before != blank and pc_bs_after != blank and testi_real -%}
-      {%- assign t_key = testi_a.id -%}
-      {%- assign t_title = testi_a.title -%}
-      {%- assign t_concern = pc_bs_group | default: t_title -%}
-      {%- assign t_tab_who = pc_bs_customer -%}
-      {%- assign t_img1 = pc_bs_before -%}{%- assign t_img2 = pc_bs_after -%}
-      {%- capture t_who -%}{{ pc_bs_customer }}{% if pc_bs_age != blank %}{% if pc_bs_customer != blank %}, {% endif %}{{ pc_bs_age }} tuổi{% endif %}{% if pc_bs_city != blank %}{% if pc_bs_customer != blank or pc_bs_age != blank %}, {% endif %}{{ pc_bs_city }}{% endif %}{% if testi_a.author != blank %}{% if pc_bs_customer != blank or pc_bs_age != blank or pc_bs_city != blank %} · {% endif %}{{ testi_a.author }}{% endif %}{%- endcapture -%}
-      {%- assign t_initial = pc_bs_cond | default: pc_bs_group -%}
-      {%- assign t_steps = '' -%}
-      {%- if testi_a.content contains '<ol' -%}
-        {%- assign testi_oseg = testi_a.content | prepend: '~' | split: '<ol' -%}
-        {%- assign testi_oseg = testi_oseg[1] | split: '</ol>' | first | split: '<li' -%}
-        {%- for testi_li in testi_oseg offset: 1 -%}
-          {%- assign testi_li_txt = testi_li | prepend: '<i ' | strip_html | strip -%}
-          {%- if testi_li_txt != blank -%}{%- assign t_steps = t_steps | append: testi_li_txt | append: testi_step_sep -%}{%- endif -%}
-        {%- endfor -%}
-      {%- endif -%}
-      {%- assign t_desc = testi_a.summary | default: testi_a.excerpt | strip_html | strip | truncate: 220 -%}
-      {%- assign t_products = pc_bs_plan -%}
-      {%- assign t_duration = '' -%}{%- if pc_bs_weeks != blank -%}{%- assign t_duration = pc_bs_weeks | append: ' tuần' -%}{%- endif -%}
-      {%- assign t_url = testi_a.url -%}
-      {%- include 'section_testimonials_case' -%}
-    {%- endif -%}
-  {%- endif -%}
-{%- endfor -%}
 
-{%- if testi_n > 0 -%}
-<section class="bg-surface-soft py-10 lg:py-16 font-sans text-ink" aria-labelledby="section-testimonials-title">
-  <div class="container">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 items-start" data-h4-tabs>
-      <div class="flex flex-col lg:col-span-1">
-        {%- capture testi_case_fb -%}/blogs/{{ testi_case_handle }}{%- endcapture -%}
-        {%- assign testi_more_url = settings.home_testi_viewall_url | default: testi_case_blog.url | default: testi_case_fb -%}
-        {%- capture testi_sub -%}{{ settings.home_testi_subtitle | default: 'Ảnh thật, đăng với sự đồng ý của khách. Kết quả phụ thuộc vào tình trạng da và cơ địa mỗi người.' | escape }}{% if settings.home_testi_disclaimer != blank %} {{ settings.home_testi_disclaimer | escape }}{% endif %}{%- endcapture -%}
-        {%- assign testi_title_t = settings.home_testi_title | default: 'Hành trình da của khách hàng' | escape -%}
-        {%- assign testi_eyebrow_t = settings.home_testi_eyebrow | default: 'Kết quả thực tế' | escape -%}
-        {%- include 'ui_section_head', title: testi_title_t, title_id: 'section-testimonials-title', eyebrow: testi_eyebrow_t, desc: testi_sub, url: testi_more_url, label: 'Xem tất cả kết quả trước và sau', mobile_only: true, wrap_class: 'mb-0' -%}
-        
-        <div class="swiper-container mt-6 overflow-hidden lg:overflow-visible" data-pc-slider data-gap="8" data-desktop-off>
-          <ul class="swiper-wrapper m-0 list-none p-0 lg:flex-col lg:gap-2" role="tablist" aria-label="Chọn câu chuyện khách hàng">{{ testi_tabs }}</ul>
-        </div>
-        
-        <a class="max-lg:hidden lg:inline-flex items-center gap-2 mt-8 text-sm font-bold text-brand-deep hover:text-primary no-underline transition-colors" href="{{ testi_more_url | escape }}">
-          <span>{{ settings.home_testi_viewall_text | default: 'Xem tất cả kết quả trước & sau' | escape }}</span>
-          {% include 'ui_icon', name: 'arrow-right' %}
-        </a>
+{%- capture testi_case_fb -%}/blogs/{{ testi_case_handle }}{%- endcapture -%}
+{%- assign testi_more_url = settings.home_testi_viewall_url | default: testi_case_blog.url | default: testi_case_fb -%}
+{%- assign testi_more_lb = settings.home_testi_viewall_text | default: 'Xem tất cả kết quả trước & sau' | escape -%}
+{%- capture testi_sub -%}{{ settings.home_testi_subtitle | default: 'Ảnh thật, đăng với sự đồng ý của khách. Kết quả phụ thuộc vào tình trạng da và cơ địa mỗi người.' | escape }}{% if settings.home_testi_disclaimer != blank %} {{ settings.home_testi_disclaimer | escape }}{% endif %}{%- endcapture -%}
+{%- assign testi_title_t = settings.home_testi_title | default: 'Trước & Sau' | escape -%}
+{%- assign testi_eyebrow_t = settings.home_testi_eyebrow | default: 'Kết quả thực tế' | escape -%}
+
+{%- if testi_case_blog.articles.size > 0 -%}
+<section class="border-t border-line-soft bg-surface-soft py-10 lg:py-16 font-sans text-ink" aria-labelledby="section-testimonials-title" data-reels-section>
+  <div class="container mb-6 lg:mb-8">
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+      <div class="min-w-0">
+        {%- include 'ui_section_head', title: testi_title_t, title_id: 'section-testimonials-title', eyebrow: testi_eyebrow_t, desc: testi_sub, url: testi_more_url, more_text: testi_more_lb, label: 'Xem tất cả kết quả trước và sau', wrap_class: 'mb-0' -%}
       </div>
-      <div class="lg:col-span-2">{{ testi_panels }}</div>
+    </div>
+
+    <!-- Danh mục lọc vấn đề da (Filter Tabs) -->
+    <div class="mt-6 flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 scrollbar-none" role="tablist" aria-label="Lọc theo nhóm vấn đề da">
+      <button type="button" data-reels-tab="all" aria-pressed="true" class="inline-flex shrink-0 whitespace-nowrap min-h-[44px] items-center justify-center rounded-full border border-solid border-primary bg-primary px-4 py-2 text-xs sm:text-sm font-bold text-white shadow-sm transition-all focus:outline-none">
+        Tất cả
+      </button>
+      <button type="button" data-reels-tab="Mụn" aria-pressed="false" class="inline-flex shrink-0 whitespace-nowrap min-h-[44px] items-center justify-center rounded-full border border-solid border-line-soft bg-white px-4 py-2 text-xs sm:text-sm font-semibold text-ink shadow-sm transition-all hover:border-primary hover:text-primary focus:outline-none">
+        Mụn
+      </button>
+      <button type="button" data-reels-tab="Nám" aria-pressed="false" class="inline-flex shrink-0 whitespace-nowrap min-h-[44px] items-center justify-center rounded-full border border-solid border-line-soft bg-white px-4 py-2 text-xs sm:text-sm font-semibold text-ink shadow-sm transition-all hover:border-primary hover:text-primary focus:outline-none">
+        Nám &amp; Sắc tố
+      </button>
+      <button type="button" data-reels-tab="Lão hóa" aria-pressed="false" class="inline-flex shrink-0 whitespace-nowrap min-h-[44px] items-center justify-center rounded-full border border-solid border-line-soft bg-white px-4 py-2 text-xs sm:text-sm font-semibold text-ink shadow-sm transition-all hover:border-primary hover:text-primary focus:outline-none">
+        Lão hóa
+      </button>
+      <button type="button" data-reels-tab="Phục hồi" aria-pressed="false" class="inline-flex shrink-0 whitespace-nowrap min-h-[44px] items-center justify-center rounded-full border border-solid border-line-soft bg-white px-4 py-2 text-xs sm:text-sm font-semibold text-ink shadow-sm transition-all hover:border-primary hover:text-primary focus:outline-none">
+        Phục hồi
+      </button>
+    </div>
+  </div>
+
+  <!-- Bố cục Carousel Trượt Ngang Swiper Chuẩn -->
+  <div class="container relative">
+    <div class="relative w-full">
+      <!-- Nút Prev -->
+      <button type="button" data-reels-prev aria-label="Slide trước" class="absolute -left-2 sm:-left-4 top-1/2 -translate-y-1/2 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border border-solid border-line-soft bg-white/95 text-ink shadow-md transition-all hover:bg-white hover:text-primary hover:shadow-lg disabled:pointer-events-none disabled:opacity-25">
+        {%- include 'ui_icon', name: 'chevron-left', size: 20 -%}
+      </button>
+
+      <!-- Nút Next -->
+      <button type="button" data-reels-next aria-label="Slide kế tiếp" class="absolute -right-2 sm:-right-4 top-1/2 -translate-y-1/2 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border border-solid border-line-soft bg-white/95 text-ink shadow-md transition-all hover:bg-white hover:text-primary hover:shadow-lg disabled:pointer-events-none disabled:opacity-25">
+        {%- include 'ui_icon', name: 'chevron-right', size: 20 -%}
+      </button>
+
+      <!-- Swiper Container -->
+      <div class="swiper-container overflow-hidden py-2" data-reels-swiper>
+        <div class="swiper-wrapper">
+          {%- for testi_a in testi_case_blog.articles limit: 24 -%}
+            {%- assign pc_bs_article = testi_a -%}{%- include 'ba_case_source' -%}
+            {%- assign pc_vs_article = testi_a -%}{%- include 'video_source' -%}
+            
+            {%- assign r_cat = pc_bs_group | default: '' -%}
+            {%- assign r_plan = pc_bs_plan | default: testi_a.title -%}
+            {%- assign r_cover = pc_vs_thumb_card -%}
+            {%- if r_cover == blank or r_cover contains 'placeholder' -%}
+              {%- if pc_bs_after != blank -%}{%- assign r_cover = pc_bs_after -%}
+              {%- elsif pc_bs_before != blank -%}{%- assign r_cover = pc_bs_before -%}
+              {%- elsif testi_a.image.src != blank -%}{%- assign r_cover = testi_a.image.src | img_url: 'large' -%}
+              {%- endif -%}
+            {%- endif -%}
+
+            <div class="swiper-slide !w-auto" data-reels-slide data-category="{{ r_cat | escape }}">
+              <div class="group relative flex flex-col justify-end w-[260px] sm:w-[280px] h-[460px] sm:h-[500px] overflow-hidden rounded-2xl border border-solid border-line-soft bg-black shadow-md transition-all duration-300 hover:shadow-xl" data-reels-card data-video-id="{{ pc_vs_id | escape }}">
+                <!-- Cover Image -->
+                <img src="{{ r_cover }}" alt="{{ testi_a.title | escape }}" width="280" height="500" loading="lazy" class="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-reels-cover>
+
+                <!-- Video Frame Container (Hover-to-Play YouTube) -->
+                <div class="pointer-events-none absolute inset-0 z-10 hidden overflow-hidden" data-reels-frame></div>
+
+                <!-- Top Badges -->
+                <div class="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between p-3.5">
+                  {%- if r_cat != blank -%}
+                    <span class="inline-flex items-center rounded-full bg-black/60 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white backdrop-blur-sm">
+                      {{ r_cat | escape }}
+                    </span>
+                  {%- else -%}
+                    <span></span>
+                  {%- endif -%}
+                  {%- if pc_vs_dur != blank -%}
+                    <span class="inline-flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+                      {{ pc_vs_dur | escape }}
+                    </span>
+                  {%- endif -%}
+                </div>
+
+                <!-- Center Play Badge (hiển thị khi có video) -->
+                {%- if pc_vs_id != blank -%}
+                <div class="pointer-events-none absolute inset-0 z-20 flex items-center justify-center transition-opacity duration-300 group-hover:opacity-0" data-reels-play-badge>
+                  <span class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-white shadow-lg backdrop-blur-sm transition-transform duration-300 group-hover:scale-110">
+                    {%- include 'ui_icon', name: 'play', size: 20 -%}
+                  </span>
+                </div>
+                {%- endif -%}
+
+                <!-- Bottom Overlay Card per media_1795226873887_e6ab7058.jpg -->
+                <div class="pointer-events-auto relative z-20 flex items-center gap-3 bg-gradient-to-t from-black/95 via-black/75 to-transparent p-3.5 sm:p-4 text-white">
+                  <!-- Thumbnail vuông bên trái -->
+                  <div class="relative h-11 w-11 sm:h-12 sm:w-12 shrink-0 overflow-hidden rounded-lg border border-solid border-white/20 bg-black/40 shadow-sm">
+                    {%- if pc_bs_after != blank -%}
+                      <img src="{{ pc_bs_after }}" alt="{{ r_plan | escape }}" width="48" height="48" loading="lazy" class="h-full w-full object-cover">
+                    {%- elsif pc_bs_before != blank -%}
+                      <img src="{{ pc_bs_before }}" alt="{{ r_plan | escape }}" width="48" height="48" loading="lazy" class="h-full w-full object-cover">
+                    {%- else -%}
+                      <img src="{{ r_cover }}" alt="{{ r_plan | escape }}" width="48" height="48" loading="lazy" class="h-full w-full object-cover">
+                    {%- endif -%}
+                  </div>
+
+                  <!-- Nội dung bên phải -->
+                  <div class="min-w-0 flex-1">
+                    <a href="{{ testi_a.url | escape }}" title="{{ testi_a.title | escape }}" class="block no-underline text-white transition-colors hover:text-primary">
+                      <h3 class="m-0 truncate text-xs sm:text-sm font-bold uppercase tracking-wide text-white">
+                        {{ r_plan | escape }}
+                      </h3>
+                      <p class="m-0 mt-0.5 truncate text-xs text-white/80">
+                        {%- if pc_bs_customer != blank -%}{{ pc_bs_customer | escape }}{%- endif -%}
+                        {%- if pc_bs_age != blank -%}{% if pc_bs_customer != blank %}, {% endif %}{{ pc_bs_age | escape }} tuổi{%- endif -%}
+                        {%- if pc_bs_weeks != blank -%}{% if pc_bs_customer != blank or pc_bs_age != blank %} · {% endif %}{{ pc_bs_weeks | escape }} tuần{%- endif -%}
+                      </p>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {%- endfor -%}
+        </div>
+      </div>
     </div>
   </div>
 </section>
-{%- include 'home_tabs_script' -%}
+
+<script>
+(function() {
+  function initReelsVideo() {
+    var cards = document.querySelectorAll('[data-reels-card][data-video-id]');
+    var canHover = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (!canHover) return;
+
+    Array.prototype.forEach.call(cards, function(card) {
+      if (card._reelsHoverBound) return;
+      card._reelsHoverBound = true;
+      var vid = card.getAttribute('data-video-id');
+      if (!vid) return;
+      var frame = card.querySelector('[data-reels-frame]');
+      if (!frame) return;
+
+      var timer = null;
+      card.addEventListener('mouseenter', function() {
+        timer = setTimeout(function() {
+          frame.innerHTML = '<iframe class="w-full h-full border-0" src="https://www.youtube-nocookie.com/embed/' + encodeURIComponent(vid) + '?autoplay=1&mute=1&playsinline=1&controls=0&loop=1&playlist=' + encodeURIComponent(vid) + '&modestbranding=1&rel=0" allow="autoplay; encrypted-media" tabindex="-1"></iframe>';
+          frame.classList.remove('hidden');
+        }, 150);
+      });
+
+      card.addEventListener('mouseleave', function() {
+        if (timer) clearTimeout(timer);
+        frame.classList.add('hidden');
+        frame.innerHTML = '';
+      });
+    });
+  }
+
+  function initReelsTabs() {
+    var container = document.querySelector('[data-reels-section]');
+    if (!container || container._reelsTabsBound) return;
+    container._reelsTabsBound = true;
+
+    var tabs = container.querySelectorAll('[data-reels-tab]');
+    var swiperEl = container.querySelector('[data-reels-swiper]');
+
+    Array.prototype.forEach.call(tabs, function(btn) {
+      btn.addEventListener('click', function() {
+        var cat = btn.getAttribute('data-reels-tab');
+        Array.prototype.forEach.call(tabs, function(b) {
+          var active = (b === btn);
+          b.setAttribute('aria-pressed', active ? 'true' : 'false');
+          if (active) {
+            b.classList.remove('bg-white', 'text-ink', 'border-line-soft');
+            b.classList.add('bg-primary', 'text-white', 'border-primary');
+          } else {
+            b.classList.remove('bg-primary', 'text-white', 'border-primary');
+            b.classList.add('bg-white', 'text-ink', 'border-line-soft');
+          }
+        });
+
+        var slides = container.querySelectorAll('[data-reels-slide]');
+        Array.prototype.forEach.call(slides, function(slide) {
+          var sCat = slide.getAttribute('data-category') || '';
+          if (!cat || cat === 'all' || sCat.indexOf(cat) !== -1 || cat.indexOf(sCat) !== -1) {
+            slide.classList.remove('!hidden');
+          } else {
+            slide.classList.add('!hidden');
+          }
+        });
+
+        if (swiperEl && swiperEl.swiper) {
+          swiperEl.swiper.update();
+          swiperEl.swiper.slideTo(0);
+        }
+      });
+    });
+  }
+
+  function boot() {
+    initReelsVideo();
+    initReelsTabs();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+  window.addEventListener('load', boot);
+})();
+</script>
 {%- include 'pc_swiper_boot' -%}
 {%- endif -%}

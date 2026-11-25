@@ -1,0 +1,493 @@
+{%- comment -%}
+  snippets/shb_sections_a.bwt — Skin Health Beauty, nhóm mục 02→06 (22/11/2026, PO: chuyển trang sang chuẩn dùng chung — Tailwind + token + ui_* + Swiper chung).
+  Gồm: 02 Mua sắm theo nhu cầu da · 03 Mua sắm theo danh mục · 04 Editorial (Swiper fade) + Virtual Clinic Tour + lightbox · 05 Liệu trình (reels) · 06 Liên kết Pharma Cosmetics.
+  100% Tailwind theo token (UI-0), màu thương hiệu bg-btn/bg-primary (UI-BRAND). Không CSS riêng, không sh-*/sh2-*, không sh-reveal.
+  Nội dung giữ nguyên cấu hình: settings.skinhealthy_* + `| default:`. h1 nằm ở Hero (mục 01) — ở đây chỉ h2/h3.
+  Móc JS còn dùng: data-shb-swiper/prev/next (swiper nhu cầu/danh mục), data-reels-swiper + data-reels-prev/next (pc_swiper_boot), data-shb-reel (video tự phát),
+  #sh-clinic-zoom-btn, #sh-clinic-lb-* (lightbox), data-vt / data-vt-* (virtual tour).
+  Biến dùng từ template: sh_book_url, sh_services_url (tự assign lại bên dưới để snippet đứng độc lập). Biến để lại cho mục sau: sh_edit_imgs (script Trước/Sau·FAQ của template dùng).
+{%- endcomment -%}
+{%- assign sh_book_page = pages[settings.skinhealthy_booking_page] -%}
+{%- assign sh_book_url = sh_book_page.url | default: pages['dat-lich-tu-van'].url | default: '/dat-lich-tu-van' -%}
+{%- assign sh_services_page = pages[settings.skinhealthy_services_page] -%}
+{%- assign sh_services_url = sh_services_page.url | default: settings.skinhealthy_services_url | default: '/collections/all' -%}
+
+{%- comment -%} Nút trước/sau dùng chung (tròn 44px, nền trắng viền control, hover = nút chính). Trạng thái Swiper: .swiper-button-disabled / .swiper-button-lock. {%- endcomment -%}
+{%- capture shb_nav_cls -%}inline-flex min-h-[44px] min-w-[44px] shrink-0 cursor-pointer items-center justify-center rounded-full border border-solid border-line-control bg-white p-0 text-ink-secondary transition-colors hover:border-btn hover:bg-btn hover:text-btn-text disabled:pointer-events-none disabled:opacity-40 [&.swiper-button-disabled]:pointer-events-none [&.swiper-button-disabled]:opacity-40 [&.swiper-button-lock]:[display:none]{%- endcapture -%}
+
+{%- comment -%} ═══ 02 + 03. MUA SẮM THEO NHU CẦU DA / THEO DANH MỤC — cùng kiểu thẻ ảnh + chữ, swiper có nút trước/sau ═══ {%- endcomment -%}
+{%- assign shb_blocks = 'concern,cat' | split: ',' -%}
+{%- for shb_key in shb_blocks -%}
+{%- if shb_key == 'concern' -%}
+  {%- assign shb_ll = linklists[settings.skinhealthy_concern_menu] -%}
+  {%- assign shb_has_menu = false -%}
+  {%- if settings.skinhealthy_concern_menu != blank and shb_ll and shb_ll.links.size > 0 -%}{%- assign shb_has_menu = true -%}{%- endif -%}
+  {%- assign shb_fallback = 'Điều trị mụn|/tri-mun,Điều trị nám|/tri-nam,Chống lão hoá|/chong-lao-hoa,Phục hồi hàng rào|/duong-am' | split: ',' -%}
+  {%- assign shb_eyebrow = 'Nhu Cầu Của Bạn' -%}
+  {%- assign shb_title = 'Mua Sắm Theo Nhu Cầu Da' -%}
+  {%- assign shb_bg = 'bg-surface-page' -%}
+{%- else -%}
+  {%- assign shb_ll = linklists[settings.skinhealthy_cat_menu] -%}
+  {%- assign shb_has_menu = false -%}
+  {%- if settings.skinhealthy_cat_menu != blank and shb_ll and shb_ll.links.size > 0 -%}{%- assign shb_has_menu = true -%}{%- endif -%}
+  {%- assign shb_fallback = 'Chăm Sóc Duy Trì|/collections/maintenance-skin-care,Điều Trị Nhắm Mục Tiêu|/collections/targeted-treatments,Xâm Lấn Tối Thiểu|/collections/invasive-treatments,Chăm Sóc Tại Nhà|/collections/all' | split: ',' -%}
+  {%- assign shb_eyebrow = 'Danh Mục' -%}
+  {%- assign shb_title = 'Mua Sắm Theo Danh Mục' -%}
+  {%- assign shb_bg = 'bg-surface-soft' -%}
+{%- endif -%}
+<section class="{{ shb_bg }} py-10 font-sans text-ink lg:py-16" aria-label="{{ shb_title }}">
+  <div class="container">
+    <div class="mb-4 flex items-end justify-between gap-3 lg:mb-8">
+      <div class="min-w-0 flex-1">
+        {%- include 'ui_section_head', title: shb_title, eyebrow: shb_eyebrow, wrap_class: 'mb-0' -%}
+      </div>
+      <div class="flex shrink-0 gap-2">
+        <button type="button" class="{{ shb_nav_cls }}" data-shb-prev="{{ shb_key }}" aria-label="Trước">{% include 'ui_icon', name: 'chevron-left', size: 20 %}</button>
+        <button type="button" class="{{ shb_nav_cls }}" data-shb-next="{{ shb_key }}" aria-label="Sau">{% include 'ui_icon', name: 'chevron-right', size: 20 %}</button>
+      </div>
+    </div>
+    <div class="swiper-container overflow-hidden" data-shb-swiper="{{ shb_key }}">
+      <div class="swiper-wrapper">
+      {%- if shb_has_menu -%}
+        {%- for link in shb_ll.links limit: 12 -%}
+        <div class="swiper-slide !h-auto">
+          <a href="{{ link.url }}" class="group block text-ink no-underline">
+            <div class="aspect-square overflow-hidden rounded-2xl bg-white">
+              {%- if link.object and link.object.image -%}
+              <img class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" src="{{ link.object.image.src | img_url: 'grande' }}" alt="{{ link.title | escape }}" width="600" height="600" loading="lazy">
+              {%- else -%}
+              <div class="flex h-full w-full items-center justify-center text-ink-muted">{% include 'ui_icon', name: 'image', size: 24 %}</div>
+              {%- endif -%}
+            </div>
+            <div class="mt-3">
+              <span class="block text-sm font-bold text-ink transition-colors group-hover:text-primary lg:text-base">{{ link.title }}</span>
+              {%- if link.object and link.object.all_products_count > 0 -%}<span class="mt-1 block text-xs text-ink-muted">{{ link.object.all_products_count }} sản phẩm</span>{%- endif -%}
+            </div>
+          </a>
+        </div>
+        {%- endfor -%}
+      {%- else -%}
+        {%- for item in shb_fallback -%}
+          {%- assign parts = item | split: '|' -%}
+        <div class="swiper-slide !h-auto">
+          <a href="{{ parts[1] }}" class="group block text-ink no-underline">
+            <div class="aspect-square overflow-hidden rounded-2xl bg-white">
+              <div class="flex h-full w-full items-center justify-center text-ink-muted">{% include 'ui_icon', name: 'image', size: 24 %}</div>
+            </div>
+            <div class="mt-3">
+              <span class="block text-sm font-bold text-ink transition-colors group-hover:text-primary lg:text-base">{{ parts[0] }}</span>
+            </div>
+          </a>
+        </div>
+        {%- endfor -%}
+      {%- endif -%}
+      </div>
+    </div>
+  </div>
+</section>
+{%- endfor -%}
+
+{%- comment -%}
+  ═══ 04. EDITORIAL + VIRTUAL CLINIC TOUR ═══
+  19/10/2026: ghép chuỗi chỉ gồm ảnh có giá trị rồi split — không bao giờ có phần tử rỗng (Liquid Sapo ra [""] với '' | split: '').
+{%- endcomment -%}
+{%- capture sh_edit_raw -%}
+{%- if settings.skinhealthy_edit_img != blank -%}|~|{{ settings.skinhealthy_edit_img }}{%- endif -%}
+{%- if settings.skinhealthy_edit_img_2 != blank -%}|~|{{ settings.skinhealthy_edit_img_2 }}{%- endif -%}
+{%- if settings.skinhealthy_edit_img_3 != blank -%}|~|{{ settings.skinhealthy_edit_img_3 }}{%- endif -%}
+{%- if settings.skinhealthy_edit_img_4 != blank -%}|~|{{ settings.skinhealthy_edit_img_4 }}{%- endif -%}
+{%- if settings.skinhealthy_edit_img_5 != blank -%}|~|{{ settings.skinhealthy_edit_img_5 }}{%- endif -%}
+{%- endcapture -%}
+{%- assign sh_edit_raw = sh_edit_raw | strip | remove_first: '|~|' -%}
+{%- assign sh_edit_imgs = nil -%}
+{%- if sh_edit_raw != blank -%}{%- assign sh_edit_imgs = sh_edit_raw | split: '|~|' -%}{%- endif -%}
+{%- assign sh_edit_cta_url = settings.skinhealthy_edit_cta_url | default: sh_book_url -%}
+<section class="relative flex min-h-[480px] items-center overflow-hidden bg-primary-darkest font-sans text-white lg:min-h-[560px]" aria-label="Phương pháp khoa học">
+  {%- if sh_edit_imgs.size > 0 -%}
+  <div class="swiper absolute inset-0 z-0 h-full w-full" data-shb-edit>
+    <div class="swiper-wrapper h-full">
+      {%- for img in sh_edit_imgs -%}
+      <div class="swiper-slide !h-full">
+        <img class="h-full w-full object-cover" src="{{ img | img_url: '2048x2048' }}" alt="Không gian phòng khám Skin Health Beauty" width="1440" height="960" loading="lazy">
+      </div>
+      {%- endfor -%}
+    </div>
+    {%- if sh_edit_imgs.size > 1 -%}
+    <div class="absolute inset-x-0 bottom-2 z-10 flex items-center justify-center gap-2" data-shb-edit-dots></div>
+    {%- endif -%}
+    <button type="button" class="absolute right-4 top-4 z-[20] inline-flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-white p-0 text-ink transition-colors hover:bg-btn hover:text-btn-text" id="sh-clinic-zoom-btn" aria-label="Phóng to xem không gian phòng khám">{% include 'ui_icon', name: 'maximize', size: 20 %}</button>
+  </div>
+  <div class="pointer-events-none absolute inset-0 z-[1] bg-slate-900/50" aria-hidden="true"></div>
+  {%- endif -%}
+  <div class="container relative z-[2] py-16 lg:py-24">
+    <div class="max-w-xl">
+      <p class="m-0 text-xs font-bold tracking-wider text-white">{{ settings.skinhealthy_edit_eyebrow | default: 'Phương pháp khoa học' }}</p>
+      <h2 class="m-0 mt-2 text-3xl font-bold text-white lg:text-4xl">{{ settings.skinhealthy_edit_title | default: 'Chẩn đoán da<br><em>cá nhân hóa</em>' }}</h2>
+      <p class="m-0 mt-4 text-base text-white">{{ settings.skinhealthy_edit_desc | default: 'Mỗi làn da là duy nhất. Chúng tôi xây dựng routine chính xác dựa trên trạng thái da thực tế của bạn — không phải xu hướng.' }}</p>
+      <a href="{{ sh_edit_cta_url }}" class="mt-6 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btn px-6 text-sm font-bold text-btn-text no-underline transition-colors hover:bg-btn-hover">
+        <span>{{ settings.skinhealthy_edit_cta_text | default: 'Đặt lịch tư vấn' }}</span>
+        {% include 'ui_icon', name: 'arrow-right', size: 20 %}
+      </a>
+    </div>
+  </div>
+</section>
+
+{%- comment -%}
+  Virtual Clinic Tour — ảnh phòng đang chọn phủ toàn ngang · trên trái: nhãn + tiêu đề + mô tả phòng · trên phải: nút phóng to (lightbox) ·
+  dưới phải: dải ảnh nhỏ (swiper, tự chuyển 5 giây, dừng khi rê chuột/focus) · dưới trái: link video + Thư viện hoạt chất.
+  Ảnh 1–3 mang tên + mô tả 3 phòng (skinhealthy_clinic_*); ảnh 4–5 chưa có chữ cấu hình ⇒ không ghi tên, ẩn mô tả (không bịa chữ).
+{%- endcomment -%}
+{%- capture sh_vt_titles -%}{{ settings.skinhealthy_clinic_diag_title | default: 'Phòng Chẩn Đoán 1:1' }}|~|{{ settings.skinhealthy_clinic_lab_title | default: 'Lab Pha Chế Hoạt Chất' }}|~|{{ settings.skinhealthy_clinic_therapy_title | default: 'Phòng Trị Liệu Riêng Tư' }}{%- endcapture -%}
+{%- capture sh_vt_descs -%}{{ settings.skinhealthy_clinic_diag_desc | default: 'Không gian tư vấn độc quyền — chỉ bạn và chuyên gia. Thiết bị phân tích da công nghệ cao, kết quả chính xác đến từng lớp biểu bì.' }}|~|{{ settings.skinhealthy_clinic_lab_desc | default: 'Phòng pha chế hoạt chất đạt chuẩn vô khuẩn y tế — nơi mỗi đơn điều trị được chuẩn bị riêng với nồng độ chính xác đến từng milligram.' }}|~|{{ settings.skinhealthy_clinic_therapy_desc | default: 'Không gian trị liệu khép kín — ánh sáng thiết kế riêng cho từng liệu pháp, âm thanh cách âm hoàn toàn, thiết bị điều trị thế hệ mới.' }}{%- endcapture -%}
+{%- assign sh_vt_titles = sh_vt_titles | split: '|~|' -%}
+{%- assign sh_vt_descs = sh_vt_descs | split: '|~|' -%}
+{%- if sh_edit_imgs.size > 0 -%}
+<section class="relative overflow-hidden bg-primary-darkest font-sans text-white" data-vt aria-label="Virtual Clinic Tour">
+  <div class="absolute inset-0 z-0">
+    {%- for sh_vt_img in sh_edit_imgs -%}
+    {%- assign sh_vt_t = sh_vt_titles[forloop.index0] | default: 'Không gian phòng khám Skin Health Beauty' -%}
+    <img class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700 data-[active=true]:opacity-100" data-vt-bg="{{ forloop.index0 }}" data-active="{% if forloop.first %}true{% else %}false{% endif %}" src="{{ sh_vt_img | img_url: '2048x2048' }}" alt="{{ sh_vt_t | strip_html | escape }}" width="1920" height="900" loading="lazy">
+    {%- endfor -%}
+  </div>
+  <div class="pointer-events-none absolute inset-0 z-[1] bg-slate-900/50" aria-hidden="true"></div>
+  <div class="relative z-[2] flex min-h-[560px] flex-col justify-between gap-8 py-8 lg:min-h-[640px] lg:py-12">
+    <div class="container flex items-start justify-between gap-4">
+      <div class="max-w-xl">
+        <p class="m-0 text-xs font-bold tracking-wider text-white">Trải Nghiệm Không Gian</p>
+        <h2 class="m-0 mt-1 text-3xl font-bold text-white lg:text-4xl">Virtual Clinic Tour</h2>
+        <p class="m-0 mt-3 text-sm text-white" data-vt-desc aria-live="polite">{{ sh_vt_descs[0] }}</p>
+      </div>
+      <button type="button" class="inline-flex min-h-[44px] min-w-[44px] shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-white p-0 text-ink transition-colors hover:bg-btn hover:text-btn-text" data-vt-full aria-label="Phóng to xem không gian phòng khám">{% include 'ui_icon', name: 'maximize', size: 20 %}</button>
+    </div>
+    <div class="container flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div class="flex flex-col items-start gap-2">
+        {%- if settings.skinhealthy_clinic_video_id != blank -%}
+        <a href="https://www.youtube.com/watch?v={{ settings.skinhealthy_clinic_video_id }}" target="_blank" rel="noopener" class="inline-flex min-h-[44px] items-center gap-2 text-sm font-bold text-white no-underline hover:underline">{% include 'ui_icon', name: 'play', size: 20 %}<span>{{ settings.skinhealthy_clinic_video_label | default: 'Xem video giới thiệu không gian trị liệu' }}</span></a>
+        {%- endif -%}
+        <a href="{{ settings.skinhealthy_ing_url | default: '/hoat-chat' }}" class="inline-flex min-h-[44px] items-center gap-2 text-sm font-bold text-white no-underline hover:underline"><span>Truy cập Thư viện Hoạt chất Lâm sàng</span>{% include 'ui_icon', name: 'arrow-right', size: 20 %}</a>
+      </div>
+      <div class="flex min-w-0 flex-col gap-3 lg:w-[520px]">
+        {%- if sh_edit_imgs.size > 1 -%}
+        <div class="flex items-center gap-3">
+          <button type="button" class="inline-flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-white p-0 text-ink transition-colors hover:bg-btn hover:text-btn-text" data-vt-prev aria-label="Cảnh trước">{% include 'ui_icon', name: 'chevron-left', size: 20 %}</button>
+          <span class="text-sm font-bold text-white" data-vt-count aria-live="polite">1 / {{ sh_edit_imgs.size }}</span>
+          <button type="button" class="inline-flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-white p-0 text-ink transition-colors hover:bg-btn hover:text-btn-text" data-vt-next aria-label="Cảnh sau">{% include 'ui_icon', name: 'chevron-right', size: 20 %}</button>
+        </div>
+        {%- endif -%}
+        <div class="swiper-container w-full overflow-hidden" data-vt-swiper>
+          <div class="swiper-wrapper" role="tablist" aria-label="Virtual Clinic Tour">
+          {%- for sh_vt_img in sh_edit_imgs -%}
+          {%- assign sh_vt_t = sh_vt_titles[forloop.index0] -%}
+          <div class="swiper-slide !h-auto !w-36">
+            <button type="button" class="group block w-full cursor-pointer border-0 bg-transparent p-0 text-left text-white" role="tab" data-active="{% if forloop.first %}true{% else %}false{% endif %}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" aria-label="{{ sh_vt_t | default: 'Không gian phòng khám' | strip_html | escape }} {{ forloop.index }}/{{ sh_edit_imgs.size }}" data-vt-room="{{ forloop.index0 }}" data-vt-text="{{ sh_vt_descs[forloop.index0] | escape }}">
+              <span class="block overflow-hidden rounded-xl border-2 border-solid border-transparent group-data-[active=true]:border-white"><img class="block aspect-[3/2] w-full object-cover" src="{{ sh_vt_img | img_url: 'medium' }}" alt="" width="240" height="160" loading="lazy"></span>
+              {%- if sh_vt_t != blank -%}<span class="mt-1 block truncate text-xs font-bold text-white">{{ sh_vt_t }}</span>{%- endif -%}
+            </button>
+          </div>
+          {%- endfor -%}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{%- else -%}
+{%- comment -%} Chưa có ảnh Editorial: bố cục chữ (3 phòng). 22/11/2026: 3 «tab» cũ không có hành động khi không có ảnh (lightbox không tồn tại) ⇒ đổi thành danh sách thẻ tĩnh. {%- endcomment -%}
+<section class="border-0 border-t border-solid border-line-soft bg-white py-10 font-sans text-ink lg:py-16" aria-label="Virtual Clinic Tour">
+  <div class="container grid gap-8 lg:grid-cols-2 lg:gap-16">
+    <div>
+      {%- include 'ui_section_head', title: 'Virtual Clinic Tour', eyebrow: 'Trải Nghiệm Không Gian', wrap_class: 'mb-4' -%}
+      {%- if settings.skinhealthy_clinic_video_id != blank -%}
+      <a href="https://www.youtube.com/watch?v={{ settings.skinhealthy_clinic_video_id }}" target="_blank" rel="noopener" class="inline-flex min-h-[44px] items-center gap-2 text-sm font-bold text-primary-deep no-underline hover:text-primary">{% include 'ui_icon', name: 'play', size: 20 %}<span>{{ settings.skinhealthy_clinic_video_label | default: 'Xem video giới thiệu không gian trị liệu' }}</span></a>
+      {%- endif -%}
+    </div>
+    <div>
+      <ul class="m-0 flex list-none flex-col gap-3 p-0">
+        <li class="rounded-2xl border border-solid border-line-soft bg-surface-soft p-4">
+          <h3 class="m-0 text-base font-bold text-brand-deep">{{ settings.skinhealthy_clinic_diag_title | default: 'Phòng Chẩn Đoán 1:1' }}</h3>
+          <p class="m-0 mt-2 text-sm text-ink-muted">{{ settings.skinhealthy_clinic_diag_desc | default: 'Không gian tư vấn độc quyền — chỉ bạn và chuyên gia. Thiết bị phân tích da công nghệ cao, kết quả chính xác đến từng lớp biểu bì.' }}</p>
+        </li>
+        <li class="rounded-2xl border border-solid border-line-soft bg-surface-soft p-4">
+          <h3 class="m-0 text-base font-bold text-brand-deep">{{ settings.skinhealthy_clinic_lab_title | default: 'Lab Pha Chế Hoạt Chất' }}</h3>
+          <p class="m-0 mt-2 text-sm text-ink-muted">{{ settings.skinhealthy_clinic_lab_desc | default: 'Phòng pha chế hoạt chất đạt chuẩn vô khuẩn y tế — nơi mỗi đơn điều trị được chuẩn bị riêng với nồng độ chính xác đến từng milligram.' }}</p>
+        </li>
+        <li class="rounded-2xl border border-solid border-line-soft bg-surface-soft p-4">
+          <h3 class="m-0 text-base font-bold text-brand-deep">{{ settings.skinhealthy_clinic_therapy_title | default: 'Phòng Trị Liệu Riêng Tư' }}</h3>
+          <p class="m-0 mt-2 text-sm text-ink-muted">{{ settings.skinhealthy_clinic_therapy_desc | default: 'Không gian trị liệu khép kín — ánh sáng thiết kế riêng cho từng liệu pháp, âm thanh cách âm hoàn toàn, thiết bị điều trị thế hệ mới.' }}</p>
+        </li>
+      </ul>
+      <a href="{{ settings.skinhealthy_ing_url | default: '/hoat-chat' }}" class="mt-4 inline-flex min-h-[44px] items-center gap-2 text-sm font-bold text-primary-deep no-underline hover:text-primary"><span>Truy cập Thư viện Hoạt chất Lâm sàng</span>{% include 'ui_icon', name: 'arrow-right', size: 20 %}</a>
+    </div>
+  </div>
+</section>
+{%- endif -%}
+
+{%- comment -%} Clinic lightbox — 1 instance dùng chung cho nút phóng to Editorial + Tour. JS đưa ra <body> khi chạy (tránh bị header/menu đáy đè). {%- endcomment -%}
+{%- if sh_edit_imgs.size > 0 -%}
+<div class="fixed inset-0 z-modal items-center justify-center [display:none] data-[open=true]:flex" id="sh-clinic-lb" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Ảnh không gian phòng khám">
+  <div class="absolute inset-0 bg-slate-900/90" id="sh-clinic-lb-back"></div>
+  <div class="relative z-10 flex h-full w-full items-center justify-center p-4 lg:p-16">
+    <button type="button" class="absolute right-4 top-4 z-[20] inline-flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-white p-0 text-ink transition-colors hover:bg-btn hover:text-btn-text" id="sh-clinic-lb-close" aria-label="Đóng">{% include 'ui_icon', name: 'x', size: 20 %}</button>
+    {%- if sh_edit_imgs.size > 1 -%}
+    <button type="button" class="absolute left-4 top-1/2 z-[20] inline-flex min-h-[44px] min-w-[44px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-0 bg-white p-0 text-ink transition-colors hover:bg-btn hover:text-btn-text" id="sh-clinic-lb-prev" aria-label="Ảnh trước">{% include 'ui_icon', name: 'chevron-left', size: 20 %}</button>
+    <button type="button" class="absolute right-4 top-1/2 z-[20] inline-flex min-h-[44px] min-w-[44px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-0 bg-white p-0 text-ink transition-colors hover:bg-btn hover:text-btn-text" id="sh-clinic-lb-next" aria-label="Ảnh sau">{% include 'ui_icon', name: 'chevron-right', size: 20 %}</button>
+    {%- endif -%}
+    <img class="max-h-full max-w-full rounded-2xl object-contain" id="sh-clinic-lb-img" alt="Không gian phòng khám Skin Health Beauty" width="1440" height="960">
+    <div class="absolute bottom-4 left-1/2 z-[20] -translate-x-1/2 text-sm font-bold text-white" id="sh-clinic-lb-counter"></div>
+  </div>
+</div>
+{%- endif -%}
+
+{%- comment -%}
+  ═══ 05. LIỆU TRÌNH ═══ nguồn = sản phẩm trong danh mục liệu trình (settings.lt_collection). Thẻ 9:16: ưu tiên video tag youtube: > facebook:
+  (quy ước snippets/video_source.bwt), không có ⇒ ảnh đại diện. Video tự phát (tắt tiếng) khi thẻ vào màn hình — chỉ nạp iframe lúc đó.
+  Danh mục trống ⇒ danh sách menu skinhealthy_programs_menu như cũ. Swiper dùng chung (pc_swiper_boot › data-reels-swiper).
+{%- endcomment -%}
+{%- assign sh_programs_url = settings.skinhealthy_programs_url | default: sh_book_url -%}
+{%- assign sh_prog_handle = settings.lt_collection | default: 'dieu-tri-chuyen-nghiep' | remove: ' ' | split: ',' | first -%}
+{%- assign sh_prog_col = collections[sh_prog_handle] -%}
+<section class="bg-white py-10 font-sans text-ink lg:py-16" aria-labelledby="shb-programs-title">
+  <div class="container">
+    {%- include 'ui_section_head', title: 'Liệu Trình', title_id: 'shb-programs-title', eyebrow: 'Lộ Trình Điều Trị', desc: 'Mỗi liệu trình được thiết kế theo mục tiêu điều trị cụ thể, từ chăm sóc duy trì đến can thiệp chuyên sâu.', wrap_class: 'mb-6 lg:mb-8' -%}
+    {%- if sh_prog_col.products.size > 0 -%}
+    <div class="relative">
+      <button type="button" class="{{ shb_nav_cls }} absolute -left-2 top-1/2 z-10 -translate-y-1/2 sm:-left-4" data-reels-prev aria-label="Trước">{% include 'ui_icon', name: 'chevron-left', size: 20 %}</button>
+      <button type="button" class="{{ shb_nav_cls }} absolute -right-2 top-1/2 z-10 -translate-y-1/2 sm:-right-4" data-reels-next aria-label="Sau">{% include 'ui_icon', name: 'chevron-right', size: 20 %}</button>
+      <div class="swiper-container overflow-hidden" data-reels-swiper>
+        <div class="swiper-wrapper">
+        {%- for sh_rp in sh_prog_col.products limit: 12 -%}
+          {%- comment -%} Video: quét tag — YouTube đầu tiên thắng, không có thì Facebook đầu tiên. {%- endcomment -%}
+          {%- assign pc_vs_article = sh_rp -%}{%- include 'video_source' -%}
+          {%- assign sh_rv_src = '' -%}{%- assign sh_rv_id = '' -%}{%- assign sh_rv_fb = '' -%}
+          {%- if pc_vs_list != '' -%}
+            {%- assign sh_rv_items = pc_vs_list | split: '||' -%}
+            {%- for sh_rv_it in sh_rv_items -%}{%- assign sh_rv_p = sh_rv_it | split: '~' -%}
+              {%- if sh_rv_src != 'youtube' and sh_rv_p[0] == 'youtube' -%}{%- assign sh_rv_src = 'youtube' -%}{%- assign sh_rv_id = sh_rv_p[1] -%}{%- endif -%}
+            {%- endfor -%}
+            {%- if sh_rv_src == '' -%}
+              {%- for sh_rv_it in sh_rv_items -%}{%- assign sh_rv_p = sh_rv_it | split: '~' -%}
+                {%- if sh_rv_src == '' and sh_rv_p[0] == 'facebook' -%}{%- assign sh_rv_src = 'facebook' -%}{%- assign sh_rv_fb = sh_rv_p[2] -%}{%- endif -%}
+              {%- endfor -%}
+            {%- endif -%}
+          {%- endif -%}
+          {%- assign sh_rp_img = sh_rp.featured_image.src | default: 'no-image.jpg' -%}
+        <div class="swiper-slide !h-auto !w-40 sm:!w-48 xl:!w-56">
+          <a class="group relative block aspect-[9/16] w-full overflow-hidden rounded-2xl bg-slate-900 text-white no-underline" href="{{ sh_rp.url }}" data-shb-reel{% if sh_rv_src != '' %} data-reel-src="{{ sh_rv_src }}" data-reel-id="{{ sh_rv_id }}" data-reel-fb="{{ sh_rv_fb | escape }}"{% endif %}>
+            <span class="absolute inset-0 block" data-shb-reel-media>
+              {%- if sh_rv_src == 'youtube' -%}
+              <img class="h-full w-full object-cover" src="https://i.ytimg.com/vi/{{ sh_rv_id }}/hqdefault.jpg" alt="{{ sh_rp.name | escape }}" width="480" height="360" loading="lazy">
+              {%- else -%}
+              <img class="h-full w-full object-cover" src="{{ sh_rp_img | img_url: 'large' }}" alt="{{ sh_rp.featured_image.alt | default: sh_rp.name | escape }}" width="480" height="480" loading="lazy">
+              {%- endif -%}
+            </span>
+            {%- if sh_rv_src != '' -%}<span class="absolute left-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-900/60 text-white" aria-hidden="true">{% include 'ui_icon', name: 'video', size: 20 %}</span>{%- endif -%}
+            <span class="absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" aria-hidden="true">{% include 'ui_icon', name: 'shopping-bag', size: 20 %}</span>
+            <span class="absolute inset-x-0 bottom-0 z-10 flex items-center gap-2 bg-slate-900/60 p-3">
+              <span class="block h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-white"><img class="h-full w-full object-cover" src="{{ sh_rp_img | img_url: 'small' }}" alt="" width="100" height="100" loading="lazy"></span>
+              <span class="line-clamp-2 min-w-0 flex-1 text-xs font-bold text-white" data-shb-reel-name>{{ sh_rp.name | escape }}</span>
+            </span>
+          </a>
+        </div>
+        {%- endfor -%}
+        </div>
+      </div>
+    </div>
+    {%- else -%}
+    {%- assign sh_prog_ll = linklists[settings.skinhealthy_programs_menu] -%}
+    <ol class="m-0 flex list-none flex-col p-0">
+      {%- if settings.skinhealthy_programs_menu != blank and sh_prog_ll and sh_prog_ll.links.size > 0 -%}
+        {%- for link in sh_prog_ll.links -%}
+        <li class="border-0 border-b border-solid border-line-soft">
+          <a href="{{ link.url }}" class="group flex min-h-[44px] items-center gap-4 py-4 text-ink no-underline transition-colors hover:text-primary">
+            <span class="w-8 shrink-0 text-sm font-bold text-primary">{% if forloop.index < 10 %}0{% endif %}{{ forloop.index }}</span>
+            <span class="min-w-0 flex-1 text-base font-semibold">{{ link.title }}</span>
+            {% include 'ui_icon', name: 'arrow-right', size: 20 %}
+          </a>
+        </li>
+        {%- endfor -%}
+      {%- else -%}
+        {%- assign sh_prog_fallback = 'Chăm Sóc Duy Trì Hàng Tháng,Phục Hồi Hàng Rào Bảo Vệ Da,Điều Trị Nám & Tăng Sắc Tố,Trẻ Hóa & Chống Lão Hóa,Kiểm Soát Mụn Chuyên Sâu' | split: ',' -%}
+        {%- for name in sh_prog_fallback -%}
+        <li class="border-0 border-b border-solid border-line-soft">
+          <a href="{{ sh_services_url }}" class="group flex min-h-[44px] items-center gap-4 py-4 text-ink no-underline transition-colors hover:text-primary">
+            <span class="w-8 shrink-0 text-sm font-bold text-primary">{% if forloop.index < 10 %}0{% endif %}{{ forloop.index }}</span>
+            <span class="min-w-0 flex-1 text-base font-semibold">{{ name }}</span>
+            {% include 'ui_icon', name: 'arrow-right', size: 20 %}
+          </a>
+        </li>
+        {%- endfor -%}
+      {%- endif -%}
+    </ol>
+    {%- endif -%}
+    <div class="mt-8 flex flex-wrap items-center gap-3">
+      <a href="{{ sh_programs_url }}" class="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btn px-6 text-sm font-bold text-btn-text no-underline transition-colors hover:bg-btn-hover">
+        <span>Xem tất cả liệu trình</span>
+        {% include 'ui_icon', name: 'arrow-right', size: 20 %}
+      </a>
+      <a href="{{ sh_book_url }}" class="inline-flex min-h-[44px] items-center justify-center rounded-full border border-solid border-primary bg-white px-6 text-sm font-bold text-primary-deep no-underline transition-colors hover:bg-primary-tint">Đặt lịch tư vấn</a>
+    </div>
+  </div>
+</section>
+
+{%- comment -%} ═══ 06. LIÊN KẾT PHARMA COSMETICS (IV-B) ═══ {%- endcomment -%}
+<section class="bg-primary-darkest py-10 font-sans text-white lg:py-12" aria-label="Pharma Cosmetics">
+  <div class="container flex flex-wrap items-center justify-between gap-6">
+    <div class="max-w-2xl">
+      <p class="m-0 text-xs font-bold tracking-wider text-white">{{ settings.skinhealthy_pharma_eyebrow | default: 'Một sản phẩm của Pharma Cosmetics' }}</p>
+      <p class="m-0 mt-2 text-sm text-white">{{ settings.skinhealthy_pharma_desc | default: 'Pharma Cosmetics là nền tảng dược mỹ phẩm toàn cầu, cung cấp giải pháp dựa trên khoa học và dữ liệu để đồng hành cùng quá trình trị liệu tại spa.' }}</p>
+    </div>
+    <a href="/" class="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-btn px-6 text-sm font-bold text-btn-text no-underline transition-colors hover:bg-btn-hover">
+      <span>Khám phá Pharma Cosmetics</span>
+      {% include 'ui_icon', name: 'arrow-right', size: 20 %}
+    </a>
+  </div>
+</section>
+
+{%- include 'pc_swiper_boot' -%}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  /* ── 02 + 03: swiper thẻ ảnh — 2 thẻ/màn mobile, 3 tablet, 4 desktop; nút trước/sau theo data-shb-prev/next="<khoá>" ── */
+  if (typeof Swiper === 'function') {
+    document.querySelectorAll('[data-shb-swiper]').forEach(function (el) {
+      var key = el.getAttribute('data-shb-swiper');
+      new Swiper(el, {
+        slidesPerView: 2, spaceBetween: 16, watchOverflow: true, speed: 500,
+        navigation: { prevEl: '[data-shb-prev="' + key + '"]', nextEl: '[data-shb-next="' + key + '"]' },
+        breakpoints: { 768: { slidesPerView: 3, spaceBetween: 24 }, 992: { slidesPerView: 4, spaceBetween: 24 } },
+        a11y: { enabled: false },
+      });
+    });
+  }
+
+  /* ── 05: video liệu trình tự phát (tắt tiếng) khi thẻ vào màn hình — chỉ nạp iframe lúc đó, gỡ khi ra khỏi ── */
+  var reels = [].slice.call(document.querySelectorAll('[data-shb-reel][data-reel-src]'));
+  if (reels.length && 'IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    var reelSrc = function (card) {
+      if (card.dataset.reelSrc === 'youtube') {
+        var id = card.dataset.reelId;
+        return 'https://www.youtube.com/embed/' + id + '?autoplay=1&mute=1&loop=1&playlist=' + id + '&controls=0&playsinline=1&rel=0&modestbranding=1';
+      }
+      return 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(card.dataset.reelFb) + '&show_text=false&autoplay=true&mute=1';
+    };
+    var reelIo = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        var card = en.target, media = card.querySelector('[data-shb-reel-media]'), fr = media.querySelector('iframe');
+        if (en.isIntersecting && !fr) {
+          fr = document.createElement('iframe');
+          fr.src = reelSrc(card);
+          fr.title = (card.querySelector('[data-shb-reel-name]') || {}).textContent || '';
+          fr.allow = 'autoplay; encrypted-media; picture-in-picture';
+          fr.className = 'pointer-events-none absolute inset-0 h-full w-full border-0';
+          fr.setAttribute('tabindex', '-1'); fr.loading = 'lazy';
+          media.appendChild(fr);
+        } else if (!en.isIntersecting && fr) {
+          fr.remove();
+        }
+      });
+    }, { threshold: 0.6 });
+    reels.forEach(function (c) { reelIo.observe(c); });
+  }
+
+  {%- if sh_edit_imgs.size > 0 -%}
+  /* ── 04: Editorial Swiper fade + dấu chấm (nút 44px, đổi trạng thái bằng class móc shb-dot-active) ── */
+  var shEditEl = document.querySelector('[data-shb-edit]');
+  var shEditSwiper = null;
+  if (shEditEl && typeof Swiper === 'function') {
+    var dotsEl = shEditEl.querySelector('[data-shb-edit-dots]');
+    shEditSwiper = new Swiper(shEditEl, {
+      effect: 'fade',
+      fadeEffect: { crossFade: true },
+      loop: {% if sh_edit_imgs.size > 1 %}true{% else %}false{% endif %},
+      autoplay: { delay: 4500, disableOnInteraction: false },
+      pagination: dotsEl ? {
+        el: dotsEl, clickable: true, bulletClass: 'shb-dot', bulletActiveClass: 'shb-dot-active',
+        renderBullet: function (i, cls) {
+          return '<button type="button" class="' + cls + ' group inline-flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center border-0 bg-transparent p-0" aria-label="Ảnh ' + (i + 1) + '"><span class="block h-2 w-2 rounded-full bg-white/50 group-[.shb-dot-active]:bg-white"></span></button>';
+        }
+      } : false
+    });
+  }
+
+  /* ── Clinic lightbox (đưa ra <body>: nằm trong khung nội dung thì header/menu đáy nổi đè lên) ── */
+  var shImgs = [{% for im in sh_edit_imgs %}"{{ im | img_url: '2048x2048' }}"{% unless forloop.last %},{% endunless %}{% endfor %}];
+  var lb = document.getElementById('sh-clinic-lb');
+  var lbImg = document.getElementById('sh-clinic-lb-img');
+  var lbCounter = document.getElementById('sh-clinic-lb-counter');
+  var lbIndex = 0;
+  if (lb && lb.parentNode !== document.body) document.body.appendChild(lb);
+
+  function shOpenLightbox(idx) {
+    if (!lb || !shImgs.length) return;
+    lbIndex = ((idx % shImgs.length) + shImgs.length) % shImgs.length;
+    lbImg.src = shImgs[lbIndex];
+    if (lbCounter) lbCounter.textContent = (lbIndex + 1) + ' / ' + shImgs.length;
+    lb.setAttribute('data-open', 'true');
+    lb.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+  function shCloseLightbox() {
+    if (!lb) return;
+    lb.removeAttribute('data-open');
+    lb.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  /* ── Virtual Clinic Tour: bấm ảnh nhỏ / nút ‹ › / tự chuyển 5 giây (dừng khi rê chuột, focus) ⇒ đổi ảnh nền + mô tả + đếm; phóng to ⇒ lightbox đúng ảnh ── */
+  var vt = document.querySelector('[data-vt]');
+  if (vt) {
+    var vtDesc = vt.querySelector('[data-vt-desc]');
+    var vtThumbs = [].slice.call(vt.querySelectorAll('[data-vt-room]'));
+    var vtBgs = [].slice.call(vt.querySelectorAll('[data-vt-bg]'));
+    var vtIndex = 0, vtTimer = null, vtPaused = false;
+    var vtCount = vt.querySelector('[data-vt-count]');
+    var vtReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var vtSwiperEl = vt.querySelector('[data-vt-swiper]');
+    var vtSwiper = (vtSwiperEl && typeof Swiper === 'function') ? new Swiper(vtSwiperEl, {
+      slidesPerView: 'auto', spaceBetween: 12, watchOverflow: true, speed: 500, a11y: { enabled: false },
+    }) : null;
+    var vtShow = function (i) {
+      vtIndex = (i + vtThumbs.length) % vtThumbs.length;
+      vtThumbs.forEach(function (b, k) { var on = k === vtIndex; b.setAttribute('data-active', on ? 'true' : 'false'); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
+      vtBgs.forEach(function (im, k) { im.setAttribute('data-active', k === vtIndex ? 'true' : 'false'); });
+      if (vtDesc) vtDesc.textContent = vtThumbs[vtIndex].getAttribute('data-vt-text') || '';
+      if (vtSwiper) vtSwiper.slideTo(Math.max(0, vtIndex - 1));
+      if (vtCount) vtCount.textContent = (vtIndex + 1) + ' / ' + vtThumbs.length;
+    };
+    var vtPlay = function () {
+      clearInterval(vtTimer);
+      if (vtReduce || vtPaused || vtThumbs.length < 2) return;
+      vtTimer = setInterval(function () { vtShow(vtIndex + 1); }, 5000);
+    };
+    vtThumbs.forEach(function (btn, k) { btn.addEventListener('click', function () { vtShow(k); vtPlay(); }); });
+    var vtPrev = vt.querySelector('[data-vt-prev]'), vtNext = vt.querySelector('[data-vt-next]');
+    if (vtPrev) vtPrev.addEventListener('click', function () { vtShow(vtIndex - 1); vtPlay(); });
+    if (vtNext) vtNext.addEventListener('click', function () { vtShow(vtIndex + 1); vtPlay(); });
+    vt.addEventListener('mouseenter', function () { vtPaused = true; clearInterval(vtTimer); });
+    vt.addEventListener('mouseleave', function () { vtPaused = false; vtPlay(); });
+    vt.addEventListener('focusin', function () { vtPaused = true; clearInterval(vtTimer); });
+    vt.addEventListener('focusout', function () { if (!vt.contains(document.activeElement)) { vtPaused = false; vtPlay(); } });
+    vtPlay();
+    var vtFull = vt.querySelector('[data-vt-full]');
+    if (vtFull) vtFull.addEventListener('click', function () { shOpenLightbox(vtIndex); });
+  }
+
+  var zoomBtn = document.getElementById('sh-clinic-zoom-btn');
+  if (zoomBtn) zoomBtn.addEventListener('click', function () { shOpenLightbox(shEditSwiper ? shEditSwiper.realIndex : 0); });
+
+  var lbClose = document.getElementById('sh-clinic-lb-close');
+  var lbBack = document.getElementById('sh-clinic-lb-back');
+  var lbPrev = document.getElementById('sh-clinic-lb-prev');
+  var lbNext = document.getElementById('sh-clinic-lb-next');
+  if (lbClose) lbClose.addEventListener('click', shCloseLightbox);
+  if (lbBack) lbBack.addEventListener('click', shCloseLightbox);
+  if (lbPrev) lbPrev.addEventListener('click', function () { shOpenLightbox(lbIndex - 1); });
+  if (lbNext) lbNext.addEventListener('click', function () { shOpenLightbox(lbIndex + 1); });
+  document.addEventListener('keydown', function (e) {
+    if (!lb || lb.getAttribute('data-open') !== 'true') return;
+    if (e.key === 'Escape') shCloseLightbox();
+    if (e.key === 'ArrowLeft') shOpenLightbox(lbIndex - 1);
+    if (e.key === 'ArrowRight') shOpenLightbox(lbIndex + 1);
+  });
+  {%- endif -%}
+});
+</script>

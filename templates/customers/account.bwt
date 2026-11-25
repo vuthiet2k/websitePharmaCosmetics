@@ -2,7 +2,8 @@
   2026-10-10: khách đăng nhập từ nút "Đăng nhập để lưu hồ sơ" (trang kết quả soi da/khảo sát) ⇒ Sapo đưa về /account;
   đọc cờ pc_login_return (snippets/pc_result_store.bwt, hạn 30 phút) để quay lại trang kết quả và mở hộp đồng ý lưu.
 {%- endcomment -%}
-{%- comment -%} L03b21 (03/11/2026): 3 icon (huy hiệu «VIP Member» crown, «Hạng thành viên» medal, nhãn «Mặc định» check) = SVG ui_icon size em thay Font Awesome. {%- endcomment -%}
+{%- comment -%} L03b21 (03/11/2026): icon huy hiệu «VIP Member» (crown) và nhãn «Mặc định» (check) = SVG ui_icon size em thay Font Awesome.
+  22/11/2026: BỎ dòng «Hạng thành viên» — customer.tier KHÔNG có trên Sapo (chỉ có trong preview-mock.js), trước đây ai cũng hiện «Hạng Thành viên» = dữ liệu bịa (RULE: không bịa dữ liệu). {%- endcomment -%}
 <script>
 (function () {
   try {
@@ -59,7 +60,7 @@
 				{%- unless seen_ids contains seen_key -%}
 					{%- assign seen_ids = seen_ids | append: pid | append: ',' -%}
 					{%- assign reorder_n = reorder_n | plus: 1 -%}
-					<div class="pc-hub-reorder__card{% if reorder_n > 4 %} pc-hub-reorder__card--extra{% endif %}">
+					<div class="pc-hub-reorder__card swiper-slide !h-auto !w-[160px]">
 						<a class="pc-hub-reorder__thumb" href="{{ li.url | default: li.product.url }}">
 							<img class="lazyload" width="120" height="120"
 								src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII="
@@ -93,76 +94,10 @@
 			<p class="pc-hub__meta">{{ customer.email }}</p>
 		</header>
 
-		<section class="pc-hub-block pc-acct-info-block">
-			<div class="pc-hub-block__head">
-				<h2 class="pc-hub-block__title font-heading">Thông Tin Cá Nhân</h2>
-			</div>
-			<div class="pc-acct-info-grid">
-				<div><span class="pc-acct-info-label">Họ và tên</span><span class="pc-acct-info-value">{{ customer.name }}</span></div>
-				<div><span class="pc-acct-info-label">Email</span><span class="pc-acct-info-value">{{ customer.email }}</span></div>
-				<div><span class="pc-acct-info-label">Số điện thoại</span><span class="pc-acct-info-value">{{ customer.phone | default: 'Chưa cập nhật' }}</span></div>
-				<div><span class="pc-acct-info-label">Hạng thành viên</span><span class="pc-acct-info-value pc-kit-badge-clinical"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'medal', size: 'em' %}</i> Hạng {{ customer.tier | default: 'Thành viên' }}</span></div>
-			</div>
-		</section>
-
-		{%- if customer.addresses_count > 0 -%}
-		<section class="pc-hub-block pc-acct-addr-block">
-			<div class="pc-hub-block__head">
-				<h2 class="pc-hub-block__title font-heading">Sổ Địa Chỉ Giao Hàng ({{ customer.addresses_count }} địa chỉ đã lưu)</h2>
-				<a class="pc-hub-block__action" href="/account/addresses">Quản lý
-					<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-				</a>
-			</div>
-			<div class="pc-acct-addr-grid">
-				{% for addr in customer.addresses limit: 2 %}
-				<div class="pc-acct-addr-card{% if addr.default %} pc-acct-addr-card--default{% endif %}">
-					{% if addr.default %}<span class="pc-acct-addr-tag"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'check', size: 'em' %}</i> Mặc định</span>{% endif %}
-					<div class="pc-acct-addr-name">{{ addr.name }}</div>
-					<div class="pc-acct-addr-line">{{ addr.address1 }}{% if addr.address2 != blank %}, {{ addr.address2 }}{% endif %}, {{ addr.district }}, {{ addr.city }}</div>
-					<div class="pc-acct-addr-phone">SĐT: {{ addr.phone }}</div>
-				</div>
-				{% endfor %}
-			</div>
-		</section>
-		{%- endif -%}
-
 		{%- if customer.orders_count > 0 -%}
-		{%- comment -%} ═══════════ TRẠNG THÁI B — KHÁCH CÓ ĐƠN ═══════════ {%- endcomment -%}
+		{%- comment -%} ═══════════ TRẠNG THÁI B — KHÁCH CÓ ĐƠN (22/11/2026: đặt NGAY SAU tên khách, trên Thông tin cá nhân) ═══════════ {%- endcomment -%}
 
-			{%- comment -%} 2. ĐƠN ĐANG ĐẾN (tự ẩn nếu không có) {%- endcomment -%}
-			{%- if active_total > 0 -%}
-			{%- assign active_shown = 0 -%}
-			{%- for o in customer.orders -%}
-				{%- assign is_active = false -%}
-				{%- unless o.cancelled or o.status == 'cancelled' or o.shipping_status == 'cancelled' -%}{%- if o.shipping_status != 'delivered' -%}{%- assign is_active = true -%}{%- endif -%}{%- endunless -%}
-				{%- if is_active and active_shown < active_limit -%}
-				{%- assign active_shown = active_shown | plus: 1 -%}
-				<a class="pc-hub-track" href="{{ o.customer_url }}">
-					<span class="pc-hub-track__icon">
-						<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-					</span>
-					<span class="pc-hub-track__body">
-						<span class="pc-hub-track__label">Đơn {{ o.name }} {% if o.shipping_status == 'delivering' %}đang trên đường giao{% else %}đang được xử lý{% endif %}</span>
-						<span class="pc-hub-track__sub">Đặt ngày {{ o.created_on | date: 'dd/MM/yyyy' }} · {{ o.total_price | money }}</span>
-					</span>
-					<span class="pc-hub-track__cta">Theo dõi
-						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-					</span>
-				</a>
-				{%- endif -%}
-			{%- endfor -%}
-			{%- assign active_more = active_total | minus: active_limit -%}
-			{%- if active_more > 0 -%}
-			<a class="pc-hub-track-more" href="/account/orders">
-				<span>+{{ active_more }} đơn khác đang xử lý</span>
-				<span class="pc-hub-track-more__cta">Xem tất cả
-					<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-				</span>
-			</a>
-			{%- endif -%}
-			{%- endif -%}
-
-			{%- comment -%} 3. ĐƠN HÀNG — lưới 4 trạng thái có icon + số đếm {%- endcomment -%}
+			{%- comment -%} 2. ĐƠN HÀNG (22/11/2026: lên trên cùng, 1 hàng 4 icon kiểu Shopee) — lưới 4 trạng thái có icon + số đếm {%- endcomment -%}
 			<section class="pc-hub-block">
 				<div class="pc-hub-block__head">
 					<h2 class="pc-hub-block__title font-heading">Đơn hàng của tôi</h2>
@@ -202,7 +137,74 @@
 				</div>
 			</section>
 
-		{%- else -%}
+			{%- comment -%} 3. ĐƠN ĐANG ĐẾN (tự ẩn nếu không có) {%- endcomment -%}
+			{%- if active_total > 0 -%}
+			{%- assign active_shown = 0 -%}
+			{%- for o in customer.orders -%}
+				{%- assign is_active = false -%}
+				{%- unless o.cancelled or o.status == 'cancelled' or o.shipping_status == 'cancelled' -%}{%- if o.shipping_status != 'delivered' -%}{%- assign is_active = true -%}{%- endif -%}{%- endunless -%}
+				{%- if is_active and active_shown < active_limit -%}
+				{%- assign active_shown = active_shown | plus: 1 -%}
+				<a class="pc-hub-track" href="{{ o.customer_url }}">
+					<span class="pc-hub-track__icon">
+						<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+					</span>
+					<span class="pc-hub-track__body">
+						<span class="pc-hub-track__label">Đơn {{ o.name }} {% if o.shipping_status == 'delivering' %}đang trên đường giao{% else %}đang được xử lý{% endif %}</span>
+						<span class="pc-hub-track__sub">Đặt ngày {{ o.created_on | date: 'dd/MM/yyyy' }} · {{ o.total_price | money }}</span>
+					</span>
+					<span class="pc-hub-track__cta">Theo dõi
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+					</span>
+				</a>
+				{%- endif -%}
+			{%- endfor -%}
+			{%- assign active_more = active_total | minus: active_limit -%}
+			{%- if active_more > 0 -%}
+			<a class="pc-hub-track-more" href="/account/orders">
+				<span>+{{ active_more }} đơn khác đang xử lý</span>
+				<span class="pc-hub-track-more__cta">Xem tất cả
+					<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+				</span>
+			</a>
+			{%- endif -%}
+			{%- endif -%}
+
+		{%- endif -%}
+
+		<section class="pc-hub-block pc-acct-info-block">
+			<div class="pc-hub-block__head">
+				<h2 class="pc-hub-block__title font-heading">Thông Tin Cá Nhân</h2>
+			</div>
+			<div class="pc-acct-info-grid">
+				<div><span class="pc-acct-info-label">Họ và tên</span><span class="pc-acct-info-value">{{ customer.name }}</span></div>
+				<div><span class="pc-acct-info-label">Email</span><span class="pc-acct-info-value">{{ customer.email }}</span></div>
+				<div><span class="pc-acct-info-label">Số điện thoại</span><span class="pc-acct-info-value">{{ customer.phone | default: 'Chưa cập nhật' }}</span></div>
+			</div>
+		</section>
+
+		{%- if customer.addresses_count > 0 -%}
+		<section class="pc-hub-block pc-acct-addr-block">
+			<div class="pc-hub-block__head">
+				<h2 class="pc-hub-block__title font-heading">Sổ Địa Chỉ Giao Hàng ({{ customer.addresses_count }} địa chỉ đã lưu)</h2>
+				<a class="pc-hub-block__action" href="/account/addresses">Quản lý
+					<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+				</a>
+			</div>
+			<div class="pc-acct-addr-grid">
+				{% for addr in customer.addresses limit: 2 %}
+				<div class="pc-acct-addr-card{% if addr.default %} pc-acct-addr-card--default{% endif %}">
+					{% if addr.default %}<span class="pc-acct-addr-tag"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'check', size: 'em' %}</i> Mặc định</span>{% endif %}
+					<div class="pc-acct-addr-name">{{ addr.name }}</div>
+					<div class="pc-acct-addr-line">{{ addr.address1 }}{% if addr.address2 != blank %}, {{ addr.address2 }}{% endif %}, {{ addr.district }}, {{ addr.city }}</div>
+					<div class="pc-acct-addr-phone">SĐT: {{ addr.phone }}</div>
+				</div>
+				{% endfor %}
+			</div>
+		</section>
+		{%- endif -%}
+
+		{%- if customer.orders_count == 0 -%}
 		{%- comment -%} ═══════════ TRẠNG THÁI A — KHÁCH CHƯA CÓ ĐƠN (welcome) ═══════════ {%- endcomment -%}
 			<div class="pc-hub-welcome">
 				<svg class="pc-hub-welcome__icon" width="72" height="72" viewBox="0 0 80 80" fill="none">
@@ -265,10 +267,9 @@
 				<h2 class="pc-hub-block__title font-heading">Mua lại nhanh</h2>
 			</div>
 			<p class="pc-hub-block__hint">Thêm lại sản phẩm đã dùng vào giỏ. Cần nâng cấp lộ trình hay đổi nồng độ? <a href="/dat-lich-tu-van">Đặt lịch tư vấn với chuyên gia &rsaquo;</a></p>
-			<div class="pc-hub-reorder">{{ reorder_cards }}</div>
-			{%- if reorder_n > 4 -%}
-			<button type="button" class="pc-hub-reorder__more js-reorder-more">Xem thêm {{ reorder_n | minus: 4 }} sản phẩm</button>
-			{%- endif -%}
+			{%- comment -%} 22/11/2026 (chủ dự án): «Mua lại nhanh» = Swiper vuốt ngang (không còn lưới 2 cột dài, không nút «Xem thêm»). {%- endcomment -%}
+			<div class="swiper" data-pc-slider data-gap="12"><div class="swiper-wrapper">{{ reorder_cards }}</div></div>
+			{%- include 'pc_swiper_boot' -%}
 		</section>
 		{%- endif -%}
 
@@ -319,10 +320,5 @@ $(function() {
 			});
 	});
 
-	/* Reorder: "Xem thêm" (mobile) */
-	$(document).on('click', '.js-reorder-more', function() {
-		$(this).closest('.pc-hub-block').find('.pc-hub-reorder').addClass('is-expanded');
-		$(this).hide();
-	});
 });
 </script>

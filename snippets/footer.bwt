@@ -13,8 +13,8 @@
 {%- assign _ft_email = settings.store_email | default: store.customer_email -%}
 <footer class="footer bg-primary text-white py-10 lg:py-14">
   <div class="container">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-      <div class="flex flex-col justify-between">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:flex lg:flex-row lg:justify-between gap-6 lg:gap-8">
+      <div class="flex flex-col justify-between lg:max-w-xs">
         <div>
           {%- assign _ft_name = settings.store_name | default: store.name -%}
           <a class="inline-flex min-h-[44px] items-center mb-4 text-white no-underline" href="/" title="{{ _ft_name | escape }}">
@@ -42,19 +42,19 @@
               {%- endfor -%}
             </p>
           {%- endif -%}
+          {%- comment -%} 21/11/2026: Hotline + Email nằm ngay dưới địa chỉ (mỗi dòng 1 nhãn), thay dòng «SĐT · email» tách riêng. {%- endcomment -%}
+          {%- if _ft_phone != blank or _ft_email != blank -%}
+            <ul class="m-0 p-0 list-none text-sm leading-relaxed text-white/90">
+              {%- if _ft_phone != blank -%}<li class="flex flex-wrap items-center gap-x-1">Hotline: <a class="inline-flex min-h-[44px] items-center text-white hover:underline no-underline lg:min-h-0" href="tel:{{ _ft_phone | remove: ' ' | remove: '.' }}">{{ _ft_phone }}</a></li>{%- endif -%}
+              {%- if _ft_email != blank -%}<li class="flex flex-wrap items-center gap-x-1">Email: <a class="inline-flex min-h-[44px] items-center text-white hover:underline no-underline lg:min-h-0" href="mailto:{{ _ft_email }}">{{ _ft_email }}</a></li>{%- endif -%}
+            </ul>
+          {%- endif -%}
         </div>
-        {%- if _ft_phone != blank or _ft_email != blank -%}
-          <p class="m-0 pt-3 border-t border-white/10 text-sm leading-relaxed text-white/90">
-            {%- if _ft_phone != blank -%}<a class="inline-flex min-h-[44px] items-center text-white hover:underline no-underline" href="tel:{{ _ft_phone | remove: ' ' | remove: '.' }}">{{ _ft_phone }}</a>{%- endif -%}
-            {%- if _ft_phone != blank and _ft_email != blank %} · {% endif -%}
-            {%- if _ft_email != blank -%}<a class="inline-flex min-h-[44px] items-center text-white hover:underline no-underline" href="mailto:{{ _ft_email }}">{{ _ft_email }}</a>{%- endif -%}
-          </p>
-        {%- endif -%}
       </div>
 
       {%- assign _fc_ll = linklists[settings.footer_custom_menu] -%}
       {%- if settings.footer_custom_menu != blank and _fc_ll.links.size > 0 -%}
-        <div class="border-0 border-b border-solid border-white/15 lg:border-none">
+        <div class="border-0 border-b border-solid border-white/15 lg:border-none lg:max-w-xs">
           <details class="group" data-pc-acc open>
             <summary class="flex items-center justify-between cursor-pointer list-none min-h-[44px] lg:min-h-0 lg:pointer-events-none [&::-webkit-details-marker]:hidden">
               <h4 class="m-0 text-base font-bold text-white">{{ settings.footer_custom_title | default: _fc_ll.title | escape }}</h4>
@@ -72,7 +72,7 @@
       {%- assign _fs_ll = linklists[settings.footer_support_menu] -%}
       {%- assign _fp_ll = linklists[settings.footer_policy_menu] -%}
       {%- if _fs_ll.links.size > 0 or _fp_ll.links.size > 0 -%}
-        <div class="border-0 border-b border-solid border-white/15 lg:border-none">
+        <div class="border-0 border-b border-solid border-white/15 lg:border-none lg:max-w-xs">
           <details class="group" data-pc-acc open>
             <summary class="flex items-center justify-between cursor-pointer list-none min-h-[44px] lg:min-h-0 lg:pointer-events-none [&::-webkit-details-marker]:hidden">
               <h4 class="m-0 text-base font-bold text-white">{{ settings.footer_support_title | default: settings.footer_policy_title | default: 'Chính sách' | escape }}</h4>
@@ -95,7 +95,7 @@
         </div>
       {%- endif -%}
 
-      <div class="border-0 border-b border-solid border-white/15 lg:border-none">
+      <div class="border-0 border-b border-solid border-white/15 lg:border-none lg:max-w-xs">
         <details class="group" data-pc-acc open>
           <summary class="flex items-center justify-between cursor-pointer list-none min-h-[44px] lg:min-h-0 lg:pointer-events-none [&::-webkit-details-marker]:hidden">
             <h4 class="m-0 text-base font-bold text-white">{{ settings.footer_help_title | default: 'Hỗ trợ' | escape }}</h4>
@@ -181,11 +181,9 @@
         {%- if settings.footer_legal_representative != blank %}
           <p class="m-0">Người đại diện pháp luật: {{ settings.footer_legal_representative }}</p>
         {%- endif %}
-        {%- if settings.contact_us_enable -%}
-          <p class="mt-2"><button type="button" class="footer-contact-reopen inline-flex items-center text-xs text-white underline cursor-pointer bg-transparent border-0 p-0" data-contact-show>Hiện lại nút liên hệ nhanh</button></p>
-        {%- endif -%}
       </div>
     {%- endif -%}
+
   </div>
 
   <script>
@@ -214,6 +212,6 @@
   </script>
 
   {% if btt %}
-    <a href="#" class="backtop !h-11 !w-11 min-h-[44px] min-w-[44px]" title="Lên đầu trang" aria-label="Lên đầu trang"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-up', size: 'em' %}</i></a>
+    <a href="#" class="backtop !h-11 !w-11 min-h-[44px] min-w-[44px] !bg-primary !text-white !z-fab max-[991px]:!hidden" title="Lên đầu trang" aria-label="Lên đầu trang"><i class="inline-block leading-none" aria-hidden="true">{% include 'ui_icon', name: 'arrow-up', size: 'em' %}</i></a>
   {% endif %}
 </footer>
