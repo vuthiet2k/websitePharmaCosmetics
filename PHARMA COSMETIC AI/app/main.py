@@ -88,6 +88,8 @@ PII_TAG_RE = re.compile(r"\[(SĐT|email|số định danh) đã ẩn\]")
 CLAIM_RE = re.compile(r"(chua khoi|khoi han|khoi hoan toan|dut diem|bao lau (thi |se )?(khoi|het)|co khoi (khong|duoc)|khoi duoc khong|"
                       r"\bco het (khong|duoc khong|mun|nam|tham|seo|ngua|benh|nhan|nep))", re.A)
 COMMIT_RE = re.compile(r"\b(cam ket|bao dam)\b", re.A)  # chỉ tính là «hỏi cam kết kết quả» khi KHÔNG phải câu hỏi chính sách (vd «cam kết chính hãng»)
+# OQ-6: dấu hiệu thuốc kê đơn trong tiêu đề (đã bỏ dấu). Bản JS: RX_RE trong cloudflare/src/index.js — phải giống hệt.
+RX_RE = re.compile(r"\bke don\b|isotretinoin|\bthuoc\b|acuroff|goesing|finpecia|clindatre")
 DOCTOR_RE = re.compile(r"(bac si|duoc si|chuyen gia|tu van vien)", re.A)
 DOCASK_RE = re.compile(r"(\bco\b(?![a-z0-9 ]*\bkhuyen\b)[a-z0-9 ]*\bkhong\b|\bgap\b|\bhoi\b|noi chuyen)", re.A)
 CB_RE = re.compile(r"(goi lai|lien he lai|lien lac lai|de lai so|goi cho (em|minh|toi)|tu van qua (dien thoai|sdt|zalo)|goi dien (cho|lai))", re.A)
@@ -273,7 +275,7 @@ async def chat_endpoint(body: ChatRequest, request: Request):
         cs = set(content)
         hits = [d for d in rag.search(" ".join(content), 8, cat) if cs & set(tokenize(d["title"]))]
         if cat == "Sản phẩm":  # 24/11/2026 AC-01.5 (OQ-2): không bao giờ gợi ý SP «kê đơn» trong chat
-            hits = [d for d in hits if "ke don" not in fold(d["title"])]
+            hits = [d for d in hits if not RX_RE.search(fold(d["title"]))]
         return [{"title": d["title"], "url": d["url"]} for d in hits[:k]]
 
     products: List[Dict[str, str]] = []

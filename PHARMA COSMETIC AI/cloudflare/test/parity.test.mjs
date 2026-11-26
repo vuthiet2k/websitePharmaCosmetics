@@ -203,9 +203,11 @@ await t("24/11 file vàng: Worker == Python từng ký tự (reply, intent, SP, 
   }
 });
 await t("24/11 không bao giờ gợi ý SP «kê đơn»", async () => {
-  for (const q of ["mụn trứng cá nặng dùng thuốc gì", "isotretinoin", "accufine", "trị mụn nặng"]) {
+  // OQ-6 (26/11/2026): cả tiêu đề có «thuốc» / isotretinoin / tên thuốc kê đơn cũng bị loại
+  const RX = /kê đơn|isotretinoin|thuốc|acuroff|goesing|finpecia|clindatre/i;
+  for (const q of ["mụn trứng cá nặng dùng thuốc gì", "isotretinoin", "accufine", "trị mụn nặng", "da bị mụn nên dùng gì", "có kê đơn thuốc trị mụn không", "rụng tóc"]) {
     const r = await (await chat(q)).json();
-    assert.ok(r.related_products.every((p) => !p.title.toLowerCase().includes("kê đơn")), q);
+    assert.ok(r.related_products.every((p) => !RX.test(p.title)), q);
   }
 });
 await t("24/11 chào lần 2 trong phiên không lặp menu; tin cũ của khách không vào tìm kiếm", async () => {

@@ -332,6 +332,6 @@ Sau khi sửa: chạy lại pytest + parity (exit 0), BA chạy lại bộ 154 c
 
 ### 8.4 Ghi nhận ngoài phạm vi T1
 
-- **OQ-6 (điểm dừng — y dược nhạy cảm, chờ chủ dự án):** «isotretinoin», «trị mụn nặng», «thuốc trị mụn» vẫn gợi ý thuốc kê đơn thực tế (Accufine 5mg, Triplivate 10 Isotretinoin, AJU AKINOL 10MG, ISOTISUN, ACNOTIN) vì tiêu đề không có chữ «kê đơn». Có mở rộng bộ lọc (vd «isotretinoin», «thuốc») không? Cần danh sách/nhãn từ chủ dự án — BA không tự quyết.
+- **OQ-6 — ĐÃ CHỐT 26/11/2026 (chủ dự án chấp nhận đề xuất):** `pick` loại thêm SP có tiêu đề chứa «thuốc» / «isotretinoin» / tên thuốc kê đơn (Acuroff, Goesing, Finpecia, ClindaTre) — regex `RX_RE` giống hệt ở `cloudflare/src/index.js` và `app/main.py`; không lọc theo «mg» vì kéo theo ~20 thực phẩm chức năng. Ghi chú gốc: **OQ-6 (điểm dừng — y dược nhạy cảm, chờ chủ dự án):** «isotretinoin», «trị mụn nặng», «thuốc trị mụn» vẫn gợi ý thuốc kê đơn thực tế (Accufine 5mg, Triplivate 10 Isotretinoin, AJU AKINOL 10MG, ISOTISUN, ACNOTIN) vì tiêu đề không có chữ «kê đơn». Có mở rộng bộ lọc (vd «isotretinoin», «thuốc») không? Cần danh sách/nhãn từ chủ dự án — BA không tự quyết.
 - «bạn là ai, da dầu dùng gì» ⇒ gợi ý dầu gội (BM25 khớp «dầu»): chất lượng xếp hạng chỉ mục, không thuộc T1 (AC-03.5 cấm đụng chỉ mục).
 - Untracked `23.11_hugo.zip` ở gốc repo không thuộc T1 — không commit.

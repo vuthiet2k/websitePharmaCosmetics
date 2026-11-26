@@ -44,6 +44,9 @@ const BANNED = ["chữa khỏi dứt điểm", "cam kết khỏi 100%", "thay th
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const BANNED_RE = BANNED.map((p) => new RegExp("(?<![\\p{L}\\p{N}_])" + escapeRe(p) + "(?![\\p{L}\\p{N}_])", "iu"));
 
+// OQ-6: dấu hiệu thuốc kê đơn trong tiêu đề (đã bỏ dấu). Bản Python: RX_RE trong app/main.py — phải giống hệt.
+const RX_RE = /\bke don\b|isotretinoin|\bthuoc\b|acuroff|goesing|finpecia|clindatre/;
+
 const SAFE_FALLBACK = "Dạ em chưa có thông tin phù hợp để trả lời chính xác. Bạn vui lòng liên hệ Chuyên gia của " +
   "Pharma Cosmetics để được tư vấn trực tiếp nhé ạ.";
 
@@ -279,7 +282,7 @@ async function chat(request, env, c, cors) {
   // Ngưỡng liên quan: tiêu đề phải chứa ≥1 từ khoá thật của câu hỏi (điểm BM25 tuyệt đối không tách được câu lạc đề)
   const pick = async (catCode, k) => {
     let hits = (await search(env, request, content.join(" "), 8, catCode)).filter((d) => tokenize(d.title).some((t) => content.includes(t)));
-    if (catCode === 2) hits = hits.filter((d) => !fold(d.title).includes("ke don")); // 24/11/2026 AC-01.5 (OQ-2): không bao giờ gợi ý SP «kê đơn» trong chat
+    if (catCode === 2) hits = hits.filter((d) => !RX_RE.test(fold(d.title))); // OQ-6 (chủ dự án chốt 26/11/2026): không gợi ý thuốc kê đơn trong chat — tiêu đề có «kê đơn» / isotretinoin / «thuốc»
     return hits.slice(0, k).map(({ title, url }) => ({ title, url }));
   };
   let products = [], articles = [];

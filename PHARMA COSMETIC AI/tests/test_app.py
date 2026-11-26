@@ -238,9 +238,12 @@ def test_response_keeps_old_fields_and_adds_intent():
 
 
 def test_never_suggest_prescription_products():
-    for q in ["mụn trứng cá nặng dùng thuốc gì", "isotretinoin", "accufine", "trị mụn nặng"]:
+    # OQ-6 (26/11/2026): cả tiêu đề có «thuốc» / isotretinoin / tên thuốc kê đơn cũng bị loại
+    rx = re.compile(r"kê đơn|isotretinoin|thuốc|acuroff|goesing|finpecia|clindatre", re.I)
+    for q in ["mụn trứng cá nặng dùng thuốc gì", "isotretinoin", "accufine", "trị mụn nặng",
+              "da bị mụn nên dùng gì", "có kê đơn thuốc trị mụn không", "rụng tóc"]:
         r = chat(q).json()
-        assert all("kê đơn" not in p["title"].lower() for p in r["related_products"]), q
+        assert all(not rx.search(p["title"]) for p in r["related_products"]), q
 
 
 def test_greeting_again_does_not_repeat_menu():
