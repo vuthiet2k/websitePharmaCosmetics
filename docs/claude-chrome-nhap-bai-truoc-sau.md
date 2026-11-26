@@ -83,7 +83,7 @@ DỮ LIỆU:
 - Trang chủ, khối **Trước & Sau**:
   - tab tự hiện «Cá nhân hoá từ xa / Chăm sóc tại nhà / Phòng 1:1 + tại nhà»;
   - nhãn thời gian đúng;
-  - rê chuột thì video **tự phát** (tắt tiếng) ngay trong thẻ; bấm thẻ thì mở đúng short trên YouTube;
+  - rê chuột thì video **tự phát** (tắt tiếng) ngay trong thẻ; bấm thẻ thì mở **trang chi tiết bài viết** của ca (video nhúng trong bài);
   - thẻ **không có biểu tượng ▶**; không có thanh tiến trình dưới băng trượt (cập nhật 26/11/2026, chủ dự án);
   - dải thông tin dưới thẻ: **đang chờ chủ dự án chốt** (chữ «Cá nhân hoá chăm sóc da từ xa» lặp ở mọi thẻ là thừa).
 - **6 bài [DEMO] cũ** của danh mục cũng hiện trong khối, dưới dạng thẻ không có video. Muốn bỏ thì chủ dự án tự Ẩn/Xoá
