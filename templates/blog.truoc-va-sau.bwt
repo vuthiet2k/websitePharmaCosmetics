@@ -232,9 +232,19 @@
         {%- for pc_ba_src in pc_ba_imgs -%}{%- if pc_ba_src != blank -%}
         {%- assign pc_ba_n = pc_ba_n | plus: 1 -%}
         {%- capture pc_ba_one -%}
+          {%- comment -%} 26/11/2026: ca video YouTube (pc_bs_yt) ⇒ ảnh bìa dọc + nút phát, bấm mở đúng short ở tab mới (giống khối Shorts trang chủ). {%- endcomment -%}
+          {%- if pc_bs_yt != blank -%}
+          <figure class="relative m-0 aspect-[4/5] overflow-hidden rounded-xl bg-slate-900" data-ba-case{% if pc_ba_n > 1 %} hidden{% endif %}>
+            <a href="https://www.youtube.com/shorts/{{ pc_bs_yt }}" target="_blank" rel="noopener" title="{{ pc_ba.title | escape }}" class="group block h-full w-full no-underline">
+              <img class="block h-full w-full object-cover" src="{{ pc_ba_src }}" alt="{{ pc_ba.title | escape }}" width="360" height="640" loading="lazy" decoding="async">
+              <span class="pointer-events-none absolute left-1/2 top-1/2 inline-flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-ink" aria-hidden="true">{%- include 'ui_icon', name: 'play', size: 18 -%}</span>
+            </a>
+          </figure>
+          {%- else -%}
           <figure class="m-0 aspect-square overflow-hidden rounded-xl bg-brand-tint" data-ba-case{% if pc_ba_n > 1 %} hidden{% endif %}>
             <img class="block h-full w-full object-cover" src="{{ pc_ba_src }}" alt="{{ pc_ba.title | escape }}{% if pc_ba_imgs.size > 1 %} — ảnh {{ forloop.index }}{% endif %}" width="560" height="420" loading="lazy" decoding="async">
           </figure>
+          {%- endif -%}
         {%- endcapture -%}
         {%- assign pc_ba_pairs = pc_ba_pairs | append: pc_ba_one -%}
         {%- capture pc_ba_one -%}<div data-ba-info{% if pc_ba_n > 1 %} hidden{% endif %}>{{ pc_ba_info }}</div>{%- endcapture -%}

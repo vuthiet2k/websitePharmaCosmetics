@@ -57,7 +57,7 @@
     cặp ảnh (trang chủ, trang liệu trình, khung so sánh trang chi tiết) tự bỏ qua ca này.
   Đầu ra thêm: pc_bs_imgs, pc_bs_single (true ⇒ ca 1 ảnh).
 {%- endcomment -%}
-{%- assign pc_bs_body = '' -%}{%- assign pc_bs_imgs = '' -%}{%- assign pc_bs_single = false -%}
+{%- assign pc_bs_body = '' -%}{%- assign pc_bs_imgs = '' -%}{%- assign pc_bs_single = false -%}{%- assign pc_bs_yt = '' -%}
 {%- assign pc_bs_tag1 = '' -%}{%- assign pc_bs_tag2 = '' -%}{%- assign pc_bs_img1 = '' -%}{%- assign pc_bs_img2 = '' -%}
 {%- assign pc_bs_from_content = false -%}
 {%- assign pc_bs_tagged = false -%}{%- if pc_bs_before != blank and pc_bs_after != blank -%}{%- assign pc_bs_tagged = true -%}{%- endif -%}
@@ -105,6 +105,27 @@
   {%- assign pc_bs_list = pc_bs_list | append: pc_bs_rest -%}
   {%- assign pc_bs_imgs = pc_bs_list | remove_first: '|' -%}
   {%- if pc_bs_imgs != blank -%}{%- assign pc_bs_single = true -%}{%- endif -%}
+{%- endif -%}
+{%- comment -%}
+  26/11/2026 (chủ dự án: «không tải ảnh, hiển thị như trang chủ»): ca CHỈ có video YouTube (tag youtube:<ID|link>, chưa có ảnh) ⇒ chế độ 1 ảnh,
+  ảnh bìa = ảnh bìa dọc của chính short (i.ytimg.com/vi/<ID>/oar2.jpg — cùng nguồn khối Shorts trang chủ). Đầu ra thêm: pc_bs_yt (mã YouTube; rỗng nếu không có).
+  Ca đã có ảnh thật thì giữ ảnh, không đổi.
+{%- endcomment -%}
+{%- if pc_bs_single == false and pc_bs_before == blank -%}
+  {%- for pc_bs_tag in pc_bs_article.tags -%}
+    {%- if pc_bs_tag contains ':' and pc_bs_yt == blank -%}
+      {%- assign pc_bs_raw = pc_bs_tag | split: ':' | first -%}
+      {%- assign pc_bs_key = pc_bs_raw | strip | downcase -%}
+      {%- if pc_bs_key == 'youtube' or pc_bs_key == 'yt' -%}
+        {%- assign pc_vp_raw = pc_bs_tag | remove_first: pc_bs_raw | remove_first: ':' | strip -%}{%- assign pc_vp_hint = 'youtube' -%}
+        {%- include 'video_parse' -%}
+        {%- if pc_vp_src == 'youtube' and pc_vp_id != blank -%}{%- assign pc_bs_yt = pc_vp_id -%}{%- endif -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- if pc_bs_yt != blank -%}
+    {%- assign pc_bs_imgs = 'https://i.ytimg.com/vi/' | append: pc_bs_yt | append: '/oar2.jpg' -%}{%- assign pc_bs_single = true -%}
+  {%- endif -%}
 {%- endif -%}
 {%- if pc_bs_need_body -%}
   {%- assign pc_bs_body = pc_bs_article.content -%}
