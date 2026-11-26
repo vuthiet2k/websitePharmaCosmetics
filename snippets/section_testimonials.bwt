@@ -62,6 +62,10 @@
           {%- if testi_channel_url != blank and testi_channel_t != blank %} <a href="{{ testi_channel_url | escape }}" target="_blank" rel="noopener" class="font-semibold text-primary-deep underline underline-offset-2 hover:text-primary">{{ testi_channel_t | escape }}</a>.{%- endif -%}
         </p>
         {%- endif -%}
+        {%- comment -%} 26/11/2026 (chủ dự án: «phải nằm bên trên»): link «Xem tất cả» đặt ở đầu khối, không còn ở cuối. {%- endcomment -%}
+        {%- if testi_more_url != blank and testi_more_lb != blank -%}
+        <div><a href="{{ testi_more_url | escape }}" class="mt-2 inline-flex min-h-[44px] shrink-0 items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-primary-deep no-underline hover:text-primary md:min-h-0">{{ testi_more_lb | escape }} {% include 'ui_icon', name: 'arrow-right', size: 16 %}</a></div>
+        {%- endif -%}
       </div>
       <div class="flex shrink-0 items-center gap-3 max-md:hidden">
         <button type="button" data-reels-prev aria-label="Hành trình trước" class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-solid border-primary-deep bg-white text-primary-deep transition-colors hover:bg-primary-tint disabled:cursor-default disabled:opacity-40">
@@ -74,14 +78,18 @@
     </div>
 
     {%- comment -%} Tab lọc theo nhóm dịch vụ — chỉ hiện khi có ≥ 1 bài gắn tag dichvu:. {%- endcomment -%}
-    <div class="mt-6 flex flex-nowrap items-center gap-2 overflow-x-auto pb-1" role="group" aria-label="Lọc theo dịch vụ">
-      {%- if testi_service_list.size > 0 -%}
-      <button type="button" data-reels-tab="all" aria-pressed="true" class="inline-flex min-h-[44px] shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-solid border-primary-deep bg-primary-deep px-4 text-xs sm:text-sm font-semibold text-white transition-colors">{{ testi_all_t | escape }}</button>
-      {%- for testi_sv in testi_service_list -%}
-      <button type="button" data-reels-tab="{{ testi_sv | escape }}" aria-pressed="false" class="inline-flex min-h-[44px] shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-solid border-line bg-white px-4 text-xs sm:text-sm font-semibold text-ink transition-colors hover:border-primary-deep hover:text-primary-deep">{{ testi_sv | escape }}</button>
-      {%- endfor -%}
-      {%- endif -%}
-      <span class="shrink-0 whitespace-nowrap pl-2 text-xs text-ink-muted" aria-live="polite"><span data-reels-count>{{ testi_total }}</span> {{ testi_count_t | escape }}</span>
+    <div class="mt-6 flex items-center gap-3">
+      <div class="swiper-container min-w-0 flex-1 overflow-hidden" data-pc-slider data-gap="8" role="group" aria-label="Lọc theo dịch vụ">
+        <div class="swiper-wrapper">
+          {%- if testi_service_list.size > 0 -%}
+          <div class="swiper-slide !w-auto"><button type="button" data-reels-tab="all" aria-pressed="true" class="inline-flex min-h-[44px] shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-solid border-primary-deep bg-primary-deep px-4 text-xs sm:text-sm font-semibold text-white transition-colors">{{ testi_all_t | escape }}</button></div>
+          {%- for testi_sv in testi_service_list -%}
+          <div class="swiper-slide !w-auto"><button type="button" data-reels-tab="{{ testi_sv | escape }}" aria-pressed="false" class="inline-flex min-h-[44px] shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-solid border-line bg-white px-4 text-xs sm:text-sm font-semibold text-ink transition-colors hover:border-primary-deep hover:text-primary-deep">{{ testi_sv | escape }}</button></div>
+          {%- endfor -%}
+          {%- endif -%}
+        </div>
+      </div>
+      <span class="shrink-0 whitespace-nowrap text-xs text-ink-muted" aria-live="polite"><span data-reels-count>{{ testi_total }}</span> {{ testi_count_t | escape }}</span>
     </div>
 
     {%- comment -%} Swiper (pc_swiper_boot › buildReelsSlider). Rộng thẻ: mobile ~1.6 thẻ, md 3, lg 5 (khớp ảnh mẫu). {%- endcomment -%}
@@ -141,9 +149,6 @@
     </div>
     <div class="mt-3 flex flex-col gap-2 md:flex-row md:items-start md:justify-between md:gap-6">
       {%- if testi_note_t != blank -%}<p class="m-0 text-xs text-ink-muted">{{ testi_note_t | escape }}</p>{%- endif -%}
-      {%- if testi_more_url != blank and testi_more_lb != blank -%}
-      <a href="{{ testi_more_url | escape }}" class="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-primary-deep no-underline hover:text-primary md:min-h-0">{{ testi_more_lb | escape }} {% include 'ui_icon', name: 'arrow-right', size: 16 %}</a>
-      {%- endif -%}
     </div>
   </div>
 </section>
