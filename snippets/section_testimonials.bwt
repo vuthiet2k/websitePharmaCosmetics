@@ -97,7 +97,6 @@
         {%- for testi_a in testi_case_blog.articles limit: 24 -%}
           {%- assign pc_bs_article = testi_a -%}{%- include 'ba_case_source' -%}
           {%- assign pc_vs_article = testi_a -%}{%- include 'video_source' -%}
-          {%- assign r_title = pc_bs_plan | default: testi_a.title -%}
           {%- assign r_vid = '' -%}{%- if pc_vs_src == 'youtube' -%}{%- assign r_vid = pc_vs_id -%}{%- endif -%}
           {%- comment -%} 26/11/2026 (chủ dự án: «click thì xem chi tiết, không về YouTube»): bấm thẻ ⇒ TRANG CHI TIẾT của ca (video nhúng ở đó); rê chuột vẫn phát thử video ngay trong thẻ. {%- endcomment -%}
           {%- assign r_href = testi_a.url -%}
@@ -121,16 +120,11 @@
                 {%- if r_vid != blank -%}<span class="inline-flex text-white" aria-hidden="true">{%- include 'ui_icon', name: 'video', size: 18 -%}</span>{%- endif -%}
               </div>
 
-              {%- if r_vid != blank -%}
-              <span class="pointer-events-none absolute left-1/2 top-1/2 inline-flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-ink transition-opacity duration-300" data-reels-play aria-hidden="true">
-                {%- include 'ui_icon', name: 'play', size: 18 -%}
-              </span>
-              {%- endif -%}
+              {%- comment -%} 26/11/2026 (chủ dự án): bỏ biểu tượng ▶ giữa thẻ — rê chuột là video tự phát. {%- endcomment -%}
 
               <div class="absolute inset-x-2.5 bottom-2.5 flex items-center gap-2.5 rounded-xl bg-white p-2.5">
                 <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-deep text-xs font-bold text-white" aria-hidden="true">{{ testi_badge_t | escape }}</span>
                 <span class="min-w-0 flex-1">
-                  <span class="line-clamp-2 block text-xs font-bold leading-snug text-ink">{{ r_title | escape }}</span>
                   <span class="mt-0.5 block truncate text-xs text-ink-muted">{{ testi_more_t | escape }}</span>
                 </span>
               </div>
