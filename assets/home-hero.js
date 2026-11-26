@@ -41,8 +41,9 @@
   var END_EARLY_S = 3;
 
   function makeVideo(slide) {
-    var kind = slide.getAttribute('data-hero-video');
-    var src = slide.getAttribute('data-video-src');
+    var isMob = window.innerWidth < 768;
+    var kind = (isMob && slide.getAttribute('data-hero-video-mobile')) || slide.getAttribute('data-hero-video');
+    var src = (isMob && slide.getAttribute('data-video-src-mobile')) || slide.getAttribute('data-video-src');
     var box = slide.querySelector('[data-hero-video-box]');
     if (!kind || !src || !box) return null;
     var v = { slide: slide, kind: kind, el: null, ready: false, failed: false, active: false, muted: true, timer: 0, ping: 0, reveal: 0, cur: 0, dur: 0, early: false };
