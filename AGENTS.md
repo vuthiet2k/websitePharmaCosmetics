@@ -42,6 +42,15 @@ Repo: **websitePharmaCosmetics** — theme giao diện **Sapo Web (.bwt)** cho P
 - Deploy: push nhánh `hugo-theme-sept2026` chỉ tạo **Preview**; production alias
   `https://hugo-theme-sept2026-test.vercel.app` chỉ đổi khi deploy thủ công
   `npx vercel --prod --yes` (**cần token/login** — máy dev không lưu credential).
+- **Nhánh & push (RULE CỨNG GIT-1, chốt 24/11/2026 — sau sự cố commit `02f9859`):**
+  - **Agent không commit, push hay merge vào nhánh của người khác** — gồm `hugopc_dev` (nhánh của người khác,
+    cũng là production branch của Cloudflare Worker), `hugomac_dev`, `main`, `gemini/*`… Chỉ làm trên nhánh
+    đang checkout của phiên; không đẩy `nhánh-mình:nhánh-khác`. Việc cần lên nhánh khác ⇒ báo chủ dự án để
+    người sở hữu nhánh tự làm.
+  - **Chỉ push đúng nhánh chủ dự án gọi tên** trong tin nhắn; không push "kèm" nhánh khác (vd được bảo push
+    `hugopc_dev` thì không push `hugo_dev`). Không có lệnh push rõ ràng ⇒ không push.
+  - **Không commit/push trước khi cổng nghiệm thu PASS** (pytest + parity + nghiệm thu `ba-lead` khi chạy `/team`).
+    Chủ dự án bảo push mà nghiệm thu chưa xong ⇒ báo trạng thái, chờ xong rồi mới push.
 - Không dựng lại `.project-agent/`; không bịa dữ liệu (đánh giá, % đã bán, thống kê);
   không commit `dist/`, `vercel-dist/`, `node_modules/`, `.env*` thật, `.vercel/`.
 - **Rule phải có sẵn từ đầu dự án trong `.clinerules/`/`Rule&HDKTXD.md` — không phải thứ đi "phát hiện

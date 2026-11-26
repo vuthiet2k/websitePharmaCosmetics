@@ -335,3 +335,52 @@ Sau khi sửa: chạy lại pytest + parity (exit 0), BA chạy lại bộ 154 c
 - **OQ-6 — ĐÃ CHỐT 26/11/2026 (chủ dự án chấp nhận đề xuất):** `pick` loại thêm SP có tiêu đề chứa «thuốc» / «isotretinoin» / tên thuốc kê đơn (Acuroff, Goesing, Finpecia, ClindaTre) — regex `RX_RE` giống hệt ở `cloudflare/src/index.js` và `app/main.py`; không lọc theo «mg» vì kéo theo ~20 thực phẩm chức năng. Ghi chú gốc: **OQ-6 (điểm dừng — y dược nhạy cảm, chờ chủ dự án):** «isotretinoin», «trị mụn nặng», «thuốc trị mụn» vẫn gợi ý thuốc kê đơn thực tế (Accufine 5mg, Triplivate 10 Isotretinoin, AJU AKINOL 10MG, ISOTISUN, ACNOTIN) vì tiêu đề không có chữ «kê đơn». Có mở rộng bộ lọc (vd «isotretinoin», «thuốc») không? Cần danh sách/nhãn từ chủ dự án — BA không tự quyết.
 - «bạn là ai, da dầu dùng gì» ⇒ gợi ý dầu gội (BM25 khớp «dầu»): chất lượng xếp hạng chỉ mục, không thuộc T1 (AC-03.5 cấm đụng chỉ mục).
 - Untracked `23.11_hugo.zip` ở gốc repo không thuộc T1 — không commit.
+
+### 8.5 Lần 2 — T1 (24/11/2026, sau sửa BUG-01/02, DOC-01, E1–E8, E10; code đã commit `02f9859` trong lúc BA chạy cổng — chạy lại trên HEAD cho cùng kết quả) · Kết luận: **FAIL** (1 lỗi an toàn trả fe-feature)
+
+Cổng đã chạy (trong `PHARMA COSMETIC AI/`, venv scratchpad, `PYTHONIOENCODING=utf-8`):
+
+| Lệnh | Kết quả thật |
+|---|---|
+| `<venv>/python -m pytest -q -p no:cacheprovider tests` | `24 passed, 1 warning` · exit 0 |
+| `cd cloudflare && node test/parity.test.mjs` | `39 kiểm tra đạt.` · exit 0 |
+| `tests/scenarios.json` | 123 dòng |
+| Bộ 154 ca BA (`scratchpad/acc/check.py`), Python + Worker | parity **154/154**; luật chung + S01–S46: **0 lỗi** |
+| Bộ dò hồi quy mới (`scratchpad/acc2/`): 86 ca (35 cảnh báo đỏ, 8 câu «rất/đỏ» dễ bắt nhầm, 43 câu SP/cửa hàng/FAQ/danh xưng) + 22 ca «rát/đỏ/ngứa» | parity **108/108**; 0 lỗi giọng điệu (mở «Dạ», không «Bác sĩ», không «anh/chị»); **9 câu đau rát/ngứa không ra `red`** (dưới) |
+| So `RED_RE` bản HEAD (trước T1) trên cùng câu | 5 câu HEAD ra `red`, nay ra `product` ⇒ hồi quy |
+| `git diff --stat` trên `data/ cloudflare/public cloudflare/src/store.json app/hybrid_rag.py app/guardrails.py app/config.py scripts/` | rỗng |
+| `git status --porcelain` | chỉ 8 file T1 + SPEC + `23.11_hugo.zip` (không thuộc T1) |
+
+| AC | KQ | Bằng chứng |
+|---|---|---|
+| AC-01.1, 01.2 | PASS | 154/154 + 108/108; 123 dòng kịch bản đạt trong pytest/parity |
+| **AC-01.3** | **FAIL** | «rát đỏ», «rát đỏ quá», «rát đỏ sau khi bôi», «mặt hơi rát đỏ» ⇒ `product` (gợi ý kem dưỡng) — «rát đỏ» nằm nguyên văn trong AC. Hồi quy so HEAD: «vừa bôi xong thì đỏ rát», «hơi đỏ rát», «thấy đỏ rát», «vẫn còn đỏ rát», «bị ửng đỏ rát» trước là `red`, nay `product`. Phần «không bắt nhầm» đạt: «da rất khô», «da mình rất dầu», «son màu đỏ rất đẹp», «da bị rất nhiều mụn», «nốt đỏ do mụn» ⇒ product |
+| AC-01.4 | PASS | «cam kết trị khỏi mụn không» ⇒ claim; «shop cam kết gì» ⇒ faq (E10) |
+| AC-01.5 | PASS (theo chữ) | 0 SP «kê đơn»; OQ-6 vẫn chờ chủ dự án — không tính FAIL |
+| AC-01.6 | PASS | «có bác sĩ/chuyên gia không» ⇒ book; «bác sĩ ơi da em bị mụn», «bác sĩ da liễu ơi trị nám», «tư vấn viên ơi, da em bị lỗ chân lông to», «chuyên gia tư vấn kem chống nắng» ⇒ product, SP đúng chủ đề (**BUG-02 đóng**) |
+| AC-01.7, 01.8 | PASS | «mấy giờ», «thứ 7 có mở cửa không», «chủ nhật có mở cửa không», «thứ hai shop làm việc không» ⇒ store; «mấy giờ thì nên bôi retinol» ⇒ product (không ra store) |
+| AC-01.9 | PASS | «giao ngoại tỉnh», «giao ngoại thành không», «ship ra tỉnh mất mấy ngày», «giao hàng đi xa được không», «tiền ship bao nhiêu» ⇒ faq 0 SP (**BUG-01 đóng**); «kem này có chính hãng không» ⇒ product + NC=T (giữ hành vi S27) |
+| AC-01.10 → 01.13 | PASS | «bao nhiêu tiền», «giá bao nhiêu» ⇒ price; «giá serum vitamin c» ⇒ product; «gia vị» ⇒ help (không ra price); regex số tiền = 0 |
+| REQ-02 (AC-02.1 → 02.12) | PASS | Như 8.1, chạy lại 154 + 108 ca |
+| REQ-03 (AC-03.1 → 03.5) | PASS | pytest/parity exit 0; vàng khớp; diff đường dẫn cấm rỗng |
+| DOC-01 | PASS | `README.md:9`, `:13` đã nói miễn trừ chỉ kèm khi có SP/bài viết hoặc ý định sức khoẻ |
+
+Rủi ro fe-feature tự báo — BA chấp nhận: «rất đỏ mặt khi uống rượu» không ra red (không phải phản ứng sau dùng SP); «chuyên gia» một mình ⇒ help (AC-01.6 chỉ yêu cầu book khi kèm «có…không/gặp/hỏi»).
+
+#### Thẻ lỗi vòng 2 — trả fe-feature
+
+- **BUG-03 (cao — an toàn y tế, AC-01.3 + hồi quy so HEAD)** — URL: POST `/api/v1/chat`, cả Python và Worker. Bước: gửi lần lượt
+  «rát đỏ», «rát đỏ sau khi bôi», «mặt hơi rát đỏ», «vừa bôi xong thì đỏ rát», «hơi đỏ rát», «thấy đỏ rát», «vẫn còn đỏ rát», «bị ửng đỏ rát».
+  Thực tế: `intent=product`, `needs_contact=false`, 3 SP (POSTQUAM NUTRIACTION CREAM, DR.GRANDEL CLEANSING MILK, BIOLIFE VAGISENS…).
+  Mong đợi: `intent=red`, 0 SP, NC=T, ST có, reply có «tạm ngừng».
+  Nguyên nhân: vòng 2 (E2) đổi `do rat`/`rat do` sang allow-list từ đứng trước (`bi|da|mat|…`) — từ đệm «thì/hơi/thấy/còn/ửng» và đầu câu «rát đỏ» rơi ra ngoài (main.py:67–71, index.js tương ứng).
+  Gợi ý (owner quyết cách làm): khớp chữ **có dấu** trên chuỗi gốc đã lowercase/NFC trước — «rát», «đỏ rát», «rát đỏ», «ngứa» không trùng nghĩa khi có dấu; chỉ dùng allow-list bản bỏ dấu khi câu không có dấu.
+  Không được hồi quy: «da rất khô», «da mình rất dầu», «son màu đỏ rất đẹp», «da bị rất nhiều mụn», «bị rất nhiều mụn», «nốt đỏ do mụn», «phòng ngừa mụn» ⇒ không red.
+  Nên (inferred, cùng nhóm phản ứng sau dùng SP — không bắt buộc để đóng thẻ): «da rát», «dùng kem xong da rát», «rát quá», «rát và đỏ», «mặt đỏ và rát», «da ửng đỏ, rát», «bôi xong ngứa», «ngứa quá sau khi bôi retinol», «da bị ngứa sau khi dùng kem» ⇒ red (HEAD cũng chưa bắt — không tính hồi quy).
+  Thêm các câu bắt buộc vào `scenarios.json` + cập nhật vàng; chạy lại pytest + parity.
+
+Sau khi đóng BUG-03: BA chạy lại 154 ca + 108 ca `acc2/`. T2 (fe-core review chéo) chỉ cần soát lại diff `RED_RE`/`RED_OK` hai bản.
+
+#### Ghi nhận (ngoài T1, không chặn)
+
+- «nên bôi retinol», «mấy giờ thì nên bôi retinol» ⇒ SP không chứa retinol; «nám dùng gì» ⇒ Clotrifox/INTRACAN (kem trị **nấm** — «nam» bỏ dấu trùng «nấm»). Do xếp hạng chỉ mục BM25 bỏ dấu (AC-03.5 cấm đụng) — đề xuất việc riêng: xếp hạng ưu tiên khớp có dấu. «kem trị nám» vẫn đúng.

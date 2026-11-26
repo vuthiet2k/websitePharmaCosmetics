@@ -8,7 +8,7 @@ tự hiện ở các nơi sau:
 | Trang **/truoc-va-sau** — phần "Kết quả của khách hàng" | Thanh **tab lọc** theo nhóm vấn đề da (tự sinh từ tag `nhom:`; "Kết quả khác" luôn cuối) + **lưới thẻ theo nhóm** (2 cột, điện thoại 1 cột), **4 thẻ / trang** có phân trang. Mỗi thẻ: tên nhóm + "Case x / n", ảnh, nút ‹ › + chấm (vuốt trên điện thoại) để chuyển ca, dòng mô tả ngắn (tuổi · tỉnh · theo dõi n tuần / Phác đồ) và nút **Tư vấn phác đồ qua Zalo**. Ca có cặp ảnh đánh dấu ⇒ 2 ảnh TRƯỚC/SAU có nhãn; ca không đánh dấu ⇒ **mỗi ảnh 1 slide nguyên khung** (xem 2.1). Thẻ không link sang bài chi tiết. |
 | **Trang chi tiết ca** `/<đường dẫn bài>` trên Sapo (bản dev: `/blogs/truoc-va-sau/<đường dẫn bài>`) (giao diện `article.truoc-va-sau`) | Khung **bài viết blog** như mọi bài khác. Cột chính: thẻ đầu bài (nhãn nhóm · H1 · chuyên gia · ngày/tỉnh · tóm tắt · hồ sơ ca 4 ô) → ảnh TRƯỚC/SAU 50/50 có nhãn tuần → nhận định chuyên gia → lộ trình diễn tiến → câu chuyện. Sidebar: đặt lịch + hotline + Zalo → liệu trình & sản phẩm đồng hành → ca khác cùng nhóm. Mobile: sidebar xuống dưới + thanh đặt lịch bám đáy |
 | Trang **liệu trình** (sản phẩm giao diện `product.lieu-trinh`) — phần "Trước – sau" | Chỉ khi bài có tag `lieutrinh:<alias sản phẩm>` (tối đa 8 ca, trình chiếu ‹ ›) |
-| **Trang chủ** — mục "Kết quả thực tế · Hành trình da của khách hàng" | Chỉ khi bài có tag **`ghim-trang-chu`** và đủ ảnh trước/sau (tối đa **3 bài mới nhất**). Tab = `nhom:` (trống ⇒ tiêu đề) – `khach:`; panel = ảnh TRƯỚC/SAU · tiêu đề · dòng khách (`khach:`, `tuoi:`, `tinh:` · Tác giả) · Tình trạng ban đầu (`tinhtrang:`, trống ⇒ `nhom:`) · Hành trình (danh sách số đầu tiên trong Nội dung, trống ⇒ Tóm tắt) · Sản phẩm sử dụng (`phacdo:`) · Thời gian theo dõi (`tuan:`) · link "Xem chi tiết ca". Đổi tag ghim: Cấu hình theme › Trước & Sau (Testimonials) › **Hành trình da — Tag ghim ca lên trang chủ**. Không bài nào được ghim ⇒ trang chủ dùng Thẻ 1–3 nhập tay như trước |
+| **Trang chủ** — khối "Trước & Sau" dạng Shorts (25/11/2026) | 24 bài mới nhất của danh mục, mỗi bài 1 thẻ dọc 9:16 trong băng trượt (nút ←/→ + thanh tiến trình). Ảnh thẻ = **ảnh đại diện** (chưa có ⇒ ảnh dọc của short YouTube). Nhãn góc trái = `thoigian:`; tên trên thẻ = `phacdo:` (trống ⇒ tiêu đề bài). Rê chuột ⇒ **phát video** `youtube:` ngay trong thẻ; bấm/chạm ⇒ mở short trên YouTube (bài không có `youtube:` ⇒ mở trang chi tiết ca). **Tab lọc** tự sinh từ tag `dichvu:` + số "N hành trình". Chữ của khối: Cấu hình theme › Hành trình da khách hàng (trang chủ). Tag `ghim-trang-chu` không còn dùng cho khối này. |
 
 > **Chỉ đăng ca thật**, đã được khách đồng ý công bố. Ảnh trước và sau phải cùng góc chụp, cùng ánh sáng và không chỉnh sửa.
 > Không dùng ảnh của hãng hoặc ảnh của liệu trình khác làm kết quả. Phần nào chưa có dữ liệu thì để trống, trang sẽ tự ẩn phần đó.
@@ -74,8 +74,8 @@ Cách cũ vẫn dùng được: tag `anhtruoc:<link ảnh>` + `anhsau:<link ản
 
 - Ảnh tối thiểu 800 px cạnh ngắn, JPG/WebP, dưới 300 KB.
 - Ca không có ảnh nào ⇒ không hiện ở trang Trước & Sau.
-- **Trang chủ** (mục Hành trình da) và **trang liệu trình** chỉ hiện ca **cách B** (cần cặp TRƯỚC/SAU); ca cách A chỉ hiện ở
-  trang Trước & Sau và trang chi tiết (ảnh nằm trong phần nội dung).
+- **Trang liệu trình** chỉ hiện ca **cách B** (cần cặp TRƯỚC/SAU); ca cách A chỉ hiện ở trang Trước & Sau và trang chi tiết
+  (ảnh nằm trong phần nội dung). **Trang chủ** (25/11/2026) hiện mọi ca, ảnh thẻ = ảnh đại diện.
 
 ### 2.2. Tag
 
@@ -95,6 +95,9 @@ Tag thiếu thì dòng tương ứng tự ẩn.
 | `chupanh:` | Ghi chú cách chụp ảnh, hiện dưới cặp ảnh (chỉ ghi điều **đúng thật** với ca này) | `chupanh:Ảnh chụp bằng máy soi da OBSERV 520x – không chỉnh sửa` |
 | `ghim-trang-chu` | (tag thường, không có dấu `:`) Đưa ca lên mục "Hành trình da của khách hàng" ở trang chủ — tối đa 3 bài mới nhất có tag này | `ghim-trang-chu` |
 | `khach:` | Tên/danh xưng khách **đã đồng ý công bố**, hiện trên tab và dòng khách ở trang chủ (trống ⇒ ẩn) | `khach:Chị Lan` |
+| `youtube:` | Short/video YouTube của ca (dán mã ID hoặc link `youtube.com/shorts/…`). Trang chủ: rê chuột phát video, bấm mở YouTube | `youtube:8DIFL9D6fZA` |
+| `dichvu:` | Nhóm **dịch vụ** — tab lọc ở khối Trước & Sau trang chủ. Mọi ca cùng nhóm viết **giống hệt nhau** (khác `nhom:` = vấn đề da) | `dichvu:Cá nhân hoá từ xa` · `dichvu:Chăm sóc tại nhà` · `dichvu:Phòng 1:1 + tại nhà` |
+| `thoigian:` | Thời gian theo dõi ghi bằng chữ — nhãn xanh góc trên thẻ trang chủ | `thoigian:6 tháng` · `thoigian:3 năm` |
 | `nhantruoc:` / `nhansau:` | Ghi đè nhãn trên ảnh (mặc định "Tuần 0 · Trước điều trị" / "Tuần <tuan> · Sau điều trị") | `nhansau:Tuần 8 · Sạch nhân mụn` |
 
 Thứ tự nhóm trên trang Trước & Sau theo thứ tự bài mới nhất. Mỗi trang đọc tối đa 50 bài mới nhất của danh mục.
@@ -145,3 +148,8 @@ Bản dev có sẵn ca mẫu này đủ 6 khối: `/blogs/truoc-va-sau/hanh-trin
 4. Dev: `npm run preview`, sau đó chạy
    `AUDIT_PAGES="/blogs/truoc-va-sau,/blogs/truoc-va-sau/<đường dẫn bài>" npm run audit:ui` (route bản dev)
    (Git Bash thêm `MSYS_NO_PATHCONV=1`). Kết quả cần 0 lỗi ở 1440px và 390px.
+
+## 5. Nhập ca từ short YouTube của kênh
+
+Dữ liệu đã làm sạch của 13 short trước/sau, khối lệnh giao cho Claude in Chrome và quy tắc làm sạch/SEO:
+[claude-chrome-nhap-bai-truoc-sau.md](./claude-chrome-nhap-bai-truoc-sau.md).

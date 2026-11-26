@@ -401,22 +401,31 @@
 		proceedCheckout(e);
 	};
 
-	/* Mã giảm giá: được áp ở trang checkout ⇒ đi qua cùng luồng đặt hàng (ngày giao, VAT) thay vì nhảy thẳng sang /checkout bỏ qua các bước đó như trước. */
+	/* Mã giảm giá: được áp ở trang checkout ⇒ đi qua cùng luồng đặt hàng (ngày giao, VAT).
+	   26/11/2026 (báo cáo lỗi 2.1): bấm «Áp dụng» KHÔNG còn nhảy thẳng sang /checkout — chỉ ghi nhớ đúng mã khách nhập
+	   (window.cartCheckoutUrl) và báo rõ; khách bấm «Đặt hàng ngay» mới sang thanh toán kèm mã. Giỏ Sapo không có API
+	   kiểm tra/áp mã ⇒ số tiền giảm do checkout Sapo tính theo điều kiện của mã. */
 	$(document).on('click', '.js-apply-coupon', function(e) {
+		if (e && e.preventDefault) e.preventDefault();
 		var code = $('#coupon-code-input').val().trim();
 		var $feedback = $('.coupon-feedback');
 		if (!code) {
+			window.cartCheckoutUrl = '';
 			$feedback.removeClass('coupon-feedback--success').addClass('coupon-feedback--error').text('Vui lòng nhập mã giảm giá.');
 			return;
 		}
-		$feedback.removeClass('coupon-feedback--error').addClass('coupon-feedback--success').text('Mã sẽ được áp dụng ở bước thanh toán.');
 		window.cartCheckoutUrl = '/checkout?discount=' + encodeURIComponent(code);
-		window.cartGoToCheckout(e);
+		$feedback.removeClass('coupon-feedback--error').addClass('coupon-feedback--success').text('Đã ghi nhận mã ' + code + '. Bấm «Đặt hàng ngay» — mã được áp và trừ tiền ở bước thanh toán nếu đơn đủ điều kiện của mã.');
+	});
+	/* Sửa/xoá mã sau khi đã «Áp dụng» ⇒ bỏ mã cũ, tránh mang mã khác sang thanh toán. */
+	$(document).on('input', '#coupon-code-input', function() {
+		if (window.cartCheckoutUrl) { window.cartCheckoutUrl = ''; $('.coupon-feedback').text(''); }
 	});
 	$(document).on('click', '.js-coupon-chip', function() {
 		var $chip = $(this);
 		$('.js-coupon-chip').removeClass('is-active');
 		$chip.addClass('is-active');
+		window.cartCheckoutUrl = '';
 		$('#coupon-code-input').val($chip.data('code')).trigger('focus');
 		$('.coupon-feedback').removeClass('coupon-feedback--error').addClass('coupon-feedback--success').text($chip.data('desc') || '');
 	});

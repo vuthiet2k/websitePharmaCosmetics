@@ -59,9 +59,11 @@
 
   function buildReelsSlider(el) {
     if (el.swiper || typeof Swiper !== 'function') return;
-    var p = el.parentElement || el;
+    // 25/11/2026: nút ←/→ đặt ở đầu khối (không còn nằm cạnh swiper) ⇒ tìm trong cả section; thêm thanh tiến trình [data-reels-progress].
+    var p = el.closest('[data-reels-section]') || el.parentElement || el;
     var nextEl = p.querySelector('[data-reels-next]');
     var prevEl = p.querySelector('[data-reels-prev]');
+    var bar = p.querySelector('[data-reels-progress]');
     var sw = new Swiper(el, {
       slidesPerView: 'auto',
       spaceBetween: 16,
@@ -73,6 +75,19 @@
         prevEl: prevEl
       } : false
     });
+    if (bar) {
+      var paint = function () {
+        // Độ dài thanh = phần đang thấy + quãng đã cuộn (giống thanh cuộn) — hết danh sách thì đầy.
+        var ratio = sw.virtualSize > 0 ? Math.min(1, (sw.size || 0) / sw.virtualSize) : 1;
+        var prog = Math.max(0, Math.min(1, sw.progress || 0));
+        bar.style.transform = 'scaleX(' + (sw.isLocked ? 1 : ratio + prog * (1 - ratio)) + ')';
+      };
+      sw.on('progress', paint);
+      sw.on('slideChange', paint);
+      sw.on('update', paint);
+      sw.on('resize', paint);
+      paint();
+    }
     return sw;
   }
 
