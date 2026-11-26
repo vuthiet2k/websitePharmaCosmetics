@@ -24,7 +24,6 @@
 {%- assign testi_all_t = settings.home_testi_all_label | default: 'Tất cả' -%}
 {%- assign testi_count_t = settings.home_testi_count_label | default: 'hành trình' -%}
 {%- assign testi_badge_t = settings.home_testi_brand_badge | default: 'PC' -%}
-{%- assign testi_yt_t = settings.video_open_youtube_label | default: 'Xem trên YouTube' -%}
 {%- assign testi_more_t = settings.clinical_case_more_label | default: 'Xem chi tiết ca' -%}
 {%- capture testi_case_fb -%}/blogs/{{ testi_case_handle }}{%- endcapture -%}
 {%- assign testi_more_url = settings.home_testi_viewall_url | default: testi_case_blog.url | default: testi_case_fb -%}
@@ -100,11 +99,8 @@
           {%- assign pc_vs_article = testi_a -%}{%- include 'video_source' -%}
           {%- assign r_title = pc_bs_plan | default: testi_a.title -%}
           {%- assign r_vid = '' -%}{%- if pc_vs_src == 'youtube' -%}{%- assign r_vid = pc_vs_id -%}{%- endif -%}
-          {%- if r_vid != blank -%}
-            {%- assign r_href = 'https://www.youtube.com/shorts/' | append: r_vid -%}
-          {%- else -%}
-            {%- assign r_href = testi_a.url -%}
-          {%- endif -%}
+          {%- comment -%} 26/11/2026 (chủ dự án: «click thì xem chi tiết, không về YouTube»): bấm thẻ ⇒ TRANG CHI TIẾT của ca (video nhúng ở đó); rê chuột vẫn phát thử video ngay trong thẻ. {%- endcomment -%}
+          {%- assign r_href = testi_a.url -%}
           {%- assign r_cover = '' -%}
           {%- if testi_a.image.src != blank -%}{%- assign r_cover = testi_a.image.src | img_url: 'large' -%}
           {%- elsif r_vid != blank -%}{%- assign r_cover = 'https://i.ytimg.com/vi/' | append: r_vid | append: '/oar2.jpg' -%}
@@ -112,7 +108,7 @@
           {%- elsif pc_bs_imgs != blank -%}{%- assign r_cover = pc_bs_imgs | split: '|' | first -%}
           {%- endif -%}
           <div class="swiper-slide !w-[62%] sm:!w-[40%] md:!w-[30%] lg:!w-[calc((100%_-_4rem)/5)]" data-reels-slide data-category="{{ pc_bs_service | escape }}">
-            <a href="{{ r_href | escape }}"{% if r_vid != blank %} target="_blank" rel="noopener"{% endif %} title="{{ testi_a.title | escape }}" class="group relative block aspect-[9/16] w-full overflow-hidden rounded-2xl bg-slate-900 no-underline" data-reels-card{% if r_vid != blank %} data-video-id="{{ r_vid | escape }}"{% endif %}>
+            <a href="{{ r_href | escape }}" title="{{ testi_a.title | escape }}" class="group relative block aspect-[9/16] w-full overflow-hidden rounded-2xl bg-slate-900 no-underline" data-reels-card{% if r_vid != blank %} data-video-id="{{ r_vid | escape }}"{% endif %}>
               {%- if r_cover != blank -%}
               <img src="{{ r_cover }}" alt="{{ testi_a.title | escape }}" width="360" height="640" loading="lazy" class="absolute inset-0 h-full w-full object-cover">
               {%- endif -%}
@@ -135,7 +131,7 @@
                 <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-deep text-xs font-bold text-white" aria-hidden="true">{{ testi_badge_t | escape }}</span>
                 <span class="min-w-0 flex-1">
                   <span class="line-clamp-2 block text-xs font-bold leading-snug text-ink">{{ r_title | escape }}</span>
-                  <span class="mt-0.5 block truncate text-xs text-ink-muted">{% if r_vid != blank %}{{ testi_yt_t | escape }}{% else %}{{ testi_more_t | escape }}{% endif %}</span>
+                  <span class="mt-0.5 block truncate text-xs text-ink-muted">{{ testi_more_t | escape }}</span>
                 </span>
               </div>
             </a>
