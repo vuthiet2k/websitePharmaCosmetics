@@ -24,7 +24,6 @@
 {%- assign testi_all_t = settings.home_testi_all_label | default: 'Tất cả' -%}
 {%- assign testi_count_t = settings.home_testi_count_label | default: 'hành trình' -%}
 {%- assign testi_badge_t = settings.home_testi_brand_badge | default: 'PC' -%}
-{%- assign testi_more_t = settings.clinical_case_more_label | default: 'Xem chi tiết ca' -%}
 {%- capture testi_case_fb -%}/blogs/{{ testi_case_handle }}{%- endcapture -%}
 {%- assign testi_more_url = settings.home_testi_viewall_url | default: testi_case_blog.url | default: testi_case_fb -%}
 {%- assign testi_more_lb = settings.home_testi_viewall_text | default: 'Xem tất cả kết quả trước & sau' -%}
@@ -125,7 +124,12 @@
               <div class="absolute inset-x-2.5 bottom-2.5 flex items-center gap-2.5 rounded-xl bg-white p-2.5">
                 <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-deep text-xs font-bold text-white" aria-hidden="true">{{ testi_badge_t | escape }}</span>
                 <span class="min-w-0 flex-1">
-                  <span class="mt-0.5 block truncate text-xs text-ink-muted">{{ testi_more_t | escape }}</span>
+                  {%- comment -%} 26/11/2026 (chủ dự án): dải dưới = TÊN BÀI VIẾT; dòng phụ = khách · tuổi lấy từ tag khach: / tuoi: của bài (không có tag ⇒ ẩn dòng, không bịa). {%- endcomment -%}
+                  <span class="line-clamp-2 block text-xs font-bold leading-snug text-ink">{{ testi_a.title | escape }}</span>
+                  {%- if pc_bs_customer != blank or pc_bs_age != blank -%}
+                  {%- assign r_age_l = pc_bs_age | downcase -%}
+                  <span class="mt-0.5 block truncate text-xs text-ink-muted">{{ pc_bs_customer | escape }}{% if pc_bs_customer != blank and pc_bs_age != blank %} · {% endif %}{% if pc_bs_age != blank %}{{ pc_bs_age | escape }}{% unless r_age_l contains 'tuổi' %} tuổi{% endunless %}{% endif %}</span>
+                  {%- endif -%}
                 </span>
               </div>
             </a>
