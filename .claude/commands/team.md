@@ -18,5 +18,6 @@ Phiên chính là **điều phối viên**: không tự sửa mã theme, chỉ g
 3. **Review chéo** (khi có cả 2 FE): gọi `fe-core` đọc diff của fe-feature (và ngược lại nếu fe-core sửa `ui_*` mà fe-feature dùng) — chỉ review, ghi nhận lỗi; sửa do owner.
 4. **Nghiệm thu — `ba-lead`**: chạy cổng nghiệm thu, đối chiếu AC. FAIL ⇒ trả thẻ lỗi về owner (tối đa 2 vòng/thẻ; vòng 3 vẫn FAIL ⇒ dừng, báo chủ dự án kèm nguyên nhân).
 5. **Báo cáo chủ dự án** (tiếng Việt, ngắn): đã làm gì, AC PASS/FAIL, lệnh đã chạy, việc chờ duyệt. Commit/push/deploy theo chế độ hiện hành trong memory của dự án; không deploy `--prod`.
+   - **Cổng cứng (GIT-1 trong AGENTS.md):** chỉ commit/push SAU khi bước 4 PASS — kể cả khi chủ dự án bảo push lúc nghiệm thu còn chạy (báo trạng thái, chờ xong). Chỉ push đúng nhánh được gọi tên. Không commit/push/merge vào nhánh của người khác (`hugopc_dev`, `main`, `gemini/*`…) — chỉ nhánh đang checkout.
 
 Kiểm tra kết quả của agent trước khi báo (xem `git diff`, chạy lại lệnh quan trọng) — báo cáo của agent không phải bằng chứng.

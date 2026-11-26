@@ -95,6 +95,14 @@ Mặc định `ALLOWED_ORIGINS` **để trống** nên trình duyệt trên webs
 | Hết hạn mức ngày | Gói miễn phí tối đa 100.000 yêu cầu/ngày (tính theo giờ UTC). Hết hạn mức thì API tạm ngừng đến ngày hôm sau. |
 | Muốn cập nhật nội dung (sản phẩm/bài viết mới) | Việc của người phát triển: chạy `python scripts/sync_data.py` rồi `python scripts/build_cf_index.py`, commit lên `hugopc_dev`. Cloudflare tự triển khai lại. Claude trong Chrome không cần làm. |
 
+| Muốn tắt LLM (Workers AI) | Đổi `AI_LLM = "off"` trong `wrangler.toml` rồi triển khai lại. Không xoá binding `[ai]`. |
+| Câu trả lời tư vấn chậm 1–3 giây | Bình thường khi LLM bật (chỉ câu tư vấn sản phẩm). Header `X-Answer-Source` cho biết câu nào dùng LLM. |
+
+## 7b. Tầng LLM Workers AI (từ 24/11/2026)
+- Không cần bật gì thêm trên Cloudflare: binding `[ai]` trong `wrangler.toml` tự có khi triển khai. Gói Free: **10.000 Neurons/ngày** (reset 00:00 UTC), hết thì API **tự trả lời bằng bộ lõi tĩnh**, không lỗi, không tính tiền.
+- Xem mức dùng: Cloudflare Dashboard › AI › Workers AI. **Không** bật AI Gateway có cache/log (lưu câu hỏi khách).
+- Kiểm tra sau triển khai: hỏi «kem chống nắng cho da dầu» — câu trả lời mở bằng «Dạ», có ≤3 sản phẩm thật; header `X-Answer-Source: llm`.
+
 ## 8. Nếu chủ website chưa có tài khoản Cloudflare
 Chủ website tự vào https://dash.cloudflare.com/sign-up , tự nhập email/mật khẩu và xác minh email. **Claude không nhập hộ.** Gói **Free** là đủ; **không cần** thêm tên miền, **không cần** thẻ. Sau khi chủ đăng nhập xong thì quay lại mục 3.
 
@@ -110,3 +118,4 @@ Sau khi xong, tóm tắt cho chủ website bằng tiếng Việt:
 - **Giới hạn tần suất 20/phút/IP** chỉ là lớp phụ (chạy trong bộ nhớ từng máy chủ Cloudflare, không chính xác tuyệt đối). Kẻ cố tình dùng script vẫn có thể ăn hết hạn mức ngày. Chặn gọi chéo domain (CORS) chỉ chặn được trình duyệt, không chặn được script.
 - Không còn là «on-premise»: dữ liệu (thông tin công khai của website) nằm trên hạ tầng Cloudflare. Câu hỏi của khách được che SĐT/email/CMND trước khi xử lý và **không ghi log**. Chính sách bảo mật của website nên cập nhật cho khớp.
 - Gợi ý theo từ khoá nên có lúc lệch ngữ cảnh (ví dụ hỏi «mụn» có thể ra cả sản phẩm kê toa); chỉ mang tính tham khảo.
+- Tầng LLM (Workers AI) miễn phí trong hạn mức 10.000 Neurons/ngày (~1.200 lượt tư vấn); vượt thì tự quay về câu trả lời tĩnh đến 00:00 UTC.

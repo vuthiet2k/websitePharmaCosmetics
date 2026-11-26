@@ -8,6 +8,7 @@
  * Không LLM, không DB, không lưu/ghi log nội dung khách. Che SĐT/email/CMND trước khi xử lý.
  */
 import STORE from "./store.json" with { type: "json" };
+import { llmChoose, llmEnabled, llmRewrite } from "./llm.js";
 
 const VERSION = "1.1.0-cf";
 const PROJECT_NAME = "Pharma Cosmetics AI Tra cứu";
@@ -35,7 +36,7 @@ function fnv1a(s) {
 }
 
 // ---------- Che thông tin cá nhân + kiểm tra phát ngôn (khớp app/guardrails.py) ----------
-const PHONE_RE = /(?<!\d)(?:\+?84|0)[35789](?:[\s.\-]?\d){8}(?!\d)/g;
+const PHONE_RE = /(?<!\d)(?:\+?84|0)[\s.\-]?[35789](?:[\s.\-]?\d){8}(?!\d)/g;
 const EMAIL_RE = /[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/g;
 const ID_RE = /(?<![\d.,])(?:\d{9}|\d{12})(?![\d.,])/g;
 
@@ -67,7 +68,7 @@ const STORE_KEYS = ["dia chi", "co so", "o dau", "chi nhanh", "showroom", "phong
   "cua hang", "sdt shop", "sdt cua hang", "sdt ben", "so dt", "gio lam viec"];
 // 24/11/2026 (kiểm thử điểm mù AI) — khớp app/main.py:
 // Cảnh báo đỏ: thai kỳ/cho con bú hoặc phản ứng cấp ⇒ KHÔNG gợi ý sản phẩm, chuyển Chuyên gia / cơ sở y tế.
-const RED_RE = /\b(mang thai|co thai|dang bau|mang bau|co bau|thai ky|bau bi|cho con bu|nuoi con bu|sung do|sung tay|sung mat|sung moi|sung mi|bi sung|phu ne|phu mat|kho tho|tuc nguc|noi me day|me day|phat ban|chay mu|ri dich|rat bong|bong rat|nong rat|bi di ung|di ung nang|bi kich ung|kich ung nang|chay mau|noi man|man do|man ngua|ngua rat)\b|(?:^\W*|\b(?:bi|da|mat|moi|tay|mi|co|vung|xong|sau|vao|boi|thoa|nam|than|lung) )do rat\b|\b(?:bi|da|mat|moi|tay|mi|co|vung|xong|sau|vao|boi|thoa|nam|than|lung) rat do\b|\bbi rat(?= (?:do|ngua|bong|sung|rat|khi|sau|luc|va|o|mat|moi|tay|co|chan|lung|tran)\b|\W*$)/; // 24/11/2026 SPEC-AI-CHAT-TONE-01 AC-01.3: «bôi xong bị rát đỏ» trước lọt cảnh báo
+const RED_RE = /\b(me bau|ba bau|bau \d+ (?:thang|tuan)|cho be bu|dang cho bu|dang bu|mang thai|co thai|dang bau|mang bau|co bau|thai ky|bau bi|cho con bu|nuoi con bu|sung do|sung tay|sung mat|sung moi|sung mi|bi sung|phu ne|phu mat|kho tho|tuc nguc|noi me day|me day|phat ban|chay mu|ri dich|rat bong|bong rat|nong rat|bi di ung|di ung nang|bi kich ung|kich ung nang|chay mau|noi man|man do|man ngua|ngua rat)\b|(?:^\W*|\b(?:bi|da|mat|moi|tay|mi|co|vung|xong|sau|vao|boi|thoa|nam|than|lung) )do rat\b|\b(?:bi|da|mat|moi|tay|mi|co|vung|xong|sau|vao|boi|thoa|nam|than|lung) rat do\b|\bbi rat(?= (?:do|ngua|bong|sung|rat|khi|sau|luc|va|o|mat|moi|tay|co|chan|lung|tran)\b|\W*$)/; // 24/11/2026 SPEC-AI-CHAT-TONE-01 AC-01.3: «bôi xong bị rát đỏ» trước lọt cảnh báo
 // 24/11/2026 SPEC-AI-CHAT-TONE-01 vòng 2 (E2): «bị rất»/«rất dở»/«đó rất» bỏ dấu trùng «bị rát»/«rát đỏ»/«đỏ rát» ⇒ chuyển sang allow-list
 // Câu hỏi mua bán/chính sách: không bịa chính sách ⇒ chỉ dẫn hotline/Zalo + mục Chính sách ở cuối trang.
 const FAQ_RE = /\b(giao hang|ship|cod|van chuyen|phi ship|thanh toan|chuyen khoan|tra gop|doi tra|doi hang|tra hang|hoan tien|bao hanh|chinh hang|hang that|hang gia|hang fake|nguon goc|xuat xu|con hang|het hang|khuyen mai|ma giam|voucher|don hang|dat hang|mua hang|mua online|giao bao lau|ship bao lau|bao lau nhan|giao ngoai|giao tinh|giao xa|giao noi thanh|giao toan quoc|cam ket gi|bao dam gi)\b/; // 24/11/2026 SPEC-AI-CHAT-TONE-01 vòng 2 (BUG-01, E10): «giao ngoại tỉnh», «shop cam kết gì» là câu hỏi chính sách
@@ -99,6 +100,30 @@ const VENT_RE = /\b(huhu|hu hu|hic|chan qua|chan da|chan nan|da (minh |em )?(xau
 const VENT_WORDS = new Set("huhu hic chan xau nan buon that vong met stress lang".split(" "));
 const ACK_CORE = new Set("ok oke okie oki okay vang u uh um uhm hmm hm uk ukm roi da o".split(" "));
 const ACK_FILL = new Set("em shop ad a nhe nha ne duoc ha ak ah".split(" "));
+// 24/11/2026 SPEC-AI-LLM-01 (BUG-03): «rát» CÒN DẤU không trùng nghĩa (bỏ dấu mới trùng «rất») ⇒ khớp trên chữ có dấu trước,
+// allow-list RED_RE chỉ còn lo câu gõ không dấu. Trước đây «rát đỏ», «hơi đỏ rát», «bị ửng đỏ rát» lọt ra gợi ý kem.
+const ACC_RED_RE = /(?<![\p{L}\p{N}_])rát(?![\p{L}\p{N}_])/u;
+// Viết tắt hay gõ (0 Neuron, khớp app/main.py)
+const ABBR = { kcn: "kem chong nang", srm: "sua rua mat", tdc: "tay da chet", nhh: "nuoc hoa hong" };
+const ABBR_RE = /\b(kcn|srm|tdc|nhh)\b/g;
+const nfcLower = (s) => String(s || "").normalize("NFC").toLowerCase();
+// Khoá «chữ bỏ dấu|các dấu» — phân biệt nám/nấm, mấy/mày, gọi/gội, dầu/đầu; coi hoà/hòa là một
+function accentKey(word) {
+  const w = nfcLower(word);
+  const marks = (w.normalize("NFD").match(/\p{Mn}/gu) || []).sort().join("");
+  return fold(w) + "|" + marks + (w.includes("đ") ? "đ" : "");
+}
+function accentMap(text, onlyMarked) {
+  const out = new Map();
+  for (const w of nfcLower(text).match(/[\p{L}\p{N}]+/gu) || []) {
+    const k = accentKey(w);
+    if (onlyMarked && k.endsWith("|")) continue;
+    const f = fold(w);
+    if (!out.has(f)) out.set(f, new Set());
+    out.get(f).add(k);
+  }
+  return out;
+}
 const KEEP2 = new Set("ha uv ph bb cc".split(" ")); // chữ ≤2 ký tự vẫn là từ khoá thật (HA, UV, pH, BB/CC cream); còn lại («u», «ừ», «ờ») bị bỏ
 for (const w of "camon thks okie oki okay uh um uhm hmm hm uk ukm ak ah".split(" ")) NOISE.add(w);
 // 24/11/2026 SPEC-AI-CHAT-TONE-01 vòng 2 (BUG-02, E4, E5/E6): cụm KHÔNG phải từ khoá sản phẩm — danh xưng (bác sĩ…), thứ/ngày, «gọi lại/gọi điện» («gọi» ≈ «gội»)
@@ -213,6 +238,7 @@ function corsHeaders(request, c) {
     h["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS";
     h["Access-Control-Allow-Headers"] = "Content-Type";
     h["Access-Control-Max-Age"] = "600";
+    h["Access-Control-Expose-Headers"] = "X-Answer-Source";
   }
   return h;
 }
@@ -241,7 +267,7 @@ async function chat(request, env, c, cors) {
   const masked = maskPii(last.content);
   const hasPii = new RegExp(PII_TAG_RE.source).test(masked);
   const query = masked.replace(PII_TAG_RE, " ");
-  const folded = fold(query);
+  const folded = fold(query).replace(ABBR_RE, (m) => ABBR[m]);
   const expert = c.expert;
 
   // 24/11/2026 SPEC-AI-CHAT-TONE-01 AC-03.4: chỉ đọc tin `assistant` để biết đã gửi menu chưa (không đưa tin cũ vào tìm kiếm)
@@ -249,10 +275,11 @@ async function chat(request, env, c, cors) {
 
   // 23/11/2026 (chủ dự án: «người mới không hỏi ngay về sản phẩm»): nhận diện Ý ĐỊNH trước khi gợi ý sản phẩm/bài viết (khớp app/main.py).
   const toks = folded.match(/[a-z0-9]+/g) || [];
-  const ctoks = folded.replace(SOCIAL_RE, " ").replace(NONKEY_RE, " ").match(/[a-z0-9]+/g) || [];
   const isFaq = FAQ_RE.test(folded);
-  const content = [...new Set(ctoks)].filter((t) => !SMALL.has(t) && !GENERIC.has(t) && !STOP.has(t) && !NOISE.has(t)
-    && !(isFaq && FAQ_FILL.has(t)) && !(t.length <= 2 && !/\d/.test(t) && !KEEP2.has(t)));
+  const keywords = (f) => [...new Set(f.replace(SOCIAL_RE, " ").replace(NONKEY_RE, " ").match(/[a-z0-9]+/g) || [])]
+    .filter((t) => !SMALL.has(t) && !GENERIC.has(t) && !STOP.has(t) && !NOISE.has(t)
+      && !(isFaq && FAQ_FILL.has(t)) && !(t.length <= 2 && !/\d/.test(t) && !KEEP2.has(t)));
+  const content = keywords(folded);
   const hasStoreKey = STORE_KEYS.some((k) => folded.includes(k)) || HOURS_RE.test(folded);
   const isCb = (hasPii || CB_RE.test(folded)) && !content.some((t) => !CB_WORDS.has(t));
   const priceOnly = PRICE_RE.test(folded) && !content.some((t) => !PRICE_WORDS.has(t));
@@ -261,7 +288,7 @@ async function chat(request, env, c, cors) {
   const isAck = toks.length > 0 && toks.every((t) => ACK_CORE.has(t) || ACK_FILL.has(t)) && toks.some((t) => ACK_CORE.has(t));
 
   let intent = "";
-  if (RED_RE.test(folded)) intent = "red";
+  if (RED_RE.test(folded) || ACC_RED_RE.test(nfcLower(query))) intent = "red";
   else if (CLAIM_RE.test(folded) || (COMMIT_RE.test(folded) && !isFaq)) intent = "claim";
   else if (BOOK_RE.test(folded) || (DOCTOR_RE.test(folded) && DOCASK_RE.test(folded))) intent = "book";
   else if (SKIN_RE.test(folded)) intent = "skin";
@@ -277,16 +304,58 @@ async function chat(request, env, c, cors) {
 
   let storeInfo = (STORE && (hasStoreKey || ["book", "red", "faq", "claim", "callback"].includes(intent))) ? STORE : null;
   // Ngưỡng liên quan: tiêu đề phải chứa ≥1 từ khoá thật của câu hỏi (điểm BM25 tuyệt đối không tách được câu lạc đề)
-  const pick = async (catCode, k) => {
-    let hits = (await search(env, request, content.join(" "), 8, catCode)).filter((d) => tokenize(d.title).some((t) => content.includes(t)));
+  // 24/11/2026 SPEC-AI-LLM-01: khách gõ CÓ DẤU thì từ khớp phải cùng dấu (nám ≠ nấm) — xét 20 ứng viên thay vì 8 để bù phần bị loại
+  const qAcc = accentMap(query, true);
+  const rel = (title, words, acc) => {
+    const tt = new Set(tokenize(title)), ta = accentMap(title, false);
+    // có từ khoá trùng chữ nhưng khác dấu (nám/nấm) ⇒ lạc đề dù từ khác có khớp
+    if (words.some((t) => tt.has(t) && acc.has(t) && ![...acc.get(t)].some((k) => (ta.get(t) || new Set()).has(k)))) return false;
+    return words.some((t) => tt.has(t));
+  };
+  const pick = async (catCode, k, words = content, acc = qAcc) => {
+    let hits = (await search(env, request, words.join(" "), 20, catCode)).filter((d) => rel(d.title, words, acc));
     if (catCode === 2) hits = hits.filter((d) => !fold(d.title).includes("ke don")); // 24/11/2026 AC-01.5 (OQ-2): không bao giờ gợi ý SP «kê đơn» trong chat
     return hits.slice(0, k).map(({ title, url }) => ({ title, url }));
   };
   let products = [], articles = [];
+  let source = "static", lead = null; // X-Answer-Source: static | llm | llm-rewrite (theo dõi tầng LLM, không đổi JSON trả về)
   if (!intent) {
-    products = await pick(2, 3);
+    // 24/11/2026 SPEC-AI-LLM-01: có Workers AI ⇒ lấy 8 SP ứng viên cho LLM chọn ≤3; không có ⇒ y hệt bản tĩnh (3 SP đầu)
+    const useLlm = llmEnabled(env);
+    products = await pick(2, useLlm ? 8 : 3);
     articles = await pick(1, 2);
-    if (products.length || articles.length) intent = "product";
+    if (useLlm && !products.length && !articles.length) {
+      const rw = await llmRewrite(env, query); // BM25 trượt (sai chính tả, viết tắt lạ…) ⇒ nhờ LLM chuẩn hoá rồi tìm lại 1 lần
+      if (rw) {
+        const rf = fold(rw).replace(ABBR_RE, (m) => ABBR[m]);
+        // câu chuẩn hoá phải qua lại các ý định an toàn (đỏ, cam kết khỏi bệnh, đặt lịch, chính sách) trước khi tìm SP
+        const rIntent = (RED_RE.test(rf) || ACC_RED_RE.test(nfcLower(rw))) ? "red"
+          : (CLAIM_RE.test(rf) || (COMMIT_RE.test(rf) && !FAQ_RE.test(rf))) ? "claim"
+          : (BOOK_RE.test(rf) || (DOCTOR_RE.test(rf) && DOCASK_RE.test(rf))) ? "book"
+          : FAQ_RE.test(rf) ? "faq" : "";
+        if (rIntent) {
+          intent = rIntent; storeInfo = STORE || null; source = "llm-rewrite";
+        } else {
+          const w2 = keywords(rf);
+          if (w2.length) {
+            const a2 = accentMap(rw, true);
+            products = await pick(2, 8, w2, a2);
+            articles = await pick(1, 2, w2, a2);
+            if (products.length || articles.length) source = "llm-rewrite";
+          }
+        }
+      }
+    }
+    if (useLlm && !intent && products.length) {
+      const ch = await llmChoose(env, query, products, complianceOk);
+      if (ch) {
+        products = ch.chon.map((i) => products[i]);
+        lead = ch.chon.length ? ch.lead : null;
+        source = source === "static" ? "llm" : source;
+      }
+    }
+    products = products.slice(0, 3);
+    if (intent) { /* ý định an toàn do câu chuẩn hoá */ } else if (products.length || articles.length) intent = "product";
     else if (VENT_RE.test(folded)) intent = "vent";
     else if (storeInfo) intent = "store";
     else intent = "nomatch";
@@ -361,7 +430,7 @@ async function chat(request, env, c, cors) {
     if (storeInfo) {
       parts.push(STORE_OPEN, storeBlock(storeInfo), PRODUCT_OPEN_ALSO);
     } else {
-      parts.push(GREET_RE.test(folded) ? PRODUCT_OPEN_GREET : PRODUCT_OPEN);
+      parts.push(lead || (GREET_RE.test(folded) ? PRODUCT_OPEN_GREET : PRODUCT_OPEN));
     }
     if (PRICE_RE.test(folded)) parts.push(PRICE_NOTE); // hỏi giá: không báo số tiền, chỉ dẫn xem tại trang sản phẩm
     if (products.length) parts.push("**Sản phẩm tham khảo** (xem giá và thành phần chi tiết tại trang sản phẩm):\n" + products.map((p) => `- [${p.title}](${p.url})`).join("\n"));
@@ -370,13 +439,19 @@ async function chat(request, env, c, cors) {
     parts.push(withExpert(PRODUCT_CLOSE, expert));
     if (hasPii) parts.push(PII_NOTE);
   } else { // nomatch
-    parts.push(withExpert(NOMATCH_REPLY, expert));
+    const isFollowUp = /(?:cái|loại|sản phẩm|sp|chai|tuýp|lọ)\s*(?:đầu tiên|thứ\s*[123]|này|đó|kia|trên)/i.test(query);
+    if (isFollowUp) {
+      parts.push("Dạ, để em tư vấn chính xác hơn, bạn vui lòng gõ lại tên sản phẩm cụ thể mà bạn đang quan tâm giúp em nhé ạ.");
+    } else {
+      parts.push(withExpert(NOMATCH_REPLY, expert));
+    }
   }
   if (products.length || articles.length || DISCLAIMER_INTENTS.includes(intent)) parts.push(withExpert(DISCLAIMER, expert));
 
   let reply = parts.join("\n\n");
   if (!complianceOk(reply)) { reply = SAFE_FALLBACK; products = []; articles = []; needsContact = true; intent = "blocked"; }
-  return json({ reply, related_products: products, related_articles: articles, store_info: storeInfo, needs_contact: needsContact, intent }, 200, cors);
+  return json({ reply, related_products: products, related_articles: articles, store_info: storeInfo, needs_contact: needsContact, intent }, 200,
+    { ...cors, "X-Answer-Source": intent === "blocked" ? "static" : source });
 }
 
 export default {
