@@ -34,13 +34,13 @@
             <iframe
               src="{{ maps_embed }}"
               width="100%" height="100%"
-              style="border:0;" allowfullscreen="" loading="lazy"
+              class="border-0" allowfullscreen="" loading="lazy"
               referrerpolicy="no-referrer-when-downgrade"
               title="Bản đồ {{ store.name }}">
             </iframe>
           {%- else -%}
             <div class="mops-booking-map__placeholder">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              {% include 'ui_icon', name: 'map-pin', size: 28 %}
               <span>{{ settings.store_address | default: 'Hà Nội, Việt Nam' }}</span>
               <span class="mops-booking-map__hint">Cấu hình bản đồ: Tùy chỉnh → Liên hệ &amp; Hỗ trợ</span>
             </div>
@@ -74,7 +74,7 @@
         <div class="mops-booking-right-box">
 
           
-          <div class="mops-tab-panel" id="mops-panel-1" style="display:none">
+          <div class="mops-tab-panel hidden" id="mops-panel-1">
             <div class="mops-contact-panel">
               {%- if settings.btnaction_1_title != blank -%}
               <h2 class="mops-contact-panel__title">{{ settings.btnaction_1_title }}</h2>
@@ -83,13 +83,13 @@
               <div class="mops-contact-panel__actions">
                 {%- if booking_phone != blank -%}
                 <a href="tel:{{ booking_phone | remove: ' ' | remove: '.' | remove: '-' }}" class="mops-contact-btn mops-contact-btn--call">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.95 9.1 19.79 19.79 0 011 0.5A2 2 0 012.96.09h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0121.9 14.9l.02 2.02z"/></svg>
+                  {% include 'ui_icon', name: 'phone', size: 18 %}
                   Gọi {{ booking_phone }}
                 </a>
                 {%- endif -%}
                 {%- if settings.contact_zalo != blank -%}
                 <a href="https://zalo.me/{{ settings.contact_zalo | remove: ' ' | remove: '+' }}" target="_blank" rel="noopener" class="mops-contact-btn mops-contact-btn--zalo">
-                  <svg width="18" height="18" viewBox="0 0 48 48" fill="currentColor" aria-hidden="true"><path d="M24 4C13 4 4 13 4 24c0 4.6 1.5 8.8 4 12.2L4 44l8.1-4c3.2 2.1 7 3.3 11.1 3.3 11 0 20-9 20-20S35 4 24 4z"/></svg>
+                  {% include 'ui_icon', name: 'message-circle', size: 18 %}
                   Nhắn Zalo
                 </a>
                 {%- endif -%}
@@ -128,7 +128,7 @@
               </div>
               {%- endif -%}
               {%- if form.errors.size > 0 -%}
-              <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+              <div class="rounded-xl border border-sale bg-surface-soft px-4 py-3 text-sm text-sale" role="alert">
                 {%- for field in form.errors -%}<p>{{ form.errors.messages[field] }}</p>{%- endfor -%}
               </div>
               {%- endif -%}
@@ -138,26 +138,26 @@
 
               <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label for="dl-name" class="mb-1 block text-sm font-semibold text-ink">Họ và tên <span class="text-red-600">*</span></label>
+                  <label for="dl-name" class="mb-1 block text-sm font-semibold text-ink">Họ và tên <span class="text-sale">*</span></label>
                   <input id="dl-name" name="contact[name]" type="text" required autocomplete="name" placeholder="Nguyễn Văn A"
                     value="{% if customer %}{{ customer.first_name }} {{ customer.last_name }}{% endif %}"
                     class="min-h-[44px] w-full rounded-lg border border-line-control bg-white px-3 py-2.5 text-base text-ink focus:border-primary focus:ring-primary">
                 </div>
                 <div>
-                  <label for="dl-phone" class="mb-1 block text-sm font-semibold text-ink">Số điện thoại <span class="text-red-600">*</span></label>
+                  <label for="dl-phone" class="mb-1 block text-sm font-semibold text-ink">Số điện thoại <span class="text-sale">*</span></label>
                   <input id="dl-phone" name="contact[phone]" type="tel" required inputmode="numeric" autocomplete="tel" placeholder="09xx xxx xxx"
                     pattern="0[0-9]{8,9}" title="Số điện thoại 9–10 số, bắt đầu bằng 0"
                     value="{{ crm_customer_phone | default: '' | escape }}"
                     class="min-h-[44px] w-full rounded-lg border border-line-control bg-white px-3 py-2.5 text-base text-ink focus:border-primary focus:ring-primary">
                 </div>
                 <div>
-                  <label for="dl-email" class="mb-1 block text-sm font-semibold text-ink">Email <span class="text-red-600">*</span></label>
+                  <label for="dl-email" class="mb-1 block text-sm font-semibold text-ink">Email <span class="text-sale">*</span></label>
                   <input id="dl-email" name="contact[email]" type="email" required autocomplete="email" placeholder="ban@email.com"
                     value="{% if customer %}{{ customer.email }}{% endif %}"
                     class="min-h-[44px] w-full rounded-lg border border-line-control bg-white px-3 py-2.5 text-base text-ink focus:border-primary focus:ring-primary">
                 </div>
                 <div>
-                  <label for="dl-branch" class="mb-1 block text-sm font-semibold text-ink">Chi nhánh <span class="text-red-600">*</span></label>
+                  <label for="dl-branch" class="mb-1 block text-sm font-semibold text-ink">Chi nhánh <span class="text-sale">*</span></label>
                   {%- assign branches = settings.list_room_booking | split: ';' -%}
                   <select id="dl-branch" name="contact[Chi_nhanh]" required {% if settings.list_room_booking == blank %}disabled{% endif %}
                     class="min-h-[44px] w-full rounded-lg border border-line-control bg-white px-3 py-2.5 text-base text-ink focus:border-primary focus:ring-primary">
@@ -174,12 +174,12 @@
                   </select>
                 </div>
                 <div>
-                  <label for="dl-date" class="mb-1 block text-sm font-semibold text-ink">Ngày đến <span class="text-red-600">*</span></label>
+                  <label for="dl-date" class="mb-1 block text-sm font-semibold text-ink">Ngày đến <span class="text-sale">*</span></label>
                   <input id="dl-date" name="contact[Ngay_den]" type="date" required
                     class="min-h-[44px] w-full rounded-lg border border-line-control bg-white px-3 py-2.5 text-base text-ink focus:border-primary focus:ring-primary">
                 </div>
                 <fieldset class="m-0 min-w-0 border-0 p-0">
-                  <legend class="mb-1 block p-0 text-sm font-semibold text-ink">Thời gian <span class="text-red-600">*</span></legend>
+                  <legend class="mb-1 block p-0 text-sm font-semibold text-ink">Thời gian <span class="text-sale">*</span></legend>
                   <div class="grid grid-cols-3 gap-2">
                     {%- assign dl_slots = 'Sáng,Chiều,Tối' | split: ',' -%}
                     {%- for dl_slot in dl_slots -%}
@@ -208,7 +208,7 @@
               {%- comment -%} pc-checkbox-native: CSS cũ ẩn mọi checkbox (opacity 0) — class này trả lại ô tick gốc (như page_about.bwt). {%- endcomment -%}
               <div class="flex min-h-[44px] items-start gap-3">
                 <input id="dl-consent" type="checkbox" required class="pc-checkbox-native mt-0.5 size-5 shrink-0 accent-primary">
-                <label for="dl-consent" class="m-0 cursor-pointer text-sm font-normal text-ink-secondary">Tôi đồng ý với <a href="/chinh-sach-bao-mat" target="_blank" rel="noopener" class="text-primary underline">Chính sách bảo mật</a> và cho phép Pharma Cosmetics xử lý dữ liệu cá nhân của tôi cho mục đích đặt lịch tư vấn. <span class="text-red-600">*</span></label>
+                <label for="dl-consent" class="m-0 cursor-pointer text-sm font-normal text-ink-secondary">Tôi đồng ý với <a href="/chinh-sach-bao-mat" target="_blank" rel="noopener" class="text-primary underline">Chính sách bảo mật</a> và cho phép Pharma Cosmetics xử lý dữ liệu cá nhân của tôi cho mục đích đặt lịch tư vấn. <span class="text-sale">*</span></label>
               </div>
 
               <button type="submit" id="dl-submit" class="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-btn px-6 text-base font-bold text-btn-text transition-colors hover:bg-btn-hover disabled:opacity-60">
@@ -246,7 +246,7 @@
 
           {%- comment -%} 26/11/2026 (chủ dự án: «bỏ ngay mục tiếp thị liên kết»): tắt ô btnaction_3 ⇒ bỏ cả tab lẫn panel khỏi trang. {%- endcomment -%}
           {%- if settings.btnaction_3 -%}
-          <div class="mops-tab-panel" id="mops-panel-3" style="display:none">
+          <div class="mops-tab-panel hidden" id="mops-panel-3">
             <div class="mops-affiliate-panel">
               {%- if settings.btnaction_3_title != blank -%}
               <h2 class="mops-affiliate-panel__title">{{ settings.btnaction_3_title }}</h2>
@@ -397,7 +397,7 @@
     btn.addEventListener('click', function() {
       var target = this.getAttribute('data-panel');
       tabBtns.forEach(function(b) { b.classList.toggle('mops-booking-tab--active', b === btn); });
-      tabPanels.forEach(function(p) { p.style.display = (p.id === target) ? '' : 'none'; });
+      tabPanels.forEach(function(p) { p.classList.toggle('hidden', p.id !== target); });
     });
   });
 })();
